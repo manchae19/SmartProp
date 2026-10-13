@@ -1,0 +1,138 @@
+﻿record_key,category,source,actual_million,v1_baseline_million,v1_xgboost_million,v2_selected_million,selected_family,duplicate_candidate_group
+alonhadat:19077029,Nhà ở,alonhadat,7950.0,6190.684779473471,6990.736328125,6176.355753465745,log_area_district_ridge_alpha_1,property_candidate:98ebb249b1cc2e71bb64
+alonhadat:19102356,Nhà ở,alonhadat,5000.0,6576.001714843007,8741.099609375,6576.44116771785,log_area_district_ridge_alpha_1,property_candidate:297d85af7030e51b3385
+cafeland:2489684,Nhà ở,cafeland,5900.0,7206.964812058001,7420.22119140625,7191.108015844806,log_area_district_ridge_alpha_1,property_candidate:6cdc245232e94e7d3dcc
+cafeland:3144958,Nhà ở,cafeland,22000.0,15223.354760833867,18561.048828125,15290.03983081425,log_area_district_ridge_alpha_1,property_candidate:bd474e381e8e6ca02071
+cafeland:3144980,Nhà ở,cafeland,24000.0,9410.840420784374,11531.8359375,9371.00147577033,log_area_district_ridge_alpha_1,property_candidate:14f037b3c9c179daf1d6
+cafeland:3145004,Nhà ở,cafeland,9500.0,9806.467377848501,9873.8251953125,9787.16483210256,log_area_district_ridge_alpha_1,property_candidate:8057216bd095aef6cc87
+cafeland:3145011,Nhà ở,cafeland,7690.0,6172.523255855071,6237.2626953125,6190.13975069633,log_area_district_ridge_alpha_1,property_candidate:173f5a2ddc4d636c806f
+cafeland:3145019,Nhà ở,cafeland,19990.0,10861.005445781604,11163.322265625,10905.80328147761,log_area_district_ridge_alpha_1,property_candidate:cb865789424f49863d41
+cafeland:3145217,Nhà ở,cafeland,5850.0,3579.7501147812736,3730.36083984375,3579.0304263023377,log_area_district_ridge_alpha_1,property_candidate:91e924c095c72fa90778
+cafeland:3147455,Nhà ở,cafeland,25500.0,10506.808257789924,12113.7373046875,10463.199222680993,log_area_district_ridge_alpha_1,property_candidate:1031e04cc8d540aef0c0
+cafeland:3147644,Nhà ở,cafeland,3600.0,10750.551461168092,11452.1015625,10794.81047379914,log_area_district_ridge_alpha_1,property_candidate:85d88c506ce21c603995
+cafeland:3150133,Nhà ở,cafeland,6500.0,9019.012174362739,11710.43359375,9047.340456139522,log_area_district_ridge_alpha_1,property_candidate:0b28e2ce61eb66f00d8f
+cafeland:3150183,Nhà ở,cafeland,9400.0,7004.548530985158,8074.92822265625,6988.986893626561,log_area_district_ridge_alpha_1,property_candidate:4b3896bdd9e426f665e4
+cafeland:3150190,Nhà ở,cafeland,4650.0,4520.4476425400935,5761.03662109375,4520.3343729083235,log_area_district_ridge_alpha_1,property_candidate:6ecbe314be8cd34474e7
+cafeland:3150213,Nhà ở,cafeland,16900.0,13428.91064817597,14015.603515625,13375.649031771058,log_area_district_ridge_alpha_1,property_candidate:2d6b597c2a922f205564
+cafeland:3150244,Nhà ở,cafeland,11490.0,7111.878254154484,8793.3486328125,7114.131563488124,log_area_district_ridge_alpha_1,property_candidate:078ed53e5f9d369456ac
+cafeland:3154185,Nhà ở,cafeland,8200.0,8521.848385786832,10640.8759765625,8548.24945211482,log_area_district_ridge_alpha_1,property_candidate:1bfc17c9355b60e6fd77
+cafeland:3154434,Nhà ở,cafeland,27300.0,11522.128822891531,12319.1845703125,11570.169299263342,log_area_district_ridge_alpha_1,property_candidate:b2da24696709ea0ef969
+cafeland:3154574,Nhà ở,cafeland,7600.0,5162.669031340568,5338.73828125,5150.013929778827,log_area_district_ridge_alpha_1,property_candidate:fde1775aea2624ebc24e
+cafeland:3154891,Nhà ở,cafeland,7350.0,6862.764098157962,7191.5146484375,6827.987182534298,log_area_district_ridge_alpha_1,property_candidate:db399217a760b90441c7
+cafeland:3154892,Nhà ở,cafeland,6680.0,8138.72601299609,8065.5478515625,8098.524889116725,log_area_district_ridge_alpha_1,property_candidate:750b4682d2e179bdbe11
+cafeland:3155621,Nhà ở,cafeland,9400.0,10506.808257789924,12113.7373046875,10463.199222680993,log_area_district_ridge_alpha_1,property_candidate:30dd971d677c3b534b92
+cafeland:3155788,Nhà ở,cafeland,8500.0,10506.808257789924,12113.7373046875,10463.199222680993,log_area_district_ridge_alpha_1,property_candidate:204b8c3ed8402a4e2b7a
+cafeland:3157966,Nhà ở,cafeland,7600.0,11594.90753660352,12681.1865234375,11547.640676930532,log_area_district_ridge_alpha_1,property_candidate:2a8a55517d6ad30154fa
+cafeland:3160126,Nhà ở,cafeland,7900.0,7281.92432241249,7998.560546875,7309.754874024072,log_area_district_ridge_alpha_1,property_candidate:7ee694f29bd17d636a6a
+cafeland:3160440,Nhà ở,cafeland,7250.0,3933.1860248809476,4028.372314453125,3943.0706928733957,log_area_district_ridge_alpha_1,property_candidate:991199fb4e3159144d60
+cafeland:3160451,Nhà ở,cafeland,8800.0,6511.483772713276,6265.0888671875,6530.331017683602,log_area_district_ridge_alpha_1,property_candidate:b8f69e9d447980c47e1b
+cafeland:3160493,Nhà ở,cafeland,11200.0,13634.231772645337,13936.5712890625,13572.167135931553,log_area_district_ridge_alpha_1,property_candidate:494ff22cf2c1cdc96be9
+cafeland:3160538,Nhà ở,cafeland,12000.0,9843.47419456507,12620.669921875,9875.04367763214,log_area_district_ridge_alpha_1,property_candidate:e832a9627b58f8fccb3f
+cafeland:3160586,Nhà ở,cafeland,22000.0,13901.844909539263,17513.7421875,13950.06254546743,log_area_district_ridge_alpha_1,property_candidate:6f84d5da920c6e642d79
+cafeland:3164732,Nhà ở,cafeland,6800.0,6257.381507786221,6237.2626953125,6275.304826075414,log_area_district_ridge_alpha_1,property_candidate:b38bd00f883be1b94537
+cafeland:3165594,Nhà ở,cafeland,4180.0,6484.210481223135,6908.9013671875,6508.4225993288455,log_area_district_ridge_alpha_1,property_candidate:3261e48497ef8e74e83b
+cafeland:3168513,Nhà ở,cafeland,3800.0,6255.073979633293,6848.025390625,6278.260105831412,log_area_district_ridge_alpha_1,property_candidate:178c1cdabb72c28a358a
+cafeland:3173805,Nhà ở,cafeland,6950.0,8971.912755043797,10197.44921875,9007.620257015551,log_area_district_ridge_alpha_1,property_candidate:cb903eab31cd5788134d
+cafeland:3173808,Nhà ở,cafeland,12800.0,9083.749145797532,11144.578125,9119.986975148884,log_area_district_ridge_alpha_1,property_candidate:67ce8ece1565429e70b3
+cafeland:3176066,Nhà ở,cafeland,3890.0,4195.35546903352,4028.372314453125,4206.103746277785,log_area_district_ridge_alpha_1,property_candidate:44a8396a7bfc329a3970
+cafeland:3176089,Nhà ở,cafeland,3700.0,6140.288876361733,6848.025390625,6162.963412556429,log_area_district_ridge_alpha_1,property_candidate:8eceb50914bb88ca4917
+cafeland:3176544,Nhà ở,cafeland,7950.0,6342.1602107826275,6174.51708984375,6360.390934957307,log_area_district_ridge_alpha_1,property_candidate:e5049920249a4f4b5e2b
+cafeland:3177708,Nhà ở,cafeland,9900.0,8455.473858415655,8752.208984375,8413.950497656051,log_area_district_ridge_alpha_1,property_candidate:91adf3dcb8c765543e4f
+cafeland:3179086,Nhà ở,cafeland,4450.0,4889.152091652618,4924.396484375,4902.243763929977,log_area_district_ridge_alpha_1,property_candidate:bbb4a736fd42c77340bc
+cafeland:3181346,Nhà ở,cafeland,7000.0,4889.152091652618,4924.396484375,4902.243763929977,log_area_district_ridge_alpha_1,property_candidate:a7253d6e2c094c0327b0
+cafeland:3185452,Nhà ở,cafeland,8290.0,6849.227252081144,8220.3173828125,6869.314122389133,log_area_district_ridge_alpha_1,property_candidate:57a1b65294a5cb6452ef
+cafeland:3189922,Nhà ở,cafeland,5450.0,4629.832157692753,4876.4892578125,4642.038603892883,log_area_district_ridge_alpha_1,property_candidate:2d3f3cf4c1ac7e0d2258
+cafeland:3191324,Nhà ở,cafeland,7350.0,7206.964812058001,7420.22119140625,7191.108015844806,log_area_district_ridge_alpha_1,property_candidate:0230fcd9f6404a9bd274
+chotot:132895871,Nhà ở,chotot,7500.0,6003.061737012361,6208.55810546875,5972.038349452035,log_area_district_ridge_alpha_1,property_candidate:d931db67421fbbea1621
+chotot:135088327,Nhà ở,chotot,5750.0,7190.756267118652,8574.8046875,7158.862401803458,log_area_district_ridge_alpha_1,property_candidate:b17cb90c0109a5cda0ef
+chotot:135103268,Nhà ở,chotot,8500.0,7206.964812058001,7420.22119140625,7191.108015844806,log_area_district_ridge_alpha_1,property_candidate:52c4e9b728179aefe91f
+chotot:135152237,Nhà ở,chotot,5300.0,10517.715728993417,12113.7373046875,10474.06962020063,log_area_district_ridge_alpha_1,property_candidate:1561a0ce1846b4e7ce51
+chotot:135154824,Nhà ở,chotot,2150.0,2871.260033643081,3821.212158203125,2877.7926642208545,log_area_district_ridge_alpha_1,property_candidate:0368a38b11d6830e45c1
+chotot:135154937,Nhà ở,chotot,4750.0,4716.381141470474,4876.4892578125,4728.881842324776,log_area_district_ridge_alpha_1,property_candidate:874f620625e44608ffb8
+chotot:135159634,Nhà ở,chotot,3450.0,2666.5813504413586,2473.23828125,2664.9443372168757,log_area_district_ridge_alpha_1,property_candidate:8ebb1e44945c67066e6e
+homedy:3217568,Nhà ở,homedy,3550.0,5870.380363879483,5816.99267578125,5870.269992350471,log_area_district_ridge_alpha_1,property_candidate:187f990a1d742997dfe1
+homedy:3217578,Nhà ở,homedy,5700.0,5895.021046377429,6151.92919921875,5864.475658899111,log_area_district_ridge_alpha_1,property_candidate:46df6692bee444f75bd9
+nhadat24h:4242078,Nhà ở,nhadat24h,15500.0,10086.14417375103,11616.0458984375,10127.180508482037,log_area_district_ridge_alpha_1,property_candidate:8cc1a209e30079c836e1
+nhadat24h:4297482,Nhà ở,nhadat24h,6000.0,6868.43709248372,9290.5654296875,6869.121543765419,log_area_district_ridge_alpha_1,property_candidate:64aaf09d173eead87bef
+nhadat24h:4337176,Nhà ở,nhadat24h,21000.0,11681.74919628652,13755.1787109375,11720.728071662958,log_area_district_ridge_alpha_1,property_candidate:dd6c78d2ff86882d3b2e
+nhadat24h:4338949,Nhà ở,nhadat24h,18500.0,13979.292307627738,16528.392578125,14039.624879369156,log_area_district_ridge_alpha_1,property_candidate:501fcc320bf54925c210
+nhadat24h:4353121,Nhà ở,nhadat24h,7500.0,7605.041974902505,8493.1865234375,7627.947745590276,log_area_district_ridge_alpha_1,property_candidate:08fc538129a17a03b14a
+nhadat24h:4356449,Nhà ở,nhadat24h,4000.0,6140.288876361733,6848.025390625,6162.963412556429,log_area_district_ridge_alpha_1,property_candidate:4f3adf3ab3261c97e32c
+nhadat24h:4361825,Nhà ở,nhadat24h,11200.0,7190.756267118652,8574.8046875,7158.862401803458,log_area_district_ridge_alpha_1,property_candidate:eb0031a5f1dd40f784b9
+nhadat24h:4362256,Nhà ở,nhadat24h,8950.0,4629.832157692753,4876.4892578125,4642.038603892883,log_area_district_ridge_alpha_1,property_candidate:ca30a51b3f7955a3b55e
+nhadat24h:4362367,Nhà ở,nhadat24h,8500.0,12568.16535538879,13709.6103515625,12517.692077624151,log_area_district_ridge_alpha_1,property_candidate:5f92927995f65e107273
+nhadat24h:4365010,Nhà ở,nhadat24h,8000.0,7206.964812058001,7420.22119140625,7191.108015844806,log_area_district_ridge_alpha_1,property_candidate:08e8af377ba4256d4fe8
+nhadat24h:4366890,Nhà ở,nhadat24h,55000.0,38147.53172877203,30211.25390625,38111.47860869038,log_area_district_ridge_alpha_1,property_candidate:05d3aa6e7fcf5cb8827a
+nhadat24h:4378609,Nhà ở,nhadat24h,4500.0,5679.628796544105,5524.3046875,5700.266875526766,log_area_district_ridge_alpha_1,property_candidate:e5d37d87c7f1a924c938
+nhadat24h:4380024,Nhà ở,nhadat24h,3950.0,4975.378462849,4924.396484375,4988.766815873652,log_area_district_ridge_alpha_1,property_candidate:94b51b67ee2455e538a1
+nhadat24h:4381513,Nhà ở,nhadat24h,13700.0,11741.913655592389,12261.8330078125,11791.03857344806,log_area_district_ridge_alpha_1,property_candidate:b044e100416d16460fed
+nhadat24h:4382767,Nhà ở,nhadat24h,9000.0,4950.042001589978,6132.384765625,4949.312228409578,log_area_district_ridge_alpha_1,property_candidate:e75163b563c9c6165bed
+nhadat24h:4384441,Nhà ở,nhadat24h,5250.0,5490.635388113328,5743.53466796875,5505.819528488595,log_area_district_ridge_alpha_1,property_candidate:2b9351dfb7079b54d7b3
+nhadat24h:4385834,Nhà ở,nhadat24h,4650.0,9678.976915860514,12606.33984375,9709.895389505205,log_area_district_ridge_alpha_1,property_candidate:d54c2b50972f5fed6feb
+nhadat24h:4386330,Nhà ở,nhadat24h,3100.0,4108.095155138785,4028.372314453125,4118.554572944776,log_area_district_ridge_alpha_1,property_candidate:ac50ee8c88369a9adade
+nhadat24h:4386478,Nhà ở,nhadat24h,3450.0,3049.9132451991604,3806.974609375,3056.9915411867864,log_area_district_ridge_alpha_1,property_candidate:4fb03efac11b24b4422a
+nhadat24h:4388574,Nhà ở,nhadat24h,17000.0,13781.690120126588,15391.0185546875,13758.094332980296,log_area_district_ridge_alpha_1,property_candidate:982eeadaf96eca871aa7
+nhadat24h:4390841,Nhà ở,nhadat24h,9500.0,6950.323355742673,8128.32421875,6970.78376190299,log_area_district_ridge_alpha_1,property_candidate:fbc0366bcf670458a617
+nhadat24h:4392720,Nhà ở,nhadat24h,11000.0,7206.964812058001,7420.22119140625,7191.108015844806,log_area_district_ridge_alpha_1,property_candidate:e730eac5eb18667528f1
+nhadat24h:4398459,Nhà ở,nhadat24h,3900.0,9019.012174362739,11710.43359375,9047.340456139522,log_area_district_ridge_alpha_1,property_candidate:292ee15edc646be48d5e
+nhadat24h:4399166,Nhà ở,nhadat24h,4650.0,5661.6306352111205,5842.55078125,5677.419001081788,log_area_district_ridge_alpha_1,property_candidate:9cf601c2646c5534be78
+nhadat24h:4400311,Nhà ở,nhadat24h,3450.0,4975.378462849,4924.396484375,4988.766815873652,log_area_district_ridge_alpha_1,property_candidate:a053af1afbe463d53641
+nhadat24h:4400869,Nhà ở,nhadat24h,4000.0,6369.7135216154875,6917.62255859375,6393.412182206656,log_area_district_ridge_alpha_1,property_candidate:734bcdd12d6896f0229c
+nhadat24h:4400920,Nhà ở,nhadat24h,11600.0,6868.43709248372,9290.5654296875,6869.121543765419,log_area_district_ridge_alpha_1,property_candidate:606f0cb4f809340c905e
+cafeland:2557342,Đất nền,cafeland,2650.0,3937.5,4303.75390625,3937.5,district_median_unit_price,property_candidate:f591cb78478b6c47b5db
+cafeland:3145034,Đất nền,cafeland,6000.0,4216.176470588235,6618.5751953125,4216.176470588235,district_median_unit_price,property_candidate:eeecc4c97768ceea203f
+cafeland:3149072,Đất nền,cafeland,1950.0,2990.1960784313724,3843.439453125,2990.1960784313724,district_median_unit_price,property_candidate:aa8956e47790317891c7
+cafeland:3149099,Đất nền,cafeland,2950.0,2242.6470588235293,3226.206787109375,2242.6470588235293,district_median_unit_price,property_candidate:df4d0b618072bdd97af8
+cafeland:3149128,Đất nền,cafeland,4350.0,5417.279411764705,7613.05810546875,4687.5,district_median_unit_price,property_candidate:23f5737f333915b5462c
+cafeland:3149990,Đất nền,cafeland,6900.0,3319.1176470588234,3843.439453125,3319.1176470588234,district_median_unit_price,property_candidate:07d4ce2bde8c4f477da8
+cafeland:3154431,Đất nền,cafeland,30000.0,9237.708333333334,14305.9033203125,9208.75,district_median_unit_price,property_candidate:4014da8f2dd7d503b67d
+cafeland:3157094,Đất nền,cafeland,795.0,1166.6666666666665,2068.789794921875,1201.6129032258063,district_median_unit_price,property_candidate:3d52f000f1967973d8b8
+cafeland:3160454,Đất nền,cafeland,50000.0,26499.375,37942.9609375,26499.375,district_median_unit_price,property_candidate:6c29b81cd4296fb787a2
+cafeland:3160528,Đất nền,cafeland,4650.0,6645.833333333334,7138.0927734375,6625.0,district_median_unit_price,property_candidate:4edfb28f71b28f0f34db
+cafeland:3160540,Đất nền,cafeland,27000.0,15001.696832579184,12708.9755859375,12980.76923076923,district_median_unit_price,property_candidate:0c0c4597920f915fe092
+cafeland:3160568,Đất nền,cafeland,5000.0,2795.625,3702.6943359375,2795.625,district_median_unit_price,property_candidate:56dc3ac4da1c76d6be1e
+cafeland:3165543,Đất nền,cafeland,2700.0,2333.333333333333,2749.823974609375,2403.2258064516127,district_median_unit_price,property_candidate:1ff104be132618cf8d89
+cafeland:3165569,Đất nền,cafeland,13700.0,7475.490196078432,12612.0498046875,7475.490196078432,district_median_unit_price,property_candidate:c3138ea7ec56c0f9b1b7
+cafeland:3168612,Đất nền,cafeland,7100.0,4246.078431372549,6618.5751953125,4246.078431372549,district_median_unit_price,property_candidate:fa4891b0ec1e21276fd1
+cafeland:3174479,Đất nền,cafeland,9000.0,8250.933257918552,8209.1044921875,7139.423076923077,district_median_unit_price,property_candidate:d88415eb3183f5582ab7
+cafeland:3176338,Đất nền,cafeland,1450.0,1085.0,2068.789794921875,1117.5,district_median_unit_price,property_candidate:73b4ad6e2f6c03a891d3
+cafeland:3178787,Đất nền,cafeland,2290.0,4265.425531914893,5655.2197265625,4265.425531914893,district_median_unit_price,property_candidate:b03e01519b3690aca019
+cafeland:3178848,Đất nền,cafeland,1890.0,1446.6666666666665,2084.705810546875,1490.0,district_median_unit_price,property_candidate:d1e34cba7f09fc13bfb0
+cafeland:3179166,Đất nền,cafeland,2390.0,4187.872340425532,5655.2197265625,4187.872340425532,district_median_unit_price,property_candidate:9134228322ce91ef90e9
+cafeland:3179997,Đất nền,cafeland,2800.0,1983.3333333333333,2549.0185546875,2042.741935483871,district_median_unit_price,property_candidate:8ba1fc3a3589ba6c337d
+cafeland:3183853,Đất nền,cafeland,1670.0,1201.6666666666665,2068.789794921875,1237.6612903225805,district_median_unit_price,property_candidate:d5d2337d8a23dcd6661f
+cafeland:3185448,Đất nền,cafeland,4900.0,7730.232558139534,10021.33984375,7600.0,district_median_unit_price,property_candidate:6053278d39072b716200
+cafeland:3186495,Đất nền,cafeland,900.0,4725.0,5163.40185546875,4725.0,district_median_unit_price,property_candidate:0b1cc90e7a927d435842
+cafeland:3187415,Đất nền,cafeland,900.0,1400.0,2084.705810546875,1441.9354838709678,district_median_unit_price,property_candidate:4dac3fd14e7818b14fee
+cafeland:3189921,Đất nền,cafeland,1180.0,5133.333333333333,17766.822265625,5287.096774193548,district_median_unit_price,property_candidate:062c32cca403801380c3
+cafeland:3189961,Đất nền,cafeland,6000.0,4186.274509803921,6618.5751953125,4186.274509803921,district_median_unit_price,property_candidate:f6feb287c7f3c0149df0
+cafeland:3190163,Đất nền,cafeland,6000.0,4186.274509803921,6618.5751953125,4186.274509803921,district_median_unit_price,property_candidate:23dbee99055c59714364
+cafeland:3190202,Đất nền,cafeland,4490.0,6645.833333333334,7138.0927734375,6625.0,district_median_unit_price,property_candidate:714b1037febcf4b07769
+nhadat24h:4360091,Đất nền,nhadat24h,1460.0,1400.0,2084.705810546875,1441.9354838709678,district_median_unit_price,property_candidate:7f155ac22c97204b9158
+nhadat24h:4362128,Đất nền,nhadat24h,1460.0,1400.0,2084.705810546875,1441.9354838709678,district_median_unit_price,property_candidate:1744efa1d255a02101bd
+nhadat24h:4365146,Đất nền,nhadat24h,1100.0,1528.3333333333333,2084.705810546875,1574.1129032258063,district_median_unit_price,property_candidate:408c793c7c8a7485bb7d
+nhadat24h:4365499,Đất nền,nhadat24h,4750.0,5981.250000000001,7138.0927734375,5962.5,district_median_unit_price,property_candidate:f2e705aaa1c755274c15
+nhadat24h:4366258,Đất nền,nhadat24h,1400.0,1400.0,2084.705810546875,1441.9354838709678,district_median_unit_price,property_candidate:1606a1c3fa4b68a347bf
+nhadat24h:4375542,Đất nền,nhadat24h,1160.0,1096.6666666666665,2068.789794921875,1129.516129032258,district_median_unit_price,property_candidate:d2da512416ce62ea979d
+nhadat24h:4376812,Đất nền,nhadat24h,990.0,1400.0,2084.705810546875,1441.9354838709678,district_median_unit_price,property_candidate:ac2549096092f4fb5172
+nhadat24h:4383512,Đất nền,nhadat24h,6050.0,3937.5,4303.75390625,3937.5,district_median_unit_price,property_candidate:60417d3cc3049300802b
+cafeland:3155783,Căn hộ chung cư,cafeland,2300.0,2468.861111111111,4320.41064453125,4096.89892578125,xgboost,property_candidate:bb607ff39a4194e4b9c6
+cafeland:3163968,Căn hộ chung cư,cafeland,2450.0,2308.545454545454,3953.321044921875,3876.3876953125,xgboost,property_candidate:b5ea8844f99b66700f58
+cafeland:3173786,Căn hộ chung cư,cafeland,6950.0,4113.61804995971,4381.640625,3552.28857421875,xgboost,property_candidate:20c52f5cffdd3a2a1a9b
+cafeland:3181317,Căn hộ chung cư,cafeland,3900.0,4500.0,4232.71630859375,3595.9580078125,xgboost,property_candidate:27e249e74baa6c75cdf6
+cafeland:3187726,Căn hộ chung cư,cafeland,4000.0,4500.0,4232.71630859375,3595.9580078125,xgboost,property_candidate:5e47c6dff5f14c11ec0c
+cafeland:3189725,Căn hộ chung cư,cafeland,5000.0,5431.034482758621,5126.86865234375,4680.6884765625,xgboost,property_candidate:4593d17198d0b2d6c9cb
+nhadat24h:4363273,Căn hộ chung cư,nhadat24h,4000.0,3491.379310344828,3774.88232421875,3191.6142578125,xgboost,property_candidate:729387d9834ecf8a9bab
+nhadat24h:4367991,Căn hộ chung cư,nhadat24h,2630.0,3007.5,2690.1220703125,2458.293701171875,xgboost,property_candidate:66bf68ad5e4048d2116e
+nhadat24h:4369781,Căn hộ chung cư,nhadat24h,2600.0,3898.611111111111,3558.93115234375,3107.724365234375,xgboost,property_candidate:c72fbe6c86a9372b90f0
+nhadat24h:4385681,Căn hộ chung cư,nhadat24h,4000.0,5761.770244821092,5295.64013671875,5928.08251953125,xgboost,property_candidate:e7368f162ade79b4586e
+nhadat24h:4385802,Căn hộ chung cư,nhadat24h,2700.0,1901.3841807909603,2078.728515625,2242.326171875,xgboost,property_candidate:17dfc97f69e5ea823557
+nhadat24h:4386735,Căn hộ chung cư,nhadat24h,1500.0,3866.800966962128,4419.76708984375,3774.380126953125,xgboost,property_candidate:8db3018f61b2e9ae5658
+nhadat24h:4394851,Căn hộ chung cư,nhadat24h,11000.0,7448.275862068966,9647.619140625,8363.8193359375,xgboost,property_candidate:de8be36d857bfdcbb0d9
+nhadat24h:4395494,Căn hộ chung cư,nhadat24h,4260.0,3801.724137931035,3562.55078125,3386.34765625,xgboost,property_candidate:53ae0bfd9d7434049384
+nhadat24h:4395628,Căn hộ chung cư,nhadat24h,2000.0,2715.5172413793107,3009.088623046875,2802.9267578125,xgboost,property_candidate:35d6a03b5011c32f1dfa
+nhadat24h:4396886,Căn hộ chung cư,nhadat24h,2110.0,1837.9166666666665,2161.569580078125,2159.53369140625,xgboost,property_candidate:9e8fa926a55e392e0f54
+nhadat24h:4397212,Căn hộ chung cư,nhadat24h,2980.0,3223.2704402515724,3113.094482421875,3060.500732421875,xgboost,property_candidate:6b9eb6b79c6446f5db1a
+nhadat24h:4397214,Căn hộ chung cư,nhadat24h,2370.0,2476.4150943396226,2424.1728515625,2598.968017578125,xgboost,property_candidate:ec16f53214c502f73db2
+nhadat24h:4397217,Căn hộ chung cư,nhadat24h,2500.0,2306.0796645702308,2429.26904296875,2486.884765625,xgboost,property_candidate:4d899c4ec7d4c3588118
+nhadat24h:4398219,Căn hộ chung cư,nhadat24h,2400.0,2515.7232704402513,2424.1728515625,2587.951904296875,xgboost,property_candidate:c21662f609cbe390280b

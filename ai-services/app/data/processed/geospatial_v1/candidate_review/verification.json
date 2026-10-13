@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-10-12T16:53:59.455847+00:00",
+  "verified": true,
+  "reviewed_ids": 80,
+  "evidence_rows": 240,
+  "source_evidence_rows_reconciled": true,
+  "aggregate_counts_reconciled": true,
+  "all_input_sha256_unchanged": true,
+  "coordinate_working_review_unchanged": true,
+  "frozen_data_models_unchanged": true,
+  "verified_property_locations": 0,
+  "model_training_performed": false
+}

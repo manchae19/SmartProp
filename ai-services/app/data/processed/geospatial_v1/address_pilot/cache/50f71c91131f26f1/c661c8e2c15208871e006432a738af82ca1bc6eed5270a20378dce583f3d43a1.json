@@ -1,0 +1,52 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=%C3%82u+C%C6%A1",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Âu Cơ"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:03.558608+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=%C3%82u+C%C6%A1",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 257859758,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 31064004,
+      "lat": "15.8884162",
+      "lon": "108.3797484",
+      "category": "highway",
+      "type": "secondary",
+      "place_rank": 26,
+      "importance": 0.053370834668497714,
+      "addresstype": "road",
+      "name": "Âu Cơ",
+      "display_name": "Âu Cơ, Phường Hội An Đông, Hội An, Thành phố Đà Nẵng, 51320, Việt Nam",
+      "address": {
+        "road": "Âu Cơ",
+        "suburb": "Phường Hội An Đông",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51320",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8763337",
+        "15.8975824",
+        "108.3659445",
+        "108.3895827"
+      ]
+    }
+  ],
+  "response_sha256": "c148ac646b6be83de5db646d90d3ce11766197c42e5a15bc48a0bc373ae46276",
+  "response_body_utf8": "[{\"place_id\":257859758,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":31064004,\"lat\":\"15.8884162\",\"lon\":\"108.3797484\",\"category\":\"highway\",\"type\":\"secondary\",\"place_rank\":26,\"importance\":0.053370834668497714,\"addresstype\":\"road\",\"name\":\"Âu Cơ\",\"display_name\":\"Âu Cơ, Phường Hội An Đông, Hội An, Thành phố Đà Nẵng, 51320, Việt Nam\",\"address\":{\"road\":\"Âu Cơ\",\"suburb\":\"Phường Hội An Đông\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51320\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8763337\",\"15.8975824\",\"108.3659445\",\"108.3895827\"]}]"
+}

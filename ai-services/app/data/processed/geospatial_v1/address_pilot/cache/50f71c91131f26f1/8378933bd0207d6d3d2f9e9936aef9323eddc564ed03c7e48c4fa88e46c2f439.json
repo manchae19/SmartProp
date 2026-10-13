@@ -1,0 +1,84 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Mai+Ch%C3%AD+Th%E1%BB%8D",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Mai Chí Thọ"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:09.074206+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Mai+Ch%C3%AD+Th%E1%BB%8D",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239586669,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 302944270,
+      "lat": "16.0139006",
+      "lon": "108.2300645",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Mai Chí Thọ",
+      "display_name": "Đường Mai Chí Thọ, Tổ dân phố Trung Lương 7, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam",
+      "address": {
+        "road": "Đường Mai Chí Thọ",
+        "neighbourhood": "Tổ dân phố Trung Lương 7",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50507",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0030341",
+        "16.0235634",
+        "108.2261233",
+        "108.2364457"
+      ]
+    },
+    {
+      "place_id": 425819046,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1553093108,
+      "lat": "16.0023151",
+      "lon": "108.2257249",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Mai Chí Thọ",
+      "display_name": "Đường Mai Chí Thọ, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam",
+      "address": {
+        "road": "Đường Mai Chí Thọ",
+        "neighbourhood": "Tổ dân phố Trung Lương 3",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50510",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0015952",
+        "16.0030341",
+        "108.2253280",
+        "108.2261233"
+      ]
+    }
+  ],
+  "response_sha256": "457d9b52af7a444410a6b8439940748bda3803b790b2a0c899ff2ce3d5aca96b",
+  "response_body_utf8": "[{\"place_id\":239586669,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":302944270,\"lat\":\"16.0139006\",\"lon\":\"108.2300645\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Mai Chí Thọ\",\"display_name\":\"Đường Mai Chí Thọ, Tổ dân phố Trung Lương 7, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam\",\"address\":{\"road\":\"Đường Mai Chí Thọ\",\"neighbourhood\":\"Tổ dân phố Trung Lương 7\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50507\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0030341\",\"16.0235634\",\"108.2261233\",\"108.2364457\"]},{\"place_id\":425819046,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1553093108,\"lat\":\"16.0023151\",\"lon\":\"108.2257249\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Mai Chí Thọ\",\"display_name\":\"Đường Mai Chí Thọ, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam\",\"address\":{\"road\":\"Đường Mai Chí Thọ\",\"neighbourhood\":\"Tổ dân phố Trung Lương 3\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50510\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0015952\",\"16.0030341\",\"108.2253280\",\"108.2261233\"]}]"
+}

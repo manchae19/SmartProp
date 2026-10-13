@@ -1,0 +1,14 @@
+{
+  "created_at": "2026-10-12T06:56:29.573189+00:00",
+  "rows": 8509,
+  "numeric_coordinates": 2752,
+  "distinct_coordinate_pairs": 844,
+  "eligible_coordinate_candidates": 80,
+  "eligible_needing_location": 2002,
+  "verified_coordinates": 0,
+  "approved_for_ml_coordinates": 0,
+  "train_coordinates": 67,
+  "validation_coordinates": 6,
+  "public_geocoder_requests": 0,
+  "warning": "Coordinate presence/repetition and address hints do not verify property precision or reuse rights."
+}

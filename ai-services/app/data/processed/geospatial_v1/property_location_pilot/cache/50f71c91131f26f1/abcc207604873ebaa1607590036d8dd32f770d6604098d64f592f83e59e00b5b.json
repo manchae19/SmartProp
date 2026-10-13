@@ -1,0 +1,118 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=%C4%90i%E1%BB%87n+Bi%C3%AAn+Ph%E1%BB%A7&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Điện Biên Phủ",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:08:56.552497+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=%C4%90i%E1%BB%87n+Bi%C3%AAn+Ph%E1%BB%A7&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238712314,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 375346559,
+      "lat": "16.0669747",
+      "lon": "108.1997848",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Điện Biên Phủ",
+      "display_name": "Điện Biên Phủ, Chính Gián, Tổ dân phố 46 Chính Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Điện Biên Phủ",
+        "quarter": "Chính Gián",
+        "neighbourhood": "Tổ dân phố 46 Chính Gián",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0665271",
+        "16.0673594",
+        "108.1992200",
+        "108.2003003"
+      ]
+    },
+    {
+      "place_id": 238730782,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 696778038,
+      "lat": "16.0653421",
+      "lon": "108.1842308",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Điện Biên Phủ",
+      "display_name": "Điện Biên Phủ, Tổ dân phố 64 Hòa Khê, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Điện Biên Phủ",
+        "neighbourhood": "Tổ dân phố 64 Hòa Khê",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0650738",
+        "16.0654622",
+        "108.1834978",
+        "108.1850006"
+      ]
+    },
+    {
+      "place_id": 238722054,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 642029118,
+      "lat": "16.0662728",
+      "lon": "108.2005522",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Điện Biên Phủ",
+      "display_name": "Điện Biên Phủ, Tổ dân phố 44 Chính Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Điện Biên Phủ",
+        "neighbourhood": "Tổ dân phố 44 Chính Gián",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0661126",
+        "16.0664483",
+        "108.2003579",
+        "108.2007328"
+      ]
+    }
+  ],
+  "response_sha256": "2dcb50661aa29db4d3092f99f50dbce9947efa1f55485947bceeda3e2f0a6ac6",
+  "response_body_utf8": "[{\"place_id\":238712314,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":375346559,\"lat\":\"16.0669747\",\"lon\":\"108.1997848\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Điện Biên Phủ\",\"display_name\":\"Điện Biên Phủ, Chính Gián, Tổ dân phố 46 Chính Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Điện Biên Phủ\",\"quarter\":\"Chính Gián\",\"neighbourhood\":\"Tổ dân phố 46 Chính Gián\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0665271\",\"16.0673594\",\"108.1992200\",\"108.2003003\"]},{\"place_id\":238730782,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":696778038,\"lat\":\"16.0653421\",\"lon\":\"108.1842308\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Điện Biên Phủ\",\"display_name\":\"Điện Biên Phủ, Tổ dân phố 64 Hòa Khê, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Điện Biên Phủ\",\"neighbourhood\":\"Tổ dân phố 64 Hòa Khê\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0650738\",\"16.0654622\",\"108.1834978\",\"108.1850006\"]},{\"place_id\":238722054,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":642029118,\"lat\":\"16.0662728\",\"lon\":\"108.2005522\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Điện Biên Phủ\",\"display_name\":\"Điện Biên Phủ, Tổ dân phố 44 Chính Gián, Phường Thanh Khê, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Điện Biên Phủ\",\"neighbourhood\":\"Tổ dân phố 44 Chính Gián\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0661126\",\"16.0664483\",\"108.2003579\",\"108.2007328\"]}]"
+}

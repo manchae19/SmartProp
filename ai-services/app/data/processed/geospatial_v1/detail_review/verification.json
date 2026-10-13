@@ -1,0 +1,13 @@
+{
+  "verified": true,
+  "verified_at": "2026-10-12T16:54:03.927048+00:00",
+  "checkpoint_ids": 80,
+  "priority_ids": 30,
+  "individual_requests": 1,
+  "actual_http_403": 1,
+  "not_requested": 79,
+  "verified_details": 0,
+  "manifest_input_output_sha256_verified": true,
+  "resume_recheck_passed": true,
+  "all_80_details_downloaded": false
+}

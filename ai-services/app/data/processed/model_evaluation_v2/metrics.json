@@ -1,0 +1,99 @@
+{
+  "categories": {
+    "Nhà ở": {
+      "selected_family": "log_area_district_ridge_alpha_1",
+      "test_n": 80,
+      "scores": {
+        "v1_baseline": {
+          "n": 80,
+          "mae_million": 3096.0640672191066,
+          "median_ape_pct": 26.109919737851495,
+          "mape_pct": 33.36146095974609,
+          "r2": 0.6177433597670661
+        },
+        "v1_xgboost": {
+          "n": 80,
+          "mae_million": 3121.6641052246096,
+          "median_ape_pct": 25.35201087869624,
+          "mape_pct": 37.62623134525137,
+          "r2": 0.5787132897767295
+        },
+        "v2_selected": {
+          "n": 80,
+          "mae_million": 3093.4876248796945,
+          "median_ape_pct": 26.46061144741224,
+          "mape_pct": 33.39540137934629,
+          "r2": 0.6181042733843216
+        }
+      }
+    },
+    "Đất nền": {
+      "selected_family": "district_median_unit_price",
+      "test_n": 37,
+      "scores": {
+        "v1_baseline": {
+          "n": 37,
+          "mae_million": 2908.5997839634833,
+          "median_ape_pct": 40.19607843137255,
+          "mape_pct": 55.08168919118906,
+          "r2": 0.6280184324241549
+        },
+        "v1_xgboost": {
+          "n": 37,
+          "mae_million": 2931.4841572529563,
+          "median_ape_pct": 48.907557896205354,
+          "mape_pct": 101.33667025170368,
+          "r2": 0.7072253803338636
+        },
+        "v2_selected": {
+          "n": 37,
+          "mae_million": 2969.232587102051,
+          "median_ape_pct": 42.473118279569896,
+          "mape_pct": 55.42475093479741,
+          "r2": 0.6116378213291445
+        }
+      }
+    },
+    "Căn hộ chung cư": {
+      "selected_family": "xgboost",
+      "test_n": 20,
+      "scores": {
+        "v1_baseline": {
+          "n": 20,
+          "mae_million": 872.3290318148486,
+          "median_ape_pct": 12.805230974560114,
+          "mape_pct": 25.79030298474493,
+          "r2": 0.6172373119191703
+        },
+        "v1_xgboost": {
+          "n": 20,
+          "mae_million": 812.895068359375,
+          "median_ape_pct": 10.41277942435169,
+          "mape_pct": 29.502337939571117,
+          "r2": 0.6828963850830845
+        },
+        "v2_selected": {
+          "n": 20,
+          "mae_million": 933.4587890625,
+          "median_ape_pct": 18.23937136223513,
+          "mape_pct": 29.01237580738856,
+          "r2": 0.5967978676901161
+        }
+      }
+    }
+  },
+  "total_test_n": 137,
+  "model_choice": "Minimum MAE on validation v2 between the documented baseline family and fixed XGBoost variant; no test-driven selection.",
+  "data_version": "training_v2",
+  "test_hash": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0",
+  "python_version": "3.14.6",
+  "numpy_version": "2.5.3",
+  "xgboost_version": "3.4.1",
+  "limitations": [
+    "The same test was previously exposed during v1 reporting; this is exploratory, not a fresh independent final benchmark.",
+    "Test labels remain automatically screened, not fully source-reviewed; asking prices are not transaction prices.",
+    "Small per-category holdouts and heuristic property grouping limit generalization claims.",
+    "v2 selected families differ from v1 XGBoost; changes are not attributable to data cleaning alone.",
+    "No retraining on validation/test; no test-driven changes to thresholds, rows or chosen models."
+  ]
+}

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /ThongBao
+Disallow: /getLookupdata*
+Disallow: /2012getNewPassword.aspx
+Disallow: /*.swf$

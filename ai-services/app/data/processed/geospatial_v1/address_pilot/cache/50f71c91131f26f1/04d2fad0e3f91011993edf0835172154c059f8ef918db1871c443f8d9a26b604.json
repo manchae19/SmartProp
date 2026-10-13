@@ -1,0 +1,175 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Huy+T%C6%B0%E1%BB%9Fng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Huy Tưởng"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:20.181235+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Huy+T%C6%B0%E1%BB%9Fng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238852299,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118676345,
+      "lat": "16.0524717",
+      "lon": "108.1696977",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Huy Tưởng",
+      "display_name": "Đường Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Huy Tưởng",
+        "quarter": "Hòa Minh",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0488377",
+        "16.0561676",
+        "108.1689534",
+        "108.1708175"
+      ]
+    },
+    {
+      "place_id": 238719406,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 676718191,
+      "lat": "16.0477593",
+      "lon": "108.1695509",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Huy Tưởng",
+      "display_name": "Đường Nguyễn Huy Tưởng, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Huy Tưởng",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0470193",
+        "16.0488412",
+        "108.1685525",
+        "108.1702579"
+      ]
+    },
+    {
+      "place_id": 238506691,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656549715,
+      "lat": "16.0526394",
+      "lon": "108.1688655",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 86 Nguyễn Huy Tưởng",
+      "display_name": "Kiệt 86 Nguyễn Huy Tưởng, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 86 Nguyễn Huy Tưởng",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0526198",
+        "16.0528357",
+        "108.1681104",
+        "108.1695901"
+      ]
+    },
+    {
+      "place_id": 238818563,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 657553311,
+      "lat": "16.0547121",
+      "lon": "108.1698412",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng",
+      "display_name": "Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng",
+        "quarter": "Hòa Minh",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0543403",
+        "16.0550711",
+        "108.1696674",
+        "108.1699705"
+      ]
+    },
+    {
+      "place_id": 238770025,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656549718,
+      "lat": "16.0537806",
+      "lon": "108.1685949",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Kiệt 62 Nguyễn Huy Tưởng",
+      "display_name": "Kiệt 62 Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 62 Nguyễn Huy Tưởng",
+        "quarter": "Hòa Minh",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0536341",
+        "16.0537836",
+        "108.1678217",
+        "108.1693413"
+      ]
+    }
+  ],
+  "response_sha256": "ce65957edfb977443326119f3c9ddc1b01630a4e59b9f51237c131517cf70ea9",
+  "response_body_utf8": "[{\"place_id\":238852299,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118676345,\"lat\":\"16.0524717\",\"lon\":\"108.1696977\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Huy Tưởng\",\"display_name\":\"Đường Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Huy Tưởng\",\"quarter\":\"Hòa Minh\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0488377\",\"16.0561676\",\"108.1689534\",\"108.1708175\"]},{\"place_id\":238719406,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":676718191,\"lat\":\"16.0477593\",\"lon\":\"108.1695509\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Huy Tưởng\",\"display_name\":\"Đường Nguyễn Huy Tưởng, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Huy Tưởng\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0470193\",\"16.0488412\",\"108.1685525\",\"108.1702579\"]},{\"place_id\":238506691,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656549715,\"lat\":\"16.0526394\",\"lon\":\"108.1688655\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 86 Nguyễn Huy Tưởng\",\"display_name\":\"Kiệt 86 Nguyễn Huy Tưởng, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 86 Nguyễn Huy Tưởng\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0526198\",\"16.0528357\",\"108.1681104\",\"108.1695901\"]},{\"place_id\":238818563,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":657553311,\"lat\":\"16.0547121\",\"lon\":\"108.1698412\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng\",\"display_name\":\"Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 27 Ngõ B Đường Nguyễn Huy Tưởng\",\"quarter\":\"Hòa Minh\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0543403\",\"16.0550711\",\"108.1696674\",\"108.1699705\"]},{\"place_id\":238770025,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656549718,\"lat\":\"16.0537806\",\"lon\":\"108.1685949\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Kiệt 62 Nguyễn Huy Tưởng\",\"display_name\":\"Kiệt 62 Nguyễn Huy Tưởng, Hòa Minh, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 62 Nguyễn Huy Tưởng\",\"quarter\":\"Hòa Minh\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0536341\",\"16.0537836\",\"108.1678217\",\"108.1693413\"]}]"
+}

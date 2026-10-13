@@ -1,0 +1,54 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ng%C3%B4+Xu%C3%A2n+Thu&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Ngô Xuân Thu",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:09:02.250394+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ng%C3%B4+Xu%C3%A2n+Thu&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239753452,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 658013446,
+      "lat": "16.1189346",
+      "lon": "108.1143752",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Ngô Xuân Thu",
+      "display_name": "Ngô Xuân Thu, Tổ dân phố Thủy Tú 2, Phường Hải Vân, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Ngô Xuân Thu",
+        "neighbourhood": "Tổ dân phố Thủy Tú 2",
+        "suburb": "Phường Hải Vân",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.1166763",
+        "16.1236990",
+        "108.1078868",
+        "108.1212605"
+      ]
+    }
+  ],
+  "response_sha256": "d7c64359a3157c99ee5fd0d8edcab81c2ee4dd4603200590420138d142256674",
+  "response_body_utf8": "[{\"place_id\":239753452,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":658013446,\"lat\":\"16.1189346\",\"lon\":\"108.1143752\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Ngô Xuân Thu\",\"display_name\":\"Ngô Xuân Thu, Tổ dân phố Thủy Tú 2, Phường Hải Vân, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Ngô Xuân Thu\",\"neighbourhood\":\"Tổ dân phố Thủy Tú 2\",\"suburb\":\"Phường Hải Vân\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.1166763\",\"16.1236990\",\"108.1078868\",\"108.1212605\"]}]"
+}

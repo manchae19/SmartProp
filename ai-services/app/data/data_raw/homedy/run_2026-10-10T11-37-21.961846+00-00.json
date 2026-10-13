@@ -1,0 +1,50 @@
+{
+  "started_at": "2026-10-10T11:37:21.961846+00:00",
+  "finished_at": "2026-10-10T11:38:16.092630+00:00",
+  "status": "new_limit",
+  "error": null,
+  "new_records": 20,
+  "total_records": 20,
+  "quality_counts": {
+    "candidate": 18,
+    "review": 2
+  },
+  "district_counts": {
+    "Quận Liên Chiểu": 7,
+    "Quận Cẩm Lệ": 2,
+    "Quận Thanh Khê": 6,
+    "Quận Hải Châu": 2,
+    "Quận Sơn Trà": 1,
+    "Huyện Hòa Vang": 1,
+    "Quận Ngũ Hành Sơn": 1
+  },
+  "missing_fields": {
+    "price_vnd": 1,
+    "area_sqm": 0,
+    "rooms": 20,
+    "toilets": 20,
+    "ward": 2,
+    "latitude": 20,
+    "longitude": 20
+  },
+  "listing_pages": [
+    {
+      "url": "https://homedy.com/ban-nha-rieng-da-nang",
+      "unique_links": 18,
+      "sha256": "e23461be255bcc228cd39a30cffe27190bdce67ba2f6d1a303193bef8d5a8408"
+    },
+    {
+      "url": "https://homedy.com/ban-nha-rieng-da-nang/p2",
+      "unique_links": 18,
+      "sha256": "df604251dba25eed2bf075272019b378dbc61b05e4ec729bca1e32bc31c70f64"
+    }
+  ],
+  "robots_user_agent": "SmartProp-Research/1.0",
+  "limitations": [
+    "Candidates need manual review and cross-source property deduplication before training.",
+    "No property coordinates verified; site-wide company coordinates are excluded.",
+    "Source listing dates are not historical transaction dates.",
+    "Source use/redistribution terms are not established by robots.txt.",
+    "Missing rooms/toilets are not filled with zeros."
+  ]
+}

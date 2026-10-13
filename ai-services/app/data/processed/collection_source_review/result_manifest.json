@@ -1,0 +1,12 @@
+{
+  "output_sha256": {
+    "processed/collection_source_review/README.md": "2a156daf8526e0b59a854285325397acad81bb4b4ba100a0549ddc9f25704e40",
+    "processed/collection_source_review/result_summary.json": "6564aae9e9a0f2c8157e7a548dad5d963c25677aaeda748d6478bcce5e5f2e88",
+    "processed/collection_source_review/collection_changes.csv": "d96ae04e552a13f0006b64a01000b1b42474981a4235161484ebd841fc01113a",
+    "processed/collection_source_review/queue_eligible.csv": "6025f5568382440da006dcf7d49807d5b68a4a9f9087b2094a5b250eef23e77e",
+    "processed/collection_source_review/queue_needs_review.csv": "cabda565e4553e2f4e9c9d46d3a62e36c76d67519efc718c4b0456d6221f1421",
+    "processed/collection_source_review/queue_excluded.csv": "6866fb2bf72171510938b3e8fe30756a9eb9318765fc77bf6ede5d6b736177b6"
+  },
+  "review_manifest_sha256": "d13ecdf413f9fc4ca9ffcbb451f96943a211f634a1573513317e58a00e21f25d",
+  "pipeline_manifest_sha256": "2362fb0d1f9d58c0a09441a3d40ad8f09840704330b199504afcadb2bcfb9f80"
+}

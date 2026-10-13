@@ -1,0 +1,92 @@
+{
+  "as_of": "2026-10-11",
+  "source_sha256": {
+    "data_raw/cafeland_batch/cafeland_listings.csv": "442997da128792d6c6c2a191cb8199665f02cc05d9742e3a10038fe4d40e6124",
+    "data_raw/cafeland_batch/cafeland_scope_recovered.csv": "75db2df9f1211afdebfb45b7c64185446494fa8170de25ae8a6a4802ff6ce4a6",
+    "data_raw/homedy_batch_3000/homedy_records.csv": "9489810040a6fa2643377b002a36adaa3d82b04b5201b4cef30fd6d3e9396bbc",
+    "data_raw/nhadat24h_batch/nhadat24h_records.csv": "0bb75a27b5023c9d46790c0ab114c8cdb4d5ade204331473339cda17804f6706",
+    "data_raw/cafeland_batch/cafeland_scope_review.csv": "9d7ef0ad47c4f9623b6eda1ef386053e0f44e3fd8b69e465f560c47f45bc626e"
+  },
+  "unique_records": 4511,
+  "duplicate_source_rows": 0,
+  "by_source": {
+    "cafeland": 1092,
+    "homedy": 1392,
+    "nhadat24h": 2027
+  },
+  "statuses": {
+    "district_needs_review": 105,
+    "needs_review": 873,
+    "candidate": 2639,
+    "older_than_183_days": 301,
+    "other_property": 200,
+    "outside_or_unknown": 393
+  },
+  "statuses_by_source": {
+    "cafeland": {
+      "district_needs_review": 105,
+      "needs_review": 103,
+      "candidate": 827,
+      "older_than_183_days": 5,
+      "other_property": 52
+    },
+    "homedy": {
+      "candidate": 785,
+      "needs_review": 192,
+      "other_property": 22,
+      "outside_or_unknown": 393
+    },
+    "nhadat24h": {
+      "candidate": 1027,
+      "needs_review": 578,
+      "other_property": 126,
+      "older_than_183_days": 296
+    }
+  },
+  "review_reasons": {
+    "possible_partial_or_starting_price_title": 116,
+    "area_threshold_review": 81,
+    "price_threshold_review": 260,
+    "source_price_needs_review": 446,
+    "jsonld_price_mismatch": 18,
+    "source_area_needs_review": 90,
+    "missing_detail_area": 23,
+    "source_area_parse_mismatch": 51,
+    "price_unavailable_or_non_total": 211,
+    "category_ambiguous": 403,
+    "jsonld_control_characters": 1,
+    "detail_price_unavailable": 179,
+    "detail_not_verified": 7
+  },
+  "candidates": 2639,
+  "baseline_representatives": 2455,
+  "possible_duplicate_pairs": 296,
+  "cross_source_pairs": 72,
+  "candidate_rows_with_unknown_date": 785,
+  "scope_review": {
+    "outside_or_unknown": 201,
+    "new_unit_mapped_to_historical_district": 477,
+    "crosses_historical_districts": 622
+  },
+  "recovered_detail_count": 92,
+  "split_counts": {
+    "test": 259,
+    "train": 1938,
+    "validation": 258
+  },
+  "assumptions": {
+    "age_limit_days": 183,
+    "area_range_sqm": [
+      20,
+      1000
+    ],
+    "unit_price_range_million_per_sqm": [
+      2,
+      300
+    ],
+    "coverage_target_per_cell": 50,
+    "unknown_dates": "retained and identified; never inferred from collection date",
+    "duplicate_groups": "heuristic candidates, one representative for baseline only",
+    "price_target": "asking price in million VND, not transaction price"
+  }
+}

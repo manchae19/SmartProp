@@ -1,0 +1,177 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Thanh+L%C6%B0%C6%A1ng+18",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Thanh Lương 18"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:59.157076+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Thanh+L%C6%B0%C6%A1ng+18",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 237301022,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656742376,
+      "lat": "16.0084365",
+      "lon": "108.2246993",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Thanh Lương 14",
+      "display_name": "Đường Thanh Lương 14, Tổ dân phố Diên Hồng, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam",
+      "address": {
+        "road": "Đường Thanh Lương 14",
+        "neighbourhood": "Tổ dân phố Diên Hồng",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50510",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0077555",
+        "16.0091175",
+        "108.2239475",
+        "108.2254510"
+      ]
+    },
+    {
+      "place_id": 241179425,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656637746,
+      "lat": "16.0066539",
+      "lon": "108.2191144",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Thanh Lương 1",
+      "display_name": "Đường Thanh Lương 1, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam",
+      "address": {
+        "road": "Đường Thanh Lương 1",
+        "neighbourhood": "Tổ dân phố Trung Lương 3",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50510",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0062311",
+        "16.0070766",
+        "108.2187729",
+        "108.2194558"
+      ]
+    },
+    {
+      "place_id": 238953050,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656742385,
+      "lat": "16.0080633",
+      "lon": "108.2276213",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Thanh Lương 9",
+      "display_name": "Đường Thanh Lương 9, Tổ dân phố Trung Lương 5, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam",
+      "address": {
+        "road": "Đường Thanh Lương 9",
+        "neighbourhood": "Tổ dân phố Trung Lương 5",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50510",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0068037",
+        "16.0092971",
+        "108.2269728",
+        "108.2283179"
+      ]
+    },
+    {
+      "place_id": 237299773,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656637737,
+      "lat": "16.0155779",
+      "lon": "108.2190143",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Thanh Lương 24",
+      "display_name": "Đường Thanh Lương 24, Tổ dân phố Thanh Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam",
+      "address": {
+        "road": "Đường Thanh Lương 24",
+        "neighbourhood": "Tổ dân phố Thanh Lương 3",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50507",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0147468",
+        "16.0164089",
+        "108.2181589",
+        "108.2198696"
+      ]
+    },
+    {
+      "place_id": 237301423,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656637735,
+      "lat": "16.0148593",
+      "lon": "108.2197396",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Thanh Lương 23",
+      "display_name": "Đường Thanh Lương 23, Tổ dân phố Thanh Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam",
+      "address": {
+        "road": "Đường Thanh Lương 23",
+        "neighbourhood": "Tổ dân phố Thanh Lương 3",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50507",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0141490",
+        "16.0155873",
+        "108.2187639",
+        "108.2207018"
+      ]
+    }
+  ],
+  "response_sha256": "199503de9514fab7ec6a7dfc91a93ae78cfd35a7eb1b4e8b3615ced20251b518",
+  "response_body_utf8": "[{\"place_id\":237301022,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656742376,\"lat\":\"16.0084365\",\"lon\":\"108.2246993\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Thanh Lương 14\",\"display_name\":\"Đường Thanh Lương 14, Tổ dân phố Diên Hồng, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam\",\"address\":{\"road\":\"Đường Thanh Lương 14\",\"neighbourhood\":\"Tổ dân phố Diên Hồng\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50510\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0077555\",\"16.0091175\",\"108.2239475\",\"108.2254510\"]},{\"place_id\":241179425,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656637746,\"lat\":\"16.0066539\",\"lon\":\"108.2191144\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Thanh Lương 1\",\"display_name\":\"Đường Thanh Lương 1, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam\",\"address\":{\"road\":\"Đường Thanh Lương 1\",\"neighbourhood\":\"Tổ dân phố Trung Lương 3\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50510\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0062311\",\"16.0070766\",\"108.2187729\",\"108.2194558\"]},{\"place_id\":238953050,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656742385,\"lat\":\"16.0080633\",\"lon\":\"108.2276213\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Thanh Lương 9\",\"display_name\":\"Đường Thanh Lương 9, Tổ dân phố Trung Lương 5, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam\",\"address\":{\"road\":\"Đường Thanh Lương 9\",\"neighbourhood\":\"Tổ dân phố Trung Lương 5\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50510\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0068037\",\"16.0092971\",\"108.2269728\",\"108.2283179\"]},{\"place_id\":237299773,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656637737,\"lat\":\"16.0155779\",\"lon\":\"108.2190143\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Thanh Lương 24\",\"display_name\":\"Đường Thanh Lương 24, Tổ dân phố Thanh Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam\",\"address\":{\"road\":\"Đường Thanh Lương 24\",\"neighbourhood\":\"Tổ dân phố Thanh Lương 3\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50507\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0147468\",\"16.0164089\",\"108.2181589\",\"108.2198696\"]},{\"place_id\":237301423,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656637735,\"lat\":\"16.0148593\",\"lon\":\"108.2197396\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Thanh Lương 23\",\"display_name\":\"Đường Thanh Lương 23, Tổ dân phố Thanh Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50507, Việt Nam\",\"address\":{\"road\":\"Đường Thanh Lương 23\",\"neighbourhood\":\"Tổ dân phố Thanh Lương 3\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50507\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0141490\",\"16.0155873\",\"108.2187639\",\"108.2207018\"]}]"
+}

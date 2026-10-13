@@ -1,0 +1,23 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ki%E1%BB%87t+266+Tr%C6%B0%E1%BB%9Dng+Chinh&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Kiệt 266 Trường Chinh",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:08:45.141507+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ki%E1%BB%87t+266+Tr%C6%B0%E1%BB%9Dng+Chinh&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [],
+  "response_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "response_body_utf8": "[]"
+}

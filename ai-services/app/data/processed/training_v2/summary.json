@@ -1,0 +1,56 @@
+{
+  "reviewed_records": 87,
+  "decisions": {
+    "pending": 24,
+    "exclude": 35,
+    "keep": 21,
+    "correct": 7
+  },
+  "v1_rows": 1383,
+  "v2_rows": 1323,
+  "removed_from_training_or_validation": 60,
+  "splits": {
+    "train": 1067,
+    "test": 137,
+    "validation": 119
+  },
+  "categories": {
+    "Căn hộ chung cư": {
+      "train": 146,
+      "validation": 17,
+      "test": 20
+    },
+    "Nhà ở": {
+      "train": 651,
+      "test": 80,
+      "validation": 68
+    },
+    "Đất nền": {
+      "validation": 34,
+      "train": 270,
+      "test": 37
+    }
+  },
+  "corrected_numeric_records": 7,
+  "test_identical_to_v1": true,
+  "raw_and_v1_unchanged": true,
+  "new_test_evaluation": false,
+  "input_sha256": {
+    "processed/training_v1/main_dataset.csv": "6eb46dd198f0bc9f7395a1cabaf46a1d2af7366b634b1095e02ea4a283040d95",
+    "processed/training_v1/train.csv": "a4fe7b1d603c0899d95e814b6de631a4a5b88362b99774cd4809738615c1d7ed",
+    "processed/training_v1/validation.csv": "d5c3f2f14db9243075c9b75beddc8d0f5fecb4f98f3db653ef1dc2429cd6d377",
+    "processed/training_v1/test.csv": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0",
+    "processed/training_source_review/source_evidence.csv": "7d7e6cd5a4c3492b97ac7cfb8e9a7b49b9e329af5fd25742466cf1c1b467c34f",
+    "processed/training_source_review/fetch_manifest.json": "d91cac16db6cc264f6cc2fdd6afa74d66be76189cca3f8751800c49f71b3ac4b",
+    "finalize_training_source_review.py": "b3121e8e8bafeea1c94bdfb497067982ff1c698b641b06e6240ad21f6c9052e3"
+  },
+  "output_sha256": {
+    "processed/training_v2/label_review_changes.csv": "57a94c1ff77ee98e896b87197820f91e6daed7afe8d8840fcfd5029127d716b4",
+    "processed/training_v2/main_dataset.csv": "6e82303a491eb4b1361c03f8f249c4a59b73ba8dbdf5a3f2e06941670c3aadee",
+    "processed/training_v2/quarantined_from_v1.csv": "89e36cc8dde97e1e8fb4031a967080afca88b322873183032390976f224cb3ba",
+    "processed/training_v2/test.csv": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0",
+    "processed/training_v2/train.csv": "32abeda7b5bb9abefef093b2aba6a532bf9e983d41df22cc2fbb7832533eed0a",
+    "processed/training_v2/validation.csv": "2e2f24cd4ee4e088f796d3ee1bdffeec4f5fd1c666ff6c6365f082b94c74e2e3",
+    "processed/training_source_review/review_decisions.csv": "42d825b42b9a425e43f492480b499ee637ba84f972c018d695dc2460c898694f"
+  }
+}

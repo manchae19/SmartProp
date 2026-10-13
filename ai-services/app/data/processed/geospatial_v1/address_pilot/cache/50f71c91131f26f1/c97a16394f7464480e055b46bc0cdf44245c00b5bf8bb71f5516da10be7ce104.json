@@ -1,0 +1,177 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+%C4%90%C3%ACnh+K%E1%BB%B5",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Lê Đình Kỵ"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:26.691773+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+%C4%90%C3%ACnh+K%E1%BB%B5",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239087506,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 583587048,
+      "lat": "16.0431915",
+      "lon": "108.1729575",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Lê Đình Kỵ",
+      "display_name": "Đường Lê Đình Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Lê Đình Kỵ",
+        "neighbourhood": "Tổ dân phố Hòa Phước 4",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0419466",
+        "16.0431963",
+        "108.1716717",
+        "108.1747567"
+      ]
+    },
+    {
+      "place_id": 239041781,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656549700,
+      "lat": "16.0416082",
+      "lon": "108.1725305",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Kiệt 47 Đường Lê Đinh Kỵ",
+      "display_name": "Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 47 Đường Lê Đinh Kỵ",
+        "neighbourhood": "Tổ dân phố Hòa Phước 4",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0412628",
+        "16.0422023",
+        "108.1719294",
+        "108.1731446"
+      ]
+    },
+    {
+      "place_id": 241159994,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656549696,
+      "lat": "16.0413955",
+      "lon": "108.1717477",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ",
+      "display_name": "Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ",
+        "neighbourhood": "Tổ dân phố Hòa Phước 4",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0412029",
+        "16.0415989",
+        "108.1714377",
+        "108.1720506"
+      ]
+    },
+    {
+      "place_id": 236574368,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1165009294,
+      "lat": "16.0413233",
+      "lon": "108.1733736",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ",
+      "display_name": "Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ",
+        "neighbourhood": "Tổ dân phố Hòa Phước 4",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0412096",
+        "16.0414542",
+        "108.1731284",
+        "108.1736277"
+      ]
+    },
+    {
+      "place_id": 238964210,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656549699,
+      "lat": "16.0412209",
+      "lon": "108.1731847",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ",
+      "display_name": "Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ",
+        "neighbourhood": "Tổ dân phố Hòa Phước 4",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0411387",
+        "16.0413031",
+        "108.1730125",
+        "108.1733568"
+      ]
+    }
+  ],
+  "response_sha256": "5b4031c342b098ad91f257e4c33cf7c051a8a5dc31315587d765d11e61006409",
+  "response_body_utf8": "[{\"place_id\":239087506,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":583587048,\"lat\":\"16.0431915\",\"lon\":\"108.1729575\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Lê Đình Kỵ\",\"display_name\":\"Đường Lê Đình Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Lê Đình Kỵ\",\"neighbourhood\":\"Tổ dân phố Hòa Phước 4\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0419466\",\"16.0431963\",\"108.1716717\",\"108.1747567\"]},{\"place_id\":239041781,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656549700,\"lat\":\"16.0416082\",\"lon\":\"108.1725305\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Kiệt 47 Đường Lê Đinh Kỵ\",\"display_name\":\"Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 47 Đường Lê Đinh Kỵ\",\"neighbourhood\":\"Tổ dân phố Hòa Phước 4\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0412628\",\"16.0422023\",\"108.1719294\",\"108.1731446\"]},{\"place_id\":241159994,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656549696,\"lat\":\"16.0413955\",\"lon\":\"108.1717477\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ\",\"display_name\":\"Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Hẻm 12 Kiệt 47 Đường Lê Đinh Kỵ\",\"neighbourhood\":\"Tổ dân phố Hòa Phước 4\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0412029\",\"16.0415989\",\"108.1714377\",\"108.1720506\"]},{\"place_id\":236574368,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1165009294,\"lat\":\"16.0413233\",\"lon\":\"108.1733736\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ\",\"display_name\":\"Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Hẻm 36 Kiệt 47 Đường Lê Đinh Kỵ\",\"neighbourhood\":\"Tổ dân phố Hòa Phước 4\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0412096\",\"16.0414542\",\"108.1731284\",\"108.1736277\"]},{\"place_id\":238964210,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656549699,\"lat\":\"16.0412209\",\"lon\":\"108.1731847\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ\",\"display_name\":\"Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ, Tổ dân phố Hòa Phước 4, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Hẻm 30 Kiệt 47 Đường Lê Đinh Kỵ\",\"neighbourhood\":\"Tổ dân phố Hòa Phước 4\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0411387\",\"16.0413031\",\"108.1730125\",\"108.1733568\"]}]"
+}

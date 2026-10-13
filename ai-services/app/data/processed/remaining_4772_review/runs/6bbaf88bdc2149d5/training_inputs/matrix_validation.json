@@ -1,0 +1,56 @@
+{
+  "xgboost_version": "3.4.1",
+  "matrices": [
+    {
+      "category": "Nhà ở",
+      "split": "train",
+      "rows": 1336,
+      "columns": 71,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    },
+    {
+      "category": "Nhà ở",
+      "split": "validation",
+      "rows": 153,
+      "columns": 71,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    },
+    {
+      "category": "Đất nền",
+      "split": "train",
+      "rows": 598,
+      "columns": 57,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    },
+    {
+      "category": "Đất nền",
+      "split": "validation",
+      "rows": 115,
+      "columns": 57,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    },
+    {
+      "category": "Căn hộ chung cư",
+      "split": "train",
+      "rows": 176,
+      "columns": 25,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    },
+    {
+      "category": "Căn hộ chung cư",
+      "split": "validation",
+      "rows": 31,
+      "columns": 25,
+      "label_transform": "natural_log_total_asking_price_million",
+      "schema_fit_on": "train_only"
+    }
+  ],
+  "models_trained": false,
+  "test_scored": false,
+  "validation_is_fixed_v3_development_set": true
+}

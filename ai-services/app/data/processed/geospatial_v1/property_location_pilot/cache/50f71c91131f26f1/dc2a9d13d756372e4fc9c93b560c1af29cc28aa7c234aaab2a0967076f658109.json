@@ -1,0 +1,174 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0+Minh+21&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Hoà Minh 21",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:08:54.187023+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0+Minh+21&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239053780,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 657580974,
+      "lat": "16.0746724",
+      "lon": "108.1607493",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hoà Minh 26",
+      "display_name": "Đường Hoà Minh 26, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hoà Minh 26",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0741047",
+        "16.0752395",
+        "108.1603598",
+        "108.1611397"
+      ]
+    },
+    {
+      "place_id": 235991688,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118685455,
+      "lat": "16.0817960",
+      "lon": "108.1612720",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hòa Minh 2",
+      "display_name": "Đường Hòa Minh 2, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hòa Minh 2",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0806652",
+        "16.0829214",
+        "108.1604687",
+        "108.1620827"
+      ]
+    },
+    {
+      "place_id": 238995485,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 672362747,
+      "lat": "16.0794402",
+      "lon": "108.1560594",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hòa Minh 18",
+      "display_name": "Đường Hòa Minh 18, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hòa Minh 18",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0788474",
+        "16.0800250",
+        "108.1556393",
+        "108.1564905"
+      ]
+    },
+    {
+      "place_id": 237544449,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303633687,
+      "lat": "16.0816606",
+      "lon": "108.1572898",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hòa Minh 11",
+      "display_name": "Đường Hòa Minh 11, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hòa Minh 11",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0813033",
+        "16.0820179",
+        "108.1567437",
+        "108.1578359"
+      ]
+    },
+    {
+      "place_id": 236078467,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303384173,
+      "lat": "16.0785716",
+      "lon": "108.1601325",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hòa Minh 20",
+      "display_name": "Đường Hòa Minh 20, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hòa Minh 20",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0782626",
+        "16.0788806",
+        "108.1599155",
+        "108.1603494"
+      ]
+    }
+  ],
+  "response_sha256": "9ec79b79774abd2822bb64ffc0e550ce6f31a33448b58754238204a82de16475",
+  "response_body_utf8": "[{\"place_id\":239053780,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":657580974,\"lat\":\"16.0746724\",\"lon\":\"108.1607493\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hoà Minh 26\",\"display_name\":\"Đường Hoà Minh 26, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hoà Minh 26\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0741047\",\"16.0752395\",\"108.1603598\",\"108.1611397\"]},{\"place_id\":235991688,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118685455,\"lat\":\"16.0817960\",\"lon\":\"108.1612720\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hòa Minh 2\",\"display_name\":\"Đường Hòa Minh 2, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hòa Minh 2\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0806652\",\"16.0829214\",\"108.1604687\",\"108.1620827\"]},{\"place_id\":238995485,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":672362747,\"lat\":\"16.0794402\",\"lon\":\"108.1560594\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hòa Minh 18\",\"display_name\":\"Đường Hòa Minh 18, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hòa Minh 18\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0788474\",\"16.0800250\",\"108.1556393\",\"108.1564905\"]},{\"place_id\":237544449,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303633687,\"lat\":\"16.0816606\",\"lon\":\"108.1572898\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hòa Minh 11\",\"display_name\":\"Đường Hòa Minh 11, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hòa Minh 11\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0813033\",\"16.0820179\",\"108.1567437\",\"108.1578359\"]},{\"place_id\":236078467,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303384173,\"lat\":\"16.0785716\",\"lon\":\"108.1601325\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hòa Minh 20\",\"display_name\":\"Đường Hòa Minh 20, Phường Hòa Khánh, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hòa Minh 20\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0782626\",\"16.0788806\",\"108.1599155\",\"108.1603494\"]}]"
+}

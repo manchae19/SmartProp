@@ -1,0 +1,514 @@
+{
+  "cafeland:2157463": {
+    "requested_url": "https://nhadat.cafeland.vn/thanh-toan-12ty-nhan-ngay-chung-cu-cap-cap-bien-da-nang-so-do-vinh-vien-2157463.html",
+    "response_url": "https://nhadat.cafeland.vn/thanh-toan-12ty-nhan-ngay-chung-cu-cap-cap-bien-da-nang-so-do-vinh-vien-2157463.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:44:44.281881+00:00",
+    "file": "cafeland_2157463.html",
+    "sha256": "0147567e7255f5a8b9d188b8a972878e9b9b68440c8ab05642ca9a9dc8af7604"
+  },
+  "nhadat24h:4395745": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/gia-dinh-can-nhuong-lai-can-1pn-can-ho-san-vuon-70m2-gia-2-7-ty-ID4395745",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/gia-dinh-can-nhuong-lai-can-1pn-can-ho-san-vuon-70m2-gia-2-7-ty-ID4395745",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:44:47.051512+00:00",
+    "file": "nhadat24h_4395745.html",
+    "sha256": "8b0440f0d6c479ac220e270602bc7b3a85c84826509bdfb3acc571e9d75d0e99"
+  },
+  "cafeland:2146428": {
+    "requested_url": "https://nhadat.cafeland.vn/thanh-toan-30-nhan-ngay-can-ho-nam-tren-bien-da-nang-so-do-lau-dai-2146428.html",
+    "response_url": "https://nhadat.cafeland.vn/thanh-toan-30-nhan-ngay-can-ho-nam-tren-bien-da-nang-so-do-lau-dai-2146428.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:47:49.653048+00:00",
+    "file": "cafeland_2146428.html",
+    "sha256": "ea5ef9c1c756865c938ba0b81ff6cc4848a673e2a24f9d2e2de85cd3cacaf51b"
+  },
+  "cafeland:3189846": {
+    "requested_url": "https://nhadat.cafeland.vn/chi-800-trieu-von-ban-dau-nhan-can-ho-full-bep-ttc-plaza-da-nang-3189846.html",
+    "response_url": "https://nhadat.cafeland.vn/chi-800-trieu-von-ban-dau-nhan-can-ho-full-bep-ttc-plaza-da-nang-3189846.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:47:52.672679+00:00",
+    "file": "cafeland_3189846.html",
+    "sha256": "d6004a2049ffa1d99fb276fb281f7706014417885a24c22f114e015c72e4b09a"
+  },
+  "cafeland:3187773": {
+    "requested_url": "https://nhadat.cafeland.vn/can-ho-ttc-plaza-da-nang-tren-aeon-mall-gia-tu-23-ty-san-sang-ban-giao-3187773.html",
+    "response_url": "https://nhadat.cafeland.vn/can-ho-ttc-plaza-da-nang-tren-aeon-mall-gia-tu-23-ty-san-sang-ban-giao-3187773.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:47:55.589983+00:00",
+    "file": "cafeland_3187773.html",
+    "sha256": "8a6f037a36e428916fc9238938a405dab3675937360c1ab752af5f2ec4a7cd80"
+  },
+  "cafeland:3179110": {
+    "requested_url": "https://nhadat.cafeland.vn/520-trieu-vao-o-ngay-can-ho-ttc-plaza-tttm-aeon-mall-da-nang-view-phao-hoa-dif-3179110.html",
+    "response_url": "https://nhadat.cafeland.vn/520-trieu-vao-o-ngay-can-ho-ttc-plaza-tttm-aeon-mall-da-nang-view-phao-hoa-dif-3179110.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:47:58.658219+00:00",
+    "file": "cafeland_3179110.html",
+    "sha256": "69e7e4fbfd2134a0d8ac6baef05d264cee2a813d333eeea9a6282710c553b6a5"
+  },
+  "cafeland:3177172": {
+    "requested_url": "https://nhadat.cafeland.vn/can-ho-1-phong-ngu-tang-18-fours-tower-chi-16-ty-full-100-co-hoi-dau-tu-hiem-3177172.html",
+    "response_url": "https://nhadat.cafeland.vn/can-ho-1-phong-ngu-tang-18-fours-tower-chi-16-ty-full-100-co-hoi-dau-tu-hiem-3177172.html",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:01.641441+00:00",
+    "file": "cafeland_3177172.html",
+    "sha256": "8e7addac108b241c5c89ae8492958a46251f6c07923a6f166648bb6f9ec529cb"
+  },
+  "nhadat24h:4401302": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/can-1pn-fours-gia-re-thi-truong-chi-1-5ty-view-song-bien-vay-70-so-lau-dai-ID4401302",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/can-1pn-fours-gia-re-thi-truong-chi-1-5ty-view-song-bien-vay-70-so-lau-dai-ID4401302",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:04.640871+00:00",
+    "file": "nhadat24h_4401302.html",
+    "sha256": "f7c15fc2831133d3c5b2213a0e45985376616d775cef1f54aaa81abdbb8b13b8"
+  },
+  "nhadat24h:4400250": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-minh-mang/sun-group-ra-mat-toa-f2-sun-four-s-chi-1ty6-so-huu-ngay-nh-ho-tro-vay-70--ID4400250",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-minh-mang/sun-group-ra-mat-toa-f2-sun-four-s-chi-1ty6-so-huu-ngay-nh-ho-tro-vay-70--ID4400250",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:07.485336+00:00",
+    "file": "nhadat24h_4400250.html",
+    "sha256": "5f6190f516f04a75736b8fe7be9c9e719361d9ab048e79d73ac613c8deb2ebfb"
+  },
+  "nhadat24h:4399774": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-timesquare-re-hon-tt-900tr-full-noi-that-dang-cho-thue-30tr-th-ID4399774",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-timesquare-re-hon-tt-900tr-full-noi-that-dang-cho-thue-30tr-th-ID4399774",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:10.433036+00:00",
+    "file": "nhadat24h_4399774.html",
+    "sha256": "f0e6c0a4c0744bda9ef3b33116bb84fc195db479fa242a51a4a3840f4dd48ccf"
+  },
+  "nhadat24h:4399666": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/hang-hiem-can-1pn-filmore-chua-noi-that-dau-tu-cho-thue-ngay-dong-tien-30tr-th-ID4399666",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/hang-hiem-can-1pn-filmore-chua-noi-that-dau-tu-cho-thue-ngay-dong-tien-30tr-th-ID4399666",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:13.443786+00:00",
+    "file": "nhadat24h_4399666.html",
+    "sha256": "e782feb72ce95818cb9f129e6c76db2b8d4902eff2cca0c7bb6b01c50fc8055a"
+  },
+  "nhadat24h:4399198": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/the-legend-city-da-nang-can-ho-hang-sang-ngay-cau-rong-ID4399198",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/the-legend-city-da-nang-can-ho-hang-sang-ngay-cau-rong-ID4399198",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:16.394881+00:00",
+    "file": "nhadat24h_4399198.html",
+    "sha256": "0caa269481b3b935a7066781a311d8fba2f0068b87451a73550189bcab5b582c"
+  },
+  "nhadat24h:4398828": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/chi-voi-1-6-ty-so-huu-ngay-can-ho-tai-trung-tam-da-nang-chu-dau-tu-sun-group-ID4398828",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/chi-voi-1-6-ty-so-huu-ngay-can-ho-tai-trung-tam-da-nang-chu-dau-tu-sun-group-ID4398828",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:19.425459+00:00",
+    "file": "nhadat24h_4398828.html",
+    "sha256": "49d6f21076ee80e669d996f2951dd3dab9df6fa5f89a7b76d852a4b02602fdb6"
+  },
+  "nhadat24h:4398535": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/can-ho-time-square-mat-bien-da-nang-can-ho-o-lau-dai-mo-ban-dot-dau-gia-goc-cdt-ID4398535",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/can-ho-time-square-mat-bien-da-nang-can-ho-o-lau-dai-mo-ban-dot-dau-gia-goc-cdt-ID4398535",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:22.427545+00:00",
+    "file": "nhadat24h_4398535.html",
+    "sha256": "8e1203ac8fe7e5ab728f62e804906f64e9f6afc99d042ab5966a82c64d5581b1"
+  },
+  "nhadat24h:4398421": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-2pn-59m2-tang-12-gia-tu-2-991-ty-hoa-xuan-can-ho-s-light-tower-ID4398421",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-2pn-59m2-tang-12-gia-tu-2-991-ty-hoa-xuan-can-ho-s-light-tower-ID4398421",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:25.382903+00:00",
+    "file": "nhadat24h_4398421.html",
+    "sha256": "f637cfd69229332f7d7fc6248196e4ad299fdbd9fd607a8d5e7de828cc0cc6d3"
+  },
+  "nhadat24h:4397834": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-29-thang-3/chinh-thuc-nhan-booking-toa-f2-fours-tower-chi-voi-50tr-1-booking-ID4397834",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-29-thang-3/chinh-thuc-nhan-booking-toa-f2-fours-tower-chi-voi-50tr-1-booking-ID4397834",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:28.706945+00:00",
+    "file": "nhadat24h_4397834.html",
+    "sha256": "9b94dd532bc0003a6cfb8647ccaf0570d9acbc10e48595d7ccbc02e4e34bcfe0"
+  },
+  "nhadat24h:4397339": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-le-duc-tho/can-ho-mat-bien-80tr-m2-chi-co-o-hiyori-aqua-tower-da-nang-ID4397339",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-le-duc-tho/can-ho-mat-bien-80tr-m2-chi-co-o-hiyori-aqua-tower-da-nang-ID4397339",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:31.399652+00:00",
+    "file": "nhadat24h_4397339.html",
+    "sha256": "554e93f75d51adfc2ba389e45c25c75b92b1e6fcddea240eadfe1b3905fca58e"
+  },
+  "nhadat24h:4396791": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/can-ho-bien-de-mua-nhat-thi-truong-dn-the-soleil-thanh-toan-gian-2-nam-ID4396791",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/can-ho-bien-de-mua-nhat-thi-truong-dn-the-soleil-thanh-toan-gian-2-nam-ID4396791",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:34.416173+00:00",
+    "file": "nhadat24h_4396791.html",
+    "sha256": "6aa7b2e2248ee0a0d6c87bbb57363b0a0570f03da69fa74eafb53dfaa2056985"
+  },
+  "nhadat24h:4396572": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-capital-square/can-1pn-noi-bat-ven-song-han-ben-canh-vincom-chi-can-bo-ra-1-ty-co-the-so-huu-ID4396572",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-capital-square/can-1pn-noi-bat-ven-song-han-ben-canh-vincom-chi-can-bo-ra-1-ty-co-the-so-huu-ID4396572",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:37.463494+00:00",
+    "file": "nhadat24h_4396572.html",
+    "sha256": "7f56d71041e0caed14de26db5c833d21b3e8a486071a9f308fcca593b1e3275d"
+  },
+  "nhadat24h:4396543": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/soc-so-huu-can-ho-ngay-trung-tam-da-nang-chi-voi-2-3-ty-ID4396543",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/soc-so-huu-can-ho-ngay-trung-tam-da-nang-chi-voi-2-3-ty-ID4396543",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:40.608978+00:00",
+    "file": "nhadat24h_4396543.html",
+    "sha256": "e66e80203522c701e3fde4aaf881b0aa1e2ba53f6baa988e41f117bb9ee7852b"
+  },
+  "nhadat24h:4396540": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/soc-so-huu-can-ho-ngay-trung-tam-chi-voi-2-3-ty-phia-duoi-la-tttm-ID4396540",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/soc-so-huu-can-ho-ngay-trung-tam-chi-voi-2-3-ty-phia-duoi-la-tttm-ID4396540",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:43.441342+00:00",
+    "file": "nhadat24h_4396540.html",
+    "sha256": "d366854acaa72f8aa8239a4cb3d71fbae0ab6c211e3a8c4ce1f21f937df4cd66"
+  },
+  "nhadat24h:4396528": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-thanh-khe/ttc-plaza-da-nang-can-ho-ngay-aeon-mall-trung-tam-thanh-khe-gia-tu-2-x-ty-ID4396528",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-thanh-khe/ttc-plaza-da-nang-can-ho-ngay-aeon-mall-trung-tam-thanh-khe-gia-tu-2-x-ty-ID4396528",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:46.387351+00:00",
+    "file": "nhadat24h_4396528.html",
+    "sha256": "c9ddb43b90a8de3d051cf7d7ab8d614696ececa10bb408548addb95190c617ac"
+  },
+  "nhadat24h:4396474": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/can-ho-tai-aeon-mall-da-nang-chi-can-600-trieu-20-nhan-nha-ngay-ID4396474",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-ttc-plaza/can-ho-tai-aeon-mall-da-nang-chi-can-600-trieu-20-nhan-nha-ngay-ID4396474",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:49.453426+00:00",
+    "file": "nhadat24h_4396474.html",
+    "sha256": "79d1e61b747966d9857af14487e4513ef16e99ebc1d745f560d72c54ddc4f9f6"
+  },
+  "nhadat24h:4394027": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/chi-chua-toi-2t5-cho-can-1br-hang-hiem-cho-can-gan-gan-50m2-symphony5-tang-20--ID4394027",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/chi-chua-toi-2t5-cho-can-1br-hang-hiem-cho-can-gan-gan-50m2-symphony5-tang-20--ID4394027",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:52.380798+00:00",
+    "file": "nhadat24h_4394027.html",
+    "sha256": "a7c97e2cf492167b6a12bd8acc5bef6285a21945325f9f57ecba91e28608f686"
+  },
+  "nhadat24h:4393865": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-vo-nguyen-giap/ban-can-howyndham-soleil-da-nang-chi-2-6ty-nhan-can-ho-view-bien-cho-thue-35tr-ID4393865",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-vo-nguyen-giap/ban-can-howyndham-soleil-da-nang-chi-2-6ty-nhan-can-ho-view-bien-cho-thue-35tr-ID4393865",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:55.438101+00:00",
+    "file": "nhadat24h_4393865.html",
+    "sha256": "f719a0d19ee684b5a22f601584343947d14d330bb10ef70ceefc1a4b1237bfd0"
+  },
+  "nhadat24h:4395115": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/ban-can-ho-chung-cu-theo-du-an-the-filmore-da-nang-tai-the-filmore-da-nang-phuo-ID4395115",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/ban-can-ho-chung-cu-theo-du-an-the-filmore-da-nang-tai-the-filmore-da-nang-phuo-ID4395115",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:48:58.405406+00:00",
+    "file": "nhadat24h_4395115.html",
+    "sha256": "c8316d2f45bfc8f374b37bd745650cd20a94545f2fb480e2c7ea2b855e2bd3ee"
+  },
+  "nhadat24h:4393670": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-symphony-residence/can-ho-1pn-sun-symphony-5-truc-dien-song-han-da-nang-tts-3-4-ty-25tr-th-ID4393670",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-symphony-residence/can-ho-1pn-sun-symphony-5-truc-dien-song-han-da-nang-tts-3-4-ty-25tr-th-ID4393670",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:01.472121+00:00",
+    "file": "nhadat24h_4393670.html",
+    "sha256": "63dfa0cbeb413690baa87432fd4d7f02a91b35ed0a56ed7bf34dbe14e0625e51"
+  },
+  "nhadat24h:4395719": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/chi-1-5-ty-can-wyndham-soleil-dong-50-den-2027-vi-tri-vang-sieu-sinh-loi-ID4395719",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/chi-1-5-ty-can-wyndham-soleil-dong-50-den-2027-vi-tri-vang-sieu-sinh-loi-ID4395719",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:04.414037+00:00",
+    "file": "nhadat24h_4395719.html",
+    "sha256": "7133cbc40d23752c390474f69ecb8b6af1098e3332b34c32401cc79935243019"
+  },
+  "nhadat24h:4393687": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-capital-square/ban-can-ho-1pn-capital-square-ngay-sat-vincom-so-huu-lau-dai-c7-11-08-ID4393687",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-capital-square/ban-can-ho-1pn-capital-square-ngay-sat-vincom-so-huu-lau-dai-c7-11-08-ID4393687",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:07.436544+00:00",
+    "file": "nhadat24h_4393687.html",
+    "sha256": "8059cd7024687af85fc10948b354cde7dd73ac11c53afacc28d94f1c4bec05e2"
+  },
+  "nhadat24h:4395515": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-capital-square/chua-toi-4-ty-so-huu-can-1-pn-capital-square-tam-diem-song-moi-ben-song-han-ID4395515",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-capital-square/chua-toi-4-ty-so-huu-can-1-pn-capital-square-tam-diem-song-moi-ben-song-han-ID4395515",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:10.410140+00:00",
+    "file": "nhadat24h_4395515.html",
+    "sha256": "bc2b4d6109b343ccbec73733190b99260d968a53ecc2f3cab27bd885d669a80e"
+  },
+  "nhadat24h:4395406": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-symphony-residence/chi-2-5-ty-so-huu-studio-view-truc-dien-song-han-tang-20-du-an-sun-symphony-5-ID4395406",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-symphony-residence/chi-2-5-ty-so-huu-studio-view-truc-dien-song-han-tang-20-du-an-sun-symphony-5-ID4395406",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:13.410898+00:00",
+    "file": "nhadat24h_4395406.html",
+    "sha256": "6d6b9fc6ea7cc56725c7c4247b53e74c17264fa14a891b20666409dd4af6b450"
+  },
+  "nhadat24h:4395377": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/chi-2-5-ty-nhan-nha-ngay-can-studio-view-bien-the-soleil-da-nang-ID4395377",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-wyndham-soleil/chi-2-5-ty-nhan-nha-ngay-can-studio-view-bien-the-soleil-da-nang-ID4395377",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:16.442887+00:00",
+    "file": "nhadat24h_4395377.html",
+    "sha256": "5d53239b6e3a6ae2effe438f7c28c69894a534ef87f02ff712c317b3e677ffc5"
+  },
+  "nhadat24h:4395293": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/chi-nhinh-2-ty-so-huu-can-1pn-tai-the-sun-fours-tower-ID4395293",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/chi-nhinh-2-ty-so-huu-can-1pn-tai-the-sun-fours-tower-ID4395293",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:19.436579+00:00",
+    "file": "nhadat24h_4395293.html",
+    "sha256": "65217d7e9d01492d4faafa2a308a63bbbd969988a960c21fd400d6f5042b4d88"
+  },
+  "nhadat24h:4395086": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-ho-time-square-da-nang-doc-quyen-2-can-tang-cao-truc-dien-bien-my-khe-ID4395086",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-ho-time-square-da-nang-doc-quyen-2-can-tang-cao-truc-dien-bien-my-khe-ID4395086",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:22.438816+00:00",
+    "file": "nhadat24h_4395086.html",
+    "sha256": "ef208a17186a6380fbabd2b7d98cf6effc69a845dbd92ebd82928b44e2f5cb9a"
+  },
+  "nhadat24h:4394028": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-capital-square/hang-hiem-studio-truc-dien-bien-so-huu-lau-dai-toan-timesquare-residence-ID4394028",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-capital-square/hang-hiem-studio-truc-dien-bien-so-huu-lau-dai-toan-timesquare-residence-ID4394028",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:25.414191+00:00",
+    "file": "nhadat24h_4394028.html",
+    "sha256": "c48c93c2c4aaa4493d303ec5f1a72bd53fc969c4a5abaffc83a54c7f6939d51f"
+  },
+  "nhadat24h:4393989": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/chinh-chu-ban-can-ho-2-pn-filmore-view-cau-rong-full-noi-that-cao-cap-ID4393989",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/chinh-chu-ban-can-ho-2-pn-filmore-view-cau-rong-full-noi-that-cao-cap-ID4393989",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:28.486315+00:00",
+    "file": "nhadat24h_4393989.html",
+    "sha256": "d097572ccb8ace896d439e7ed21d12adb6dc1ce5c2d1f7f8d157d21be5041952"
+  },
+  "nhadat24h:4393797": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-monarchy/san-so-truc-dien-song-tang-cao-full-noi-that-4-7-ti-monarchy-ID4393797",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-monarchy/san-so-truc-dien-song-tang-cao-full-noi-that-4-7-ti-monarchy-ID4393797",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:31.606756+00:00",
+    "file": "nhadat24h_4393797.html",
+    "sha256": "e3fd62fa93994a91f35f1195739add9a0b47d78b8e0e0091d9fdaf34b2a92e8b"
+  },
+  "nhadat24h:4393680": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-riva-vista/chi-1-9-ty-so-huu-ngay-can-ho-view-truc-dien-song-han-xem-phao-hoa-diff-ID4393680",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-riva-vista/chi-1-9-ty-so-huu-ngay-can-ho-view-truc-dien-song-han-xem-phao-hoa-diff-ID4393680",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:34.676328+00:00",
+    "file": "nhadat24h_4393680.html",
+    "sha256": "a752262d4fe70862e4f29e6968b1d757f5e85bdf2d3ac5adec134d9a8b9ab21c"
+  },
+  "nhadat24h:4360105": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/260-trieu-la-co-the-vao-can-studio-tai-fours-tower-da-nang-can-doc-quyen-tang-6-ID4360105",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/260-trieu-la-co-the-vao-can-studio-tai-fours-tower-da-nang-can-doc-quyen-tang-6-ID4360105",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:49:37.388616+00:00",
+    "file": "nhadat24h_4360105.html",
+    "sha256": "b9a82815628ce47500b1250523871ba42235224b52e9948c67e9dd1437e1e0d1"
+  },
+  "nhadat24h:4388404": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/hang-hiem-time-square-stu-truc-dien-bien-gia-7-4-ti-san-noi-that-so-huu-lau-dai-ID4388404",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/hang-hiem-time-square-stu-truc-dien-bien-gia-7-4-ti-san-noi-that-so-huu-lau-dai-ID4388404",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:01.643987+00:00",
+    "file": "nhadat24h_4388404.html",
+    "sha256": "8cc48d0043b3538f3c38941939a8b6015f794777da4cef5ddc29acc43ee2a59b"
+  },
+  "nhadat24h:4384419": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-ho-mat-tien-song-han-trung-tam-da-nang-gia-dau-tu-nhan-booking-50tr--ID4384419",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-ho-mat-tien-song-han-trung-tam-da-nang-gia-dau-tu-nhan-booking-50tr--ID4384419",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:04.637483+00:00",
+    "file": "nhadat24h_4384419.html",
+    "sha256": "a13212dde1d73f4d714c1d3038ff42b15d25445f9ac22a82745011557433a508"
+  },
+  "nhadat24h:4386429": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-hai-chau/ban-can-ho-masteri-2pn-view-song-thanh-toan-truoc-4-3-ti-thang-9-nhan-nha-ID4386429",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-hai-chau/ban-can-ho-masteri-2pn-view-song-thanh-toan-truoc-4-3-ti-thang-9-nhan-nha-ID4386429",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:07.617250+00:00",
+    "file": "nhadat24h_4386429.html",
+    "sha256": "49c17386dee61c050451a360e7f8e3d60a89457b4df7fb947131a86bfd3bd106"
+  },
+  "nhadat24h:4386416": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-studio-33-3m2-gia-tu-1-747-ty-can-ho-s-light-tower-ID4386416",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-studio-33-3m2-gia-tu-1-747-ty-can-ho-s-light-tower-ID4386416",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:10.620842+00:00",
+    "file": "nhadat24h_4386416.html",
+    "sha256": "35f2fdafe999b26ab38425b3b85a87e038eb31b9bc10fe6abd09199124f347e6"
+  },
+  "nhadat24h:4385198": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/hang-hiem-timesquare-ngoai-giao-can-stu-truc-dien-bien-san-noi-that-7-3-ti-ID4385198",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/hang-hiem-timesquare-ngoai-giao-can-stu-truc-dien-bien-san-noi-that-7-3-ti-ID4385198",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:13.666716+00:00",
+    "file": "nhadat24h_4385198.html",
+    "sha256": "66a7a84283d58829f3a0dec61a5bd4f8dffab636731e137f464a1684d56318c4"
+  },
+  "nhadat24h:4383618": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-ho-time-square-so-huu-lau-dai-mat-bien-my-khe-nhan-nha-ngay-thue-35tr-th-ID4383618",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/ban-can-ho-time-square-so-huu-lau-dai-mat-bien-my-khe-nhan-nha-ngay-thue-35tr-th-ID4383618",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:16.688444+00:00",
+    "file": "nhadat24h_4383618.html",
+    "sha256": "e9b0e82aaf91393d9f57e249d2b81f359ef81a5df653380eff06208b515aa1dd"
+  },
+  "nhadat24h:4381530": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/can-ho-mat-bien-so-huu-lau-dai-tai-time-square-da-nang-nhan-nha-ngay-ID4381530",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/can-ho-mat-bien-so-huu-lau-dai-tai-time-square-da-nang-nhan-nha-ngay-ID4381530",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:19.688259+00:00",
+    "file": "nhadat24h_4381530.html",
+    "sha256": "016c805a1d37d75e20c0fe616f9f2136675c61fe559134d2d7188e2b4a05aa1d"
+  },
+  "nhadat24h:4361442": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-hai-chau/ban-nhanh-can-1pn-tang-cao-view-song-tai-filmore-cho-thue-28-trieu-thang-ID4361442",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-hai-chau/ban-nhanh-can-1pn-tang-cao-view-song-tai-filmore-cho-thue-28-trieu-thang-ID4361442",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:22.666304+00:00",
+    "file": "nhadat24h_4361442.html",
+    "sha256": "4008e1870488bd105f44a9c16ed8121ed8469fc1a0d5d48fee87684282b4fa7f"
+  },
+  "nhadat24h:4362003": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/doc-quyen-can-1pn-tang-12-vao-truoc-420tr-huong-dong-nam-mat-me-sun-fours-tower-ID4362003",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/doc-quyen-can-1pn-tang-12-vao-truoc-420tr-huong-dong-nam-mat-me-sun-fours-tower-ID4362003",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:25.616833+00:00",
+    "file": "nhadat24h_4362003.html",
+    "sha256": "20333d3d9a7f1280b972b21436a91d16917ef6b326d7e3e94a87f237cf6f8630"
+  },
+  "nhadat24h:4380789": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/duy-nhat-can-1br-53-8m2-san-vuon-fours-gia-truc-tiep-tu-cdt-2-3-ty-chiet-khau-ID4380789",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/duy-nhat-can-1br-53-8m2-san-vuon-fours-gia-truc-tiep-tu-cdt-2-3-ty-chiet-khau-ID4380789",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:28.660661+00:00",
+    "file": "nhadat24h_4380789.html",
+    "sha256": "47b402b5e2252968260e5a6664b9ae80f7f8d36699e686521fd79fb7286e907b"
+  },
+  "nhadat24h:4379583": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/can-2pn-filmore-full-noi-that-dang-cho-thue-47tr-thang-ID4379583",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/can-2pn-filmore-full-noi-that-dang-cho-thue-47tr-thang-ID4379583",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:31.643070+00:00",
+    "file": "nhadat24h_4379583.html",
+    "sha256": "64f1f666742189502bb457ec18f36f54fed9abea18b2816fe7332dd66325b706"
+  },
+  "nhadat24h:4374076": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-m-landmark-residences/can-ho-view-truc-dien-song-han-m-landmark-khang-dinh-dang-cap-gioi-thuong-luu-ID4374076",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-m-landmark-residences/can-ho-view-truc-dien-song-han-m-landmark-khang-dinh-dang-cap-gioi-thuong-luu-ID4374076",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:34.958141+00:00",
+    "file": "nhadat24h_4374076.html",
+    "sha256": "091557c89c4c6de6dd5df42902c3c79bf3226bfab30a3ea36782d9d68b478850"
+  },
+  "nhadat24h:4371796": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/time-square-can-studio-truc-dien-bien-truc-04-tang-19-gia-truc-tiep-cdt-ID4371796",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/time-square-can-studio-truc-dien-bien-truc-04-tang-19-gia-truc-tiep-cdt-ID4371796",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:37.664869+00:00",
+    "file": "nhadat24h_4371796.html",
+    "sha256": "2ee14bb771aa19873ce569c39db0d38c620170c18c90ea0ff5d6a96430ab8744"
+  },
+  "nhadat24h:4370965": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-goc-3pn-116m2-san-vuon-24-4m2-gia-tu-4-167-ty-fours-tower-da-nang-ID4370965",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-cam-le/can-goc-3pn-116m2-san-vuon-24-4m2-gia-tu-4-167-ty-fours-tower-da-nang-ID4370965",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:40.615056+00:00",
+    "file": "nhadat24h_4370965.html",
+    "sha256": "314aad014fb4c55ca51e87db79f9bd685ce64b581ab46dd09c8349c8ece606c3"
+  },
+  "nhadat24h:4370936": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-minh-mang/duy-nhat-fours-can-san-vuon-52-70m2-gia-chi-2ty4-hang-doc-quyen-full-chiet-khau-ID4370936",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-minh-mang/duy-nhat-fours-can-san-vuon-52-70m2-gia-chi-2ty4-hang-doc-quyen-full-chiet-khau-ID4370936",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:43.649573+00:00",
+    "file": "nhadat24h_4370936.html",
+    "sha256": "8b83dc2c443d61b578358afd08a926fd097b8b7c7f760958833cbaddc5479429"
+  },
+  "nhadat24h:4369560": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/doc-quyen-1br-rong-nhu-2pn-dtsd-gan-70m²-tai-sun-fours-da-nang-gia-chi-2-6-ty-ID4369560",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/doc-quyen-1br-rong-nhu-2pn-dtsd-gan-70m%C2%B2-tai-sun-fours-da-nang-gia-chi-2-6-ty-ID4369560",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:46.621628+00:00",
+    "file": "nhadat24h_4369560.html",
+    "sha256": "91425989577cb746963182e7785c500347daaa3dd975adf5efeae51433fee2ca"
+  },
+  "nhadat24h:4368726": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/can-ho-bien-my-khe-da-nang-so-huu-lau-dai-gio-hang-times-square-gia-tot-t5-ID4368726",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-da-nang-times-square/can-ho-bien-my-khe-da-nang-so-huu-lau-dai-gio-hang-times-square-gia-tot-t5-ID4368726",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:49.652830+00:00",
+    "file": "nhadat24h_4368726.html",
+    "sha256": "61afe85415ca83a67db8ebec60e0d425c847d62972d0064c2088ecfa2a846512"
+  },
+  "nhadat24h:4368721": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-a-la-carte/nhuong-lai-can-stu-47m2-alacarte-truc-dien-bien-my-khe-thap-hon-tt-300tr-ID4368721",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-a-la-carte/nhuong-lai-can-stu-47m2-alacarte-truc-dien-bien-my-khe-thap-hon-tt-300tr-ID4368721",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:52.982058+00:00",
+    "file": "nhadat24h_4368721.html",
+    "sha256": "f7a5c097f8be77dc87c243d1666af56c639038333ea1b9c7b28d7b4d21a7e657"
+  },
+  "nhadat24h:4368616": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/can-1br-rong-nhu-2pn-tai-sun-fours-tower-dn-tang-san-vuon-16-2m²-chi-2-6-ty-ID4368616",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-sun-fours-tower/can-1br-rong-nhu-2pn-tai-sun-fours-tower-dn-tang-san-vuon-16-2m%C2%B2-chi-2-6-ty-ID4368616",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:55.687641+00:00",
+    "file": "nhadat24h_4368616.html",
+    "sha256": "2c77d4710338fe52bcc44216cc10d074ceb29d196c010dde5dd373819c7369cd"
+  },
+  "nhadat24h:4364758": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-kdt-sinh-thai-hoa-xuan/ban-sieu-can-ho-dong-tien-san-sau-lung-vo-chi-cong-khu-vip-hoa-xuan-ID4364758",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-kdt-sinh-thai-hoa-xuan/ban-sieu-can-ho-dong-tien-san-sau-lung-vo-chi-cong-khu-vip-hoa-xuan-ID4364758",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:50:58.722110+00:00",
+    "file": "nhadat24h_4364758.html",
+    "sha256": "e2153959c0b7f223bafab15a65020e6fe0372f4e2f3a1bad72debb9772a72b53"
+  },
+  "nhadat24h:4364722": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/the-legend-da-nang-can-ho-sieu-sang-tai-dau-cau-rong-so-huu-lau-dai-gia-5-ty-ID4364722",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-son-tra/the-legend-da-nang-can-ho-sieu-sang-tai-dau-cau-rong-so-huu-lau-dai-gia-5-ty-ID4364722",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:51:01.640000+00:00",
+    "file": "nhadat24h_4364722.html",
+    "sha256": "377e5777df3dc9ab8f0cd954deaaaca8acf70562f54136cbb5fb707addc5a41c"
+  },
+  "nhadat24h:4363275": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/ban-nhanh-can-filmore-view-song-han-cau-tran-thi-ly-gia-tot-nhat-thi-truong-ID4363275",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-the-filmore-da-nang/ban-nhanh-can-filmore-view-song-han-cau-tran-thi-ly-gia-tot-nhat-thi-truong-ID4363275",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:51:04.662297+00:00",
+    "file": "nhadat24h_4363275.html",
+    "sha256": "7b03e12b747d2f6b4211cd0fc96a4d31a84158bd471c75663028c3f7cdf6d73d"
+  },
+  "nhadat24h:4363205": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-duong-vo-van-kiet/the-legend-city-da-nang-thanh-toan-som-30-nhan-nha-sang-ngay-tai-vi-tri-ID4363205",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-duong-vo-van-kiet/the-legend-city-da-nang-thanh-toan-som-30-nhan-nha-sang-ngay-tai-vi-tri-ID4363205",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:51:07.925403+00:00",
+    "file": "nhadat24h_4363205.html",
+    "sha256": "44562ff5d02adaf38e45229b142b54f8475ba8a3103e43dd8c0408069824c191"
+  },
+  "nhadat24h:4362743": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-m-landmark-residences/m-landmark-dn-can-ho-ban-giao-full-noi-that-cao-cap-o-lien-cho-thue-35-55tr-t-ID4362743",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-m-landmark-residences/m-landmark-dn-can-ho-ban-giao-full-noi-that-cao-cap-o-lien-cho-thue-35-55tr-t-ID4362743",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:51:10.642851+00:00",
+    "file": "nhadat24h_4362743.html",
+    "sha256": "9ef40a9d90a86a1205baba4b4549f22e6859f299e7ffeedc35d88a72b43444f5"
+  },
+  "nhadat24h:4361386": {
+    "requested_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/cho-thue-can-ho-duong-phan-thuc-duyen-dt-40m2-ID4361386",
+    "response_url": "https://nhadat24h.net/ban-chung-cu-quan-ngu-hanh-son/cho-thue-can-ho-duong-phan-thuc-duyen-dt-40m2-ID4361386",
+    "http_status": 200,
+    "fetched_at_utc": "2026-10-11T11:51:13.627755+00:00",
+    "file": "nhadat24h_4361386.html",
+    "sha256": "a165db75d070752d705a3a039f42007945fbc51b5e7f3c87c09cfb193f6536d5"
+  }
+}

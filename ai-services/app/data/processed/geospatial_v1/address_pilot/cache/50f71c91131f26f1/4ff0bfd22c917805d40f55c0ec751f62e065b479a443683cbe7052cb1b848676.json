@@ -1,0 +1,113 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C6%B0%C6%A1ng+Th%E1%BA%BF+Vinh",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Lương Thế Vinh"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:52.555035+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C6%B0%C6%A1ng+Th%E1%BA%BF+Vinh",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239430617,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118609219,
+      "lat": "16.0633626",
+      "lon": "108.2361658",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Lương Thế Vinh",
+      "display_name": "Lương Thế Vinh, Tổ dân phố An Thành 1, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Lương Thế Vinh",
+        "neighbourhood": "Tổ dân phố An Thành 1",
+        "suburb": "Phường An Hải",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0628453",
+        "16.0636959",
+        "108.2340525",
+        "108.2383019"
+      ]
+    },
+    {
+      "place_id": 259165105,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 531235814,
+      "lat": "15.5861802",
+      "lon": "108.4750791",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Lương Thế Vinh",
+      "display_name": "Lương Thế Vinh, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Lương Thế Vinh",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5850840",
+        "15.5872763",
+        "108.4742453",
+        "108.4759129"
+      ]
+    },
+    {
+      "place_id": 239603099,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 708208565,
+      "lat": "16.0637522",
+      "lon": "108.2386176",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Lương Thế Vinh",
+      "display_name": "Lương Thế Vinh, Tổ dân phố Mỹ Khê, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Lương Thế Vinh",
+        "neighbourhood": "Tổ dân phố Mỹ Khê",
+        "suburb": "Phường An Hải",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0636865",
+        "16.0637606",
+        "108.2383019",
+        "108.2389971"
+      ]
+    }
+  ],
+  "response_sha256": "9aeba50fdd425df512342e5cdfad140e62dfe14c20449675874360edf3b69b22",
+  "response_body_utf8": "[{\"place_id\":239430617,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118609219,\"lat\":\"16.0633626\",\"lon\":\"108.2361658\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Lương Thế Vinh\",\"display_name\":\"Lương Thế Vinh, Tổ dân phố An Thành 1, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Lương Thế Vinh\",\"neighbourhood\":\"Tổ dân phố An Thành 1\",\"suburb\":\"Phường An Hải\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0628453\",\"16.0636959\",\"108.2340525\",\"108.2383019\"]},{\"place_id\":259165105,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":531235814,\"lat\":\"15.5861802\",\"lon\":\"108.4750791\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Lương Thế Vinh\",\"display_name\":\"Lương Thế Vinh, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Lương Thế Vinh\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5850840\",\"15.5872763\",\"108.4742453\",\"108.4759129\"]},{\"place_id\":239603099,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":708208565,\"lat\":\"16.0637522\",\"lon\":\"108.2386176\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Lương Thế Vinh\",\"display_name\":\"Lương Thế Vinh, Tổ dân phố Mỹ Khê, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Lương Thế Vinh\",\"neighbourhood\":\"Tổ dân phố Mỹ Khê\",\"suburb\":\"Phường An Hải\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0636865\",\"16.0637606\",\"108.2383019\",\"108.2389971\"]}]"
+}

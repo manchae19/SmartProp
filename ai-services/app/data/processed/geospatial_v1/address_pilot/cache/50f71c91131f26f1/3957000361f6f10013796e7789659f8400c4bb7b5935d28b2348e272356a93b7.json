@@ -1,0 +1,177 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=2+Th%C3%A1ng+9",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "2 Tháng 9"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:28.798611+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=2+Th%C3%A1ng+9",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 241152031,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 35950897,
+      "lat": "16.0573939",
+      "lon": "108.2223620",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "2 Tháng 9",
+      "display_name": "2 Tháng 9, Tổ dân phố 45 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "2 Tháng 9",
+        "neighbourhood": "Tổ dân phố 45 Bình Hiên",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0540238",
+        "16.0604292",
+        "108.2220670",
+        "108.2238119"
+      ]
+    },
+    {
+      "place_id": 238886651,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 964171425,
+      "lat": "16.0529853",
+      "lon": "108.2220634",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "2 Tháng 9",
+      "display_name": "2 Tháng 9, Tổ dân phố 4, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "2 Tháng 9",
+        "neighbourhood": "Tổ dân phố 4",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0519474",
+        "16.0540238",
+        "108.2220447",
+        "108.2221187"
+      ]
+    },
+    {
+      "place_id": 235999691,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 673151142,
+      "lat": "16.0601433",
+      "lon": "108.2239464",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường 2 Tháng 9",
+      "display_name": "Đường 2 Tháng 9, Tổ dân phố 45 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường 2 Tháng 9",
+        "neighbourhood": "Tổ dân phố 45 Bình Hiên",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0594159",
+        "16.0609739",
+        "108.2235551",
+        "108.2239741"
+      ]
+    },
+    {
+      "place_id": 235983310,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 694775628,
+      "lat": "16.0550983",
+      "lon": "108.2222321",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường 2 Tháng 9",
+      "display_name": "Đường 2 Tháng 9, Tổ dân phố 3, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường 2 Tháng 9",
+        "neighbourhood": "Tổ dân phố 3",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0540251",
+        "16.0561723",
+        "108.2221752",
+        "108.2222732"
+      ]
+    },
+    {
+      "place_id": 236042507,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 694774375,
+      "lat": "16.0531247",
+      "lon": "108.2221689",
+      "category": "highway",
+      "type": "primary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường 2 Tháng 9",
+      "display_name": "Đường 2 Tháng 9, Tổ dân phố 4, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường 2 Tháng 9",
+        "neighbourhood": "Tổ dân phố 4",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0522252",
+        "16.0540251",
+        "108.2221541",
+        "108.2222229"
+      ]
+    }
+  ],
+  "response_sha256": "7b71a1b9a84fb98c8bd148c2dcf8c25714782e6d70b6e9ec914a336cfa598220",
+  "response_body_utf8": "[{\"place_id\":241152031,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":35950897,\"lat\":\"16.0573939\",\"lon\":\"108.2223620\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"2 Tháng 9\",\"display_name\":\"2 Tháng 9, Tổ dân phố 45 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"2 Tháng 9\",\"neighbourhood\":\"Tổ dân phố 45 Bình Hiên\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0540238\",\"16.0604292\",\"108.2220670\",\"108.2238119\"]},{\"place_id\":238886651,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":964171425,\"lat\":\"16.0529853\",\"lon\":\"108.2220634\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"2 Tháng 9\",\"display_name\":\"2 Tháng 9, Tổ dân phố 4, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"2 Tháng 9\",\"neighbourhood\":\"Tổ dân phố 4\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0519474\",\"16.0540238\",\"108.2220447\",\"108.2221187\"]},{\"place_id\":235999691,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":673151142,\"lat\":\"16.0601433\",\"lon\":\"108.2239464\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường 2 Tháng 9\",\"display_name\":\"Đường 2 Tháng 9, Tổ dân phố 45 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường 2 Tháng 9\",\"neighbourhood\":\"Tổ dân phố 45 Bình Hiên\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0594159\",\"16.0609739\",\"108.2235551\",\"108.2239741\"]},{\"place_id\":235983310,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":694775628,\"lat\":\"16.0550983\",\"lon\":\"108.2222321\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường 2 Tháng 9\",\"display_name\":\"Đường 2 Tháng 9, Tổ dân phố 3, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường 2 Tháng 9\",\"neighbourhood\":\"Tổ dân phố 3\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0540251\",\"16.0561723\",\"108.2221752\",\"108.2222732\"]},{\"place_id\":236042507,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":694774375,\"lat\":\"16.0531247\",\"lon\":\"108.2221689\",\"category\":\"highway\",\"type\":\"primary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường 2 Tháng 9\",\"display_name\":\"Đường 2 Tháng 9, Tổ dân phố 4, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường 2 Tháng 9\",\"neighbourhood\":\"Tổ dân phố 4\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0522252\",\"16.0540251\",\"108.2221541\",\"108.2222229\"]}]"
+}

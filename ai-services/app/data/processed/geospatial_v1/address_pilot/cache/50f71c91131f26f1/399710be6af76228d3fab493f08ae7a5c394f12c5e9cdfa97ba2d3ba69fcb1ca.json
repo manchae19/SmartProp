@@ -1,0 +1,146 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Ph%C6%B0%E1%BB%9Bc+Nguy%C3%AAn",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Phước Nguyên"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:49.253433+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Ph%C6%B0%E1%BB%9Bc+Nguy%C3%AAn",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238890384,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 641149626,
+      "lat": "16.0596995",
+      "lon": "108.1800812",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Nguyễn Phước Nguyên",
+      "display_name": "Nguyễn Phước Nguyên, Tổ dân phố Đông Xuân 3, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Nguyễn Phước Nguyên",
+        "neighbourhood": "Tổ dân phố Đông Xuân 3",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0595800",
+        "16.0598191",
+        "108.1797001",
+        "108.1804623"
+      ]
+    },
+    {
+      "place_id": 239687032,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118689945,
+      "lat": "16.0568552",
+      "lon": "108.1819165",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Phước Nguyên",
+      "display_name": "Đường Nguyễn Phước Nguyên, Tổ dân phố Đông Xuân 2, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Phước Nguyên",
+        "neighbourhood": "Tổ dân phố Đông Xuân 2",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0520344",
+        "16.0619092",
+        "108.1796899",
+        "108.1847295"
+      ]
+    },
+    {
+      "place_id": 239789500,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1329007584,
+      "lat": "16.0469531",
+      "lon": "108.1859053",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Phước Nguyên",
+      "display_name": "Đường Nguyễn Phước Nguyên, Tổ dân phố Thuận An 1, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Phước Nguyên",
+        "neighbourhood": "Tổ dân phố Thuận An 1",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0462912",
+        "16.0486309",
+        "108.1839254",
+        "108.1864593"
+      ]
+    },
+    {
+      "place_id": 239819119,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1459740858,
+      "lat": "16.0503400",
+      "lon": "108.1853693",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Phước Nguyên",
+      "display_name": "Đường Nguyễn Phước Nguyên, Tổ dân phố Thuận An 3, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Phước Nguyên",
+        "neighbourhood": "Tổ dân phố Thuận An 3",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0486309",
+        "16.0520344",
+        "108.1847295",
+        "108.1860088"
+      ]
+    }
+  ],
+  "response_sha256": "ff73dc02129a9303736d7adc35c9889d5d28f710e514afa87caec6cbb3468975",
+  "response_body_utf8": "[{\"place_id\":238890384,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":641149626,\"lat\":\"16.0596995\",\"lon\":\"108.1800812\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Nguyễn Phước Nguyên\",\"display_name\":\"Nguyễn Phước Nguyên, Tổ dân phố Đông Xuân 3, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Nguyễn Phước Nguyên\",\"neighbourhood\":\"Tổ dân phố Đông Xuân 3\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0595800\",\"16.0598191\",\"108.1797001\",\"108.1804623\"]},{\"place_id\":239687032,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118689945,\"lat\":\"16.0568552\",\"lon\":\"108.1819165\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Phước Nguyên\",\"display_name\":\"Đường Nguyễn Phước Nguyên, Tổ dân phố Đông Xuân 2, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Phước Nguyên\",\"neighbourhood\":\"Tổ dân phố Đông Xuân 2\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0520344\",\"16.0619092\",\"108.1796899\",\"108.1847295\"]},{\"place_id\":239789500,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1329007584,\"lat\":\"16.0469531\",\"lon\":\"108.1859053\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Phước Nguyên\",\"display_name\":\"Đường Nguyễn Phước Nguyên, Tổ dân phố Thuận An 1, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Phước Nguyên\",\"neighbourhood\":\"Tổ dân phố Thuận An 1\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0462912\",\"16.0486309\",\"108.1839254\",\"108.1864593\"]},{\"place_id\":239819119,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1459740858,\"lat\":\"16.0503400\",\"lon\":\"108.1853693\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Phước Nguyên\",\"display_name\":\"Đường Nguyễn Phước Nguyên, Tổ dân phố Thuận An 3, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Phước Nguyên\",\"neighbourhood\":\"Tổ dân phố Thuận An 3\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0486309\",\"16.0520344\",\"108.1847295\",\"108.1860088\"]}]"
+}

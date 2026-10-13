@@ -1,0 +1,57 @@
+﻿split,category,feature,total,available,available_pct
+train,ALL,ward_source,1120,467,41.69642857142857
+train,Nhà ở,ward_source,657,288,43.83561643835616
+train,Đất nền,ward_source,292,52,17.80821917808219
+train,Căn hộ chung cư,ward_source,171,127,74.26900584795321
+train,ALL,rooms,1120,351,31.339285714285715
+train,Nhà ở,rooms,657,246,37.44292237442922
+train,Đất nền,rooms,292,2,0.684931506849315
+train,Căn hộ chung cư,rooms,171,103,60.23391812865497
+train,ALL,legal_status,1120,16,1.4285714285714286
+train,Nhà ở,legal_status,657,16,2.43531202435312
+train,Đất nền,legal_status,292,0,0.0
+train,Căn hộ chung cư,legal_status,171,0,0.0
+train,ALL,street_source,1120,88,7.857142857142857
+train,Nhà ở,street_source,657,88,13.39421613394216
+train,Đất nền,street_source,292,0,0.0
+train,Căn hộ chung cư,street_source,171,0,0.0
+train,ALL,latitude,1120,67,5.982142857142857
+train,Nhà ở,latitude,657,67,10.197869101978691
+train,Đất nền,latitude,292,0,0.0
+train,Căn hộ chung cư,latitude,171,0,0.0
+train,ALL,longitude,1120,67,5.982142857142857
+train,Nhà ở,longitude,657,67,10.197869101978691
+train,Đất nền,longitude,292,0,0.0
+train,Căn hộ chung cư,longitude,171,0,0.0
+train,ALL,direction,1120,18,1.6071428571428572
+train,Nhà ở,direction,657,18,2.73972602739726
+train,Đất nền,direction,292,0,0.0
+train,Căn hộ chung cư,direction,171,0,0.0
+validation,ALL,ward_source,126,50,39.682539682539684
+validation,Nhà ở,ward_source,68,27,39.705882352941174
+validation,Đất nền,ward_source,37,8,21.62162162162162
+validation,Căn hộ chung cư,ward_source,21,15,71.42857142857143
+validation,ALL,rooms,126,35,27.77777777777778
+validation,Nhà ở,rooms,68,22,32.35294117647059
+validation,Đất nền,rooms,37,0,0.0
+validation,Căn hộ chung cư,rooms,21,13,61.904761904761905
+validation,ALL,legal_status,126,2,1.5873015873015872
+validation,Nhà ở,legal_status,68,2,2.9411764705882355
+validation,Đất nền,legal_status,37,0,0.0
+validation,Căn hộ chung cư,legal_status,21,0,0.0
+validation,ALL,street_source,126,9,7.142857142857143
+validation,Nhà ở,street_source,68,9,13.235294117647058
+validation,Đất nền,street_source,37,0,0.0
+validation,Căn hộ chung cư,street_source,21,0,0.0
+validation,ALL,latitude,126,7,5.555555555555555
+validation,Nhà ở,latitude,68,7,10.294117647058824
+validation,Đất nền,latitude,37,0,0.0
+validation,Căn hộ chung cư,latitude,21,0,0.0
+validation,ALL,longitude,126,7,5.555555555555555
+validation,Nhà ở,longitude,68,7,10.294117647058824
+validation,Đất nền,longitude,37,0,0.0
+validation,Căn hộ chung cư,longitude,21,0,0.0
+validation,ALL,direction,126,2,1.5873015873015872
+validation,Nhà ở,direction,68,2,2.9411764705882355
+validation,Đất nền,direction,37,0,0.0
+validation,Căn hộ chung cư,direction,21,0,0.0

@@ -1,0 +1,25 @@
+{
+  "category": "Nhà ở",
+  "feature_order": [
+    "area_sqm",
+    "location:Cẩm Lệ",
+    "location:Hòa Vang",
+    "location:Hải Châu",
+    "location:Liên Chiểu",
+    "location:Ngũ Hành Sơn",
+    "location:Sơn Trà",
+    "location:Thanh Khê",
+    "location:new_unit:lien chieu"
+  ],
+  "location_vocabulary": [
+    "Cẩm Lệ",
+    "Hòa Vang",
+    "Hải Châu",
+    "Liên Chiểu",
+    "Ngũ Hành Sơn",
+    "Sơn Trà",
+    "Thanh Khê",
+    "new_unit:lien chieu"
+  ],
+  "unseen_location": "all-zero location indicators"
+}

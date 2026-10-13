@@ -1,0 +1,71 @@
+{
+  "queue": 4383,
+  "download_checkpoints": 4383,
+  "fetch_states": {
+    "not_requested_source_access_blocked": 1798,
+    "cached": 66,
+    "downloaded": 2512,
+    "unexpected_http_status": 7
+  },
+  "decisions": {
+    "pending": 3636,
+    "keep": 619,
+    "correct": 62,
+    "exclude": 66
+  },
+  "by_source": {
+    "alonhadat": {
+      "pending": 4,
+      "keep": 1
+    },
+    "cafeland": {
+      "pending": 858,
+      "correct": 13,
+      "keep": 496,
+      "exclude": 47
+    },
+    "chotot": {
+      "pending": 1798
+    },
+    "homedy": {
+      "pending": 251,
+      "exclude": 15,
+      "keep": 62
+    },
+    "nhadat24h": {
+      "pending": 725,
+      "exclude": 4,
+      "keep": 60,
+      "correct": 49
+    }
+  },
+  "identity_verified": 2575,
+  "description_duplicate_candidate_pairs": 52,
+  "pending_codes": {
+    "description_total_price_needs_review": 503,
+    "multiple_assets_or_inventory_context": 288,
+    "source_structure_incomplete": 278,
+    "mixed_land_and_building_context": 77,
+    "description_price_or_area_range": 272,
+    "partial_or_starting_price_context": 326,
+    "prior_pending_requires_explicit_resolution": 64,
+    "special_or_whole_building_not_resolved": 180,
+    "specific_category_not_supported_by_asset_claims": 435,
+    "structured_and_displayed_price_conflict": 74,
+    "description_area_needs_review": 415,
+    "source_category_content_conflict": 161,
+    "description_dimensions_need_review": 9,
+    "project_marketing_requires_specific_asset": 60,
+    "explicit_non_model_source_category": 22,
+    "explicit_commercial_or_whole_building_asset": 44,
+    "not_requested_source_access_blocked": 1798,
+    "source_identity_not_verified": 1808,
+    "unexpected_http_status": 7,
+    "response_identity_mismatch": 3,
+    "current_province_not_verified": 14,
+    "broad_source_category_unresolved": 170,
+    "current_category_unresolved": 170
+  },
+  "partial": false,
+  "all_individual_urls_verified": false
+}

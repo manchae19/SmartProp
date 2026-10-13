@@ -1,0 +1,173 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=H%C3%A0+Huy+T%E1%BA%ADp",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Hà Huy Tập"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:02.457914+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=H%C3%A0+Huy+T%E1%BA%ADp",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 258412877,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 479723831,
+      "lat": "15.5704905",
+      "lon": "108.4639030",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Hà Huy Tập",
+      "display_name": "Hà Huy Tập, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Hà Huy Tập",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5681908",
+        "15.5733920",
+        "108.4636354",
+        "108.4657078"
+      ]
+    },
+    {
+      "place_id": 255542063,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 531235837,
+      "lat": "15.5842795",
+      "lon": "108.4654182",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Hà Huy Tập",
+      "display_name": "Hà Huy Tập, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Hà Huy Tập",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5828575",
+        "15.5854808",
+        "108.4651584",
+        "108.4662925"
+      ]
+    },
+    {
+      "place_id": 239185336,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 300789634,
+      "lat": "16.0618385",
+      "lon": "108.1918470",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hà Huy Tập",
+      "display_name": "Đường Hà Huy Tập, Tổ dân phố 56 Hòa Khê, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hà Huy Tập",
+        "neighbourhood": "Tổ dân phố 56 Hòa Khê",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0601813",
+        "16.0657727",
+        "108.1884811",
+        "108.1920133"
+      ]
+    },
+    {
+      "place_id": 239012002,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118676409,
+      "lat": "16.0574355",
+      "lon": "108.1822128",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hà Huy Tập",
+      "display_name": "Đường Hà Huy Tập, Tổ dân phố Đông Xuân 1, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hà Huy Tập",
+        "neighbourhood": "Tổ dân phố Đông Xuân 1",
+        "suburb": "Phường An Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0567900",
+        "16.0583233",
+        "108.1805746",
+        "108.1837558"
+      ]
+    },
+    {
+      "place_id": 239052271,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372164620,
+      "lat": "16.0695469",
+      "lon": "108.1917838",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hà Huy Tập",
+      "display_name": "Đường Hà Huy Tập, Tổ dân phố 39 Xuân Hà, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Hà Huy Tập",
+        "neighbourhood": "Tổ dân phố 39 Xuân Hà",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0678827",
+        "16.0712198",
+        "108.1916123",
+        "108.1920316"
+      ]
+    }
+  ],
+  "response_sha256": "4e51ec2859a96b313150cda11c1493d608787e1389ccc7cbf93e129ed6d467f0",
+  "response_body_utf8": "[{\"place_id\":258412877,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":479723831,\"lat\":\"15.5704905\",\"lon\":\"108.4639030\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Hà Huy Tập\",\"display_name\":\"Hà Huy Tập, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Hà Huy Tập\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5681908\",\"15.5733920\",\"108.4636354\",\"108.4657078\"]},{\"place_id\":255542063,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":531235837,\"lat\":\"15.5842795\",\"lon\":\"108.4654182\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Hà Huy Tập\",\"display_name\":\"Hà Huy Tập, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Hà Huy Tập\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5828575\",\"15.5854808\",\"108.4651584\",\"108.4662925\"]},{\"place_id\":239185336,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":300789634,\"lat\":\"16.0618385\",\"lon\":\"108.1918470\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hà Huy Tập\",\"display_name\":\"Đường Hà Huy Tập, Tổ dân phố 56 Hòa Khê, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hà Huy Tập\",\"neighbourhood\":\"Tổ dân phố 56 Hòa Khê\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0601813\",\"16.0657727\",\"108.1884811\",\"108.1920133\"]},{\"place_id\":239012002,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118676409,\"lat\":\"16.0574355\",\"lon\":\"108.1822128\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hà Huy Tập\",\"display_name\":\"Đường Hà Huy Tập, Tổ dân phố Đông Xuân 1, Phường An Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hà Huy Tập\",\"neighbourhood\":\"Tổ dân phố Đông Xuân 1\",\"suburb\":\"Phường An Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0567900\",\"16.0583233\",\"108.1805746\",\"108.1837558\"]},{\"place_id\":239052271,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372164620,\"lat\":\"16.0695469\",\"lon\":\"108.1917838\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hà Huy Tập\",\"display_name\":\"Đường Hà Huy Tập, Tổ dân phố 39 Xuân Hà, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Hà Huy Tập\",\"neighbourhood\":\"Tổ dân phố 39 Xuân Hà\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0678827\",\"16.0712198\",\"108.1916123\",\"108.1920316\"]}]"
+}

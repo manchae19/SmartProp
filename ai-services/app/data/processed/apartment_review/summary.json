@@ -1,0 +1,64 @@
+{
+  "total": 296,
+  "needs_review": 64,
+  "no_rule_flag_unverified": 232,
+  "by_source": {
+    "cafeland": 58,
+    "nhadat24h": 238
+  },
+  "detail_states": {
+    "identity_verified": 64,
+    "not_fetched": 232
+  },
+  "review_rule_counts": {
+    "description_price_conflict": 23,
+    "expired_listing": 6,
+    "multiple_properties": 11,
+    "possible_partial_price": 27,
+    "unit_price_band": 25,
+    "low_total_price": 12,
+    "title_price_conflict": 27,
+    "rental_title": 1,
+    "description_unit_price": 2,
+    "title_area_conflict": 3,
+    "area_band": 1
+  },
+  "protected_input_sha256": {
+    "processed\\smartprop_review\\baseline_inputs.csv": "af08029d0cfc9e757c951ab7f61b61b2798a28ca84ef1945e4b8270dcf18565f",
+    "data_raw\\cafeland_batch\\cafeland_listings.csv": "442997da128792d6c6c2a191cb8199665f02cc05d9742e3a10038fe4d40e6124",
+    "data_raw\\nhadat24h_batch\\nhadat24h_records.csv": "0bb75a27b5023c9d46790c0ab114c8cdb4d5ade204331473339cda17804f6706"
+  },
+  "rules": {
+    "low_total_price": "Tổng giá dưới 500 triệu: kiểm tra tổng giá/giá trả trước/giá theo m²",
+    "unit_price_band": "Đơn giá ngoài 15–150 triệu/m²: ngưỡng ưu tiên duyệt, không kết luận sai",
+    "area_band": "Diện tích ngoài 25–200m²: cần xác minh căn hộ và định nghĩa diện tích",
+    "possible_partial_price": "Có dấu hiệu thanh toán/trả trước/giá khởi điểm",
+    "rental_title": "Tiêu đề bắt đầu cho thuê trong tập tin bán",
+    "nonstandard_property": "Có dấu hiệu condotel/căn hộ dịch vụ/khách sạn",
+    "title_price_conflict": "Giá tổng trong tiêu đề lệch giá nhãn trên 10%",
+    "title_area_conflict": "Diện tích trong tiêu đề lệch nhãn trên 5%",
+    "raw_parse_mismatch": "Giá/diện tích thô không khớp giá/diện tích chuẩn hóa",
+    "detail_unavailable": "Trang chi tiết không còn truy cập được",
+    "detail_identity_unverified": "Không xác minh được đúng trang chi tiết/tiêu đề",
+    "detail_structure_unverified": "Thiếu vùng nội dung hoặc nhãn giá/diện tích dự kiến",
+    "current_detail_changed": "Nhãn giá/diện tích hiện tại khác snapshot đã cào",
+    "description_price_conflict": "Giá tổng nêu trong mô tả không khớp nhãn giá",
+    "description_unit_price": "Mô tả có giá theo m²: cần xác định nhãn tổng giá",
+    "multiple_properties": "Mô tả có dấu hiệu nhiều căn/giỏ hàng",
+    "expired_listing": "Nguồn ghi tin hết hạn"
+  },
+  "thresholds": {
+    "total_price_min_million": 500,
+    "unit_price_band_million_sqm": [
+      15,
+      150
+    ],
+    "area_band_sqm": [
+      25,
+      200
+    ]
+  },
+  "labels_changed": 0,
+  "model_errors_used": false,
+  "limitation": "No-rule-flag is not verified clean. Detail snapshots may differ from original collection. Existing experimental test is not a fresh final benchmark."
+}

@@ -1,0 +1,52 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+V%C4%83n+L%C6%B0%C6%A1ng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Lê Văn Lương"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:04.658948+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+V%C4%83n+L%C6%B0%C6%A1ng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238222918,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118618164,
+      "lat": "16.1062263",
+      "lon": "108.2582825",
+      "category": "highway",
+      "type": "secondary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Lê Văn Lương",
+      "display_name": "Đường Lê Văn Lương, Phường Sơn Trà, Thành phố Đà Nẵng, 50408, Việt Nam",
+      "address": {
+        "road": "Đường Lê Văn Lương",
+        "suburb": "Phường Sơn Trà",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50408",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.1049933",
+        "16.1075169",
+        "108.2553622",
+        "108.2611784"
+      ]
+    }
+  ],
+  "response_sha256": "1b17830210e70d1cd90a41057877008d7ccd408a05cd33c7a7914445e4bafd3d",
+  "response_body_utf8": "[{\"place_id\":238222918,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118618164,\"lat\":\"16.1062263\",\"lon\":\"108.2582825\",\"category\":\"highway\",\"type\":\"secondary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Lê Văn Lương\",\"display_name\":\"Đường Lê Văn Lương, Phường Sơn Trà, Thành phố Đà Nẵng, 50408, Việt Nam\",\"address\":{\"road\":\"Đường Lê Văn Lương\",\"suburb\":\"Phường Sơn Trà\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50408\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.1049933\",\"16.1075169\",\"108.2553622\",\"108.2611784\"]}]"
+}

@@ -1,0 +1,167 @@
+{
+  "categories": {
+    "Nhà ở": {
+      "train_count": 657,
+      "validation_count": 68,
+      "original_area_location_raw": {
+        "n": 68,
+        "mae_million": 2761.2581751206344,
+        "median_ape_pct": 19.742906863656174,
+        "mape_pct": 33.6276287630176,
+        "r2": 0.38884004784425763
+      },
+      "experiments": {
+        "area_location_log": {
+          "validation": {
+            "n": 68,
+            "mae_million": 2766.7645299574906,
+            "median_ape_pct": 20.927138513668996,
+            "mape_pct": 29.38055273242971,
+            "r2": 0.36525471739123483
+          },
+          "best_iteration": 409,
+          "model_file": "category_1_area_location_log.json"
+        },
+        "enriched_raw": {
+          "validation": {
+            "n": 68,
+            "mae_million": 2710.357644473805,
+            "median_ape_pct": 22.307878918226237,
+            "mape_pct": 32.33872119049153,
+            "r2": 0.4253930936011403
+          },
+          "best_iteration": 272,
+          "model_file": "category_1_enriched_raw.json"
+        },
+        "enriched_log": {
+          "validation": {
+            "n": 68,
+            "mae_million": 2746.7673447552847,
+            "median_ape_pct": 18.67042855659938,
+            "mape_pct": 28.852654529667383,
+            "r2": 0.38253758670137517
+          },
+          "best_iteration": 272,
+          "model_file": "category_1_enriched_log.json"
+        }
+      },
+      "selected_by_validation_mae": "enriched_raw",
+      "selected_validation_mae_million": 2710.357644473805,
+      "improvement_vs_original_pct": 1.8433817998422255
+    },
+    "Đất nền": {
+      "train_count": 292,
+      "validation_count": 37,
+      "original_area_location_raw": {
+        "n": 37,
+        "mae_million": 4142.847537478885,
+        "median_ape_pct": 53.85933166142751,
+        "mape_pct": 91.92887451385701,
+        "r2": 0.34639252134017895
+      },
+      "experiments": {
+        "area_location_log": {
+          "validation": {
+            "n": 37,
+            "mae_million": 3477.569814321157,
+            "median_ape_pct": 38.39308449074074,
+            "mape_pct": 55.47941393842449,
+            "r2": 0.4831617944070341
+          },
+          "best_iteration": 258,
+          "model_file": "category_2_area_location_log.json"
+        },
+        "enriched_raw": {
+          "validation": {
+            "n": 37,
+            "mae_million": 4161.9970109269425,
+            "median_ape_pct": 53.997662606323956,
+            "mape_pct": 93.49180715224402,
+            "r2": 0.3453988578170347
+          },
+          "best_iteration": 118,
+          "model_file": "category_2_enriched_raw.json"
+        },
+        "enriched_log": {
+          "validation": {
+            "n": 37,
+            "mae_million": 3517.475714606208,
+            "median_ape_pct": 45.70909288194444,
+            "mape_pct": 56.76556940140836,
+            "r2": 0.47124565023105225
+          },
+          "best_iteration": 137,
+          "model_file": "category_2_enriched_log.json"
+        }
+      },
+      "selected_by_validation_mae": "area_location_log",
+      "selected_validation_mae_million": 3477.569814321157,
+      "improvement_vs_original_pct": 16.058465032545712
+    },
+    "Căn hộ chung cư": {
+      "train_count": 171,
+      "validation_count": 21,
+      "original_area_location_raw": {
+        "n": 21,
+        "mae_million": 952.4348842075893,
+        "median_ape_pct": 24.5467041015625,
+        "mape_pct": 27.779445896667198,
+        "r2": 0.6342159459437298
+      },
+      "experiments": {
+        "area_location_log": {
+          "validation": {
+            "n": 21,
+            "mae_million": 898.3101050967261,
+            "median_ape_pct": 22.805029296875002,
+            "mape_pct": 25.947136160444973,
+            "r2": 0.6801910631090847
+          },
+          "best_iteration": 216,
+          "model_file": "category_3_area_location_log.json"
+        },
+        "enriched_raw": {
+          "validation": {
+            "n": 21,
+            "mae_million": 895.2883533296131,
+            "median_ape_pct": 18.14727783203125,
+            "mape_pct": 26.27280156256921,
+            "r2": 0.6219559504795139
+          },
+          "best_iteration": 279,
+          "model_file": "category_3_enriched_raw.json"
+        },
+        "enriched_log": {
+          "validation": {
+            "n": 21,
+            "mae_million": 872.5396321614584,
+            "median_ape_pct": 14.687207031249999,
+            "mape_pct": 24.338302360728225,
+            "r2": 0.671522818134263
+          },
+          "best_iteration": 276,
+          "model_file": "category_3_enriched_log.json"
+        }
+      },
+      "selected_by_validation_mae": "enriched_log",
+      "selected_validation_mae_million": 872.5396321614584,
+      "improvement_vs_original_pct": 8.388526435862598
+    }
+  },
+  "input_sha256": {
+    "processed/training_v1/train.csv": "a4fe7b1d603c0899d95e814b6de631a4a5b88362b99774cd4809738615c1d7ed",
+    "processed/training_v1/validation.csv": "d5c3f2f14db9243075c9b75beddc8d0f5fecb4f98f3db653ef1dc2429cd6d377",
+    "processed/training_v1/test.csv": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0",
+    "processed/xgboost_v1/metrics.json": "d6b18c520735246e794fd1e100e6252236d10f2b35639ee2e57bb792aeba9f46"
+  },
+  "test_evaluated": false,
+  "labels_splits_unchanged": true,
+  "xgboost_version": "3.4.1",
+  "protocol": "Three fixed feature/target variants; same tree settings and frozen train/validation. Log variants early-stop on raw-price MAE.",
+  "limitations": [
+    "Validation was used for selection; improvement is not independent test evidence.",
+    "Missing and source-specific fields may act as source proxies. Ward aliases are not reconciled.",
+    "Legal status, coordinates, direction excluded because of sparse training coverage.",
+    "No label corrections, row removal or new source fetches. Previously exposed test held aside."
+  ]
+}

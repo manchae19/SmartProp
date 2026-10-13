@@ -1,0 +1,32 @@
+{
+  "validation_rows": 126,
+  "train_rows": 1120,
+  "validation_content_flagged": 11,
+  "train_content_flagged": 76,
+  "categories": {
+    "Nhà ở": {
+      "n": 68,
+      "ape_above_50pct": 11,
+      "ape_above_100pct": 3
+    },
+    "Đất nền": {
+      "n": 37,
+      "ape_above_50pct": 20,
+      "ape_above_100pct": 10
+    },
+    "Căn hộ chung cư": {
+      "n": 21,
+      "ape_above_50pct": 3,
+      "ape_above_100pct": 1
+    }
+  },
+  "input_sha256": {
+    "processed/training_v1/train.csv": "a4fe7b1d603c0899d95e814b6de631a4a5b88362b99774cd4809738615c1d7ed",
+    "processed/training_v1/validation.csv": "d5c3f2f14db9243075c9b75beddc8d0f5fecb4f98f3db653ef1dc2429cd6d377",
+    "processed/training_v1/test.csv": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0",
+    "processed/xgboost_v1/metrics.json": "d6b18c520735246e794fd1e100e6252236d10f2b35639ee2e57bb792aeba9f46",
+    "processed/xgboost_v1/holdout_predictions.csv": "8479f9133b156e889bf42f93dc0498d8303a032b0408a988466dd21fce644bd8"
+  },
+  "test_not_analyzed": true,
+  "labels_and_splits_unchanged": true
+}

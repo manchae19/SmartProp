@@ -1,0 +1,13 @@
+{
+  "created_at_utc": "2026-10-12T17:00:06.500325+00:00",
+  "queue_sha256": "ed2fa26c222ce1b6828bb1c7f465b16ad59fc28d2dbbe2e4ac0ebdc4eb2370c9",
+  "cache_sha256": {},
+  "code_sha256": "588dd2dc1308907f069668efed223ae3e6a85999178d4a098e29428c09959848",
+  "output_sha256": {
+    "candidates_DO_NOT_TRAIN.csv": "2c72bf66321238ee08f72fbfa9f386a09e5e0a279de5cfea9fba5ac45af95e48",
+    "checkpoint.csv": "ab1c81211891316f7f3f904577a4be2350768bb2191a722be16460427da580dd",
+    "README.md": "64424eaa5161bce845a5f162aa8b3ccd4eddef6e2975d51b8403e15d46e4f433",
+    "review.html": "f2e66058d3147032b3c48b58c231c8de97bb195a9165fb9d23388676d8115c13",
+    "summary.json": "af6d43ff83f0ea8fffed24902b297e4110db0ffdaaf88cc0bc2394523f5084a7"
+  }
+}

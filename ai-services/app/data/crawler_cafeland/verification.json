@@ -1,0 +1,34 @@
+{
+  "source": "cafeland",
+  "sample_detail_count": 20,
+  "scope_review_count": 12,
+  "unique_ids": 20,
+  "categories": {
+    "Căn hộ chung cư": 10,
+    "Nhà ở": 6,
+    "Đất nền": 4
+  },
+  "districts": {
+    "Liên Chiểu": 3,
+    "Ngũ Hành Sơn": 11,
+    "Sơn Trà": 2,
+    "Hải Châu": 2,
+    "Cẩm Lệ": 2
+  },
+  "value_or_category_review_ids": [
+    "cafeland:2148064",
+    "cafeland:2147854",
+    "cafeland:2148044",
+    "cafeland:2148077",
+    "cafeland:2931065",
+    "cafeland:2144092"
+  ],
+  "parser_checks_passed": 15,
+  "resume_test": "passed in isolated offline test; no duplicate ID",
+  "notes": [
+    "Raw candidates, not training-ready data",
+    "All update dates require review; posted_at intentionally blank",
+    "Source ID dedup only; no cross-source property dedup",
+    "Land subtype mapping expanded after live sample; sample categories updated from verified source URLs"
+  ]
+}

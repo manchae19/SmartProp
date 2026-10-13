@@ -1,0 +1,82 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=V%C3%B5+Nh%C6%B0+H%C6%B0ng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Võ Như Hưng"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:06.873917+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=V%C3%B5+Nh%C6%B0+H%C6%B0ng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239688758,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118666326,
+      "lat": "16.0469134",
+      "lon": "108.2379585",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Võ Như Hưng",
+      "display_name": "Đường Võ Như Hưng, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Võ Như Hưng",
+        "suburb": "Phường Ngũ Hành Sơn",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0448690",
+        "16.0491212",
+        "108.2372842",
+        "108.2384972"
+      ]
+    },
+    {
+      "place_id": 258726453,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 834545147,
+      "lat": "15.8846062",
+      "lon": "108.3026272",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337333409628439,
+      "addresstype": "road",
+      "name": "Đường Võ Như Hưng",
+      "display_name": "Đường Võ Như Hưng, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam",
+      "address": {
+        "road": "Đường Võ Như Hưng",
+        "suburb": "Phường Hội An Tây",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51309",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8837816",
+        "15.8854308",
+        "108.3015276",
+        "108.3037268"
+      ]
+    }
+  ],
+  "response_sha256": "58c928a5c8b2d259ca139c552a11145390f961306282dc8d44d256d9e70458bb",
+  "response_body_utf8": "[{\"place_id\":239688758,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118666326,\"lat\":\"16.0469134\",\"lon\":\"108.2379585\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Võ Như Hưng\",\"display_name\":\"Đường Võ Như Hưng, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Võ Như Hưng\",\"suburb\":\"Phường Ngũ Hành Sơn\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0448690\",\"16.0491212\",\"108.2372842\",\"108.2384972\"]},{\"place_id\":258726453,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":834545147,\"lat\":\"15.8846062\",\"lon\":\"108.3026272\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337333409628439,\"addresstype\":\"road\",\"name\":\"Đường Võ Như Hưng\",\"display_name\":\"Đường Võ Như Hưng, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam\",\"address\":{\"road\":\"Đường Võ Như Hưng\",\"suburb\":\"Phường Hội An Tây\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51309\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8837816\",\"15.8854308\",\"108.3015276\",\"108.3037268\"]}]"
+}

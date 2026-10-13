@@ -1,0 +1,17 @@
+{
+  "dataset_id": "d_8b84c4ee58e3cfc0ece0d773c8ca6abc",
+  "source": "https://data.gov.sg/datasets/d_8b84c4ee58e3cfc0ece0d773c8ca6abc/view",
+  "retrieved_at_utc": "2026-10-11T11:38:39.395002+00:00",
+  "raw_sha256": "32b767d68e9f22b2e48a95a942d233cb13b311f1d06633e456743020c47fecdf",
+  "fx_source": "https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx",
+  "fx_date": "10/11/2026 6:29:14 PM",
+  "fx_rates": {
+    "CurrencyCode": "SGD",
+    "CurrencyName": "SINGAPORE DOLLAR    ",
+    "Buy": "19,701.51",
+    "Transfer": "19,900.51",
+    "Sell": "20,579.47"
+  },
+  "vnd_per_sgd": 20239.989999999998,
+  "fx_method": "midpoint of Vietcombank telegraphic buying and selling, snapshot conversion, not historical monthly FX"
+}

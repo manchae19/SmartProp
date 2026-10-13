@@ -1,0 +1,246 @@
+{
+  "created_at_utc": "2026-10-11T18:34:40.543972+00:00",
+  "fingerprint": "5753e0aff0e9d930c8298a560d681fe8505caa4839c0f40386e873634c0766de",
+  "pipeline_run": "processed/collection_pipeline/runs/2026-10-11_26b058753e0d7bc6",
+  "protocol": {
+    "target": "total asking price, million VND",
+    "train": "All eligible representatives with training_allowed=True and only train reservations.",
+    "validation": "Eligible representatives with a validation reservation and NO test reservation; fixed before fitting.",
+    "reserved": "Every other eligible representative, including any test-linked group, kept aside.",
+    "test": "Old 137-row test files preserved by hash; not copied or scored.",
+    "independence": "Development validation, partly exposed in earlier experiments; not a fresh independent benchmark.",
+    "features": [
+      "area_sqm",
+      "location_feature",
+      "ward_source",
+      "rooms",
+      "missing/unseen flags"
+    ],
+    "forbidden_features": [
+      "price_million",
+      "unit_price",
+      "title",
+      "description",
+      "raw_json",
+      "record_key",
+      "source",
+      "group",
+      "review_flags",
+      "URL"
+    ],
+    "numeric_corrections": false,
+    "duplicate_groups": "Frozen pipeline groups, including all historical bridges."
+  },
+  "counts": {
+    "train": 1435,
+    "validation": 299
+  },
+  "eligible_total": 2082,
+  "reserved_eligible": 348,
+  "distributions": {
+    "train": {
+      "n": 1435,
+      "by_category": {
+        "Căn hộ chung cư": 129,
+        "Nhà ở": 788,
+        "Đất nền": 518
+      },
+      "by_source": {
+        "cafeland": 822,
+        "nhadat24h": 515,
+        "alonhadat": 26,
+        "chotot": 67,
+        "homedy": 5
+      },
+      "by_location": {
+        "Ngũ Hành Sơn": 159,
+        "Hải Châu": 201,
+        "Sơn Trà": 217,
+        "Cẩm Lệ": 148,
+        "new_unit:lien chieu": 53,
+        "Thanh Khê": 198,
+        "Liên Chiểu": 90,
+        "new_unit:hoa xuan": 43,
+        "Hòa Vang": 135,
+        "new_unit:hoa khanh": 77,
+        "new_unit:an khe": 48,
+        "new_unit:hai van": 16,
+        "new_unit:dien ban dong": 11,
+        "new_unit:ban thach": 4,
+        "new_unit:tam ky": 1,
+        "new_unit:dien ban bac": 2,
+        "new_unit:hoi an tay": 3,
+        "new_unit:huong tra": 6,
+        "new_unit:hoi an": 4,
+        "new_unit:thang binh": 1,
+        "new_unit:que son": 1,
+        "new_unit:thang an": 1,
+        "new_unit:dai loc": 5,
+        "new_unit:vu gia": 1,
+        "new_unit:phu ninh": 1,
+        "new_unit:hoi an dong": 1,
+        "new_unit:tan hiep": 3,
+        "new_unit:an thang": 3,
+        "new_unit:nui thanh": 1,
+        "new_unit:thang phu": 1
+      },
+      "date_min": "2026-04-11",
+      "date_max": "2026-10-10",
+      "categories": {
+        "Nhà ở": {
+          "n": 788,
+          "price_million": {
+            "min": 700.0,
+            "p25": 4587.5,
+            "median": 6915.0,
+            "p75": 10500.0,
+            "max": 140000.0
+          },
+          "area_sqm": {
+            "min": 25.0,
+            "p25": 61.0,
+            "median": 81.0,
+            "p75": 100.0,
+            "max": 880.0
+          }
+        },
+        "Đất nền": {
+          "n": 518,
+          "price_million": {
+            "min": 290.0,
+            "p25": 1792.5,
+            "median": 4200.0,
+            "p75": 8500.0,
+            "max": 116000.0
+          },
+          "area_sqm": {
+            "min": 50.0,
+            "p25": 95.0,
+            "median": 118.5,
+            "p75": 141.75,
+            "max": 780.0
+          }
+        },
+        "Căn hộ chung cư": {
+          "n": 129,
+          "price_million": {
+            "min": 1200.0,
+            "p25": 2630.0,
+            "median": 4100.0,
+            "p75": 6000.0,
+            "max": 27000.0
+          },
+          "area_sqm": {
+            "min": 29.4,
+            "p25": 48.0,
+            "median": 65.0,
+            "p75": 75.0,
+            "max": 147.0
+          }
+        }
+      }
+    },
+    "validation": {
+      "n": 299,
+      "by_category": {
+        "Căn hộ chung cư": 31,
+        "Nhà ở": 153,
+        "Đất nền": 115
+      },
+      "by_source": {
+        "cafeland": 154,
+        "nhadat24h": 135,
+        "alonhadat": 3,
+        "chotot": 6,
+        "homedy": 1
+      },
+      "by_location": {
+        "Hải Châu": 37,
+        "Ngũ Hành Sơn": 39,
+        "new_unit:lien chieu": 7,
+        "Sơn Trà": 50,
+        "Cẩm Lệ": 25,
+        "Thanh Khê": 46,
+        "new_unit:an khe": 8,
+        "new_unit:hoa khanh": 14,
+        "new_unit:hoa xuan": 5,
+        "new_unit:ban thach": 1,
+        "Liên Chiểu": 20,
+        "Hòa Vang": 43,
+        "new_unit:dien ban bac": 1,
+        "new_unit:dai loc": 1,
+        "new_unit:phu ninh": 1,
+        "new_unit:hai van": 1
+      },
+      "date_min": "2026-04-11",
+      "date_max": "2026-10-10",
+      "categories": {
+        "Nhà ở": {
+          "n": 153,
+          "price_million": {
+            "min": 1000.0,
+            "p25": 4850.0,
+            "median": 7650.0,
+            "p75": 11600.0,
+            "max": 32000.0
+          },
+          "area_sqm": {
+            "min": 27.7,
+            "p25": 60.0,
+            "median": 80.0,
+            "p75": 100.0,
+            "max": 403.0
+          }
+        },
+        "Đất nền": {
+          "n": 115,
+          "price_million": {
+            "min": 716.4,
+            "p25": 1500.0,
+            "median": 3590.0,
+            "p75": 6650.0,
+            "max": 35000.0
+          },
+          "area_sqm": {
+            "min": 50.0,
+            "p25": 98.5,
+            "median": 115.0,
+            "p75": 129.5,
+            "max": 516.0
+          }
+        },
+        "Căn hộ chung cư": {
+          "n": 31,
+          "price_million": {
+            "min": 1600.0,
+            "p25": 2900.0,
+            "median": 4030.0000000000005,
+            "p75": 5600.0,
+            "max": 15000.0
+          },
+          "area_sqm": {
+            "min": 30.0,
+            "p25": 48.5,
+            "median": 60.0,
+            "p75": 69.15,
+            "max": 120.0
+          }
+        }
+      }
+    }
+  },
+  "old_v2_validation_n": 119,
+  "old_v2_validation_ids_in_v3": 105,
+  "test_evaluated": false,
+  "test_rows_copied": false,
+  "model_trained": false,
+  "raw_labels_unchanged": true,
+  "group_overlap": false,
+  "limitations": [
+    "Automatically screened asking prices, not verified transaction values.",
+    "Heuristic duplicate detection may miss or overgroup assets.",
+    "Validation is used for model choice, not independent test evidence.",
+    "Mixed old/new administrative units remain distinct; no guessed ward mapping.",
+    "Few apartment samples and source imbalance limit coverage."
+  ]
+}

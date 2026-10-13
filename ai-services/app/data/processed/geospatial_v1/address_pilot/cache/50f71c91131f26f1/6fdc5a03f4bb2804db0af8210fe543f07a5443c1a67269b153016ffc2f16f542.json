@@ -1,0 +1,177 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+V%C4%83n+Hu%E1%BB%81",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Văn Huề"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:51.454485+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+V%C4%83n+Hu%E1%BB%81",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 237286889,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 350115241,
+      "lat": "16.0691000",
+      "lon": "108.1765551",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Văn Huề",
+      "display_name": "Đường Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Văn Huề",
+        "neighbourhood": "Tổ dân phố 69 Thanh Khê Tây",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0690412",
+        "16.0699058",
+        "108.1751910",
+        "108.1779820"
+      ]
+    },
+    {
+      "place_id": 237283392,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 375346968,
+      "lat": "16.0691226",
+      "lon": "108.1753010",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 23 Nguyễn Văn Huề",
+      "display_name": "Kiệt 23 Nguyễn Văn Huề, Tổ dân phố 68 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 23 Nguyễn Văn Huề",
+        "neighbourhood": "Tổ dân phố 68 Thanh Khê Tây",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0684290",
+        "16.0699058",
+        "108.1750899",
+        "108.1757982"
+      ]
+    },
+    {
+      "place_id": 237286708,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 375346959,
+      "lat": "16.0682284",
+      "lon": "108.1767155",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 21 Nguyễn Văn Huề",
+      "display_name": "Kiệt 21 Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 21 Nguyễn Văn Huề",
+        "neighbourhood": "Tổ dân phố 69 Thanh Khê Tây",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0674507",
+        "16.0688212",
+        "108.1762151",
+        "108.1769265"
+      ]
+    },
+    {
+      "place_id": 241166842,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 375346970,
+      "lat": "16.0683243",
+      "lon": "108.1772513",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 5 Nguyễn Văn Huề",
+      "display_name": "Kiệt 5 Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 5 Nguyễn Văn Huề",
+        "neighbourhood": "Tổ dân phố 69 Thanh Khê Tây",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0674028",
+        "16.0692793",
+        "108.1771804",
+        "108.1775196"
+      ]
+    },
+    {
+      "place_id": 240305584,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 375346962,
+      "lat": "16.0665649",
+      "lon": "108.1765271",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 5 Nguyễn Văn Huề",
+      "display_name": "Kiệt 5 Nguyễn Văn Huề, Tổ dân phố 68 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam",
+      "address": {
+        "road": "Kiệt 5 Nguyễn Văn Huề",
+        "neighbourhood": "Tổ dân phố 68 Thanh Khê Tây",
+        "suburb": "Phường Thanh Khê",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "84236",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0665049",
+        "16.0666331",
+        "108.1760849",
+        "108.1769957"
+      ]
+    }
+  ],
+  "response_sha256": "baf4b5314da2f1c1ec26492e2728d61a4cecf422eb89980d7bb05636d44ed2b8",
+  "response_body_utf8": "[{\"place_id\":237286889,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":350115241,\"lat\":\"16.0691000\",\"lon\":\"108.1765551\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Văn Huề\",\"display_name\":\"Đường Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Văn Huề\",\"neighbourhood\":\"Tổ dân phố 69 Thanh Khê Tây\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0690412\",\"16.0699058\",\"108.1751910\",\"108.1779820\"]},{\"place_id\":237283392,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":375346968,\"lat\":\"16.0691226\",\"lon\":\"108.1753010\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 23 Nguyễn Văn Huề\",\"display_name\":\"Kiệt 23 Nguyễn Văn Huề, Tổ dân phố 68 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 23 Nguyễn Văn Huề\",\"neighbourhood\":\"Tổ dân phố 68 Thanh Khê Tây\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0684290\",\"16.0699058\",\"108.1750899\",\"108.1757982\"]},{\"place_id\":237286708,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":375346959,\"lat\":\"16.0682284\",\"lon\":\"108.1767155\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 21 Nguyễn Văn Huề\",\"display_name\":\"Kiệt 21 Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 21 Nguyễn Văn Huề\",\"neighbourhood\":\"Tổ dân phố 69 Thanh Khê Tây\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0674507\",\"16.0688212\",\"108.1762151\",\"108.1769265\"]},{\"place_id\":241166842,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":375346970,\"lat\":\"16.0683243\",\"lon\":\"108.1772513\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 5 Nguyễn Văn Huề\",\"display_name\":\"Kiệt 5 Nguyễn Văn Huề, Tổ dân phố 69 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 5 Nguyễn Văn Huề\",\"neighbourhood\":\"Tổ dân phố 69 Thanh Khê Tây\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0674028\",\"16.0692793\",\"108.1771804\",\"108.1775196\"]},{\"place_id\":240305584,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":375346962,\"lat\":\"16.0665649\",\"lon\":\"108.1765271\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 5 Nguyễn Văn Huề\",\"display_name\":\"Kiệt 5 Nguyễn Văn Huề, Tổ dân phố 68 Thanh Khê Tây, Phường Thanh Khê, Thành phố Đà Nẵng, 84236, Việt Nam\",\"address\":{\"road\":\"Kiệt 5 Nguyễn Văn Huề\",\"neighbourhood\":\"Tổ dân phố 68 Thanh Khê Tây\",\"suburb\":\"Phường Thanh Khê\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"84236\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0665049\",\"16.0666331\",\"108.1760849\",\"108.1769957\"]}]"
+}

@@ -1,0 +1,60 @@
+{
+  "locations": [
+    "Cẩm Lệ",
+    "Hải Châu",
+    "Liên Chiểu",
+    "Ngũ Hành Sơn",
+    "Sơn Trà",
+    "Thanh Khê",
+    "new_unit:lien chieu"
+  ],
+  "wards": [
+    "Cẩm Lệ|hoa xuan",
+    "Hải Châu|binh thuan",
+    "Hải Châu|hoa cuong nam",
+    "Ngũ Hành Sơn|hoa hai",
+    "Ngũ Hành Sơn|hoa quy",
+    "Sơn Trà|an hai bac",
+    "Sơn Trà|an hai dong",
+    "Sơn Trà|nai hien dong",
+    "Sơn Trà|phuoc my",
+    "Sơn Trà|tho quang",
+    "Thanh Khê|chinh gian"
+  ],
+  "min_ward_train_count": 3,
+  "numeric": [
+    "area_sqm",
+    "rooms"
+  ],
+  "missing": [
+    "rooms_missing",
+    "ward_missing",
+    "ward_unseen_or_rare"
+  ],
+  "feature_names": [
+    "area_sqm",
+    "rooms",
+    "rooms_missing",
+    "ward_missing",
+    "ward_unseen_or_rare",
+    "location:Cẩm Lệ",
+    "location:Hải Châu",
+    "location:Liên Chiểu",
+    "location:Ngũ Hành Sơn",
+    "location:Sơn Trà",
+    "location:Thanh Khê",
+    "location:new_unit:lien chieu",
+    "ward:Cẩm Lệ|hoa xuan",
+    "ward:Hải Châu|binh thuan",
+    "ward:Hải Châu|hoa cuong nam",
+    "ward:Ngũ Hành Sơn|hoa hai",
+    "ward:Ngũ Hành Sơn|hoa quy",
+    "ward:Sơn Trà|an hai bac",
+    "ward:Sơn Trà|an hai dong",
+    "ward:Sơn Trà|nai hien dong",
+    "ward:Sơn Trà|phuoc my",
+    "ward:Sơn Trà|tho quang",
+    "ward:Thanh Khê|chinh gian"
+  ],
+  "target_transform": "log"
+}

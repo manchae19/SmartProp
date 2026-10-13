@@ -1,0 +1,48 @@
+{
+  "locations": [
+    "Cẩm Lệ",
+    "Hòa Vang",
+    "Hải Châu",
+    "Liên Chiểu",
+    "Ngũ Hành Sơn",
+    "Sơn Trà",
+    "Thanh Khê",
+    "new_unit:lien chieu"
+  ],
+  "wards": [
+    "Hòa Vang|hoa khuong",
+    "Hòa Vang|hoa phu",
+    "Hòa Vang|hoa tien",
+    "Liên Chiểu|hoa hiep bac"
+  ],
+  "min_ward_train_count": 3,
+  "numeric": [
+    "area_sqm",
+    "rooms"
+  ],
+  "missing": [
+    "rooms_missing",
+    "ward_missing",
+    "ward_unseen_or_rare"
+  ],
+  "feature_names": [
+    "area_sqm",
+    "rooms",
+    "rooms_missing",
+    "ward_missing",
+    "ward_unseen_or_rare",
+    "location:Cẩm Lệ",
+    "location:Hòa Vang",
+    "location:Hải Châu",
+    "location:Liên Chiểu",
+    "location:Ngũ Hành Sơn",
+    "location:Sơn Trà",
+    "location:Thanh Khê",
+    "location:new_unit:lien chieu",
+    "ward:Hòa Vang|hoa khuong",
+    "ward:Hòa Vang|hoa phu",
+    "ward:Hòa Vang|hoa tien",
+    "ward:Liên Chiểu|hoa hiep bac"
+  ],
+  "target_transform": "log"
+}

@@ -1,0 +1,102 @@
+{
+  "reviewed_pending": 5442,
+  "original_total": 8509,
+  "pending_after_status": {
+    "needs_review": 5318,
+    "eligible": 33,
+    "excluded": 91
+  },
+  "outcomes": {
+    "financial_or_multiple_asset_context": 240,
+    "passed_rules": 33,
+    "price_or_area_unresolved": 282,
+    "category_needs_source": 1568,
+    "duplicate_group_needs_review": 94,
+    "previous_source_review_pending": 64,
+    "other_evidence_needed": 355,
+    "excluded": 91,
+    "historical_candidate": 262,
+    "legacy_source_evidence_missing": 1780,
+    "undated_candidate": 673
+  },
+  "full_collection_status": {
+    "eligible": 1634,
+    "needs_review": 5326,
+    "excluded": 1549
+  },
+  "by_source": {
+    "alonhadat": {
+      "financial_or_multiple_asset_context": 1,
+      "passed_rules": 1,
+      "price_or_area_unresolved": 1,
+      "category_needs_source": 2,
+      "duplicate_group_needs_review": 1
+    },
+    "cafeland": {
+      "previous_source_review_pending": 19,
+      "category_needs_source": 1135,
+      "other_evidence_needed": 60,
+      "price_or_area_unresolved": 114,
+      "excluded": 7,
+      "historical_candidate": 4,
+      "duplicate_group_needs_review": 45,
+      "financial_or_multiple_asset_context": 41,
+      "passed_rules": 1
+    },
+    "chotot": {
+      "legacy_source_evidence_missing": 1780,
+      "excluded": 3,
+      "financial_or_multiple_asset_context": 6,
+      "other_evidence_needed": 8,
+      "category_needs_source": 3,
+      "duplicate_group_needs_review": 1
+    },
+    "homedy": {
+      "undated_candidate": 673,
+      "price_or_area_unresolved": 93,
+      "category_needs_source": 37,
+      "other_evidence_needed": 162,
+      "financial_or_multiple_asset_context": 32,
+      "duplicate_group_needs_review": 4
+    },
+    "nhadat24h": {
+      "category_needs_source": 391,
+      "excluded": 81,
+      "financial_or_multiple_asset_context": 160,
+      "price_or_area_unresolved": 74,
+      "duplicate_group_needs_review": 43,
+      "historical_candidate": 258,
+      "other_evidence_needed": 125,
+      "passed_rules": 31,
+      "previous_source_review_pending": 45
+    }
+  },
+  "normalized_fields": {
+    "price_million": 1156,
+    "area_sqm": 1130
+  },
+  "normalized_records": 1166,
+  "category_resolutions": 86,
+  "train_candidates": 1081,
+  "affected_previous_nonpending": [
+    "cafeland:3146694",
+    "cafeland:3154480",
+    "cafeland:3163842",
+    "cafeland:3168419",
+    "cafeland:3168484",
+    "cafeland:3172144",
+    "cafeland:3173263",
+    "cafeland:3176057"
+  ],
+  "source_queue": 4383,
+  "cached_detail_states": {
+    "identity_verified": 67,
+    "blocked": 1
+  },
+  "cached_detail_rows": 68,
+  "new_source_probe_requests": 5,
+  "raw_and_previous_artifacts_unchanged": true,
+  "test_replaced": false,
+  "model_trained": false,
+  "all_urls_refetched": false
+}

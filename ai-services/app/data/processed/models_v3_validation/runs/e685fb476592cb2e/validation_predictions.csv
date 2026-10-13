@@ -1,0 +1,898 @@
+﻿record_key,category,source,pipeline_group,location_feature,model,actual_million,predicted_million,absolute_error_million,ape_pct,selected
+alonhadat:19132883,Nhà ở,alonhadat,property_candidate:0c468e69b9b8eeccee8f,Thanh Khê,location_median_unit_price,4970.0,3967.7419354838707,1002.2580645161293,20.166158239761153,False
+alonhadat:19132883,Nhà ở,alonhadat,property_candidate:0c468e69b9b8eeccee8f,Thanh Khê,ridge_log_area_location_alpha_1,4970.0,4219.924347914958,750.0756520850418,15.092065434306676,True
+alonhadat:19132883,Nhà ở,alonhadat,property_candidate:0c468e69b9b8eeccee8f,Thanh Khê,xgboost_enriched_log,4970.0,4130.14990234375,839.85009765625,16.8983923069668,False
+alonhadat:19133733,Nhà ở,alonhadat,property_candidate:6407372fd1efe866593d,Ngũ Hành Sơn,location_median_unit_price,24000.0,29131.578947368424,5131.5789473684235,21.381578947368432,False
+alonhadat:19133733,Nhà ở,alonhadat,property_candidate:6407372fd1efe866593d,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,24000.0,23450.104330753522,549.8956692464781,2.2912319551936586,True
+alonhadat:19133733,Nhà ở,alonhadat,property_candidate:6407372fd1efe866593d,Ngũ Hành Sơn,xgboost_enriched_log,24000.0,17527.19921875,6472.80078125,26.970003255208333,False
+cafeland:3036309,Nhà ở,cafeland,property_candidate:755d0c01de1562f18b1f,Hải Châu,location_median_unit_price,4950.0,5264.7290412227885,314.7290412227885,6.358162448945222,False
+cafeland:3036309,Nhà ở,cafeland,property_candidate:755d0c01de1562f18b1f,Hải Châu,ridge_log_area_location_alpha_1,4950.0,5656.32578404742,706.3257840474198,14.269207758533732,True
+cafeland:3036309,Nhà ở,cafeland,property_candidate:755d0c01de1562f18b1f,Hải Châu,xgboost_enriched_log,4950.0,4984.70556640625,34.70556640625,0.7011225536616161,False
+cafeland:3036455,Nhà ở,cafeland,property_candidate:badf574fe26102e7fcde,Hải Châu,location_median_unit_price,6950.0,8774.54840203798,1824.5484020379808,26.252494993352244,False
+cafeland:3036455,Nhà ở,cafeland,property_candidate:badf574fe26102e7fcde,Hải Châu,ridge_log_area_location_alpha_1,6950.0,9012.38930485588,2062.3893048558803,29.674666256919142,True
+cafeland:3036455,Nhà ở,cafeland,property_candidate:badf574fe26102e7fcde,Hải Châu,xgboost_enriched_log,6950.0,9043.0400390625,2093.0400390625,30.11568401528777,False
+cafeland:3144947,Nhà ở,cafeland,property_candidate:3ee2111a91ed1ddf4b90,Ngũ Hành Sơn,location_median_unit_price,10500.0,9451.578947368422,1048.4210526315783,9.984962406015033,False
+cafeland:3144947,Nhà ở,cafeland,property_candidate:3ee2111a91ed1ddf4b90,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,10500.0,8401.368104875552,2098.6318951244484,19.98697042975665,True
+cafeland:3144947,Nhà ở,cafeland,property_candidate:3ee2111a91ed1ddf4b90,Ngũ Hành Sơn,xgboost_enriched_log,10500.0,7517.73583984375,2982.26416015625,28.402515811011906,False
+cafeland:3144949,Nhà ở,cafeland,property_candidate:b1427a1b1c2d9ca56c7f,Thanh Khê,location_median_unit_price,4750.0,5202.1505376344085,452.15053763440847,9.518958687040179,False
+cafeland:3144949,Nhà ở,cafeland,property_candidate:b1427a1b1c2d9ca56c7f,Thanh Khê,ridge_log_area_location_alpha_1,4750.0,5402.328640545423,652.3286405454228,13.733234537798376,True
+cafeland:3144949,Nhà ở,cafeland,property_candidate:b1427a1b1c2d9ca56c7f,Thanh Khê,xgboost_enriched_log,4750.0,5264.93896484375,514.93896484375,10.8408203125,False
+cafeland:3144963,Nhà ở,cafeland,property_candidate:63c13291b3e593f71e95,Sơn Trà,location_median_unit_price,16900.0,10607.361963190184,6292.638036809816,37.23454459650779,False
+cafeland:3144963,Nhà ở,cafeland,property_candidate:63c13291b3e593f71e95,Sơn Trà,ridge_log_area_location_alpha_1,16900.0,10456.536760382705,6443.463239617295,38.12700141785381,True
+cafeland:3144963,Nhà ở,cafeland,property_candidate:63c13291b3e593f71e95,Sơn Trà,xgboost_enriched_log,16900.0,10143.2001953125,6756.7998046875,39.98106393306213,False
+cafeland:3144995,Nhà ở,cafeland,property_candidate:145c63178f24e6152db9,Cẩm Lệ,location_median_unit_price,8300.0,6545.0,1755.0,21.14457831325301,False
+cafeland:3144995,Nhà ở,cafeland,property_candidate:145c63178f24e6152db9,Cẩm Lệ,ridge_log_area_location_alpha_1,8300.0,6181.464890222561,2118.535109777439,25.524519394908907,True
+cafeland:3144995,Nhà ở,cafeland,property_candidate:145c63178f24e6152db9,Cẩm Lệ,xgboost_enriched_log,8300.0,6491.20166015625,1808.79833984375,21.79275108245482,False
+cafeland:3144997,Nhà ở,cafeland,property_candidate:db96286c85b91a1c8359,Sơn Trà,location_median_unit_price,19000.0,14920.245398773006,4079.754601226994,21.47239263803681,False
+cafeland:3144997,Nhà ở,cafeland,property_candidate:db96286c85b91a1c8359,Sơn Trà,ridge_log_area_location_alpha_1,19000.0,14272.626422218149,4727.373577781851,24.880913567272902,True
+cafeland:3144997,Nhà ở,cafeland,property_candidate:db96286c85b91a1c8359,Sơn Trà,xgboost_enriched_log,19000.0,12210.556640625,6789.443359375,35.73391241776316,False
+cafeland:3145000,Nhà ở,cafeland,property_candidate:890b44387268044b1226,Cẩm Lệ,location_median_unit_price,21800.0,10164.0,11636.0,53.37614678899082,False
+cafeland:3145000,Nhà ở,cafeland,property_candidate:890b44387268044b1226,Cẩm Lệ,ridge_log_area_location_alpha_1,21800.0,9234.36594499481,12565.63405500519,57.640523188097205,True
+cafeland:3145000,Nhà ở,cafeland,property_candidate:890b44387268044b1226,Cẩm Lệ,xgboost_enriched_log,21800.0,7425.560546875,14374.439453125,65.9377956565367,False
+cafeland:3145057,Nhà ở,cafeland,property_candidate:51e6a3a1a7c90f428579,new_unit:an khe,location_median_unit_price,11500.0,6217.283950617283,5282.716049382717,45.93666129898015,False
+cafeland:3145057,Nhà ở,cafeland,property_candidate:51e6a3a1a7c90f428579,new_unit:an khe,ridge_log_area_location_alpha_1,11500.0,6431.40634754843,5068.59365245157,44.074727412622345,True
+cafeland:3145057,Nhà ở,cafeland,property_candidate:51e6a3a1a7c90f428579,new_unit:an khe,xgboost_enriched_log,11500.0,6137.7919921875,5362.2080078125,46.6278957201087,False
+cafeland:3145058,Nhà ở,cafeland,property_candidate:35f6b79e73dc63875a48,Thanh Khê,location_median_unit_price,5850.0,5113.978494623656,736.0215053763441,12.581564194467422,False
+cafeland:3145058,Nhà ở,cafeland,property_candidate:35f6b79e73dc63875a48,Thanh Khê,ridge_log_area_location_alpha_1,5850.0,5318.767210567234,531.2327894327664,9.080902383466091,True
+cafeland:3145058,Nhà ở,cafeland,property_candidate:35f6b79e73dc63875a48,Thanh Khê,xgboost_enriched_log,5850.0,5264.93896484375,585.06103515625,10.001043336004274,False
+cafeland:3145060,Nhà ở,cafeland,property_candidate:7fd80a95b9ddc6d88880,Hải Châu,location_median_unit_price,15500.0,10529.458082445577,4970.541917554423,32.06801237131886,False
+cafeland:3145060,Nhà ở,cafeland,property_candidate:7fd80a95b9ddc6d88880,Hải Châu,ridge_log_area_location_alpha_1,15500.0,10642.555212250289,4857.444787749711,31.338353469352977,True
+cafeland:3145060,Nhà ở,cafeland,property_candidate:7fd80a95b9ddc6d88880,Hải Châu,xgboost_enriched_log,15500.0,9891.3154296875,5608.6845703125,36.185061743951614,False
+cafeland:3145065,Nhà ở,cafeland,property_candidate:81877c44318a83ce7f21,Cẩm Lệ,location_median_unit_price,21000.0,11935.0,9065.0,43.166666666666664,False
+cafeland:3145065,Nhà ở,cafeland,property_candidate:81877c44318a83ce7f21,Cẩm Lệ,ridge_log_area_location_alpha_1,21000.0,10691.033948987348,10308.966051012652,49.09031452863168,True
+cafeland:3145065,Nhà ở,cafeland,property_candidate:81877c44318a83ce7f21,Cẩm Lệ,xgboost_enriched_log,21000.0,13389.2412109375,7610.7587890625,36.24170851934524,False
+cafeland:3145211,Nhà ở,cafeland,property_candidate:411202e2098ca80d6623,Ngũ Hành Sơn,location_median_unit_price,16800.0,11652.63157894737,5147.36842105263,30.639097744360893,False
+cafeland:3145211,Nhà ở,cafeland,property_candidate:411202e2098ca80d6623,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,16800.0,10168.58022904424,6631.419770955759,39.472736731879515,True
+cafeland:3145211,Nhà ở,cafeland,property_candidate:411202e2098ca80d6623,Ngũ Hành Sơn,xgboost_enriched_log,16800.0,10660.7236328125,6139.2763671875,36.543311709449405,False
+cafeland:3146730,Nhà ở,cafeland,property_candidate:c8df45972ac4ebde55f4,Cẩm Lệ,location_median_unit_price,3700.0,6930.0,3230.0,87.29729729729729,False
+cafeland:3146730,Nhà ở,cafeland,property_candidate:c8df45972ac4ebde55f4,Cẩm Lệ,ridge_log_area_location_alpha_1,3700.0,6512.207316161312,2812.2073161613116,76.00560313949491,True
+cafeland:3146730,Nhà ở,cafeland,property_candidate:c8df45972ac4ebde55f4,Cẩm Lệ,xgboost_enriched_log,3700.0,6511.5263671875,2811.5263671875,75.98719911317568,False
+cafeland:3149063,Nhà ở,cafeland,property_candidate:3c4b4574ab6e826cdebb,new_unit:an khe,location_median_unit_price,1470.0,4352.098765432099,2882.098765432099,196.06114050558494,False
+cafeland:3149063,Nhà ở,cafeland,property_candidate:3c4b4574ab6e826cdebb,new_unit:an khe,ridge_log_area_location_alpha_1,1470.0,4645.684347064268,3175.684347064268,216.0329487798822,True
+cafeland:3149063,Nhà ở,cafeland,property_candidate:3c4b4574ab6e826cdebb,new_unit:an khe,xgboost_enriched_log,1470.0,4637.80517578125,3167.80517578125,215.49695073341837,False
+cafeland:3149900,Nhà ở,cafeland,property_candidate:fa56033abb530876f234,new_unit:lien chieu,location_median_unit_price,4750.0,3588.75,1161.25,24.44736842105263,False
+cafeland:3149900,Nhà ở,cafeland,property_candidate:fa56033abb530876f234,new_unit:lien chieu,ridge_log_area_location_alpha_1,4750.0,3474.1492403569655,1275.8507596430345,26.86001599248494,True
+cafeland:3149900,Nhà ở,cafeland,property_candidate:fa56033abb530876f234,new_unit:lien chieu,xgboost_enriched_log,4750.0,3975.632080078125,774.367919921875,16.302482524671053,False
+cafeland:3150155,Nhà ở,cafeland,property_candidate:114c2598e4c6bc82a1e8,Ngũ Hành Sơn,location_median_unit_price,8900.0,9581.052631578948,681.0526315789484,7.652276759314026,False
+cafeland:3150155,Nhà ở,cafeland,property_candidate:114c2598e4c6bc82a1e8,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,8900.0,8506.254000574063,393.74599942593704,4.4241123531004165,True
+cafeland:3150155,Nhà ở,cafeland,property_candidate:114c2598e4c6bc82a1e8,Ngũ Hành Sơn,xgboost_enriched_log,8900.0,6969.265625,1930.734375,21.693644662921347,False
+cafeland:3150174,Nhà ở,cafeland,property_candidate:92667ff75d3913988773,Sơn Trà,location_median_unit_price,16900.0,10607.361963190184,6292.638036809816,37.23454459650779,False
+cafeland:3150174,Nhà ở,cafeland,property_candidate:92667ff75d3913988773,Sơn Trà,ridge_log_area_location_alpha_1,16900.0,10456.536760382705,6443.463239617295,38.12700141785381,True
+cafeland:3150174,Nhà ở,cafeland,property_candidate:92667ff75d3913988773,Sơn Trà,xgboost_enriched_log,16900.0,10143.2001953125,6756.7998046875,39.98106393306213,False
+cafeland:3150203,Nhà ở,cafeland,property_candidate:cbc550b00a6ff428fc72,Hải Châu,location_median_unit_price,8600.0,7955.590551181103,644.4094488188966,7.493133125801124,False
+cafeland:3150203,Nhà ở,cafeland,property_candidate:cbc550b00a6ff428fc72,Hải Châu,ridge_log_area_location_alpha_1,8600.0,8242.066946659541,357.9330533404591,4.162012248144873,True
+cafeland:3150203,Nhà ở,cafeland,property_candidate:cbc550b00a6ff428fc72,Hải Châu,xgboost_enriched_log,8600.0,8836.6591796875,236.6591796875,2.7518509265988373,False
+cafeland:3150204,Nhà ở,cafeland,property_candidate:42b8734ab102b669c301,Thanh Khê,location_median_unit_price,23500.0,9258.064516129032,14241.935483870968,60.603980782429645,False
+cafeland:3150204,Nhà ở,cafeland,property_candidate:42b8734ab102b669c301,Thanh Khê,ridge_log_area_location_alpha_1,23500.0,9138.300567219094,14361.699432780906,61.11361460757832,True
+cafeland:3150204,Nhà ở,cafeland,property_candidate:42b8734ab102b669c301,Thanh Khê,xgboost_enriched_log,23500.0,8268.279296875,15231.720703125,64.81583277925532,False
+cafeland:3150220,Nhà ở,cafeland,property_candidate:acc27cfe536c71a6fca1,Hải Châu,location_median_unit_price,23000.0,16730.138953219084,6269.861046780916,27.26026542078659,False
+cafeland:3150220,Nhà ở,cafeland,property_candidate:acc27cfe536c71a6fca1,Hải Châu,ridge_log_area_location_alpha_1,23000.0,16233.964759418084,6766.035240581916,29.4175445242692,True
+cafeland:3150220,Nhà ở,cafeland,property_candidate:acc27cfe536c71a6fca1,Hải Châu,xgboost_enriched_log,23000.0,16681.46484375,6318.53515625,27.471891983695652,False
+cafeland:3150257,Nhà ở,cafeland,property_candidate:03bbb706b9de71519f3f,Hải Châu,location_median_unit_price,13000.0,10178.476146364059,2821.523853635941,21.704029643353394,False
+cafeland:3150257,Nhà ở,cafeland,property_candidate:03bbb706b9de71519f3f,Hải Châu,ridge_log_area_location_alpha_1,13000.0,10318.573553802691,2681.426446197309,20.62635727844084,True
+cafeland:3150257,Nhà ở,cafeland,property_candidate:03bbb706b9de71519f3f,Hải Châu,xgboost_enriched_log,13000.0,9708.8095703125,3291.1904296875,25.316849459134616,False
+cafeland:3154150,Nhà ở,cafeland,property_candidate:93d3cb4c66198e37add1,Ngũ Hành Sơn,location_median_unit_price,18800.0,19809.473684210527,1009.4736842105267,5.369540873460249,False
+cafeland:3154150,Nhà ở,cafeland,property_candidate:93d3cb4c66198e37add1,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,18800.0,16497.13044531862,2302.8695546813797,12.249306141922233,True
+cafeland:3154150,Nhà ở,cafeland,property_candidate:93d3cb4c66198e37add1,Ngũ Hành Sơn,xgboost_enriched_log,18800.0,19952.080078125,1152.080078125,6.12808552194149,False
+cafeland:3154186,Nhà ở,cafeland,property_candidate:8f1b1d5e6ae399ed5943,Thanh Khê,location_median_unit_price,3050.0,3791.3978494623657,741.3978494623657,24.308126211880843,False
+cafeland:3154186,Nhà ở,cafeland,property_candidate:8f1b1d5e6ae399ed5943,Thanh Khê,ridge_log_area_location_alpha_1,3050.0,4048.5537683202,998.5537683202001,32.73946781377705,True
+cafeland:3154186,Nhà ở,cafeland,property_candidate:8f1b1d5e6ae399ed5943,Thanh Khê,xgboost_enriched_log,3050.0,4284.8330078125,1234.8330078125,40.486328125,False
+cafeland:3154218,Nhà ở,cafeland,property_candidate:21074313c6ca7e6010a1,Thanh Khê,location_median_unit_price,8200.0,8464.516129032258,264.5161290322576,3.2258064516128977,False
+cafeland:3154218,Nhà ở,cafeland,property_candidate:21074313c6ca7e6010a1,Thanh Khê,ridge_log_area_location_alpha_1,8200.0,8421.234554905115,221.23455490511515,2.697982376891648,True
+cafeland:3154218,Nhà ở,cafeland,property_candidate:21074313c6ca7e6010a1,Thanh Khê,xgboost_enriched_log,8200.0,8559.93359375,359.93359375,4.389434070121951,False
+cafeland:3154221,Nhà ở,cafeland,property_candidate:de1ba0762723bb708389,Thanh Khê,location_median_unit_price,12300.0,11374.193548387097,925.8064516129034,7.526881720430108,False
+cafeland:3154221,Nhà ở,cafeland,property_candidate:de1ba0762723bb708389,Thanh Khê,ridge_log_area_location_alpha_1,12300.0,11025.298072795695,1274.7019272043053,10.363430302474026,True
+cafeland:3154221,Nhà ở,cafeland,property_candidate:de1ba0762723bb708389,Thanh Khê,xgboost_enriched_log,12300.0,9717.619140625,2582.380859375,20.994966336382113,False
+cafeland:3154240,Nhà ở,cafeland,property_candidate:c846ed1bfebbde2453d8,new_unit:hoa khanh,location_median_unit_price,6500.0,6400.0,100.0,1.5384615384615385,False
+cafeland:3154240,Nhà ở,cafeland,property_candidate:c846ed1bfebbde2453d8,new_unit:hoa khanh,ridge_log_area_location_alpha_1,6500.0,5688.543054920527,811.4569450794734,12.483953001222668,True
+cafeland:3154240,Nhà ở,cafeland,property_candidate:c846ed1bfebbde2453d8,new_unit:hoa khanh,xgboost_enriched_log,6500.0,6288.1416015625,211.8583984375,3.2593599759615386,False
+cafeland:3154243,Nhà ở,cafeland,property_candidate:32c752736b56a65d7e44,Cẩm Lệ,location_median_unit_price,3500.0,4312.0,812.0,23.2,False
+cafeland:3154243,Nhà ở,cafeland,property_candidate:32c752736b56a65d7e44,Cẩm Lệ,ridge_log_area_location_alpha_1,3500.0,4224.989165833611,724.989165833611,20.713976166674602,True
+cafeland:3154243,Nhà ở,cafeland,property_candidate:32c752736b56a65d7e44,Cẩm Lệ,xgboost_enriched_log,3500.0,4511.09912109375,1011.09912109375,28.888546316964284,False
+cafeland:3154468,Nhà ở,cafeland,property_candidate:5b2c36b7ca71ee921278,Ngũ Hành Sơn,location_median_unit_price,14800.0,7768.42105263158,7031.57894736842,47.510668563300136,False
+cafeland:3154468,Nhà ở,cafeland,property_candidate:5b2c36b7ca71ee921278,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,14800.0,7025.567131943526,7774.432868056474,52.52995181119239,True
+cafeland:3154468,Nhà ở,cafeland,property_candidate:5b2c36b7ca71ee921278,Ngũ Hành Sơn,xgboost_enriched_log,14800.0,7230.7900390625,7569.2099609375,51.143310546875,False
+cafeland:3154516,Nhà ở,cafeland,property_candidate:cb2a7bde3109dd7018ab,Thanh Khê,location_median_unit_price,5500.0,6436.559139784947,936.5591397849466,17.028347996089938,False
+cafeland:3154516,Nhà ở,cafeland,property_candidate:cb2a7bde3109dd7018ab,Thanh Khê,ridge_log_area_location_alpha_1,5500.0,6560.030461928721,1060.0304619287208,19.27328112597674,True
+cafeland:3154516,Nhà ở,cafeland,property_candidate:cb2a7bde3109dd7018ab,Thanh Khê,xgboost_enriched_log,5500.0,5650.259765625,150.259765625,2.7319957386363636,False
+cafeland:3154569,Nhà ở,cafeland,property_candidate:f1e830bbb3daa338c38e,Sơn Trà,location_median_unit_price,6000.0,9674.846625766872,3674.8466257668715,61.247443762781195,False
+cafeland:3154569,Nhà ở,cafeland,property_candidate:f1e830bbb3daa338c38e,Sơn Trà,ridge_log_area_location_alpha_1,6000.0,9614.90588463854,3614.9058846385396,60.24843141064233,True
+cafeland:3154569,Nhà ở,cafeland,property_candidate:f1e830bbb3daa338c38e,Sơn Trà,xgboost_enriched_log,6000.0,10259.5166015625,4259.5166015625,70.991943359375,False
+cafeland:3154620,Nhà ở,cafeland,property_candidate:5260363f0104e976aaf9,Cẩm Lệ,location_median_unit_price,6650.0,5621.0,1029.0,15.473684210526315,False
+cafeland:3154620,Nhà ở,cafeland,property_candidate:5260363f0104e976aaf9,Cẩm Lệ,ridge_log_area_location_alpha_1,6650.0,5380.441478158772,1269.558521841228,19.09110559159741,True
+cafeland:3154620,Nhà ở,cafeland,property_candidate:5260363f0104e976aaf9,Cẩm Lệ,xgboost_enriched_log,6650.0,4917.30517578125,1732.69482421875,26.05556126644737,False
+cafeland:3154700,Nhà ở,cafeland,property_candidate:1493336eca60b5a79e33,Thanh Khê,location_median_unit_price,7950.0,6348.387096774193,1601.6129032258068,20.146074254412664,False
+cafeland:3154700,Nhà ở,cafeland,property_candidate:1493336eca60b5a79e33,Thanh Khê,ridge_log_area_location_alpha_1,7950.0,6478.03363729197,1471.96636270803,18.51530015984943,True
+cafeland:3154700,Nhà ở,cafeland,property_candidate:1493336eca60b5a79e33,Thanh Khê,xgboost_enriched_log,7950.0,5760.72314453125,2189.27685546875,27.53807365369497,False
+cafeland:3154712,Nhà ở,cafeland,property_candidate:92c754e65bce3bb22ab8,new_unit:hoa xuan,location_median_unit_price,4800.0,6750.0,1950.0,40.625,False
+cafeland:3154712,Nhà ở,cafeland,property_candidate:92c754e65bce3bb22ab8,new_unit:hoa xuan,ridge_log_area_location_alpha_1,4800.0,6248.912872065801,1448.912872065801,30.18568483470419,True
+cafeland:3154712,Nhà ở,cafeland,property_candidate:92c754e65bce3bb22ab8,new_unit:hoa xuan,xgboost_enriched_log,4800.0,6320.64990234375,1520.64990234375,31.680206298828125,False
+cafeland:3154821,Nhà ở,cafeland,property_candidate:112c94894e77ee616a38,Ngũ Hành Sơn,location_median_unit_price,8750.0,12300.000000000002,3550.000000000002,40.57142857142859,False
+cafeland:3154821,Nhà ở,cafeland,property_candidate:112c94894e77ee616a38,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,8750.0,10682.500106669382,1932.5001066693821,22.085715504792937,True
+cafeland:3154821,Nhà ở,cafeland,property_candidate:112c94894e77ee616a38,Ngũ Hành Sơn,xgboost_enriched_log,8750.0,11760.1923828125,3010.1923828125,34.402198660714284,False
+cafeland:3154903,Nhà ở,cafeland,property_candidate:cc677b620db65a2a689b,Ngũ Hành Sơn,location_median_unit_price,14000.0,17867.368421052633,3867.3684210526335,27.624060150375957,False
+cafeland:3154903,Nhà ở,cafeland,property_candidate:cc677b620db65a2a689b,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,14000.0,15015.634815957357,1015.6348159573572,7.254534399695409,True
+cafeland:3154903,Nhà ở,cafeland,property_candidate:cc677b620db65a2a689b,Ngũ Hành Sơn,xgboost_enriched_log,14000.0,13220.8388671875,779.1611328125,5.5654366629464285,False
+cafeland:3155008,Nhà ở,cafeland,property_candidate:76acfb4f4a952d57559f,Thanh Khê,location_median_unit_price,12950.0,6789.247311827957,6160.752688172043,47.57337983144435,False
+cafeland:3155008,Nhà ở,cafeland,property_candidate:76acfb4f4a952d57559f,Thanh Khê,ridge_log_area_location_alpha_1,12950.0,6887.043163441886,6062.956836558114,46.81819951010127,True
+cafeland:3155008,Nhà ở,cafeland,property_candidate:76acfb4f4a952d57559f,Thanh Khê,xgboost_enriched_log,12950.0,6916.6396484375,6033.3603515625,46.58965522442085,False
+cafeland:3155178,Nhà ở,cafeland,property_candidate:c639b6664e42406b598c,Sơn Trà,location_median_unit_price,12900.0,8975.460122699387,3924.5398773006127,30.42278974651638,False
+cafeland:3155178,Nhà ở,cafeland,property_candidate:c639b6664e42406b598c,Sơn Trà,ridge_log_area_location_alpha_1,12900.0,8979.00833044849,3920.9916695515094,30.39528426008922,True
+cafeland:3155178,Nhà ở,cafeland,property_candidate:c639b6664e42406b598c,Sơn Trà,xgboost_enriched_log,12900.0,9217.1171875,3682.8828125,28.549479166666668,False
+cafeland:3155779,Nhà ở,cafeland,property_candidate:1011d09c87beb05b2433,Ngũ Hành Sơn,location_median_unit_price,6500.0,12817.894736842107,6317.894736842107,97.19838056680165,False
+cafeland:3155779,Nhà ở,cafeland,property_candidate:1011d09c87beb05b2433,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,6500.0,11091.917165664792,4591.917165664792,70.64487947176603,True
+cafeland:3155779,Nhà ở,cafeland,property_candidate:1011d09c87beb05b2433,Ngũ Hành Sơn,xgboost_enriched_log,6500.0,11481.021484375,4981.021484375,76.63109975961538,False
+cafeland:3159201,Nhà ở,cafeland,property_candidate:440e6ebc530f6bb5e42d,Ngũ Hành Sơn,location_median_unit_price,7900.0,18644.21052631579,10744.21052631579,136.0026648900733,False
+cafeland:3159201,Nhà ở,cafeland,property_candidate:440e6ebc530f6bb5e42d,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,7900.0,15609.854427792763,7709.854427792763,97.59309402269321,True
+cafeland:3159201,Nhà ở,cafeland,property_candidate:440e6ebc530f6bb5e42d,Ngũ Hành Sơn,xgboost_enriched_log,7900.0,14206.2001953125,6306.2001953125,79.82531892800633,False
+cafeland:3159264,Nhà ở,cafeland,property_candidate:cd55b0d925eab3f5bca1,Thanh Khê,location_median_unit_price,5150.0,4496.774193548387,653.2258064516127,12.683996241778887,False
+cafeland:3159264,Nhà ở,cafeland,property_candidate:cd55b0d925eab3f5bca1,Thanh Khê,ridge_log_area_location_alpha_1,5150.0,4730.138123901626,419.8618760983736,8.152657788317935,True
+cafeland:3159264,Nhà ở,cafeland,property_candidate:cd55b0d925eab3f5bca1,Thanh Khê,xgboost_enriched_log,5150.0,4832.724609375,317.275390625,6.160687196601942,False
+cafeland:3159266,Nhà ở,cafeland,property_candidate:9252a56847e5d00e3d5a,Thanh Khê,location_median_unit_price,5990.0,5554.8387096774195,435.1612903225805,7.264796165652428,False
+cafeland:3159266,Nhà ở,cafeland,property_candidate:9252a56847e5d00e3d5a,Thanh Khê,ridge_log_area_location_alpha_1,5990.0,5735.349791523792,254.6502084762078,4.251255567215489,True
+cafeland:3159266,Nhà ở,cafeland,property_candidate:9252a56847e5d00e3d5a,Thanh Khê,xgboost_enriched_log,5990.0,5422.81103515625,567.18896484375,9.468930965671953,False
+cafeland:3160444,Nhà ở,cafeland,property_candidate:d16c3bf3bc18b2e4be27,Hải Châu,location_median_unit_price,12800.0,8774.54840203798,4025.451597962019,31.448840609078275,False
+cafeland:3160444,Nhà ở,cafeland,property_candidate:d16c3bf3bc18b2e4be27,Hải Châu,ridge_log_area_location_alpha_1,12800.0,9012.38930485588,3787.6106951441197,29.590708555813436,True
+cafeland:3160444,Nhà ở,cafeland,property_candidate:d16c3bf3bc18b2e4be27,Hải Châu,xgboost_enriched_log,12800.0,9043.0400390625,3756.9599609375,29.35124969482422,False
+cafeland:3160516,Nhà ở,cafeland,property_candidate:3dcf6dc4f0226da97c23,Sơn Trà,location_median_unit_price,12600.0,10490.79754601227,2109.2024539877293,16.73970201577563,False
+cafeland:3160516,Nhà ở,cafeland,property_candidate:3dcf6dc4f0226da97c23,Sơn Trà,ridge_log_area_location_alpha_1,12600.0,10351.701291433294,2248.2987085667064,17.843640544180207,True
+cafeland:3160516,Nhà ở,cafeland,property_candidate:3dcf6dc4f0226da97c23,Sơn Trà,xgboost_enriched_log,12600.0,10143.2001953125,2456.7998046875,19.49841114831349,False
+cafeland:3160517,Nhà ở,cafeland,property_candidate:b99a8612882c342f7916,Ngũ Hành Sơn,location_median_unit_price,9700.0,9451.578947368422,248.42105263157828,2.5610417797069926,False
+cafeland:3160517,Nhà ở,cafeland,property_candidate:b99a8612882c342f7916,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,9700.0,8401.368104875552,1298.6318951244484,13.387957681695344,True
+cafeland:3160517,Nhà ở,cafeland,property_candidate:b99a8612882c342f7916,Ngũ Hành Sơn,xgboost_enriched_log,9700.0,7517.73583984375,2182.26416015625,22.49756866140464,False
+cafeland:3160518,Nhà ở,cafeland,property_candidate:03cb3795cd0c54683c85,Sơn Trà,location_median_unit_price,7400.0,6061.349693251534,1338.6503067484664,18.08986901011441,False
+cafeland:3160518,Nhà ở,cafeland,property_candidate:03cb3795cd0c54683c85,Sơn Trà,ridge_log_area_location_alpha_1,7400.0,6277.108863042645,1122.8911369573552,15.174204553477773,True
+cafeland:3160518,Nhà ở,cafeland,property_candidate:03cb3795cd0c54683c85,Sơn Trà,xgboost_enriched_log,7400.0,5408.31396484375,1991.68603515625,26.914676150760137,False
+cafeland:3160529,Nhà ở,cafeland,property_candidate:043dca87552c46614325,Cẩm Lệ,location_median_unit_price,9850.0,12320.0,2470.0,25.076142131979694,False
+cafeland:3160529,Nhà ở,cafeland,property_candidate:043dca87552c46614325,Cẩm Lệ,ridge_log_area_location_alpha_1,9850.0,11005.083650821016,1155.083650821016,11.726737571786964,True
+cafeland:3160529,Nhà ở,cafeland,property_candidate:043dca87552c46614325,Cẩm Lệ,xgboost_enriched_log,9850.0,13389.2412109375,3539.2412109375,35.93138285215736,False
+cafeland:3160550,Nhà ở,cafeland,property_candidate:c50cc60c663a6b79a93d,Hải Châu,location_median_unit_price,17500.0,11699.397869383974,5800.6021306160255,33.14629788923443,False
+cafeland:3160550,Nhà ở,cafeland,property_candidate:c50cc60c663a6b79a93d,Hải Châu,ridge_log_area_location_alpha_1,17500.0,11715.815089227664,5784.184910772336,33.052485204413344,True
+cafeland:3160550,Nhà ở,cafeland,property_candidate:c50cc60c663a6b79a93d,Hải Châu,xgboost_enriched_log,17500.0,11413.4892578125,6086.5107421875,34.78006138392857,False
+cafeland:3160558,Nhà ở,cafeland,property_candidate:83f02cb3c6706a926bdd,Thanh Khê,location_median_unit_price,22500.0,9258.064516129032,13241.935483870968,58.853046594982075,False
+cafeland:3160558,Nhà ở,cafeland,property_candidate:83f02cb3c6706a926bdd,Thanh Khê,ridge_log_area_location_alpha_1,22500.0,9138.300567219094,13361.699432780906,59.385330812359584,True
+cafeland:3160558,Nhà ở,cafeland,property_candidate:83f02cb3c6706a926bdd,Thanh Khê,xgboost_enriched_log,22500.0,8268.279296875,14231.720703125,63.25209201388889,False
+cafeland:3160572,Nhà ở,cafeland,property_candidate:927508a785ca21bcc3a9,Hải Châu,location_median_unit_price,24000.0,12284.367762853173,11715.632237146827,48.815134321445115,False
+cafeland:3160572,Nhà ở,cafeland,property_candidate:927508a785ca21bcc3a9,Hải Châu,ridge_log_area_location_alpha_1,24000.0,12248.846391351986,11751.153608648014,48.96314003603339,True
+cafeland:3160572,Nhà ở,cafeland,property_candidate:927508a785ca21bcc3a9,Hải Châu,xgboost_enriched_log,24000.0,12324.9755859375,11675.0244140625,48.64593505859375,False
+cafeland:3160578,Nhà ở,cafeland,property_candidate:7b6d93365e14cb45b473,new_unit:hoa khanh,location_median_unit_price,7650.0,6320.9876543209875,1329.0123456790125,17.37271040103284,False
+cafeland:3160578,Nhà ở,cafeland,property_candidate:7b6d93365e14cb45b473,new_unit:hoa khanh,ridge_log_area_location_alpha_1,7650.0,5624.465791401275,2025.534208598725,26.477571354231696,True
+cafeland:3160578,Nhà ở,cafeland,property_candidate:7b6d93365e14cb45b473,new_unit:hoa khanh,xgboost_enriched_log,7650.0,6387.85986328125,1262.14013671875,16.49856387867647,False
+cafeland:3160587,Nhà ở,cafeland,property_candidate:40d7fc56ba79aea94824,Sơn Trà,location_median_unit_price,9900.0,10490.79754601227,590.7975460122707,5.967651979921926,False
+cafeland:3160587,Nhà ở,cafeland,property_candidate:40d7fc56ba79aea94824,Sơn Trà,ridge_log_area_location_alpha_1,9900.0,10351.701291433294,451.7012914332936,4.562639307407006,True
+cafeland:3160587,Nhà ở,cafeland,property_candidate:40d7fc56ba79aea94824,Sơn Trà,xgboost_enriched_log,9900.0,10143.2001953125,243.2001953125,2.456567629419192,False
+cafeland:3160592,Nhà ở,cafeland,property_candidate:191ecedcbde5113cea68,Ngũ Hành Sơn,location_median_unit_price,11000.0,14242.105263157897,3242.105263157897,29.473684210526333,False
+cafeland:3160592,Nhà ở,cafeland,property_candidate:191ecedcbde5113cea68,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,11000.0,12210.49343003423,1210.4934300342302,11.00448572758391,True
+cafeland:3160592,Nhà ở,cafeland,property_candidate:191ecedcbde5113cea68,Ngũ Hành Sơn,xgboost_enriched_log,11000.0,11565.5849609375,565.5849609375,5.141681463068182,False
+cafeland:3163979,Nhà ở,cafeland,property_candidate:ee35d916712b0be885ad,Thanh Khê,location_median_unit_price,7950.0,8729.032258064517,779.032258064517,9.799147900182604,False
+cafeland:3163979,Nhà ở,cafeland,property_candidate:ee35d916712b0be885ad,Thanh Khê,ridge_log_area_location_alpha_1,7950.0,8660.888748074794,710.8887480747944,8.94199683112949,True
+cafeland:3163979,Nhà ở,cafeland,property_candidate:ee35d916712b0be885ad,Thanh Khê,xgboost_enriched_log,7950.0,8333.5087890625,383.5087890625,4.824009925314465,False
+cafeland:3164071,Nhà ở,cafeland,property_candidate:21101c7c52d9c4ba2ab5,new_unit:hoa khanh,location_median_unit_price,1000.0,31841.975308641973,30841.975308641973,3084.1975308641972,False
+cafeland:3164071,Nhà ở,cafeland,property_candidate:21101c7c52d9c4ba2ab5,new_unit:hoa khanh,ridge_log_area_location_alpha_1,1000.0,24571.769105369483,23571.769105369483,2357.176910536948,True
+cafeland:3164071,Nhà ở,cafeland,property_candidate:21101c7c52d9c4ba2ab5,new_unit:hoa khanh,xgboost_enriched_log,1000.0,26625.095703125,25625.095703125,2562.5095703125,False
+cafeland:3164094,Nhà ở,cafeland,property_candidate:4a2e1ec5e1e25c3fd7ea,new_unit:hoa khanh,location_median_unit_price,6480.0,9244.444444444443,2764.4444444444434,42.66117969821671,False
+cafeland:3164094,Nhà ở,cafeland,property_candidate:4a2e1ec5e1e25c3fd7ea,new_unit:hoa khanh,ridge_log_area_location_alpha_1,6480.0,7954.876440536751,1474.876440536751,22.760438897172087,True
+cafeland:3164094,Nhà ở,cafeland,property_candidate:4a2e1ec5e1e25c3fd7ea,new_unit:hoa khanh,xgboost_enriched_log,6480.0,6513.82470703125,33.82470703125,0.5219862196180556,False
+cafeland:3165567,Nhà ở,cafeland,property_candidate:5c414da28edae67787c2,new_unit:hoa khanh,location_median_unit_price,3850.0,5530.864197530864,1680.8641975308637,43.65881032547698,False
+cafeland:3165567,Nhà ở,cafeland,property_candidate:5c414da28edae67787c2,new_unit:hoa khanh,ridge_log_area_location_alpha_1,3850.0,4979.640506718798,1129.640506718798,29.341311862825922,True
+cafeland:3165567,Nhà ở,cafeland,property_candidate:5c414da28edae67787c2,new_unit:hoa khanh,xgboost_enriched_log,3850.0,4905.8623046875,1055.8623046875,27.424994926948052,False
+cafeland:3165585,Nhà ở,cafeland,property_candidate:99bfca4f4bf158d0a329,Thanh Khê,location_median_unit_price,2550.0,2645.1612903225805,95.1612903225805,3.7318153067678628,False
+cafeland:3165585,Nhà ở,cafeland,property_candidate:99bfca4f4bf158d0a329,Thanh Khê,ridge_log_area_location_alpha_1,2550.0,2915.585178087951,365.58517808795114,14.336673650507887,True
+cafeland:3165585,Nhà ở,cafeland,property_candidate:99bfca4f4bf158d0a329,Thanh Khê,xgboost_enriched_log,2550.0,3601.49755859375,1051.49755859375,41.23519837622549,False
+cafeland:3165597,Nhà ở,cafeland,property_candidate:3c0142abd829c3126d6c,Hải Châu,location_median_unit_price,7450.0,5966.6929133858275,1483.3070866141725,19.910162236431844,False
+cafeland:3165597,Nhà ở,cafeland,property_candidate:3c0142abd829c3126d6c,Hải Châu,ridge_log_area_location_alpha_1,7450.0,6340.208976862361,1109.791023137639,14.896523800505221,True
+cafeland:3165597,Nhà ở,cafeland,property_candidate:3c0142abd829c3126d6c,Hải Châu,xgboost_enriched_log,7450.0,5860.8232421875,1589.1767578125,21.331231648489933,False
+cafeland:3165598,Nhà ở,cafeland,property_candidate:6c7703d98ddec8ec5119,Hải Châu,location_median_unit_price,7900.0,7019.638721630385,880.3612783696153,11.143813650248296,False
+cafeland:3165598,Nhà ở,cafeland,property_candidate:6c7703d98ddec8ec5119,Hải Châu,ridge_log_area_location_alpha_1,7900.0,7353.040878363372,546.959121636628,6.923533185273771,True
+cafeland:3165598,Nhà ở,cafeland,property_candidate:6c7703d98ddec8ec5119,Hải Châu,xgboost_enriched_log,7900.0,7055.02197265625,844.97802734375,10.695924396756329,False
+cafeland:3165603,Nhà ở,cafeland,property_candidate:092896247e8066bfc978,Ngũ Hành Sơn,location_median_unit_price,7800.0,13724.21052631579,5924.21052631579,75.9514170040486,False
+cafeland:3165603,Nhà ở,cafeland,property_candidate:092896247e8066bfc978,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,7800.0,11804.932912570806,4004.9329125708064,51.34529375090777,True
+cafeland:3165603,Nhà ở,cafeland,property_candidate:092896247e8066bfc978,Ngũ Hành Sơn,xgboost_enriched_log,7800.0,11190.1396484375,3390.1396484375,43.463328826121796,False
+cafeland:3168485,Nhà ở,cafeland,property_candidate:39a6f2e3c52bcf6d6fd8,Thanh Khê,location_median_unit_price,4550.0,4584.94623655914,34.946236559139834,0.7680491551459304,False
+cafeland:3168485,Nhà ở,cafeland,property_candidate:39a6f2e3c52bcf6d6fd8,Thanh Khê,ridge_log_area_location_alpha_1,4550.0,4814.6430084934545,264.64300849345454,5.816329856999001,True
+cafeland:3168485,Nhà ở,cafeland,property_candidate:39a6f2e3c52bcf6d6fd8,Thanh Khê,xgboost_enriched_log,4550.0,4832.724609375,282.724609375,6.213727678571429,False
+cafeland:3168499,Nhà ở,cafeland,property_candidate:52e7973a0d289b76768a,new_unit:an khe,location_median_unit_price,5150.0,3232.9876543209875,1917.0123456790125,37.223540692796355,False
+cafeland:3168499,Nhà ở,cafeland,property_candidate:52e7973a0d289b76768a,new_unit:an khe,ridge_log_area_location_alpha_1,5150.0,3542.642124440462,1607.3578755595381,31.21083253513666,True
+cafeland:3168499,Nhà ở,cafeland,property_candidate:52e7973a0d289b76768a,new_unit:an khe,xgboost_enriched_log,5150.0,4059.1162109375,1090.8837890625,21.182209496359224,False
+cafeland:3168503,Nhà ở,cafeland,property_candidate:0d6e0d3b2129e0549bae,Thanh Khê,location_median_unit_price,4750.0,4126.451612903225,623.5483870967746,13.127334465195254,False
+cafeland:3168503,Nhà ở,cafeland,property_candidate:0d6e0d3b2129e0549bae,Thanh Khê,ridge_log_area_location_alpha_1,4750.0,4373.584223967493,376.415776032507,7.924542653315936,True
+cafeland:3168503,Nhà ở,cafeland,property_candidate:0d6e0d3b2129e0549bae,Thanh Khê,xgboost_enriched_log,4750.0,4214.61474609375,535.38525390625,11.271268503289473,False
+cafeland:3168545,Nhà ở,cafeland,property_candidate:2046bf042088d1b459f7,Ngũ Hành Sơn,location_median_unit_price,6800.0,13335.789473684212,6535.789473684212,96.11455108359134,False
+cafeland:3168545,Nhà ở,cafeland,property_candidate:2046bf042088d1b459f7,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,6800.0,11499.879166172615,4699.879166172615,69.11587009077375,True
+cafeland:3168545,Nhà ở,cafeland,property_candidate:2046bf042088d1b459f7,Ngũ Hành Sơn,xgboost_enriched_log,6800.0,11325.0478515625,4525.0478515625,66.54482134650735,False
+cafeland:3168609,Nhà ở,cafeland,property_candidate:ffcb1b79f17cff451f34,new_unit:hoa khanh,location_median_unit_price,5990.0,7111.11111111111,1121.1111111111104,18.7163791504359,False
+cafeland:3168609,Nhà ở,cafeland,property_candidate:ffcb1b79f17cff451f34,new_unit:hoa khanh,ridge_log_area_location_alpha_1,5990.0,6262.210270879792,272.210270879792,4.5444118677761605,True
+cafeland:3168609,Nhà ở,cafeland,property_candidate:ffcb1b79f17cff451f34,new_unit:hoa khanh,xgboost_enriched_log,5990.0,6241.0400390625,251.0400390625,4.190985627086811,False
+cafeland:3173252,Nhà ở,cafeland,property_candidate:d75626ad8d3b720d89d3,Hải Châu,location_median_unit_price,10600.0,11699.397869383974,1099.3978693839745,10.371678013056362,False
+cafeland:3173252,Nhà ở,cafeland,property_candidate:d75626ad8d3b720d89d3,Hải Châu,ridge_log_area_location_alpha_1,10600.0,11715.815089227664,1115.8150892276644,10.526557445544004,True
+cafeland:3173252,Nhà ở,cafeland,property_candidate:d75626ad8d3b720d89d3,Hải Châu,xgboost_enriched_log,10600.0,11413.4892578125,813.4892578125,7.674426960495283,False
+cafeland:3173817,Nhà ở,cafeland,property_candidate:a6c70482cb294dcac3d3,new_unit:an khe,location_median_unit_price,3950.0,3108.6419753086416,841.3580246913584,21.30020315674325,False
+cafeland:3173817,Nhà ở,cafeland,property_candidate:a6c70482cb294dcac3d3,new_unit:an khe,ridge_log_area_location_alpha_1,3950.0,3418.1762580334826,531.8237419665174,13.463892201683985,True
+cafeland:3173817,Nhà ở,cafeland,property_candidate:a6c70482cb294dcac3d3,new_unit:an khe,xgboost_enriched_log,3950.0,3984.058349609375,34.058349609375,0.862236698971519,False
+cafeland:3176067,Nhà ở,cafeland,property_candidate:952d96464aab926fac94,Cẩm Lệ,location_median_unit_price,4600.0,9240.0,4640.0,100.8695652173913,False
+cafeland:3176067,Nhà ở,cafeland,property_candidate:952d96464aab926fac94,Cẩm Lệ,ridge_log_area_location_alpha_1,4600.0,8465.659233978415,3865.6592339784147,84.03607030387857,True
+cafeland:3176067,Nhà ở,cafeland,property_candidate:952d96464aab926fac94,Cẩm Lệ,xgboost_enriched_log,4600.0,6628.41455078125,2028.41455078125,44.09596849524456,False
+cafeland:3176125,Nhà ở,cafeland,property_candidate:b4e7ed9e550e3da88cfc,Thanh Khê,location_median_unit_price,12000.0,12344.086021505376,344.08602150537627,2.8673835125448024,False
+cafeland:3176125,Nhà ở,cafeland,property_candidate:b4e7ed9e550e3da88cfc,Thanh Khê,ridge_log_area_location_alpha_1,12000.0,11879.49566466659,120.50433533340947,1.0042027944450789,True
+cafeland:3176125,Nhà ở,cafeland,property_candidate:b4e7ed9e550e3da88cfc,Thanh Khê,xgboost_enriched_log,12000.0,11471.958984375,528.041015625,4.400341796875,False
+cafeland:3176139,Nhà ở,cafeland,property_candidate:25f140b46c15b93beb09,new_unit:an khe,location_median_unit_price,3650.0,3419.506172839506,230.49382716049422,6.314899374260116,False
+cafeland:3176139,Nhà ở,cafeland,property_candidate:25f140b46c15b93beb09,new_unit:an khe,ridge_log_area_location_alpha_1,3650.0,3728.5566969768574,78.55669697685744,2.15223827333856,True
+cafeland:3176139,Nhà ở,cafeland,property_candidate:25f140b46c15b93beb09,new_unit:an khe,xgboost_enriched_log,3650.0,4176.84228515625,526.84228515625,14.434035209760275,False
+cafeland:3176230,Nhà ở,cafeland,property_candidate:1f87ba30b394c30d3b63,new_unit:lien chieu,location_median_unit_price,2500.0,7425.0,4925.0,197.0,False
+cafeland:3176230,Nhà ở,cafeland,property_candidate:1f87ba30b394c30d3b63,new_unit:lien chieu,ridge_log_area_location_alpha_1,2500.0,6741.960673353696,4241.960673353696,169.67842693414784,True
+cafeland:3176230,Nhà ở,cafeland,property_candidate:1f87ba30b394c30d3b63,new_unit:lien chieu,xgboost_enriched_log,2500.0,5351.052734375,2851.052734375,114.042109375,False
+cafeland:3176327,Nhà ở,cafeland,property_candidate:0b28e845ae195f96d3ff,Thanh Khê,location_median_unit_price,4650.0,4937.634408602151,287.63440860215087,6.185686206497868,False
+cafeland:3176327,Nhà ở,cafeland,property_candidate:0b28e845ae195f96d3ff,Thanh Khê,ridge_log_area_location_alpha_1,4650.0,5151.260866175605,501.26086617560486,10.779803573668923,True
+cafeland:3176327,Nhà ở,cafeland,property_candidate:0b28e845ae195f96d3ff,Thanh Khê,xgboost_enriched_log,4650.0,5189.6298828125,539.6298828125,11.60494371639785,False
+cafeland:3176341,Nhà ở,cafeland,property_candidate:f0a3aeb24329be328ca7,Thanh Khê,location_median_unit_price,3950.0,3879.569892473118,70.43010752688178,1.7830406968830832,False
+cafeland:3176341,Nhà ở,cafeland,property_candidate:f0a3aeb24329be328ca7,Thanh Khê,ridge_log_area_location_alpha_1,3950.0,4134.324841202594,184.32484120259414,4.666451676015042,True
+cafeland:3176341,Nhà ở,cafeland,property_candidate:f0a3aeb24329be328ca7,Thanh Khê,xgboost_enriched_log,3950.0,4214.61474609375,264.61474609375,6.699107496044304,False
+cafeland:3176346,Nhà ở,cafeland,property_candidate:e7a43fe202690e93ddf6,Sơn Trà,location_median_unit_price,8500.0,10141.104294478528,1641.1042944785277,19.307109346806207,False
+cafeland:3176346,Nhà ở,cafeland,property_candidate:e7a43fe202690e93ddf6,Sơn Trà,ridge_log_area_location_alpha_1,8500.0,10036.573835172387,1536.5738351723867,18.077339237322196,True
+cafeland:3176346,Nhà ở,cafeland,property_candidate:e7a43fe202690e93ddf6,Sơn Trà,xgboost_enriched_log,8500.0,9994.2431640625,1494.2431640625,17.579331341911764,False
+cafeland:3176553,Nhà ở,cafeland,property_candidate:ca54dc66ec640d11062c,Thanh Khê,location_median_unit_price,7899.0,8376.344086021505,477.34408602150506,6.043095151557223,False
+cafeland:3176553,Nhà ở,cafeland,property_candidate:ca54dc66ec640d11062c,Thanh Khê,ridge_log_area_location_alpha_1,7899.0,8341.204103250755,442.204103250755,5.598228930886885,True
+cafeland:3176553,Nhà ở,cafeland,property_candidate:ca54dc66ec640d11062c,Thanh Khê,xgboost_enriched_log,7899.0,8559.93359375,660.93359375,8.367307174958855,False
+cafeland:3178828,Nhà ở,cafeland,property_candidate:a205fe2ac8642ee563eb,Thanh Khê,location_median_unit_price,4780.0,5995.698924731183,1215.698924731183,25.433031898141905,False
+cafeland:3178828,Nhà ở,cafeland,property_candidate:a205fe2ac8642ee563eb,Thanh Khê,ridge_log_area_location_alpha_1,4780.0,6149.026826468612,1369.026826468612,28.640728587209452,True
+cafeland:3178828,Nhà ở,cafeland,property_candidate:a205fe2ac8642ee563eb,Thanh Khê,xgboost_enriched_log,4780.0,5688.6806640625,908.6806640625,19.010055733525103,False
+cafeland:3179350,Nhà ở,cafeland,property_candidate:d542f5a2961b72635d0d,new_unit:hoa xuan,location_median_unit_price,9000.0,7500.0,1500.0,16.666666666666668,False
+cafeland:3179350,Nhà ở,cafeland,property_candidate:d542f5a2961b72635d0d,new_unit:hoa xuan,ridge_log_area_location_alpha_1,9000.0,6879.091182308034,2120.908817691966,23.565653529910733,True
+cafeland:3179350,Nhà ở,cafeland,property_candidate:d542f5a2961b72635d0d,new_unit:hoa xuan,xgboost_enriched_log,9000.0,6618.59814453125,2381.40185546875,26.460020616319444,False
+cafeland:3179638,Nhà ở,cafeland,property_candidate:aa4b2f97ce85db362157,new_unit:lien chieu,location_median_unit_price,4650.0,4331.25,318.75,6.854838709677419,False
+cafeland:3179638,Nhà ở,cafeland,property_candidate:aa4b2f97ce85db362157,new_unit:lien chieu,ridge_log_area_location_alpha_1,4650.0,4124.050690134604,525.9493098653957,11.310737846567648,True
+cafeland:3179638,Nhà ở,cafeland,property_candidate:aa4b2f97ce85db362157,new_unit:lien chieu,xgboost_enriched_log,4650.0,4339.53955078125,310.46044921875,6.676568800403226,False
+cafeland:3179904,Nhà ở,cafeland,property_candidate:ef19c558d96044d01c70,new_unit:hoa khanh,location_median_unit_price,4750.0,9481.481481481482,4731.481481481482,99.61013645224173,False
+cafeland:3179904,Nhà ở,cafeland,property_candidate:ef19c558d96044d01c70,new_unit:hoa khanh,ridge_log_area_location_alpha_1,4750.0,8140.671147434765,3390.671147434765,71.38255047231084,True
+cafeland:3179904,Nhà ở,cafeland,property_candidate:ef19c558d96044d01c70,new_unit:hoa khanh,xgboost_enriched_log,4750.0,6455.5009765625,1705.5009765625,35.90528371710526,False
+cafeland:3180313,Nhà ở,cafeland,property_candidate:961e0bf0e7fce3713a29,Thanh Khê,location_median_unit_price,7500.0,8376.344086021505,876.3440860215051,11.684587813620068,False
+cafeland:3180313,Nhà ở,cafeland,property_candidate:961e0bf0e7fce3713a29,Thanh Khê,ridge_log_area_location_alpha_1,7500.0,8341.204103250755,841.204103250755,11.216054710010066,True
+cafeland:3180313,Nhà ở,cafeland,property_candidate:961e0bf0e7fce3713a29,Thanh Khê,xgboost_enriched_log,7500.0,8559.93359375,1059.93359375,14.132447916666667,False
+cafeland:3180330,Nhà ở,cafeland,property_candidate:f26dd8ad5c86ac1c7fde,Hải Châu,location_median_unit_price,17900.0,32290.33811949977,14390.338119499771,80.39295038826688,False
+cafeland:3180330,Nhà ở,cafeland,property_candidate:f26dd8ad5c86ac1c7fde,Hải Châu,ridge_log_area_location_alpha_1,17900.0,29569.282508468892,11669.282508468892,65.19152239368096,True
+cafeland:3180330,Nhà ở,cafeland,property_candidate:f26dd8ad5c86ac1c7fde,Hải Châu,xgboost_enriched_log,17900.0,42082.390625,24182.390625,135.09715432960894,False
+cafeland:3180502,Nhà ở,cafeland,property_candidate:b095bab158d084fcfe20,new_unit:ban thach,location_median_unit_price,4200.0,5294.117647058823,1094.1176470588234,26.050420168067227,False
+cafeland:3180502,Nhà ở,cafeland,property_candidate:b095bab158d084fcfe20,new_unit:ban thach,ridge_log_area_location_alpha_1,4200.0,7192.0299052617465,2992.0299052617465,71.23880726813682,True
+cafeland:3180502,Nhà ở,cafeland,property_candidate:b095bab158d084fcfe20,new_unit:ban thach,xgboost_enriched_log,4200.0,17067.07421875,12867.07421875,306.3589099702381,False
+cafeland:3182949,Nhà ở,cafeland,property_candidate:5020010eafdf64660053,Hải Châu,location_median_unit_price,4000.0,11699.397869383974,7699.3978693839745,192.48494673459936,False
+cafeland:3182949,Nhà ở,cafeland,property_candidate:5020010eafdf64660053,Hải Châu,ridge_log_area_location_alpha_1,4000.0,11715.815089227664,7715.815089227664,192.8953772306916,True
+cafeland:3182949,Nhà ở,cafeland,property_candidate:5020010eafdf64660053,Hải Châu,xgboost_enriched_log,4000.0,11413.4892578125,7413.4892578125,185.3372314453125,False
+cafeland:3183860,Nhà ở,cafeland,property_candidate:70a59f3c91d925823120,new_unit:hoa khanh,location_median_unit_price,3350.0,6400.0,3050.0,91.04477611940298,False
+cafeland:3183860,Nhà ở,cafeland,property_candidate:70a59f3c91d925823120,new_unit:hoa khanh,ridge_log_area_location_alpha_1,3350.0,5688.543054920527,2338.5430549205266,69.807255370762,True
+cafeland:3183860,Nhà ở,cafeland,property_candidate:70a59f3c91d925823120,new_unit:hoa khanh,xgboost_enriched_log,3350.0,6288.1416015625,2938.1416015625,87.70571944962687,False
+cafeland:3184786,Nhà ở,cafeland,property_candidate:37afa0846cae442e9689,Cẩm Lệ,location_median_unit_price,5000.0,4620.0,380.0,7.6,False
+cafeland:3184786,Nhà ở,cafeland,property_candidate:37afa0846cae442e9689,Cẩm Lệ,ridge_log_area_location_alpha_1,5000.0,4499.344908165745,500.65509183425456,10.013101836685092,True
+cafeland:3184786,Nhà ở,cafeland,property_candidate:37afa0846cae442e9689,Cẩm Lệ,xgboost_enriched_log,5000.0,4576.56201171875,423.43798828125,8.468759765625,False
+cafeland:3185438,Nhà ở,cafeland,property_candidate:88f120f814e0ee4cc89f,Thanh Khê,location_median_unit_price,9500.0,5290.322580645161,4209.677419354839,44.312393887945674,False
+cafeland:3185438,Nhà ở,cafeland,property_candidate:88f120f814e0ee4cc89f,Thanh Khê,ridge_log_area_location_alpha_1,9500.0,5485.765392320876,4014.2346076791237,42.255101133464464,True
+cafeland:3185438,Nhà ở,cafeland,property_candidate:88f120f814e0ee4cc89f,Thanh Khê,xgboost_enriched_log,9500.0,5264.93896484375,4235.06103515625,44.57958984375,False
+cafeland:3187439,Nhà ở,cafeland,property_candidate:a34c696d3515c4ecd3d3,new_unit:an khe,location_median_unit_price,3950.0,6217.283950617283,2267.283950617283,57.3995936865135,False
+cafeland:3187439,Nhà ở,cafeland,property_candidate:a34c696d3515c4ecd3d3,new_unit:an khe,ridge_log_area_location_alpha_1,3950.0,6431.40634754843,2481.40634754843,62.820413861985564,True
+cafeland:3187439,Nhà ở,cafeland,property_candidate:a34c696d3515c4ecd3d3,new_unit:an khe,xgboost_enriched_log,3950.0,6137.7919921875,2187.7919921875,55.38713904272152,False
+cafeland:3191148,Nhà ở,cafeland,property_candidate:a123f7a1c1271de895a0,Thanh Khê,location_median_unit_price,10300.0,4408.602150537635,5891.397849462365,57.19803737342102,False
+cafeland:3191148,Nhà ở,cafeland,property_candidate:a123f7a1c1271de895a0,Thanh Khê,ridge_log_area_location_alpha_1,10300.0,4645.487137693467,5654.512862306533,54.89818312918964,True
+cafeland:3191148,Nhà ở,cafeland,property_candidate:a123f7a1c1271de895a0,Thanh Khê,xgboost_enriched_log,10300.0,4706.25537109375,5593.74462890625,54.308200280643206,False
+cafeland:3191430,Nhà ở,cafeland,property_candidate:a9d03d1a5d3e259dba2c,Ngũ Hành Sơn,location_median_unit_price,10700.0,9840.000000000002,859.9999999999982,8.037383177570078,False
+cafeland:3191430,Nhà ở,cafeland,property_candidate:a9d03d1a5d3e259dba2c,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,10700.0,8715.653231395461,1984.3467686045387,18.545296902846157,True
+cafeland:3191430,Nhà ở,cafeland,property_candidate:a9d03d1a5d3e259dba2c,Ngũ Hành Sơn,xgboost_enriched_log,10700.0,8745.1689453125,1954.8310546875,18.269449109228972,False
+chotot:135098116,Nhà ở,chotot,property_candidate:9d82ee4530a57aefcdaf,Thanh Khê,location_median_unit_price,3990.0,4584.94623655914,594.9462365591398,14.910933247096235,False
+chotot:135098116,Nhà ở,chotot,property_candidate:9d82ee4530a57aefcdaf,Thanh Khê,ridge_log_area_location_alpha_1,3990.0,4814.6430084934545,824.6430084934545,20.66774457377079,True
+chotot:135098116,Nhà ở,chotot,property_candidate:9d82ee4530a57aefcdaf,Thanh Khê,xgboost_enriched_log,3990.0,3836.23193359375,153.76806640625,3.8538362507832082,False
+chotot:135131309,Nhà ở,chotot,property_candidate:99675669b1e0a7ce6a0c,Cẩm Lệ,location_median_unit_price,6599.0,6930.0,331.0,5.015911501742688,False
+chotot:135131309,Nhà ở,chotot,property_candidate:99675669b1e0a7ce6a0c,Cẩm Lệ,ridge_log_area_location_alpha_1,6599.0,6512.207316161312,86.79268383868839,1.315239943001794,True
+chotot:135131309,Nhà ở,chotot,property_candidate:99675669b1e0a7ce6a0c,Cẩm Lệ,xgboost_enriched_log,6599.0,7110.49755859375,511.49755859375,7.751137423757387,False
+chotot:135146805,Nhà ở,chotot,property_candidate:be97bc53ab7dd8934104,Ngũ Hành Sơn,location_median_unit_price,5800.0,11652.63157894737,5852.63157894737,100.90744101633396,False
+chotot:135146805,Nhà ở,chotot,property_candidate:be97bc53ab7dd8934104,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,5800.0,10168.58022904424,4368.580229044241,75.32034877662484,True
+chotot:135146805,Nhà ở,chotot,property_candidate:be97bc53ab7dd8934104,Ngũ Hành Sơn,xgboost_enriched_log,5800.0,9607.9423828125,3807.9423828125,65.65417901400862,False
+chotot:135151279,Nhà ở,chotot,property_candidate:40dd8f26b1ad47ec4385,Thanh Khê,location_median_unit_price,6000.0,5466.666666666667,533.333333333333,8.888888888888884,False
+chotot:135151279,Nhà ở,chotot,property_candidate:40dd8f26b1ad47ec4385,Thanh Khê,ridge_log_area_location_alpha_1,6000.0,5652.273822263661,347.7261777363392,5.795436295605652,True
+chotot:135151279,Nhà ở,chotot,property_candidate:40dd8f26b1ad47ec4385,Thanh Khê,xgboost_enriched_log,6000.0,5058.49755859375,941.50244140625,15.691707356770833,False
+chotot:135157819,Nhà ở,chotot,property_candidate:f021795094bd57f51423,Liên Chiểu,location_median_unit_price,3850.0,4794.2307692307695,944.2307692307695,24.525474525474532,False
+chotot:135157819,Nhà ở,chotot,property_candidate:f021795094bd57f51423,Liên Chiểu,ridge_log_area_location_alpha_1,3850.0,4348.7842890463,498.7842890462998,12.95543607912467,True
+chotot:135157819,Nhà ở,chotot,property_candidate:f021795094bd57f51423,Liên Chiểu,xgboost_enriched_log,3850.0,4682.1708984375,832.1708984375,21.614828530844157,False
+chotot:135168377,Nhà ở,chotot,property_candidate:a9c7cfdc71c51d936d9c,Ngũ Hành Sơn,location_median_unit_price,8900.0,13594.736842105265,4694.736842105265,52.74985215848613,False
+chotot:135168377,Nhà ở,chotot,property_candidate:a9c7cfdc71c51d936d9c,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,8900.0,11703.3339042801,2803.3339042801,31.498133755956175,True
+chotot:135168377,Nhà ở,chotot,property_candidate:a9c7cfdc71c51d936d9c,Ngũ Hành Sơn,xgboost_enriched_log,8900.0,10212.84375,1312.84375,14.751053370786517,False
+homedy:3222595,Nhà ở,homedy,property_candidate:eafd207a4c542c0508c2,Liên Chiểu,location_median_unit_price,4500.0,4931.208791208792,431.2087912087918,9.582417582417596,False
+homedy:3222595,Nhà ở,homedy,property_candidate:eafd207a4c542c0508c2,Liên Chiểu,ridge_log_area_location_alpha_1,4500.0,4461.948548572864,38.05145142713627,0.8455878094919171,True
+homedy:3222595,Nhà ở,homedy,property_candidate:eafd207a4c542c0508c2,Liên Chiểu,xgboost_enriched_log,4500.0,4428.7724609375,71.2275390625,1.582834201388889,False
+nhadat24h:4305281,Nhà ở,nhadat24h,property_candidate:db4160642f911d29df1d,Liên Chiểu,location_median_unit_price,26990.0,9314.505494505494,17675.494505494506,65.48904966837534,False
+nhadat24h:4305281,Nhà ở,nhadat24h,property_candidate:db4160642f911d29df1d,Liên Chiểu,ridge_log_area_location_alpha_1,26990.0,7968.915902574208,19021.08409742579,70.4745613094694,True
+nhadat24h:4305281,Nhà ở,nhadat24h,property_candidate:db4160642f911d29df1d,Liên Chiểu,xgboost_enriched_log,26990.0,8518.8076171875,18471.1923828125,68.43717074032048,False
+nhadat24h:4341415,Nhà ở,nhadat24h,property_candidate:ff9a442e04209caa6279,Thanh Khê,location_median_unit_price,25000.0,17898.924731182797,7101.075268817203,28.404301075268812,False
+nhadat24h:4341415,Nhà ở,nhadat24h,property_candidate:ff9a442e04209caa6279,Thanh Khê,ridge_log_area_location_alpha_1,25000.0,16670.579128512298,8329.420871487702,33.31768348595081,True
+nhadat24h:4341415,Nhà ở,nhadat24h,property_candidate:ff9a442e04209caa6279,Thanh Khê,xgboost_enriched_log,25000.0,14219.0908203125,10780.9091796875,43.12363671875,False
+nhadat24h:4358235,Nhà ở,nhadat24h,property_candidate:4b207056a2c6254b439c,Hải Châu,location_median_unit_price,6300.0,18953.024548402038,12653.024548402038,200.84165949844504,False
+nhadat24h:4358235,Nhà ở,nhadat24h,property_candidate:4b207056a2c6254b439c,Hải Châu,ridge_log_area_location_alpha_1,6300.0,18189.92095646133,11889.92095646133,188.72890407081476,True
+nhadat24h:4358235,Nhà ở,nhadat24h,property_candidate:4b207056a2c6254b439c,Hải Châu,xgboost_enriched_log,6300.0,20018.40625,13718.40625,217.75248015873015,False
+nhadat24h:4358618,Nhà ở,nhadat24h,property_candidate:d2aec8109da57b36322b,Liên Chiểu,location_median_unit_price,9700.0,9588.461538461539,111.53846153846098,1.1498810467882574,False
+nhadat24h:4358618,Nhà ở,nhadat24h,property_candidate:d2aec8109da57b36322b,Liên Chiểu,ridge_log_area_location_alpha_1,9700.0,8182.37468444124,1517.6253155587601,15.645621809884126,True
+nhadat24h:4358618,Nhà ở,nhadat24h,property_candidate:d2aec8109da57b36322b,Liên Chiểu,xgboost_enriched_log,9700.0,8004.54150390625,1695.45849609375,17.478953567976806,False
+nhadat24h:4358662,Nhà ở,nhadat24h,property_candidate:637c9698118405d5783c,Sơn Trà,location_median_unit_price,6100.0,7110.429447852761,1010.4294478527609,16.564417177914113,False
+nhadat24h:4358662,Nhà ở,nhadat24h,property_candidate:637c9698118405d5783c,Sơn Trà,ridge_log_area_location_alpha_1,6100.0,7260.708559713585,1160.7085597135847,19.028009175632537,True
+nhadat24h:4358662,Nhà ở,nhadat24h,property_candidate:637c9698118405d5783c,Sơn Trà,xgboost_enriched_log,6100.0,7273.53955078125,1173.53955078125,19.2383532914959,False
+nhadat24h:4363081,Nhà ở,nhadat24h,property_candidate:117c7d83d6f3dc74e50d,Sơn Trà,location_median_unit_price,9000.0,8742.331288343557,257.6687116564426,2.8629856850715845,False
+nhadat24h:4363081,Nhà ở,nhadat24h,property_candidate:117c7d83d6f3dc74e50d,Sơn Trà,ridge_log_area_location_alpha_1,9000.0,8766.086728738708,233.9132712612918,2.599036347347687,True
+nhadat24h:4363081,Nhà ở,nhadat24h,property_candidate:117c7d83d6f3dc74e50d,Sơn Trà,xgboost_enriched_log,9000.0,8996.453125,3.546875,0.03940972222222222,False
+nhadat24h:4363572,Nhà ở,nhadat24h,property_candidate:0bd48de320d7f5de4ea6,Sơn Trà,location_median_unit_price,5500.0,7226.993865030675,1726.993865030675,31.399888455103177,False
+nhadat24h:4363572,Nhà ở,nhadat24h,property_candidate:0bd48de320d7f5de4ea6,Sơn Trà,ridge_log_area_location_alpha_1,5500.0,7369.173175142044,1869.1731751420439,33.984966820764434,True
+nhadat24h:4363572,Nhà ở,nhadat24h,property_candidate:0bd48de320d7f5de4ea6,Sơn Trà,xgboost_enriched_log,5500.0,7004.787109375,1504.787109375,27.359765625,False
+nhadat24h:4364125,Nhà ở,nhadat24h,property_candidate:8222c0b7d1d10678ed4b,Thanh Khê,location_median_unit_price,8950.0,4408.602150537635,4541.397849462365,50.74187541298732,False
+nhadat24h:4364125,Nhà ở,nhadat24h,property_candidate:8222c0b7d1d10678ed4b,Thanh Khê,ridge_log_area_location_alpha_1,8950.0,4645.487137693467,4304.512862306533,48.09511577996126,True
+nhadat24h:4364125,Nhà ở,nhadat24h,property_candidate:8222c0b7d1d10678ed4b,Thanh Khê,xgboost_enriched_log,8950.0,4483.50390625,4466.49609375,49.904984287709496,False
+nhadat24h:4366486,Nhà ở,nhadat24h,property_candidate:63b1e29cfe6d1dc50d43,Sơn Trà,location_median_unit_price,6200.0,6411.042944785276,211.04294478527572,3.403918464278641,False
+nhadat24h:4366486,Nhà ở,nhadat24h,property_candidate:63b1e29cfe6d1dc50d43,Sơn Trà,ridge_log_area_location_alpha_1,6200.0,6606.525713529994,406.5257135299944,6.556866347257974,True
+nhadat24h:4366486,Nhà ở,nhadat24h,property_candidate:63b1e29cfe6d1dc50d43,Sơn Trà,xgboost_enriched_log,6200.0,5879.02197265625,320.97802734375,5.177064957157258,False
+nhadat24h:4367575,Nhà ở,nhadat24h,property_candidate:295e62f442a258b98c19,Sơn Trà,location_median_unit_price,11600.0,8159.509202453987,3440.490797546013,29.6594034271208,False
+nhadat24h:4367575,Nhà ở,nhadat24h,property_candidate:295e62f442a258b98c19,Sơn Trà,ridge_log_area_location_alpha_1,11600.0,8231.55864056166,3368.4413594383404,29.038287581365,True
+nhadat24h:4367575,Nhà ở,nhadat24h,property_candidate:295e62f442a258b98c19,Sơn Trà,xgboost_enriched_log,11600.0,7792.845703125,3807.154296875,32.820295662715516,False
+nhadat24h:4367768,Nhà ở,nhadat24h,property_candidate:888f421f8925f8c1b2be,Hải Châu,location_median_unit_price,20500.0,11699.397869383974,8800.602130616026,42.92976649080988,False
+nhadat24h:4367768,Nhà ở,nhadat24h,property_candidate:888f421f8925f8c1b2be,Hải Châu,ridge_log_area_location_alpha_1,20500.0,11715.815089227664,8784.184910772336,42.849682491572366,True
+nhadat24h:4367768,Nhà ở,nhadat24h,property_candidate:888f421f8925f8c1b2be,Hải Châu,xgboost_enriched_log,20500.0,11678.6494140625,8821.3505859375,43.03097846798781,False
+nhadat24h:4368831,Nhà ở,nhadat24h,property_candidate:1863b7e24f58cf876ce7,Sơn Trà,location_median_unit_price,15000.0,8742.331288343557,6257.668711656443,41.71779141104295,False
+nhadat24h:4368831,Nhà ở,nhadat24h,property_candidate:1863b7e24f58cf876ce7,Sơn Trà,ridge_log_area_location_alpha_1,15000.0,8766.086728738708,6233.913271261292,41.559421808408615,True
+nhadat24h:4368831,Nhà ở,nhadat24h,property_candidate:1863b7e24f58cf876ce7,Sơn Trà,xgboost_enriched_log,15000.0,9491.2890625,5508.7109375,36.72473958333333,False
+nhadat24h:4372535,Nhà ở,nhadat24h,property_candidate:95f91a402c507efb3ded,Cẩm Lệ,location_median_unit_price,8400.0,7392.0,1008.0,12.0,False
+nhadat24h:4372535,Nhà ở,nhadat24h,property_candidate:95f91a402c507efb3ded,Cẩm Lệ,ridge_log_area_location_alpha_1,8400.0,6906.973978165612,1493.0260218343883,17.774119307552244,True
+nhadat24h:4372535,Nhà ở,nhadat24h,property_candidate:95f91a402c507efb3ded,Cẩm Lệ,xgboost_enriched_log,8400.0,7611.64208984375,788.35791015625,9.385213216145834,False
+nhadat24h:4372585,Nhà ở,nhadat24h,property_candidate:f00a3815ab913ee18d1b,Sơn Trà,location_median_unit_price,12900.0,11073.61963190184,1826.38036809816,14.15798734959814,False
+nhadat24h:4372585,Nhà ở,nhadat24h,property_candidate:f00a3815ab913ee18d1b,Sơn Trà,ridge_log_area_location_alpha_1,12900.0,10874.876104541441,2025.1238954585588,15.698634848515958,True
+nhadat24h:4372585,Nhà ở,nhadat24h,property_candidate:f00a3815ab913ee18d1b,Sơn Trà,xgboost_enriched_log,12900.0,14010.4765625,1110.4765625,8.608345445736434,False
+nhadat24h:4372763,Nhà ở,nhadat24h,property_candidate:5691307ecc3329bdb3dc,Hải Châu,location_median_unit_price,7900.0,7487.614636405744,412.385363594256,5.220067893598177,False
+nhadat24h:4372763,Nhà ở,nhadat24h,property_candidate:5691307ecc3329bdb3dc,Hải Châu,ridge_log_area_location_alpha_1,7900.0,7798.778438948855,101.22156105114482,1.2812855829258838,True
+nhadat24h:4372763,Nhà ở,nhadat24h,property_candidate:5691307ecc3329bdb3dc,Hải Châu,xgboost_enriched_log,7900.0,7954.10498046875,54.10498046875,0.6848731704905063,False
+nhadat24h:4373871,Nhà ở,nhadat24h,property_candidate:eca7de4310e3315ab639,Sơn Trà,location_median_unit_price,27000.0,15969.325153374233,11030.674846625767,40.85435128379913,False
+nhadat24h:4373871,Nhà ở,nhadat24h,property_candidate:eca7de4310e3315ab639,Sơn Trà,ridge_log_area_location_alpha_1,27000.0,15185.001261808029,11814.998738191971,43.75925458589619,True
+nhadat24h:4373871,Nhà ở,nhadat24h,property_candidate:eca7de4310e3315ab639,Sơn Trà,xgboost_enriched_log,27000.0,14827.6796875,12172.3203125,45.08266782407407,False
+nhadat24h:4374345,Nhà ở,nhadat24h,property_candidate:c08a7313f13ffc6706dc,Hải Châu,location_median_unit_price,6400.0,9359.51829550718,2959.5182955071796,46.24247336729968,False
+nhadat24h:4374345,Nhà ở,nhadat24h,property_candidate:c08a7313f13ffc6706dc,Hải Châu,ridge_log_area_location_alpha_1,6400.0,9558.71571460206,3158.71571460206,49.35493304065719,True
+nhadat24h:4374345,Nhà ở,nhadat24h,property_candidate:c08a7313f13ffc6706dc,Hải Châu,xgboost_enriched_log,6400.0,9858.9658203125,3458.9658203125,54.04634094238281,False
+nhadat24h:4374947,Nhà ở,nhadat24h,property_candidate:b571c6b959eb2710332a,Sơn Trà,location_median_unit_price,11500.0,11656.441717791411,156.44171779141107,1.3603627634035744,False
+nhadat24h:4374947,Nhà ở,nhadat24h,property_candidate:b571c6b959eb2710332a,Sơn Trà,ridge_log_area_location_alpha_1,11500.0,11395.629693304474,104.37030669552587,0.9075678843089205,True
+nhadat24h:4374947,Nhà ở,nhadat24h,property_candidate:b571c6b959eb2710332a,Sơn Trà,xgboost_enriched_log,11500.0,10507.7939453125,992.2060546875,8.627878736413043,False
+nhadat24h:4375887,Nhà ở,nhadat24h,property_candidate:99b5c70995bcc81ec2db,Cẩm Lệ,location_median_unit_price,6500.0,7700.0,1200.0,18.46153846153846,False
+nhadat24h:4375887,Nhà ở,nhadat24h,property_candidate:99b5c70995bcc81ec2db,Cẩm Lệ,ridge_log_area_location_alpha_1,6500.0,7168.937836567663,668.937836567663,10.291351331810201,True
+nhadat24h:4375887,Nhà ở,nhadat24h,property_candidate:99b5c70995bcc81ec2db,Cẩm Lệ,xgboost_enriched_log,6500.0,7491.61962890625,991.61962890625,15.255686598557693,False
+nhadat24h:4377849,Nhà ở,nhadat24h,property_candidate:8a7cff61747b5ed38e6e,Hải Châu,location_median_unit_price,3450.0,5966.6929133858275,2516.6929133858275,72.94762067785007,False
+nhadat24h:4377849,Nhà ở,nhadat24h,property_candidate:8a7cff61747b5ed38e6e,Hải Châu,ridge_log_area_location_alpha_1,3450.0,6340.208976862361,2890.208976862361,83.77417324238726,True
+nhadat24h:4377849,Nhà ở,nhadat24h,property_candidate:8a7cff61747b5ed38e6e,Hải Châu,xgboost_enriched_log,3450.0,3977.308349609375,527.308349609375,15.284299988677537,False
+nhadat24h:4378232,Nhà ở,nhadat24h,property_candidate:284d2268d4b199df917f,Liên Chiểu,location_median_unit_price,7600.0,7568.035714285715,31.964285714285325,0.4205827067669122,False
+nhadat24h:4378232,Nhà ở,nhadat24h,property_candidate:284d2268d4b199df917f,Liên Chiểu,ridge_log_area_location_alpha_1,7600.0,6594.2666164422135,1005.7333835577865,13.233333994181402,True
+nhadat24h:4378232,Nhà ở,nhadat24h,property_candidate:284d2268d4b199df917f,Liên Chiểu,xgboost_enriched_log,7600.0,6163.001953125,1436.998046875,18.90786903782895,False
+nhadat24h:4378502,Nhà ở,nhadat24h,property_candidate:aa1335ec96068b9b1cda,Hải Châu,location_median_unit_price,15000.0,13805.28948587309,1194.7105141269094,7.964736760846063,False
+nhadat24h:4378502,Nhà ở,nhadat24h,property_candidate:aa1335ec96068b9b1cda,Hải Châu,ridge_log_area_location_alpha_1,15000.0,13624.552501784414,1375.4474982155862,9.169649988103908,True
+nhadat24h:4378502,Nhà ở,nhadat24h,property_candidate:aa1335ec96068b9b1cda,Hải Châu,xgboost_enriched_log,15000.0,13022.9345703125,1977.0654296875,13.180436197916666,False
+nhadat24h:4379435,Nhà ở,nhadat24h,property_candidate:86ab7c22a191b4b35f6d,Thanh Khê,location_median_unit_price,7800.0,5290.322580645161,2509.677419354839,32.17535153019024,False
+nhadat24h:4379435,Nhà ở,nhadat24h,property_candidate:86ab7c22a191b4b35f6d,Thanh Khê,ridge_log_area_location_alpha_1,7800.0,5485.765392320876,2314.2346076791237,29.669674457424662,True
+nhadat24h:4379435,Nhà ở,nhadat24h,property_candidate:86ab7c22a191b4b35f6d,Thanh Khê,xgboost_enriched_log,7800.0,4855.6298828125,2944.3701171875,37.74833483573718,False
+nhadat24h:4379604,Nhà ở,nhadat24h,property_candidate:583830d69d455fd573c8,Hải Châu,location_median_unit_price,32000.0,31705.368226030572,294.63177396942774,0.9207242936544617,False
+nhadat24h:4379604,Nhà ở,nhadat24h,property_candidate:583830d69d455fd573c8,Hải Châu,ridge_log_area_location_alpha_1,32000.0,29080.403743454466,2919.596256545534,9.123738301704794,True
+nhadat24h:4379604,Nhà ở,nhadat24h,property_candidate:583830d69d455fd573c8,Hải Châu,xgboost_enriched_log,32000.0,25051.447265625,6948.552734375,21.714227294921876,False
+nhadat24h:4379680,Nhà ở,nhadat24h,property_candidate:3ce79d13340b24ead92a,Thanh Khê,location_median_unit_price,4750.0,5290.322580645161,540.322580645161,11.375212224108653,False
+nhadat24h:4379680,Nhà ở,nhadat24h,property_candidate:3ce79d13340b24ead92a,Thanh Khê,ridge_log_area_location_alpha_1,4750.0,5485.765392320876,735.7653923208763,15.489797733071082,True
+nhadat24h:4379680,Nhà ở,nhadat24h,property_candidate:3ce79d13340b24ead92a,Thanh Khê,xgboost_enriched_log,4750.0,4855.6298828125,105.6298828125,2.2237870065789473,False
+nhadat24h:4380030,Nhà ở,nhadat24h,property_candidate:eb9b0964f2e2e893becf,Thanh Khê,location_median_unit_price,4120.0,2821.505376344086,1298.494623655914,31.516859797473643,False
+nhadat24h:4380030,Nhà ở,nhadat24h,property_candidate:eb9b0964f2e2e893becf,Thanh Khê,ridge_log_area_location_alpha_1,4120.0,3092.3264537667224,1027.6735462332776,24.94353267556499,True
+nhadat24h:4380030,Nhà ở,nhadat24h,property_candidate:eb9b0964f2e2e893becf,Thanh Khê,xgboost_enriched_log,4120.0,3091.050537109375,1028.949462890625,24.97450152647148,False
+nhadat24h:4380541,Nhà ở,nhadat24h,property_candidate:85cb4a200de09305b3b6,Hải Châu,location_median_unit_price,5150.0,5849.698934691987,699.6989346919872,13.58638708139781,False
+nhadat24h:4380541,Nhà ở,nhadat24h,property_candidate:85cb4a200de09305b3b6,Hải Châu,ridge_log_area_location_alpha_1,5150.0,6226.74401482558,1076.74401482558,20.907650773312234,True
+nhadat24h:4380541,Nhà ở,nhadat24h,property_candidate:85cb4a200de09305b3b6,Hải Châu,xgboost_enriched_log,5150.0,5726.04638671875,576.04638671875,11.185366732402912,False
+nhadat24h:4380964,Nhà ở,nhadat24h,property_candidate:62eb1876f45f5dbd2888,Hải Châu,location_median_unit_price,5300.0,5381.723019916629,81.7230199166288,1.541943772011864,False
+nhadat24h:4380964,Nhà ở,nhadat24h,property_candidate:62eb1876f45f5dbd2888,Hải Châu,ridge_log_area_location_alpha_1,5300.0,5770.837720473693,470.83772047369257,8.883730574975333,True
+nhadat24h:4380964,Nhà ở,nhadat24h,property_candidate:62eb1876f45f5dbd2888,Hải Châu,xgboost_enriched_log,5300.0,5117.0810546875,182.9189453125,3.45130085495283,False
+nhadat24h:4382671,Nhà ở,nhadat24h,property_candidate:46e61dc577cc1a0b7a33,Liên Chiểu,location_median_unit_price,7900.0,5136.675824175824,2763.3241758241757,34.97878703574906,False
+nhadat24h:4382671,Nhà ở,nhadat24h,property_candidate:46e61dc577cc1a0b7a33,Liên Chiểu,ridge_log_area_location_alpha_1,7900.0,4631.178845584351,3268.8211544156493,41.3774829672867,True
+nhadat24h:4382671,Nhà ở,nhadat24h,property_candidate:46e61dc577cc1a0b7a33,Liên Chiểu,xgboost_enriched_log,7900.0,4717.58837890625,3182.41162109375,40.28369140625,False
+nhadat24h:4382749,Nhà ở,nhadat24h,property_candidate:3a8d810ba1cc64c88a53,Hải Châu,location_median_unit_price,4250.0,3240.733209819361,1009.266790180639,23.747453886603267,False
+nhadat24h:4382749,Nhà ở,nhadat24h,property_candidate:3a8d810ba1cc64c88a53,Hải Châu,ridge_log_area_location_alpha_1,4250.0,3633.838775562851,616.161224437149,14.497911163227037,True
+nhadat24h:4382749,Nhà ở,nhadat24h,property_candidate:3a8d810ba1cc64c88a53,Hải Châu,xgboost_enriched_log,4250.0,3098.319580078125,1151.680419921875,27.098362821691175,False
+nhadat24h:4382900,Nhà ở,nhadat24h,property_candidate:beece5a914923e021b09,Sơn Trà,location_median_unit_price,21000.0,11656.441717791411,9343.558282208589,44.49313467718376,False
+nhadat24h:4382900,Nhà ở,nhadat24h,property_candidate:beece5a914923e021b09,Sơn Trà,ridge_log_area_location_alpha_1,21000.0,11395.629693304474,9604.370306695526,45.73509669855012,True
+nhadat24h:4382900,Nhà ở,nhadat24h,property_candidate:beece5a914923e021b09,Sơn Trà,xgboost_enriched_log,21000.0,14409.1787109375,6590.8212890625,31.38486328125,False
+nhadat24h:4384140,Nhà ở,nhadat24h,property_candidate:3ca1256207a8b74a498a,Hải Châu,location_median_unit_price,14600.0,7382.320055581288,7217.679944418712,49.43616400286789,False
+nhadat24h:4384140,Nhà ở,nhadat24h,property_candidate:3ca1256207a8b74a498a,Hải Châu,ridge_log_area_location_alpha_1,14600.0,7698.706991082869,6901.293008917131,47.26913019806254,True
+nhadat24h:4384140,Nhà ở,nhadat24h,property_candidate:3ca1256207a8b74a498a,Hải Châu,xgboost_enriched_log,14600.0,8836.5830078125,5763.4169921875,39.47545885059932,False
+nhadat24h:4386598,Nhà ở,nhadat24h,property_candidate:14aeb1568857644c3859,Thanh Khê,location_median_unit_price,3450.0,3086.021505376344,363.97849462365593,10.550101293439303,False
+nhadat24h:4386598,Nhà ở,nhadat24h,property_candidate:14aeb1568857644c3859,Thanh Khê,ridge_log_area_location_alpha_1,3450.0,3355.6372764873595,94.36272351264051,2.735151406163493,True
+nhadat24h:4386598,Nhà ở,nhadat24h,property_candidate:14aeb1568857644c3859,Thanh Khê,xgboost_enriched_log,3450.0,3320.716796875,129.283203125,3.7473392210144927,False
+nhadat24h:4387172,Nhà ở,nhadat24h,property_candidate:0a3f3a9c3e4b7e832f70,Thanh Khê,location_median_unit_price,4750.0,4408.602150537635,341.39784946236523,7.1873231465761105,False
+nhadat24h:4387172,Nhà ở,nhadat24h,property_candidate:0a3f3a9c3e4b7e832f70,Thanh Khê,ridge_log_area_location_alpha_1,4750.0,4645.487137693467,104.51286230653295,2.2002707854006935,True
+nhadat24h:4387172,Nhà ở,nhadat24h,property_candidate:0a3f3a9c3e4b7e832f70,Thanh Khê,xgboost_enriched_log,4750.0,4729.70654296875,20.29345703125,0.42723067434210527,False
+nhadat24h:4387279,Nhà ở,nhadat24h,property_candidate:ff8283deb5f5be1798c5,Thanh Khê,location_median_unit_price,14890.0,7935.4838709677415,6954.5161290322585,46.70595116878615,False
+nhadat24h:4387279,Nhà ở,nhadat24h,property_candidate:ff8283deb5f5be1798c5,Thanh Khê,ridge_log_area_location_alpha_1,14890.0,7939.920644398959,6950.079355601041,46.67615416790491,True
+nhadat24h:4387279,Nhà ở,nhadat24h,property_candidate:ff8283deb5f5be1798c5,Thanh Khê,xgboost_enriched_log,14890.0,8051.93359375,6838.06640625,45.92388452820685,False
+nhadat24h:4387607,Nhà ở,nhadat24h,property_candidate:45a5ff1cba0a061dd012,Liên Chiểu,location_median_unit_price,8400.0,5479.120879120879,2920.879120879121,34.7723704866562,False
+nhadat24h:4387607,Nhà ở,nhadat24h,property_candidate:45a5ff1cba0a061dd012,Liên Chiểu,ridge_log_area_location_alpha_1,8400.0,4911.918528038729,3488.081471961271,41.52477942811037,True
+nhadat24h:4387607,Nhà ở,nhadat24h,property_candidate:45a5ff1cba0a061dd012,Liên Chiểu,xgboost_enriched_log,8400.0,5569.71533203125,2830.28466796875,33.69386509486607,False
+nhadat24h:4388415,Nhà ở,nhadat24h,property_candidate:b3edc350d99ec5c75291,Liên Chiểu,location_median_unit_price,5400.0,4314.807692307692,1085.1923076923076,20.096153846153847,False
+nhadat24h:4388415,Nhà ở,nhadat24h,property_candidate:b3edc350d99ec5c75291,Liên Chiểu,ridge_log_area_location_alpha_1,5400.0,3950.401790217481,1449.598209782519,26.84441129226887,True
+nhadat24h:4388415,Nhà ở,nhadat24h,property_candidate:b3edc350d99ec5c75291,Liên Chiểu,xgboost_enriched_log,5400.0,4499.14697265625,900.85302734375,16.682463469328702,False
+nhadat24h:4389655,Nhà ở,nhadat24h,property_candidate:548aa5611655bd025659,Thanh Khê,location_median_unit_price,4950.0,5290.322580645161,340.322580645161,6.875203649397192,False
+nhadat24h:4389655,Nhà ở,nhadat24h,property_candidate:548aa5611655bd025659,Thanh Khê,ridge_log_area_location_alpha_1,4950.0,5485.765392320876,535.7653923208763,10.823543279209623,True
+nhadat24h:4389655,Nhà ở,nhadat24h,property_candidate:548aa5611655bd025659,Thanh Khê,xgboost_enriched_log,4950.0,4773.9765625,176.0234375,3.55602904040404,False
+nhadat24h:4389656,Nhà ở,nhadat24h,property_candidate:f7a35275b5e780ea6e20,Thanh Khê,location_median_unit_price,6000.0,6524.731182795699,524.7311827956992,8.745519713261652,False
+nhadat24h:4389656,Nhà ở,nhadat24h,property_candidate:f7a35275b5e780ea6e20,Thanh Khê,ridge_log_area_location_alpha_1,6000.0,6641.92839357745,641.9283935774502,10.69880655962417,True
+nhadat24h:4389656,Nhà ở,nhadat24h,property_candidate:f7a35275b5e780ea6e20,Thanh Khê,xgboost_enriched_log,6000.0,5252.3408203125,747.6591796875,12.460986328125,False
+nhadat24h:4390198,Nhà ở,nhadat24h,property_candidate:e7d3d16fb2c7cc6a171e,Thanh Khê,location_median_unit_price,4500.0,4849.462365591397,349.46236559139743,7.765830346475497,False
+nhadat24h:4390198,Nhà ở,nhadat24h,property_candidate:e7d3d16fb2c7cc6a171e,Thanh Khê,ridge_log_area_location_alpha_1,4500.0,5067.3110075171435,567.3110075171435,12.606911278158742,True
+nhadat24h:4390198,Nhà ở,nhadat24h,property_candidate:e7d3d16fb2c7cc6a171e,Thanh Khê,xgboost_enriched_log,4500.0,4687.6083984375,187.6083984375,4.169075520833333,False
+nhadat24h:4390676,Nhà ở,nhadat24h,property_candidate:ebd967103596a93cd7df,Hải Châu,location_median_unit_price,5800.0,4679.75914775359,1120.2408522464102,19.314497452524314,False
+nhadat24h:4390676,Nhà ở,nhadat24h,property_candidate:ebd967103596a93cd7df,Hải Châu,ridge_log_area_location_alpha_1,5800.0,5080.284676056736,719.7153239432637,12.408884895573511,True
+nhadat24h:4390676,Nhà ở,nhadat24h,property_candidate:ebd967103596a93cd7df,Hải Châu,xgboost_enriched_log,5800.0,5185.8251953125,614.1748046875,10.589220770474139,False
+nhadat24h:4392670,Nhà ở,nhadat24h,property_candidate:f97f5e8db65cc88121b0,Thanh Khê,location_median_unit_price,4850.0,5290.322580645161,440.322580645161,9.078816095776515,False
+nhadat24h:4392670,Nhà ở,nhadat24h,property_candidate:f97f5e8db65cc88121b0,Thanh Khê,ridge_log_area_location_alpha_1,4850.0,5485.765392320876,635.7653923208763,13.108564790121163,True
+nhadat24h:4392670,Nhà ở,nhadat24h,property_candidate:f97f5e8db65cc88121b0,Thanh Khê,xgboost_enriched_log,4850.0,4055.8623046875,794.1376953125,16.373973099226806,False
+nhadat24h:4394586,Nhà ở,nhadat24h,property_candidate:eaea70fac9b657f36c81,Liên Chiểu,location_median_unit_price,8400.0,5479.120879120879,2920.879120879121,34.7723704866562,False
+nhadat24h:4394586,Nhà ở,nhadat24h,property_candidate:eaea70fac9b657f36c81,Liên Chiểu,ridge_log_area_location_alpha_1,8400.0,4911.918528038729,3488.081471961271,41.52477942811037,True
+nhadat24h:4394586,Nhà ở,nhadat24h,property_candidate:eaea70fac9b657f36c81,Liên Chiểu,xgboost_enriched_log,8400.0,5569.71533203125,2830.28466796875,33.69386509486607,False
+nhadat24h:4394797,Nhà ở,nhadat24h,property_candidate:f900ce40519d1f447d0b,Hải Châu,location_median_unit_price,14000.0,12705.546086150996,1294.4539138490036,9.24609938463574,False
+nhadat24h:4394797,Nhà ở,nhadat24h,property_candidate:f900ce40519d1f447d0b,Hải Châu,ridge_log_area_location_alpha_1,14000.0,12631.240181599507,1368.7598184004928,9.776855845717805,True
+nhadat24h:4394797,Nhà ở,nhadat24h,property_candidate:f900ce40519d1f447d0b,Hải Châu,xgboost_enriched_log,14000.0,13373.978515625,626.021484375,4.47158203125,False
+nhadat24h:4394893,Nhà ở,nhadat24h,property_candidate:67b4318b844ceb69a869,Hải Châu,location_median_unit_price,14800.0,8950.03937007874,5849.960629921259,39.526761012981474,False
+nhadat24h:4394893,Nhà ở,nhadat24h,property_candidate:67b4318b844ceb69a869,Hải Châu,ridge_log_area_location_alpha_1,14800.0,9176.614846792632,5623.385153207368,37.99584562977952,True
+nhadat24h:4394893,Nhà ở,nhadat24h,property_candidate:67b4318b844ceb69a869,Hải Châu,xgboost_enriched_log,14800.0,10523.9091796875,4276.0908203125,28.892505542652028,False
+nhadat24h:4395329,Nhà ở,nhadat24h,property_candidate:1c2a418fa24313eee166,Liên Chiểu,location_median_unit_price,6950.0,5136.675824175824,1813.3241758241757,26.09099533559965,False
+nhadat24h:4395329,Nhà ở,nhadat24h,property_candidate:1c2a418fa24313eee166,Liên Chiểu,ridge_log_area_location_alpha_1,6950.0,4631.178845584351,2318.8211544156493,33.364333157059704,True
+nhadat24h:4395329,Nhà ở,nhadat24h,property_candidate:1c2a418fa24313eee166,Liên Chiểu,xgboost_enriched_log,6950.0,4740.03369140625,2209.96630859375,31.798076382643885,False
+nhadat24h:4396236,Nhà ở,nhadat24h,property_candidate:770f19119ed415a3c162,Hải Châu,location_median_unit_price,24000.0,14039.27744326077,9960.72255673923,41.503010653080125,False
+nhadat24h:4396236,Nhà ở,nhadat24h,property_candidate:770f19119ed415a3c162,Hải Châu,ridge_log_area_location_alpha_1,24000.0,13834.978131319678,10165.021868680322,42.354257786168006,True
+nhadat24h:4396236,Nhà ở,nhadat24h,property_candidate:770f19119ed415a3c162,Hải Châu,xgboost_enriched_log,24000.0,13275.29296875,10724.70703125,44.686279296875,False
+nhadat24h:4396387,Nhà ở,nhadat24h,property_candidate:7cef326ec8d7bca4d710,Hải Châu,location_median_unit_price,4700.0,6083.686892079667,1383.686892079667,29.440146639992914,False
+nhadat24h:4396387,Nhà ở,nhadat24h,property_candidate:7cef326ec8d7bca4d710,Hải Châu,ridge_log_area_location_alpha_1,4700.0,6453.47810639803,1753.47810639803,37.30804481697936,True
+nhadat24h:4396387,Nhà ở,nhadat24h,property_candidate:7cef326ec8d7bca4d710,Hải Châu,xgboost_enriched_log,4700.0,5461.9140625,761.9140625,16.2109375,False
+nhadat24h:4397838,Nhà ở,nhadat24h,property_candidate:5844528859b7dd17868c,Liên Chiểu,location_median_unit_price,3500.0,5479.120879120879,1979.1208791208792,56.54631083202512,False
+nhadat24h:4397838,Nhà ở,nhadat24h,property_candidate:5844528859b7dd17868c,Liên Chiểu,ridge_log_area_location_alpha_1,3500.0,4911.918528038729,1411.9185280387292,40.34052937253512,True
+nhadat24h:4397838,Nhà ở,nhadat24h,property_candidate:5844528859b7dd17868c,Liên Chiểu,xgboost_enriched_log,3500.0,5559.55810546875,2059.55810546875,58.844517299107146,False
+nhadat24h:4397920,Nhà ở,nhadat24h,property_candidate:814622f1a3614ee01887,Hải Châu,location_median_unit_price,11200.0,9499.911069939788,1700.088930060212,15.17936544696618,False
+nhadat24h:4397920,Nhà ở,nhadat24h,property_candidate:814622f1a3614ee01887,Hải Châu,ridge_log_area_location_alpha_1,11200.0,9689.37975671803,1510.62024328197,13.487680743589019,True
+nhadat24h:4397920,Nhà ở,nhadat24h,property_candidate:814622f1a3614ee01887,Hải Châu,xgboost_enriched_log,11200.0,9815.66015625,1384.33984375,12.360177176339286,False
+nhadat24h:4398243,Nhà ở,nhadat24h,property_candidate:9348b6ae3752f2e26648,Thanh Khê,location_median_unit_price,5150.0,4584.94623655914,565.0537634408602,10.971917736715731,False
+nhadat24h:4398243,Nhà ở,nhadat24h,property_candidate:9348b6ae3752f2e26648,Thanh Khê,ridge_log_area_location_alpha_1,5150.0,4814.6430084934545,335.35699150654546,6.511786242845543,True
+nhadat24h:4398243,Nhà ở,nhadat24h,property_candidate:9348b6ae3752f2e26648,Thanh Khê,xgboost_enriched_log,5150.0,4518.474609375,631.525390625,12.262628944174757,False
+nhadat24h:4400001,Nhà ở,nhadat24h,property_candidate:712d595f7853724a023a,Hải Châu,location_median_unit_price,11000.0,13688.295507179251,2688.295507179251,24.43905006526592,False
+nhadat24h:4400001,Nhà ở,nhadat24h,property_candidate:712d595f7853724a023a,Hải Châu,ridge_log_area_location_alpha_1,11000.0,13519.222137704955,2519.2221377049555,22.902019433681414,True
+nhadat24h:4400001,Nhà ở,nhadat24h,property_candidate:712d595f7853724a023a,Hải Châu,xgboost_enriched_log,11000.0,14748.3212890625,3748.3212890625,34.075648082386365,False
+nhadat24h:4400755,Nhà ở,nhadat24h,property_candidate:067eb8d82f68b6442332,Liên Chiểu,location_median_unit_price,1800.0,4314.807692307692,2514.8076923076924,139.71153846153848,False
+nhadat24h:4400755,Nhà ở,nhadat24h,property_candidate:067eb8d82f68b6442332,Liên Chiểu,ridge_log_area_location_alpha_1,1800.0,3950.401790217481,2150.401790217481,119.4667661231934,True
+nhadat24h:4400755,Nhà ở,nhadat24h,property_candidate:067eb8d82f68b6442332,Liên Chiểu,xgboost_enriched_log,1800.0,4499.14697265625,2699.14697265625,149.95260959201389,False
+nhadat24h:4400789,Nhà ở,nhadat24h,property_candidate:b0214313de30b0d4bdbb,Liên Chiểu,location_median_unit_price,8440.0,5136.675824175824,3303.3241758241757,39.13891203583146,False
+nhadat24h:4400789,Nhà ở,nhadat24h,property_candidate:b0214313de30b0d4bdbb,Liên Chiểu,ridge_log_area_location_alpha_1,8440.0,4631.178845584351,3808.8211544156493,45.12821273004324,True
+nhadat24h:4400789,Nhà ở,nhadat24h,property_candidate:b0214313de30b0d4bdbb,Liên Chiểu,xgboost_enriched_log,8440.0,4623.6162109375,3816.3837890625,45.21781740595379,False
+alonhadat:13099911,Đất nền,alonhadat,property_candidate:8bd6fa7121e708a3bc82,Sơn Trà,location_median_unit_price,16000.0,9300.0,6700.0,41.875,True
+alonhadat:13099911,Đất nền,alonhadat,property_candidate:8bd6fa7121e708a3bc82,Sơn Trà,ridge_log_area_location_alpha_1,16000.0,9422.7942779208,6577.205722079199,41.10753576299499,False
+alonhadat:13099911,Đất nền,alonhadat,property_candidate:8bd6fa7121e708a3bc82,Sơn Trà,xgboost_enriched_log,16000.0,10432.724609375,5567.275390625,34.79547119140625,False
+cafeland:2283069,Đất nền,cafeland,property_candidate:ee2f211c728626f4f66d,Cẩm Lệ,location_median_unit_price,2700.0,4547.233870967742,1847.2338709677424,68.41606929510156,True
+cafeland:2283069,Đất nền,cafeland,property_candidate:ee2f211c728626f4f66d,Cẩm Lệ,ridge_log_area_location_alpha_1,2700.0,4286.7071412673085,1586.7071412673085,58.766931158048465,False
+cafeland:2283069,Đất nền,cafeland,property_candidate:ee2f211c728626f4f66d,Cẩm Lệ,xgboost_enriched_log,2700.0,3567.75341796875,867.75341796875,32.139015480324076,False
+cafeland:2819829,Đất nền,cafeland,property_candidate:87f7f67961dd77c48d84,Cẩm Lệ,location_median_unit_price,5550.0,4171.774193548387,1378.2258064516127,24.83289741354257,True
+cafeland:2819829,Đất nền,cafeland,property_candidate:87f7f67961dd77c48d84,Cẩm Lệ,ridge_log_area_location_alpha_1,5550.0,3993.6390648684214,1556.3609351315786,28.042539371740155,False
+cafeland:2819829,Đất nền,cafeland,property_candidate:87f7f67961dd77c48d84,Cẩm Lệ,xgboost_enriched_log,5550.0,3608.373291015625,1941.626708984375,34.9842650267455,False
+cafeland:3144971,Đất nền,cafeland,property_candidate:004b35c844a121098402,Sơn Trà,location_median_unit_price,22500.0,13433.333333333332,9066.666666666668,40.2962962962963,True
+cafeland:3144971,Đất nền,cafeland,property_candidate:004b35c844a121098402,Sơn Trà,ridge_log_area_location_alpha_1,22500.0,12747.14510283633,9752.85489716367,43.34602176517187,False
+cafeland:3144971,Đất nền,cafeland,property_candidate:004b35c844a121098402,Sơn Trà,xgboost_enriched_log,22500.0,12005.47265625,10494.52734375,46.64234375,False
+cafeland:3145055,Đất nền,cafeland,property_candidate:9a347a8f3ba7b70055a7,Hải Châu,location_median_unit_price,15000.0,7072.0,7928.0,52.85333333333333,True
+cafeland:3145055,Đất nền,cafeland,property_candidate:9a347a8f3ba7b70055a7,Hải Châu,ridge_log_area_location_alpha_1,15000.0,7620.16754217423,7379.83245782577,49.198883052171794,False
+cafeland:3145055,Đất nền,cafeland,property_candidate:9a347a8f3ba7b70055a7,Hải Châu,xgboost_enriched_log,15000.0,5941.16845703125,9058.83154296875,60.39221028645834,False
+cafeland:3145201,Đất nền,cafeland,property_candidate:a90f461f144a4c0c3159,Hòa Vang,location_median_unit_price,2000.0,1330.0,670.0,33.5,True
+cafeland:3145201,Đất nền,cafeland,property_candidate:a90f461f144a4c0c3159,Hòa Vang,ridge_log_area_location_alpha_1,2000.0,1375.6180999516578,624.3819000483422,31.21909500241711,False
+cafeland:3145201,Đất nền,cafeland,property_candidate:a90f461f144a4c0c3159,Hòa Vang,xgboost_enriched_log,2000.0,1633.9654541015625,366.0345458984375,18.301727294921875,False
+cafeland:3145213,Đất nền,cafeland,property_candidate:984f90c8783c425fbc8c,Ngũ Hành Sơn,location_median_unit_price,5200.0,7049.66133004926,1849.66133004926,35.570410193255,True
+cafeland:3145213,Đất nền,cafeland,property_candidate:984f90c8783c425fbc8c,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,5200.0,7842.098715260552,2642.098715260552,50.80959067808754,False
+cafeland:3145213,Đất nền,cafeland,property_candidate:984f90c8783c425fbc8c,Ngũ Hành Sơn,xgboost_enriched_log,5200.0,6599.93505859375,1399.93505859375,26.921828049879807,False
+cafeland:3146696,Đất nền,cafeland,property_candidate:16389512cb75bbb42980,Hòa Vang,location_median_unit_price,1350.0,1174.8333333333335,175.16666666666652,12.975308641975296,True
+cafeland:3146696,Đất nền,cafeland,property_candidate:16389512cb75bbb42980,Hòa Vang,ridge_log_area_location_alpha_1,1350.0,1242.2989182155254,107.70108178447458,7.977857909961081,False
+cafeland:3146696,Đất nền,cafeland,property_candidate:16389512cb75bbb42980,Hòa Vang,xgboost_enriched_log,1350.0,1789.6402587890625,439.6402587890625,32.565945095486114,False
+cafeland:3146717,Đất nền,cafeland,property_candidate:c54da74f915ae9db472b,Ngũ Hành Sơn,location_median_unit_price,35000.0,13822.865353037763,21177.134646962237,60.506098991320684,True
+cafeland:3146717,Đất nền,cafeland,property_candidate:c54da74f915ae9db472b,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,35000.0,13637.500430976,21362.499569024,61.03571305435429,False
+cafeland:3146717,Đất nền,cafeland,property_candidate:c54da74f915ae9db472b,Ngũ Hành Sơn,xgboost_enriched_log,35000.0,13837.7578125,21162.2421875,60.46354910714286,False
+cafeland:3146736,Đất nền,cafeland,property_candidate:c2861f4a3d18e724c1f9,Hòa Vang,location_median_unit_price,3600.0,5719.0,2119.0,58.861111111111114,True
+cafeland:3146736,Đất nền,cafeland,property_candidate:c2861f4a3d18e724c1f9,Hòa Vang,ridge_log_area_location_alpha_1,3600.0,4560.860886846911,960.860886846911,26.69058019019197,False
+cafeland:3146736,Đất nền,cafeland,property_candidate:c2861f4a3d18e724c1f9,Hòa Vang,xgboost_enriched_log,3600.0,7207.5751953125,3607.5751953125,100.21042209201389,False
+cafeland:3149020,Đất nền,cafeland,property_candidate:760616995c129cb8be7b,new_unit:dien ban bac,location_median_unit_price,2780.0,645.0,2135.0,76.79856115107914,True
+cafeland:3149020,Đất nền,cafeland,property_candidate:760616995c129cb8be7b,new_unit:dien ban bac,ridge_log_area_location_alpha_1,2780.0,1442.6178840795467,1337.3821159204533,48.10727035685083,False
+cafeland:3149020,Đất nền,cafeland,property_candidate:760616995c129cb8be7b,new_unit:dien ban bac,xgboost_enriched_log,2780.0,3526.002685546875,746.002685546875,26.834628976506295,False
+cafeland:3149073,Đất nền,cafeland,property_candidate:6b83e048bc3dc391196a,Hòa Vang,location_median_unit_price,2400.0,2128.0,272.0,11.333333333333334,True
+cafeland:3149073,Đất nền,cafeland,property_candidate:6b83e048bc3dc391196a,Hòa Vang,ridge_log_area_location_alpha_1,2400.0,2024.10140333551,375.89859666449,15.662441527687085,False
+cafeland:3149073,Đất nền,cafeland,property_candidate:6b83e048bc3dc391196a,Hòa Vang,xgboost_enriched_log,2400.0,1757.2454833984375,642.7545166015625,26.78143819173177,False
+cafeland:3150142,Đất nền,cafeland,property_candidate:2c03fecf0aaaa77b09f5,Ngũ Hành Sơn,location_median_unit_price,26400.0,25157.61494252873,1242.3850574712706,4.706004005572995,True
+cafeland:3150142,Đất nền,cafeland,property_candidate:2c03fecf0aaaa77b09f5,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,26400.0,22307.29430755859,4092.70569244141,15.502673077429582,False
+cafeland:3150142,Đất nền,cafeland,property_candidate:2c03fecf0aaaa77b09f5,Ngũ Hành Sơn,xgboost_enriched_log,26400.0,30651.9609375,4251.9609375,16.105912642045453,False
+cafeland:3150164,Đất nền,cafeland,property_candidate:81654d91dce4b33be05b,new_unit:hoa xuan,location_median_unit_price,6350.0,5475.0,875.0,13.779527559055119,True
+cafeland:3150164,Đất nền,cafeland,property_candidate:81654d91dce4b33be05b,new_unit:hoa xuan,ridge_log_area_location_alpha_1,6350.0,4216.712095925802,2133.287904074198,33.59508510353068,False
+cafeland:3150164,Đất nền,cafeland,property_candidate:81654d91dce4b33be05b,new_unit:hoa xuan,xgboost_enriched_log,6350.0,4040.258056640625,2309.741943359375,36.37388887180118,False
+cafeland:3150177,Đất nền,cafeland,property_candidate:1391657e718dd167af98,Cẩm Lệ,location_median_unit_price,8000.0,3462.5725806451615,4537.427419354839,56.717842741935485,True
+cafeland:3150177,Đất nền,cafeland,property_candidate:1391657e718dd167af98,Cẩm Lệ,ridge_log_area_location_alpha_1,8000.0,3426.6655188501404,4573.334481149859,57.16668101437324,False
+cafeland:3150177,Đất nền,cafeland,property_candidate:1391657e718dd167af98,Cẩm Lệ,xgboost_enriched_log,8000.0,3720.154296875,4279.845703125,53.4980712890625,False
+cafeland:3150238,Đất nền,cafeland,property_candidate:1bb53a80c582e10f42de,Cẩm Lệ,location_median_unit_price,4850.0,3712.8790322580644,1137.1209677419356,23.44579314931826,True
+cafeland:3150238,Đất nền,cafeland,property_candidate:1bb53a80c582e10f42de,Cẩm Lệ,ridge_log_area_location_alpha_1,4850.0,3628.944699387364,1221.055300612636,25.176397950776,False
+cafeland:3150238,Đất nền,cafeland,property_candidate:1bb53a80c582e10f42de,Cẩm Lệ,xgboost_enriched_log,4850.0,3775.982421875,1074.017578125,22.144692332474225,False
+cafeland:3154054,Đất nền,cafeland,property_candidate:fe6c8aa64dbd8bab6ca8,Ngũ Hành Sơn,location_median_unit_price,20600.0,10574.49199507389,10025.50800492611,48.66751458701995,True
+cafeland:3154054,Đất nền,cafeland,property_candidate:fe6c8aa64dbd8bab6ca8,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,20600.0,10942.945896763862,9657.054103236138,46.87890341376766,False
+cafeland:3154054,Đất nền,cafeland,property_candidate:fe6c8aa64dbd8bab6ca8,Ngũ Hành Sơn,xgboost_enriched_log,20600.0,12699.51171875,7900.48828125,38.35188486043689,False
+cafeland:3154244,Đất nền,cafeland,property_candidate:a51ba54d277fa06028e4,Sơn Trà,location_median_unit_price,14800.0,15500.0,700.0,4.72972972972973,True
+cafeland:3154244,Đất nền,cafeland,property_candidate:a51ba54d277fa06028e4,Sơn Trà,ridge_log_area_location_alpha_1,14800.0,14337.802806327585,462.19719367241487,3.1229540113001004,False
+cafeland:3154244,Đất nền,cafeland,property_candidate:a51ba54d277fa06028e4,Sơn Trà,xgboost_enriched_log,14800.0,13921.904296875,878.095703125,5.933079075168919,False
+cafeland:3154497,Đất nền,cafeland,property_candidate:448b8b18930111e50f45,Ngũ Hành Sơn,location_median_unit_price,25000.0,13062.607758620687,11937.392241379313,47.749568965517255,True
+cafeland:3154497,Đất nền,cafeland,property_candidate:448b8b18930111e50f45,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,25000.0,13018.052293019025,11981.947706980975,47.9277908279239,False
+cafeland:3154497,Đất nền,cafeland,property_candidate:448b8b18930111e50f45,Ngũ Hành Sơn,xgboost_enriched_log,25000.0,13193.0048828125,11806.9951171875,47.22798046875,False
+cafeland:3154503,Đất nền,cafeland,property_candidate:d219f6894802af9d7eb1,Ngũ Hành Sơn,location_median_unit_price,33800.0,11196.520935960589,22603.479064039413,66.87419841431779,True
+cafeland:3154503,Đất nền,cafeland,property_candidate:d219f6894802af9d7eb1,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,33800.0,11469.193625139465,22330.806374860535,66.0674744818359,False
+cafeland:3154503,Đất nền,cafeland,property_candidate:d219f6894802af9d7eb1,Ngũ Hành Sơn,xgboost_enriched_log,33800.0,15668.3056640625,18131.6943359375,53.64406608265533,False
+cafeland:3154615,Đất nền,cafeland,property_candidate:3498ad4d6d19dd66cd76,new_unit:hoa xuan,location_median_unit_price,4100.0,5201.25,1101.25,26.859756097560975,True
+cafeland:3154615,Đất nền,cafeland,property_candidate:3498ad4d6d19dd66cd76,new_unit:hoa xuan,ridge_log_area_location_alpha_1,4100.0,4042.6715165333444,57.3284834666556,1.398255694308673,False
+cafeland:3154615,Đất nền,cafeland,property_candidate:3498ad4d6d19dd66cd76,new_unit:hoa xuan,xgboost_enriched_log,4100.0,4043.037109375,56.962890625,1.3893387957317074,False
+cafeland:3154895,Đất nền,cafeland,property_candidate:0b318933c062224699e8,Sơn Trà,location_median_unit_price,10800.0,9196.666666666666,1603.333333333334,14.845679012345686,True
+cafeland:3154895,Đất nền,cafeland,property_candidate:0b318933c062224699e8,Sơn Trà,ridge_log_area_location_alpha_1,10800.0,9336.673977375774,1463.3260226242255,13.549315024298386,False
+cafeland:3154895,Đất nền,cafeland,property_candidate:0b318933c062224699e8,Sơn Trà,xgboost_enriched_log,10800.0,9507.8955078125,1292.1044921875,11.963930483217593,False
+cafeland:3157128,Đất nền,cafeland,property_candidate:37307415e6e41f5a18c6,new_unit:hoa khanh,location_median_unit_price,4950.0,6099.819444444444,1149.8194444444443,23.22867564534231,True
+cafeland:3157128,Đất nền,cafeland,property_candidate:37307415e6e41f5a18c6,new_unit:hoa khanh,ridge_log_area_location_alpha_1,4950.0,4340.452372471586,609.5476275284136,12.314093485422497,False
+cafeland:3157128,Đất nền,cafeland,property_candidate:37307415e6e41f5a18c6,new_unit:hoa khanh,xgboost_enriched_log,4950.0,4416.49951171875,533.50048828125,10.777787642045455,False
+cafeland:3159255,Đất nền,cafeland,property_candidate:435e7ae7e9eb42f0f7a5,new_unit:lien chieu,location_median_unit_price,1650.0,3737.745098039216,2087.745098039216,126.53000594177067,True
+cafeland:3159255,Đất nền,cafeland,property_candidate:435e7ae7e9eb42f0f7a5,new_unit:lien chieu,ridge_log_area_location_alpha_1,1650.0,3765.7236167289916,2115.7236167289916,128.225673741151,False
+cafeland:3159255,Đất nền,cafeland,property_candidate:435e7ae7e9eb42f0f7a5,new_unit:lien chieu,xgboost_enriched_log,1650.0,3200.43212890625,1550.43212890625,93.96558357007575,False
+cafeland:3159268,Đất nền,cafeland,property_candidate:b17b88543dabfcee16dc,Thanh Khê,location_median_unit_price,2490.0,4404.166666666666,1914.166666666666,76.87416331994642,True
+cafeland:3159268,Đất nền,cafeland,property_candidate:b17b88543dabfcee16dc,Thanh Khê,ridge_log_area_location_alpha_1,2490.0,4893.344984555424,2403.344984555424,96.51987889780821,False
+cafeland:3159268,Đất nền,cafeland,property_candidate:b17b88543dabfcee16dc,Thanh Khê,xgboost_enriched_log,2490.0,4374.11279296875,1884.11279296875,75.66718044051204,False
+cafeland:3160449,Đất nền,cafeland,property_candidate:78a9c5473a45604ed0b6,Thanh Khê,location_median_unit_price,13500.0,9647.222222222223,3852.7777777777774,28.539094650205758,True
+cafeland:3160449,Đất nền,cafeland,property_candidate:78a9c5473a45604ed0b6,Thanh Khê,ridge_log_area_location_alpha_1,13500.0,9320.546057852865,4179.4539421471345,30.958918089978777,False
+cafeland:3160449,Đất nền,cafeland,property_candidate:78a9c5473a45604ed0b6,Thanh Khê,xgboost_enriched_log,13500.0,8890.2421875,4609.7578125,34.14635416666667,False
+cafeland:3160470,Đất nền,cafeland,property_candidate:b07992486bd56cc0926f,Sơn Trà,location_median_unit_price,12500.0,8886.666666666666,3613.333333333334,28.90666666666667,True
+cafeland:3160470,Đất nền,cafeland,property_candidate:b07992486bd56cc0926f,Sơn Trà,ridge_log_area_location_alpha_1,12500.0,9077.267770125865,3422.7322298741346,27.381857838993078,False
+cafeland:3160470,Đất nền,cafeland,property_candidate:b07992486bd56cc0926f,Sơn Trà,xgboost_enriched_log,12500.0,9507.8955078125,2992.1044921875,23.9368359375,False
+cafeland:3160503,Đất nền,cafeland,property_candidate:d40ca8cf90c56f5d2a7d,Ngũ Hành Sơn,location_median_unit_price,6600.0,6911.432676518882,311.43267651888164,4.718676916952752,True
+cafeland:3160503,Đất nền,cafeland,property_candidate:d40ca8cf90c56f5d2a7d,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,6600.0,7715.51934905498,1115.51934905498,16.901808319014847,False
+cafeland:3160503,Đất nền,cafeland,property_candidate:d40ca8cf90c56f5d2a7d,Ngũ Hành Sơn,xgboost_enriched_log,6600.0,6439.76611328125,160.23388671875,2.427786162405303,False
+cafeland:3160597,Đất nền,cafeland,property_candidate:c978e9804c21bc1d73c4,Cẩm Lệ,location_median_unit_price,15700.0,11180.354838709678,4519.645161290322,28.787548798027526,True
+cafeland:3160597,Đất nền,cafeland,property_candidate:c978e9804c21bc1d73c4,Cẩm Lệ,ridge_log_area_location_alpha_1,15700.0,8978.133074478586,6721.866925521414,42.81443901605996,False
+cafeland:3160597,Đất nền,cafeland,property_candidate:c978e9804c21bc1d73c4,Cẩm Lệ,xgboost_enriched_log,15700.0,8459.8037109375,7240.1962890625,46.11589993033439,False
+cafeland:3160600,Đất nền,cafeland,property_candidate:b909b06b6e4d3ae3eb54,Ngũ Hành Sơn,location_median_unit_price,12800.0,7326.118637110015,5473.881362889985,42.76469814757801,True
+cafeland:3160600,Đất nền,cafeland,property_candidate:b909b06b6e4d3ae3eb54,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,12800.0,8093.942398166508,4706.057601833492,36.76607501432416,False
+cafeland:3160600,Đất nền,cafeland,property_candidate:b909b06b6e4d3ae3eb54,Ngũ Hành Sơn,xgboost_enriched_log,12800.0,6599.93505859375,6200.06494140625,48.43800735473633,False
+cafeland:3164077,Đất nền,cafeland,property_candidate:53ae04345dc246addc2b,Hòa Vang,location_median_unit_price,1790.0,2615.666666666667,825.666666666667,46.12662942271883,True
+cafeland:3164077,Đất nền,cafeland,property_candidate:53ae04345dc246addc2b,Hòa Vang,ridge_log_area_location_alpha_1,1790.0,2398.111589741651,608.1115897416512,33.97271451070677,False
+cafeland:3164077,Đất nền,cafeland,property_candidate:53ae04345dc246addc2b,Hòa Vang,xgboost_enriched_log,1790.0,1814.4525146484375,24.4525146484375,1.3660622708624302,False
+cafeland:3165544,Đất nền,cafeland,property_candidate:439abce549b1dcf4dc5f,Hòa Vang,location_median_unit_price,2550.0,2216.666666666667,333.33333333333303,13.071895424836589,True
+cafeland:3165544,Đất nền,cafeland,property_candidate:439abce549b1dcf4dc5f,Hòa Vang,ridge_log_area_location_alpha_1,2550.0,2093.152038789284,456.8479612107162,17.91560632198887,False
+cafeland:3165544,Đất nền,cafeland,property_candidate:439abce549b1dcf4dc5f,Hòa Vang,xgboost_enriched_log,2550.0,1819.8228759765625,730.1771240234375,28.63439702052696,False
+cafeland:3165549,Đất nền,cafeland,property_candidate:426c47c7e32367c30010,new_unit:dai loc,location_median_unit_price,1450.0,806.6666666666666,643.3333333333334,44.367816091954026,True
+cafeland:3165549,Đất nền,cafeland,property_candidate:426c47c7e32367c30010,new_unit:dai loc,ridge_log_area_location_alpha_1,1450.0,1083.5847744081664,366.41522559183363,25.270015558057494,False
+cafeland:3165549,Đất nền,cafeland,property_candidate:426c47c7e32367c30010,new_unit:dai loc,xgboost_enriched_log,1450.0,1518.952880859375,68.952880859375,4.75537109375,False
+cafeland:3168471,Đất nền,cafeland,property_candidate:c19c030a9e46057e6acb,new_unit:hoa khanh,location_median_unit_price,3100.0,7157.951388888889,4057.9513888888887,130.90165770609318,True
+cafeland:3168471,Đất nền,cafeland,property_candidate:c19c030a9e46057e6acb,new_unit:hoa khanh,ridge_log_area_location_alpha_1,3100.0,4950.202959242779,1850.202959242779,59.68396642718641,False
+cafeland:3168471,Đất nền,cafeland,property_candidate:c19c030a9e46057e6acb,new_unit:hoa khanh,xgboost_enriched_log,3100.0,3402.235107421875,302.235107421875,9.749519594254032,False
+cafeland:3168476,Đất nền,cafeland,property_candidate:f0084ad69da579abd06c,Hòa Vang,location_median_unit_price,1250.0,1596.0,346.0,27.68,True
+cafeland:3168476,Đất nền,cafeland,property_candidate:f0084ad69da579abd06c,Hòa Vang,ridge_log_area_location_alpha_1,1250.0,1597.9552045102641,347.95520451026414,27.836416360821133,False
+cafeland:3168476,Đất nền,cafeland,property_candidate:f0084ad69da579abd06c,Hòa Vang,xgboost_enriched_log,1250.0,1769.40869140625,519.40869140625,41.5526953125,False
+cafeland:3168539,Đất nền,cafeland,property_candidate:41a3aa49f391ba83093e,Ngũ Hành Sơn,location_median_unit_price,4650.0,6980.547003284071,2330.5470032840713,50.11929039320583,True
+cafeland:3168539,Đất nền,cafeland,property_candidate:41a3aa49f391ba83093e,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,4650.0,7778.864883441995,3128.8648834419946,67.28741684821495,False
+cafeland:3168539,Đất nền,cafeland,property_candidate:41a3aa49f391ba83093e,Ngũ Hành Sơn,xgboost_enriched_log,4650.0,6599.93505859375,1949.93505859375,41.934087281586024,False
+cafeland:3173787,Đất nền,cafeland,property_candidate:cbee533bbc809894be7c,Hòa Vang,location_median_unit_price,1500.0,1108.3333333333335,391.6666666666665,26.1111111111111,True
+cafeland:3173787,Đất nền,cafeland,property_candidate:cbee533bbc809894be7c,Hòa Vang,ridge_log_area_location_alpha_1,1500.0,1184.2166486103495,315.78335138965053,21.052223425976702,False
+cafeland:3173787,Đất nền,cafeland,property_candidate:cbee533bbc809894be7c,Hòa Vang,xgboost_enriched_log,1500.0,2074.819580078125,574.819580078125,38.32130533854167,False
+cafeland:3173813,Đất nền,cafeland,property_candidate:5c03be726082a283d0c1,Hòa Vang,location_median_unit_price,2650.0,1108.3333333333335,1541.6666666666665,58.17610062893081,True
+cafeland:3173813,Đất nền,cafeland,property_candidate:5c03be726082a283d0c1,Hòa Vang,ridge_log_area_location_alpha_1,2650.0,1184.2166486103495,1465.7833513896505,55.31257929772266,False
+cafeland:3173813,Đất nền,cafeland,property_candidate:5c03be726082a283d0c1,Hòa Vang,xgboost_enriched_log,2650.0,2074.819580078125,575.180419921875,21.70492150648585,False
+cafeland:3174908,Đất nền,cafeland,property_candidate:3582cfe1e3e098958e2c,Ngũ Hành Sơn,location_median_unit_price,3100.0,5252.688834154351,2152.688834154351,69.44157529530165,True
+cafeland:3174908,Đất nền,cafeland,property_candidate:3582cfe1e3e098958e2c,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,3100.0,6157.783866740014,3057.7838667400138,98.63818924967785,False
+cafeland:3174908,Đất nền,cafeland,property_candidate:3582cfe1e3e098958e2c,Ngũ Hành Sơn,xgboost_enriched_log,3100.0,5870.31591796875,2770.31591796875,89.36502961189517,False
+cafeland:3176054,Đất nền,cafeland,property_candidate:5f7c787965e793687fec,Thanh Khê,location_median_unit_price,3450.0,3495.3703703703704,45.37037037037044,1.315083199141172,True
+cafeland:3176054,Đất nền,cafeland,property_candidate:5f7c787965e793687fec,Thanh Khê,ridge_log_area_location_alpha_1,3450.0,4046.9415795500186,596.9415795500186,17.302654479710682,False
+cafeland:3176054,Đất nền,cafeland,property_candidate:5f7c787965e793687fec,Thanh Khê,xgboost_enriched_log,3450.0,4374.11279296875,924.11279296875,26.78587805706522,False
+cafeland:3176081,Đất nền,cafeland,property_candidate:4f668994de62c9b33b5c,new_unit:hoa khanh,location_median_unit_price,6500.0,6224.305555555556,275.69444444444434,4.24145299145299,True
+cafeland:3176081,Đất nền,cafeland,property_candidate:4f668994de62c9b33b5c,new_unit:hoa khanh,ridge_log_area_location_alpha_1,6500.0,4413.111652671756,2086.888347328244,32.10597457428068,False
+cafeland:3176081,Đất nền,cafeland,property_candidate:4f668994de62c9b33b5c,new_unit:hoa khanh,xgboost_enriched_log,6500.0,4401.9287109375,2098.0712890625,32.27801983173077,False
+cafeland:3176601,Đất nền,cafeland,property_candidate:3f29b8a01ca1f4a3482f,new_unit:an khe,location_median_unit_price,3590.0,3746.363636363636,156.36363636363603,4.355533046340836,True
+cafeland:3176601,Đất nền,cafeland,property_candidate:3f29b8a01ca1f4a3482f,new_unit:an khe,ridge_log_area_location_alpha_1,3590.0,3800.5064216156115,210.50642161561154,5.863688624390294,False
+cafeland:3176601,Đất nền,cafeland,property_candidate:3f29b8a01ca1f4a3482f,new_unit:an khe,xgboost_enriched_log,3590.0,3471.270751953125,118.729248046875,3.3072213940633706,False
+cafeland:3178829,Đất nền,cafeland,property_candidate:388c1d41c2b4cd2b8ad2,Thanh Khê,location_median_unit_price,2490.0,4404.166666666666,1914.166666666666,76.87416331994642,True
+cafeland:3178829,Đất nền,cafeland,property_candidate:388c1d41c2b4cd2b8ad2,Thanh Khê,ridge_log_area_location_alpha_1,2490.0,4893.344984555424,2403.344984555424,96.51987889780821,False
+cafeland:3178829,Đất nền,cafeland,property_candidate:388c1d41c2b4cd2b8ad2,Thanh Khê,xgboost_enriched_log,2490.0,4374.11279296875,1884.11279296875,75.66718044051204,False
+cafeland:3178842,Đất nền,cafeland,property_candidate:a08e1778afeacf80216b,new_unit:hoa khanh,location_median_unit_price,8900.0,6224.305555555556,2675.6944444444443,30.063982521847688,True
+cafeland:3178842,Đất nền,cafeland,property_candidate:a08e1778afeacf80216b,new_unit:hoa khanh,ridge_log_area_location_alpha_1,8900.0,4413.111652671756,4486.888347328244,50.4144758126769,False
+cafeland:3178842,Đất nền,cafeland,property_candidate:a08e1778afeacf80216b,new_unit:hoa khanh,xgboost_enriched_log,8900.0,4401.9287109375,4498.0712890625,50.54012684339887,False
+cafeland:3179191,Đất nền,cafeland,property_candidate:416f8c395c0c4381091a,Ngũ Hành Sơn,location_median_unit_price,3800.0,6911.432676518882,3111.4326765188816,81.87980727681268,True
+cafeland:3179191,Đất nền,cafeland,property_candidate:416f8c395c0c4381091a,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,3800.0,7715.51934905498,3915.51934905498,103.0399828698679,False
+cafeland:3179191,Đất nền,cafeland,property_candidate:416f8c395c0c4381091a,Ngũ Hành Sơn,xgboost_enriched_log,3800.0,6439.76611328125,2639.76611328125,69.467529296875,False
+cafeland:3181367,Đất nền,cafeland,property_candidate:0d83f574002c3dca36ab,new_unit:phu ninh,location_median_unit_price,3000.0,1333.3333333333335,1666.6666666666665,55.55555555555555,True
+cafeland:3181367,Đất nền,cafeland,property_candidate:0d83f574002c3dca36ab,new_unit:phu ninh,ridge_log_area_location_alpha_1,3000.0,1981.8368290022272,1018.1631709977728,33.93877236659243,False
+cafeland:3181367,Đất nền,cafeland,property_candidate:0d83f574002c3dca36ab,new_unit:phu ninh,xgboost_enriched_log,3000.0,3526.002685546875,526.002685546875,17.5334228515625,False
+cafeland:3182928,Đất nền,cafeland,property_candidate:b6dec55ac0646fe63c04,Ngũ Hành Sơn,location_median_unit_price,4000.0,12095.007183908043,8095.007183908043,202.37517959770105,True
+cafeland:3182928,Đất nền,cafeland,property_candidate:b6dec55ac0646fe63c04,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,4000.0,12220.254172749022,8220.254172749022,205.50635431872556,False
+cafeland:3182928,Đất nền,cafeland,property_candidate:b6dec55ac0646fe63c04,Ngũ Hành Sơn,xgboost_enriched_log,4000.0,13193.0048828125,9193.0048828125,229.8251220703125,False
+cafeland:3182933,Đất nền,cafeland,property_candidate:09ad8aff73f197b3a75a,new_unit:hoa khanh,location_median_unit_price,5200.0,6691.128472222223,1491.1284722222226,28.675547542735046,True
+cafeland:3182933,Đất nền,cafeland,property_candidate:09ad8aff73f197b3a75a,new_unit:hoa khanh,ridge_log_area_location_alpha_1,5200.0,4683.328641597197,516.671358402803,9.935987661592366,False
+cafeland:3182933,Đất nền,cafeland,property_candidate:09ad8aff73f197b3a75a,new_unit:hoa khanh,xgboost_enriched_log,5200.0,3866.242431640625,1333.757568359375,25.649184006911057,False
+cafeland:3183850,Đất nền,cafeland,property_candidate:9de4cea8fe6db6e59231,Hòa Vang,location_median_unit_price,1000.0,5541.666666666667,4541.666666666667,454.1666666666667,True
+cafeland:3183850,Đất nền,cafeland,property_candidate:9de4cea8fe6db6e59231,Hòa Vang,ridge_log_area_location_alpha_1,1000.0,4444.323011282307,3444.3230112823067,344.4323011282306,False
+cafeland:3183850,Đất nền,cafeland,property_candidate:9de4cea8fe6db6e59231,Hòa Vang,xgboost_enriched_log,1000.0,7207.5751953125,6207.5751953125,620.75751953125,False
+cafeland:3184784,Đất nền,cafeland,property_candidate:0c4b98e74d2ac8af8b79,Ngũ Hành Sơn,location_median_unit_price,6900.0,17278.581691297204,10378.581691297204,150.41422741010442,True
+cafeland:3184784,Đất nền,cafeland,property_candidate:0c4b98e74d2ac8af8b79,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,6900.0,16382.116325784422,9482.116325784422,137.42197573600612,False
+cafeland:3184784,Đất nền,cafeland,property_candidate:0c4b98e74d2ac8af8b79,Ngũ Hành Sơn,xgboost_enriched_log,6900.0,21131.6171875,14231.6171875,206.255321557971,False
+cafeland:3184793,Đất nền,cafeland,property_candidate:a18ef41f6a199052efeb,new_unit:hai van,location_median_unit_price,3950.0,2760.0,1190.0,30.126582278481013,True
+cafeland:3184793,Đất nền,cafeland,property_candidate:a18ef41f6a199052efeb,new_unit:hai van,ridge_log_area_location_alpha_1,3950.0,2404.8126588469445,1545.1873411530555,39.11866686463432,False
+cafeland:3184793,Đất nền,cafeland,property_candidate:a18ef41f6a199052efeb,new_unit:hai van,xgboost_enriched_log,3950.0,3174.057861328125,775.942138671875,19.644104776503166,False
+cafeland:3185441,Đất nền,cafeland,property_candidate:fe1d03d3ff77517ab417,new_unit:an khe,location_median_unit_price,3299.0,3746.363636363636,447.36363636363603,13.560583096806186,True
+cafeland:3185441,Đất nền,cafeland,property_candidate:fe1d03d3ff77517ab417,new_unit:an khe,ridge_log_area_location_alpha_1,3299.0,3800.5064216156115,501.50642161561154,15.201770888621144,False
+cafeland:3185441,Đất nền,cafeland,property_candidate:fe1d03d3ff77517ab417,new_unit:an khe,xgboost_enriched_log,3299.0,3471.270751953125,172.270751953125,5.221908213189603,False
+cafeland:3185447,Đất nền,cafeland,property_candidate:189473f482348bb54685,Cẩm Lệ,location_median_unit_price,1700.0,4004.9032258064517,2304.9032258064517,135.58254269449716,True
+cafeland:3185447,Đất nền,cafeland,property_candidate:189473f482348bb54685,Cẩm Lệ,ridge_log_area_location_alpha_1,1700.0,3861.8935871907943,2161.8935871907943,127.1702110112232,False
+cafeland:3185447,Đất nền,cafeland,property_candidate:189473f482348bb54685,Cẩm Lệ,xgboost_enriched_log,1700.0,3610.855712890625,1910.855712890625,112.40327722886029,False
+cafeland:3186489,Đất nền,cafeland,property_candidate:415cef107cca00d8a99a,Ngũ Hành Sơn,location_median_unit_price,2000.0,8984.862479474546,6984.8624794745465,349.24312397372734,True
+cafeland:3186489,Đất nền,cafeland,property_candidate:415cef107cca00d8a99a,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,2000.0,9571.884253452285,7571.884253452285,378.5942126726143,False
+cafeland:3186489,Đất nền,cafeland,property_candidate:415cef107cca00d8a99a,Ngũ Hành Sơn,xgboost_enriched_log,2000.0,7849.67529296875,5849.67529296875,292.4837646484375,False
+cafeland:3186497,Đất nền,cafeland,property_candidate:f23b3f8ac05184d9badf,new_unit:hoa khanh,location_median_unit_price,5000.0,6162.0625,1162.0625,23.24125,True
+cafeland:3186497,Đất nền,cafeland,property_candidate:f23b3f8ac05184d9badf,new_unit:hoa khanh,ridge_log_area_location_alpha_1,5000.0,4376.814720107664,623.1852798923364,12.463705597846728,False
+cafeland:3186497,Đất nền,cafeland,property_candidate:f23b3f8ac05184d9badf,new_unit:hoa khanh,xgboost_enriched_log,5000.0,4416.49951171875,583.50048828125,11.670009765625,False
+cafeland:3187438,Đất nền,cafeland,property_candidate:ab75885ad2d1dac9cfe0,new_unit:hoa xuan,location_median_unit_price,4600.0,6843.75,2243.75,48.77717391304348,True
+cafeland:3187438,Đất nền,cafeland,property_candidate:ab75885ad2d1dac9cfe0,new_unit:hoa xuan,ridge_log_area_location_alpha_1,4600.0,5065.346719322151,465.34671932215133,10.11623302874242,False
+cafeland:3187438,Đất nền,cafeland,property_candidate:ab75885ad2d1dac9cfe0,new_unit:hoa xuan,xgboost_enriched_log,4600.0,3836.4443359375,763.5556640625,16.59903617527174,False
+cafeland:3190021,Đất nền,cafeland,property_candidate:3bade2fed7ca775c2229,new_unit:lien chieu,location_median_unit_price,4350.0,2242.6470588235293,2107.3529411764707,48.4448951994591,True
+cafeland:3190021,Đất nền,cafeland,property_candidate:3bade2fed7ca775c2229,new_unit:lien chieu,ridge_log_area_location_alpha_1,4350.0,2474.831006343972,1875.1689936560279,43.107333187494895,False
+cafeland:3190021,Đất nền,cafeland,property_candidate:3bade2fed7ca775c2229,new_unit:lien chieu,xgboost_enriched_log,4350.0,3212.15869140625,1137.84130859375,26.157271461925287,False
+cafeland:3190167,Đất nền,cafeland,property_candidate:ee47089c846bc348938a,new_unit:lien chieu,location_median_unit_price,7000.0,3468.627450980392,3531.372549019608,50.44817927170868,True
+cafeland:3190167,Đất nền,cafeland,property_candidate:ee47089c846bc348938a,new_unit:lien chieu,ridge_log_area_location_alpha_1,7000.0,3541.450566607812,3458.549433392188,49.40784904845983,False
+cafeland:3190167,Đất nền,cafeland,property_candidate:ee47089c846bc348938a,new_unit:lien chieu,xgboost_enriched_log,7000.0,3082.2958984375,3917.7041015625,55.96720145089286,False
+cafeland:3191313,Đất nền,cafeland,property_candidate:4097b6047b80ca190ca0,Hòa Vang,location_median_unit_price,1600.0,1662.5,62.5,3.90625,True
+cafeland:3191313,Đất nền,cafeland,property_candidate:4097b6047b80ca190ca0,Hòa Vang,ridge_log_area_location_alpha_1,1600.0,1652.4681958635001,52.468195863500114,3.279262241468757,False
+cafeland:3191313,Đất nền,cafeland,property_candidate:4097b6047b80ca190ca0,Hòa Vang,xgboost_enriched_log,1600.0,1874.4449462890625,274.4449462890625,17.152809143066406,False
+nhadat24h:4349825,Đất nền,nhadat24h,property_candidate:17ba1aeafc2335ada5d2,Hòa Vang,location_median_unit_price,4300.0,1385.4166666666667,2914.583333333333,67.78100775193798,True
+nhadat24h:4349825,Đất nền,nhadat24h,property_candidate:17ba1aeafc2335ada5d2,Hòa Vang,ridge_log_area_location_alpha_1,4300.0,1422.5462349684362,2877.4537650315638,66.91752941933869,False
+nhadat24h:4349825,Đất nền,nhadat24h,property_candidate:17ba1aeafc2335ada5d2,Hòa Vang,xgboost_enriched_log,4300.0,1684.18505859375,2615.81494140625,60.832905614098834,False
+nhadat24h:4353603,Đất nền,nhadat24h,property_candidate:792597b80817bc451e5f,Liên Chiểu,location_median_unit_price,3950.0,5000.0,1050.0,26.582278481012658,True
+nhadat24h:4353603,Đất nền,nhadat24h,property_candidate:792597b80817bc451e5f,Liên Chiểu,ridge_log_area_location_alpha_1,3950.0,4963.4104739501845,1013.4104739501845,25.655961365827455,False
+nhadat24h:4353603,Đất nền,nhadat24h,property_candidate:792597b80817bc451e5f,Liên Chiểu,xgboost_enriched_log,3950.0,4968.73486328125,1018.73486328125,25.790756032436708,False
+nhadat24h:4357968,Đất nền,nhadat24h,property_candidate:8dd998ca95df3a05a08a,Sơn Trà,location_median_unit_price,21500.0,9300.0,12200.0,56.74418604651163,True
+nhadat24h:4357968,Đất nền,nhadat24h,property_candidate:8dd998ca95df3a05a08a,Sơn Trà,ridge_log_area_location_alpha_1,21500.0,9422.7942779208,12077.2057220792,56.17304987013581,False
+nhadat24h:4357968,Đất nền,nhadat24h,property_candidate:8dd998ca95df3a05a08a,Sơn Trà,xgboost_enriched_log,21500.0,11591.6328125,9908.3671875,46.085428779069765,False
+nhadat24h:4358411,Đất nền,nhadat24h,property_candidate:6b0ccfd5f3307c1287c5,Cẩm Lệ,location_median_unit_price,4300.0,3754.5967741935483,545.4032258064517,12.683795948987248,True
+nhadat24h:4358411,Đất nền,nhadat24h,property_candidate:6b0ccfd5f3307c1287c5,Cẩm Lệ,ridge_log_area_location_alpha_1,4300.0,3662.417626569979,637.5823734300211,14.827497056512119,False
+nhadat24h:4358411,Đất nền,nhadat24h,property_candidate:6b0ccfd5f3307c1287c5,Cẩm Lệ,xgboost_enriched_log,4300.0,4150.646484375,149.353515625,3.4733375726744184,False
+nhadat24h:4358494,Đất nền,nhadat24h,property_candidate:7a5f8535319d3e3447bc,Hòa Vang,location_median_unit_price,1450.0,1385.4166666666667,64.58333333333326,4.454022988505742,True
+nhadat24h:4358494,Đất nền,nhadat24h,property_candidate:7a5f8535319d3e3447bc,Hòa Vang,ridge_log_area_location_alpha_1,1450.0,1422.5462349684362,27.453765031563762,1.893363105625087,False
+nhadat24h:4358494,Đất nền,nhadat24h,property_candidate:7a5f8535319d3e3447bc,Hòa Vang,xgboost_enriched_log,1450.0,1322.384033203125,127.615966796875,8.801101158405173,False
+nhadat24h:4359010,Đất nền,nhadat24h,property_candidate:e717b61ea7264a7bde5a,Hòa Vang,location_median_unit_price,1450.0,1374.3333333333335,75.66666666666652,5.218390804597691,True
+nhadat24h:4359010,Đất nền,nhadat24h,property_candidate:e717b61ea7264a7bde5a,Hòa Vang,ridge_log_area_location_alpha_1,1450.0,1413.1877944885196,36.81220551148044,2.5387727938952027,False
+nhadat24h:4359010,Đất nền,nhadat24h,property_candidate:e717b61ea7264a7bde5a,Hòa Vang,xgboost_enriched_log,1450.0,1322.384033203125,127.615966796875,8.801101158405173,False
+nhadat24h:4359371,Đất nền,nhadat24h,property_candidate:948477bb2ac44c32fc56,Ngũ Hành Sơn,location_median_unit_price,8800.0,9745.120073891623,945.1200738916232,10.740000839677537,True
+nhadat24h:4359371,Đất nền,nhadat24h,property_candidate:948477bb2ac44c32fc56,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,8800.0,10232.578500398346,1432.5785003983456,16.27930114089029,False
+nhadat24h:4359371,Đất nền,nhadat24h,property_candidate:948477bb2ac44c32fc56,Ngũ Hành Sơn,xgboost_enriched_log,8800.0,13450.109375,4650.109375,52.84215198863637,False
+nhadat24h:4359402,Đất nền,nhadat24h,property_candidate:410307686c8cd58210b4,Hòa Vang,location_median_unit_price,1450.0,1662.5,212.5,14.655172413793103,True
+nhadat24h:4359402,Đất nền,nhadat24h,property_candidate:410307686c8cd58210b4,Hòa Vang,ridge_log_area_location_alpha_1,1450.0,1652.4681958635001,202.4681958635001,13.963323852655181,False
+nhadat24h:4359402,Đất nền,nhadat24h,property_candidate:410307686c8cd58210b4,Hòa Vang,xgboost_enriched_log,1450.0,1374.58984375,75.41015625,5.200700431034483,False
+nhadat24h:4361803,Đất nền,nhadat24h,property_candidate:37b686ed674cb0d393fb,Hòa Vang,location_median_unit_price,1490.0,1496.25,6.25,0.41946308724832215,True
+nhadat24h:4361803,Đất nền,nhadat24h,property_candidate:37b686ed674cb0d393fb,Hòa Vang,ridge_log_area_location_alpha_1,1490.0,1515.4170293244008,25.4170293244008,1.7058408942550873,False
+nhadat24h:4361803,Đất nền,nhadat24h,property_candidate:37b686ed674cb0d393fb,Hòa Vang,xgboost_enriched_log,1490.0,1342.4234619140625,147.5765380859375,9.90446564335151,False
+nhadat24h:4362272,Đất nền,nhadat24h,property_candidate:f7a6fc2fda3ee9c80944,Sơn Trà,location_median_unit_price,7200.0,10230.0,3030.0,42.083333333333336,True
+nhadat24h:4362272,Đất nền,nhadat24h,property_candidate:f7a6fc2fda3ee9c80944,Sơn Trà,ridge_log_area_location_alpha_1,7200.0,10190.462682527128,2990.462682527128,41.53420392398789,False
+nhadat24h:4362272,Đất nền,nhadat24h,property_candidate:f7a6fc2fda3ee9c80944,Sơn Trà,xgboost_enriched_log,7200.0,12233.4248046875,5033.4248046875,69.90867784288194,False
+nhadat24h:4363317,Đất nền,nhadat24h,property_candidate:f54dd35b4b6a92470576,Sơn Trà,location_median_unit_price,27800.0,13330.0,14470.0,52.05035971223022,True
+nhadat24h:4363317,Đất nền,nhadat24h,property_candidate:f54dd35b4b6a92470576,Sơn Trà,ridge_log_area_location_alpha_1,27800.0,12666.513608866935,15133.486391133065,54.43700140695347,False
+nhadat24h:4363317,Đất nền,nhadat24h,property_candidate:f54dd35b4b6a92470576,Sơn Trà,xgboost_enriched_log,27800.0,16219.8447265625,11580.1552734375,41.65523479653777,False
+nhadat24h:4363782,Đất nền,nhadat24h,property_candidate:8de419ab6f0a878984eb,Hòa Vang,location_median_unit_price,1000.0,1330.0,330.0,33.0,True
+nhadat24h:4363782,Đất nền,nhadat24h,property_candidate:8de419ab6f0a878984eb,Hòa Vang,ridge_log_area_location_alpha_1,1000.0,1375.6180999516578,375.61809995165777,37.56180999516578,False
+nhadat24h:4363782,Đất nền,nhadat24h,property_candidate:8de419ab6f0a878984eb,Hòa Vang,xgboost_enriched_log,1000.0,1245.89599609375,245.89599609375,24.589599609375,False
+nhadat24h:4363785,Đất nền,nhadat24h,property_candidate:5afbac6ea2c6e09242ae,Cẩm Lệ,location_median_unit_price,716.4,5006.129032258064,4289.729032258065,598.789647160534,True
+nhadat24h:4363785,Đất nền,nhadat24h,property_candidate:5afbac6ea2c6e09242ae,Cẩm Lệ,ridge_log_area_location_alpha_1,716.4,4639.119192213488,3922.7191922134875,547.5599095775387,False
+nhadat24h:4363785,Đất nền,nhadat24h,property_candidate:5afbac6ea2c6e09242ae,Cẩm Lệ,xgboost_enriched_log,716.4,3737.422607421875,3021.022607421875,421.6949479930032,False
+nhadat24h:4364380,Đất nền,nhadat24h,property_candidate:37211e6161d32b6f2eec,Sơn Trà,location_median_unit_price,33000.0,13123.333333333332,19876.666666666668,60.23232323232323,True
+nhadat24h:4364380,Đất nền,nhadat24h,property_candidate:37211e6161d32b6f2eec,Sơn Trà,ridge_log_area_location_alpha_1,33000.0,12504.915102349465,20495.084897650537,62.10631787166829,False
+nhadat24h:4364380,Đất nền,nhadat24h,property_candidate:37211e6161d32b6f2eec,Sơn Trà,xgboost_enriched_log,33000.0,13883.693359375,19116.306640625,57.92820194128788,False
+nhadat24h:4364818,Đất nền,nhadat24h,property_candidate:df9a72d0283060fde093,Liên Chiểu,location_median_unit_price,2650.0,3000.0,350.0,13.20754716981132,True
+nhadat24h:4364818,Đất nền,nhadat24h,property_candidate:df9a72d0283060fde093,Liên Chiểu,ridge_log_area_location_alpha_1,2650.0,3261.9499964296906,611.9499964296906,23.09245269546002,False
+nhadat24h:4364818,Đất nền,nhadat24h,property_candidate:df9a72d0283060fde093,Liên Chiểu,xgboost_enriched_log,2650.0,3884.11083984375,1234.11083984375,46.57022037146226,False
+nhadat24h:4365615,Đất nền,nhadat24h,property_candidate:7177c6fbff05e792ffe0,Liên Chiểu,location_median_unit_price,3750.0,3900.0,150.0,4.0,True
+nhadat24h:4365615,Đất nền,nhadat24h,property_candidate:7177c6fbff05e792ffe0,Liên Chiểu,ridge_log_area_location_alpha_1,3750.0,4046.7797945705856,296.77979457058564,7.914127855215617,False
+nhadat24h:4365615,Đất nền,nhadat24h,property_candidate:7177c6fbff05e792ffe0,Liên Chiểu,xgboost_enriched_log,3750.0,4087.742919921875,337.742919921875,9.006477864583333,False
+nhadat24h:4365807,Đất nền,nhadat24h,property_candidate:a9115ca92979291ac5a1,Hòa Vang,location_median_unit_price,1140.0,1352.1666666666667,212.16666666666674,18.611111111111118,True
+nhadat24h:4365807,Đất nền,nhadat24h,property_candidate:a9115ca92979291ac5a1,Hòa Vang,ridge_log_area_location_alpha_1,1140.0,1394.4303953469955,254.4303953469955,22.31845573219259,False
+nhadat24h:4365807,Đất nền,nhadat24h,property_candidate:a9115ca92979291ac5a1,Hòa Vang,xgboost_enriched_log,1140.0,1285.1170654296875,145.1170654296875,12.729567142955045,False
+nhadat24h:4365942,Đất nền,nhadat24h,property_candidate:2920501be669a23bb317,Liên Chiểu,location_median_unit_price,7300.0,5200.0,2100.0,28.767123287671232,True
+nhadat24h:4365942,Đất nền,nhadat24h,property_candidate:2920501be669a23bb317,Liên Chiểu,ridge_log_area_location_alpha_1,7300.0,5125.98390622,2174.01609378,29.781042380547948,False
+nhadat24h:4365942,Đất nền,nhadat24h,property_candidate:2920501be669a23bb317,Liên Chiểu,xgboost_enriched_log,7300.0,4265.962890625,3034.037109375,41.562152183219176,False
+nhadat24h:4366135,Đất nền,nhadat24h,property_candidate:f9dcfb7571f26bc9f39b,Hòa Vang,location_median_unit_price,1690.0,3136.5833333333335,1446.5833333333335,85.59664694280079,True
+nhadat24h:4366135,Đất nền,nhadat24h,property_candidate:f9dcfb7571f26bc9f39b,Hòa Vang,ridge_log_area_location_alpha_1,1690.0,2784.0945801863777,1094.0945801863777,64.7393242713833,False
+nhadat24h:4366135,Đất nền,nhadat24h,property_candidate:f9dcfb7571f26bc9f39b,Hòa Vang,xgboost_enriched_log,1690.0,1858.77197265625,168.77197265625,9.986507257766272,False
+nhadat24h:4366271,Đất nền,nhadat24h,property_candidate:6048525b5c08cbd01395,Hòa Vang,location_median_unit_price,1500.0,1330.0,170.0,11.333333333333334,True
+nhadat24h:4366271,Đất nền,nhadat24h,property_candidate:6048525b5c08cbd01395,Hòa Vang,ridge_log_area_location_alpha_1,1500.0,1375.6180999516578,124.38190004834223,8.292126669889482,False
+nhadat24h:4366271,Đất nền,nhadat24h,property_candidate:6048525b5c08cbd01395,Hòa Vang,xgboost_enriched_log,1500.0,1279.3807373046875,220.6192626953125,14.707950846354167,False
+nhadat24h:4366447,Đất nền,nhadat24h,property_candidate:c3479956d4461a85e336,Hòa Vang,location_median_unit_price,1400.0,1330.0,70.0,5.0,True
+nhadat24h:4366447,Đất nền,nhadat24h,property_candidate:c3479956d4461a85e336,Hòa Vang,ridge_log_area_location_alpha_1,1400.0,1375.6180999516578,24.38190004834223,1.7415642891673022,False
+nhadat24h:4366447,Đất nền,nhadat24h,property_candidate:c3479956d4461a85e336,Hòa Vang,xgboost_enriched_log,1400.0,1279.3807373046875,120.6192626953125,8.61566162109375,False
+nhadat24h:4367169,Đất nền,nhadat24h,property_candidate:79910e44c34ccd05a45e,Sơn Trà,location_median_unit_price,7100.0,8163.333333333333,1063.333333333333,14.976525821596239,True
+nhadat24h:4367169,Đất nền,nhadat24h,property_candidate:79910e44c34ccd05a45e,Sơn Trà,ridge_log_area_location_alpha_1,7100.0,8465.572348522639,1365.572348522639,19.23341335947379,False
+nhadat24h:4367169,Đất nền,nhadat24h,property_candidate:79910e44c34ccd05a45e,Sơn Trà,xgboost_enriched_log,7100.0,8743.984375,1643.984375,23.154709507042252,False
+nhadat24h:4368601,Đất nền,nhadat24h,property_candidate:69eccb3a0cf961b2f835,Liên Chiểu,location_median_unit_price,3600.0,5000.0,1400.0,38.888888888888886,True
+nhadat24h:4368601,Đất nền,nhadat24h,property_candidate:69eccb3a0cf961b2f835,Liên Chiểu,ridge_log_area_location_alpha_1,3600.0,4963.4104739501845,1363.4104739501845,37.8725131652829,False
+nhadat24h:4368601,Đất nền,nhadat24h,property_candidate:69eccb3a0cf961b2f835,Liên Chiểu,xgboost_enriched_log,3600.0,4968.73486328125,1368.73486328125,38.020412868923614,False
+nhadat24h:4370581,Đất nền,nhadat24h,property_candidate:e1113dce3920e6388506,Hòa Vang,location_median_unit_price,1270.0,1330.0,60.0,4.724409448818897,True
+nhadat24h:4370581,Đất nền,nhadat24h,property_candidate:e1113dce3920e6388506,Hòa Vang,ridge_log_area_location_alpha_1,1270.0,1375.6180999516578,105.61809995165777,8.316385822965179,False
+nhadat24h:4370581,Đất nền,nhadat24h,property_candidate:e1113dce3920e6388506,Hòa Vang,xgboost_enriched_log,1270.0,1279.3807373046875,9.3807373046875,0.738640732652559,False
+nhadat24h:4371378,Đất nền,nhadat24h,property_candidate:0c3e6dd20e13222d4994,Hòa Vang,location_median_unit_price,1490.0,1474.0833333333335,15.916666666666515,1.0682326621923837,True
+nhadat24h:4371378,Đất nền,nhadat24h,property_candidate:0c3e6dd20e13222d4994,Hòa Vang,ridge_log_area_location_alpha_1,1490.0,1496.9438606042236,6.943860604223573,0.46603091303513916,False
+nhadat24h:4371378,Đất nền,nhadat24h,property_candidate:0c3e6dd20e13222d4994,Hòa Vang,xgboost_enriched_log,1490.0,1281.4566650390625,208.5433349609375,13.996196977244127,False
+nhadat24h:4372892,Đất nền,nhadat24h,property_candidate:9f6b3d1003230393225e,Liên Chiểu,location_median_unit_price,5800.0,5000.0,800.0,13.793103448275861,True
+nhadat24h:4372892,Đất nền,nhadat24h,property_candidate:9f6b3d1003230393225e,Liên Chiểu,ridge_log_area_location_alpha_1,5800.0,4963.4104739501845,836.5895260498155,14.423957345686473,False
+nhadat24h:4372892,Đất nền,nhadat24h,property_candidate:9f6b3d1003230393225e,Liên Chiểu,xgboost_enriched_log,5800.0,4263.34375,1536.65625,26.494073275862068,False
+nhadat24h:4372950,Đất nền,nhadat24h,property_candidate:ab1d994645f818d69fd6,Cẩm Lệ,location_median_unit_price,4700.0,4880.975806451613,180.9758064516127,3.850549073438568,True
+nhadat24h:4372950,Đất nền,nhadat24h,property_candidate:ab1d994645f818d69fd6,Cẩm Lệ,ridge_log_area_location_alpha_1,4700.0,4543.60050482215,156.39949517785044,3.327648833571286,False
+nhadat24h:4372950,Đất nền,nhadat24h,property_candidate:ab1d994645f818d69fd6,Cẩm Lệ,xgboost_enriched_log,4700.0,3730.659912109375,969.340087890625,20.624257189162233,False
+nhadat24h:4373446,Đất nền,nhadat24h,property_candidate:efb8fa27a3bc3dd3ad6c,Cẩm Lệ,location_median_unit_price,6350.0,4171.774193548387,2178.2258064516127,34.30276860553721,True
+nhadat24h:4373446,Đất nền,nhadat24h,property_candidate:efb8fa27a3bc3dd3ad6c,Cẩm Lệ,ridge_log_area_location_alpha_1,6350.0,3993.6390648684214,2356.3609351315786,37.108046222544544,False
+nhadat24h:4373446,Đất nền,nhadat24h,property_candidate:efb8fa27a3bc3dd3ad6c,Cẩm Lệ,xgboost_enriched_log,6350.0,4016.16748046875,2333.83251953125,36.75326802411417,False
+nhadat24h:4374082,Đất nền,nhadat24h,property_candidate:9ec3eea49cc7abcf3b6b,Hòa Vang,location_median_unit_price,1160.0,1041.8333333333335,118.16666666666652,10.186781609195389,True
+nhadat24h:4374082,Đất nền,nhadat24h,property_candidate:9ec3eea49cc7abcf3b6b,Hòa Vang,ridge_log_area_location_alpha_1,1160.0,1125.5094235956165,34.490576404383546,2.97332555210203,False
+nhadat24h:4374082,Đất nền,nhadat24h,property_candidate:9ec3eea49cc7abcf3b6b,Hòa Vang,xgboost_enriched_log,1160.0,1647.5040283203125,487.5040283203125,42.02620933795797,False
+nhadat24h:4374568,Đất nền,nhadat24h,property_candidate:c06189b3718ea0bbe813,Hòa Vang,location_median_unit_price,1160.0,1108.3333333333335,51.666666666666515,4.454022988505734,True
+nhadat24h:4374568,Đất nền,nhadat24h,property_candidate:c06189b3718ea0bbe813,Hòa Vang,ridge_log_area_location_alpha_1,1160.0,1184.2166486103495,24.216648610349466,2.0876421215818506,False
+nhadat24h:4374568,Đất nền,nhadat24h,property_candidate:c06189b3718ea0bbe813,Hòa Vang,xgboost_enriched_log,1160.0,1526.814453125,366.814453125,31.62193561422414,False
+nhadat24h:4374945,Đất nền,nhadat24h,property_candidate:a4bdc856dcd6e80ca233,Hòa Vang,location_median_unit_price,1160.0,1108.3333333333335,51.666666666666515,4.454022988505734,True
+nhadat24h:4374945,Đất nền,nhadat24h,property_candidate:a4bdc856dcd6e80ca233,Hòa Vang,ridge_log_area_location_alpha_1,1160.0,1184.2166486103495,24.216648610349466,2.0876421215818506,False
+nhadat24h:4374945,Đất nền,nhadat24h,property_candidate:a4bdc856dcd6e80ca233,Hòa Vang,xgboost_enriched_log,1160.0,1526.814453125,366.814453125,31.62193561422414,False
+nhadat24h:4375585,Đất nền,nhadat24h,property_candidate:5152541cb5219062cbfd,Hòa Vang,location_median_unit_price,1600.0,1330.0,270.0,16.875,True
+nhadat24h:4375585,Đất nền,nhadat24h,property_candidate:5152541cb5219062cbfd,Hòa Vang,ridge_log_area_location_alpha_1,1600.0,1375.6180999516578,224.38190004834223,14.023868753021388,False
+nhadat24h:4375585,Đất nền,nhadat24h,property_candidate:5152541cb5219062cbfd,Hòa Vang,xgboost_enriched_log,1600.0,1356.9503173828125,243.0496826171875,15.190605163574219,False
+nhadat24h:4375593,Đất nền,nhadat24h,property_candidate:2b85cf583a5f89bbd482,Hòa Vang,location_median_unit_price,1600.0,1352.1666666666667,247.83333333333326,15.489583333333329,True
+nhadat24h:4375593,Đất nền,nhadat24h,property_candidate:2b85cf583a5f89bbd482,Hòa Vang,ridge_log_area_location_alpha_1,1600.0,1394.4303953469955,205.5696046530045,12.84810029081278,False
+nhadat24h:4375593,Đất nền,nhadat24h,property_candidate:2b85cf583a5f89bbd482,Hòa Vang,xgboost_enriched_log,1600.0,1363.0345458984375,236.9654541015625,14.810340881347656,False
+nhadat24h:4375655,Đất nền,nhadat24h,property_candidate:1a7ec0225787ad49b581,Sơn Trà,location_median_unit_price,18000.0,10643.333333333332,7356.666666666668,40.870370370370374,True
+nhadat24h:4375655,Đất nền,nhadat24h,property_candidate:1a7ec0225787ad49b581,Sơn Trà,ridge_log_area_location_alpha_1,18000.0,10527.604695267513,7472.395304732487,41.51330724851382,False
+nhadat24h:4375655,Đất nền,nhadat24h,property_candidate:1a7ec0225787ad49b581,Sơn Trà,xgboost_enriched_log,18000.0,13747.734375,4252.265625,23.623697916666668,False
+nhadat24h:4375962,Đất nền,nhadat24h,property_candidate:1f372b5055427701d59a,Hòa Vang,location_median_unit_price,1600.0,1330.0,270.0,16.875,True
+nhadat24h:4375962,Đất nền,nhadat24h,property_candidate:1f372b5055427701d59a,Hòa Vang,ridge_log_area_location_alpha_1,1600.0,1375.6180999516578,224.38190004834223,14.023868753021388,False
+nhadat24h:4375962,Đất nền,nhadat24h,property_candidate:1f372b5055427701d59a,Hòa Vang,xgboost_enriched_log,1600.0,1356.9503173828125,243.0496826171875,15.190605163574219,False
+nhadat24h:4376018,Đất nền,nhadat24h,property_candidate:be909057864468edcb38,Hòa Vang,location_median_unit_price,1270.0,1330.0,60.0,4.724409448818897,True
+nhadat24h:4376018,Đất nền,nhadat24h,property_candidate:be909057864468edcb38,Hòa Vang,ridge_log_area_location_alpha_1,1270.0,1375.6180999516578,105.61809995165777,8.316385822965179,False
+nhadat24h:4376018,Đất nền,nhadat24h,property_candidate:be909057864468edcb38,Hòa Vang,xgboost_enriched_log,1270.0,1245.89599609375,24.10400390625,1.897953063484252,False
+nhadat24h:4376767,Đất nền,nhadat24h,property_candidate:10c211714296fdc4aa06,Hòa Vang,location_median_unit_price,990.0,1440.8333333333335,450.8333333333335,45.538720538720554,True
+nhadat24h:4376767,Đất nền,nhadat24h,property_candidate:10c211714296fdc4aa06,Hòa Vang,ridge_log_area_location_alpha_1,990.0,1469.1408547757449,479.14085477574486,48.39806613896413,False
+nhadat24h:4376767,Đất nền,nhadat24h,property_candidate:10c211714296fdc4aa06,Hòa Vang,xgboost_enriched_log,990.0,1334.7392578125,344.7392578125,34.822147253787875,False
+nhadat24h:4376801,Đất nền,nhadat24h,property_candidate:872eb052cc0f3d267ce3,Hòa Vang,location_median_unit_price,1000.0,1330.0,330.0,33.0,True
+nhadat24h:4376801,Đất nền,nhadat24h,property_candidate:872eb052cc0f3d267ce3,Hòa Vang,ridge_log_area_location_alpha_1,1000.0,1375.6180999516578,375.61809995165777,37.56180999516578,False
+nhadat24h:4376801,Đất nền,nhadat24h,property_candidate:872eb052cc0f3d267ce3,Hòa Vang,xgboost_enriched_log,1000.0,1279.3807373046875,279.3807373046875,27.93807373046875,False
+nhadat24h:4377468,Đất nền,nhadat24h,property_candidate:2b963d3dd298715e84cc,Hải Châu,location_median_unit_price,6900.0,5621.333333333334,1278.666666666666,18.531400966183565,True
+nhadat24h:4377468,Đất nền,nhadat24h,property_candidate:2b963d3dd298715e84cc,Hải Châu,ridge_log_area_location_alpha_1,6900.0,6310.070956111464,589.9290438885364,8.549696288239659,False
+nhadat24h:4377468,Đất nền,nhadat24h,property_candidate:2b963d3dd298715e84cc,Hải Châu,xgboost_enriched_log,6900.0,5446.123046875,1453.876953125,21.070680480072465,False
+nhadat24h:4377689,Đất nền,nhadat24h,property_candidate:4db4ba8013478a1cdee7,Hòa Vang,location_median_unit_price,1500.0,1330.0,170.0,11.333333333333334,True
+nhadat24h:4377689,Đất nền,nhadat24h,property_candidate:4db4ba8013478a1cdee7,Hòa Vang,ridge_log_area_location_alpha_1,1500.0,1375.6180999516578,124.38190004834223,8.292126669889482,False
+nhadat24h:4377689,Đất nền,nhadat24h,property_candidate:4db4ba8013478a1cdee7,Hòa Vang,xgboost_enriched_log,1500.0,1279.3807373046875,220.6192626953125,14.707950846354167,False
+nhadat24h:4377938,Đất nền,nhadat24h,property_candidate:49191ea439319c5f5b32,Hòa Vang,location_median_unit_price,1600.0,1551.6666666666667,48.33333333333326,3.0208333333333286,True
+nhadat24h:4377938,Đất nền,nhadat24h,property_candidate:49191ea439319c5f5b32,Hòa Vang,ridge_log_area_location_alpha_1,1600.0,1561.3886159478259,38.61138405217412,2.4132115032608823,False
+nhadat24h:4377938,Đất nền,nhadat24h,property_candidate:49191ea439319c5f5b32,Hòa Vang,xgboost_enriched_log,1600.0,1426.5067138671875,173.4932861328125,10.843330383300781,False
+nhadat24h:4378197,Đất nền,nhadat24h,property_candidate:9190c707a4ebcb1bec8e,Sơn Trà,location_median_unit_price,5700.0,7750.0,2050.0,35.96491228070175,True
+nhadat24h:4378197,Đất nền,nhadat24h,property_candidate:9190c707a4ebcb1bec8e,Sơn Trà,ridge_log_area_location_alpha_1,5700.0,8111.720731746897,2411.7207317468974,42.31089003064732,False
+nhadat24h:4378197,Đất nền,nhadat24h,property_candidate:9190c707a4ebcb1bec8e,Sơn Trà,xgboost_enriched_log,5700.0,8067.8759765625,2367.8759765625,41.5416837993421,False
+nhadat24h:4379729,Đất nền,nhadat24h,property_candidate:b2e598cabe265d80ad26,Hòa Vang,location_median_unit_price,1000.0,1662.5,662.5,66.25,True
+nhadat24h:4379729,Đất nền,nhadat24h,property_candidate:b2e598cabe265d80ad26,Hòa Vang,ridge_log_area_location_alpha_1,1000.0,1652.4681958635001,652.4681958635001,65.24681958635001,False
+nhadat24h:4379729,Đất nền,nhadat24h,property_candidate:b2e598cabe265d80ad26,Hòa Vang,xgboost_enriched_log,1000.0,1350.483154296875,350.483154296875,35.0483154296875,False
+nhadat24h:4379969,Đất nền,nhadat24h,property_candidate:7c9d87df6df74f17d3fa,Hòa Vang,location_median_unit_price,1160.0,1064.0,96.0,8.275862068965518,True
+nhadat24h:4379969,Đất nền,nhadat24h,property_candidate:7c9d87df6df74f17d3fa,Hòa Vang,ridge_log_area_location_alpha_1,1160.0,1145.1507276518391,14.849272348160866,1.2801096851862817,False
+nhadat24h:4379969,Đất nền,nhadat24h,property_candidate:7c9d87df6df74f17d3fa,Hòa Vang,xgboost_enriched_log,1160.0,1527.86669921875,367.86669921875,31.712646484375,False
+nhadat24h:4381132,Đất nền,nhadat24h,property_candidate:aeb447710e57287d4fe3,Thanh Khê,location_median_unit_price,4550.0,3705.0925925925926,844.9074074074074,18.56939356939357,True
+nhadat24h:4381132,Đất nền,nhadat24h,property_candidate:aeb447710e57287d4fe3,Thanh Khê,ridge_log_area_location_alpha_1,4550.0,4245.431908305033,304.5680916949668,6.693804213076194,False
+nhadat24h:4381132,Đất nền,nhadat24h,property_candidate:aeb447710e57287d4fe3,Thanh Khê,xgboost_enriched_log,4550.0,5097.2431640625,547.2431640625,12.027322287087912,False
+nhadat24h:4381397,Đất nền,nhadat24h,property_candidate:11af72e8e64bd2837bf9,Sơn Trà,location_median_unit_price,7000.0,14260.0,7260.0,103.71428571428571,True
+nhadat24h:4381397,Đất nền,nhadat24h,property_candidate:11af72e8e64bd2837bf9,Sơn Trà,ridge_log_area_location_alpha_1,7000.0,13388.300917639295,6388.300917639295,91.26144168056135,False
+nhadat24h:4381397,Đất nền,nhadat24h,property_candidate:11af72e8e64bd2837bf9,Sơn Trà,xgboost_enriched_log,7000.0,16717.982421875,9717.982421875,138.8283203125,False
+nhadat24h:4383359,Đất nền,nhadat24h,property_candidate:23f2b4a25cfcfa782538,Hòa Vang,location_median_unit_price,1690.0,1330.0,360.0,21.301775147928993,True
+nhadat24h:4383359,Đất nền,nhadat24h,property_candidate:23f2b4a25cfcfa782538,Hòa Vang,ridge_log_area_location_alpha_1,1690.0,1375.6180999516578,314.38190004834223,18.602479292801313,False
+nhadat24h:4383359,Đất nền,nhadat24h,property_candidate:23f2b4a25cfcfa782538,Hòa Vang,xgboost_enriched_log,1690.0,1279.3807373046875,410.6192626953125,24.29699779262204,False
+nhadat24h:4383735,Đất nền,nhadat24h,property_candidate:4849fb16fe41e425efb1,Hòa Vang,location_median_unit_price,1330.0,1330.0,0.0,0.0,True
+nhadat24h:4383735,Đất nền,nhadat24h,property_candidate:4849fb16fe41e425efb1,Hòa Vang,ridge_log_area_location_alpha_1,1330.0,1375.6180999516578,45.61809995165777,3.4299323271923132,False
+nhadat24h:4383735,Đất nền,nhadat24h,property_candidate:4849fb16fe41e425efb1,Hòa Vang,xgboost_enriched_log,1330.0,1279.3807373046875,50.6192626953125,3.805959601151316,False
+nhadat24h:4384269,Đất nền,nhadat24h,property_candidate:21b0a851688710e21f5f,Hòa Vang,location_median_unit_price,1330.0,1330.0,0.0,0.0,True
+nhadat24h:4384269,Đất nền,nhadat24h,property_candidate:21b0a851688710e21f5f,Hòa Vang,ridge_log_area_location_alpha_1,1330.0,1375.6180999516578,45.61809995165777,3.4299323271923132,False
+nhadat24h:4384269,Đất nền,nhadat24h,property_candidate:21b0a851688710e21f5f,Hòa Vang,xgboost_enriched_log,1330.0,1279.3807373046875,50.6192626953125,3.805959601151316,False
+nhadat24h:4386842,Đất nền,nhadat24h,property_candidate:9643cd15961ab556385b,Hòa Vang,location_median_unit_price,1330.0,1330.0,0.0,0.0,True
+nhadat24h:4386842,Đất nền,nhadat24h,property_candidate:9643cd15961ab556385b,Hòa Vang,ridge_log_area_location_alpha_1,1330.0,1375.6180999516578,45.61809995165777,3.4299323271923132,False
+nhadat24h:4386842,Đất nền,nhadat24h,property_candidate:9643cd15961ab556385b,Hòa Vang,xgboost_enriched_log,1330.0,1279.3807373046875,50.6192626953125,3.805959601151316,False
+nhadat24h:4387252,Đất nền,nhadat24h,property_candidate:7b0176916c0f9696fd87,Hòa Vang,location_median_unit_price,1050.0,1551.6666666666667,501.66666666666674,47.777777777777786,True
+nhadat24h:4387252,Đất nền,nhadat24h,property_candidate:7b0176916c0f9696fd87,Hòa Vang,ridge_log_area_location_alpha_1,1050.0,1561.3886159478259,511.3886159478259,48.70367770931675,False
+nhadat24h:4387252,Đất nền,nhadat24h,property_candidate:7b0176916c0f9696fd87,Hòa Vang,xgboost_enriched_log,1050.0,1334.5687255859375,284.5687255859375,27.101783389136905,False
+nhadat24h:4387640,Đất nền,nhadat24h,property_candidate:ef0844b608d0e81814b0,Cẩm Lệ,location_median_unit_price,4050.0,4171.774193548387,121.7741935483873,3.0067702110712915,True
+nhadat24h:4387640,Đất nền,nhadat24h,property_candidate:ef0844b608d0e81814b0,Cẩm Lệ,ridge_log_area_location_alpha_1,4050.0,3993.6390648684214,56.36093513157857,1.3916280279402116,False
+nhadat24h:4387640,Đất nền,nhadat24h,property_candidate:ef0844b608d0e81814b0,Cẩm Lệ,xgboost_enriched_log,4050.0,4016.16748046875,33.83251953125,0.8353708526234568,False
+nhadat24h:4388110,Đất nền,nhadat24h,property_candidate:ef1ce8c124cd50375d0b,Sơn Trà,location_median_unit_price,6700.0,6799.333333333333,99.33333333333303,1.4825870646766124,True
+nhadat24h:4388110,Đất nền,nhadat24h,property_candidate:ef1ce8c124cd50375d0b,Sơn Trà,ridge_log_area_location_alpha_1,6700.0,7284.65288883897,584.6528888389703,8.72616251998463,False
+nhadat24h:4388110,Đất nền,nhadat24h,property_candidate:ef1ce8c124cd50375d0b,Sơn Trà,xgboost_enriched_log,6700.0,7761.287109375,1061.287109375,15.840106110074627,False
+nhadat24h:4393546,Đất nền,nhadat24h,property_candidate:41202dd5d09c7a41aed9,Hòa Vang,location_median_unit_price,890.0,1330.0,440.0,49.438202247191015,True
+nhadat24h:4393546,Đất nền,nhadat24h,property_candidate:41202dd5d09c7a41aed9,Hòa Vang,ridge_log_area_location_alpha_1,890.0,1375.6180999516578,485.61809995165777,54.56383145524245,False
+nhadat24h:4393546,Đất nền,nhadat24h,property_candidate:41202dd5d09c7a41aed9,Hòa Vang,xgboost_enriched_log,890.0,1279.3807373046875,389.3807373046875,43.75064464097613,False
+nhadat24h:4395983,Đất nền,nhadat24h,property_candidate:460d2537ce9c82b5d4f7,Hòa Vang,location_median_unit_price,1190.0,1330.0,140.0,11.764705882352942,True
+nhadat24h:4395983,Đất nền,nhadat24h,property_candidate:460d2537ce9c82b5d4f7,Hòa Vang,ridge_log_area_location_alpha_1,1190.0,1375.6180999516578,185.61809995165777,15.598159659803175,False
+nhadat24h:4395983,Đất nền,nhadat24h,property_candidate:460d2537ce9c82b5d4f7,Hòa Vang,xgboost_enriched_log,1190.0,1279.3807373046875,89.3807373046875,7.510986328125,False
+nhadat24h:4401000,Đất nền,nhadat24h,property_candidate:8a2033e0fb4cc116da69,Liên Chiểu,location_median_unit_price,2800.0,4000.0,1200.0,42.857142857142854,True
+nhadat24h:4401000,Đất nền,nhadat24h,property_candidate:8a2033e0fb4cc116da69,Liên Chiểu,ridge_log_area_location_alpha_1,2800.0,4131.853976098854,1331.8539760988542,47.56621343210194,False
+nhadat24h:4401000,Đất nền,nhadat24h,property_candidate:8a2033e0fb4cc116da69,Liên Chiểu,xgboost_enriched_log,2800.0,4066.7998046875,1266.7998046875,45.242850167410715,False
+cafeland:2271282,Căn hộ chung cư,cafeland,property_candidate:ec204135300ec0a2adc6,Hải Châu,location_median_unit_price,9000.0,6970.934799685782,2029.0652003142177,22.545168892380197,False
+cafeland:2271282,Căn hộ chung cư,cafeland,property_candidate:ec204135300ec0a2adc6,Hải Châu,ridge_log_area_location_alpha_1,9000.0,7182.773142024763,1817.2268579752372,20.191409533058188,False
+cafeland:2271282,Căn hộ chung cư,cafeland,property_candidate:ec204135300ec0a2adc6,Hải Châu,xgboost_enriched_log,9000.0,6638.94775390625,2361.05224609375,26.23391384548611,True
+cafeland:2323911,Căn hộ chung cư,cafeland,property_candidate:7505fcce94e739fb29a7,Ngũ Hành Sơn,location_median_unit_price,3350.0,3208.3242059145678,141.67579408543224,4.229128181654694,False
+cafeland:2323911,Căn hộ chung cư,cafeland,property_candidate:7505fcce94e739fb29a7,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,3350.0,3248.620494450562,101.37950554943791,3.0262538969981465,False
+cafeland:2323911,Căn hộ chung cư,cafeland,property_candidate:7505fcce94e739fb29a7,Ngũ Hành Sơn,xgboost_enriched_log,3350.0,3256.9384765625,93.0615234375,2.777955923507463,True
+cafeland:3155562,Căn hộ chung cư,cafeland,property_candidate:98b550bfac670e9925f9,Ngũ Hành Sơn,location_median_unit_price,3190.0,3208.3242059145678,18.324205914567756,0.5744265176980488,False
+cafeland:3155562,Căn hộ chung cư,cafeland,property_candidate:98b550bfac670e9925f9,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,3190.0,3248.620494450562,58.62049445056209,1.8376330548765545,False
+cafeland:3155562,Căn hộ chung cư,cafeland,property_candidate:98b550bfac670e9925f9,Ngũ Hành Sơn,xgboost_enriched_log,3190.0,3256.9384765625,66.9384765625,2.0983848452194356,True
+cafeland:3176348,Căn hộ chung cư,cafeland,property_candidate:27fb17f0e6367a2557ad,new_unit:lien chieu,location_median_unit_price,1600.0,1756.9444444444443,156.94444444444434,9.809027777777771,False
+cafeland:3176348,Căn hộ chung cư,cafeland,property_candidate:27fb17f0e6367a2557ad,new_unit:lien chieu,ridge_log_area_location_alpha_1,1600.0,2010.1098975630687,410.10989756306867,25.631868597691792,False
+cafeland:3176348,Căn hộ chung cư,cafeland,property_candidate:27fb17f0e6367a2557ad,new_unit:lien chieu,xgboost_enriched_log,1600.0,2004.3909912109375,404.3909912109375,25.274436950683594,True
+cafeland:3184785,Căn hộ chung cư,cafeland,property_candidate:b9f1f0dbaa8b9118a485,Sơn Trà,location_median_unit_price,4000.0,5179.3650793650795,1179.3650793650795,29.48412698412699,False
+cafeland:3184785,Căn hộ chung cư,cafeland,property_candidate:b9f1f0dbaa8b9118a485,Sơn Trà,ridge_log_area_location_alpha_1,4000.0,5034.74937430844,1034.7493743084397,25.868734357710995,False
+cafeland:3184785,Căn hộ chung cư,cafeland,property_candidate:b9f1f0dbaa8b9118a485,Sơn Trà,xgboost_enriched_log,4000.0,4756.81591796875,756.81591796875,18.92039794921875,True
+cafeland:3187442,Căn hộ chung cư,cafeland,property_candidate:1ccf458f8553c78ff815,Sơn Trà,location_median_unit_price,4700.0,5179.3650793650795,479.3650793650795,10.199257007767649,False
+cafeland:3187442,Căn hộ chung cư,cafeland,property_candidate:1ccf458f8553c78ff815,Sơn Trà,ridge_log_area_location_alpha_1,4700.0,5034.74937430844,334.74937430843966,7.122327112945524,False
+cafeland:3187442,Căn hộ chung cư,cafeland,property_candidate:1ccf458f8553c78ff815,Sơn Trà,xgboost_enriched_log,4700.0,4756.81591796875,56.81591796875,1.2088493184840425,True
+nhadat24h:4360788,Căn hộ chung cư,nhadat24h,property_candidate:ace1ce576dea9c6ab81f,Ngũ Hành Sơn,location_median_unit_price,3900.0,6416.6484118291355,2516.6484118291355,64.52944645715732,False
+nhadat24h:4360788,Căn hộ chung cư,nhadat24h,property_candidate:ace1ce576dea9c6ab81f,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,3900.0,6276.90432511195,2376.90432511195,60.94626474646026,False
+nhadat24h:4360788,Căn hộ chung cư,nhadat24h,property_candidate:ace1ce576dea9c6ab81f,Ngũ Hành Sơn,xgboost_enriched_log,3900.0,5980.20947265625,2080.20947265625,53.338704427083336,True
+nhadat24h:4363205,Căn hộ chung cư,nhadat24h,property_candidate:2788d53beb14f95e199e,Sơn Trà,location_median_unit_price,7900.0,5776.984126984127,2123.015873015873,26.87361864577054,False
+nhadat24h:4363205,Căn hộ chung cư,nhadat24h,property_candidate:2788d53beb14f95e199e,Sơn Trà,ridge_log_area_location_alpha_1,7900.0,5585.241960404035,2314.758039595965,29.300734678429937,False
+nhadat24h:4363205,Căn hộ chung cư,nhadat24h,property_candidate:2788d53beb14f95e199e,Sơn Trà,xgboost_enriched_log,7900.0,5281.6650390625,2618.3349609375,33.1434805181962,True
+nhadat24h:4363269,Căn hộ chung cư,nhadat24h,property_candidate:c845a6529ef73ec160d6,Ngũ Hành Sơn,location_median_unit_price,5500.0,3475.6845564074483,2024.3154435925517,36.8057353380464,False
+nhadat24h:4363269,Căn hộ chung cư,nhadat24h,property_candidate:c845a6529ef73ec160d6,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,5500.0,3505.3455560255584,1994.6544439744416,36.26644443589894,False
+nhadat24h:4363269,Căn hộ chung cư,nhadat24h,property_candidate:c845a6529ef73ec160d6,Ngũ Hành Sơn,xgboost_enriched_log,5500.0,3768.442138671875,1731.557861328125,31.48287020596591,True
+nhadat24h:4368588,Căn hộ chung cư,nhadat24h,property_candidate:33f8aea5711a47bd4b2f,Sơn Trà,location_median_unit_price,2000.0,2390.4761904761904,390.47619047619037,19.52380952380952,False
+nhadat24h:4368588,Căn hộ chung cư,nhadat24h,property_candidate:33f8aea5711a47bd4b2f,Sơn Trà,ridge_log_area_location_alpha_1,2000.0,2414.901771717986,414.90177171798587,20.745088585899293,False
+nhadat24h:4368588,Căn hộ chung cư,nhadat24h,property_candidate:33f8aea5711a47bd4b2f,Sơn Trà,xgboost_enriched_log,2000.0,1987.412353515625,12.587646484375,0.62938232421875,True
+nhadat24h:4369915,Căn hộ chung cư,nhadat24h,property_candidate:167dcef6236d1013df22,Hải Châu,location_median_unit_price,5600.0,5576.747839748626,23.252160251374335,0.41521714734597026,False
+nhadat24h:4369915,Căn hộ chung cư,nhadat24h,property_candidate:167dcef6236d1013df22,Hải Châu,ridge_log_area_location_alpha_1,5600.0,5810.396049228047,210.39604922804665,3.75707230764369,False
+nhadat24h:4369915,Căn hộ chung cư,nhadat24h,property_candidate:167dcef6236d1013df22,Hải Châu,xgboost_enriched_log,5600.0,5537.333984375,62.666015625,1.1190359933035714,True
+nhadat24h:4379530,Căn hộ chung cư,nhadat24h,property_candidate:d1966162c9db1bcb475f,Sơn Trà,location_median_unit_price,10000.0,7410.476190476191,2589.523809523809,25.895238095238092,False
+nhadat24h:4379530,Căn hộ chung cư,nhadat24h,property_candidate:d1966162c9db1bcb475f,Sơn Trà,ridge_log_area_location_alpha_1,10000.0,7076.265642718561,2923.734357281439,29.23734357281439,False
+nhadat24h:4379530,Căn hộ chung cư,nhadat24h,property_candidate:d1966162c9db1bcb475f,Sơn Trà,xgboost_enriched_log,10000.0,8999.138671875,1000.861328125,10.00861328125,True
+nhadat24h:4384947,Căn hộ chung cư,nhadat24h,property_candidate:0cbc8809f6d95fbb059f,Cẩm Lệ,location_median_unit_price,4030.0000000000005,3309.5593220338983,720.4406779661022,17.876939899903274,False
+nhadat24h:4384947,Căn hộ chung cư,nhadat24h,property_candidate:0cbc8809f6d95fbb059f,Cẩm Lệ,ridge_log_area_location_alpha_1,4030.0000000000005,3255.4543067382765,774.545693261724,19.21949611071275,False
+nhadat24h:4384947,Căn hộ chung cư,nhadat24h,property_candidate:0cbc8809f6d95fbb059f,Cẩm Lệ,xgboost_enriched_log,4030.0000000000005,2586.818115234375,1443.1818847656255,35.81096488252172,True
+nhadat24h:4388404,Căn hộ chung cư,nhadat24h,property_candidate:9b703a6c7ecf780789c4,Sơn Trà,location_median_unit_price,7400.0,3665.3968253968255,3734.6031746031745,50.46761046761047,False
+nhadat24h:4388404,Căn hộ chung cư,nhadat24h,property_candidate:9b703a6c7ecf780789c4,Sơn Trà,ridge_log_area_location_alpha_1,7400.0,3624.9011873635577,3775.0988126364423,51.01484881941138,False
+nhadat24h:4388404,Căn hộ chung cư,nhadat24h,property_candidate:9b703a6c7ecf780789c4,Sơn Trà,xgboost_enriched_log,7400.0,3797.867919921875,3602.132080078125,48.67746054159628,True
+nhadat24h:4393602,Căn hộ chung cư,nhadat24h,property_candidate:8bb0e57ba6e5df6993b9,Sơn Trà,location_median_unit_price,7000.0,5737.142857142857,1262.8571428571431,18.040816326530617,False
+nhadat24h:4393602,Căn hộ chung cư,nhadat24h,property_candidate:8bb0e57ba6e5df6993b9,Sơn Trà,ridge_log_area_location_alpha_1,7000.0,5548.633993167105,1451.3660068328954,20.733800097612793,False
+nhadat24h:4393602,Căn hộ chung cư,nhadat24h,property_candidate:8bb0e57ba6e5df6993b9,Sơn Trà,xgboost_enriched_log,7000.0,5005.375,1994.625,28.494642857142857,True
+nhadat24h:4393633,Căn hộ chung cư,nhadat24h,property_candidate:57a00232be26804acbeb,Sơn Trà,location_median_unit_price,2800.0,2434.3015873015875,365.69841269841254,13.060657596371877,False
+nhadat24h:4393633,Căn hộ chung cư,nhadat24h,property_candidate:57a00232be26804acbeb,Sơn Trà,ridge_log_area_location_alpha_1,2800.0,2456.9522440104765,343.04775598952347,12.251705571054408,False
+nhadat24h:4393633,Căn hộ chung cư,nhadat24h,property_candidate:57a00232be26804acbeb,Sơn Trà,xgboost_enriched_log,2800.0,2385.381591796875,414.618408203125,14.80780029296875,True
+nhadat24h:4393989,Căn hộ chung cư,nhadat24h,property_candidate:f29ce23cffee17e995a0,Hải Châu,location_median_unit_price,9500.0,5765.373134328359,3734.626865671641,39.31186174391201,False
+nhadat24h:4393989,Căn hộ chung cư,nhadat24h,property_candidate:f29ce23cffee17e995a0,Hải Châu,ridge_log_area_location_alpha_1,9500.0,5996.986793907057,3503.0132060929427,36.87382322203098,False
+nhadat24h:4393989,Căn hộ chung cư,nhadat24h,property_candidate:f29ce23cffee17e995a0,Hải Châu,xgboost_enriched_log,9500.0,9064.73046875,435.26953125,4.581784539473684,True
+nhadat24h:4394416,Căn hộ chung cư,nhadat24h,property_candidate:97975d6db724d198c183,Sơn Trà,location_median_unit_price,3400.0,3984.126984126984,584.1269841269841,17.180205415499533,False
+nhadat24h:4394416,Căn hộ chung cư,nhadat24h,property_candidate:97975d6db724d198c183,Sơn Trà,ridge_log_area_location_alpha_1,3400.0,3923.7914860092087,523.7914860092087,15.405631941447316,False
+nhadat24h:4394416,Căn hộ chung cư,nhadat24h,property_candidate:97975d6db724d198c183,Sơn Trà,xgboost_enriched_log,3400.0,3066.855224609375,333.144775390625,9.798375746783089,True
+nhadat24h:4394837,Căn hộ chung cư,nhadat24h,property_candidate:06e8b3317e5028c9d904,Sơn Trà,location_median_unit_price,15000.0,9561.904761904761,5438.0952380952385,36.25396825396826,False
+nhadat24h:4394837,Căn hộ chung cư,nhadat24h,property_candidate:06e8b3317e5028c9d904,Sơn Trà,ridge_log_area_location_alpha_1,15000.0,9015.556274937735,5984.443725062265,39.8962915004151,False
+nhadat24h:4394837,Căn hộ chung cư,nhadat24h,property_candidate:06e8b3317e5028c9d904,Sơn Trà,xgboost_enriched_log,15000.0,10436.8232421875,4563.1767578125,30.421178385416667,True
+nhadat24h:4395293,Căn hộ chung cư,nhadat24h,property_candidate:24dee72e573b26663d86,Ngũ Hành Sơn,location_median_unit_price,2330.0,2566.659364731654,236.65936473165402,10.157054280328499,False
+nhadat24h:4395293,Căn hộ chung cư,nhadat24h,property_candidate:24dee72e573b26663d86,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,2330.0,2627.9225743548855,297.92257435488546,12.78637658175474,False
+nhadat24h:4395293,Căn hộ chung cư,nhadat24h,property_candidate:24dee72e573b26663d86,Ngũ Hành Sơn,xgboost_enriched_log,2330.0,2780.0732421875,450.0732421875,19.316448162553648,True
+nhadat24h:4396479,Căn hộ chung cư,nhadat24h,property_candidate:d571094a24a7d5ddd2ce,Sơn Trà,location_median_unit_price,3000.0,3027.936507936508,27.93650793650795,0.9312169312169317,False
+nhadat24h:4396479,Căn hộ chung cư,nhadat24h,property_candidate:d571094a24a7d5ddd2ce,Sơn Trà,ridge_log_area_location_alpha_1,3000.0,3023.095708825309,23.095708825308975,0.7698569608436325,False
+nhadat24h:4396479,Căn hộ chung cư,nhadat24h,property_candidate:d571094a24a7d5ddd2ce,Sơn Trà,xgboost_enriched_log,3000.0,2495.80517578125,504.19482421875,16.806494140625,True
+nhadat24h:4396558,Căn hộ chung cư,nhadat24h,property_candidate:779d6534b864a1ae0b3f,Thanh Khê,location_median_unit_price,2300.0,2431.656184486373,131.65618448637315,5.7241819341901365,False
+nhadat24h:4396558,Căn hộ chung cư,nhadat24h,property_candidate:779d6534b864a1ae0b3f,Thanh Khê,ridge_log_area_location_alpha_1,2300.0,2484.725753815052,184.72575381505203,8.031554513697914,False
+nhadat24h:4396558,Căn hộ chung cư,nhadat24h,property_candidate:779d6534b864a1ae0b3f,Thanh Khê,xgboost_enriched_log,2300.0,2529.88330078125,229.88330078125,9.994926120923912,True
+nhadat24h:4396574,Căn hộ chung cư,nhadat24h,property_candidate:fdc468b89e49719855d8,Sơn Trà,location_median_unit_price,4000.0,3904.4444444444443,95.55555555555566,2.3888888888888915,False
+nhadat24h:4396574,Căn hộ chung cư,nhadat24h,property_candidate:fdc468b89e49719855d8,Sơn Trà,ridge_log_area_location_alpha_1,4000.0,3849.1843332784165,150.8156667215835,3.7703916680395877,False
+nhadat24h:4396574,Căn hộ chung cư,nhadat24h,property_candidate:fdc468b89e49719855d8,Sơn Trà,xgboost_enriched_log,4000.0,4936.87109375,936.87109375,23.42177734375,True
+nhadat24h:4396893,Căn hộ chung cư,nhadat24h,property_candidate:e8c5f85f00ac06068494,Cẩm Lệ,location_median_unit_price,2800.0,3332.542372881356,532.5423728813562,19.019370460048435,False
+nhadat24h:4396893,Căn hộ chung cư,nhadat24h,property_candidate:e8c5f85f00ac06068494,Cẩm Lệ,ridge_log_area_location_alpha_1,2800.0,3276.932667853672,476.9326678536718,17.03330956620256,False
+nhadat24h:4396893,Căn hộ chung cư,nhadat24h,property_candidate:e8c5f85f00ac06068494,Cẩm Lệ,xgboost_enriched_log,2800.0,2966.9853515625,166.9853515625,5.963762555803571,True
+nhadat24h:4397138,Căn hộ chung cư,nhadat24h,property_candidate:3817dffcddfb7fa94e87,Sơn Trà,location_median_unit_price,5600.0,5179.3650793650795,420.6349206349205,7.511337868480723,False
+nhadat24h:4397138,Căn hộ chung cư,nhadat24h,property_candidate:3817dffcddfb7fa94e87,Sơn Trà,ridge_log_area_location_alpha_1,5600.0,5034.74937430844,565.2506256915603,10.093761173063578,False
+nhadat24h:4397138,Căn hộ chung cư,nhadat24h,property_candidate:3817dffcddfb7fa94e87,Sơn Trà,xgboost_enriched_log,5600.0,5459.6904296875,140.3095703125,2.505528041294643,True
+nhadat24h:4397339,Căn hộ chung cư,nhadat24h,property_candidate:33327e362d888a3d22cc,Sơn Trà,location_median_unit_price,5000.0,5338.730158730159,338.730158730159,6.774603174603181,False
+nhadat24h:4397339,Căn hộ chung cư,nhadat24h,property_candidate:33327e362d888a3d22cc,Sơn Trà,ridge_log_area_location_alpha_1,5000.0,5181.8424549651545,181.8424549651545,3.63684909930309,False
+nhadat24h:4397339,Căn hộ chung cư,nhadat24h,property_candidate:33327e362d888a3d22cc,Sơn Trà,xgboost_enriched_log,5000.0,5397.10205078125,397.10205078125,7.942041015625,True
+nhadat24h:4398475,Căn hộ chung cư,nhadat24h,property_candidate:14ef8536b08b4d2ab201,Ngũ Hành Sơn,location_median_unit_price,2700.0,1871.5224534501644,828.4775465498356,30.684353575919836,False
+nhadat24h:4398475,Căn hộ chung cư,nhadat24h,property_candidate:14ef8536b08b4d2ab201,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,2700.0,1946.5565758427429,753.4434241572571,27.90531200582434,False
+nhadat24h:4398475,Căn hộ chung cư,nhadat24h,property_candidate:14ef8536b08b4d2ab201,Ngũ Hành Sơn,xgboost_enriched_log,2700.0,2327.610107421875,372.389892578125,13.79221824363426,True
+nhadat24h:4398530,Căn hộ chung cư,nhadat24h,property_candidate:acf1cfc3aa38564379c6,Sơn Trà,location_median_unit_price,5000.0,5179.3650793650795,179.3650793650795,3.58730158730159,False
+nhadat24h:4398530,Căn hộ chung cư,nhadat24h,property_candidate:acf1cfc3aa38564379c6,Sơn Trà,ridge_log_area_location_alpha_1,5000.0,5034.74937430844,34.749374308439656,0.6949874861687931,False
+nhadat24h:4398530,Căn hộ chung cư,nhadat24h,property_candidate:acf1cfc3aa38564379c6,Sơn Trà,xgboost_enriched_log,5000.0,5577.71484375,577.71484375,11.554296875,True
+nhadat24h:4399080,Căn hộ chung cư,nhadat24h,property_candidate:fe7ce0dfee54be7033dc,Sơn Trà,location_median_unit_price,4600.0,4780.952380952381,180.95238095238074,3.9337474120082767,False
+nhadat24h:4399080,Căn hộ chung cư,nhadat24h,property_candidate:fe7ce0dfee54be7033dc,Sơn Trà,ridge_log_area_location_alpha_1,4600.0,4666.013589925593,66.0135899255929,1.4350780418607152,False
+nhadat24h:4399080,Căn hộ chung cư,nhadat24h,property_candidate:fe7ce0dfee54be7033dc,Sơn Trà,xgboost_enriched_log,4600.0,4654.736328125,54.736328125,1.1899201766304348,True
+nhadat24h:4399598,Căn hộ chung cư,nhadat24h,property_candidate:46fc5d65734df06780e5,Ngũ Hành Sơn,location_median_unit_price,2000.0,2031.9386637458929,31.93866374589288,1.5969331872946442,False
+nhadat24h:4399598,Căn hộ chung cư,nhadat24h,property_candidate:46fc5d65734df06780e5,Ngũ Hành Sơn,ridge_log_area_location_alpha_1,2000.0,2104.771125737777,104.77112573777686,5.2385562868888425,False
+nhadat24h:4399598,Căn hộ chung cư,nhadat24h,property_candidate:46fc5d65734df06780e5,Ngũ Hành Sơn,xgboost_enriched_log,2000.0,2192.34619140625,192.34619140625,9.6173095703125,True
+nhadat24h:4399806,Căn hộ chung cư,nhadat24h,property_candidate:0df32f036398820a92b8,Sơn Trà,location_median_unit_price,5200.0,5896.507936507936,696.5079365079364,13.394383394383393,False
+nhadat24h:4399806,Căn hộ chung cư,nhadat24h,property_candidate:0df32f036398820a92b8,Sơn Trà,ridge_log_area_location_alpha_1,5200.0,5694.990836216939,494.990836216939,9.519054542633443,False
+nhadat24h:4399806,Căn hộ chung cư,nhadat24h,property_candidate:0df32f036398820a92b8,Sơn Trà,xgboost_enriched_log,5200.0,6212.2333984375,1012.2333984375,19.466026893028847,True

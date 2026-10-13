@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "unique_ids": 100,
+  "changes": {
+    "added": 100
+  },
+  "descriptions": 0,
+  "source_address_claims": 0,
+  "verified_property_locations": 0,
+  "approved_model_features": 0,
+  "mode": "import",
+  "original_raw_and_model_modified": false,
+  "detail_endpoints_requested": false
+}

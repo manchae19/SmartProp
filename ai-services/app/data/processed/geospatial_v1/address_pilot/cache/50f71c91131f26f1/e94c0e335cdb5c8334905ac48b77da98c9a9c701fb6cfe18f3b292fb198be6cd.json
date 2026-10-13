@@ -1,0 +1,53 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+S%E1%BA%AFc+Kim",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Sắc Kim"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:24.489990+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+S%E1%BA%AFc+Kim",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239693846,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656742378,
+      "lat": "16.0029251",
+      "lon": "108.2238312",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nguyễn Sắc Kim",
+      "display_name": "Đường Nguyễn Sắc Kim, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam",
+      "address": {
+        "road": "Đường Nguyễn Sắc Kim",
+        "neighbourhood": "Tổ dân phố Trung Lương 3",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50510",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0015608",
+        "16.0043431",
+        "108.2211668",
+        "108.2265249"
+      ]
+    }
+  ],
+  "response_sha256": "ccedd10d64ae728d6c13917066b486d827ddc2cba8496138831d1430f5915938",
+  "response_body_utf8": "[{\"place_id\":239693846,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656742378,\"lat\":\"16.0029251\",\"lon\":\"108.2238312\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nguyễn Sắc Kim\",\"display_name\":\"Đường Nguyễn Sắc Kim, Tổ dân phố Trung Lương 3, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50510, Việt Nam\",\"address\":{\"road\":\"Đường Nguyễn Sắc Kim\",\"neighbourhood\":\"Tổ dân phố Trung Lương 3\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50510\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0015608\",\"16.0043431\",\"108.2211668\",\"108.2265249\"]}]"
+}

@@ -1,0 +1,171 @@
+{
+  "created_at_utc": "2026-10-12T06:31:59.273012+00:00",
+  "fingerprint": "3414f42ee47f37a2b81a4e5b0e685879ad8deca8135d460751a5939b3b7da875",
+  "dataset_run": "processed/training_v3/runs/5753e0aff0e9d930",
+  "model_run": "processed/models_v3_validation/runs/e685fb476592cb2e",
+  "train_n": 1435,
+  "validation_n": 299,
+  "aggregate": {
+    "n": 299,
+    "mae_million": 2668.361351495238,
+    "rmse_million": 4654.046421842957,
+    "mape_pct": 43.80369858334077,
+    "median_ape_pct": 23.24125,
+    "within_20pct": 46.82274247491639,
+    "above_50pct": 57,
+    "r2": 0.5025551234919823
+  },
+  "categories": {
+    "Nhà ở": {
+      "train_n": 788,
+      "validation_n": 153,
+      "selected_model": "ridge_log_area_location_alpha_1",
+      "metrics": {
+        "n": 153,
+        "mae_million": 3091.9834221749256,
+        "rmse_million": 4872.295882773859,
+        "mape_pct": 47.266721303175416,
+        "median_ape_pct": 22.085715504792937,
+        "within_20pct": 47.05882352941176,
+        "above_50pct": 26,
+        "r2": 0.3573541064906639
+      },
+      "train_ward_available_pct": 40.86294416243655,
+      "train_rooms_available_pct": 31.218274111675125,
+      "validation_low_location_support_n": 1,
+      "label_review_candidates_n": 17
+    },
+    "Đất nền": {
+      "train_n": 518,
+      "validation_n": 115,
+      "selected_model": "location_median_unit_price",
+      "metrics": {
+        "n": 115,
+        "mae_million": 2571.3069532219433,
+        "rmse_million": 4916.079092030904,
+        "mape_pct": 46.47911769622042,
+        "median_ape_pct": 28.675547542735053,
+        "within_20pct": 40.869565217391305,
+        "above_50pct": 30,
+        "r2": 0.548144337087579
+      },
+      "train_ward_available_pct": 37.06563706563706,
+      "train_rooms_available_pct": null,
+      "validation_low_location_support_n": 5,
+      "label_review_candidates_n": 15
+    },
+    "Căn hộ chung cư": {
+      "train_n": 129,
+      "validation_n": 31,
+      "selected_model": "xgboost_enriched_log",
+      "metrics": {
+        "n": 31,
+        "mae_million": 937.6219639931955,
+        "rmse_million": 1447.7517108580162,
+        "mape_pct": 16.787063934442,
+        "median_ape_pct": 13.792218243634261,
+        "within_20pct": 67.74193548387096,
+        "above_50pct": 1,
+        "r2": 0.746512893790805
+      },
+      "train_ward_available_pct": 75.96899224806202,
+      "train_rooms_available_pct": 62.01550387596899,
+      "validation_low_location_support_n": 2,
+      "label_review_candidates_n": 5
+    }
+  },
+  "top10_absolute_error_share_pct": 21.709760970578156,
+  "validation_priority_n": 64,
+  "label_review_candidates_n": 37,
+  "label_review_candidates_by_split": {
+    "train": 32,
+    "validation": 5
+  },
+  "label_review_flags": {
+    "unit_price_outside_train_q01_q99": 37
+  },
+  "benchmark": {
+    "status": "prepared_not_collected",
+    "freeze_at_utc": "2026-10-12T06:31:59.273012+00:00",
+    "model_run": "processed/models_v3_validation/runs/e685fb476592cb2e",
+    "model_manifest_sha256": "2da6b41610df82ee58bffac3cb490c725293099b8580dfbdb8f330371f8aa941",
+    "proposed_per_category": 50,
+    "proposed_total": 150,
+    "actual_collected": 0,
+    "actually_scored": 0,
+    "exclusion_source_ids": 8509,
+    "dedupe_requirement": "Exclude every previously collected ID and any suspected same asset across sources, dates or address aliases; independent evidence review required.",
+    "timestamp_requirement": "First observed after protocol freeze. An update/display date alone does not prove initial publication or a future-time listing.",
+    "label_requirement": "Independently verify source identity, sale, ordinary asset type, total asking price, area, Da Nang geography and evidence hash before revealing predictions.",
+    "selection": "Consecutive independently reviewed new assets by category, never by model residual.",
+    "eligibility": {
+      "categories": [
+        "Nhà ở",
+        "Đất nền",
+        "Căn hộ chung cư"
+      ],
+      "geography": "Old or expanded Da Nang with explicit address evidence.",
+      "transaction": "Sale of an ordinary single house, land parcel or apartment, not rent or whole commercial buildings.",
+      "currency": "VND; price_million is total asking price in million VND, not per-m2, a deposit, installment or a starting range.",
+      "numeric": "Price and area must be finite and positive, verified independently from the main source listing.",
+      "date": "Record actual first observation with timezone after freeze; preserve displayed date and its semantics separately.",
+      "uniqueness": "No previously collected source ID or suspected physical-asset overlap; documented independent dedupe review.",
+      "sampling": "First 50 qualifying, independently reviewed assets per category in observation order; log all excluded/rejected records and reasons.",
+      "out_of_train_range": "Retain valid ordinary assets outside the observed train range and report them separately; do not suppress extremes to improve scores."
+    },
+    "review_columns": [
+      "record_key",
+      "source",
+      "source_listing_id",
+      "detail_url",
+      "first_observed_at",
+      "displayed_date",
+      "date_basis",
+      "category",
+      "area_sqm",
+      "price_million",
+      "currency",
+      "location_feature",
+      "ward_source",
+      "rooms",
+      "transaction_type",
+      "geography_evidence",
+      "total_asking_price_verified",
+      "reviewed_by",
+      "reviewed_at",
+      "source_evidence_sha256",
+      "physical_duplicate_status",
+      "dedupe_reviewed_by",
+      "dedupe_evidence",
+      "review_decision",
+      "notes"
+    ],
+    "minimum_statistical_guarantee": false,
+    "scoring_rule": "Keep models, encoders and selection fixed; report all collected/rejected/verified counts and per-category errors; do not use benchmark to tune."
+  },
+  "new_model_trained": false,
+  "test_evaluated": false,
+  "labels_changed": false,
+  "integrity": "Frozen dataset/model outputs and analysis inputs verified by SHA256; other prior artifacts compared by size/mtime/ctime before and after this read-only analysis.",
+  "policy": {
+    "small_location_train_n": 10,
+    "small_validation_group_n": 10,
+    "unit_price_tail_quantiles": [
+      0.01,
+      0.99
+    ],
+    "high_error_ape_pct": 50,
+    "largest_errors_n": 20,
+    "benchmark_pilot_per_category": 50,
+    "label_action": "Diagnostic flags only; no automatic relabeling, deletion or retraining.",
+    "benchmark_selection": "Consecutive independently reviewed new assets by category, never by model residual."
+  },
+  "limitations": [
+    "Diagnostic associations do not prove why a model fails.",
+    "Validation was used for selection; no new independent performance result.",
+    "Tail prices/large residuals do not prove incorrect source labels.",
+    "Cache coverage is only this source-review round, not all historical verifications.",
+    "Header agreement is not independent confirmation of total market/transaction value.",
+    "The benchmark pilot target is a workload proposal, not an accuracy guarantee."
+  ]
+}

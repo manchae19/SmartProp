@@ -1,0 +1,62 @@
+{
+  "input_candidates": 2780,
+  "main_records": 1383,
+  "unknown_date_records": 720,
+  "quarantined_records": 522,
+  "suppressed_duplicate_records": 155,
+  "dispositions": {
+    "quarantined": 522,
+    "main": 1383,
+    "suppressed_possible_duplicate": 155,
+    "unknown_date_experiment": 720
+  },
+  "quarantine_reasons": {
+    "source_category_needs_review": 434,
+    "multiple_properties_in_title": 18,
+    "duplicate_group_historical_location_conflict": 19,
+    "duplicate_group_area_sqm_conflict": 30,
+    "duplicate_group_price_million_conflict": 30,
+    "transaction_or_partial_price_title": 27,
+    "duplicate_group_category_conflict": 8,
+    "linked_candidate_needs_review": 1,
+    "multiple_different_total_prices_in_title": 2
+  },
+  "main_by_category": {
+    "Nhà ở": {
+      "train": 657,
+      "test": 80,
+      "validation": 68
+    },
+    "Đất nền": {
+      "validation": 37,
+      "train": 292,
+      "test": 37
+    },
+    "Căn hộ chung cư": {
+      "train": 171,
+      "validation": 21,
+      "test": 20
+    }
+  },
+  "main_by_source": {
+    "alonhadat": 17,
+    "cafeland": 803,
+    "chotot": 81,
+    "homedy": 10,
+    "nhadat24h": 472
+  },
+  "split_seed": "smartprop-expanded-training-v1",
+  "split_counts": {
+    "train": 1120,
+    "test": 137,
+    "validation": 126
+  },
+  "suspected_pairs": 475,
+  "source_sha256": {
+    "processed/full_collection_audit_expanded/all_unique_listings_audit.csv": "fd1962d713c7d7e9105bc6257eebae3d07e2004299a7a7787916aca8a04d7a79",
+    "processed/full_collection_audit_expanded/summary.json": "51a749e145b0adb3a5f5b818f391ce6f64ed6469d36684bd882267cbe00ede02",
+    "processed/full_collection_audit/possible_duplicate_properties.csv": "58953da15a04b1451fa3e66f999d1f11def65ff71459017b8ec389ba54a5193d",
+    "processed/full_collection_audit/summary.json": "391c44a4ac6ddd014ce7ad05e04942ed926958ca8b1ebf0376c56d13bf3916c7"
+  },
+  "raw_hashes_unchanged": true
+}

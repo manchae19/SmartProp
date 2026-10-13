@@ -1,0 +1,83 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+B%E1%BB%89nh+Khi%C3%AAm",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Bỉnh Khiêm"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:12.386375+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+B%E1%BB%89nh+Khi%C3%AAm",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238716917,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118609269,
+      "lat": "16.0643059",
+      "lon": "108.2324420",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Nguyễn Bỉnh Khiêm",
+      "display_name": "Nguyễn Bỉnh Khiêm, Tổ dân phố An Mỹ 2, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Nguyễn Bỉnh Khiêm",
+        "neighbourhood": "Tổ dân phố An Mỹ 2",
+        "suburb": "Phường An Hải",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0622069",
+        "16.0663998",
+        "108.2316903",
+        "108.2331788"
+      ]
+    },
+    {
+      "place_id": 258046688,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 207205654,
+      "lat": "15.8895862",
+      "lon": "108.3240773",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Nguyễn Bỉnh Khiêm",
+      "display_name": "Nguyễn Bỉnh Khiêm, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam",
+      "address": {
+        "road": "Nguyễn Bỉnh Khiêm",
+        "suburb": "Phường Hội An Tây",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51309",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8891399",
+        "15.8900408",
+        "108.3234482",
+        "108.3247159"
+      ]
+    }
+  ],
+  "response_sha256": "6bc2700930dd730382d18910ec4e7b897121ca4d3854597019b3c2dd820743ae",
+  "response_body_utf8": "[{\"place_id\":238716917,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118609269,\"lat\":\"16.0643059\",\"lon\":\"108.2324420\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Nguyễn Bỉnh Khiêm\",\"display_name\":\"Nguyễn Bỉnh Khiêm, Tổ dân phố An Mỹ 2, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Nguyễn Bỉnh Khiêm\",\"neighbourhood\":\"Tổ dân phố An Mỹ 2\",\"suburb\":\"Phường An Hải\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0622069\",\"16.0663998\",\"108.2316903\",\"108.2331788\"]},{\"place_id\":258046688,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":207205654,\"lat\":\"15.8895862\",\"lon\":\"108.3240773\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Nguyễn Bỉnh Khiêm\",\"display_name\":\"Nguyễn Bỉnh Khiêm, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam\",\"address\":{\"road\":\"Nguyễn Bỉnh Khiêm\",\"suburb\":\"Phường Hội An Tây\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51309\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8891399\",\"15.8900408\",\"108.3234482\",\"108.3247159\"]}]"
+}

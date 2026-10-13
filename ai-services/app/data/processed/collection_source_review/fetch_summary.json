@@ -1,0 +1,13 @@
+{
+  "queued": 4383,
+  "checkpoint_entries": 4383,
+  "states": {
+    "not_requested_source_access_blocked": 1798,
+    "cached": 66,
+    "downloaded": 2512,
+    "unexpected_http_status": 7
+  },
+  "failures": [],
+  "protected_inputs_unchanged": true,
+  "completed_at_utc": "2026-10-11T15:05:38.336515+00:00"
+}

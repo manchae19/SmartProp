@@ -1,0 +1,86 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+H%E1%BB%AFu+Tr%C3%A1c&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Lê Hữu Trác",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:08:58.828061+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=L%C3%AA+H%E1%BB%AFu+Tr%C3%A1c&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239737866,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 672374429,
+      "lat": "16.0597259",
+      "lon": "108.2380618",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Lê Hữu Trác",
+      "display_name": "Đường Lê Hữu Trác, Tổ dân phố An Trung Đông 2, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Lê Hữu Trác",
+        "neighbourhood": "Tổ dân phố An Trung Đông 2",
+        "suburb": "Phường An Hải",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0596647",
+        "16.0597674",
+        "108.2376988",
+        "108.2384276"
+      ]
+    },
+    {
+      "place_id": 239783563,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1351519672,
+      "lat": "16.0571390",
+      "lon": "108.2358175",
+      "category": "highway",
+      "type": "tertiary_link",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Đường Lê Hữu Trác",
+      "display_name": "Đường Lê Hữu Trác, Tổ dân phố An Trung Đông 1, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Lê Hữu Trác",
+        "neighbourhood": "Tổ dân phố An Trung Đông 1",
+        "suburb": "Phường An Hải",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0571303",
+        "16.0571477",
+        "108.2357759",
+        "108.2358590"
+      ]
+    }
+  ],
+  "response_sha256": "d4b4d715d477705b2024476beab6bebe24bfd36373e9e1651bed56c43a485a85",
+  "response_body_utf8": "[{\"place_id\":239737866,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":672374429,\"lat\":\"16.0597259\",\"lon\":\"108.2380618\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Lê Hữu Trác\",\"display_name\":\"Đường Lê Hữu Trác, Tổ dân phố An Trung Đông 2, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Lê Hữu Trác\",\"neighbourhood\":\"Tổ dân phố An Trung Đông 2\",\"suburb\":\"Phường An Hải\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0596647\",\"16.0597674\",\"108.2376988\",\"108.2384276\"]},{\"place_id\":239783563,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1351519672,\"lat\":\"16.0571390\",\"lon\":\"108.2358175\",\"category\":\"highway\",\"type\":\"tertiary_link\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Đường Lê Hữu Trác\",\"display_name\":\"Đường Lê Hữu Trác, Tổ dân phố An Trung Đông 1, Phường An Hải, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Lê Hữu Trác\",\"neighbourhood\":\"Tổ dân phố An Trung Đông 1\",\"suburb\":\"Phường An Hải\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0571303\",\"16.0571477\",\"108.2357759\",\"108.2358590\"]}]"
+}

@@ -1,0 +1,145 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=H%C3%A0n+M%E1%BA%B7c+T%E1%BB%AD",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Hàn Mặc Tử"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:25.591274+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=H%C3%A0n+M%E1%BA%B7c+T%E1%BB%AD",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239041987,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118609225,
+      "lat": "16.0862105",
+      "lon": "108.2164274",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hàn Mặc Tử",
+      "display_name": "Đường Hàn Mặc Tử, Tổ dân phố 08 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50206, Việt Nam",
+      "address": {
+        "road": "Đường Hàn Mặc Tử",
+        "neighbourhood": "Tổ dân phố 08 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50206",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0852402",
+        "16.0872420",
+        "108.2150407",
+        "108.2178460"
+      ]
+    },
+    {
+      "place_id": 239011086,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118609290,
+      "lat": "16.0847375",
+      "lon": "108.2187829",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hàn Mặc Tử",
+      "display_name": "Đường Hàn Mặc Tử, Tổ dân phố 05 Thuận Phước, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Hàn Mặc Tử",
+        "neighbourhood": "Tổ dân phố 05 Thuận Phước",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0841777",
+        "16.0852402",
+        "108.2178460",
+        "108.2196867"
+      ]
+    },
+    {
+      "place_id": 236753464,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372213416,
+      "lat": "16.0847180",
+      "lon": "108.2193713",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hàn Mặc Tử",
+      "display_name": "Đường Hàn Mặc Tử, Tổ dân phố 04 Thuận Phước, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Hàn Mặc Tử",
+        "neighbourhood": "Tổ dân phố 04 Thuận Phước",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0844312",
+        "16.0850047",
+        "108.2188927",
+        "108.2198498"
+      ]
+    },
+    {
+      "place_id": 258945724,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 448708183,
+      "lat": "15.8857467",
+      "lon": "108.3814554",
+      "category": "highway",
+      "type": "unclassified",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Đường Hàn Mặc Tử",
+      "display_name": "Đường Hàn Mặc Tử, Phường Hội An Đông, Hội An, Thành phố Đà Nẵng, 51313, Việt Nam",
+      "address": {
+        "road": "Đường Hàn Mặc Tử",
+        "suburb": "Phường Hội An Đông",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51313",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8853637",
+        "15.8863995",
+        "108.3813429",
+        "108.3819665"
+      ]
+    }
+  ],
+  "response_sha256": "d9d6f9c6359275d8fed85bee23ca468a2ce7ef071ef877fb615b05426a150415",
+  "response_body_utf8": "[{\"place_id\":239041987,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118609225,\"lat\":\"16.0862105\",\"lon\":\"108.2164274\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hàn Mặc Tử\",\"display_name\":\"Đường Hàn Mặc Tử, Tổ dân phố 08 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50206, Việt Nam\",\"address\":{\"road\":\"Đường Hàn Mặc Tử\",\"neighbourhood\":\"Tổ dân phố 08 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50206\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0852402\",\"16.0872420\",\"108.2150407\",\"108.2178460\"]},{\"place_id\":239011086,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118609290,\"lat\":\"16.0847375\",\"lon\":\"108.2187829\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hàn Mặc Tử\",\"display_name\":\"Đường Hàn Mặc Tử, Tổ dân phố 05 Thuận Phước, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Hàn Mặc Tử\",\"neighbourhood\":\"Tổ dân phố 05 Thuận Phước\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0841777\",\"16.0852402\",\"108.2178460\",\"108.2196867\"]},{\"place_id\":236753464,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372213416,\"lat\":\"16.0847180\",\"lon\":\"108.2193713\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hàn Mặc Tử\",\"display_name\":\"Đường Hàn Mặc Tử, Tổ dân phố 04 Thuận Phước, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Hàn Mặc Tử\",\"neighbourhood\":\"Tổ dân phố 04 Thuận Phước\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0844312\",\"16.0850047\",\"108.2188927\",\"108.2198498\"]},{\"place_id\":258945724,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":448708183,\"lat\":\"15.8857467\",\"lon\":\"108.3814554\",\"category\":\"highway\",\"type\":\"unclassified\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Đường Hàn Mặc Tử\",\"display_name\":\"Đường Hàn Mặc Tử, Phường Hội An Đông, Hội An, Thành phố Đà Nẵng, 51313, Việt Nam\",\"address\":{\"road\":\"Đường Hàn Mặc Tử\",\"suburb\":\"Phường Hội An Đông\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51313\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8853637\",\"15.8863995\",\"108.3813429\",\"108.3819665\"]}]"
+}

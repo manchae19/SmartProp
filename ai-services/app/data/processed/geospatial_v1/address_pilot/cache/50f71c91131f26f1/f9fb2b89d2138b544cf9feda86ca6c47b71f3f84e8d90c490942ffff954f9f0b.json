@@ -1,0 +1,141 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Ho%C3%A0ng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nguyễn Hoàng"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:22.289098+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nguy%E1%BB%85n+Ho%C3%A0ng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 257997993,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 160628176,
+      "lat": "15.8747121",
+      "lon": "108.3259244",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Nguyễn Hoàng",
+      "display_name": "Nguyễn Hoàng, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam",
+      "address": {
+        "road": "Nguyễn Hoàng",
+        "neighbourhood": "An Hội",
+        "quarter": "Phố cổ Hội An",
+        "suburb": "Phường Hội An",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "64000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8733789",
+        "15.8760711",
+        "108.3259003",
+        "108.3259827"
+      ]
+    },
+    {
+      "place_id": 258066553,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 715351965,
+      "lat": "15.5701455",
+      "lon": "108.4635205",
+      "category": "highway",
+      "type": "trunk",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Nguyễn Hoàng",
+      "display_name": "Nguyễn Hoàng, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Nguyễn Hoàng",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5676398",
+        "15.5731565",
+        "108.4631662",
+        "108.4652203"
+      ]
+    },
+    {
+      "place_id": 257964840,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 813567463,
+      "lat": "15.5778668",
+      "lon": "108.4640650",
+      "category": "highway",
+      "type": "trunk",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Nguyễn Hoàng",
+      "display_name": "Nguyễn Hoàng, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Nguyễn Hoàng",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5740691",
+        "15.5816602",
+        "108.4634014",
+        "108.4647555"
+      ]
+    },
+    {
+      "place_id": 258079718,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 714388058,
+      "lat": "15.5486856",
+      "lon": "108.4987128",
+      "category": "highway",
+      "type": "trunk",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Nguyễn Hoàng",
+      "display_name": "Nguyễn Hoàng, Phường Hương Trà, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Nguyễn Hoàng",
+        "suburb": "Phường Hương Trà",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5485578",
+        "15.5489578",
+        "108.4968388",
+        "108.5005547"
+      ]
+    }
+  ],
+  "response_sha256": "a22bb0654f3ae96630ee93a6f2519748eae8f93378453de1d7eb191b3ee991c9",
+  "response_body_utf8": "[{\"place_id\":257997993,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":160628176,\"lat\":\"15.8747121\",\"lon\":\"108.3259244\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Nguyễn Hoàng\",\"display_name\":\"Nguyễn Hoàng, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam\",\"address\":{\"road\":\"Nguyễn Hoàng\",\"neighbourhood\":\"An Hội\",\"quarter\":\"Phố cổ Hội An\",\"suburb\":\"Phường Hội An\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"64000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8733789\",\"15.8760711\",\"108.3259003\",\"108.3259827\"]},{\"place_id\":258066553,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":715351965,\"lat\":\"15.5701455\",\"lon\":\"108.4635205\",\"category\":\"highway\",\"type\":\"trunk\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Nguyễn Hoàng\",\"display_name\":\"Nguyễn Hoàng, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Nguyễn Hoàng\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5676398\",\"15.5731565\",\"108.4631662\",\"108.4652203\"]},{\"place_id\":257964840,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":813567463,\"lat\":\"15.5778668\",\"lon\":\"108.4640650\",\"category\":\"highway\",\"type\":\"trunk\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Nguyễn Hoàng\",\"display_name\":\"Nguyễn Hoàng, Phường Bàn Thạch, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Nguyễn Hoàng\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5740691\",\"15.5816602\",\"108.4634014\",\"108.4647555\"]},{\"place_id\":258079718,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":714388058,\"lat\":\"15.5486856\",\"lon\":\"108.4987128\",\"category\":\"highway\",\"type\":\"trunk\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Nguyễn Hoàng\",\"display_name\":\"Nguyễn Hoàng, Phường Hương Trà, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Nguyễn Hoàng\",\"suburb\":\"Phường Hương Trà\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5485578\",\"15.5489578\",\"108.4968388\",\"108.5005547\"]}]"
+}

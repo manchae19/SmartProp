@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /tim-kiem/
+Disallow: /ajax/
+Disallow: /error.html
+Sitemap: https://nhadat.cafeland.vn/sitemap.xml

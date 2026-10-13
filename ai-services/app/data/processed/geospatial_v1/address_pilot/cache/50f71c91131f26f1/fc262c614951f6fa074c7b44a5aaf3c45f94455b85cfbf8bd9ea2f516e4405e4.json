@@ -1,0 +1,172 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Kh%C3%A1nh+An+5",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Khánh An 5"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:23.481855+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Kh%C3%A1nh+An+5",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 258273938,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 714402599,
+      "lat": "15.5384558",
+      "lon": "108.4477366",
+      "category": "highway",
+      "type": "motorway",
+      "place_rank": 26,
+      "importance": 0.2647815871063118,
+      "addresstype": "road",
+      "name": "Cầu Khánh Thọ - OP17C",
+      "display_name": "Cầu Khánh Thọ - OP17C, Xã Chiên Đàn, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Cầu Khánh Thọ - OP17C",
+        "town": "Xã Chiên Đàn",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5383769",
+        "15.5385346",
+        "108.4476007",
+        "108.4478725"
+      ]
+    },
+    {
+      "place_id": 238990906,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 656399240,
+      "lat": "16.0658410",
+      "lon": "108.1459509",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Khánh An 12",
+      "display_name": "Đường Khánh An 12, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam",
+      "address": {
+        "road": "Đường Khánh An 12",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0648625",
+        "16.0669063",
+        "108.1442735",
+        "108.1476659"
+      ]
+    },
+    {
+      "place_id": 237892181,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118618214,
+      "lat": "16.0535514",
+      "lon": "108.2409552",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Trần Khánh Dư",
+      "display_name": "Đường Trần Khánh Dư, Tổ dân phố An Cư 4, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Trần Khánh Dư",
+        "neighbourhood": "Tổ dân phố An Cư 4",
+        "suburb": "Phường Ngũ Hành Sơn",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0524580",
+        "16.0546398",
+        "108.2406207",
+        "108.2412723"
+      ]
+    },
+    {
+      "place_id": 236011523,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 599977234,
+      "lat": "16.0595708",
+      "lon": "108.1396028",
+      "category": "highway",
+      "type": "unclassified",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Khánh An 5",
+      "display_name": "Đường Khánh An 5, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam",
+      "address": {
+        "road": "Đường Khánh An 5",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0589392",
+        "16.0624197",
+        "108.1362398",
+        "108.1417594"
+      ]
+    },
+    {
+      "place_id": 239135417,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1484270106,
+      "lat": "16.0592244",
+      "lon": "108.1340405",
+      "category": "highway",
+      "type": "track",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Khánh An 5",
+      "display_name": "Đường Khánh An 5, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam",
+      "address": {
+        "road": "Đường Khánh An 5",
+        "suburb": "Phường Hòa Khánh",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0589392",
+        "16.0594709",
+        "108.1318190",
+        "108.1362398"
+      ]
+    }
+  ],
+  "response_sha256": "4dc0b3df7bc9d966ee6d649eff78287f579b4b1910bf2c5c2f683aa2dd723715",
+  "response_body_utf8": "[{\"place_id\":258273938,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":714402599,\"lat\":\"15.5384558\",\"lon\":\"108.4477366\",\"category\":\"highway\",\"type\":\"motorway\",\"place_rank\":26,\"importance\":0.2647815871063118,\"addresstype\":\"road\",\"name\":\"Cầu Khánh Thọ - OP17C\",\"display_name\":\"Cầu Khánh Thọ - OP17C, Xã Chiên Đàn, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Cầu Khánh Thọ - OP17C\",\"town\":\"Xã Chiên Đàn\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5383769\",\"15.5385346\",\"108.4476007\",\"108.4478725\"]},{\"place_id\":238990906,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":656399240,\"lat\":\"16.0658410\",\"lon\":\"108.1459509\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Khánh An 12\",\"display_name\":\"Đường Khánh An 12, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam\",\"address\":{\"road\":\"Đường Khánh An 12\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0648625\",\"16.0669063\",\"108.1442735\",\"108.1476659\"]},{\"place_id\":237892181,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118618214,\"lat\":\"16.0535514\",\"lon\":\"108.2409552\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Trần Khánh Dư\",\"display_name\":\"Đường Trần Khánh Dư, Tổ dân phố An Cư 4, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Trần Khánh Dư\",\"neighbourhood\":\"Tổ dân phố An Cư 4\",\"suburb\":\"Phường Ngũ Hành Sơn\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0524580\",\"16.0546398\",\"108.2406207\",\"108.2412723\"]},{\"place_id\":236011523,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":599977234,\"lat\":\"16.0595708\",\"lon\":\"108.1396028\",\"category\":\"highway\",\"type\":\"unclassified\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Khánh An 5\",\"display_name\":\"Đường Khánh An 5, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam\",\"address\":{\"road\":\"Đường Khánh An 5\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0589392\",\"16.0624197\",\"108.1362398\",\"108.1417594\"]},{\"place_id\":239135417,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1484270106,\"lat\":\"16.0592244\",\"lon\":\"108.1340405\",\"category\":\"highway\",\"type\":\"track\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Khánh An 5\",\"display_name\":\"Đường Khánh An 5, Phường Hòa Khánh, Thành phố Đà Nẵng, 51000, Việt Nam\",\"address\":{\"road\":\"Đường Khánh An 5\",\"suburb\":\"Phường Hòa Khánh\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0589392\",\"16.0594709\",\"108.1318190\",\"108.1362398\"]}]"
+}

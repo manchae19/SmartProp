@@ -1,0 +1,8 @@
+{
+  "source_review_run": "processed/geospatial_v1/candidate_review/runs/32189c842163e5b8",
+  "source_review_manifest_sha256": "8ad0ae5cbda6416bc8d061e0e008bd457c68ba695ec034594000de59cf044dfd",
+  "queue_sha256": "42c55803424066e01e82567cabddc44355f368c95359c0dde7d5739647b0d849",
+  "rows": 80,
+  "priority_1": 30,
+  "scope": "Source-detail evidence only; no raw/model/label/split changes."
+}

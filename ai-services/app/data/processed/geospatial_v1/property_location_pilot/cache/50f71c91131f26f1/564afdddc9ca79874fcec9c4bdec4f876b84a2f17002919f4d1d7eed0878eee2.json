@@ -1,0 +1,179 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0ng+Di%E1%BB%87u&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Hoàng Diệu",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:09:03.350426+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0ng+Di%E1%BB%87u&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238579977,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 35950925,
+      "lat": "16.0632386",
+      "lon": "108.2179960",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hoàng Diệu",
+      "display_name": "Đường Hoàng Diệu, Tổ dân phố 41 Phước Ninh, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Hoàng Diệu",
+        "neighbourhood": "Tổ dân phố 41 Phước Ninh",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0608534",
+        "16.0653300",
+        "108.2171150",
+        "108.2194632"
+      ]
+    },
+    {
+      "place_id": 238651223,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118570159,
+      "lat": "16.0564751",
+      "lon": "108.2148772",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 356 Hoàng Diệu",
+      "display_name": "Kiệt 356 Hoàng Diệu, Tổ dân phố 52 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Kiệt 356 Hoàng Diệu",
+        "neighbourhood": "Tổ dân phố 52 Bình Hiên",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0558422",
+        "16.0565481",
+        "108.2126952",
+        "108.2171333"
+      ]
+    },
+    {
+      "place_id": 238752398,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 676453140,
+      "lat": "16.0555890",
+      "lon": "108.2149524",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 356 Hoàng Diệu",
+      "display_name": "Kiệt 356 Hoàng Diệu, Tổ dân phố 15, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Kiệt 356 Hoàng Diệu",
+        "neighbourhood": "Tổ dân phố 15",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0548080",
+        "16.0564217",
+        "108.2147148",
+        "108.2152124"
+      ]
+    },
+    {
+      "place_id": 238862970,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372467087,
+      "lat": "16.0505337",
+      "lon": "108.2188969",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hoàng Diệu",
+      "display_name": "Đường Hoàng Diệu, Tổ dân phố 5, Phường Hòa Cường, Thành phố Đà Nẵng, 50219, Việt Nam",
+      "address": {
+        "road": "Đường Hoàng Diệu",
+        "neighbourhood": "Tổ dân phố 5",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50219",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0504763",
+        "16.0506435",
+        "108.2181538",
+        "108.2196334"
+      ]
+    },
+    {
+      "place_id": 238794951,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 642050078,
+      "lat": "16.0591366",
+      "lon": "108.2138765",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hoàng Diệu",
+      "display_name": "Đường Hoàng Diệu, Tổ dân phố 50 Nam Dương, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Hoàng Diệu",
+        "neighbourhood": "Tổ dân phố 50 Nam Dương",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0591153",
+        "16.0592790",
+        "108.2136811",
+        "108.2141650"
+      ]
+    }
+  ],
+  "response_sha256": "29d5eab17d890f0e5432c318c81e6cb3cd82310e50a2b6db2723ead415b98638",
+  "response_body_utf8": "[{\"place_id\":238579977,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":35950925,\"lat\":\"16.0632386\",\"lon\":\"108.2179960\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hoàng Diệu\",\"display_name\":\"Đường Hoàng Diệu, Tổ dân phố 41 Phước Ninh, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Hoàng Diệu\",\"neighbourhood\":\"Tổ dân phố 41 Phước Ninh\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0608534\",\"16.0653300\",\"108.2171150\",\"108.2194632\"]},{\"place_id\":238651223,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118570159,\"lat\":\"16.0564751\",\"lon\":\"108.2148772\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 356 Hoàng Diệu\",\"display_name\":\"Kiệt 356 Hoàng Diệu, Tổ dân phố 52 Bình Hiên, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Kiệt 356 Hoàng Diệu\",\"neighbourhood\":\"Tổ dân phố 52 Bình Hiên\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0558422\",\"16.0565481\",\"108.2126952\",\"108.2171333\"]},{\"place_id\":238752398,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":676453140,\"lat\":\"16.0555890\",\"lon\":\"108.2149524\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 356 Hoàng Diệu\",\"display_name\":\"Kiệt 356 Hoàng Diệu, Tổ dân phố 15, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Kiệt 356 Hoàng Diệu\",\"neighbourhood\":\"Tổ dân phố 15\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0548080\",\"16.0564217\",\"108.2147148\",\"108.2152124\"]},{\"place_id\":238862970,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372467087,\"lat\":\"16.0505337\",\"lon\":\"108.2188969\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hoàng Diệu\",\"display_name\":\"Đường Hoàng Diệu, Tổ dân phố 5, Phường Hòa Cường, Thành phố Đà Nẵng, 50219, Việt Nam\",\"address\":{\"road\":\"Đường Hoàng Diệu\",\"neighbourhood\":\"Tổ dân phố 5\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50219\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0504763\",\"16.0506435\",\"108.2181538\",\"108.2196334\"]},{\"place_id\":238794951,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":642050078,\"lat\":\"16.0591366\",\"lon\":\"108.2138765\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hoàng Diệu\",\"display_name\":\"Đường Hoàng Diệu, Tổ dân phố 50 Nam Dương, Phường Hải Châu, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Hoàng Diệu\",\"neighbourhood\":\"Tổ dân phố 50 Nam Dương\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0591153\",\"16.0592790\",\"108.2136811\",\"108.2141650\"]}]"
+}

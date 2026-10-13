@@ -1,0 +1,173 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Tr%C6%B0ng+N%E1%BB%AF+V%C6%B0%C6%A1ng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Trưng Nữ Vương"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:55.856306+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Tr%C6%B0ng+N%E1%BB%AF+V%C6%B0%C6%A1ng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238992374,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 641090921,
+      "lat": "16.0437652",
+      "lon": "108.2077989",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Trưng Nữ Vương",
+      "display_name": "Trưng Nữ Vương, Tổ dân phố 24, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Trưng Nữ Vương",
+        "neighbourhood": "Tổ dân phố 24",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0419914",
+        "16.0454875",
+        "108.2058659",
+        "108.2097757"
+      ]
+    },
+    {
+      "place_id": 239096069,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 676440285,
+      "lat": "16.0411520",
+      "lon": "108.2058661",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Trưng Nữ Vương",
+      "display_name": "Trưng Nữ Vương, Tổ dân phố 25, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Trưng Nữ Vương",
+        "neighbourhood": "Tổ dân phố 25",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0402781",
+        "16.0419914",
+        "108.2057562",
+        "108.2059464"
+      ]
+    },
+    {
+      "place_id": 238815184,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 698701955,
+      "lat": "16.0456047",
+      "lon": "108.2099058",
+      "category": "highway",
+      "type": "secondary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Trưng Nữ Vương",
+      "display_name": "Trưng Nữ Vương, Tổ dân phố 22, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Trưng Nữ Vương",
+        "neighbourhood": "Tổ dân phố 22",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0454875",
+        "16.0457227",
+        "108.2097757",
+        "108.2100352"
+      ]
+    },
+    {
+      "place_id": 260708694,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 531235868,
+      "lat": "15.5630213",
+      "lon": "108.4652937",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Trưng Nữ Vương",
+      "display_name": "Trưng Nữ Vương, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Trưng Nữ Vương",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5613376",
+        "15.5655383",
+        "108.4614140",
+        "108.4685982"
+      ]
+    },
+    {
+      "place_id": 417263081,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1510270302,
+      "lat": "15.5686216",
+      "lon": "108.4710195",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Trưng Nữ Vương",
+      "display_name": "Trưng Nữ Vương, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Trưng Nữ Vương",
+        "suburb": "Phường Tam Kỳ",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5659701",
+        "15.5712523",
+        "108.4689281",
+        "108.4731383"
+      ]
+    }
+  ],
+  "response_sha256": "51bdf6225a1d2a77c66cf64357f4cfe879f423eefb03543aeef92edad87582d5",
+  "response_body_utf8": "[{\"place_id\":238992374,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":641090921,\"lat\":\"16.0437652\",\"lon\":\"108.2077989\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Trưng Nữ Vương\",\"display_name\":\"Trưng Nữ Vương, Tổ dân phố 24, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Trưng Nữ Vương\",\"neighbourhood\":\"Tổ dân phố 24\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0419914\",\"16.0454875\",\"108.2058659\",\"108.2097757\"]},{\"place_id\":239096069,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":676440285,\"lat\":\"16.0411520\",\"lon\":\"108.2058661\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Trưng Nữ Vương\",\"display_name\":\"Trưng Nữ Vương, Tổ dân phố 25, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Trưng Nữ Vương\",\"neighbourhood\":\"Tổ dân phố 25\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0402781\",\"16.0419914\",\"108.2057562\",\"108.2059464\"]},{\"place_id\":238815184,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":698701955,\"lat\":\"16.0456047\",\"lon\":\"108.2099058\",\"category\":\"highway\",\"type\":\"secondary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Trưng Nữ Vương\",\"display_name\":\"Trưng Nữ Vương, Tổ dân phố 22, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Trưng Nữ Vương\",\"neighbourhood\":\"Tổ dân phố 22\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0454875\",\"16.0457227\",\"108.2097757\",\"108.2100352\"]},{\"place_id\":260708694,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":531235868,\"lat\":\"15.5630213\",\"lon\":\"108.4652937\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Trưng Nữ Vương\",\"display_name\":\"Trưng Nữ Vương, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Trưng Nữ Vương\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5613376\",\"15.5655383\",\"108.4614140\",\"108.4685982\"]},{\"place_id\":417263081,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1510270302,\"lat\":\"15.5686216\",\"lon\":\"108.4710195\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Trưng Nữ Vương\",\"display_name\":\"Trưng Nữ Vương, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Trưng Nữ Vương\",\"suburb\":\"Phường Tam Kỳ\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5659701\",\"15.5712523\",\"108.4689281\",\"108.4731383\"]}]"
+}

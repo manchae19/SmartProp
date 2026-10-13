@@ -1,0 +1,179 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=B%E1%BA%AFc+%C4%90%E1%BA%A9u&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "bounded": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Bắc Đẩu",
+    "viewbox": "108.05,16.21,108.31,15.93"
+  },
+  "fetched_at_utc": "2026-10-12T17:08:57.727017+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&bounded=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=B%E1%BA%AFc+%C4%90%E1%BA%A9u&viewbox=108.05%2C16.21%2C108.31%2C15.93",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 236663705,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118609204,
+      "lat": "16.0771402",
+      "lon": "108.2087191",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Bắc Đẩu",
+      "display_name": "Đường Bắc Đẩu, Tổ dân phố 18 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Bắc Đẩu",
+        "neighbourhood": "Tổ dân phố 18 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0751040",
+        "16.0795154",
+        "108.2062224",
+        "108.2108993"
+      ]
+    },
+    {
+      "place_id": 235986566,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372472123,
+      "lat": "16.0791728",
+      "lon": "108.2111238",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 02 Bắc Đẩu",
+      "display_name": "Kiệt 02 Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Kiệt 02 Bắc Đẩu",
+        "neighbourhood": "Tổ dân phố 14 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0788332",
+        "16.0797592",
+        "108.2105739",
+        "108.2117306"
+      ]
+    },
+    {
+      "place_id": 239104059,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372471686,
+      "lat": "16.0793210",
+      "lon": "108.2113605",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Bắc Đẩu",
+      "display_name": "Đường Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Bắc Đẩu",
+        "neighbourhood": "Tổ dân phố 14 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0792404",
+        "16.0794017",
+        "108.2110852",
+        "108.2116358"
+      ]
+    },
+    {
+      "place_id": 241145585,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372201362,
+      "lat": "16.0780791",
+      "lon": "108.2100745",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Kiệt Bắc Đẩu",
+      "display_name": "Kiệt Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Kiệt Bắc Đẩu",
+        "neighbourhood": "Tổ dân phố 14 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0775129",
+        "16.0786104",
+        "108.2096142",
+        "108.2104947"
+      ]
+    },
+    {
+      "place_id": 239179135,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 372471688,
+      "lat": "16.0776868",
+      "lon": "108.2098117",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04006461966887921,
+      "addresstype": "road",
+      "name": "Đường Bắc Đẩu",
+      "display_name": "Đường Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam",
+      "address": {
+        "road": "Đường Bắc Đẩu",
+        "neighbourhood": "Tổ dân phố 14 Thanh Bình",
+        "suburb": "Phường Hải Châu",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50207",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0773769",
+        "16.0779325",
+        "108.2095222",
+        "108.2100398"
+      ]
+    }
+  ],
+  "response_sha256": "d2cc745426db6c2d452a1b40bbd7d06146664907ce7886337a1f00cf1578e28f",
+  "response_body_utf8": "[{\"place_id\":236663705,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118609204,\"lat\":\"16.0771402\",\"lon\":\"108.2087191\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Bắc Đẩu\",\"display_name\":\"Đường Bắc Đẩu, Tổ dân phố 18 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Bắc Đẩu\",\"neighbourhood\":\"Tổ dân phố 18 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0751040\",\"16.0795154\",\"108.2062224\",\"108.2108993\"]},{\"place_id\":235986566,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372472123,\"lat\":\"16.0791728\",\"lon\":\"108.2111238\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 02 Bắc Đẩu\",\"display_name\":\"Kiệt 02 Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Kiệt 02 Bắc Đẩu\",\"neighbourhood\":\"Tổ dân phố 14 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0788332\",\"16.0797592\",\"108.2105739\",\"108.2117306\"]},{\"place_id\":239104059,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372471686,\"lat\":\"16.0793210\",\"lon\":\"108.2113605\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Bắc Đẩu\",\"display_name\":\"Đường Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Bắc Đẩu\",\"neighbourhood\":\"Tổ dân phố 14 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0792404\",\"16.0794017\",\"108.2110852\",\"108.2116358\"]},{\"place_id\":241145585,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372201362,\"lat\":\"16.0780791\",\"lon\":\"108.2100745\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Kiệt Bắc Đẩu\",\"display_name\":\"Kiệt Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Kiệt Bắc Đẩu\",\"neighbourhood\":\"Tổ dân phố 14 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0775129\",\"16.0786104\",\"108.2096142\",\"108.2104947\"]},{\"place_id\":239179135,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":372471688,\"lat\":\"16.0776868\",\"lon\":\"108.2098117\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04006461966887921,\"addresstype\":\"road\",\"name\":\"Đường Bắc Đẩu\",\"display_name\":\"Đường Bắc Đẩu, Tổ dân phố 14 Thanh Bình, Phường Hải Châu, Thành phố Đà Nẵng, 50207, Việt Nam\",\"address\":{\"road\":\"Đường Bắc Đẩu\",\"neighbourhood\":\"Tổ dân phố 14 Thanh Bình\",\"suburb\":\"Phường Hải Châu\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50207\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0773769\",\"16.0779325\",\"108.2095222\",\"108.2100398\"]}]"
+}

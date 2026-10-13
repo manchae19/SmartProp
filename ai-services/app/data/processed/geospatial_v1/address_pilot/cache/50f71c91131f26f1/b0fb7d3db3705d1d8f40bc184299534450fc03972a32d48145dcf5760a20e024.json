@@ -1,0 +1,177 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nh%C3%A2n+H%C3%B2a+4",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Nhân Hòa 4"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:17.888007+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Nh%C3%A2n+H%C3%B2a+4",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 258216125,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303060478,
+      "lat": "15.9821229",
+      "lon": "108.2101930",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nhân Hòa 4",
+      "display_name": "Đường Nhân Hòa 4, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Nhân Hòa 4",
+        "neighbourhood": "Tổ dân phố Nhơn Hòa 1",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9820990",
+        "15.9821467",
+        "108.2097043",
+        "108.2106816"
+      ]
+    },
+    {
+      "place_id": 258357462,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 352066321,
+      "lat": "15.9787460",
+      "lon": "108.2097434",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nhân Hoà 6",
+      "display_name": "Đường Nhân Hoà 6, Tổ dân phố Cồn Mong, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Nhân Hoà 6",
+        "neighbourhood": "Tổ dân phố Cồn Mong",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9749274",
+        "15.9825694",
+        "108.2096762",
+        "108.2100391"
+      ]
+    },
+    {
+      "place_id": 255122831,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303060481,
+      "lat": "15.9843822",
+      "lon": "108.2095772",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nhân Hòa 8",
+      "display_name": "Đường Nhân Hòa 8, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Nhân Hòa 8",
+        "neighbourhood": "Tổ dân phố Nhơn Hòa 1",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9827725",
+        "15.9859931",
+        "108.2095038",
+        "108.2096759"
+      ]
+    },
+    {
+      "place_id": 258341698,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303060540,
+      "lat": "15.9860121",
+      "lon": "108.2101102",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nhân Hòa 9",
+      "display_name": "Đường Nhân Hòa 9, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Nhân Hòa 9",
+        "neighbourhood": "Tổ dân phố Nhơn Hòa 1",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9859737",
+        "15.9860549",
+        "108.2090143",
+        "108.2112058"
+      ]
+    },
+    {
+      "place_id": 257888224,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303060516,
+      "lat": "15.9817436",
+      "lon": "108.2086712",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Nhân Hòa 7",
+      "display_name": "Đường Nhân Hòa 7, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Nhân Hòa 7",
+        "neighbourhood": "Tổ dân phố Nhơn Hòa 1",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9809694",
+        "15.9825178",
+        "108.2086217",
+        "108.2087206"
+      ]
+    }
+  ],
+  "response_sha256": "019e3c472f1436a39933be27999cb970a9e7927d473d8fe787b71c464cd045b5",
+  "response_body_utf8": "[{\"place_id\":258216125,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303060478,\"lat\":\"15.9821229\",\"lon\":\"108.2101930\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nhân Hòa 4\",\"display_name\":\"Đường Nhân Hòa 4, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Nhân Hòa 4\",\"neighbourhood\":\"Tổ dân phố Nhơn Hòa 1\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9820990\",\"15.9821467\",\"108.2097043\",\"108.2106816\"]},{\"place_id\":258357462,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":352066321,\"lat\":\"15.9787460\",\"lon\":\"108.2097434\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nhân Hoà 6\",\"display_name\":\"Đường Nhân Hoà 6, Tổ dân phố Cồn Mong, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Nhân Hoà 6\",\"neighbourhood\":\"Tổ dân phố Cồn Mong\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9749274\",\"15.9825694\",\"108.2096762\",\"108.2100391\"]},{\"place_id\":255122831,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303060481,\"lat\":\"15.9843822\",\"lon\":\"108.2095772\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nhân Hòa 8\",\"display_name\":\"Đường Nhân Hòa 8, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Nhân Hòa 8\",\"neighbourhood\":\"Tổ dân phố Nhơn Hòa 1\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9827725\",\"15.9859931\",\"108.2095038\",\"108.2096759\"]},{\"place_id\":258341698,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303060540,\"lat\":\"15.9860121\",\"lon\":\"108.2101102\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nhân Hòa 9\",\"display_name\":\"Đường Nhân Hòa 9, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Nhân Hòa 9\",\"neighbourhood\":\"Tổ dân phố Nhơn Hòa 1\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9859737\",\"15.9860549\",\"108.2090143\",\"108.2112058\"]},{\"place_id\":257888224,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303060516,\"lat\":\"15.9817436\",\"lon\":\"108.2086712\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Nhân Hòa 7\",\"display_name\":\"Đường Nhân Hòa 7, Tổ dân phố Nhơn Hòa 1, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Nhân Hòa 7\",\"neighbourhood\":\"Tổ dân phố Nhơn Hòa 1\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9809694\",\"15.9825178\",\"108.2086217\",\"108.2087206\"]}]"
+}

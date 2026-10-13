@@ -1,0 +1,16 @@
+{
+  "verified_at": "2026-10-12T16:54:01.572078+00:00",
+  "verified": true,
+  "rows": 8509,
+  "raw_snapshots_sha256_verified": 20,
+  "frozen_collection_outputs_sha256_verified": true,
+  "frozen_v3_data_and_model_outputs_sha256_verified": true,
+  "other_processed_artifacts_stat_unchanged": true,
+  "numeric_coordinate_candidates": 2752,
+  "eligible_coordinate_review_rows": 80,
+  "eligible_geocoding_queue_rows": 2002,
+  "verified_locations": 0,
+  "model_training_performed": false,
+  "osm_snapshots_available": 0,
+  "feature_runs_available": 0
+}

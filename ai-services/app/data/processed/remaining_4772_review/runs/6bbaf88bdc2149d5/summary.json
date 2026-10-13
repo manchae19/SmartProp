@@ -1,0 +1,140 @@
+{
+  "reviewed_at_local": "2026-10-13",
+  "source_rules_as_of": "2026-10-11",
+  "reviewed_pending": 4772,
+  "total_unique_source_ids": 8509,
+  "previous_statuses": {
+    "eligible": 2082,
+    "needs_review": 4772,
+    "excluded": 1655
+  },
+  "statuses_after_review": {
+    "eligible": 3062,
+    "needs_review": 3752,
+    "excluded": 1695
+  },
+  "pending_batch_outcomes": {
+    "needs_review": 3752,
+    "eligible": 980,
+    "excluded": 40
+  },
+  "primary_issues": {
+    "financial_multiple_or_special_asset_context": 876,
+    "price_area_or_structure_unresolved": 881,
+    "property_category_unresolved": 136,
+    "eligible_after_date_policy_change": 980,
+    "duplicate_group_unresolved": 44,
+    "duplicate_representative_suppressed": 40,
+    "prior_content_review_still_unresolved": 2,
+    "source_blocked_not_individually_requested": 1798,
+    "detail_http_error": 7,
+    "source_identity_unverified": 3,
+    "geography_or_sale_unverified": 5
+  },
+  "by_source": {
+    "alonhadat": {
+      "needs_review": 4
+    },
+    "cafeland": {
+      "needs_review": 902,
+      "eligible": 26,
+      "excluded": 6
+    },
+    "chotot": {
+      "needs_review": 1798
+    },
+    "homedy": {
+      "eligible": 682,
+      "needs_review": 270,
+      "excluded": 31
+    },
+    "nhadat24h": {
+      "needs_review": 778,
+      "eligible": 272,
+      "excluded": 3
+    }
+  },
+  "pipeline_issue_counts": {
+    "multiple_properties_in_title": 36,
+    "saved_source_review_pending": 1838,
+    "price_text_non_total_or_unparsed": 228,
+    "detail_price_unparsed": 80,
+    "source_price_needs_review": 315,
+    "source_price_unit_review": 1,
+    "missing_or_invalid_price": 228,
+    "invalid_numeric_target_or_area": 281,
+    "category_review_pending": 359,
+    "source_category_needs_review": 359,
+    "category_title_inferred": 583,
+    "source_review_reason": 40,
+    "source_area_needs_review": 73,
+    "total_price_threshold": 154,
+    "apartment_price_priority": 72,
+    "unit_price_threshold": 290,
+    "numeric_threshold": 321,
+    "partial_starting_or_booking_title": 214,
+    "category_unresolved": 363,
+    "unsupported_category": 319,
+    "outside_model_property_types": 388,
+    "missing_or_invalid_area": 120,
+    "area_text_unparsed": 98,
+    "linked_group_member_not_eligible": 27,
+    "title_price_conflict": 176,
+    "transaction_or_partial_price_title": 268,
+    "special_or_whole_building": 102,
+    "area_threshold": 41,
+    "group_historical_location_conflict": 1,
+    "group_area_sqm_conflict": 16,
+    "group_price_million_conflict": 10,
+    "category_title_conflict": 48,
+    "land_title_house_label": 27,
+    "sale_transaction_unverified": 1787,
+    "legacy_price_raw_unavailable": 1780,
+    "sale_not_supported": 1787,
+    "source_detail_not_verified": 1798,
+    "legacy_province_unverified": 1780,
+    "geography_not_supported": 1794,
+    "multiple_different_total_prices_in_title": 11,
+    "coordinates_need_geographic_review": 4,
+    "source_review_flags": 1,
+    "detail_fetch_error": 7,
+    "outside_or_unverified_expanded_danang": 15,
+    "source_region_needs_review": 15
+  },
+  "evidence_coverage": {
+    "identity_verified": 2024,
+    "description_available": 2024,
+    "access_states": {
+      "cached": 66,
+      "downloaded": 1961,
+      "not_in_source_batch": 940,
+      "not_requested_source_access_blocked": 1798,
+      "unexpected_http_status": 7
+    }
+  },
+  "rows_with_waived_date_gates": 3215,
+  "training_inputs": {
+    "train": 2110,
+    "validation": 299,
+    "reserved_eligible": 653,
+    "by_category": {
+      "train": {
+        "Đất nền": 598,
+        "Nhà ở": 1336,
+        "Căn hộ chung cư": 176
+      },
+      "validation": {
+        "Đất nền": 115,
+        "Nhà ở": 153,
+        "Căn hộ chung cư": 31
+      }
+    },
+    "matrix_validation_passed": true,
+    "model_trained": false
+  },
+  "numeric_labels_changed": 0,
+  "category_labels_changed": 0,
+  "old_v3_modified": false,
+  "source_manual_review_claimed": false,
+  "new_network_requests": 0
+}

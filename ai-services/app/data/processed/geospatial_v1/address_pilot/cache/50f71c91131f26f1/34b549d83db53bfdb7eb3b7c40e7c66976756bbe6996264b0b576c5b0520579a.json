@@ -1,0 +1,115 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ch%C3%A2u+Th%C6%B0%E1%BB%A3ng+V%C4%83n",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Châu Thượng Văn"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:36.502007+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ch%C3%A2u+Th%C6%B0%E1%BB%A3ng+V%C4%83n",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 258608738,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 39334255,
+      "lat": "15.8752278",
+      "lon": "108.3265611",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Châu Thượng Văn",
+      "display_name": "Châu Thượng Văn, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam",
+      "address": {
+        "road": "Châu Thượng Văn",
+        "neighbourhood": "An Hội",
+        "quarter": "Phố cổ Hội An",
+        "suburb": "Phường Hội An",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "64000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8745239",
+        "15.8759338",
+        "108.3265289",
+        "108.3266291"
+      ]
+    },
+    {
+      "place_id": 259170516,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 531235852,
+      "lat": "15.5775914",
+      "lon": "108.4672224",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Châu Thượng Văn",
+      "display_name": "Châu Thượng Văn, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Châu Thượng Văn",
+        "suburb": "Phường Bàn Thạch",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5767062",
+        "15.5775974",
+        "108.4661578",
+        "108.4686629"
+      ]
+    },
+    {
+      "place_id": 258553041,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 35952573,
+      "lat": "15.8768661",
+      "lon": "108.3265067",
+      "category": "highway",
+      "type": "service",
+      "place_rank": 27,
+      "importance": 0.04004934386205843,
+      "addresstype": "road",
+      "name": "Châu Thượng Văn",
+      "display_name": "Châu Thượng Văn, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam",
+      "address": {
+        "road": "Châu Thượng Văn",
+        "neighbourhood": "An Hội",
+        "quarter": "Phố cổ Hội An",
+        "suburb": "Phường Hội An",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "64000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8766445",
+        "15.8770876",
+        "108.3264845",
+        "108.3265288"
+      ]
+    }
+  ],
+  "response_sha256": "f150edb7bb8ebb22c3a3cdd11763a12d31c9c76180764f23a092ebf36cd39c89",
+  "response_body_utf8": "[{\"place_id\":258608738,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":39334255,\"lat\":\"15.8752278\",\"lon\":\"108.3265611\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Châu Thượng Văn\",\"display_name\":\"Châu Thượng Văn, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam\",\"address\":{\"road\":\"Châu Thượng Văn\",\"neighbourhood\":\"An Hội\",\"quarter\":\"Phố cổ Hội An\",\"suburb\":\"Phường Hội An\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"64000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8745239\",\"15.8759338\",\"108.3265289\",\"108.3266291\"]},{\"place_id\":259170516,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":531235852,\"lat\":\"15.5775914\",\"lon\":\"108.4672224\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Châu Thượng Văn\",\"display_name\":\"Châu Thượng Văn, Phường Bàn Thạch, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Châu Thượng Văn\",\"suburb\":\"Phường Bàn Thạch\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5767062\",\"15.5775974\",\"108.4661578\",\"108.4686629\"]},{\"place_id\":258553041,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":35952573,\"lat\":\"15.8768661\",\"lon\":\"108.3265067\",\"category\":\"highway\",\"type\":\"service\",\"place_rank\":27,\"importance\":0.04004934386205843,\"addresstype\":\"road\",\"name\":\"Châu Thượng Văn\",\"display_name\":\"Châu Thượng Văn, An Hội, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam\",\"address\":{\"road\":\"Châu Thượng Văn\",\"neighbourhood\":\"An Hội\",\"quarter\":\"Phố cổ Hội An\",\"suburb\":\"Phường Hội An\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"64000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8766445\",\"15.8770876\",\"108.3264845\",\"108.3265288\"]}]"
+}

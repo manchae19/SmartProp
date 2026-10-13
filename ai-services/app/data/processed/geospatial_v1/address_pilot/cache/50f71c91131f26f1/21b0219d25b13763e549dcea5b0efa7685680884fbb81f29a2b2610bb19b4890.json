@@ -1,0 +1,144 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=phan+%C4%91%C4%83ng+l%C6%B0u",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "phan đăng lưu"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:29.899603+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=phan+%C4%91%C4%83ng+l%C6%B0u",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 259111201,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 81232866,
+      "lat": "15.8929296",
+      "lon": "108.3174564",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Phan Đăng Lưu",
+      "display_name": "Phan Đăng Lưu, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam",
+      "address": {
+        "road": "Phan Đăng Lưu",
+        "suburb": "Phường Hội An Tây",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51309",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8921390",
+        "15.8937233",
+        "108.3160405",
+        "108.3188740"
+      ]
+    },
+    {
+      "place_id": 258737361,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 320626352,
+      "lat": "15.5653974",
+      "lon": "108.4761812",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Phan Đăng Lưu",
+      "display_name": "Phan Đăng Lưu, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, 51119, Việt Nam",
+      "address": {
+        "road": "Phan Đăng Lưu",
+        "suburb": "Phường Tam Kỳ",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51119",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5645633",
+        "15.5661751",
+        "108.4756793",
+        "108.4767707"
+      ]
+    },
+    {
+      "place_id": 239733691,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 695509453,
+      "lat": "16.0376432",
+      "lon": "108.2228012",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Phan Đăng Lưu",
+      "display_name": "Đường Phan Đăng Lưu, Tổ dân phố 43, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Phan Đăng Lưu",
+        "neighbourhood": "Tổ dân phố 43",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0375481",
+        "16.0377200",
+        "108.2221242",
+        "108.2234804"
+      ]
+    },
+    {
+      "place_id": 239593971,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1280089219,
+      "lat": "16.0368439",
+      "lon": "108.2099676",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Phan Đăng Lưu",
+      "display_name": "Đường Phan Đăng Lưu, Tổ dân phố 1, Phường Cẩm Lệ, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Phan Đăng Lưu",
+        "neighbourhood": "Tổ dân phố 1",
+        "suburb": "Phường Cẩm Lệ",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0368307",
+        "16.0368570",
+        "108.2099068",
+        "108.2100283"
+      ]
+    }
+  ],
+  "response_sha256": "5cce46e174d9b3d56a9bef7410c2f5a7a050ad7eefee3c122b9c249f9d74ff65",
+  "response_body_utf8": "[{\"place_id\":259111201,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":81232866,\"lat\":\"15.8929296\",\"lon\":\"108.3174564\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Phan Đăng Lưu\",\"display_name\":\"Phan Đăng Lưu, Phường Hội An Tây, Hội An, Thành phố Đà Nẵng, 51309, Việt Nam\",\"address\":{\"road\":\"Phan Đăng Lưu\",\"suburb\":\"Phường Hội An Tây\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51309\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8921390\",\"15.8937233\",\"108.3160405\",\"108.3188740\"]},{\"place_id\":258737361,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":320626352,\"lat\":\"15.5653974\",\"lon\":\"108.4761812\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Phan Đăng Lưu\",\"display_name\":\"Phan Đăng Lưu, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, 51119, Việt Nam\",\"address\":{\"road\":\"Phan Đăng Lưu\",\"suburb\":\"Phường Tam Kỳ\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51119\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5645633\",\"15.5661751\",\"108.4756793\",\"108.4767707\"]},{\"place_id\":239733691,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":695509453,\"lat\":\"16.0376432\",\"lon\":\"108.2228012\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Phan Đăng Lưu\",\"display_name\":\"Đường Phan Đăng Lưu, Tổ dân phố 43, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Phan Đăng Lưu\",\"neighbourhood\":\"Tổ dân phố 43\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0375481\",\"16.0377200\",\"108.2221242\",\"108.2234804\"]},{\"place_id\":239593971,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1280089219,\"lat\":\"16.0368439\",\"lon\":\"108.2099676\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Phan Đăng Lưu\",\"display_name\":\"Đường Phan Đăng Lưu, Tổ dân phố 1, Phường Cẩm Lệ, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Phan Đăng Lưu\",\"neighbourhood\":\"Tổ dân phố 1\",\"suburb\":\"Phường Cẩm Lệ\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0368307\",\"16.0368570\",\"108.2099068\",\"108.2100283\"]}]"
+}

@@ -1,0 +1,3282 @@
+{
+  "homedy:2067038": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-5-tang-17-phong-tro-can-ho-duong-k20-es2067038",
+    "fetched_at_utc": "2026-10-11T13:55:46.771605+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-5-tang-17-phong-tro-can-ho-duong-k20-es2067038",
+    "state": "downloaded",
+    "file": "homedy_2067038.html",
+    "sha256": "09a1d2f2c8a514573e0c7ca07b26c617ca19530adea80d82481b84d1b0f06f41"
+  },
+  "homedy:2165550": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-kem-duong-tong-duy-tan-doi-dien-ben-xe-gia-sap-sat-cho-hoa-my-es2165550",
+    "fetched_at_utc": "2026-10-11T13:55:49.774515+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-kem-duong-tong-duy-tan-doi-dien-ben-xe-gia-sap-sat-cho-hoa-my-es2165550",
+    "state": "downloaded",
+    "file": "homedy_2165550.html",
+    "sha256": "9a261b111b2449ca2fedf5565bba8078079c89dd8f9a5f8a00bafc06bf7b2ef5"
+  },
+  "homedy:2165622": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-kem-duong-tong-duy-tan-doi-dien-ben-xe-gia-sap-sat-cho-hoa-my-es2165622",
+    "fetched_at_utc": "2026-10-11T13:55:52.776164+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-kem-duong-tong-duy-tan-doi-dien-ben-xe-gia-sap-sat-cho-hoa-my-es2165622",
+    "state": "downloaded",
+    "file": "homedy_2165622.html",
+    "sha256": "b73525201c0ca5c5fe8b4a3fe0df414297e6d7f90f29580a4cbff42282ceced1"
+  },
+  "homedy:2317566": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/lo-dat-biet-thu-pho-phan-ba-vanh-es2317566",
+    "fetched_at_utc": "2026-10-11T13:55:55.782283+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/lo-dat-biet-thu-pho-phan-ba-vanh-es2317566",
+    "state": "downloaded",
+    "file": "homedy_2317566.html",
+    "sha256": "7f594cfbd2f22058f38fced3878c21c6fd2f9fa68e9a40ebf422b4b642624d01"
+  },
+  "homedy:2421620": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-can-ho-3-mat-tien-o-le-quang-hien-co-dong-300tr-1-nam-es2421620",
+    "fetched_at_utc": "2026-10-11T13:55:58.790842+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-can-ho-3-mat-tien-o-le-quang-hien-co-dong-300tr-1-nam-es2421620",
+    "state": "downloaded",
+    "file": "homedy_2421620.html",
+    "sha256": "0fb4476e046ab22adcfdc456381b133ab98f439935714e014265b472e9a92642"
+  },
+  "homedy:2424390": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gia-re-bat-ngo-nhinh-1ty-so-huu-ngay-can-hoac-lo-dat-nguyen-cong-tru-dt-70m-ngang-7m-es2424390",
+    "fetched_at_utc": "2026-10-11T13:56:01.803337+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gia-re-bat-ngo-nhinh-1ty-so-huu-ngay-can-hoac-lo-dat-nguyen-cong-tru-dt-70m-ngang-7m-es2424390",
+    "state": "downloaded",
+    "file": "homedy_2424390.html",
+    "sha256": "80a3193c58b41c16b5cbb7ad4ef05eb62c05db89cde1edfae6a1bc02eb575e16"
+  },
+  "homedy:2556231": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dat-95m25x19-kem-dep-nhu-hinh-kdt-nam-viet-a-de-lai-noi-that-vip-es2556231",
+    "fetched_at_utc": "2026-10-11T13:56:04.808020+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dat-95m25x19-kem-dep-nhu-hinh-kdt-nam-viet-a-de-lai-noi-that-vip-es2556231",
+    "state": "downloaded",
+    "file": "homedy_2556231.html",
+    "sha256": "6381acb090c8ba45804b82527f0c9f965bf47d95a83eaf8b0df0d8d9ea256232"
+  },
+  "homedy:2789316": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-7-9-ty-co-toa-can-ho-2-mat-tien-moi-va-dep-dang-cho-thue-20-trieu-thang-es2789316",
+    "fetched_at_utc": "2026-10-11T13:56:07.811119+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-7-9-ty-co-toa-can-ho-2-mat-tien-moi-va-dep-dang-cho-thue-20-trieu-thang-es2789316",
+    "state": "downloaded",
+    "file": "homedy_2789316.html",
+    "sha256": "3f2fdc511bb45a8e9d856373d430ae399494803f639050c587a2b6b3fad3d528"
+  },
+  "homedy:2910757": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-toa-can-ho-sieu-vip-ngay-pho-tay-an-thuong-nam-tring-cung-duong-di-bo-es2910757",
+    "fetched_at_utc": "2026-10-11T13:56:10.817823+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-toa-can-ho-sieu-vip-ngay-pho-tay-an-thuong-nam-tring-cung-duong-di-bo-es2910757",
+    "state": "downloaded",
+    "file": "homedy_2910757.html",
+    "sha256": "9123c511416925b03ed72b3a3600c435bd2dceb5e356631716261c24f53901bb"
+  },
+  "homedy:2912618": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mot-khach-san-sieu-vip-ngay-day-mt-pho-cho-dem-di-bo-an-thuong-gia-hoi-es2912618",
+    "fetched_at_utc": "2026-10-11T13:56:13.823006+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mot-khach-san-sieu-vip-ngay-day-mt-pho-cho-dem-di-bo-an-thuong-gia-hoi-es2912618",
+    "state": "downloaded",
+    "file": "homedy_2912618.html",
+    "sha256": "efd7dd51a4a80b3fb2653a4b432e395f34365f85b5341cf47a37f8c2c3c3a6ca"
+  },
+  "homedy:2948544": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-toa-can-ho-sieu-vip-ngay-pho-my-an-thuong-es2948544",
+    "fetched_at_utc": "2026-10-11T13:56:16.825308+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-toa-can-ho-sieu-vip-ngay-pho-my-an-thuong-es2948544",
+    "state": "downloaded",
+    "file": "homedy_2948544.html",
+    "sha256": "ac9c045bf0dcc4318a90003b586d6ee8939837e8b84f01bf0ff334ce926ff767"
+  },
+  "homedy:3104657": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/can-toa-ho-khu-pho-vip-duong-an-thuong-thanh-es3104657",
+    "fetched_at_utc": "2026-10-11T13:56:19.828812+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/can-toa-ho-khu-pho-vip-duong-an-thuong-thanh-es3104657",
+    "state": "downloaded",
+    "file": "homedy_3104657.html",
+    "sha256": "f85a2996c65a4ba9bac76f22af00d9a97e15dd82881214998fd12ecc68d8081f"
+  },
+  "homedy:3109720": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-dat-mat-tien-hoa-minh-14-tang-c4-dang-cho-thue-4tr-thang-khu-dan-cu-van-es3109720",
+    "fetched_at_utc": "2026-10-11T13:56:22.830877+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-dat-mat-tien-hoa-minh-14-tang-c4-dang-cho-thue-4tr-thang-khu-dan-cu-van-es3109720",
+    "state": "downloaded",
+    "file": "homedy_3109720.html",
+    "sha256": "db1785c95667473ded840d92c2a11fbb89b1ba6bb44b090070187034e1ae4292"
+  },
+  "homedy:3119675": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-can-dat-chieugan-chogan-truong-hoc-es3119675",
+    "fetched_at_utc": "2026-10-11T13:56:25.832167+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-can-dat-chieugan-chogan-truong-hoc-es3119675",
+    "state": "downloaded",
+    "file": "homedy_3119675.html",
+    "sha256": "dfbef70fbc0a1f6faeb2aa82ab16ea5738e7b02bdf1ccd3e7c8ed4ab97f6cc3f"
+  },
+  "homedy:3149394": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-tang-mai-thai-dang-kinh-doanh-cafe-duong-tran-quy-khoach-va-hoa-minh-18-dt-es3149394",
+    "fetched_at_utc": "2026-10-11T13:56:28.837755+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-tang-mai-thai-dang-kinh-doanh-cafe-duong-tran-quy-khoach-va-hoa-minh-18-dt-es3149394",
+    "state": "downloaded",
+    "file": "homedy_3149394.html",
+    "sha256": "dda483519a8639c8e2ed110b8da8634fa3ad378d29329fdab42f07315dff84e3"
+  },
+  "homedy:3149705": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-tang-mai-thai-dang-kinh-doanh-cafe-duong-tran-quy-khoach-va-hoa-minh-18-dt-es3149705",
+    "fetched_at_utc": "2026-10-11T13:56:31.842044+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dat-tang-mai-thai-dang-kinh-doanh-cafe-duong-tran-quy-khoach-va-hoa-minh-18-dt-es3149705",
+    "state": "downloaded",
+    "file": "homedy_3149705.html",
+    "sha256": "e195e531ac95dd7759be9a8b36890313f50da04c2cb9db70af397ab4f03f647d"
+  },
+  "homedy:3151351": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-co-boi-pccc-mat-tien-nui-thanh-dong-80trt-th-lh-0905-982-668-es3151351",
+    "fetched_at_utc": "2026-10-11T13:56:34.855914+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-co-boi-pccc-mat-tien-nui-thanh-dong-80trt-th-lh-0905-982-668-es3151351",
+    "state": "downloaded",
+    "file": "homedy_3151351.html",
+    "sha256": "acb4ea0cc6c203c181b4b0a7c1c0fd83433e0e2c28d6e993302e040227b74e5d"
+  },
+  "homedy:3166083": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/dat-cam-toai-trung-phong-duong-o-to-5m-es3166083",
+    "fetched_at_utc": "2026-10-11T13:56:37.860344+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/dat-cam-toai-trung-phong-duong-o-to-5m-es3166083",
+    "state": "downloaded",
+    "file": "homedy_3166083.html",
+    "sha256": "517802a54d284a50729c71c23a966fa8ecace639689ae99a2ce3e7832c6904f4"
+  },
+  "homedy:3167954": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dat-tang-c4-duong-phan-tu-trung-tam-du-lich-es3167954",
+    "fetched_at_utc": "2026-10-11T13:56:40.875624+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dat-tang-c4-duong-phan-tu-trung-tam-du-lich-es3167954",
+    "state": "downloaded",
+    "file": "homedy_3167954.html",
+    "sha256": "9744a5faf2cdf014c9ee0c09752137fa1de8a3119edaa9ce7a2af4bc318d6fe4"
+  },
+  "homedy:3171442": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/so-huu-lo-dat-vang-trung-tam-mat-tien-le-lai-144m-sieu-dep-es3171442",
+    "fetched_at_utc": "2026-10-11T13:56:43.876821+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/so-huu-lo-dat-vang-trung-tam-mat-tien-le-lai-144m-sieu-dep-es3171442",
+    "state": "downloaded",
+    "file": "homedy_3171442.html",
+    "sha256": "646b68985d847476f6ab45ab5f42e3bccef55fb876e9ae6ca9fc3e33b3adbde9"
+  },
+  "homedy:3189873": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gap-toa-can-ho-dong-tien-500tr-nam-45-tang-704m2-ngay-to-huu-tt-0932474384-es3189873",
+    "fetched_at_utc": "2026-10-11T13:56:46.879982+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gap-toa-can-ho-dong-tien-500tr-nam-45-tang-704m2-ngay-to-huu-tt-0932474384-es3189873",
+    "state": "downloaded",
+    "file": "homedy_3189873.html",
+    "sha256": "ae08a38e6440008c0cc496bb23e4efcc66e1ea468f6414ebd84f073982fd574a"
+  },
+  "homedy:3191581": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/so-huu-ngay-toa-can-ho-4-tang-cau-rong-872m2-dong-tien-45-5tr-thang-san-ket-es3191581",
+    "fetched_at_utc": "2026-10-11T13:56:49.882016+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/so-huu-ngay-toa-can-ho-4-tang-cau-rong-872m2-dong-tien-45-5tr-thang-san-ket-es3191581",
+    "state": "downloaded",
+    "file": "homedy_3191581.html",
+    "sha256": "57e5353d2a922c86733567490439aaace60554aa270e2a2ba9a10b21b03f2d3d"
+  },
+  "homedy:3201298": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/homestay-dong-tien-65tr-1thang-duong-oto-gia-chi-9ti50-es3201298",
+    "fetched_at_utc": "2026-10-11T13:56:52.885546+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/homestay-dong-tien-65tr-1thang-duong-oto-gia-chi-9ti50-es3201298",
+    "state": "downloaded",
+    "file": "homedy_3201298.html",
+    "sha256": "cbae9407ad88724aef35dac8e69d9409ed9136b3fb8a1c5ea89ad59ea483b955"
+  },
+  "homedy:3208010": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gap-day-tro-bui-thi-xuan-ngay-nga-5-dai-hoc-gia-tot-thu-nhap-cao-es3208010",
+    "fetched_at_utc": "2026-10-11T13:56:55.892646+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gap-day-tro-bui-thi-xuan-ngay-nga-5-dai-hoc-gia-tot-thu-nhap-cao-es3208010",
+    "state": "downloaded",
+    "file": "homedy_3208010.html",
+    "sha256": "4afaa221e4f06f8cda9f53909a26f1b8949bd4f4384a47dfaf9e506cbd342777"
+  },
+  "homedy:3208011": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chu-gui-lo-dat-mt-duong-pham-hong-thai-giap-ngay-khach-san-merperle-5-sao-trung-tam-es3208011",
+    "fetched_at_utc": "2026-10-11T13:56:58.898711+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chu-gui-lo-dat-mt-duong-pham-hong-thai-giap-ngay-khach-san-merperle-5-sao-trung-tam-es3208011",
+    "state": "downloaded",
+    "file": "homedy_3208011.html",
+    "sha256": "1b7790194bb153759a9759513314f3ec676ae2251dcedf978157c3bb1b1f1f59"
+  },
+  "homedy:3209610": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-le-huu-trac-gan-bien-my-khe-dien-tich-117m-es3209610",
+    "fetched_at_utc": "2026-10-11T13:57:01.900327+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-le-huu-trac-gan-bien-my-khe-dien-tich-117m-es3209610",
+    "state": "downloaded",
+    "file": "homedy_3209610.html",
+    "sha256": "b0756a6df6fc84171bbcd0ed4f98f7224702f535c84fc6291e7ae86e7a736957"
+  },
+  "homedy:3215604": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/khach-san-3-sao-tarasa-2-mt-dong-lam-viec-truc-tiep-gia-tot-es3215604",
+    "fetched_at_utc": "2026-10-11T13:57:04.901908+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/khach-san-3-sao-tarasa-2-mt-dong-lam-viec-truc-tiep-gia-tot-es3215604",
+    "state": "downloaded",
+    "file": "homedy_3215604.html",
+    "sha256": "e38e79cb83c079670850a27c19602358eff0c740815437e702c37ab2fcad7b6c"
+  },
+  "homedy:3215606": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-6-tang-mt-dong-lam-viec-truc-tiep-gia-tot-es3215606",
+    "fetched_at_utc": "2026-10-11T13:57:07.913411+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-6-tang-mt-dong-lam-viec-truc-tiep-gia-tot-es3215606",
+    "state": "downloaded",
+    "file": "homedy_3215606.html",
+    "sha256": "32f1ae196bf8e80545b33235007482d946abf96d732d59ca0657b3a2943b7bc5"
+  },
+  "homedy:3215613": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-3-tang-binh-an-7-lam-viec-truc-tiep-gia-tot-es3215613",
+    "fetched_at_utc": "2026-10-11T13:57:10.920332+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-can-ho-3-tang-binh-an-7-lam-viec-truc-tiep-gia-tot-es3215613",
+    "state": "downloaded",
+    "file": "homedy_3215613.html",
+    "sha256": "db50415ffe255487c2a3c17a3318b855fbd911a0977b56563be76b5829d96670"
+  },
+  "homedy:3215728": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-can-ho-4-tang-1-lung-mat-tien-phan-tu-lam-viec-es3215728",
+    "fetched_at_utc": "2026-10-11T13:57:13.926078+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-can-ho-4-tang-1-lung-mat-tien-phan-tu-lam-viec-es3215728",
+    "state": "downloaded",
+    "file": "homedy_3215728.html",
+    "sha256": "613b378b0a0b1d8d3ac0786e94db73dbdad022a0418e028aa75f719d031319c7"
+  },
+  "homedy:3215775": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-mat-tien-phan-dinh-phung-chaulam-viec-truc-tiep-gia-tot-es3215775",
+    "fetched_at_utc": "2026-10-11T13:57:16.929422+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/toa-mat-tien-phan-dinh-phung-chaulam-viec-truc-tiep-gia-tot-es3215775",
+    "state": "downloaded",
+    "file": "homedy_3215775.html",
+    "sha256": "042cef173b42dbd9ac27a3316d172eba811e315b3ec694efbb04d5bec94ecbcd"
+  },
+  "homedy:3215780": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-mat-tien-chau-thi-vinh-te-my-anlam-viec-truc-tiep-gia-tot-es3215780",
+    "fetched_at_utc": "2026-10-11T13:57:19.940883+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/toa-mat-tien-chau-thi-vinh-te-my-anlam-viec-truc-tiep-gia-tot-es3215780",
+    "state": "downloaded",
+    "file": "homedy_3215780.html",
+    "sha256": "a21d585948f2255b222adb9d85c0a4372b6dc48c4e2f1e9136768a970093fe82"
+  },
+  "homedy:3215867": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toa-chdv-pham-viet-chanh-lam-viec-truc-tiep-gia-tot-es3215867",
+    "fetched_at_utc": "2026-10-11T13:57:22.949376+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toa-chdv-pham-viet-chanh-lam-viec-truc-tiep-gia-tot-es3215867",
+    "state": "downloaded",
+    "file": "homedy_3215867.html",
+    "sha256": "89352ab48d8755bac3db9cd2a7e9047507ce440dd6e90328f0f75e3e832591aa"
+  },
+  "homedy:3215913": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/homestay-3-tang-nguyen-van-thoai-lam-viec-truc-tiep-gia-tot-es3215913",
+    "fetched_at_utc": "2026-10-11T13:57:25.954367+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/homestay-3-tang-nguyen-van-thoai-lam-viec-truc-tiep-gia-tot-es3215913",
+    "state": "downloaded",
+    "file": "homedy_3215913.html",
+    "sha256": "399c3fec3405bf1d3e5e54eb8b4c669edbc5fdcaaf8d368ae2b143f45703cb2e"
+  },
+  "homedy:3216021": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/tro-kiet-o-to-hoang-thi-loan-lam-viec-truc-tiep-gia-tot-es3216021",
+    "fetched_at_utc": "2026-10-11T13:57:28.958570+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/tro-kiet-o-to-hoang-thi-loan-lam-viec-truc-tiep-gia-tot-es3216021",
+    "state": "downloaded",
+    "file": "homedy_3216021.html",
+    "sha256": "0f9c40f912d3e4443df633fe9175a87133a40c02ceefcc47cf25baece73dba8a"
+  },
+  "homedy:3216591": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/toa-can-ho-dich-vu-phuoc-truong-17-lam-viec-truc-tiep-gia-tot-es3216591",
+    "fetched_at_utc": "2026-10-11T13:57:31.964883+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/toa-can-ho-dich-vu-phuoc-truong-17-lam-viec-truc-tiep-gia-tot-es3216591",
+    "state": "downloaded",
+    "file": "homedy_3216591.html",
+    "sha256": "b45510de6e825877385b74f0da50c6dad8ae8115a43a202d558889532709e312"
+  },
+  "homedy:3216836": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toa-can-ho-4-tang-bui-vinh-lam-viec-truc-tiep-gia-tot-es3216836",
+    "fetched_at_utc": "2026-10-11T13:57:34.965547+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toa-can-ho-4-tang-bui-vinh-lam-viec-truc-tiep-gia-tot-es3216836",
+    "state": "downloaded",
+    "file": "homedy_3216836.html",
+    "sha256": "aadd803aa26cdee4ed8d2d9f63b71a1188491e93a2b8098115f25c10ec76db86"
+  },
+  "homedy:2056970": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-gap-nguyen-van-thoai-190tr-m2-dt-2288m2-mt-15m-co-cho-oto-dau-es2056970",
+    "fetched_at_utc": "2026-10-11T13:57:37.980068+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-gap-nguyen-van-thoai-190tr-m2-dt-2288m2-mt-15m-co-cho-oto-dau-es2056970",
+    "state": "downloaded",
+    "file": "homedy_2056970.html",
+    "sha256": "e8fa431c4275821d5f08bd1def8fffadc8125eda72d8192d4d51e132da8bacab"
+  },
+  "homedy:2060418": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-duong-nguyen-du-gia-3-50-ty-es2060418",
+    "fetched_at_utc": "2026-10-11T13:57:40.989824+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-duong-nguyen-du-gia-3-50-ty-es2060418",
+    "state": "downloaded",
+    "file": "homedy_2060418.html",
+    "sha256": "6c8497d0f987124ec6166983d5c1e951585f0e0e823483d1c4a3bb4c47c3524c"
+  },
+  "homedy:2064775": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-pho-gia-thoa-thuan-es2064775",
+    "fetched_at_utc": "2026-10-11T13:57:44.000869+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-pho-gia-thoa-thuan-es2064775",
+    "state": "downloaded",
+    "file": "homedy_2064775.html",
+    "sha256": "0418082d613b28193b061bbf548c054e0388980b8a3c4ac2e97be5f519d71858"
+  },
+  "homedy:2073277": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-cap-4-2-phong-ngu-1pkbep-duong-5m-3m-es2073277",
+    "fetched_at_utc": "2026-10-11T13:57:47.014360+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-cap-4-2-phong-ngu-1pkbep-duong-5m-3m-es2073277",
+    "state": "downloaded",
+    "file": "homedy_2073277.html",
+    "sha256": "c40dfc0921cdb42ccec3c818f624f5765fc65644276cda58619a93ca46f2abd1"
+  },
+  "homedy:2113564": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2-mat-tien-duong-pham-cu-luong-dien-tich-lon-vi-tri-dep-khu-vuc-sam-uat-nguon-thu-on-es2113564",
+    "fetched_at_utc": "2026-10-11T13:57:50.022314+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2-mat-tien-duong-pham-cu-luong-dien-tich-lon-vi-tri-dep-khu-vuc-sam-uat-nguon-thu-on-es2113564",
+    "state": "downloaded",
+    "file": "homedy_2113564.html",
+    "sha256": "d3f479f5604fb505248b3801ca01f3714c2236a1ed31654399a36ab42e6139cf"
+  },
+  "homedy:2115350": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/dep-sat-ngay-cong-vien-mat-tien-duong-pham-xuan-an-kdc-nam-cau-nguyen-tri-phuong-can-es2115350",
+    "fetched_at_utc": "2026-10-11T13:57:53.033189+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/dep-sat-ngay-cong-vien-mat-tien-duong-pham-xuan-an-kdc-nam-cau-nguyen-tri-phuong-can-es2115350",
+    "state": "downloaded",
+    "file": "homedy_2115350.html",
+    "sha256": "97316e6397866d8e8e6003282318dcf804c977950c65b48b89745a286cf33879"
+  },
+  "homedy:2149670": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cc-can-doi-dien-cong-vien-sach-dep-sau-lung-la-day-biet-thu-sat-duong-mai-chi-tho-es2149670",
+    "fetched_at_utc": "2026-10-11T13:57:56.037827+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cc-can-doi-dien-cong-vien-sach-dep-sau-lung-la-day-biet-thu-sat-duong-mai-chi-tho-es2149670",
+    "state": "downloaded",
+    "file": "homedy_2149670.html",
+    "sha256": "aa964082859c491940a48a0b452c224bcf6db98418a836fe0ebac4444f002413"
+  },
+  "homedy:2265899": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gap-mat-tien-pham-cu-luong-es2265899",
+    "fetched_at_utc": "2026-10-11T13:57:59.044339+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gap-mat-tien-pham-cu-luong-es2265899",
+    "state": "downloaded",
+    "file": "homedy_2265899.html",
+    "sha256": "463f4b2d4f93dfed3f7f073c8ec0cdaf6d7c11b0f0e7bec0027c96119660f3b2"
+  },
+  "homedy:2286924": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-moi-trung-tam-hai-chau-gia-chi-2x-ty-es2286924",
+    "fetched_at_utc": "2026-10-11T13:58:02.051576+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-moi-trung-tam-hai-chau-gia-chi-2x-ty-es2286924",
+    "state": "downloaded",
+    "file": "homedy_2286924.html",
+    "sha256": "a0880c7f944063e4a97e8db0b6102cc6e188701fd3228ea4f505b36f8626210f"
+  },
+  "homedy:2299866": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-nu-vuong-chi-nhinh-3ty-moi-cong-tien-ich-khong-thieu-thu-gi-es2299866",
+    "fetched_at_utc": "2026-10-11T13:58:05.061282+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-nu-vuong-chi-nhinh-3ty-moi-cong-tien-ich-khong-thieu-thu-gi-es2299866",
+    "state": "downloaded",
+    "file": "homedy_2299866.html",
+    "sha256": "4252586417cfbd51d9f8593eae249bd4c830b8dcc5f1bc500af84128776fc248"
+  },
+  "homedy:2302581": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/dep-tran-cao-van-o-va-kinh-doanh-dt90m2-6x15-gia-giam-manh-chi-con-4ty-es2302581",
+    "fetched_at_utc": "2026-10-11T13:58:08.075903+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/dep-tran-cao-van-o-va-kinh-doanh-dt90m2-6x15-gia-giam-manh-chi-con-4ty-es2302581",
+    "state": "downloaded",
+    "file": "homedy_2302581.html",
+    "sha256": "3fc910a97e060bce9c877bd80a986e158e38005311009a6958a62afe5922de57"
+  },
+  "homedy:2307849": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-tien-hung-vuong-66m2-chi-3-toi-x-tieu-hoc-dang-kinh-doanh-es2307849",
+    "fetched_at_utc": "2026-10-11T13:58:11.084600+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-tien-hung-vuong-66m2-chi-3-toi-x-tieu-hoc-dang-kinh-doanh-es2307849",
+    "state": "downloaded",
+    "file": "homedy_2307849.html",
+    "sha256": "0597bba21fe260ad7f0966a5c4ad970fc25f5640e87b415c6e5454f127adc1c7"
+  },
+  "homedy:2316812": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/pho-ngay-cho-hoa-trung-tam-tho-dong-es2316812",
+    "fetched_at_utc": "2026-10-11T13:58:14.092559+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/pho-ngay-cho-hoa-trung-tam-tho-dong-es2316812",
+    "state": "downloaded",
+    "file": "homedy_2316812.html",
+    "sha256": "12da47f29fecfcaaa367505b4552e3f298844527bccfed5f5165cee8c55c5281"
+  },
+  "homedy:2325990": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kien-co-moi-dep-gan-cho-ho-xuan-es2325990",
+    "fetched_at_utc": "2026-10-11T13:58:17.095914+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kien-co-moi-dep-gan-cho-ho-xuan-es2325990",
+    "state": "downloaded",
+    "file": "homedy_2325990.html",
+    "sha256": "21bd95b885ce179d1016e4f915b7fe020fb22caa47f8de6910b0c1431d83fb02"
+  },
+  "homedy:2326715": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/can-tien-tra-ngan-hang-gap-es2326715",
+    "fetched_at_utc": "2026-10-11T13:58:20.110359+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/can-tien-tra-ngan-hang-gap-es2326715",
+    "state": "downloaded",
+    "file": "homedy_2326715.html",
+    "sha256": "b71b19485eeb0bd5999627f09c9d74e371f13c1f97f8e70981f166834f71e98f"
+  },
+  "homedy:2367846": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/giam-soc-700tr-chi-con-2-3-ty-co-ngay-tang-120m2-dtsd-hung-vuong-lh-0395383999-es2367846",
+    "fetched_at_utc": "2026-10-11T13:58:23.125649+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/giam-soc-700tr-chi-con-2-3-ty-co-ngay-tang-120m2-dtsd-hung-vuong-lh-0395383999-es2367846",
+    "state": "downloaded",
+    "file": "homedy_2367846.html",
+    "sha256": "e8adbed615da31455a9d8c911325bf2ac757590aea8c5fd165982a345fb03951"
+  },
+  "homedy:2430857": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chinh-chu-can-sach-dep-kiet-oto-cu-lan-es2430857",
+    "fetched_at_utc": "2026-10-11T13:58:26.137965+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chinh-chu-can-sach-dep-kiet-oto-cu-lan-es2430857",
+    "state": "downloaded",
+    "file": "homedy_2430857.html",
+    "sha256": "2a58383afaf53d199542b603d31987fc72702cdc5e3770f90b572cdc3291122c"
+  },
+  "homedy:2461618": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/chuyen-nhuong-3-tang-gia-qua-re-phuong-an-hai-bac-es2461618",
+    "fetched_at_utc": "2026-10-11T13:58:29.150954+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/chuyen-nhuong-3-tang-gia-qua-re-phuong-an-hai-bac-es2461618",
+    "state": "downloaded",
+    "file": "homedy_2461618.html",
+    "sha256": "e4eb5a4a397fd4db93f8f161738f312cb3b17008eea00ccafa8838f834d7c77b"
+  },
+  "homedy:2505609": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-thuc-tram-duong-6m-thong-2-lon-khu-sam-uat-chi-nhinh-3-ty-es2505609",
+    "fetched_at_utc": "2026-10-11T13:58:32.158537+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-thuc-tram-duong-6m-thong-2-lon-khu-sam-uat-chi-nhinh-3-ty-es2505609",
+    "state": "downloaded",
+    "file": "homedy_2505609.html",
+    "sha256": "a1d722cd2cd05fdec55b28f82eefa61acaf8fadb37b0485842e826ec420fc18c"
+  },
+  "homedy:2514138": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-1ty800-con-bot-gac-duc-kiet-phan-trinh-es2514138",
+    "fetched_at_utc": "2026-10-11T13:58:35.171903+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-1ty800-con-bot-gac-duc-kiet-phan-trinh-es2514138",
+    "state": "downloaded",
+    "file": "homedy_2514138.html",
+    "sha256": "57d0969df1c53a2afdc003efdfce0252b3555068a8740db982adcdda68706768"
+  },
+  "homedy:2517235": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-mat-kiet-4m-trai-nhua-o-to-dau-truoc-es2517235",
+    "fetched_at_utc": "2026-10-11T13:58:38.183670+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-mat-kiet-4m-trai-nhua-o-to-dau-truoc-es2517235",
+    "state": "downloaded",
+    "file": "homedy_2517235.html",
+    "sha256": "0a4ad433b090e806cd3f7cdf62dc52a6f8f844ba232a10eb1206d34f005f1af8"
+  },
+  "homedy:2528382": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-khu-dan-cu-thang-long-sky-village/chi-115-ty-so-huu-biet-thu-lo-goc-2-mat-tien-gan-250m2-doi-dien-dao-noi-danh-tieng-es2528382",
+    "fetched_at_utc": "2026-10-11T13:58:41.198741+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-khu-dan-cu-thang-long-sky-village/chi-115-ty-so-huu-biet-thu-lo-goc-2-mat-tien-gan-250m2-doi-dien-dao-noi-danh-tieng-es2528382",
+    "state": "downloaded",
+    "file": "homedy_2528382.html",
+    "sha256": "21213230aa10b1454525f92fd71c76792784a1cabdd5b029953a131c63af5b84"
+  },
+  "homedy:2535032": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/chi-3-ty-so-huu-dien-tich-khung-duong-nguyen-cong-tru-tien-nghi-sam-uat-dau-oto-24-es2535032",
+    "fetched_at_utc": "2026-10-11T13:58:44.208392+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/chi-3-ty-so-huu-dien-tich-khung-duong-nguyen-cong-tru-tien-nghi-sam-uat-dau-oto-24-es2535032",
+    "state": "downloaded",
+    "file": "homedy_2535032.html",
+    "sha256": "e58bf0f7062f3feb72f306c719b0f2db74bf190641aae16269898776f84eedb1"
+  },
+  "homedy:2563905": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-pham-cu-luong-gap3-tang-cach-vo-nguyen-giap-300m2-ngay-dau-cau-rong-sieu-re-es2563905",
+    "fetched_at_utc": "2026-10-11T13:58:47.216591+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-pham-cu-luong-gap3-tang-cach-vo-nguyen-giap-300m2-ngay-dau-cau-rong-sieu-re-es2563905",
+    "state": "downloaded",
+    "file": "homedy_2563905.html",
+    "sha256": "74efe738d05110bb801f854e469392193dd6fa42638269d17b6401c3795f039c"
+  },
+  "homedy:2610461": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/can-dep-doi-dien-cho-con-es2610461",
+    "fetched_at_utc": "2026-10-11T13:58:50.231014+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/can-dep-doi-dien-cho-con-es2610461",
+    "state": "downloaded",
+    "file": "homedy_2610461.html",
+    "sha256": "ade291ac6e0ca68f02c38c3d8e1ce3bef10767835b36f68d06c204045265fba5"
+  },
+  "homedy:2621356": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-chi-4ty750-so-huu-ngay-can-sieu-pham-4-tang-es2621356",
+    "fetched_at_utc": "2026-10-11T13:58:57.204613+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-chi-4ty750-so-huu-ngay-can-sieu-pham-4-tang-es2621356",
+    "state": "downloaded",
+    "file": "homedy_2621356.html",
+    "sha256": "0f2c2d563d3aa0572f9bb3af5a6ca6fbdae3f82fb9ff864a5c260f9b044a226a"
+  },
+  "homedy:2621363": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-chi-4-ty-190-co-ngay-can-villa-3tang-es2621363",
+    "fetched_at_utc": "2026-10-11T13:59:00.204542+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-chi-4-ty-190-co-ngay-can-villa-3tang-es2621363",
+    "state": "downloaded",
+    "file": "homedy_2621363.html",
+    "sha256": "baedda04418ca354df1028a52ced80050ac67ef7518e6afbac831d47fb13fae1"
+  },
+  "homedy:2621401": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chao-can-3tang-hoa-minh-19-vi-tri-khu-dan-cu-van-es2621401",
+    "fetched_at_utc": "2026-10-11T13:59:03.214071+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chao-can-3tang-hoa-minh-19-vi-tri-khu-dan-cu-van-es2621401",
+    "state": "downloaded",
+    "file": "homedy_2621401.html",
+    "sha256": "738723a89b541430539244ce14ce540bd4cefca57fa0152b593cb8bf5086bef4"
+  },
+  "homedy:2626202": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2mt-dg-75m-dinh-dat-gan-bien-phuong-phuoc-my-es2626202",
+    "fetched_at_utc": "2026-10-11T13:59:06.229314+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2mt-dg-75m-dinh-dat-gan-bien-phuong-phuoc-my-es2626202",
+    "state": "downloaded",
+    "file": "homedy_2626202.html",
+    "sha256": "4d6024d405d18624f6507e84cc029861e832b095f91554afdcbc83b9b07846ed"
+  },
+  "homedy:2683233": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-thoa-thuan-es2683233",
+    "fetched_at_utc": "2026-10-11T13:59:09.237990+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-thoa-thuan-es2683233",
+    "state": "downloaded",
+    "file": "homedy_2683233.html",
+    "sha256": "453f46fdcdfe1911ec27a61716c60dbf59eb518fd79666df9aa8a63210f2591c"
+  },
+  "homedy:2758207": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/gia-7-50-ty-es2758207",
+    "fetched_at_utc": "2026-10-11T13:59:12.245196+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/gia-7-50-ty-es2758207",
+    "state": "downloaded",
+    "file": "homedy_2758207.html",
+    "sha256": "f0f4ebc856258aaaf7584a5d3c655a2ca10ae1e2240b5d7173f7604994d89e2b"
+  },
+  "homedy:2761771": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/tai-chinh-5-ty-can-dong-tien-cho-thue-khu-vuc-an-thuong-gan-bien-my-khe-es2761771",
+    "fetched_at_utc": "2026-10-11T13:59:15.259688+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/tai-chinh-5-ty-can-dong-tien-cho-thue-khu-vuc-an-thuong-gan-bien-my-khe-es2761771",
+    "state": "downloaded",
+    "file": "homedy_2761771.html",
+    "sha256": "3128e9b8885e2a047dba0221ea9c59d8ef6e410d03256ed20b1f0b5edf2db7aa"
+  },
+  "homedy:2850172": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chuyen-nhuong-nhanh-kiet-oto-nguyen-van-thoai-es2850172",
+    "fetched_at_utc": "2026-10-11T13:59:18.274620+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chuyen-nhuong-nhanh-kiet-oto-nguyen-van-thoai-es2850172",
+    "state": "downloaded",
+    "file": "homedy_2850172.html",
+    "sha256": "46180e1e89dc6a9accf1e0bf28044643a6f9e212e88032b1bb6a53dd14da9db1"
+  },
+  "homedy:2850302": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-chuyen-nhuong-3-tang-khu-kinh-doanh-sam-uat-es2850302",
+    "fetched_at_utc": "2026-10-11T13:59:21.283352+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-chuyen-nhuong-3-tang-khu-kinh-doanh-sam-uat-es2850302",
+    "state": "downloaded",
+    "file": "homedy_2850302.html",
+    "sha256": "0cb7e47b0fbd999c4330eb26e1ab795d9d9e9b933c5d660a3a54f882c464c8f0"
+  },
+  "homedy:2850305": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chuyen-nhuong-nhanh-nguyen-van-thoai-chua-qua-dau-tu-a-es2850305",
+    "fetched_at_utc": "2026-10-11T13:59:24.293031+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chuyen-nhuong-nhanh-nguyen-van-thoai-chua-qua-dau-tu-a-es2850305",
+    "state": "downloaded",
+    "file": "homedy_2850305.html",
+    "sha256": "499c00116f1dae3d742984b4dc57738f1776c103903a2ee9b4eb5d55ec7f4bfc"
+  },
+  "homedy:2850340": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/ven-bien-hoa-minh-4-5-ty-es2850340",
+    "fetched_at_utc": "2026-10-11T13:59:27.302451+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/ven-bien-hoa-minh-4-5-ty-es2850340",
+    "state": "downloaded",
+    "file": "homedy_2850340.html",
+    "sha256": "b666d898849720a1fe0ed8c91ffe0cb0f9be890c1d6d12c0163788c9407bda59"
+  },
+  "homedy:2891340": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/pho-4-tang-trung-tam-doi-dien-song-han-es2891340",
+    "fetched_at_utc": "2026-10-11T13:59:30.312931+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/pho-4-tang-trung-tam-doi-dien-song-han-es2891340",
+    "state": "downloaded",
+    "file": "homedy_2891340.html",
+    "sha256": "9d1c047a031d5108e4effbf2166ce6e5d245e90675723ca5bbe2db225eb213aa"
+  },
+  "homedy:2898029": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/pho-gan-bien-4-tang-tai-cach-500m-es2898029",
+    "fetched_at_utc": "2026-10-11T13:59:33.314012+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/pho-gan-bien-4-tang-tai-cach-500m-es2898029",
+    "state": "downloaded",
+    "file": "homedy_2898029.html",
+    "sha256": "5a2e5d6e7870966a5d292c901252c1f89a4d885aa9da6cd69f851afdae9bf155"
+  },
+  "homedy:2900907": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-ton-dan-chi-3-ty-6-thuan-loi-kinh-doanh-es2900907",
+    "fetched_at_utc": "2026-10-11T13:59:36.326948+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-ton-dan-chi-3-ty-6-thuan-loi-kinh-doanh-es2900907",
+    "state": "downloaded",
+    "file": "homedy_2900907.html",
+    "sha256": "6666061cf515168ecdf80ddeae1dfc6b4b4274af00600d0c87d1e91a4ac437ae"
+  },
+  "homedy:2903065": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-mat-tien-khu-vuc-duong-75m-gia-nhinh-5ty-es2903065",
+    "fetched_at_utc": "2026-10-11T13:59:39.337739+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-mat-tien-khu-vuc-duong-75m-gia-nhinh-5ty-es2903065",
+    "state": "downloaded",
+    "file": "homedy_2903065.html",
+    "sha256": "b55a16ee5a21c578eb69038377a4d2b7f5f59d46ef025e22ba8f701a234b4ee9"
+  },
+  "homedy:2904645": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-gap-mt-ton-dan-3ty7-mat-tien-6m5-es2904645",
+    "fetched_at_utc": "2026-10-11T13:59:42.337526+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-gap-mt-ton-dan-3ty7-mat-tien-6m5-es2904645",
+    "state": "downloaded",
+    "file": "homedy_2904645.html",
+    "sha256": "cae39b6dc0262c9ded293199e5116ade4b5a22cdad65ca12da6f361fd075e3d3"
+  },
+  "homedy:2904653": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-ton-dan-3ty7-2-tang-kien-co-thuan-loi-kinh-doanh-va-o-gd-es2904653",
+    "fetched_at_utc": "2026-10-11T13:59:45.350127+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-ton-dan-3ty7-2-tang-kien-co-thuan-loi-kinh-doanh-va-o-gd-es2904653",
+    "state": "downloaded",
+    "file": "homedy_2904653.html",
+    "sha256": "65ca7e612609fcdb06cc01cfe235a9fda66c93297b92c39697d8c9bc2c7b6f5e"
+  },
+  "homedy:2912561": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/sieu-pham-3-tang-cuc-hot-full-noi-that-gia-re-chi-ty-750-trieu-es2912561",
+    "fetched_at_utc": "2026-10-11T13:59:48.361364+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/sieu-pham-3-tang-cuc-hot-full-noi-that-gia-re-chi-ty-750-trieu-es2912561",
+    "state": "downloaded",
+    "file": "homedy_2912561.html",
+    "sha256": "5312d0fb9efbbf77ff23585f4ae1d6f63dec8b99ebb4856facd75483cf953bab"
+  },
+  "homedy:2941592": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/mat-tien-duong-ngo-si-sat-truong-dai-hoc-bach-khoa-es2941592",
+    "fetched_at_utc": "2026-10-11T13:59:51.377038+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/mat-tien-duong-ngo-si-sat-truong-dai-hoc-bach-khoa-es2941592",
+    "state": "downloaded",
+    "file": "homedy_2941592.html",
+    "sha256": "53f5995d89c2db429226007555203eb370f727ace4ec15e64bafc5e8f33c0566"
+  },
+  "homedy:2943397": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-sieu-pham-pho-kiet-hung-vuong-es2943397",
+    "fetched_at_utc": "2026-10-11T13:59:54.391725+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-sieu-pham-pho-kiet-hung-vuong-es2943397",
+    "state": "downloaded",
+    "file": "homedy_2943397.html",
+    "sha256": "a3c3567faea77126bb18ed8ed7b787aab51dfb2d3ed40933d80d7e5a6601b1f8"
+  },
+  "homedy:2946318": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-kiet-oto-duong-ha-huy-tap-full-noi-that-lh-0905642794-es2946318",
+    "fetched_at_utc": "2026-10-11T13:59:57.401441+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-kiet-oto-duong-ha-huy-tap-full-noi-that-lh-0905642794-es2946318",
+    "state": "downloaded",
+    "file": "homedy_2946318.html",
+    "sha256": "c2345f625073be07ccf89b916aa59fe037abd65195d16d2fd7cf09e06979b70a"
+  },
+  "homedy:2973929": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-cach-bien-200m-nguyen-chanh-es2973929",
+    "fetched_at_utc": "2026-10-11T14:00:00.414676+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-cach-bien-200m-nguyen-chanh-es2973929",
+    "state": "downloaded",
+    "file": "homedy_2973929.html",
+    "sha256": "c9f75c01f2d5586afb548c2cb65e1886c6a1aacc87b59af984d899baba9536d3"
+  },
+  "homedy:2978883": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-mat-tien-len-den-75m-ngang-hoa-hai-es2978883",
+    "fetched_at_utc": "2026-10-11T14:00:03.427716+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-mat-tien-len-den-75m-ngang-hoa-hai-es2978883",
+    "state": "downloaded",
+    "file": "homedy_2978883.html",
+    "sha256": "bff14b7ea7c844e1e82211c00c98d6ba22bb965071ad2703783843f79e1871be"
+  },
+  "homedy:2984918": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dep-2-tang-kien-co-hoa-khanh-nam-es2984918",
+    "fetched_at_utc": "2026-10-11T14:00:06.442393+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dep-2-tang-kien-co-hoa-khanh-nam-es2984918",
+    "state": "downloaded",
+    "file": "homedy_2984918.html",
+    "sha256": "3d00d526bea723eccb160b9bd2da4893cbc60af9627ef5743f8359bc326aeb71"
+  },
+  "homedy:2985574": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/3-tang-day-du-noi-that-khu-do-thi-hoa-quy-tp-es2985574",
+    "fetched_at_utc": "2026-10-11T14:00:09.448662+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/3-tang-day-du-noi-that-khu-do-thi-hoa-quy-tp-es2985574",
+    "state": "downloaded",
+    "file": "homedy_2985574.html",
+    "sha256": "eb0de3b7506541f29cdcdeb49df121cd17286884ee0e2cbd3b08d10bd7118ff3"
+  },
+  "homedy:3007763": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-duong-7m5-ngay-dh-duy-tan-es3007763",
+    "fetched_at_utc": "2026-10-11T14:00:12.458783+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-duong-7m5-ngay-dh-duy-tan-es3007763",
+    "state": "downloaded",
+    "file": "homedy_3007763.html",
+    "sha256": "d789038fbbd72d8cb4e876dd041be1c272650a0260871a1b5cbf99d109cfd6de"
+  },
+  "homedy:3043843": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/biet-thu-view-song-doanh-khai-thac-cho-thue-tu-80-120tr-thang-es3043843",
+    "fetched_at_utc": "2026-10-11T14:00:15.459470+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/biet-thu-view-song-doanh-khai-thac-cho-thue-tu-80-120tr-thang-es3043843",
+    "state": "downloaded",
+    "file": "homedy_3043843.html",
+    "sha256": "8bf19a5e4aff931c91fe4135b8abc46f171f8017a42d412dbd299a3d4ced0ccd"
+  },
+  "homedy:3043949": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/biet-thu-mat-song-han-ngay-canh-du-an-sun-group-es3043949",
+    "fetched_at_utc": "2026-10-11T14:00:18.473573+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/biet-thu-mat-song-han-ngay-canh-du-an-sun-group-es3043949",
+    "state": "downloaded",
+    "file": "homedy_3043949.html",
+    "sha256": "fb3c57d4cc5a5c5d02ed47d1f7e8fa73da64f6bbf66fe8b5e765ddfdd73c6a6e"
+  },
+  "homedy:3091836": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-2-tang-3-phong-ngu-chi-ty-x-es3091836",
+    "fetched_at_utc": "2026-10-11T14:00:21.485679+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-2-tang-3-phong-ngu-chi-ty-x-es3091836",
+    "state": "downloaded",
+    "file": "homedy_3091836.html",
+    "sha256": "5e71aa2fd792c6b310f41f603f6d817b5f8e7c1862422afb1ac2d9999f8ea3a7"
+  },
+  "homedy:3092347": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/can-dep-chinh-chu-xay-o-tam-huyet-kiet-nguyen-van-linh-es3092347",
+    "fetched_at_utc": "2026-10-11T14:00:24.486913+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/can-dep-chinh-chu-xay-o-tam-huyet-kiet-nguyen-van-linh-es3092347",
+    "state": "downloaded",
+    "file": "homedy_3092347.html",
+    "sha256": "b7536f38a70d7c41ed543fb22759b6fe1d365d805f899f0e04524c8eb119cec3"
+  },
+  "homedy:3114784": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/sieu-pham-dong-tien-pho-tay-2-lo-lien-ke-an-thuong-17-san-phu-hop-kinh-doanh-cho-thue-es3114784",
+    "fetched_at_utc": "2026-10-11T14:00:27.489528+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/sieu-pham-dong-tien-pho-tay-2-lo-lien-ke-an-thuong-17-san-phu-hop-kinh-doanh-cho-thue-es3114784",
+    "state": "downloaded",
+    "file": "homedy_3114784.html",
+    "sha256": "3eadb07b5cd391ef4267e91896a093b3cb3f325e4adae9c54ee5217a0a9458ca"
+  },
+  "homedy:3116169": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/nhanh-lo-goc-pho-tay-2-mat-tien-an-thuong-29-phan-ton-320m2-ngang-20m-thien-chi-thoa-thuan-es3116169",
+    "fetched_at_utc": "2026-10-11T14:00:30.493292+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/nhanh-lo-goc-pho-tay-2-mat-tien-an-thuong-29-phan-ton-320m2-ngang-20m-thien-chi-thoa-thuan-es3116169",
+    "state": "downloaded",
+    "file": "homedy_3116169.html",
+    "sha256": "a9b02395571162ef5937535cb0777c5a5332d5b4dc505124c69a35693af20bc9"
+  },
+  "homedy:3127652": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-2-mat-kiet-thoang-5m-duong-nguyen-duy-hieu-an-hai-dong-es3127652",
+    "fetched_at_utc": "2026-10-11T14:00:33.501109+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-2-mat-kiet-thoang-5m-duong-nguyen-duy-hieu-an-hai-dong-es3127652",
+    "state": "downloaded",
+    "file": "homedy_3127652.html",
+    "sha256": "570b7ef27d47948ee03b12d34e33bc713c380280841137af9034b74aedce7f57"
+  },
+  "homedy:3127661": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-c4-le-phu-tran-man-thai-es3127661",
+    "fetched_at_utc": "2026-10-11T14:00:36.514718+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-c4-le-phu-tran-man-thai-es3127661",
+    "state": "downloaded",
+    "file": "homedy_3127661.html",
+    "sha256": "8b0189ea285703cc1c003d71b65415a46b937118cacb500065ce5f51f65018c8"
+  },
+  "homedy:3128079": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/sieu-pham-2-tang-duong-an-nhon-8an-hai-bac-es3128079",
+    "fetched_at_utc": "2026-10-11T14:00:39.519970+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/sieu-pham-2-tang-duong-an-nhon-8an-hai-bac-es3128079",
+    "state": "downloaded",
+    "file": "homedy_3128079.html",
+    "sha256": "165e0555fea084584135e0fa3561befe35fdea6e928094611c3ab2ea4a9bf420"
+  },
+  "homedy:3129747": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/giap-van-cuong-cach-bien-50m-dang-cho-thue-dong-tien-15-trieu-thang-es3129747",
+    "fetched_at_utc": "2026-10-11T14:00:42.530533+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/giap-van-cuong-cach-bien-50m-dang-cho-thue-dong-tien-15-trieu-thang-es3129747",
+    "state": "downloaded",
+    "file": "homedy_3129747.html",
+    "sha256": "e5a10f337e18ee4b3204ffc315a369a74ec20d3e0e4d5e3def2e557649a8ae8e"
+  },
+  "homedy:3132441": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mat-tien-duong-lam-nhi-khu-dan-tri-cao-ke-truong-dang-fpt-es3132441",
+    "fetched_at_utc": "2026-10-11T14:00:45.536737+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mat-tien-duong-lam-nhi-khu-dan-tri-cao-ke-truong-dang-fpt-es3132441",
+    "state": "downloaded",
+    "file": "homedy_3132441.html",
+    "sha256": "d30036057d7fb7a13412b8f3fff48b837a3173459b61dff4c8ad8bde6d60abc2"
+  },
+  "homedy:3140655": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-ngo-thi-nham-trung-tam-sat-dai-hoc-bach-khoa-es3140655",
+    "fetched_at_utc": "2026-10-11T14:00:48.541531+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-ngo-thi-nham-trung-tam-sat-dai-hoc-bach-khoa-es3140655",
+    "state": "downloaded",
+    "file": "homedy_3140655.html",
+    "sha256": "a8631507498a46773f6b562f5e9ea1f7fc52f0f397ead876ff5ef521282f1dc9"
+  },
+  "homedy:3143265": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-60m2-dang-thuy-tram-kiet-o-to-gan-vong-xoay-duy-tan-khu-tien-ich-es3143265",
+    "fetched_at_utc": "2026-10-11T14:00:51.545695+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/error/404",
+    "state": "downloaded",
+    "file": "homedy_3143265.html",
+    "sha256": "bc5af69016c32f71f75ce799cbe8783177933d4264f89c6a7d0b824a1a450437"
+  },
+  "homedy:3143278": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-cmt8-160m2-2mt-lo-goc-kiet-o-to-trung-tam-gan-ubnd-es3143278",
+    "fetched_at_utc": "2026-10-11T14:00:54.555571+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/error/404",
+    "state": "downloaded",
+    "file": "homedy_3143278.html",
+    "sha256": "778123557210f07f21c45c9499ba85be792c80c3d05b5437dddb151ca730a078"
+  },
+  "homedy:3151078": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chinh-chu-3ty995-es3151078",
+    "fetched_at_utc": "2026-10-11T14:00:57.564000+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chinh-chu-3ty995-es3151078",
+    "state": "downloaded",
+    "file": "homedy_3151078.html",
+    "sha256": "f26a1478de85061bab5efe87b2e2a00d85d64ca5781c373d6f7c04a977c85084"
+  },
+  "homedy:3153552": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/hiem-dien-tich-khung-con-sot-lai-1-can-duy-nhat-lh-0972834919-es3153552",
+    "fetched_at_utc": "2026-10-11T14:01:00.572514+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/hiem-dien-tich-khung-con-sot-lai-1-can-duy-nhat-lh-0972834919-es3153552",
+    "state": "downloaded",
+    "file": "homedy_3153552.html",
+    "sha256": "feda55ced3991529c5bc6e6e8fd4edc95c02301d9be220f05b84b8b9c175137c"
+  },
+  "homedy:3159310": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toi-chinh-chu-can-3-tang-duong-thanh-luong-15-phuong-hoa-xuan-es3159310",
+    "fetched_at_utc": "2026-10-11T14:01:03.587981+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/toi-chinh-chu-can-3-tang-duong-thanh-luong-15-phuong-hoa-xuan-es3159310",
+    "state": "downloaded",
+    "file": "homedy_3159310.html",
+    "sha256": "623269318a592f97ce9038294ec8cef789d3904042a1450e757f53e8e84fa5fd"
+  },
+  "homedy:3162485": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/can-moi-mat-tien-duong-hoa-minh-14-cach-bien-300m-tang-kem-full-noi-that-luxury-es3162485",
+    "fetched_at_utc": "2026-10-11T14:01:06.596471+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/can-moi-mat-tien-duong-hoa-minh-14-cach-bien-300m-tang-kem-full-noi-that-luxury-es3162485",
+    "state": "downloaded",
+    "file": "homedy_3162485.html",
+    "sha256": "45eecddb8506c58917f49d4ef07b378d706a9d2ad2e39d5e9cc5207bcbe1d1d3"
+  },
+  "homedy:3171177": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gan-duong-vo-van-kiet-es3171177",
+    "fetched_at_utc": "2026-10-11T14:01:09.605685+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gan-duong-vo-van-kiet-es3171177",
+    "state": "downloaded",
+    "file": "homedy_3171177.html",
+    "sha256": "aafe1aa3a528fa39202fac80cfa180926a8487ed3b8e3de16d0d2a7f33056520"
+  },
+  "homedy:3174780": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/can-tai-duong-kiet-1-trung-nu-vuong-es3174780",
+    "fetched_at_utc": "2026-10-11T14:01:12.621132+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/error/404",
+    "state": "downloaded",
+    "file": "homedy_3174780.html",
+    "sha256": "31b12a452c5bff1fc416fd506821cc23cfd6f0597d7f1cccd30a129f518902e9"
+  },
+  "homedy:3175379": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-gan-cho-san-bay-bien-toan-bo-noi-that-chi-viec-don-vao-o-es3175379",
+    "fetched_at_utc": "2026-10-11T14:01:15.626876+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-gan-cho-san-bay-bien-toan-bo-noi-that-chi-viec-don-vao-o-es3175379",
+    "state": "downloaded",
+    "file": "homedy_3175379.html",
+    "sha256": "28643a73c320dd6ec20229cc1c55973832797e31a47950568268830b09ac783a"
+  },
+  "homedy:3175383": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-dep-duong-o-to-gan-bien-san-bay-full-noi-that-cao-cap-es3175383",
+    "fetched_at_utc": "2026-10-11T14:01:18.627671+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-dep-duong-o-to-gan-bien-san-bay-full-noi-that-cao-cap-es3175383",
+    "state": "downloaded",
+    "file": "homedy_3175383.html",
+    "sha256": "007e0ef7e7a73d04b069bef9f512a7f5a79d59dd76041bc6346b9f41eec7d98c"
+  },
+  "homedy:3176159": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/4-tang-2-mat-tien-trung-tam-dong-780tr-nam-es3176159",
+    "fetched_at_utc": "2026-10-11T14:01:21.643301+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/4-tang-2-mat-tien-trung-tam-dong-780tr-nam-es3176159",
+    "state": "downloaded",
+    "file": "homedy_3176159.html",
+    "sha256": "35bcfdac53114287bf1c3d45fb1193fabea62a35342b5604bc0eb415622d9619"
+  },
+  "homedy:3177458": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-duong-thanh-tinh-sat-nam-tran-ben-xe-ga-tau-es3177458",
+    "fetched_at_utc": "2026-10-11T14:01:24.648241+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-duong-thanh-tinh-sat-nam-tran-ben-xe-ga-tau-es3177458",
+    "state": "downloaded",
+    "file": "homedy_3177458.html",
+    "sha256": "c3cc5e7f78e84bffe2ecaf13a90d112f92ba54d2da8c89246fe112ebb7d23a04"
+  },
+  "homedy:3177460": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/duong-tran-trieu-luat-gan-mega-makarket-sat-bien-es3177460",
+    "fetched_at_utc": "2026-10-11T14:01:27.655436+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/duong-tran-trieu-luat-gan-mega-makarket-sat-bien-es3177460",
+    "state": "downloaded",
+    "file": "homedy_3177460.html",
+    "sha256": "18402d6209d5dbc3107c5f5d68e38d4f1ac57e9c3e68c9e2e829e063a46eaa9a"
+  },
+  "homedy:3177479": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/duong-van-thanh-sat-bau-tram-mat-me-bien-xuan-thieu-es3177479",
+    "fetched_at_utc": "2026-10-11T14:01:30.669214+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/duong-van-thanh-sat-bau-tram-mat-me-bien-xuan-thieu-es3177479",
+    "state": "downloaded",
+    "file": "homedy_3177479.html",
+    "sha256": "c829b417d6b0a9a86e98e6714763c7c05e9945fa3844b14248da8af4d2afce88"
+  },
+  "homedy:3177567": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-hoang-van-thai-es3177567",
+    "fetched_at_utc": "2026-10-11T14:01:33.678118+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-hoang-van-thai-es3177567",
+    "state": "downloaded",
+    "file": "homedy_3177567.html",
+    "sha256": "f8aec22e56bc78e9104c9dcb44f5f4f131dbffb20c5e2a49b3f5d6349c946461"
+  },
+  "homedy:3177569": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/day-tro-k-nguyen-luong-bang-gan-mega-maker-trung-tam-qlc-es3177569",
+    "fetched_at_utc": "2026-10-11T14:01:36.691617+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/day-tro-k-nguyen-luong-bang-gan-mega-maker-trung-tam-qlc-es3177569",
+    "state": "downloaded",
+    "file": "homedy_3177569.html",
+    "sha256": "0e4f8a28e0d24d17b34c50effa2de990651fdc8e69f93901e52efb73c847ec34"
+  },
+  "homedy:3177741": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/can-ba-tang-hoanh-trang-es3177741",
+    "fetched_at_utc": "2026-10-11T14:01:39.705330+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/can-ba-tang-hoanh-trang-es3177741",
+    "state": "downloaded",
+    "file": "homedy_3177741.html",
+    "sha256": "7b1fbb8f09f4da4e8944605faada5e641c53d535ad2b164b741bbccd41dbf71c"
+  },
+  "homedy:3178562": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chinh-chu-can-tai-kiet-1-trung-nu-vuong-es3178562",
+    "fetched_at_utc": "2026-10-11T14:01:42.710561+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chinh-chu-can-tai-kiet-1-trung-nu-vuong-es3178562",
+    "state": "downloaded",
+    "file": "homedy_3178562.html",
+    "sha256": "e150b80a532847ff01809b4c3172485c7913b5883ee8b51a510b50670a2f4ad3"
+  },
+  "homedy:3178595": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-duong-55m-es3178595",
+    "fetched_at_utc": "2026-10-11T14:01:45.720805+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/mt-duong-55m-es3178595",
+    "state": "downloaded",
+    "file": "homedy_3178595.html",
+    "sha256": "d340b91c21036a5e5d3d487b2e5ad87ad48d2ced2ec91dd4f2ecc4a0e8598930"
+  },
+  "homedy:3185820": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/sieu-pham-le-dinh-ly-gan-cho-tan-lap-es3185820",
+    "fetched_at_utc": "2026-10-11T14:01:48.722227+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/sieu-pham-le-dinh-ly-gan-cho-tan-lap-es3185820",
+    "state": "downloaded",
+    "file": "homedy_3185820.html",
+    "sha256": "30be2d0ec740d4c0b09c9bf332a60d8ebcf040b6011432003268491b702438e4"
+  },
+  "homedy:3187087": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/nhinh-4-ty-co-ngay-full-noi-that-trung-tam-so-hong-chinh-chu-es3187087",
+    "fetched_at_utc": "2026-10-11T14:01:51.737473+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/nhinh-4-ty-co-ngay-full-noi-that-trung-tam-so-hong-chinh-chu-es3187087",
+    "state": "downloaded",
+    "file": "homedy_3187087.html",
+    "sha256": "23ec1d810cf39259679b7862200cfa3fad5082ca3583371ebb0946b525639d79"
+  },
+  "homedy:3192153": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-sat-nga-4-hoa-phu-14-tran-trieu-luat-gan-hoang-thi-loan-es3192153",
+    "fetched_at_utc": "2026-10-11T14:01:54.752509+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-sat-nga-4-hoa-phu-14-tran-trieu-luat-gan-hoang-thi-loan-es3192153",
+    "state": "downloaded",
+    "file": "homedy_3192153.html",
+    "sha256": "04f6e8e6702ba554dcbea0839adeceb0bce1d275416d9ddb22494a32ddbf4987"
+  },
+  "homedy:3194322": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-vinhomes-hai-van-bay/hot-quy-can-63m2-vi-tri-dep-gia-tot-lien-he-ngay-so-luong-co-han-es3194322",
+    "fetched_at_utc": "2026-10-11T14:01:57.760613+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-vinhomes-hai-van-bay/hot-quy-can-63m2-vi-tri-dep-gia-tot-lien-he-ngay-so-luong-co-han-es3194322",
+    "state": "downloaded",
+    "file": "homedy_3194322.html",
+    "sha256": "caa9e392186a2d2e06f4598f34c4fcb4d863a089891576f65b46a0f4b3b9f5ac"
+  },
+  "homedy:3195143": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chinh-chu-2-tang-duc-kien-co-phong-ngu-1-wc-cach-duong-20m-bien-ntthanh-150m-es3195143",
+    "fetched_at_utc": "2026-10-11T14:02:00.769703+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chinh-chu-2-tang-duc-kien-co-phong-ngu-1-wc-cach-duong-20m-bien-ntthanh-150m-es3195143",
+    "state": "downloaded",
+    "file": "homedy_3195143.html",
+    "sha256": "98604924f5db3476e9e806e23f755a68f2a08bfc78113983118f37dd41577d5a"
+  },
+  "homedy:3206301": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/duong-nguyen-thuat-thong-ra-bac-son-es3206301",
+    "fetched_at_utc": "2026-10-11T14:02:03.778202+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/duong-nguyen-thuat-thong-ra-bac-son-es3206301",
+    "state": "downloaded",
+    "file": "homedy_3206301.html",
+    "sha256": "5f094a5ce6c9a51f8189ceac82095d3f2ea72346be2f9c5a7c2b35853e8c6980"
+  },
+  "homedy:3207575": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/sieu-pham-o-gan-bien-tai-es3207575",
+    "fetched_at_utc": "2026-10-11T14:02:06.783841+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/sieu-pham-o-gan-bien-tai-es3207575",
+    "state": "downloaded",
+    "file": "homedy_3207575.html",
+    "sha256": "d191026131c6dade5485bf817cfa11e570cd50b14bea2c82ae8945e0f16fa922"
+  },
+  "homedy:3208162": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/n2494-cho-thue-tuyen-2-le-hong-co-thang-may-es3208162",
+    "fetched_at_utc": "2026-10-11T14:02:09.785906+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/n2494-cho-thue-tuyen-2-le-hong-co-thang-may-es3208162",
+    "state": "downloaded",
+    "file": "homedy_3208162.html",
+    "sha256": "c1efa562695523d5becacc826420ec666f88814b3043dab7dd3b0f48ee9e8513"
+  },
+  "homedy:3211793": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/can-nhanh-cap-4-hai-tang-kiet-33-nguyen-nhu-hanh-cach-noi-do-o-to-30m-es3211793",
+    "fetched_at_utc": "2026-10-11T14:02:12.800894+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/can-nhanh-cap-4-hai-tang-kiet-33-nguyen-nhu-hanh-cach-noi-do-o-to-30m-es3211793",
+    "state": "downloaded",
+    "file": "homedy_3211793.html",
+    "sha256": "d424f09932f8c483a6477776f2a973987c086fc42f715fb220a5974053fde36b"
+  },
+  "homedy:3211832": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chu-ngop-bank-xa-gap-3-tang-me-moi-tinh-sau-lung-mat-tien-tran-cao-van-es3211832",
+    "fetched_at_utc": "2026-10-11T14:02:15.810266+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chu-ngop-bank-xa-gap-3-tang-me-moi-tinh-sau-lung-mat-tien-tran-cao-van-es3211832",
+    "state": "downloaded",
+    "file": "homedy_3211832.html",
+    "sha256": "81587faf9e7a63b2562a708a5fa6f5b8f411eba44e730368d40e0f53127f32e0"
+  },
+  "homedy:3219499": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-goc-3-mat-ton-dan-phu-hop-khach-mua-cho-thue-tang-1-kinh-doanh-van-phong-es3219499",
+    "fetched_at_utc": "2026-10-11T14:02:18.815905+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-goc-3-mat-ton-dan-phu-hop-khach-mua-cho-thue-tang-1-kinh-doanh-van-phong-es3219499",
+    "state": "downloaded",
+    "file": "homedy_3219499.html",
+    "sha256": "5bbce8832f3512329cbf99c30c5e6571def5406f6ee1c30806df41dec0d8f003"
+  },
+  "homedy:2293329": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/60m2-3-tang-5x12m-o-to-do-cua-chi-ty-7-tl-k-1-nguyen-huu-tho-es2293329",
+    "fetched_at_utc": "2026-10-11T14:02:21.818822+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/60m2-3-tang-5x12m-o-to-do-cua-chi-ty-7-tl-k-1-nguyen-huu-tho-es2293329",
+    "state": "downloaded",
+    "file": "homedy_2293329.html",
+    "sha256": "b201d439c9660233d4a22fa3f66069d30635b17307d2e3b2a7ded84e8bf9adcf"
+  },
+  "homedy:2349910": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-trung-tam-kiet-27-ngo-gia-tu-05-ty-136-m2-es2349910",
+    "fetched_at_utc": "2026-10-11T14:02:24.833841+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-trung-tam-kiet-27-ngo-gia-tu-05-ty-136-m2-es2349910",
+    "state": "downloaded",
+    "file": "homedy_2349910.html",
+    "sha256": "bb6001113e17bd64d6f8ecd50ce2c9fb93a972dc61c9b59862d4e51f27df42c6"
+  },
+  "homedy:2356712": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chuyen-nhuong-200-m2-thach-son-4-co-san-day-tro-cho-thue-es2356712",
+    "fetched_at_utc": "2026-10-11T14:02:27.841973+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chuyen-nhuong-200-m2-thach-son-4-co-san-day-tro-cho-thue-es2356712",
+    "state": "downloaded",
+    "file": "homedy_2356712.html",
+    "sha256": "b51435b1e7d8cad5820b4ffc77eee59887056125f1fbc0a09b697f6c0adadc88"
+  },
+  "homedy:2363415": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-bien-duong-5m5-via-he-dt-55m2-chi-3-ty-nhinh-tieu-hoc-san-2-tang-tien-kdt-es2363415",
+    "fetched_at_utc": "2026-10-11T14:02:30.849681+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/dat-bien-duong-5m5-via-he-dt-55m2-chi-3-ty-nhinh-tieu-hoc-san-2-tang-tien-kdt-es2363415",
+    "state": "downloaded",
+    "file": "homedy_2363415.html",
+    "sha256": "fdfd854377c659ae0f3f38991cf313b88da5362c311eb5000985be6b3af428ce"
+  },
+  "homedy:2364973": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/hang-qua-hiem-3-tang-duong-o-to-tai-co-6-phong-dang-cho-thue-ma-chi-37-ty-es2364973",
+    "fetched_at_utc": "2026-10-11T14:02:33.853723+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/hang-qua-hiem-3-tang-duong-o-to-tai-co-6-phong-dang-cho-thue-ma-chi-37-ty-es2364973",
+    "state": "downloaded",
+    "file": "homedy_2364973.html",
+    "sha256": "ea2649411675c4eed37f43ed2f163be5cf40c4ef4e4068b182a02226228c50ec"
+  },
+  "homedy:2384159": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/khong-mua-hoi-han-ca-doi-kieu-biet-thu-san-vuon-lien-chieu-122m2-gia-chi-2-ty-es2384159",
+    "fetched_at_utc": "2026-10-11T14:02:36.858632+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/khong-mua-hoi-han-ca-doi-kieu-biet-thu-san-vuon-lien-chieu-122m2-gia-chi-2-ty-es2384159",
+    "state": "downloaded",
+    "file": "homedy_2384159.html",
+    "sha256": "3542d681e5d86b1824abb7c9f16c39782ce08b6a310080a8a7ff319cc4b6380d"
+  },
+  "homedy:2384512": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-5m-hoang-van-thai-o-to-den-cua-2-tang-moi-tinh-60m2-chi-ty-3-es2384512",
+    "fetched_at_utc": "2026-10-11T14:02:39.868270+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-5m-hoang-van-thai-o-to-den-cua-2-tang-moi-tinh-60m2-chi-ty-3-es2384512",
+    "state": "downloaded",
+    "file": "homedy_2384512.html",
+    "sha256": "39fcd68e3a8856a77884e47aa1a088a697feba09470af14a3123b319f5e17099"
+  },
+  "homedy:2384887": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-5m-hoang-van-thai-o-to-den-cua-2-tang-moi-tinh-60m2-chi-ty-3-es2384887",
+    "fetched_at_utc": "2026-10-11T14:02:42.870965+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gap-kiet-5m-hoang-van-thai-o-to-den-cua-2-tang-moi-tinh-60m2-chi-ty-3-es2384887",
+    "state": "downloaded",
+    "file": "homedy_2384887.html",
+    "sha256": "88c186f08fb2b5b6b9ee8ab7df4f358e6af9441c276960028f10e58dce51e4af"
+  },
+  "homedy:2385407": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-10m-ra-mat-duong-hoang-dieu-dien-tich-rong-76m2-ma-chi-1-ty-es2385407",
+    "fetched_at_utc": "2026-10-11T14:02:45.885501+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-10m-ra-mat-duong-hoang-dieu-dien-tich-rong-76m2-ma-chi-1-ty-es2385407",
+    "state": "downloaded",
+    "file": "homedy_2385407.html",
+    "sha256": "58e2767d141fa613e40c8bd9c103ebbbe0f298e04bc062f6c5acff3274df9fb0"
+  },
+  "homedy:2421793": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/no-bank-900tr-3-me-1-tum-ngay-dau-cau-rong-sat-vo-van-kiet-chot-2ty25-es2421793",
+    "fetched_at_utc": "2026-10-11T14:02:48.900995+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/no-bank-900tr-3-me-1-tum-ngay-dau-cau-rong-sat-vo-van-kiet-chot-2ty25-es2421793",
+    "state": "downloaded",
+    "file": "homedy_2421793.html",
+    "sha256": "4d75f8474bbe70bd6ebb1a43ad5b238141f1840e1f77c3bd0a8528024d6094d6"
+  },
+  "homedy:2536451": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chi-1ty900-con-bot-can-gap-2-tang-kiet-o-to-tai-tran-cao-van-es2536451",
+    "fetched_at_utc": "2026-10-11T14:02:51.901977+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chi-1ty900-con-bot-can-gap-2-tang-kiet-o-to-tai-tran-cao-van-es2536451",
+    "state": "downloaded",
+    "file": "homedy_2536451.html",
+    "sha256": "31063df16bf0f5a5a5ba20b9ed75091abdd0f465308cd7b9041868c4295f5a61"
+  },
+  "homedy:2626533": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/qua-re-chi-6-ty-so-huu-vua-o-kinh-doanh-cho-thue-tai-es2626533",
+    "fetched_at_utc": "2026-10-11T14:02:54.910478+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/qua-re-chi-6-ty-so-huu-vua-o-kinh-doanh-cho-thue-tai-es2626533",
+    "state": "downloaded",
+    "file": "homedy_2626533.html",
+    "sha256": "dd8a93b0504b081203560f88a7263cdf82decbaefa30063086952c41c6b227b1"
+  },
+  "homedy:2670969": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-re-gan-bien-nguyen-tat-phan-khuc-tam-1-ty-es2670969",
+    "fetched_at_utc": "2026-10-11T14:02:57.912427+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/gia-re-gan-bien-nguyen-tat-phan-khuc-tam-1-ty-es2670969",
+    "state": "downloaded",
+    "file": "homedy_2670969.html",
+    "sha256": "7809f015370e270f71efbd552efcd865e499ded78d181fa333a88f8e1a26581a"
+  },
+  "homedy:2753876": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/ha-200-trieu-gap-villa-mini-166m2-ngang-8m-kiet-o-to-hoang-van-thai-thong-son-nam-chu-es2753876",
+    "fetched_at_utc": "2026-10-11T14:03:00.918796+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/ha-200-trieu-gap-villa-mini-166m2-ngang-8m-kiet-o-to-hoang-van-thai-thong-son-nam-chu-es2753876",
+    "state": "downloaded",
+    "file": "homedy_2753876.html",
+    "sha256": "7eeb7130cd70ea571662138f707675ab15a76437faf9645220ea972eebd0cccf"
+  },
+  "homedy:2840806": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-o-to-dau-trong-gan-truong-dai-hoc-q-gia-ty-xx-es2840806",
+    "fetched_at_utc": "2026-10-11T14:03:03.933776+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-o-to-dau-trong-gan-truong-dai-hoc-q-gia-ty-xx-es2840806",
+    "state": "downloaded",
+    "file": "homedy_2840806.html",
+    "sha256": "fedb56e59a1c66db0907c0f0c853d3a5ef5ba82ebc9e49ca98543fe0a643ca90"
+  },
+  "homedy:2896577": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/lo-goc-2mt-duong-115m-to-cha-ba-ngay-hien-dang-cho-thue-12tr-thang-0905222215-es2896577",
+    "fetched_at_utc": "2026-10-11T14:03:06.945589+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/lo-goc-2mt-duong-115m-to-cha-ba-ngay-hien-dang-cho-thue-12tr-thang-0905222215-es2896577",
+    "state": "downloaded",
+    "file": "homedy_2896577.html",
+    "sha256": "4214eee07002de221c68b3073ca186bfe36ce9b7bb723a06d9a5c100967b67a7"
+  },
+  "homedy:2896718": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-can-dang-cho-thue-ho-dong-tien-ngay-dai-hoc-kinh-te-0905222215-es2896718",
+    "fetched_at_utc": "2026-10-11T14:03:09.955368+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-gui-can-dang-cho-thue-ho-dong-tien-ngay-dai-hoc-kinh-te-0905222215-es2896718",
+    "state": "downloaded",
+    "file": "homedy_2896718.html",
+    "sha256": "1ebf33c3c6eaf0d6b8c123b848d1567c27d2e604eee9360d9911474d0130fe5d"
+  },
+  "homedy:2899967": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dep-3-tang-sau-lung-co-them-7-phong-cho-thue-dt-den-130m-mua-vua-o-nguon-thu-nhap-es2899967",
+    "fetched_at_utc": "2026-10-11T14:03:12.967779+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/dep-3-tang-sau-lung-co-them-7-phong-cho-thue-dt-den-130m-mua-vua-o-nguon-thu-nhap-es2899967",
+    "state": "downloaded",
+    "file": "homedy_2899967.html",
+    "sha256": "947644ce9e1352a3af678576f00dd9b9de1bfbfbdb90e893dd3163d3e7d3f4fd"
+  },
+  "homedy:2911585": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-lo-goc-3-mat-tien-duong-105m-gia-chua-den-60tr-m-es2911585",
+    "fetched_at_utc": "2026-10-11T14:03:15.971202+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-lo-goc-3-mat-tien-duong-105m-gia-chua-den-60tr-m-es2911585",
+    "state": "downloaded",
+    "file": "homedy_2911585.html",
+    "sha256": "6ba9571b1c042330d5bf636c8e7109e5da953ad174314e5e0091e6da05f9fb72"
+  },
+  "homedy:2917839": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-can-400tr-co-ngay-tttp-kiet-o-to-cach-duong-chinh-80m-es2917839",
+    "fetched_at_utc": "2026-10-11T14:03:18.973098+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/chi-can-400tr-co-ngay-tttp-kiet-o-to-cach-duong-chinh-80m-es2917839",
+    "state": "downloaded",
+    "file": "homedy_2917839.html",
+    "sha256": "6f1e5823d4954a1f1988fee9f43f643dd27490068277ee79766afb85ab6b9b50"
+  },
+  "homedy:2939068": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/co-hoi-hiem-kiet-le-duan-3-tang-cuc-dep-kien-tt-hai-chau-chi-2-ty-100-tl-es2939068",
+    "fetched_at_utc": "2026-10-11T14:03:21.988114+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/co-hoi-hiem-kiet-le-duan-3-tang-cuc-dep-kien-tt-hai-chau-chi-2-ty-100-tl-es2939068",
+    "state": "downloaded",
+    "file": "homedy_2939068.html",
+    "sha256": "00ed1a405a039fd9569958452204a3ceeb8b955e9d163f901cc7d7dd64cf3bfd"
+  },
+  "homedy:2977268": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/tang-dat-dien-tich-74m2-duong-le-huu-trac-gan-cho-an-hai-dong-sup-ham-2ty990-es2977268",
+    "fetched_at_utc": "2026-10-11T14:03:24.988285+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/tang-dat-dien-tich-74m2-duong-le-huu-trac-gan-cho-an-hai-dong-sup-ham-2ty990-es2977268",
+    "state": "downloaded",
+    "file": "homedy_2977268.html",
+    "sha256": "fda3380afe688c94265c868b1d1a39c2e9c9a1792a8a95484ff7201583c7817e"
+  },
+  "homedy:2986444": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-duc-kiet-80-nguyen-chanh-hoa-khanh-bac-gia-2ty300-co-bot-es2986444",
+    "fetched_at_utc": "2026-10-11T14:03:28.002929+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-duc-kiet-80-nguyen-chanh-hoa-khanh-bac-gia-2ty300-co-bot-es2986444",
+    "state": "downloaded",
+    "file": "homedy_2986444.html",
+    "sha256": "e895ab72dfaea85283147b0451520728b0b1eafb5f7eba0201358b735309aa64"
+  },
+  "homedy:3050338": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/biet-thu-compound-khep-kin-doanh-cho-thue-80-100tr-thang-es3050338",
+    "fetched_at_utc": "2026-10-11T14:03:31.008238+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/biet-thu-compound-khep-kin-doanh-cho-thue-80-100tr-thang-es3050338",
+    "state": "downloaded",
+    "file": "homedy_3050338.html",
+    "sha256": "b1a8434d327d3aee8d85c22663f1596011a8fe2feda5cb117fe87214d851297d"
+  },
+  "homedy:3093857": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/1700-trieu-day-tro-4-phong-1-cap-truc-chinh-duong-5m-es3093857",
+    "fetched_at_utc": "2026-10-11T14:03:34.014625+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/1700-trieu-day-tro-4-phong-1-cap-truc-chinh-duong-5m-es3093857",
+    "state": "downloaded",
+    "file": "homedy_3093857.html",
+    "sha256": "a36f9821eccf3712718b39e93989c119eb29905f3da0279602f2ac8003bbb9a5"
+  },
+  "homedy:3106362": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/tai-chinh-2-ty-x-co-ngay-full-noi-that-tttp-duong-ly-thai-to-giao-ham-nghi-es3106362",
+    "fetched_at_utc": "2026-10-11T14:03:37.019391+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/tai-chinh-2-ty-x-co-ngay-full-noi-that-tttp-duong-ly-thai-to-giao-ham-nghi-es3106362",
+    "state": "downloaded",
+    "file": "homedy_3106362.html",
+    "sha256": "6125250ca0c4eaed8550463039d85141b8fd005fee638d4951bf0ad28171360d"
+  },
+  "homedy:3121112": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2mt-duong-tan-hoa-10-co-san-thu-nhap-tu-phong-tro-cho-thue-es3121112",
+    "fetched_at_utc": "2026-10-11T14:03:40.033434+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2mt-duong-tan-hoa-10-co-san-thu-nhap-tu-phong-tro-cho-thue-es3121112",
+    "state": "downloaded",
+    "file": "homedy_3121112.html",
+    "sha256": "ac5aca15cfbe501af18ce1b29be36855e4479a9e481fe119dad17dbefcbad9b0"
+  },
+  "homedy:3140732": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-tien-trung-tam-chi-nhich-4-ty-phu-hop-o-dau-tu-es3140732",
+    "fetched_at_utc": "2026-10-11T14:03:43.035396+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-tien-trung-tam-chi-nhich-4-ty-phu-hop-o-dau-tu-es3140732",
+    "state": "downloaded",
+    "file": "homedy_3140732.html",
+    "sha256": "0044c4b6835ad244546545c6ac4b07ec9849d926861c96cdc967cb116af87729"
+  },
+  "homedy:3186578": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-pho-3-tang-mat-tien-ky-dong-khu-buon-sam-uat-phu-hop-o-kinh-doanh-hoac-cho-thue-es3186578",
+    "fetched_at_utc": "2026-10-11T14:03:46.048199+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-pho-3-tang-mat-tien-ky-dong-khu-buon-sam-uat-phu-hop-o-kinh-doanh-hoac-cho-thue-es3186578",
+    "state": "downloaded",
+    "file": "homedy_3186578.html",
+    "sha256": "ed04f148fee5d5dbb38a53d0d58c914f49609d482c109a4508bcce2d91b18654"
+  },
+  "homedy:3196170": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-chi-7-ty-95-ngay-trung-tam-es3196170",
+    "fetched_at_utc": "2026-10-11T14:03:49.059358+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-chi-7-ty-95-ngay-trung-tam-es3196170",
+    "state": "downloaded",
+    "file": "homedy_3196170.html",
+    "sha256": "34bf3767122f17ac05bdc788e3065ec0e4fff2c8341685bc2685c6ac5d1bd787"
+  },
+  "homedy:3205882": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-tien-du-bac-ninh/cap-4-gia-mem-sat-cho-dai-vi-chi-18-ty-so-huu-ngay-tai-dong-es3205882",
+    "fetched_at_utc": "2026-10-11T14:03:52.067518+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-tien-du-bac-ninh/cap-4-gia-mem-sat-cho-dai-vi-chi-18-ty-so-huu-ngay-tai-dong-es3205882",
+    "state": "downloaded",
+    "file": "homedy_3205882.html",
+    "sha256": "46147358b38bcc815d9cae170040fdbaed285ce789aec0df7f3eb172ba92d74e"
+  },
+  "homedy:3215821": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-can-gac-lung-kiet-doan-phu-tu-lam-viec-truc-tiep-gia-tot-es3215821",
+    "fetched_at_utc": "2026-10-11T14:03:55.073568+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-can-gac-lung-kiet-doan-phu-tu-lam-viec-truc-tiep-gia-tot-es3215821",
+    "state": "downloaded",
+    "file": "homedy_3215821.html",
+    "sha256": "b87d0fb110c8c4fe442b0112a2ee9a440bc3a2b7b7000781c58fe26b70225cf0"
+  },
+  "homedy:3217338": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/c4-pham-nhu-xuong-lam-viec-truc-tiep-gia-tot-es3217338",
+    "fetched_at_utc": "2026-10-11T14:03:58.087979+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/c4-pham-nhu-xuong-lam-viec-truc-tiep-gia-tot-es3217338",
+    "state": "downloaded",
+    "file": "homedy_3217338.html",
+    "sha256": "5188e9efbef9dc40a03c20ee7af8f65cd284ddcf2c5153d2db1b6171baddd043"
+  },
+  "homedy:3217538": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-kiet-87-hoang-van-thai-lam-viec-truc-tiep-gia-tot-es3217538",
+    "fetched_at_utc": "2026-10-11T14:04:01.089590+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-kiet-87-hoang-van-thai-lam-viec-truc-tiep-gia-tot-es3217538",
+    "state": "downloaded",
+    "file": "homedy_3217538.html",
+    "sha256": "6879a6c587c7a3e1095a355272a41427df882942ec5d4e693c64cf95a023bfd5"
+  },
+  "homedy:3217545": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217545",
+    "fetched_at_utc": "2026-10-11T14:04:04.094915+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217545",
+    "state": "downloaded",
+    "file": "homedy_3217545.html",
+    "sha256": "3592757edb0b5ce3d1067e404473df32a4efb61b69de8f256f52105cadc3f583"
+  },
+  "homedy:3217568": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3217568",
+    "fetched_at_utc": "2026-10-11T14:04:07.098675+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3217568",
+    "state": "downloaded",
+    "file": "homedy_3217568.html",
+    "sha256": "88917430c4fffeaf8d3984127a7bdc3616dec3b5acee6820274da1e6f7a14126"
+  },
+  "homedy:2141802": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gia-tot-kiet-au-co-dien-tich-96m2-san-4-phong-tro-khu-vuc-dong-dan-cu-es2141802",
+    "fetched_at_utc": "2026-10-11T14:04:10.113869+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gia-tot-kiet-au-co-dien-tich-96m2-san-4-phong-tro-khu-vuc-dong-dan-cu-es2141802",
+    "state": "downloaded",
+    "file": "homedy_2141802.html",
+    "sha256": "c0cd2d7dd84b5107ff79573473aa51e4c1b488a405809b9695c50840a497eecf"
+  },
+  "homedy:2157741": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gia-tot-kiet-au-co-dien-tich-96m2-san-4-phong-tro-khu-vuc-dong-dan-cu-es2157741",
+    "fetched_at_utc": "2026-10-11T14:04:13.124658+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gia-tot-kiet-au-co-dien-tich-96m2-san-4-phong-tro-khu-vuc-dong-dan-cu-es2157741",
+    "state": "downloaded",
+    "file": "homedy_2157741.html",
+    "sha256": "9405d24450458ef69d867a98665d78c41102224adf6f534d3546dc3e752773b8"
+  },
+  "homedy:2275869": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-95-trieu-es2275869",
+    "fetched_at_utc": "2026-10-11T14:04:16.133360+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-95-trieu-es2275869",
+    "state": "downloaded",
+    "file": "homedy_2275869.html",
+    "sha256": "00f3c40c07d8aa9466bda05b02061a9e39274ea09ccc70cb55d89e56e02ed6a1"
+  },
+  "homedy:2275892": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-dieu-moi-dep-canh-truong-quoc-te-benh-vien-es2275892",
+    "fetched_at_utc": "2026-10-11T14:04:19.138803+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-dieu-moi-dep-canh-truong-quoc-te-benh-vien-es2275892",
+    "state": "downloaded",
+    "file": "homedy_2275892.html",
+    "sha256": "83e2241cc832df92da62d3c906c5ed52d9ecd68c486256bbe7067216d6d09aa7"
+  },
+  "homedy:2300823": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-10-ty-es2300823",
+    "fetched_at_utc": "2026-10-11T14:04:22.141497+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-10-ty-es2300823",
+    "state": "downloaded",
+    "file": "homedy_2300823.html",
+    "sha256": "3b29d5fe9e30968521f3842200c1eec2590eb772f9cda51e960b7c8ebcb78100"
+  },
+  "homedy:2304248": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-10-ty-es2304248",
+    "fetched_at_utc": "2026-10-11T14:04:25.145528+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-3-10-ty-es2304248",
+    "state": "downloaded",
+    "file": "homedy_2304248.html",
+    "sha256": "20dc56c198fccef82b9ad4b9252d4f9764b45fa9014cb548c95821e742ffdb8f"
+  },
+  "homedy:2360998": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-5-00-ty-es2360998",
+    "fetched_at_utc": "2026-10-11T14:04:28.160436+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-5-00-ty-es2360998",
+    "state": "downloaded",
+    "file": "homedy_2360998.html",
+    "sha256": "ebdddbd2ebf3327cd1c8cf286ffa8f19cfad225984b0105e0a226c4691e57a4b"
+  },
+  "homedy:2504259": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-9-50-ty-es2504259",
+    "fetched_at_utc": "2026-10-11T14:04:31.175072+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-9-50-ty-es2504259",
+    "state": "downloaded",
+    "file": "homedy_2504259.html",
+    "sha256": "342328a9ef361de7e3233d682ef5ca691514b22b4fc07fff1ca790f63780d94e"
+  },
+  "homedy:2504267": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-dieu-gia-9-50-ty-es2504267",
+    "fetched_at_utc": "2026-10-11T14:04:34.176301+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hoang-dieu-gia-9-50-ty-es2504267",
+    "state": "downloaded",
+    "file": "homedy_2504267.html",
+    "sha256": "1d6eb2f19bb104d3093acae8c56593e793b62ca68b6b237ec4cca1b51e182b26"
+  },
+  "homedy:2549231": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/1-tret-lau-kiet-6m-le-huu-trac-dn-es2549231",
+    "fetched_at_utc": "2026-10-11T14:04:37.181074+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/1-tret-lau-kiet-6m-le-huu-trac-dn-es2549231",
+    "state": "downloaded",
+    "file": "homedy_2549231.html",
+    "sha256": "71d67054726bf88d8a29b3200678f5ceb31e4e8651c176665199f5f9ab07d5a5"
+  },
+  "homedy:2610293": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/1-tret-lau-kiet-6m-le-huu-trac-dn-es2610293",
+    "fetched_at_utc": "2026-10-11T14:04:40.188409+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/1-tret-lau-kiet-6m-le-huu-trac-dn-es2610293",
+    "state": "downloaded",
+    "file": "homedy_2610293.html",
+    "sha256": "651a0498a4a476f6db8503f64bf38dc02c3a6e960d25201c599ee4bb0713d4f8"
+  },
+  "homedy:2639519": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/duoi-5-ty-dep-kien-co-tien-ich-bat-ngan-kiet-es2639519",
+    "fetched_at_utc": "2026-10-11T14:04:43.199367+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/duoi-5-ty-dep-kien-co-tien-ich-bat-ngan-kiet-es2639519",
+    "state": "downloaded",
+    "file": "homedy_2639519.html",
+    "sha256": "00c8967e4260e3d71255e4cf8fd39ae3b4ad7a0520c4f004bd0d76287d3c6e9c"
+  },
+  "homedy:2640035": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/duoi-5-ty-dep-kien-co-tien-tich-bat-ngan-kiet-es2640035",
+    "fetched_at_utc": "2026-10-11T14:04:46.201286+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/duoi-5-ty-dep-kien-co-tien-tich-bat-ngan-kiet-es2640035",
+    "state": "downloaded",
+    "file": "homedy_2640035.html",
+    "sha256": "f0f390991ce4641c4c51d5da8946a48c17889481fc4de54d751d51c19f23d485"
+  },
+  "homedy:2683246": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/ngan-hang-chuan-bi-phat-mai-nen-giam-gia-nhanh-cat-lo-sau-can-ngay-sieu-thi-coop-mart-dbp-es2683246",
+    "fetched_at_utc": "2026-10-11T14:04:49.202824+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/ngan-hang-chuan-bi-phat-mai-nen-giam-gia-nhanh-cat-lo-sau-can-ngay-sieu-thi-coop-mart-dbp-es2683246",
+    "state": "downloaded",
+    "file": "homedy_2683246.html",
+    "sha256": "0f7290ea60bc63f97ce20b66d9e86ea309f0759dda4e1d37da5f0a17281174b4"
+  },
+  "homedy:2721292": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-5-00-ty-es2721292",
+    "fetched_at_utc": "2026-10-11T14:04:52.214512+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/gia-5-00-ty-es2721292",
+    "state": "downloaded",
+    "file": "homedy_2721292.html",
+    "sha256": "21a41a66b62459f437b39b781d5c5e1e24f9d40d723e0bcf36b53ad66ae9d8e8"
+  },
+  "homedy:2800700": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-hoa-an-len-so-do-chinh-chu-es2800700",
+    "fetched_at_utc": "2026-10-11T14:04:55.229036+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-hoa-an-len-so-do-chinh-chu-es2800700",
+    "state": "unexpected_http_status",
+    "file": "homedy_2800700.html",
+    "sha256": "33160a45091766ec98c4708c8bbcca7c786ef580c6023bd7f0a2b06c46a1416e"
+  },
+  "homedy:2800873": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/trung-tam-pho-giay-to-so-do-chinh-chu-es2800873",
+    "fetched_at_utc": "2026-10-11T14:04:58.236856+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/trung-tam-pho-giay-to-so-do-chinh-chu-es2800873",
+    "state": "unexpected_http_status",
+    "file": "homedy_2800873.html",
+    "sha256": "4ca1a9bbb173b70029fedbf450c9ab0d522cb7c9cb9320543f85e0985da9da9d"
+  },
+  "homedy:2801035": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-o-to-ton-dan-so-do-chinhas-chu-moi-es2801035",
+    "fetched_at_utc": "2026-10-11T14:05:01.243075+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-o-to-ton-dan-so-do-chinhas-chu-moi-es2801035",
+    "state": "unexpected_http_status",
+    "file": "homedy_2801035.html",
+    "sha256": "efc8be7a0741a1fd76383fc25b9d7e72efe1a2cb36147b08f34090b7e4fd1d65"
+  },
+  "homedy:2801097": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-2-tang-so-do-chinh-chu-kiet-o-to-5m-es2801097",
+    "fetched_at_utc": "2026-10-11T14:05:04.252964+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/can-2-tang-so-do-chinh-chu-kiet-o-to-5m-es2801097",
+    "state": "unexpected_http_status",
+    "file": "homedy_2801097.html",
+    "sha256": "ef7ab02ae9b5bd0daa2789d284ce3b6c3fbedec1cd4ac4611daf5256e70d3c01"
+  },
+  "homedy:2801893": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dep-3-tang-giay-to-phap-li-day-du-gia-thuong-luong-cho-khach-thien-chi-es2801893",
+    "fetched_at_utc": "2026-10-11T14:05:07.259115+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/dep-3-tang-giay-to-phap-li-day-du-gia-thuong-luong-cho-khach-thien-chi-es2801893",
+    "state": "unexpected_http_status",
+    "file": "homedy_2801893.html",
+    "sha256": "87781a94d81a84cc69b21ab184f6513e9b11170a00c7a1fe9e52808b3ed4f609"
+  },
+  "homedy:2811051": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/tai-chinh-nhinh-1-chut-so-huu-dep-trung-tam-tp-es2811051",
+    "fetched_at_utc": "2026-10-11T14:05:10.264412+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/tai-chinh-nhinh-1-chut-so-huu-dep-trung-tam-tp-es2811051",
+    "state": "downloaded",
+    "file": "homedy_2811051.html",
+    "sha256": "24fcc2005e1e838320f3f83339d1e0fb8b8aa636cd7d51897baf51298b505ba0"
+  },
+  "homedy:2811059": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/tai-chinh-nhinh-1-chut-so-huu-dep-trung-tam-tp-es2811059",
+    "fetched_at_utc": "2026-10-11T14:05:13.277882+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/tai-chinh-nhinh-1-chut-so-huu-dep-trung-tam-tp-es2811059",
+    "state": "downloaded",
+    "file": "homedy_2811059.html",
+    "sha256": "e638c31e2da19274113f66d1101fceee298cbcbe851c68141573f7aa915a0379"
+  },
+  "homedy:2812817": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-ho-12t-gia-tot-dep-thuong-mai-duoc-cap-es2812817",
+    "fetched_at_utc": "2026-10-11T14:05:19.365221+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/can-ho-12t-gia-tot-dep-thuong-mai-duoc-cap-es2812817",
+    "state": "downloaded",
+    "file": "homedy_2812817.html",
+    "sha256": "8724ce653d538576b72c115ac9c95c459682ca395eeab91b320019ed01e616e7"
+  },
+  "homedy:2897657": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-chuyen-nhuong-35-tang-sat-bien-es2897657",
+    "fetched_at_utc": "2026-10-11T14:05:22.370969+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chinh-chu-chuyen-nhuong-35-tang-sat-bien-es2897657",
+    "state": "downloaded",
+    "file": "homedy_2897657.html",
+    "sha256": "e30bfe7f8c21448e77bf33d749d91b17b57c94b52127a7223071e3bd8f5fc97e"
+  },
+  "homedy:2922453": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gan-bien-truong-hoc-ben-vien-cho-co-an-ninh-tot-es2922453",
+    "fetched_at_utc": "2026-10-11T14:05:25.378504+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/gan-bien-truong-hoc-ben-vien-cho-co-an-ninh-tot-es2922453",
+    "state": "downloaded",
+    "file": "homedy_2922453.html",
+    "sha256": "4eedc6aaea7421441e275d10f9c4253d55fa014392fb924ffd4b806462eb5cda"
+  },
+  "homedy:2957387": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-2-tang-duong-mat-tien-khe-nuoc-binh-ky-gan-cho-es2957387",
+    "fetched_at_utc": "2026-10-11T14:05:28.389154+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-2-tang-duong-mat-tien-khe-nuoc-binh-ky-gan-cho-es2957387",
+    "state": "downloaded",
+    "file": "homedy_2957387.html",
+    "sha256": "37f19df54d33b5ac82ba62c1521720435497790f5dd0fa23f64cd624f4218f0b"
+  },
+  "homedy:2965165": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-2-tang-duong-mat-tien-khe-nuoc-binh-ky-gan-cho-es2965165",
+    "fetched_at_utc": "2026-10-11T14:05:31.391123+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/chao-can-2-tang-duong-mat-tien-khe-nuoc-binh-ky-gan-cho-es2965165",
+    "state": "downloaded",
+    "file": "homedy_2965165.html",
+    "sha256": "2821612145f4fd2c6773140ffc44d14ed0793bc6049bf05febac03b3cddaf8e5"
+  },
+  "homedy:2967413": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/3-tang-moi-mat-tien-quoc-lo-1a-es2967413",
+    "fetched_at_utc": "2026-10-11T14:05:34.392180+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/3-tang-moi-mat-tien-quoc-lo-1a-es2967413",
+    "state": "downloaded",
+    "file": "homedy_2967413.html",
+    "sha256": "67f0e406c0255bf0510b426f3e5d7173252890e0de6f6b8bb7aa3e11c7776150"
+  },
+  "homedy:2972936": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/mat-tien-quoc-lo-1a-gia-ngop-ngan-hang-es2972936",
+    "fetched_at_utc": "2026-10-11T14:05:37.395827+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/mat-tien-quoc-lo-1a-gia-ngop-ngan-hang-es2972936",
+    "state": "downloaded",
+    "file": "homedy_2972936.html",
+    "sha256": "632f9d25e14eb02fb140c2f254f5fbeabf43e705baf813426f0228d907835822"
+  },
+  "homedy:3038513": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/b-a-n-nh-25-tang-kiet-o-to-pho-duc-chinh-full-noi-that-es3038513",
+    "fetched_at_utc": "2026-10-11T14:05:40.397945+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/b-a-n-nh-25-tang-kiet-o-to-pho-duc-chinh-full-noi-that-es3038513",
+    "state": "downloaded",
+    "file": "homedy_3038513.html",
+    "sha256": "bd3e20df63f9b985fb75d26a3111c4bffeb724a54cc3ceb40493cfbfd1204341"
+  },
+  "homedy:3044891": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/35-tang-kiet-o-to-6m-duong-hoang-dieuhai-es3044891",
+    "fetched_at_utc": "2026-10-11T14:05:43.397768+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/35-tang-kiet-o-to-6m-duong-hoang-dieuhai-es3044891",
+    "state": "downloaded",
+    "file": "homedy_3044891.html",
+    "sha256": "b900cc3002aa48f66635512b67898ee65990c5cef548b4036a87e64d9f16bc62"
+  },
+  "homedy:3059130": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/dep-2-tang-gan-cho-full-noi-that-es3059130",
+    "fetched_at_utc": "2026-10-11T14:05:46.412371+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/dep-2-tang-gan-cho-full-noi-that-es3059130",
+    "state": "downloaded",
+    "file": "homedy_3059130.html",
+    "sha256": "010f493fa73a0e3889939d932f836c60655671064ccae258ee9dae3765a55b14"
+  },
+  "homedy:3060837": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/sieu-pham-2-5-tang-kiet-nhu-es3060837",
+    "fetched_at_utc": "2026-10-11T14:05:49.420769+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/sieu-pham-2-5-tang-kiet-nhu-es3060837",
+    "state": "downloaded",
+    "file": "homedy_3060837.html",
+    "sha256": "613d13835432c60c5b8d7b1cfe65170a755c280da5a4bd27cb11b9b2e36e3d57"
+  },
+  "homedy:3063587": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/35-tang-kiet-rong-duong-hoang-dieuhai-es3063587",
+    "fetched_at_utc": "2026-10-11T14:05:52.428913+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/35-tang-kiet-rong-duong-hoang-dieuhai-es3063587",
+    "state": "downloaded",
+    "file": "homedy_3063587.html",
+    "sha256": "163bb2789b7a2d096f194ee1cf55370dddebff90811ef0ce50572dc206b3c19c"
+  },
+  "homedy:3119888": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hiem-chi-67-so-huu-ngay-3-tang-duong-2-thang-9-tt-dn-es3119888",
+    "fetched_at_utc": "2026-10-11T14:05:55.441209+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/hiem-chi-67-so-huu-ngay-3-tang-duong-2-thang-9-tt-dn-es3119888",
+    "state": "downloaded",
+    "file": "homedy_3119888.html",
+    "sha256": "21ad6b6fd78634f3e9b16733c29703400d24ebcfd8d814ce6043505c84bdbb4f"
+  },
+  "homedy:3123447": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mau-vuon-hien-dai-ngay-trung-tam-dien-tich-khung-full-noi-that-vao-o-es3123447",
+    "fetched_at_utc": "2026-10-11T14:05:58.449247+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mau-vuon-hien-dai-ngay-trung-tam-dien-tich-khung-full-noi-that-vao-o-es3123447",
+    "state": "unexpected_http_status",
+    "file": "homedy_3123447.html",
+    "sha256": "4f04cea9bf3c043d9c2f6252e22643d128b6050157175915f7091111cbf14f89"
+  },
+  "homedy:3129038": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-69-hoang-thuc-tram-3phong-ngu-day-du-cong-es3129038",
+    "fetched_at_utc": "2026-10-11T14:06:01.455095+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-69-hoang-thuc-tram-3phong-ngu-day-du-cong-es3129038",
+    "state": "downloaded",
+    "file": "homedy_3129038.html",
+    "sha256": "62665b112eadc25835d41583b5c9e0c5395db8f92d7bb5e63570bc93e3814fd0"
+  },
+  "homedy:3129039": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-69-hoang-thuc-tram-3-phong-ngu-day-du-cong-es3129039",
+    "fetched_at_utc": "2026-10-11T14:06:04.464322+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-69-hoang-thuc-tram-3-phong-ngu-day-du-cong-es3129039",
+    "state": "downloaded",
+    "file": "homedy_3129039.html",
+    "sha256": "80424813f8219ed00bf4361da9b8124fe5ba635496f884e157ed8031e4f9eea3"
+  },
+  "homedy:3135818": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3135818",
+    "fetched_at_utc": "2026-10-11T14:06:08.127329+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3135818",
+    "state": "downloaded",
+    "file": "homedy_3135818.html",
+    "sha256": "77acbeb50037b868a165da82b585dfbf87f2d631fdc0acf2382312166d777b14"
+  },
+  "homedy:3136184": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-dang-kinh-doanh-ca-phe-khu-vuc-es3136184",
+    "fetched_at_utc": "2026-10-11T14:06:11.132593+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/chinh-chu-dang-kinh-doanh-ca-phe-khu-vuc-es3136184",
+    "state": "downloaded",
+    "file": "homedy_3136184.html",
+    "sha256": "a650949f4fac380d015bf7cb3b6600af576d186c2cd39a20866121a0d03d23e1"
+  },
+  "homedy:3136509": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chao-2-tang-kiet-o-to-duong-nhua-nguyen-phuoc-thong-ra-dinh-tuu-es3136509",
+    "fetched_at_utc": "2026-10-11T14:06:14.146335+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chao-2-tang-kiet-o-to-duong-nhua-nguyen-phuoc-thong-ra-dinh-tuu-es3136509",
+    "state": "downloaded",
+    "file": "homedy_3136509.html",
+    "sha256": "17584a52cdde2fba4347f651c4f7493dc2dc47f390002c097cdf7857dbeaac7d"
+  },
+  "homedy:3137070": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3137070",
+    "fetched_at_utc": "2026-10-11T14:06:17.150391+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3137070",
+    "state": "downloaded",
+    "file": "homedy_3137070.html",
+    "sha256": "2b7ff8380d5b63287c1998cedbd493b9d09ba76c8ceb25e33413a7657cd12d73"
+  },
+  "homedy:3137090": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3137090",
+    "fetched_at_utc": "2026-10-11T14:06:20.154341+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-o-to-nhua-nguyen-phuoc-thong-dinh-tuu-es3137090",
+    "state": "downloaded",
+    "file": "homedy_3137090.html",
+    "sha256": "86fe27d3f17405b77badc38c0172c4967ed65074c2bed5ef06c45f6817d9beb2"
+  },
+  "homedy:3138356": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chao-2-tang-kiet-o-to-duong-nhua-nguyen-phuoc-thong-ra-dinh-tuu-es3138356",
+    "fetched_at_utc": "2026-10-11T14:06:23.168746+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/chao-2-tang-kiet-o-to-duong-nhua-nguyen-phuoc-thong-ra-dinh-tuu-es3138356",
+    "state": "downloaded",
+    "file": "homedy_3138356.html",
+    "sha256": "25c3946d724bac73cef77d94bbf7acb999a0a4d54a0e34a961fc6cf6952b1d6e"
+  },
+  "homedy:3148658": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-duc-kiet-nguyen-nhu-hanh-gan-ton-thang-es3148658",
+    "fetched_at_utc": "2026-10-11T14:06:26.169854+00:00",
+    "probe_only": false,
+    "http_status": 500,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-duc-kiet-nguyen-nhu-hanh-gan-ton-thang-es3148658",
+    "state": "unexpected_http_status",
+    "file": "homedy_3148658.html",
+    "sha256": "ab89f59b46f9eae07ed7196d2147ce1c0c99c9027b442e0c2fae7b30addb5228"
+  },
+  "homedy:3149041": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-3-tang-2-mat-kiet-oto-ha-huy-tap-es3149041",
+    "fetched_at_utc": "2026-10-11T14:06:29.178284+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-3-tang-2-mat-kiet-oto-ha-huy-tap-es3149041",
+    "state": "downloaded",
+    "file": "homedy_3149041.html",
+    "sha256": "e63522b90ae88fb4b2be04ade47469d90babc344a8509c1c9da53345db355059"
+  },
+  "homedy:3149046": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-3-tang-2-mat-kiet-oto-ha-huy-tap-es3149046",
+    "fetched_at_utc": "2026-10-11T14:06:32.192592+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/biet-thu-3-tang-2-mat-kiet-oto-ha-huy-tap-es3149046",
+    "state": "downloaded",
+    "file": "homedy_3149046.html",
+    "sha256": "433e276a2222959fc0d772e9031b66c86237888b349f432abf3998e738942f73"
+  },
+  "homedy:3176985": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-ariyana-beach-resort-suites-da-nang/test-api-apai-apia-pai-p-es3176985",
+    "fetched_at_utc": "2026-10-11T14:06:35.201143+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-ariyana-beach-resort-suites-da-nang/test-api-apai-apia-pai-p-es3176985",
+    "state": "downloaded",
+    "file": "homedy_3176985.html",
+    "sha256": "c9cada1d9a5dcc5c54a7562447ab2d889904f83dfbca7f49bf9d1247c01769d5"
+  },
+  "homedy:3176986": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-ariyana-beach-resort-suites-da-nang/test-api-apai-apia-pai-p-es3176986",
+    "fetched_at_utc": "2026-10-11T14:06:38.201968+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-ariyana-beach-resort-suites-da-nang/test-api-apai-apia-pai-p-es3176986",
+    "state": "downloaded",
+    "file": "homedy_3176986.html",
+    "sha256": "b69c6aa9a374dae9912cb652adac3969167b1e87d0d24daba5c27c501ce41f7f"
+  },
+  "homedy:3188946": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-pho-huy-can-3-tang-3pn-duong-5-5m-oto-tranh-day-du-tien-nghi-vao-o-ngay-es3188946",
+    "fetched_at_utc": "2026-10-11T14:06:41.205273+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/mat-pho-huy-can-3-tang-3pn-duong-5-5m-oto-tranh-day-du-tien-nghi-vao-o-ngay-es3188946",
+    "state": "downloaded",
+    "file": "homedy_3188946.html",
+    "sha256": "a4fc58705768c475592bc36c3221597e59ab6bc0b631df3ce84791fecf2347f6"
+  },
+  "homedy:3193495": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193495",
+    "fetched_at_utc": "2026-10-11T14:06:44.211534+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193495",
+    "state": "downloaded",
+    "file": "homedy_3193495.html",
+    "sha256": "49a02bbbf9486ba0e82d0acc91f43758769233d2722cb725ab97dc104dd1dba9"
+  },
+  "homedy:3193496": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-2-mat-kiet-nhua-o-to-k205-tran-thai-tong-es3193496",
+    "fetched_at_utc": "2026-10-11T14:06:47.225758+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-2-mat-kiet-nhua-o-to-k205-tran-thai-tong-es3193496",
+    "state": "downloaded",
+    "file": "homedy_3193496.html",
+    "sha256": "8afe7a7896673aaab5a31aa7ff414fb2dcb375fdb86ed4d44ef522d6b596bf1e"
+  },
+  "homedy:3193527": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193527",
+    "fetched_at_utc": "2026-10-11T14:06:50.240587+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193527",
+    "state": "downloaded",
+    "file": "homedy_3193527.html",
+    "sha256": "338f1585fc9856d52206877f7a2457f456c18fccf31c6005c71a12a4bef08202"
+  },
+  "homedy:3193549": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193549",
+    "fetched_at_utc": "2026-10-11T14:06:53.245848+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193549",
+    "state": "downloaded",
+    "file": "homedy_3193549.html",
+    "sha256": "80e7752353d3302bf60d7dba12c215836ceafa95bb859614101f5378c3338872"
+  },
+  "homedy:3193551": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193551",
+    "fetched_at_utc": "2026-10-11T14:06:56.260445+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/sieu-pham-3-tang-full-noi-that-kiet-nguyen-chanh-es3193551",
+    "state": "downloaded",
+    "file": "homedy_3193551.html",
+    "sha256": "64c1dde6cc475780394a83d38ebd23f94eb245b5b4e631c2ea61c80a59801e21"
+  },
+  "homedy:3193552": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-2-mat-kiet-nhua-o-to-k205-tran-thai-tong-es3193552",
+    "fetched_at_utc": "2026-10-11T14:06:59.265206+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-2-mat-kiet-nhua-o-to-k205-tran-thai-tong-es3193552",
+    "state": "downloaded",
+    "file": "homedy_3193552.html",
+    "sha256": "90dfee932300360a65d2d8cb8f0369527e753aaddd97fc7432167366214c4e44"
+  },
+  "homedy:3193565": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-hieu-sau-mat-tien-es3193565",
+    "fetched_at_utc": "2026-10-11T14:07:02.279708+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-hieu-sau-mat-tien-es3193565",
+    "state": "downloaded",
+    "file": "homedy_3193565.html",
+    "sha256": "5ae8d877f23e5c13c0dbba5b722e0cbad8177bf7ef34b6cf9dc4decc39dd9b45"
+  },
+  "homedy:3193567": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-to-hieu-cach-duong-chinh-20m-o-es3193567",
+    "fetched_at_utc": "2026-10-11T14:07:05.282546+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-to-hieu-cach-duong-chinh-20m-o-es3193567",
+    "state": "downloaded",
+    "file": "homedy_3193567.html",
+    "sha256": "6ff52b0f457420cf699478dcc028e85951effdd3be109653a8b1b44a6ceef4d0"
+  },
+  "homedy:3193575": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193575",
+    "fetched_at_utc": "2026-10-11T14:07:08.289993+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193575",
+    "state": "downloaded",
+    "file": "homedy_3193575.html",
+    "sha256": "37812b1b493ff5ccabaeca3ba4e3b82bfc541dc100a9ce42498e40a5f86d9e20"
+  },
+  "homedy:3193597": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193597",
+    "fetched_at_utc": "2026-10-11T14:07:11.304812+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-ton-duc-thang-cach-duong-chinh-chi-50m-es3193597",
+    "state": "downloaded",
+    "file": "homedy_3193597.html",
+    "sha256": "816ac3f7508fd883c81c01c2f4e29b9e6bef2e485f08160e1dda9afd06b60837"
+  },
+  "homedy:3193785": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-to-hieu-cach-duong-chinh-20m-o-es3193785",
+    "fetched_at_utc": "2026-10-11T14:07:14.314914+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-to-hieu-cach-duong-chinh-20m-o-es3193785",
+    "state": "downloaded",
+    "file": "homedy_3193785.html",
+    "sha256": "b97a4246e0ea414dfe01440de575cb0d446b7eed2c9421021d55e56db7824e86"
+  },
+  "homedy:3193820": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-hieu-sau-mat-tien-es3193820",
+    "fetched_at_utc": "2026-10-11T14:07:17.330076+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-hieu-sau-mat-tien-es3193820",
+    "state": "downloaded",
+    "file": "homedy_3193820.html",
+    "sha256": "7494241d57f3218261876fda7f61521bf2846c31a522ec385cabaebfb2359fc2"
+  },
+  "homedy:3194439": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-cuc-dep-duong-vao-6m-oto-dau-thoa-mai-es3194439",
+    "fetched_at_utc": "2026-10-11T14:07:20.344272+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-cuc-dep-duong-vao-6m-oto-dau-thoa-mai-es3194439",
+    "state": "downloaded",
+    "file": "homedy_3194439.html",
+    "sha256": "1b3d76a99005494fac834ed84af3167420918782f69273d2cc6eadb05f709bce"
+  },
+  "homedy:3204807": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/gac-lung-duc-hoa-tho-tay-107m2-4pn-o-to-vao-tan-noi-33-ty-es3204807",
+    "fetched_at_utc": "2026-10-11T14:07:23.345767+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/gac-lung-duc-hoa-tho-tay-107m2-4pn-o-to-vao-tan-noi-33-ty-es3204807",
+    "state": "downloaded",
+    "file": "homedy_3204807.html",
+    "sha256": "5e0eb5d5fd1f399e313b005153dd565d8886a69582a12a46d6907e94ec676ef8"
+  },
+  "homedy:3205186": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/xay-moi-dep-3-tang-tai-thien-loi-aeonmall-es3205186",
+    "fetched_at_utc": "2026-10-11T14:07:26.355452+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/xay-moi-dep-3-tang-tai-thien-loi-aeonmall-es3205186",
+    "state": "downloaded",
+    "file": "homedy_3205186.html",
+    "sha256": "3f1a52c0f4ec8734764c1919be56c6702569baadc1832071349df41f1cc4528c"
+  },
+  "homedy:3205314": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/chinh-chu-dan-xay-tai-dinh-cu-a51-ho-sen-tam-ky-es3205314",
+    "fetched_at_utc": "2026-10-11T14:07:29.372241+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/chinh-chu-dan-xay-tai-dinh-cu-a51-ho-sen-tam-ky-es3205314",
+    "state": "downloaded",
+    "file": "homedy_3205314.html",
+    "sha256": "9e2bf6a6443038eda7a7a64da135f9d3e1b889a06ec372b16a8370e90603395d"
+  },
+  "homedy:3205660": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/7tang-thang-may-khu-phan-lo-thien-loi-an-bien-cach-tttm-eonmall-500m-es3205660",
+    "fetched_at_utc": "2026-10-11T14:07:32.376329+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-le-chan-hai-phong/7tang-thang-may-khu-phan-lo-thien-loi-an-bien-cach-tttm-eonmall-500m-es3205660",
+    "state": "downloaded",
+    "file": "homedy_3205660.html",
+    "sha256": "8056b6444d6772622f09d09de494e91c2e7573e397d15a58a7d5f5200e16397c"
+  },
+  "homedy:3206658": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngo-quyen-hai-phong/can-uy-tin-tai-danh-cho-cac-bac-cong-an-es3206658",
+    "fetched_at_utc": "2026-10-11T14:07:35.390869+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngo-quyen-hai-phong/can-uy-tin-tai-danh-cho-cac-bac-cong-an-es3206658",
+    "state": "downloaded",
+    "file": "homedy_3206658.html",
+    "sha256": "2254e7d7980d2ae7ac4f07f6f0bfc8246e66c773b203ab259f28f8edae87ecb6"
+  },
+  "homedy:3207393": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/5-tang-dang-doc-lap-xay-moi-lo-goc-o-to-vao-515-ty-0523-424-434-es3207393",
+    "fetched_at_utc": "2026-10-11T14:07:38.402918+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/5-tang-dang-doc-lap-xay-moi-lo-goc-o-to-vao-515-ty-0523-424-434-es3207393",
+    "state": "downloaded",
+    "file": "homedy_3207393.html",
+    "sha256": "f2a8b9dd5229de4d5bdf80fb032f1646a6a216e70a659e0499bc4248ad2b7b0c"
+  },
+  "homedy:3207534": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/4-tang-dang-mat-ngo-xay-moi-41m2-0523-424-434-es3207534",
+    "fetched_at_utc": "2026-10-11T14:07:41.417664+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-an-hai-phong/4-tang-dang-mat-ngo-xay-moi-41m2-0523-424-434-es3207534",
+    "state": "downloaded",
+    "file": "homedy_3207534.html",
+    "sha256": "9c003e10c3ba9f73bf076846ea2dd60dc910790b58c98a309f99d05becdc3d6a"
+  },
+  "homedy:3207839": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-duong-kinh-hai-phong/doc-lap-xay-moi-hien-dai-tieu-tra-48m-245-ty-0523-424-434-es3207839",
+    "fetched_at_utc": "2026-10-11T14:07:44.419606+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-duong-kinh-hai-phong/doc-lap-xay-moi-hien-dai-tieu-tra-48m-245-ty-0523-424-434-es3207839",
+    "state": "downloaded",
+    "file": "homedy_3207839.html",
+    "sha256": "d11deba54eb7f9cdbaf186c22b402f768156a7460bd18239976cb6577abb34c7"
+  },
+  "homedy:3208004": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gui-gap-mat-tien-duong-ho-xuan-huong-phuong-vien-gia-tot-es3208004",
+    "fetched_at_utc": "2026-10-11T14:07:47.428128+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gui-gap-mat-tien-duong-ho-xuan-huong-phuong-vien-gia-tot-es3208004",
+    "state": "downloaded",
+    "file": "homedy_3208004.html",
+    "sha256": "fc1f68dadfe744ce6128089b31dbbaad7503327423bcfa5932cff8563a8993ea"
+  },
+  "homedy:3208007": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/villa-mat-tien-trinh-hoai-duc-view-bao-dep-vinh-vien-es3208007",
+    "fetched_at_utc": "2026-10-11T14:07:50.435800+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/villa-mat-tien-trinh-hoai-duc-view-bao-dep-vinh-vien-es3208007",
+    "state": "downloaded",
+    "file": "homedy_3208007.html",
+    "sha256": "84115a16898c5470ccb21fd657432d6ffb0b46b97ae1b71b54ef98d15c9b9922"
+  },
+  "homedy:3208008": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/mai-hoa-thon-p2-92m2-136-ty-con-thuong-luong-es3208008",
+    "fetched_at_utc": "2026-10-11T14:07:53.442383+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/mai-hoa-thon-p2-92m2-136-ty-con-thuong-luong-es3208008",
+    "state": "downloaded",
+    "file": "homedy_3208008.html",
+    "sha256": "432a50c8d986a8b30b90e4ba6b45a6c19ccd92baf46a9b7d6481ed8b54659a20"
+  },
+  "homedy:3208009": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gui-gap-moi-view-dep-nhu-hinh-nhin-toan-bo-ho-xuan-huong-es3208009",
+    "fetched_at_utc": "2026-10-11T14:07:56.448315+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-thanh-pho-da-lat-lam-dong/chinh-chu-gui-gap-moi-view-dep-nhu-hinh-nhin-toan-bo-ho-xuan-huong-es3208009",
+    "state": "downloaded",
+    "file": "homedy_3208009.html",
+    "sha256": "a11365bc7416c7086da6b13cbb6b5168a7cdcacbfbfce2cb3aa2d9b2d1d54a56"
+  },
+  "homedy:3208523": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-moi-tinh-3-tang-ngang-6m2-full-noi-that-san-dong-tien-chi-hon-5-ty-es3208523",
+    "fetched_at_utc": "2026-10-11T14:07:59.451063+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/trung-tam-moi-tinh-3-tang-ngang-6m2-full-noi-that-san-dong-tien-chi-hon-5-ty-es3208523",
+    "state": "downloaded",
+    "file": "homedy_3208523.html",
+    "sha256": "0e91d80b55e8435e4a080f3026a80115c48725c6527e081854687204ca315355"
+  },
+  "homedy:3215127": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-vuon-2-tang-mt-an-ngai-3-lam-viec-truc-tiep-gia-tot-es3215127",
+    "fetched_at_utc": "2026-10-11T14:08:02.462225+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-vuon-2-tang-mt-an-ngai-3-lam-viec-truc-tiep-gia-tot-es3215127",
+    "state": "downloaded",
+    "file": "homedy_3215127.html",
+    "sha256": "de9e0e5c25a03b6f3a94a50f58c6df03a1f0e7918996a665a14f3b60fe54fa89"
+  },
+  "homedy:3215152": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-vuon-2-tang-mt-an-ngai-3-lam-viec-truc-tiep-gia-tot-es3215152",
+    "fetched_at_utc": "2026-10-11T14:08:05.466133+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-vuon-2-tang-mt-an-ngai-3-lam-viec-truc-tiep-gia-tot-es3215152",
+    "state": "downloaded",
+    "file": "homedy_3215152.html",
+    "sha256": "3e3ae896c0b6f957b10b22bc461c637285745ae1b5746d58ac373cd53d0eda50"
+  },
+  "homedy:3215236": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215236",
+    "fetched_at_utc": "2026-10-11T14:08:08.469943+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215236",
+    "state": "downloaded",
+    "file": "homedy_3215236.html",
+    "sha256": "5d29423d98ecd86b063323dc4a2b24644e49a7bc4a98b753143d9794f745f7cb"
+  },
+  "homedy:3215265": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-dong-lam-viec-truc-tiep-gia-tot-es3215265",
+    "fetched_at_utc": "2026-10-11T14:08:11.474662+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-dong-lam-viec-truc-tiep-gia-tot-es3215265",
+    "state": "downloaded",
+    "file": "homedy_3215265.html",
+    "sha256": "416236359696a5425b20a81c1b51e3a7a78757d156dcfbadc5cf1168aef2101e"
+  },
+  "homedy:3215267": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-ton-dan-hoa-phat-lam-viec-truc-tiep-gia-tot-es3215267",
+    "fetched_at_utc": "2026-10-11T14:08:14.484712+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-ton-dan-hoa-phat-lam-viec-truc-tiep-gia-tot-es3215267",
+    "state": "downloaded",
+    "file": "homedy_3215267.html",
+    "sha256": "1cd26665cbb8e09186ae7c0b145b501a18017b2c8e0a0224ec5e8917f4331abe"
+  },
+  "homedy:3215270": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-ton-dan-hoa-phat-lam-viec-truc-tiep-gia-tot-es3215270",
+    "fetched_at_utc": "2026-10-11T14:08:17.496387+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-ton-dan-hoa-phat-lam-viec-truc-tiep-gia-tot-es3215270",
+    "state": "downloaded",
+    "file": "homedy_3215270.html",
+    "sha256": "829db86fc8e5a1c662472cfa7321de3b2bb8abb083b856d5fbec768a2c4eb238"
+  },
+  "homedy:3215276": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mt-hoang-bat-dat-hoa-hai-lam-viec-truc-tiep-gia-tot-es3215276",
+    "fetched_at_utc": "2026-10-11T14:08:20.510891+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mt-hoang-bat-dat-hoa-hai-lam-viec-truc-tiep-gia-tot-es3215276",
+    "state": "downloaded",
+    "file": "homedy_3215276.html",
+    "sha256": "61abbf1a822e8f34642a4f055f293d31c8b3c0b880326ff59d84098f3cbe32d4"
+  },
+  "homedy:3215282": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/4-tang-lam-hoanh-phuoc-my-viec-truc-tiep-gia-tot-es3215282",
+    "fetched_at_utc": "2026-10-11T14:08:23.514209+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/4-tang-lam-hoanh-phuoc-my-viec-truc-tiep-gia-tot-es3215282",
+    "state": "downloaded",
+    "file": "homedy_3215282.html",
+    "sha256": "b219e2474c64d84c25176c19b57e983fa1299b61b037b5345bcb7a2b2bf011df"
+  },
+  "homedy:3215292": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-giang-nam-2-phuoc-lam-viec-truc-tiep-gia-tot-es3215292",
+    "fetched_at_utc": "2026-10-11T14:08:26.526847+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-giang-nam-2-phuoc-lam-viec-truc-tiep-gia-tot-es3215292",
+    "state": "downloaded",
+    "file": "homedy_3215292.html",
+    "sha256": "09be2e2375708b5e511cfe8a2c8f7b9299dbca4238a27e0704a59495acbefc32"
+  },
+  "homedy:3215364": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mat-tien-hoang-bat-dat-lam-viec-truc-tiep-gia-tot-es3215364",
+    "fetched_at_utc": "2026-10-11T14:08:29.541679+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/mat-tien-hoang-bat-dat-lam-viec-truc-tiep-gia-tot-es3215364",
+    "state": "downloaded",
+    "file": "homedy_3215364.html",
+    "sha256": "aea99210569822176d95d35a4903ff2dd0ebf6fc68e3a196decc83b8d1857cdb"
+  },
+  "homedy:3215371": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/kiet-nam-cao-lam-viec-truc-tiep-gia-tot-es3215371",
+    "fetched_at_utc": "2026-10-11T14:08:32.548246+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/kiet-nam-cao-lam-viec-truc-tiep-gia-tot-es3215371",
+    "state": "downloaded",
+    "file": "homedy_3215371.html",
+    "sha256": "94691e01b1b86e715b7c61bc83542f5ed77c76166a7e2263a43096f5f5c09493"
+  },
+  "homedy:3215448": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-hoa-an-lam-viec-truc-tiep-gia-tot-es3215448",
+    "fetched_at_utc": "2026-10-11T14:08:35.563415+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-hoa-an-lam-viec-truc-tiep-gia-tot-es3215448",
+    "state": "downloaded",
+    "file": "homedy_3215448.html",
+    "sha256": "0cdb0e8573acceda261efd46b5f03f88ca9c79922262afe1af9a4011fa26f94c"
+  },
+  "homedy:3215480": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-7m-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3215480",
+    "fetched_at_utc": "2026-10-11T14:08:38.568293+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-o-to-7m-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3215480",
+    "state": "downloaded",
+    "file": "homedy_3215480.html",
+    "sha256": "e80c364467bf2f0aee7591abb893b6656b9d4c28ddf5d32602b0694d51a47b6f"
+  },
+  "homedy:3215481": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-full-noi-that-kiet-thai-thi-boi-lam-viec-truc-tiep-gia-tot-es3215481",
+    "fetched_at_utc": "2026-10-11T14:08:41.569614+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-full-noi-that-kiet-thai-thi-boi-lam-viec-truc-tiep-gia-tot-es3215481",
+    "state": "downloaded",
+    "file": "homedy_3215481.html",
+    "sha256": "bfa63a07d12dfa0c075096c2953ce0d9dfae842ac9f1ff90a600c90d73c8b265"
+  },
+  "homedy:3215489": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/4-tang-mt-an-thuong-pho-tay-lam-viec-truc-tiep-gia-tot-es3215489",
+    "fetched_at_utc": "2026-10-11T14:08:44.578215+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/4-tang-mt-an-thuong-pho-tay-lam-viec-truc-tiep-gia-tot-es3215489",
+    "state": "downloaded",
+    "file": "homedy_3215489.html",
+    "sha256": "019d22d8181834a7f1d2973953e4624ee0e41042347e04eeb092c533afe9c186"
+  },
+  "homedy:3215617": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215617",
+    "fetched_at_utc": "2026-10-11T14:08:47.582183+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215617",
+    "state": "downloaded",
+    "file": "homedy_3215617.html",
+    "sha256": "ddae869e6959633d6dbeeaa03b0deb3525cefe23e302d0bf0e8cbf5c36558ad1"
+  },
+  "homedy:3215675": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-91-cu-chinh-lan-lam-viec-truc-tiep-gia-tot-es3215675",
+    "fetched_at_utc": "2026-10-11T14:08:50.593323+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-91-cu-chinh-lan-lam-viec-truc-tiep-gia-tot-es3215675",
+    "state": "downloaded",
+    "file": "homedy_3215675.html",
+    "sha256": "8a6f9cab6ab01f20a1a9232452f719dda3dfe0f272a53ba91dbfdaa38e150723"
+  },
+  "homedy:3215685": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-k351-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215685",
+    "fetched_at_utc": "2026-10-11T14:08:53.599498+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-k351-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3215685",
+    "state": "downloaded",
+    "file": "homedy_3215685.html",
+    "sha256": "db1f90876766abdbf13f4530fc92ae4d1d9a3f72bf2675baa4ec98c680961ded"
+  },
+  "homedy:3215706": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-giang-nam-2-phuoc-lam-viec-truc-tiep-gia-tot-es3215706",
+    "fetched_at_utc": "2026-10-11T14:08:56.605601+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/biet-thu-giang-nam-2-phuoc-lam-viec-truc-tiep-gia-tot-es3215706",
+    "state": "downloaded",
+    "file": "homedy_3215706.html",
+    "sha256": "421cc0535aad420b3ffa5ec8c3d6bc300da524c2b2112187f75c3873995a1822"
+  },
+  "homedy:3215708": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-k33-nam-cao-lam-viec-truc-tiep-gia-tot-es3215708",
+    "fetched_at_utc": "2026-10-11T14:08:59.615125+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-k33-nam-cao-lam-viec-truc-tiep-gia-tot-es3215708",
+    "state": "downloaded",
+    "file": "homedy_3215708.html",
+    "sha256": "a8c0df106e586a35320f01d733f3eda126350bea9f1b165f0b8848eeec4640a2"
+  },
+  "homedy:3215823": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-5-tang-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3215823",
+    "fetched_at_utc": "2026-10-11T14:09:02.628978+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-5-tang-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3215823",
+    "state": "downloaded",
+    "file": "homedy_3215823.html",
+    "sha256": "42fbfdbada0d0bac003f2c4d276944a5a915bd32e0b9e628e77536482d0e5295"
+  },
+  "homedy:3215828": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-phu-loc-8-lam-viec-truc-tiep-gia-tot-es3215828",
+    "fetched_at_utc": "2026-10-11T14:09:05.637830+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-phu-loc-8-lam-viec-truc-tiep-gia-tot-es3215828",
+    "state": "downloaded",
+    "file": "homedy_3215828.html",
+    "sha256": "36587c37e340564583c3bd4e1fc21846b4d075271acece2b47c926da3ee6e95b"
+  },
+  "homedy:3215832": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kiet-o-to-ton-dan-lam-viec-truc-tiep-gia-tot-es3215832",
+    "fetched_at_utc": "2026-10-11T14:09:08.647482+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kiet-o-to-ton-dan-lam-viec-truc-tiep-gia-tot-es3215832",
+    "state": "downloaded",
+    "file": "homedy_3215832.html",
+    "sha256": "414956287aeffb7090749db6c008df215701d8e5cfa2c2b2a9987aa6620cf564"
+  },
+  "homedy:3215837": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3215837",
+    "fetched_at_utc": "2026-10-11T14:09:11.649225+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3215837",
+    "state": "downloaded",
+    "file": "homedy_3215837.html",
+    "sha256": "dd7e8c321ae3482899495adcd6f1938641659114f352ad209940e750f458fa3d"
+  },
+  "homedy:3215850": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-thai-thi-boi-lam-viec-truc-tiep-gia-tot-es3215850",
+    "fetched_at_utc": "2026-10-11T14:09:14.651348+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-thai-thi-boi-lam-viec-truc-tiep-gia-tot-es3215850",
+    "state": "downloaded",
+    "file": "homedy_3215850.html",
+    "sha256": "a27ebd15eef7e80c6bde1e3a8455607911b75b8cc346c383a29cf95a567b0033"
+  },
+  "homedy:3215852": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kiet-o-to-ton-dan-lam-viec-truc-tiep-gia-tot-es3215852",
+    "fetched_at_utc": "2026-10-11T14:09:17.653098+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/3-tang-kiet-o-to-ton-dan-lam-viec-truc-tiep-gia-tot-es3215852",
+    "state": "downloaded",
+    "file": "homedy_3215852.html",
+    "sha256": "cdb4dc8ae878413a091277522f7aaf08d8a96aa45291140549953c28157d3ff8"
+  },
+  "homedy:3215868": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3215868",
+    "fetched_at_utc": "2026-10-11T14:09:20.653319+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3215868",
+    "state": "downloaded",
+    "file": "homedy_3215868.html",
+    "sha256": "4a1174d0df14c3121b9107839b24935ed3a829ef6082fd251cbd822839f1e13c"
+  },
+  "homedy:3215877": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-pham-nhu-xuong-lam-viec-truc-tiep-gia-tot-es3215877",
+    "fetched_at_utc": "2026-10-11T14:09:23.660014+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-pham-nhu-xuong-lam-viec-truc-tiep-gia-tot-es3215877",
+    "state": "downloaded",
+    "file": "homedy_3215877.html",
+    "sha256": "2eb2451641e7f7ba302fe8f0c3f440617475820f88747c767b93ac34a588387b"
+  },
+  "homedy:3215904": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/4-tang-lam-hoanh-viec-truc-tiep-gia-tot-es3215904",
+    "fetched_at_utc": "2026-10-11T14:09:26.667347+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/4-tang-lam-hoanh-viec-truc-tiep-gia-tot-es3215904",
+    "state": "downloaded",
+    "file": "homedy_3215904.html",
+    "sha256": "bcd17110cba1920f9b282dfebb89fcff37f67a73697f89476940e75fcce4152e"
+  },
+  "homedy:3215924": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-hai-phong-lam-viec-truc-tiep-gia-tot-es3215924",
+    "fetched_at_utc": "2026-10-11T14:09:29.668297+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-hai-phong-lam-viec-truc-tiep-gia-tot-es3215924",
+    "state": "downloaded",
+    "file": "homedy_3215924.html",
+    "sha256": "c3a6005299efdbca1a5971f288125c19d4f348cc11b5fa51bf6e8f83834c0136"
+  },
+  "homedy:3215938": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3215938",
+    "fetched_at_utc": "2026-10-11T14:09:32.675708+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3215938",
+    "state": "downloaded",
+    "file": "homedy_3215938.html",
+    "sha256": "08ca3e79d6c45187fdc2c4463658dce684b455f94491d6c687182cdcdecf99da"
+  },
+  "homedy:3216445": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3216445",
+    "fetched_at_utc": "2026-10-11T14:09:35.676435+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3216445",
+    "state": "downloaded",
+    "file": "homedy_3216445.html",
+    "sha256": "04ef6d0d1752c604e85407b451c46374e8ced15fdcf5db0e92a038ee080ad6da"
+  },
+  "homedy:3216446": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/2-tang-kem-phong-tro-yen-ne-lam-viec-truc-tiep-gia-tot-es3216446",
+    "fetched_at_utc": "2026-10-11T14:09:38.679228+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-huyen-hoa-vang-da-nang/2-tang-kem-phong-tro-yen-ne-lam-viec-truc-tiep-gia-tot-es3216446",
+    "state": "downloaded",
+    "file": "homedy_3216446.html",
+    "sha256": "ca6d06ff8d897e3a3f767718e7405eac104898ae528bf5a268632de1a342b0da"
+  },
+  "homedy:3216448": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216448",
+    "fetched_at_utc": "2026-10-11T14:09:41.692657+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216448",
+    "state": "downloaded",
+    "file": "homedy_3216448.html",
+    "sha256": "4badb70a7e8ff528fcd9d45ebcce95d1d6b39cc9eeee573cca74e24018224fcb"
+  },
+  "homedy:3216454": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-mat-kiet-kem-phong-tro-au-co-lam-viec-truc-tiep-gia-tot-es3216454",
+    "fetched_at_utc": "2026-10-11T14:09:44.701913+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-mat-kiet-kem-phong-tro-au-co-lam-viec-truc-tiep-gia-tot-es3216454",
+    "state": "downloaded",
+    "file": "homedy_3216454.html",
+    "sha256": "be600a4ce6d4121bb23360425b5948f7c374835e5af8f0bc1ff8f3972b244cdb"
+  },
+  "homedy:3216569": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3216569",
+    "fetched_at_utc": "2026-10-11T14:09:47.714170+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3216569",
+    "state": "downloaded",
+    "file": "homedy_3216569.html",
+    "sha256": "8b68c87f3075b23421790d6cdcd31d07d9a044e79bd7547576aca3b401cdcd11"
+  },
+  "homedy:3216570": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-duong-dinh-duc-thien-lam-viec-truc-tiep-gia-tot-es3216570",
+    "fetched_at_utc": "2026-10-11T14:09:50.721131+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/gac-lung-duong-dinh-duc-thien-lam-viec-truc-tiep-gia-tot-es3216570",
+    "state": "downloaded",
+    "file": "homedy_3216570.html",
+    "sha256": "3ad1e707d1b528b003025a4afa2fdf7f17791f9198e3d2d3e25f4158cf2ac12f"
+  },
+  "homedy:3216575": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-hoa-my-8-lam-viec-truc-tiep-gia-tot-es3216575",
+    "fetched_at_utc": "2026-10-11T14:09:53.729135+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-mat-tien-hoa-my-8-lam-viec-truc-tiep-gia-tot-es3216575",
+    "state": "downloaded",
+    "file": "homedy_3216575.html",
+    "sha256": "b0cd606406fb47bcc9522e31ae5cfbc8243024c277f23f1b9016f3579ac46b39"
+  },
+  "homedy:3216582": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/lo-goc-3-mat-tien-tran-van-thanh-lam-viec-truc-tiep-gia-tot-es3216582",
+    "fetched_at_utc": "2026-10-11T14:09:56.741509+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/lo-goc-3-mat-tien-tran-van-thanh-lam-viec-truc-tiep-gia-tot-es3216582",
+    "state": "downloaded",
+    "file": "homedy_3216582.html",
+    "sha256": "6788b232bca1f7f750a618c116aa535803a0cbee284f77adabb69b7e2a470653"
+  },
+  "homedy:3216584": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-mat-tien-phu-xuan-2-lam-viec-truc-tiep-gia-tot-es3216584",
+    "fetched_at_utc": "2026-10-11T14:09:59.750256+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-mat-tien-phu-xuan-2-lam-viec-truc-tiep-gia-tot-es3216584",
+    "state": "downloaded",
+    "file": "homedy_3216584.html",
+    "sha256": "6cf3ba5a994ddab7da0e4d8591253997b305b590fb30dc7db0eaeee90316f8c9"
+  },
+  "homedy:3216596": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-do-me-duong-lo-giang-20-lam-viec-truc-tiep-gia-tot-es3216596",
+    "fetched_at_utc": "2026-10-11T14:10:02.756941+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-do-me-duong-lo-giang-20-lam-viec-truc-tiep-gia-tot-es3216596",
+    "state": "downloaded",
+    "file": "homedy_3216596.html",
+    "sha256": "36e08dace0c558ad42ac0dfad069429ead8c1f75d139b75ce0dcab27415d2ec8"
+  },
+  "homedy:3216597": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-nguyen-chanh-lam-viec-truc-tiep-gia-tot-es3216597",
+    "fetched_at_utc": "2026-10-11T14:10:05.759547+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-nguyen-chanh-lam-viec-truc-tiep-gia-tot-es3216597",
+    "state": "downloaded",
+    "file": "homedy_3216597.html",
+    "sha256": "95a5e5341ec995128fd85d691f31dd0845e128db2b7e89f83f3f91febaeed650"
+  },
+  "homedy:3216599": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/day-tro-2-mat-kiet-o-to-hieu-lam-viec-truc-tiep-gia-tot-es3216599",
+    "fetched_at_utc": "2026-10-11T14:10:08.759711+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/day-tro-2-mat-kiet-o-to-hieu-lam-viec-truc-tiep-gia-tot-es3216599",
+    "state": "downloaded",
+    "file": "homedy_3216599.html",
+    "sha256": "dbc05789422380fdd9588970f319f52fd89726e335ba16e334907b4304fd97b0"
+  },
+  "homedy:3216600": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-gac-lung-nguyen-chanh-lam-viec-truc-tiep-gia-tot-es3216600",
+    "fetched_at_utc": "2026-10-11T14:10:11.767504+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-gac-lung-nguyen-chanh-lam-viec-truc-tiep-gia-tot-es3216600",
+    "state": "downloaded",
+    "file": "homedy_3216600.html",
+    "sha256": "e895447e92e58b419859e33b506b101f748cbf1ff18336beb78a0907969a98fc"
+  },
+  "homedy:3216602": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-me-suot-lam-viec-truc-tiep-gia-tot-es3216602",
+    "fetched_at_utc": "2026-10-11T14:10:14.775055+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-o-to-me-suot-lam-viec-truc-tiep-gia-tot-es3216602",
+    "state": "downloaded",
+    "file": "homedy_3216602.html",
+    "sha256": "4412002a83b9dd016682ac593aa65b1b72bd6cf5c132a1f07bff326c86871751"
+  },
+  "homedy:3216605": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-au-co-lam-viec-truc-tiep-gia-tot-es3216605",
+    "fetched_at_utc": "2026-10-11T14:10:17.787516+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-kiet-au-co-lam-viec-truc-tiep-gia-tot-es3216605",
+    "state": "downloaded",
+    "file": "homedy_3216605.html",
+    "sha256": "26b0c93de25aac1501f7a9f8d4922bad512a9e013f847060001522c427b38462"
+  },
+  "homedy:3216612": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-mat-tien-nui-thanh-lam-viec-truc-tiep-gia-tot-es3216612",
+    "fetched_at_utc": "2026-10-11T14:10:20.801858+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/3-tang-mat-tien-nui-thanh-lam-viec-truc-tiep-gia-tot-es3216612",
+    "state": "downloaded",
+    "file": "homedy_3216612.html",
+    "sha256": "ff753b483f127bdb918b91046e14416c271061807a18cb1f86b5c1959d1ca65a"
+  },
+  "homedy:3216617": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-kiet-o-to-binh-thai-1-lam-viec-truc-tiep-gia-tot-es3216617",
+    "fetched_at_utc": "2026-10-11T14:10:23.815206+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/cap-4-kiet-o-to-binh-thai-1-lam-viec-truc-tiep-gia-tot-es3216617",
+    "state": "downloaded",
+    "file": "homedy_3216617.html",
+    "sha256": "85c1c8d06776d911290cb0200a628de6baae20c3eb90863fbf378429708726fb"
+  },
+  "homedy:3216626": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216626",
+    "fetched_at_utc": "2026-10-11T14:10:26.829566+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216626",
+    "state": "downloaded",
+    "file": "homedy_3216626.html",
+    "sha256": "6c163c981eef82938b001f3315fac94934f28ec3d94649b85ebfe1aa4acf52c1"
+  },
+  "homedy:3216628": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-nguyen-tat-thanh-noi-dai-lam-viec-truc-tiep-gia-tot-es3216628",
+    "fetched_at_utc": "2026-10-11T14:10:29.837628+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-nguyen-tat-thanh-noi-dai-lam-viec-truc-tiep-gia-tot-es3216628",
+    "state": "downloaded",
+    "file": "homedy_3216628.html",
+    "sha256": "b649e5f256b47db19a7ee41db6495866c7ef4eb2cd21acb6fd876a7842e6a4c4"
+  },
+  "homedy:3216630": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-kiet-ton-dan-lam-viec-truc-tiep-gia-tot-es3216630",
+    "fetched_at_utc": "2026-10-11T14:10:32.838015+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-kiet-ton-dan-lam-viec-truc-tiep-gia-tot-es3216630",
+    "state": "downloaded",
+    "file": "homedy_3216630.html",
+    "sha256": "5688f2b32c2e122587e3c1ccfcb4f3888fbb0682ccc86c7d80cb1df55755fb93"
+  },
+  "homedy:3216754": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/biet-thu-nguyen-suy-lam-viec-truc-tiep-gia-tot-es3216754",
+    "fetched_at_utc": "2026-10-11T14:10:35.843584+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/biet-thu-nguyen-suy-lam-viec-truc-tiep-gia-tot-es3216754",
+    "state": "downloaded",
+    "file": "homedy_3216754.html",
+    "sha256": "15bc39d085334b0b04f32e498032be7ec3b18d7f962b51dde84c1812cd593e07"
+  },
+  "homedy:3216755": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-dung-si-lam-viec-truc-tiep-gia-tot-es3216755",
+    "fetched_at_utc": "2026-10-11T14:10:38.854145+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/3-tang-dung-si-lam-viec-truc-tiep-gia-tot-es3216755",
+    "state": "downloaded",
+    "file": "homedy_3216755.html",
+    "sha256": "46d3364c7d7d3f9bc832e6967aa41ce80d4e16f46fc09bd1b8ce37e2b47d30c5"
+  },
+  "homedy:3216759": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-dong-2-lam-viec-truc-tiep-gia-tot-es3216759",
+    "fetched_at_utc": "2026-10-11T14:10:41.870072+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-dong-2-lam-viec-truc-tiep-gia-tot-es3216759",
+    "state": "downloaded",
+    "file": "homedy_3216759.html",
+    "sha256": "eab99d918cf46fffbd772c9d455375d03f71f7e726a88b8f6c5b89c48b73369f"
+  },
+  "homedy:3216762": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-dong-ke-lam-viec-truc-tiep-gia-tot-es3216762",
+    "fetched_at_utc": "2026-10-11T14:10:44.882343+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/3-tang-kiet-dong-ke-lam-viec-truc-tiep-gia-tot-es3216762",
+    "state": "downloaded",
+    "file": "homedy_3216762.html",
+    "sha256": "0136a38538bf1268355b52dcd8ea9671e2b8be964c08514e4276154978f766f9"
+  },
+  "homedy:3216834": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2-tang-1-tum-an-hai-6-lam-viec-truc-tiep-gia-tot-es3216834",
+    "fetched_at_utc": "2026-10-11T14:10:47.894062+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-son-tra-da-nang/2-tang-1-tum-an-hai-6-lam-viec-truc-tiep-gia-tot-es3216834",
+    "state": "downloaded",
+    "file": "homedy_3216834.html",
+    "sha256": "dbc104a33225402b73c2196d6d26d59490050a9aa0dc8f8bcff774666fd0ee19"
+  },
+  "homedy:3216837": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-phuoc-ly-5-lam-viec-truc-tiep-gia-tot-es3216837",
+    "fetched_at_utc": "2026-10-11T14:10:50.899739+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-phuoc-ly-5-lam-viec-truc-tiep-gia-tot-es3216837",
+    "state": "downloaded",
+    "file": "homedy_3216837.html",
+    "sha256": "60933ce97e4dbb667a4549f414925ec10fc7bc3b3301e8c6c3b19bb316fe6ce2"
+  },
+  "homedy:3216838": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216838",
+    "fetched_at_utc": "2026-10-11T14:10:53.906833+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/cap-4-kiet-nguyen-luong-bang-lam-viec-truc-tiep-gia-tot-es3216838",
+    "state": "downloaded",
+    "file": "homedy_3216838.html",
+    "sha256": "5ed84161f96eaf22086cdb98f490050160169e524c28f190ba1edcebd887b153"
+  },
+  "homedy:3217024": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-le-duan-lam-viec-truc-tiep-gia-tot-es3217024",
+    "fetched_at_utc": "2026-10-11T14:10:56.909049+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-le-duan-lam-viec-truc-tiep-gia-tot-es3217024",
+    "state": "downloaded",
+    "file": "homedy_3217024.html",
+    "sha256": "e4096b2279dfd0a96d17465c00ade9b870627ff4d20012f38036c80c42591d97"
+  },
+  "homedy:3217026": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/biet-thu-xuan-thieu-11-lam-viec-truc-tiep-gia-tot-es3217026",
+    "fetched_at_utc": "2026-10-11T14:10:59.911500+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/biet-thu-xuan-thieu-11-lam-viec-truc-tiep-gia-tot-es3217026",
+    "state": "downloaded",
+    "file": "homedy_3217026.html",
+    "sha256": "c97c8956e197ee90f6a7d5549444d8ce3ecdc6c702927d5f71acd000b728bcb8"
+  },
+  "homedy:3217028": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217028",
+    "fetched_at_utc": "2026-10-11T14:11:02.915083+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217028",
+    "state": "downloaded",
+    "file": "homedy_3217028.html",
+    "sha256": "a79438d5bceea9089a6d7c093331877ccdab701c5b2f59a993c718978f6c5ce1"
+  },
+  "homedy:3217032": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217032",
+    "fetched_at_utc": "2026-10-11T14:11:05.930870+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217032",
+    "state": "downloaded",
+    "file": "homedy_3217032.html",
+    "sha256": "6110ce2640f276fa29c11a571692797c0a378cc3dffb18decc61ae2fd964e327"
+  },
+  "homedy:3217033": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3217033",
+    "fetched_at_utc": "2026-10-11T14:11:08.944527+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3217033",
+    "state": "downloaded",
+    "file": "homedy_3217033.html",
+    "sha256": "43fd779eb4bb8f0592fd51c09c652623f03fc90a2c7bbbd6a44527f5aee98d78"
+  },
+  "homedy:3217037": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217037",
+    "fetched_at_utc": "2026-10-11T14:11:11.947249+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217037",
+    "state": "downloaded",
+    "file": "homedy_3217037.html",
+    "sha256": "f23771547ebf1cc7ab6d9c0dd332d99d10e80ef1dbbfb6461f1c156f353799f7"
+  },
+  "homedy:3217074": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-le-duan-lam-viec-truc-tiep-gia-tot-es3217074",
+    "fetched_at_utc": "2026-10-11T14:11:14.950159+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-le-duan-lam-viec-truc-tiep-gia-tot-es3217074",
+    "state": "downloaded",
+    "file": "homedy_3217074.html",
+    "sha256": "9865f9671490485466ce9e66e03c438c2640129e84e7f54b35039a328fa3bb64"
+  },
+  "homedy:3217075": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/biet-thu-xuan-thieu-11-lam-viec-truc-tiep-gia-tot-es3217075",
+    "fetched_at_utc": "2026-10-11T14:11:17.963028+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/biet-thu-xuan-thieu-11-lam-viec-truc-tiep-gia-tot-es3217075",
+    "state": "downloaded",
+    "file": "homedy_3217075.html",
+    "sha256": "ab6e88e622ecccde7d196f5660a02f431d9f00aaf644b71f774053b6884c74f9"
+  },
+  "homedy:3217085": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217085",
+    "fetched_at_utc": "2026-10-11T14:11:20.969755+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-nguyen-phuoc-lam-viec-truc-tiep-gia-tot-es3217085",
+    "state": "downloaded",
+    "file": "homedy_3217085.html",
+    "sha256": "22dfcb5e68fe5e5084dcc3a75f97602469a6a142c3ae0c752bcf97432ed43104"
+  },
+  "homedy:3217087": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/duong-tran-xuan-le-lam-viec-truc-tiep-gia-tot-es3217087",
+    "fetched_at_utc": "2026-10-11T14:11:23.980055+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/duong-tran-xuan-le-lam-viec-truc-tiep-gia-tot-es3217087",
+    "state": "downloaded",
+    "file": "homedy_3217087.html",
+    "sha256": "cc5708ac05ce4a41e91f1ca9dcbe53e64e628bb377a9750b5d8f6851554ec00d"
+  },
+  "homedy:3217090": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217090",
+    "fetched_at_utc": "2026-10-11T14:11:26.983647+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217090",
+    "state": "downloaded",
+    "file": "homedy_3217090.html",
+    "sha256": "e45698d3a153d96691bda33a74c4661fa16565f1893a8d25bb6ae7054f15266b"
+  },
+  "homedy:3217092": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3217092",
+    "fetched_at_utc": "2026-10-11T14:11:29.989184+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-ha-huy-tap-lam-viec-truc-tiep-gia-tot-es3217092",
+    "state": "downloaded",
+    "file": "homedy_3217092.html",
+    "sha256": "bd1a1cb31d05a85ce0cffdfb17a1bbcb0d12fc3bc605319f8927412a8a98d080"
+  },
+  "homedy:3217095": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217095",
+    "fetched_at_utc": "2026-10-11T14:11:32.992542+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dung-si-lam-viec-truc-tiep-gia-tot-es3217095",
+    "state": "downloaded",
+    "file": "homedy_3217095.html",
+    "sha256": "8645f88b5d0380e1c044da5c132dc90683658c7a4006fcd6bb55742c75a02e6c"
+  },
+  "homedy:3217097": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-dong-lam-viec-truc-tiep-gia-tot-es3217097",
+    "fetched_at_utc": "2026-10-11T14:11:36.000885+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-dong-lam-viec-truc-tiep-gia-tot-es3217097",
+    "state": "downloaded",
+    "file": "homedy_3217097.html",
+    "sha256": "fe0c65e8299c4b02ec42aa295a15b8e9423cd9ce84392a4fa4f271b074b13024"
+  },
+  "homedy:3217099": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-dong-lam-viec-truc-tiep-gia-tot-es3217099",
+    "fetched_at_utc": "2026-10-11T14:11:39.003497+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/kiet-dong-lam-viec-truc-tiep-gia-tot-es3217099",
+    "state": "downloaded",
+    "file": "homedy_3217099.html",
+    "sha256": "a4d57d8346bb8028bfafbe7ecaf0082f820e98ea0d9e0e139eed9d321e3971fb"
+  },
+  "homedy:3217117": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/an-thuong-16-lam-viec-truc-tiep-gia-tot-es3217117",
+    "fetched_at_utc": "2026-10-11T14:11:42.014042+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-ngu-hanh-son-da-nang/an-thuong-16-lam-viec-truc-tiep-gia-tot-es3217117",
+    "state": "downloaded",
+    "file": "homedy_3217117.html",
+    "sha256": "51f5618150b6b305c325593699a037107d29fed4643618fbf801388bd3cbfe71"
+  },
+  "homedy:3217198": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/ly-thuong-kiet-lam-viec-truc-tiep-gia-tot-es3217198",
+    "fetched_at_utc": "2026-10-11T14:11:45.014353+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/ly-thuong-kiet-lam-viec-truc-tiep-gia-tot-es3217198",
+    "state": "downloaded",
+    "file": "homedy_3217198.html",
+    "sha256": "97a7eec72b8168335e2415f4c1a79b6d41a5a50c34302bcab122117847289c95"
+  },
+  "homedy:3217203": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3217203",
+    "fetched_at_utc": "2026-10-11T14:11:48.029063+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3217203",
+    "state": "downloaded",
+    "file": "homedy_3217203.html",
+    "sha256": "3582cfcffe2c7c2574cb7fe6b4241bc61e131c6db985b54e0057a7d841dd9e34"
+  },
+  "homedy:3217221": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-tran-xuan-le-lam-viec-truc-tiep-gia-tot-es3217221",
+    "fetched_at_utc": "2026-10-11T14:11:51.041624+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-tran-xuan-le-lam-viec-truc-tiep-gia-tot-es3217221",
+    "state": "downloaded",
+    "file": "homedy_3217221.html",
+    "sha256": "9035d036be94d27ccd5525ccad517fd6c83c47e83ac2ada9fd11ce0ac443fdd9"
+  },
+  "homedy:3217222": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/nguyen-huy-luong-lam-viec-truc-tiep-gia-tot-es3217222",
+    "fetched_at_utc": "2026-10-11T14:11:54.044064+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/nguyen-huy-luong-lam-viec-truc-tiep-gia-tot-es3217222",
+    "state": "downloaded",
+    "file": "homedy_3217222.html",
+    "sha256": "3f0f2c7138e3ea3cf1016b3aecd3fdfc3665478db96001f84e384f9d34e9d54b"
+  },
+  "homedy:3217223": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/khu-tran-cao-van-lam-viec-truc-tiep-gia-tot-es3217223",
+    "fetched_at_utc": "2026-10-11T14:11:57.049378+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/khu-tran-cao-van-lam-viec-truc-tiep-gia-tot-es3217223",
+    "state": "downloaded",
+    "file": "homedy_3217223.html",
+    "sha256": "0ed740755586170799070e62e032cdccbde0527316d7ae48ddb0531ce46c7742"
+  },
+  "homedy:3217251": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-hoa-an-7-lam-viec-truc-tiep-gia-tot-es3217251",
+    "fetched_at_utc": "2026-10-11T14:12:00.049699+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/kiet-hoa-an-7-lam-viec-truc-tiep-gia-tot-es3217251",
+    "state": "downloaded",
+    "file": "homedy_3217251.html",
+    "sha256": "52dfcb6a0976ef8cdea4cd4dd0bda9a1e2e1877a327b33e1480a392c51074a30"
+  },
+  "homedy:3217289": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-378-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3217289",
+    "fetched_at_utc": "2026-10-11T14:12:03.062585+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/kiet-378-dien-bien-phu-lam-viec-truc-tiep-gia-tot-es3217289",
+    "state": "downloaded",
+    "file": "homedy_3217289.html",
+    "sha256": "6c248c88836afd6d268aadb305f911c1655b64041e91f3e5c95ba5ca1abb7902"
+  },
+  "homedy:3217293": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3217293",
+    "fetched_at_utc": "2026-10-11T14:12:06.068239+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/kiet-tran-dinh-tri-lam-viec-truc-tiep-gia-tot-es3217293",
+    "state": "downloaded",
+    "file": "homedy_3217293.html",
+    "sha256": "004336ce17d9797c2d8074c53675917df34dea71f9e3bb3e02943192facb7537"
+  },
+  "homedy:3217303": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-hoang-dieu-lam-viec-truc-tiep-gia-tot-es3217303",
+    "fetched_at_utc": "2026-10-11T14:12:09.081080+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-hai-chau-da-nang/2-tang-hoang-dieu-lam-viec-truc-tiep-gia-tot-es3217303",
+    "state": "downloaded",
+    "file": "homedy_3217303.html",
+    "sha256": "44bdf35ea98025812a17b0216e62a6e1ef02678b1f04af6fffd11d86591421ec"
+  },
+  "homedy:3217305": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-ly-thai-to-lam-viec-truc-tiep-gia-tot-es3217305",
+    "fetched_at_utc": "2026-10-11T14:12:12.090215+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-thanh-khe-da-nang/2-tang-ly-thai-to-lam-viec-truc-tiep-gia-tot-es3217305",
+    "state": "downloaded",
+    "file": "homedy_3217305.html",
+    "sha256": "31c9ee27bfd5c1e5393b7a701bb15d1e8d9e72fd229dfc2323527477b6832d29"
+  },
+  "homedy:3217327": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-dai-hanh-lam-viec-truc-tiep-gia-tot-es3217327",
+    "fetched_at_utc": "2026-10-11T14:12:15.093258+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-cam-le-da-nang/2-tang-dai-hanh-lam-viec-truc-tiep-gia-tot-es3217327",
+    "state": "downloaded",
+    "file": "homedy_3217327.html",
+    "sha256": "72cb4ddaea2047e20b63607f513a10636617e87842e919f6b5890bb0a65d18cb"
+  },
+  "homedy:3220698": {
+    "requested_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-k-97-nguyen-luong-bang-doi-dien-dh-bach-khoa-dau-do-o-to-thoai-mai-es3220698",
+    "fetched_at_utc": "2026-10-11T14:12:18.099636+00:00",
+    "probe_only": false,
+    "http_status": 200,
+    "response_url": "https://homedy.com/ban-nha-rieng-quan-lien-chieu-da-nang/2-tang-k-97-nguyen-luong-bang-doi-dien-dh-bach-khoa-dau-do-o-to-thoai-mai-es3220698",
+    "state": "downloaded",
+    "file": "homedy_3220698.html",
+    "sha256": "df236ff023f4e4c707e43edc9d305edf7641501e94219edb8150c709ee39cfe2"
+  }
+}

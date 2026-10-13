@@ -1,0 +1,53 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ki%E1%BB%87t+59+Tr%C6%B0%C6%A1ng+Ch%C3%AD+C%C6%B0%C6%A1ng",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Kiệt 59 Trương Chí Cương"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:31.000232+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ki%E1%BB%87t+59+Tr%C6%B0%C6%A1ng+Ch%C3%AD+C%C6%B0%C6%A1ng",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 239669970,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118672381,
+      "lat": "16.0301347",
+      "lon": "108.2260357",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Kiệt 59 Trương Chí Cương",
+      "display_name": "Kiệt 59 Trương Chí Cương, Tổ dân phố 52, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Kiệt 59 Trương Chí Cương",
+        "neighbourhood": "Tổ dân phố 52",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0300573",
+        "16.0302137",
+        "108.2255133",
+        "108.2265578"
+      ]
+    }
+  ],
+  "response_sha256": "19b0c8f95bb11c1d214fe3fe63d2e22e69b4ccded448357ac905987f336209bd",
+  "response_body_utf8": "[{\"place_id\":239669970,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118672381,\"lat\":\"16.0301347\",\"lon\":\"108.2260357\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Kiệt 59 Trương Chí Cương\",\"display_name\":\"Kiệt 59 Trương Chí Cương, Tổ dân phố 52, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Kiệt 59 Trương Chí Cương\",\"neighbourhood\":\"Tổ dân phố 52\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0300573\",\"16.0302137\",\"108.2255133\",\"108.2265578\"]}]"
+}

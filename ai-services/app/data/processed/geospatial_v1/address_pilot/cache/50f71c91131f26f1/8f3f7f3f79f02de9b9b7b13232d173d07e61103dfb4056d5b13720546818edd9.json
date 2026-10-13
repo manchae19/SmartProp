@@ -1,0 +1,184 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Trung+H%C3%B2a+1",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Trung Hòa 1"
+  },
+  "fetched_at_utc": "2026-10-12T17:01:05.759148+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Trung+H%C3%B2a+1",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 238175514,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 965856880,
+      "lat": "21.0131965",
+      "lon": "105.7948731",
+      "category": "shop",
+      "type": "car",
+      "place_rank": 30,
+      "importance": 7.283054856179167e-05,
+      "addresstype": "shop",
+      "name": "Mazda",
+      "display_name": "Mazda, 1, Phố Mạc Thái Tông, Trung Kính Hạ, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam",
+      "address": {
+        "shop": "Mazda",
+        "house_number": "1",
+        "road": "Phố Mạc Thái Tông",
+        "neighbourhood": "Trung Kính Hạ",
+        "quarter": "Kẻ Giàn",
+        "suburb": "Phường Yên Hòa",
+        "city": "Hà Nội",
+        "ISO3166-2-lvl4": "VN-HN",
+        "postcode": "11312",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "21.0128980",
+        "21.0134077",
+        "105.7945244",
+        "105.7952217"
+      ]
+    },
+    {
+      "place_id": 239209537,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 846162868,
+      "lat": "21.0137611",
+      "lon": "105.8018029",
+      "category": "building",
+      "type": "apartments",
+      "place_rank": 30,
+      "importance": 7.283054856179167e-05,
+      "addresstype": "building",
+      "name": "Trung Yên Plaza",
+      "display_name": "Trung Yên Plaza, 1, Phố Trung Hoà, Trung Kính Thượng, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam",
+      "address": {
+        "building": "Trung Yên Plaza",
+        "house_number": "1",
+        "road": "Phố Trung Hoà",
+        "neighbourhood": "Trung Kính Thượng",
+        "quarter": "Kẻ Giàn",
+        "suburb": "Phường Yên Hòa",
+        "city": "Hà Nội",
+        "ISO3166-2-lvl4": "VN-HN",
+        "postcode": "11312",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "21.0134992",
+        "21.0140316",
+        "105.8015570",
+        "105.8021446"
+      ]
+    },
+    {
+      "place_id": 239125156,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 5485663761,
+      "lat": "21.0089677",
+      "lon": "105.8029663",
+      "category": "leisure",
+      "type": "fitness_centre",
+      "place_rank": 30,
+      "importance": 7.283054856179167e-05,
+      "addresstype": "leisure",
+      "name": "M Fitness Club",
+      "display_name": "M Fitness Club, 1, Ngõ 163 Hoàng Ngân, Trung Kính Thượng, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam",
+      "address": {
+        "leisure": "M Fitness Club",
+        "house_number": "1",
+        "road": "Ngõ 163 Hoàng Ngân",
+        "neighbourhood": "Trung Kính Thượng",
+        "quarter": "Kẻ Giàn",
+        "suburb": "Phường Yên Hòa",
+        "city": "Hà Nội",
+        "ISO3166-2-lvl4": "VN-HN",
+        "postcode": "11312",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "21.0089177",
+        "21.0090177",
+        "105.8029163",
+        "105.8030163"
+      ]
+    },
+    {
+      "place_id": 259144514,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 337192022,
+      "lat": "15.9933284",
+      "lon": "108.2328929",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Trung Hòa 1",
+      "display_name": "Đường Trung Hòa 1, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Đường Trung Hòa 1",
+        "suburb": "Phường Ngũ Hành Sơn",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9926370",
+        "15.9940198",
+        "108.2327806",
+        "108.2330051"
+      ]
+    },
+    {
+      "place_id": 239553453,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 118672370,
+      "lat": "16.0444172",
+      "lon": "108.2198452",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Hóa Quê Trung 1",
+      "display_name": "Đường Hóa Quê Trung 1, Tổ dân phố 37, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam",
+      "address": {
+        "road": "Đường Hóa Quê Trung 1",
+        "neighbourhood": "Tổ dân phố 37",
+        "suburb": "Phường Hòa Cường",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "02363",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "16.0443388",
+        "16.0444919",
+        "108.2192308",
+        "108.2204601"
+      ]
+    }
+  ],
+  "response_sha256": "d8db7ec25cf52d2d39bcf2ad4c1c650e3d71ab3369ee939ded0a6ce87d7a228b",
+  "response_body_utf8": "[{\"place_id\":238175514,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":965856880,\"lat\":\"21.0131965\",\"lon\":\"105.7948731\",\"category\":\"shop\",\"type\":\"car\",\"place_rank\":30,\"importance\":7.283054856179167e-05,\"addresstype\":\"shop\",\"name\":\"Mazda\",\"display_name\":\"Mazda, 1, Phố Mạc Thái Tông, Trung Kính Hạ, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam\",\"address\":{\"shop\":\"Mazda\",\"house_number\":\"1\",\"road\":\"Phố Mạc Thái Tông\",\"neighbourhood\":\"Trung Kính Hạ\",\"quarter\":\"Kẻ Giàn\",\"suburb\":\"Phường Yên Hòa\",\"city\":\"Hà Nội\",\"ISO3166-2-lvl4\":\"VN-HN\",\"postcode\":\"11312\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"21.0128980\",\"21.0134077\",\"105.7945244\",\"105.7952217\"]},{\"place_id\":239209537,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":846162868,\"lat\":\"21.0137611\",\"lon\":\"105.8018029\",\"category\":\"building\",\"type\":\"apartments\",\"place_rank\":30,\"importance\":7.283054856179167e-05,\"addresstype\":\"building\",\"name\":\"Trung Yên Plaza\",\"display_name\":\"Trung Yên Plaza, 1, Phố Trung Hoà, Trung Kính Thượng, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam\",\"address\":{\"building\":\"Trung Yên Plaza\",\"house_number\":\"1\",\"road\":\"Phố Trung Hoà\",\"neighbourhood\":\"Trung Kính Thượng\",\"quarter\":\"Kẻ Giàn\",\"suburb\":\"Phường Yên Hòa\",\"city\":\"Hà Nội\",\"ISO3166-2-lvl4\":\"VN-HN\",\"postcode\":\"11312\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"21.0134992\",\"21.0140316\",\"105.8015570\",\"105.8021446\"]},{\"place_id\":239125156,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"node\",\"osm_id\":5485663761,\"lat\":\"21.0089677\",\"lon\":\"105.8029663\",\"category\":\"leisure\",\"type\":\"fitness_centre\",\"place_rank\":30,\"importance\":7.283054856179167e-05,\"addresstype\":\"leisure\",\"name\":\"M Fitness Club\",\"display_name\":\"M Fitness Club, 1, Ngõ 163 Hoàng Ngân, Trung Kính Thượng, Kẻ Giàn, Phường Yên Hòa, Hà Nội, 11312, Việt Nam\",\"address\":{\"leisure\":\"M Fitness Club\",\"house_number\":\"1\",\"road\":\"Ngõ 163 Hoàng Ngân\",\"neighbourhood\":\"Trung Kính Thượng\",\"quarter\":\"Kẻ Giàn\",\"suburb\":\"Phường Yên Hòa\",\"city\":\"Hà Nội\",\"ISO3166-2-lvl4\":\"VN-HN\",\"postcode\":\"11312\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"21.0089177\",\"21.0090177\",\"105.8029163\",\"105.8030163\"]},{\"place_id\":259144514,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":337192022,\"lat\":\"15.9933284\",\"lon\":\"108.2328929\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Trung Hòa 1\",\"display_name\":\"Đường Trung Hòa 1, Phường Ngũ Hành Sơn, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Đường Trung Hòa 1\",\"suburb\":\"Phường Ngũ Hành Sơn\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9926370\",\"15.9940198\",\"108.2327806\",\"108.2330051\"]},{\"place_id\":239553453,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":118672370,\"lat\":\"16.0444172\",\"lon\":\"108.2198452\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Hóa Quê Trung 1\",\"display_name\":\"Đường Hóa Quê Trung 1, Tổ dân phố 37, Phường Hòa Cường, Thành phố Đà Nẵng, 02363, Việt Nam\",\"address\":{\"road\":\"Đường Hóa Quê Trung 1\",\"neighbourhood\":\"Tổ dân phố 37\",\"suburb\":\"Phường Hòa Cường\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"02363\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"16.0443388\",\"16.0444919\",\"108.2192308\",\"108.2204601\"]}]"
+}

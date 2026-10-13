@@ -1,0 +1,53 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=V%C5%A9+Mi%C3%AAn",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Vũ Miên"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:14.680181+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=V%C5%A9+Mi%C3%AAn",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 257984825,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 303060485,
+      "lat": "15.9862385",
+      "lon": "108.2072802",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05339795300221252,
+      "addresstype": "road",
+      "name": "Đường Vũ Miên",
+      "display_name": "Đường Vũ Miên, Tổ dân phố Miếu Bông 2, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam",
+      "address": {
+        "road": "Đường Vũ Miên",
+        "neighbourhood": "Tổ dân phố Miếu Bông 2",
+        "suburb": "Phường Hòa Xuân",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "50707",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.9826599",
+        "15.9898171",
+        "108.2070938",
+        "108.2074665"
+      ]
+    }
+  ],
+  "response_sha256": "196cb4987855e5fc9189e1b780958a708a2bf62b37858c2a4556268191f9d3bb",
+  "response_body_utf8": "[{\"place_id\":257984825,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":303060485,\"lat\":\"15.9862385\",\"lon\":\"108.2072802\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05339795300221252,\"addresstype\":\"road\",\"name\":\"Đường Vũ Miên\",\"display_name\":\"Đường Vũ Miên, Tổ dân phố Miếu Bông 2, Phường Hòa Xuân, Hội An, Thành phố Đà Nẵng, 50707, Việt Nam\",\"address\":{\"road\":\"Đường Vũ Miên\",\"neighbourhood\":\"Tổ dân phố Miếu Bông 2\",\"suburb\":\"Phường Hòa Xuân\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"50707\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.9826599\",\"15.9898171\",\"108.2070938\",\"108.2074665\"]}]"
+}

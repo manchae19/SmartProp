@@ -1,0 +1,17 @@
+{
+  "verified": true,
+  "checked_at_utc": "2026-10-12T06:34:07.934634+00:00",
+  "run": "processed/training_v3_diagnostics/runs/3414f42ee47f37a2",
+  "train_n": 1435,
+  "validation_n": 299,
+  "validation_priority_n": 64,
+  "label_review_candidates_n": 37,
+  "raw_inventory_files_sha256_verified": 20,
+  "frozen_data_and_model_output_sha256_verified": true,
+  "other_previous_artifact_metadata_unchanged": true,
+  "labels_and_predictions_match_frozen_v3": true,
+  "test_evaluated": false,
+  "benchmark_collected": 0,
+  "benchmark_scored": 0,
+  "benchmark_exclusion_ids": 8509
+}

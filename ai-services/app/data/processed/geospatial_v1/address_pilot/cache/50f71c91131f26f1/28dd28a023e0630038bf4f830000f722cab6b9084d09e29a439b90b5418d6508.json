@@ -1,0 +1,171 @@
+{
+  "request_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0ng+Di%E1%BB%87u",
+  "endpoint": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "accept-language": "vi",
+    "addressdetails": 1,
+    "city": "Đà Nẵng",
+    "countrycodes": "vn",
+    "format": "jsonv2",
+    "limit": 5,
+    "street": "Hoàng Diệu"
+  },
+  "fetched_at_utc": "2026-10-12T17:00:56.956524+00:00",
+  "attribution": "© OpenStreetMap contributors; ODbL 1.0; https://www.openstreetmap.org/copyright",
+  "http_status": 200,
+  "response_url": "https://nominatim.openstreetmap.org/search?accept-language=vi&addressdetails=1&city=%C4%90%C3%A0+N%E1%BA%B5ng&countrycodes=vn&format=jsonv2&limit=5&street=Ho%C3%A0ng+Di%E1%BB%87u",
+  "state": "ok",
+  "results": [
+    {
+      "place_id": 255105836,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 693138438,
+      "lat": "15.8786550",
+      "lon": "108.3323231",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Hoàng Diệu",
+      "display_name": "Hoàng Diệu, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam",
+      "address": {
+        "road": "Hoàng Diệu",
+        "quarter": "Phố cổ Hội An",
+        "suburb": "Phường Hội An",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "64000",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8776554",
+        "15.8796528",
+        "108.3320052",
+        "108.3326353"
+      ]
+    },
+    {
+      "place_id": 257846265,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 39369520,
+      "lat": "15.8764870",
+      "lon": "108.3330316",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05338267719539174,
+      "addresstype": "road",
+      "name": "Hoàng Diệu",
+      "display_name": "Hoàng Diệu, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 51319, Việt Nam",
+      "address": {
+        "road": "Hoàng Diệu",
+        "quarter": "Phố cổ Hội An",
+        "suburb": "Phường Hội An",
+        "city": "Hội An",
+        "ISO3166-2-lvl4": "VN-DN",
+        "postcode": "51319",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.8763123",
+        "15.8766613",
+        "108.3329943",
+        "108.3330668"
+      ]
+    },
+    {
+      "place_id": 257619100,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 532520415,
+      "lat": "15.5659911",
+      "lon": "108.4953778",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.05337842603189132,
+      "addresstype": "road",
+      "name": "Hoàng Diệu",
+      "display_name": "Hoàng Diệu, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Hoàng Diệu",
+        "suburb": "Phường Tam Kỳ",
+        "city": "Tam Kỳ",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5652856",
+        "15.5664701",
+        "108.4943882",
+        "108.4963676"
+      ]
+    },
+    {
+      "place_id": 258449211,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 354257760,
+      "lat": "15.4395209",
+      "lon": "107.7943141",
+      "category": "highway",
+      "type": "tertiary",
+      "place_rank": 26,
+      "importance": 0.053370834668497714,
+      "addresstype": "road",
+      "name": "Hoàng Diệu",
+      "display_name": "Hoàng Diệu, Xã Khâm Đức, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Hoàng Diệu",
+        "town": "Xã Khâm Đức",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.4392340",
+        "15.4398078",
+        "107.7933251",
+        "107.7953030"
+      ]
+    },
+    {
+      "place_id": 258269914,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1050996398,
+      "lat": "15.5823491",
+      "lon": "108.1090528",
+      "category": "highway",
+      "type": "residential",
+      "place_rank": 26,
+      "importance": 0.053356149385824336,
+      "addresstype": "road",
+      "name": "Hoàng Diệu",
+      "display_name": "Hoàng Diệu, Xã Hiệp Đức, Thành phố Đà Nẵng, Việt Nam",
+      "address": {
+        "road": "Hoàng Diệu",
+        "town": "Xã Hiệp Đức",
+        "city": "Thành phố Đà Nẵng",
+        "ISO3166-2-lvl4": "VN-DN",
+        "country": "Việt Nam",
+        "country_code": "vn"
+      },
+      "boundingbox": [
+        "15.5821427",
+        "15.5825554",
+        "108.1090126",
+        "108.1090930"
+      ]
+    }
+  ],
+  "response_sha256": "949f0b6c40c864622514fe76a6027754f5fce8fdf0016c1d6fdcdd51569a4726",
+  "response_body_utf8": "[{\"place_id\":255105836,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":693138438,\"lat\":\"15.8786550\",\"lon\":\"108.3323231\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Hoàng Diệu\",\"display_name\":\"Hoàng Diệu, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 64000, Việt Nam\",\"address\":{\"road\":\"Hoàng Diệu\",\"quarter\":\"Phố cổ Hội An\",\"suburb\":\"Phường Hội An\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"64000\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8776554\",\"15.8796528\",\"108.3320052\",\"108.3326353\"]},{\"place_id\":257846265,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":39369520,\"lat\":\"15.8764870\",\"lon\":\"108.3330316\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05338267719539174,\"addresstype\":\"road\",\"name\":\"Hoàng Diệu\",\"display_name\":\"Hoàng Diệu, Phố cổ Hội An, Phường Hội An, Hội An, Thành phố Đà Nẵng, 51319, Việt Nam\",\"address\":{\"road\":\"Hoàng Diệu\",\"quarter\":\"Phố cổ Hội An\",\"suburb\":\"Phường Hội An\",\"city\":\"Hội An\",\"ISO3166-2-lvl4\":\"VN-DN\",\"postcode\":\"51319\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.8763123\",\"15.8766613\",\"108.3329943\",\"108.3330668\"]},{\"place_id\":257619100,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":532520415,\"lat\":\"15.5659911\",\"lon\":\"108.4953778\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.05337842603189132,\"addresstype\":\"road\",\"name\":\"Hoàng Diệu\",\"display_name\":\"Hoàng Diệu, Phường Tam Kỳ, Tam Kỳ, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Hoàng Diệu\",\"suburb\":\"Phường Tam Kỳ\",\"city\":\"Tam Kỳ\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5652856\",\"15.5664701\",\"108.4943882\",\"108.4963676\"]},{\"place_id\":258449211,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":354257760,\"lat\":\"15.4395209\",\"lon\":\"107.7943141\",\"category\":\"highway\",\"type\":\"tertiary\",\"place_rank\":26,\"importance\":0.053370834668497714,\"addresstype\":\"road\",\"name\":\"Hoàng Diệu\",\"display_name\":\"Hoàng Diệu, Xã Khâm Đức, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Hoàng Diệu\",\"town\":\"Xã Khâm Đức\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.4392340\",\"15.4398078\",\"107.7933251\",\"107.7953030\"]},{\"place_id\":258269914,\"licence\":\"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright\",\"osm_type\":\"way\",\"osm_id\":1050996398,\"lat\":\"15.5823491\",\"lon\":\"108.1090528\",\"category\":\"highway\",\"type\":\"residential\",\"place_rank\":26,\"importance\":0.053356149385824336,\"addresstype\":\"road\",\"name\":\"Hoàng Diệu\",\"display_name\":\"Hoàng Diệu, Xã Hiệp Đức, Thành phố Đà Nẵng, Việt Nam\",\"address\":{\"road\":\"Hoàng Diệu\",\"town\":\"Xã Hiệp Đức\",\"city\":\"Thành phố Đà Nẵng\",\"ISO3166-2-lvl4\":\"VN-DN\",\"country\":\"Việt Nam\",\"country_code\":\"vn\"},\"boundingbox\":[\"15.5821427\",\"15.5825554\",\"108.1090126\",\"108.1090930\"]}]"
+}

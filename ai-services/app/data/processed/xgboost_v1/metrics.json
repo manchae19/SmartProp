@@ -1,0 +1,129 @@
+{
+  "xgboost_version": "3.4.1",
+  "target": "total asking price in million VND",
+  "features": [
+    "area_sqm",
+    "train-only one-hot location_feature"
+  ],
+  "seed": 42,
+  "source_sha256": {
+    "train.csv": "a4fe7b1d603c0899d95e814b6de631a4a5b88362b99774cd4809738615c1d7ed",
+    "validation.csv": "d5c3f2f14db9243075c9b75beddc8d0f5fecb4f98f3db653ef1dc2429cd6d377",
+    "test.csv": "d8bb121252f6ab966758736393490f8b969637d72f1734067d5b4e5d1cd15ad0"
+  },
+  "categories": {
+    "Nhà ở": {
+      "counts": {
+        "train": 657,
+        "validation": 68,
+        "test": 80
+      },
+      "params": {
+        "objective": "reg:squarederror",
+        "eval_metric": "mae",
+        "tree_method": "hist",
+        "max_depth": 3,
+        "eta": 0.03,
+        "min_child_weight": 5,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 10,
+        "seed": 42,
+        "nthread": 4
+      },
+      "best_iteration": 484,
+      "model_file": "category_1.json",
+      "validation": {
+        "n": 68,
+        "mae_million": 2761.2581751206344,
+        "median_ape_pct": 19.742906863656174,
+        "mape_pct": 33.6276287630176,
+        "r2": 0.38884004784425763
+      },
+      "test": {
+        "n": 80,
+        "mae_million": 3121.6641052246096,
+        "median_ape_pct": 25.35201087869624,
+        "mape_pct": 37.62623134525137,
+        "r2": 0.5787132897767295
+      }
+    },
+    "Đất nền": {
+      "counts": {
+        "train": 292,
+        "validation": 37,
+        "test": 37
+      },
+      "params": {
+        "objective": "reg:squarederror",
+        "eval_metric": "mae",
+        "tree_method": "hist",
+        "max_depth": 3,
+        "eta": 0.03,
+        "min_child_weight": 5,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 10,
+        "seed": 42,
+        "nthread": 4
+      },
+      "best_iteration": 122,
+      "model_file": "category_2.json",
+      "validation": {
+        "n": 37,
+        "mae_million": 4142.847537478885,
+        "median_ape_pct": 53.85933166142751,
+        "mape_pct": 91.92887451385701,
+        "r2": 0.34639252134017895
+      },
+      "test": {
+        "n": 37,
+        "mae_million": 2931.4841572529563,
+        "median_ape_pct": 48.907557896205354,
+        "mape_pct": 101.33667025170368,
+        "r2": 0.7072253803338636
+      }
+    },
+    "Căn hộ chung cư": {
+      "counts": {
+        "train": 171,
+        "validation": 21,
+        "test": 20
+      },
+      "params": {
+        "objective": "reg:squarederror",
+        "eval_metric": "mae",
+        "tree_method": "hist",
+        "max_depth": 3,
+        "eta": 0.03,
+        "min_child_weight": 5,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 10,
+        "seed": 42,
+        "nthread": 4
+      },
+      "best_iteration": 263,
+      "model_file": "category_3.json",
+      "validation": {
+        "n": 21,
+        "mae_million": 952.4348842075893,
+        "median_ape_pct": 24.5467041015625,
+        "mape_pct": 27.779445896667198,
+        "r2": 0.6342159459437298
+      },
+      "test": {
+        "n": 20,
+        "mae_million": 812.895068359375,
+        "median_ape_pct": 10.41277942435169,
+        "mape_pct": 29.502337939571117,
+        "r2": 0.6828963850830845
+      }
+    }
+  },
+  "limitations": [
+    "Automatically screened asking prices; not verified transactions.",
+    "Suspected duplicate grouping can miss or overgroup properties.",
+    "Grouped random holdouts, not future-time evaluation; small category test sets."
+  ]
+}
