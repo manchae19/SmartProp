@@ -1,8 +1,0 @@
-User-agent: *
-Disallow: /publish/handler/*
-Disallow: /publish/form/*
-Disallow: /can-mua*
-Disallow: /can-thue*
-Disallow: /nha-dat/can-mua*
-Disallow: /nha-dat/can-thue*
-Sitemap: https://alonhadat.com.vn/sitemap.xml
