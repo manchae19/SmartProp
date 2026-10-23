@@ -102,7 +102,7 @@ function goNext() {
         </h1>
 
         <p
-          class="mt-2 text-[11px] uppercase
+          class="mt-2 text-[12px] uppercase
                  tracking-[0.22em] text-gray-200 font-semibold"
         >
           BƯỚC 2 / 4 · THÔNG TIN & ẢNH
@@ -139,7 +139,7 @@ function goNext() {
             <!-- Title -->
             <div class="mb-4">
               <label
-                class="block text-[11px] font-medium
+                class="block text-[12px] font-medium
                        text-[#1E325A] mb-1.5"
               >
                 Tiêu đề tin đăng
@@ -243,7 +243,7 @@ function goNext() {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400
+              class="text-[11px] text-gray-400
                      leading-relaxed mb-4"
             >
               Tọa độ lưu dưới dạng POINT trong MySQL Spatial
@@ -268,7 +268,7 @@ function goNext() {
               <div
                 class="bg-white rounded-md
                        px-5 py-2
-                       text-[10px] text-gray-400"
+                       text-[11px] text-gray-400"
               >
                 mapbox gl js — kéo ghim để chỉnh tọa độ
               </div>
@@ -284,7 +284,7 @@ function goNext() {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400
+              class="text-[11px] text-gray-400
                      leading-relaxed mb-4"
             >
               Ảnh sẽ được đối chiếu tương đồng và nhận diện
@@ -303,7 +303,7 @@ function goNext() {
                 <span
                   class="absolute top-2 left-2
                          bg-[#1E325A] text-white
-                         text-[9px] px-2 py-1 rounded"
+                         text-[10px] px-2 py-1 rounded"
                 >
                   Ảnh bìa
                 </span>
@@ -336,7 +336,7 @@ function goNext() {
                   +
                 </span>
 
-                <span class="text-[10px] mt-1">
+                <span class="text-[11px] mt-1">
                   Thêm ảnh
                 </span>
 
@@ -359,7 +359,7 @@ function goNext() {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400
+              class="text-[11px] text-gray-400
                      leading-relaxed mb-4"
             >
               Những tiện ích bạn chọn sẽ được so với vật thể
@@ -374,7 +374,7 @@ function goNext() {
                 type="button"
                 @click="toggleAmenity(item)"
                 :class="[
-                  'px-4 py-1.5 rounded-full border text-[10px] transition',
+                  'px-4 py-1.5 rounded-full border text-[11px] transition',
                   selectedAmenities.includes(item)
                     ? 'bg-[#1E325A] border-[#1E325A] text-white'
                     : 'bg-white border-gray-200 text-gray-500 hover:border-[#1E325A]'
@@ -400,7 +400,7 @@ function goNext() {
                    p-6"
           >
             <p
-              class="text-[9px]
+              class="text-[10px]
                      tracking-[0.18em]
                      text-white/60"
             >
@@ -412,7 +412,7 @@ function goNext() {
             </div>
 
             <p
-              class="text-[9px]
+              class="text-[10px]
                      text-white/60
                      leading-relaxed mt-2"
             >
@@ -428,7 +428,7 @@ function goNext() {
             </h3>
 
             <!-- Factor -->
-            <div class="space-y-4 text-[10px]">
+            <div class="space-y-4 text-[11px]">
 
               <div
                 class="grid grid-cols-[1fr_55px_45px]
@@ -499,7 +499,7 @@ function goNext() {
             <div class="h-px bg-white/10 my-6"></div>
 
             <p
-              class="text-[9px]
+              class="text-[10px]
                      leading-relaxed text-white/50"
             >
               Thông tin tham khảo, không phải kết quả
@@ -549,7 +549,7 @@ function goNext() {
 <style>
 .form-label {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #1e325a;
   margin-bottom: 6px;
@@ -562,7 +562,7 @@ function goNext() {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: white;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #6b7280;
   outline: none;
 }

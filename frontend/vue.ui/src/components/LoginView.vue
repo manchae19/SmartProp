@@ -79,9 +79,6 @@
                   <span>Đặt lại mật khẩu</span>
                 </button>
                 
-                <p class="security-note">
-                  Mật khẩu được mã hóa, phiên làm việc dùng JWT, kết nối qua TLS.
-                </p>
               </form>
             </template>
 
@@ -220,9 +217,8 @@
                   <span>{{ isForgotPassword ? 'Gửi liên kết đặt lại ↗' : (isLoginTab ? 'Đăng nhập' : 'Đăng ký') }}</span>
                 </button>
                 
-                <!-- Chú thích chân trang thay đổi theo thiết kế mới khi ở màn hình quên mật khẩu -->
-                <p class="security-note">
-                  {{ isForgotPassword ? 'Liên kết có hiệu lực trong 15 phút và chỉ dùng được một lần.' : 'Mật khẩu được mã hóa, phiên làm việc dùng JWT, kết nối qua TLS.' }}
+                <p v-if="isForgotPassword" class="security-note">
+                  Liên kết có hiệu lực trong 15 phút và chỉ dùng được một lần.
                 </p>
                 
                 <a href="#" class="admin-link" v-if="!isForgotPassword" @click.prevent="handleLinkClick">
@@ -394,7 +390,7 @@ html, body, #app {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .login-container {
@@ -453,8 +449,8 @@ html, body, #app {
   bottom: 40px;
   z-index: 4;
   color: rgba(255, 255, 255, 0.55);
-  font-family: monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -499,12 +495,12 @@ html, body, #app {
 .s {
   color: #1e325a;
   font-weight: 800;
-  font-size: 20px;
+  font-size: var(--text-xl);
 }
 
 .smart-prop {
   color: #ffffff;
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -527,7 +523,7 @@ html, body, #app {
 
 .main-title {
   color: #ffffff;
-  font-size: 36px;
+  font-size: var(--text-4xl);
   font-weight: 700;
   line-height: 1.2;
   text-align: left;
@@ -535,7 +531,7 @@ html, body, #app {
 
 .sub-title {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 14.5px;
+  font-size: 15.5px;
   line-height: 1.5;
   text-align: left;
 }
@@ -562,21 +558,21 @@ html, body, #app {
 
 .role-num {
   color: rgba(255, 255, 255, 0.6);
-  font-family: monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   font-weight: 700;
 }
 
 .role-title {
   color: #ffffff;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
   margin-bottom: 2px;
 }
 
 .role-desc {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
@@ -609,7 +605,7 @@ html, body, #app {
   display: inline-flex;
   align-items: center;
   color: rgba(30, 50, 90, 0.7);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   text-decoration: none;
   margin-bottom: 14px;
@@ -636,7 +632,7 @@ html, body, #app {
   justify-content: center;
   flex: 1;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: rgba(30, 50, 90, 0.65);
   font-weight: 600;
   border: none;
@@ -666,14 +662,14 @@ html, body, #app {
 
 .welcome-title {
   color: #1e325a;
-  font-size: 22px;
+  font-size: 23px;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .welcome-desc {
   color: rgba(30, 50, 90, 0.65);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
 }
 
@@ -716,7 +712,7 @@ html, body, #app {
 }
 
 .resend-text {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: rgba(30, 50, 90, 0.65);
   text-align: center;
 }
@@ -760,7 +756,7 @@ html, body, #app {
 .strength-bar.bar-strong { background: #10b981 !important; }
 
 .strength-label {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -789,7 +785,7 @@ html, body, #app {
 
 .label {
   color: #1e325a;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   text-align: left;
   display: block;
@@ -804,7 +800,7 @@ html, body, #app {
 
 .forgot-link-new {
   color: rgba(30, 50, 90, 0.7);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-decoration: none;
   font-weight: 500;
 }
@@ -826,7 +822,7 @@ html, body, #app {
 .input-box input {
   width: 100%;
   color: #1e325a;
-  font-size: 14px;
+  font-size: var(--text-sm);
   outline: none;
   background: transparent;
   border: none;
@@ -858,13 +854,13 @@ html, body, #app {
 
 .submit-btn span {
   color: #ffffff;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
 }
 
 .security-note {
   color: rgba(30, 50, 90, 0.5);
-  font-size: 11px;
+  font-size: 12px;
   text-align: center;
   margin-top: 2px;
   line-height: 1.4;
@@ -873,7 +869,7 @@ html, body, #app {
 .admin-link {
   color: rgba(30, 50, 90, 0.7);
   text-align: center;
-  font-size: 12.5px;
+  font-size: 13.5px;
   cursor: pointer;
   margin-top: 2px;
   display: block;

@@ -150,22 +150,22 @@ const logout = () => {
               Hoàng Văn Bình
             </h2>
 
-            <p class="text-[11px] text-white/60 mt-1">
+            <p class="text-[12px] text-white/60 mt-1">
               hoang.binh@gmail.com
             </p>
 
             <div
-              class="inline-flex mt-3 bg-emerald-400/20 text-emerald-200 px-3 py-1 rounded-full text-[10px]"
+              class="inline-flex mt-3 bg-emerald-400/20 text-emerald-200 px-3 py-1 rounded-full text-[11px]"
             >
               Người mua / người thuê
             </div>
 
             <div class="border-t border-white/10 mt-5 pt-5">
-              <p class="text-[10px] text-white/50">
+              <p class="text-[11px] text-white/50">
                 Thành viên từ 04/01/2025
               </p>
 
-              <p class="text-[10px] text-white/50 mt-2">
+              <p class="text-[11px] text-white/50 mt-2">
                 Đăng nhập gần nhất: hôm nay, 09:42
               </p>
             </div>
@@ -188,7 +188,7 @@ const logout = () => {
               </div>
 
               <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
+                class="text-[10px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
               >
                 Tin đã đăng
               </div>
@@ -206,7 +206,7 @@ const logout = () => {
               </div>
 
               <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
+                class="text-[10px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
               >
                 Yêu thích
               </div>
@@ -223,7 +223,7 @@ const logout = () => {
               </div>
 
               <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4"
+                class="text-[10px] text-gray-400 mt-1 text-center leading-4"
               >
                 Lượt xem hồ sơ
               </div>
@@ -256,7 +256,7 @@ const logout = () => {
                 </h3>
 
                 <p
-                  class="text-[9px] text-gray-400 mt-1"
+                  class="text-[10px] text-gray-400 mt-1"
                 >
                   Xem trạng thái các báo cáo đã gửi
                 </p>
@@ -282,14 +282,14 @@ const logout = () => {
             </h3>
 
             <p
-              class="text-[10px] text-[#a7745d] mt-3 leading-relaxed"
+              class="text-[11px] text-[#a7745d] mt-3 leading-relaxed"
             >
               Nâng cấp lên tài khoản Môi giới để đăng tin, quản lý danh sách
               bất động sản và nhận thêm công cụ hỗ trợ.
             </p>
 
             <button
-              class="mt-7 bg-[#c9683c] hover:bg-[#b95b32] text-white rounded-full px-5 py-2.5 text-[10px] transition"
+              class="mt-7 bg-[#c9683c] hover:bg-[#b95b32] text-white rounded-full px-5 py-2.5 text-[11px] transition"
             >
               Đăng ký tài khoản môi giới
             </button>
@@ -311,7 +311,7 @@ const logout = () => {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
+              class="text-[11px] text-gray-400 mt-1 mb-5"
             >
               Thông tin này hiển thị với môi giới khi bạn nhắn tin hoặc yêu cầu
               liên hệ.
@@ -324,7 +324,7 @@ const logout = () => {
               <!-- NAME -->
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Họ và tên
                 </label>
@@ -339,7 +339,7 @@ const logout = () => {
               <!-- PHONE -->
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Số điện thoại
                 </label>
@@ -354,7 +354,7 @@ const logout = () => {
               <!-- EMAIL -->
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Email
                 </label>
@@ -369,7 +369,7 @@ const logout = () => {
               <!-- DISTRICT -->
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Khu vực quan tâm
                 </label>
@@ -384,7 +384,7 @@ const logout = () => {
               <!-- ADDRESS -->
               <div class="md:col-span-2">
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Địa chỉ liên hệ
                 </label>
@@ -404,13 +404,13 @@ const logout = () => {
 
               <button
                 @click="saveProfile"
-                class="bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
+                class="bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[12px] hover:bg-[#263f70] transition"
               >
                 Lưu thay đổi
               </button>
 
               <button
-                class="bg-white border border-gray-200 text-gray-500 rounded-full px-5 py-2.5 text-[11px]"
+                class="bg-white border border-gray-200 text-gray-500 rounded-full px-5 py-2.5 text-[12px]"
               >
                 Hủy
               </button>
@@ -427,7 +427,7 @@ const logout = () => {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
+              class="text-[11px] text-gray-400 mt-1 mb-5"
             >
               Đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.
             </p>
@@ -435,7 +435,7 @@ const logout = () => {
             <!-- CURRENT PASSWORD -->
             <div>
               <label
-                class="text-[10px] text-gray-500"
+                class="text-[11px] text-gray-500"
               >
                 Mật khẩu hiện tại
               </label>
@@ -455,7 +455,7 @@ const logout = () => {
 
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Mật khẩu mới
                 </label>
@@ -471,7 +471,7 @@ const logout = () => {
               <!-- CONFIRM PASSWORD -->
               <div>
                 <label
-                  class="text-[10px] text-gray-500"
+                  class="text-[11px] text-gray-500"
                 >
                   Xác nhận mật khẩu mới
                 </label>
@@ -488,7 +488,7 @@ const logout = () => {
 
             <button
               @click="changePassword"
-              class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
+              class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[12px] hover:bg-[#263f70] transition"
             >
               Đổi mật khẩu
             </button>
@@ -503,7 +503,7 @@ const logout = () => {
             </h2>
 
             <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
+              class="text-[11px] text-gray-400 mt-1 mb-5"
             >
               Chọn kênh và loại thông báo bạn muốn nhận từ SmartProp.
             </p>
@@ -520,7 +520,7 @@ const logout = () => {
                 </h3>
 
                 <p
-                  class="text-[9px] text-gray-400 mt-1"
+                  class="text-[10px] text-gray-400 mt-1"
                 >
                   Email khi có tin đăng khớp bộ lọc tìm kiếm đã lưu.
                 </p>
@@ -558,7 +558,7 @@ const logout = () => {
                 </h3>
 
                 <p
-                  class="text-[9px] text-gray-400 mt-1"
+                  class="text-[10px] text-gray-400 mt-1"
                 >
                   Thông báo khi có tin nhắn mới liên quan tới tin đăng.
                 </p>
@@ -596,7 +596,7 @@ const logout = () => {
                 </h3>
 
                 <p
-                  class="text-[9px] text-gray-400 mt-1"
+                  class="text-[10px] text-gray-400 mt-1"
                 >
                   Cập nhật khi tin đăng hoặc báo cáo của bạn được xử lý.
                 </p>

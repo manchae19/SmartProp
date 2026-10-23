@@ -123,7 +123,7 @@ export default {
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: bold;
   color: #1e325a;
   margin-bottom: 4px;
@@ -161,7 +161,7 @@ export default {
 }
 
 .avatar-letter {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: bold;
   color: #1e325a;
 }
@@ -174,20 +174,20 @@ export default {
 }
 
 .user-name {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
   color: #1e325a;
 }
 
 .user-email {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
 /* Vai trò (Role) */
 .user-role {
   flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -203,7 +203,7 @@ export default {
 /* Số lượng tin */
 .user-posts-count {
   flex: 0.8;
-  font-size: 13px;
+  font-size: 14px;
   color: #374151;
   font-weight: 500;
 }
@@ -212,7 +212,7 @@ export default {
 .user-status {
   padding: 4px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   text-align: center;
 }
@@ -230,7 +230,7 @@ export default {
 /* Ngày tham gia */
 .user-joined-date {
   flex: 1.2;
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   text-align: right;
 }
@@ -246,7 +246,7 @@ export default {
   border: 1px solid #fecaca;
   padding: 7px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
@@ -262,7 +262,7 @@ export default {
   border: none;
   padding: 7px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.2s;

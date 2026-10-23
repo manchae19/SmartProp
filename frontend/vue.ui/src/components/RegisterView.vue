@@ -210,7 +210,7 @@ html, body, #app {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .login-container {
@@ -269,8 +269,8 @@ html, body, #app {
   bottom: 40px;
   z-index: 4;
   color: rgba(255, 255, 255, 0.55);
-  font-family: monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -315,12 +315,12 @@ html, body, #app {
 .s {
   color: #1e325a;
   font-weight: 800;
-  font-size: 20px;
+  font-size: var(--text-xl);
 }
 
 .smart-prop {
   color: #ffffff;
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -343,7 +343,7 @@ html, body, #app {
 
 .main-title {
   color: #ffffff;
-  font-size: 36px;
+  font-size: var(--text-4xl);
   font-weight: 700;
   line-height: 1.2;
   text-align: left;
@@ -351,7 +351,7 @@ html, body, #app {
 
 .sub-title {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 14.5px;
+  font-size: 15.5px;
   line-height: 1.5;
   text-align: left;
 }
@@ -378,21 +378,21 @@ html, body, #app {
 
 .role-num {
   color: rgba(255, 255, 255, 0.6);
-  font-family: monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 14px;
   font-weight: 700;
 }
 
 .role-title {
   color: #ffffff;
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 600;
   margin-bottom: 2px;
 }
 
 .role-desc {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.35;
 }
 
@@ -437,7 +437,7 @@ html, body, #app {
   justify-content: center;
   flex: 1;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(30, 50, 90, 0.65);
   font-weight: 600;
   border: none;
@@ -459,7 +459,7 @@ html, body, #app {
 
 .welcome-title {
   color: #1e325a;
-  font-size: 18px;
+  font-size: var(--text-lg);
   font-weight: 700;
   margin-bottom: 2px;
   text-align: left;
@@ -467,7 +467,7 @@ html, body, #app {
 
 .welcome-desc {
   color: rgba(30, 50, 90, 0.65);
-  font-size: 11.5px;
+  font-size: 12.5px;
   line-height: 1.35;
   text-align: left;
 }
@@ -489,7 +489,7 @@ html, body, #app {
 
 .label {
   color: #1e325a;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-align: left;
   display: block;
@@ -508,7 +508,7 @@ html, body, #app {
 .input-box input {
   width: 100%;
   color: #1e325a;
-  font-size: 12.5px;
+  font-size: 13.5px;
   outline: none;
   background: transparent;
   border: none;
@@ -540,13 +540,13 @@ html, body, #app {
 
 .submit-btn span {
   color: #ffffff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .security-note {
   color: rgba(30, 50, 90, 0.5);
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   margin-top: 4px;
   line-height: 1.3;
@@ -554,7 +554,7 @@ html, body, #app {
 
 .switch-auth-mode {
   text-align: center;
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: rgba(30, 50, 90, 0.7);
   margin-top: 4px;
 }

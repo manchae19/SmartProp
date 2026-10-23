@@ -22,19 +22,19 @@
             <div
               class="flex h-[26px] w-[26px] items-center justify-center overflow-hidden rounded-lg bg-white/90"
             >
-              <span class="font-['BeVietnamPro'] text-[13px] font-semibold text-[#1e325a]">
+              <span class="font-sans text-[14px] font-semibold text-[#1e325a]">
                 S
               </span>
             </div>
 
-            <div class="font-['BeVietnamPro'] text-[17px] font-medium tracking-[-0.3px] text-white">
+            <div class="font-sans text-[18px] font-medium tracking-[-0.3px] text-white">
               SmartProp
             </div>
           </div>
 
           <div class="flex flex-col items-start overflow-hidden">
             <h1
-              class="w-full max-w-[560px] font-['BeVietnamPro'] text-[36px] font-normal leading-tight tracking-[-1.4px] text-white sm:text-[44px]"
+              class="w-full max-w-[560px] font-sans text-4xl font-normal leading-tight tracking-[-1.4px] text-white sm:text-[46px]"
             >
               Ba vai trò, ba quyền hạn
             </h1>
@@ -42,7 +42,7 @@
             <div class="h-4"></div>
 
             <p
-              class="w-full max-w-[600px] font-['BeVietnamPro'] text-[17px] font-normal leading-relaxed text-white"
+              class="w-full max-w-[600px] font-sans text-[18px] font-normal leading-relaxed text-white"
             >
               Phân quyền được áp dụng ngay sau khi xác thực. Mỗi vai trò chỉ thấy
               phần chức năng thuộc quyền của mình.
@@ -70,7 +70,7 @@
           </div>
 
           <div
-            class="font-['JetBrainsMono'] text-[11px] font-normal tracking-[0.5px] text-white/65"
+            class="font-mono text-[12px] font-normal tracking-[0.5px] text-white/65"
           >
             ĐÀ NẴNG · C2SE.01
           </div>
@@ -89,7 +89,7 @@
                 class="flex flex-1 items-center justify-center rounded-full bg-white py-[9px] shadow-[0_2px_8px_-3px_rgba(30,50,90,0.3)]"
                 @click="activeTab = 'login'"
               >
-                <span class="font-['BeVietnamPro'] text-[13.5px] font-medium text-[#1e325a]/95">
+                <span class="font-sans text-[14.5px] font-medium text-[#1e325a]/95">
                   Đăng nhập
                 </span>
               </button>
@@ -99,7 +99,7 @@
                 class="flex flex-1 items-center justify-center rounded-full py-[9px]"
                 @click="activeTab = 'signup'"
               >
-                <span class="font-['BeVietnamPro'] text-[13.5px] font-normal text-[#1e325a]/60">
+                <span class="font-sans text-[14.5px] font-normal text-[#1e325a]/60">
                   Đăng ký
                 </span>
               </button>
@@ -107,13 +107,13 @@
 
             <div class="flex flex-col gap-1.5 overflow-hidden pt-6">
               <h2
-                class="font-['BeVietnamPro'] text-[23px] font-normal leading-tight tracking-[-0.5px] text-[#1e325a]/95"
+                class="font-sans text-[24px] font-normal leading-tight tracking-[-0.5px] text-[#1e325a]/95"
               >
                 {{ activeTab === 'login' ? 'Chào bạn trở lại' : 'Tạo tài khoản' }}
               </h2>
 
               <p
-                class="w-full max-w-[336px] font-['BeVietnamPro'] text-[13.5px] font-normal leading-relaxed text-[#1e325a]/60"
+                class="w-full max-w-[336px] font-sans text-[14.5px] font-normal leading-relaxed text-[#1e325a]/60"
               >
                 {{
                   activeTab === 'login'
@@ -125,7 +125,7 @@
 
             <form class="flex flex-col gap-3.5 overflow-hidden pt-6" @submit.prevent="handleSubmit">
               <label class="flex flex-col gap-1.5 overflow-hidden">
-                <span class="font-['BeVietnamPro'] text-[12.5px] font-medium text-[#1e325a]/75">
+                <span class="font-sans text-[13.5px] font-medium text-[#1e325a]/75">
                   Email
                 </span>
 
@@ -134,12 +134,12 @@
                   type="email"
                   placeholder="ban@email.com"
                   autocomplete="email"
-                  class="w-full rounded-xl border border-[#1e325a]/14 bg-white/75 px-3.5 py-3 font-['BeVietnamPro'] text-sm font-normal text-[#1e325a] outline-none placeholder:text-[#1e325a]/40 focus:border-[#1e325a]/40"
+                  class="w-full rounded-xl border border-[#1e325a]/14 bg-white/75 px-3.5 py-3 font-sans text-sm font-normal text-[#1e325a] outline-none placeholder:text-[#1e325a]/40 focus:border-[#1e325a]/40"
                 />
               </label>
 
               <label class="flex flex-col gap-1.5 overflow-hidden">
-                <span class="font-['BeVietnamPro'] text-[12.5px] font-medium text-[#1e325a]/75">
+                <span class="font-sans text-[13.5px] font-medium text-[#1e325a]/75">
                   Mật khẩu
                 </span>
 
@@ -148,27 +148,27 @@
                   type="password"
                   placeholder="Tối thiểu 8 ký tự"
                   :autocomplete="activeTab === 'login' ? 'current-password' : 'new-password'"
-                  class="w-full rounded-xl border border-[#1e325a]/14 bg-white/75 px-3.5 py-3 font-['BeVietnamPro'] text-sm font-normal text-[#1e325a] outline-none placeholder:text-[#1e325a]/40 focus:border-[#1e325a]/40"
+                  class="w-full rounded-xl border border-[#1e325a]/14 bg-white/75 px-3.5 py-3 font-sans text-sm font-normal text-[#1e325a] outline-none placeholder:text-[#1e325a]/40 focus:border-[#1e325a]/40"
                 />
               </label>
 
               <button
                 type="submit"
-                class="flex w-full items-center justify-center gap-[9px] rounded-full bg-[#1e325a]/90 py-[13px] font-['BeVietnamPro'] text-[14.5px] font-normal text-white transition hover:bg-[#1e325a] active:scale-[0.99]"
+                class="flex w-full items-center justify-center gap-[9px] rounded-full bg-[#1e325a]/90 py-[13px] font-sans text-[15.5px] font-normal text-white transition hover:bg-[#1e325a] active:scale-[0.99]"
               >
                 <span>{{ activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký' }}</span>
-                <span class="text-[13px]">↗</span>
+                <span class="text-[14px]">↗</span>
               </button>
 
               <p
-                class="w-full max-w-[336px] font-['BeVietnamPro'] text-[11.5px] font-normal leading-relaxed text-[#1e325a]/50"
+                class="w-full max-w-[336px] font-sans text-[12.5px] font-normal leading-relaxed text-[#1e325a]/50"
               >
                 Mật khẩu được băm, phiên làm việc dùng JWT, kết nối qua TLS.
               </p>
 
               <button
                 type="button"
-                class="w-full max-w-[336px] text-center font-['BeVietnamPro'] text-[12px] font-normal text-[#1e325a]/55 hover:text-[#1e325a]/80"
+                class="w-full max-w-[336px] text-center font-sans text-xs font-normal text-[#1e325a]/55 hover:text-[#1e325a]/80"
                 @click="handleAdminLogin"
               >
                 Đăng nhập quản trị

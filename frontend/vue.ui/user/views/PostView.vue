@@ -87,7 +87,7 @@ const areas = [
           </h1>
 
           <div
-            class="text-[10px] uppercase tracking-[0.25em]
+            class="text-[11px] uppercase tracking-[0.25em]
                    text-white/70"
           >
             BƯỚC 1 / 4 · LOẠI HÌNH & HÌNH THỨC
@@ -142,7 +142,7 @@ const areas = [
                 Hình thức giao dịch
               </h2>
 
-              <p class="text-[11px] text-gray-400 mt-1">
+              <p class="text-[12px] text-gray-400 mt-1">
                 Chọn hình thức phù hợp với tin đăng của bạn.
               </p>
 
@@ -182,7 +182,7 @@ const areas = [
                 Loại hình bất động sản
               </h2>
 
-              <p class="text-[11px] text-gray-400 mt-1">
+              <p class="text-[12px] text-gray-400 mt-1">
                 Loại hình ảnh hưởng đến các trường thông tin ở bước tiếp theo.
               </p>
 
@@ -253,7 +253,7 @@ const areas = [
                 Khu vực
               </h2>
 
-              <p class="text-[11px] text-gray-400 mt-1">
+              <p class="text-[12px] text-gray-400 mt-1">
                 Chọn quận/huyện tại Đà Nẵng để hệ thống gợi ý giá tham chiếu chính xác hơn.
               </p>
 
@@ -268,7 +268,7 @@ const areas = [
                 type="button"
                 @click="area = item"
                 :class="[
-                  'px-4 py-2 rounded-full border text-[11px] transition',
+                  'px-4 py-2 rounded-full border text-[12px] transition',
 
                   area === item
                     ? 'border-[#1E325A] bg-white text-[#1E325A]'
@@ -301,7 +301,7 @@ const areas = [
           >
 
             <p
-              class="text-[9px]
+              class="text-[10px]
                      tracking-[0.2em]
                      uppercase
                      text-white/60"
@@ -316,7 +316,7 @@ const areas = [
 
 
             <p
-              class="text-[10px]
+              class="text-[11px]
                      leading-relaxed
                      text-white/50
                      mt-2"
@@ -348,7 +348,7 @@ const areas = [
                          text-[#1E325A]
                          flex items-center
                          justify-center
-                         text-[9px]
+                         text-[10px]
                          font-bold"
                 >
                   1
@@ -376,7 +376,7 @@ const areas = [
                          bg-white/15
                          flex items-center
                          justify-center
-                         text-[9px]"
+                         text-[10px]"
                 >
                   2
                 </div>
@@ -403,7 +403,7 @@ const areas = [
                          bg-white/15
                          flex items-center
                          justify-center
-                         text-[9px]"
+                         text-[10px]"
                 >
                   3
                 </div>
@@ -430,7 +430,7 @@ const areas = [
                          bg-white/15
                          flex items-center
                          justify-center
-                         text-[9px]"
+                         text-[10px]"
                 >
                   4
                 </div>

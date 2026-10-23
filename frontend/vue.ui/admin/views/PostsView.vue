@@ -95,7 +95,7 @@ export default {
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: bold;
   color: #1e325a;
   margin-bottom: 4px;
@@ -136,13 +136,13 @@ export default {
 }
 
 .post-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
   color: #1e325a;
 }
 
 .post-meta {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
@@ -150,7 +150,7 @@ export default {
 .post-badge {
   padding: 6px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   text-align: center;
   white-space: nowrap;
@@ -184,7 +184,7 @@ export default {
   border: none;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -200,7 +200,7 @@ export default {
   border: 1px solid #fecaca;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
@@ -215,7 +215,7 @@ export default {
   color: #4b5563;
   border: none;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   font-weight: 500;
 }
