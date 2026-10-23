@@ -227,12 +227,12 @@ function goMap() {
           <div>
             <div class="flex items-center gap-3">
               <span class="h-px w-9 bg-[#B49362]"></span>
-              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
+              <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
                 SMARTPROP / TRUST & TRANSPARENCY
               </p>
             </div>
 
-            <h1 class="mt-6 text-[39px] font-medium leading-tight tracking-tight sm:text-[56px]">
+            <h1 class="mt-6 text-[41px] font-medium leading-tight tracking-tight sm:text-[58px]">
               Theo dõi
               <span class="block italic text-[#B49362]">báo cáo của bạn.</span>
             </h1>
@@ -243,7 +243,7 @@ function goMap() {
               minh bạch và dễ sử dụng.
             </p>
 
-            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94774F]">
+            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#94774F]">
               Dữ liệu minh họa
             </span>
           </div>
@@ -264,7 +264,7 @@ function goMap() {
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng báo cáo
           </p>
 
@@ -273,13 +273,13 @@ function goMap() {
             <span class="text-xl text-[#C6A77A]">▤</span>
           </div>
 
-          <p class="mt-3 text-[11px] text-[#8D99A8]">
+          <p class="mt-3 text-[12px] text-[#8D99A8]">
             Báo cáo đã gửi
           </p>
         </div>
 
         <div class="rounded-[20px] bg-[#142B4F] p-5 text-white sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-white/60">
             Đang xử lý
           </p>
 
@@ -288,13 +288,13 @@ function goMap() {
             <span class="h-3 w-3 rounded-full bg-[#E5B76A]"></span>
           </div>
 
-          <p class="mt-3 text-[11px] text-white/55">
+          <p class="mt-3 text-[12px] text-white/55">
             Đang chờ kết quả
           </p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Đã xử lý
           </p>
 
@@ -303,13 +303,13 @@ function goMap() {
             <span class="text-xl text-[#3A9A70]">✓</span>
           </div>
 
-          <p class="mt-3 text-[11px] text-[#8D99A8]">
+          <p class="mt-3 text-[12px] text-[#8D99A8]">
             Đã có kết quả xem xét
           </p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Bị từ chối
           </p>
 
@@ -318,7 +318,7 @@ function goMap() {
             <span class="text-xl text-[#C56E56]">!</span>
           </div>
 
-          <p class="mt-3 text-[11px] text-[#8D99A8]">
+          <p class="mt-3 text-[12px] text-[#8D99A8]">
             Báo cáo không được chấp nhận
           </p>
         </div>
@@ -330,7 +330,7 @@ function goMap() {
 
       <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
             REPORT CENTER / 01
           </p>
 
@@ -363,7 +363,7 @@ function goMap() {
           :key="filter.key"
           type="button"
           @click="activeFilter = filter.key"
-          class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition sm:px-5"
+          class="rounded-full border px-4 py-2.5 text-[12px] font-semibold transition sm:px-5"
           :class="
             activeFilter === filter.key
               ? 'border-[#142B4F] bg-[#142B4F] text-white'
@@ -382,7 +382,7 @@ function goMap() {
           báo cáo
         </p>
 
-        <span class="text-[10px] uppercase tracking-widest text-[#B49362]">
+        <span class="text-[11px] uppercase tracking-widest text-[#B49362]">
           REPORT HISTORY
         </span>
       </div>
@@ -405,7 +405,7 @@ function goMap() {
 
             <div class="absolute inset-0 bg-gradient-to-t from-[#142B4F]/55 to-transparent"></div>
 
-            <span class="absolute bottom-4 left-4 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
+            <span class="absolute bottom-4 left-4 text-[11px] font-bold uppercase tracking-[0.12em] text-white">
               {{ report.location }}
             </span>
           </div>
@@ -414,7 +414,7 @@ function goMap() {
           <div class="flex min-w-0 flex-col justify-center p-5 sm:p-7">
             <div class="flex flex-wrap items-center gap-3">
               <span
-                class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold"
+                class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-bold"
                 :class="statusClass(report.status)"
               >
                 <span
@@ -424,7 +424,7 @@ function goMap() {
                 {{ report.statusLabel }}
               </span>
 
-              <span class="text-[10px] font-semibold text-[#B49362]">
+              <span class="text-[11px] font-semibold text-[#B49362]">
                 REPORT #{{ String(report.id).padStart(3, '0') }}
               </span>
             </div>
@@ -438,12 +438,12 @@ function goMap() {
             </p>
 
             <div class="mt-4">
-              <span class="inline-flex max-w-full rounded-full bg-[#F4EFE7] px-3 py-2 text-[10px] font-bold tracking-wide text-[#9B7952]">
+              <span class="inline-flex max-w-full rounded-full bg-[#F4EFE7] px-3 py-2 text-[11px] font-bold tracking-wide text-[#9B7952]">
                 {{ report.reason }}
               </span>
             </div>
 
-            <p class="mt-4 text-[11px] text-[#87919F]">
+            <p class="mt-4 text-[12px] text-[#87919F]">
               {{ report.sentAt }}
             </p>
 
@@ -458,7 +458,7 @@ function goMap() {
           <!-- STATUS / ACTION -->
           <div class="flex flex-col justify-between gap-6 border-t border-[#EEEAE3] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div class="lg:text-right">
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Trạng thái hiện tại
               </p>
 
@@ -466,7 +466,7 @@ function goMap() {
                 {{ report.statusLabel }}
               </p>
 
-              <p class="mt-2 text-[11px] leading-5 text-[#87919F]">
+              <p class="mt-2 text-[12px] leading-5 text-[#87919F]">
                 {{ report.update }}
               </p>
             </div>
@@ -474,7 +474,7 @@ function goMap() {
             <button
               type="button"
               @click="openReport(report)"
-              class="self-start rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-[11px] font-semibold transition hover:border-[#142B4F] hover:bg-[#142B4F] hover:text-white lg:self-end"
+              class="self-start rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-[12px] font-semibold transition hover:border-[#142B4F] hover:bg-[#142B4F] hover:text-white lg:self-end"
             >
               Xem báo cáo ↗
             </button>
@@ -535,7 +535,7 @@ function goMap() {
 
         <div class="relative flex flex-wrap items-center justify-between gap-7">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
               SMARTPROP / TRUST & SAFETY
             </p>
 
@@ -560,7 +560,7 @@ function goMap() {
         </div>
       </section>
 
-      <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
+      <p class="mt-7 text-center text-[12px] leading-6 text-[#87919F]">
         Báo cáo, kết quả xử lý và hình ảnh trên trang này đều là dữ liệu minh họa.
       </p>
     </main>
@@ -597,13 +597,13 @@ function goMap() {
         <div class="p-6 sm:p-8">
           <div class="flex flex-wrap items-center gap-3">
             <span
-              class="rounded-full px-3 py-1.5 text-[10px] font-semibold"
+              class="rounded-full px-3 py-1.5 text-[11px] font-semibold"
               :class="statusClass(selectedReport.status)"
             >
               {{ selectedReport.statusLabel }}
             </span>
 
-            <span class="text-[11px] text-[#B49362]">
+            <span class="text-[12px] text-[#B49362]">
               REPORT #{{ String(selectedReport.id).padStart(3, '0') }}
             </span>
           </div>
@@ -618,7 +618,7 @@ function goMap() {
 
           <div class="mt-6 space-y-4 border-y border-[#EEEAE3] py-5">
             <div>
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Lý do báo cáo
               </p>
               <p class="mt-2 text-sm font-semibold">
@@ -627,7 +627,7 @@ function goMap() {
             </div>
 
             <div>
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Thời gian gửi
               </p>
               <p class="mt-2 text-sm">
@@ -636,7 +636,7 @@ function goMap() {
             </div>
 
             <div>
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Cập nhật
               </p>
               <p class="mt-2 text-sm">
@@ -645,7 +645,7 @@ function goMap() {
             </div>
 
             <div>
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Kết quả
               </p>
               <p class="mt-2 text-sm leading-6 text-[#64748B]">
@@ -672,7 +672,7 @@ function goMap() {
           SmartProp<span class="text-[#C6A77A]">.</span>
         </button>
 
-        <p class="text-[11px] text-[#87919F]">
+        <p class="text-[12px] text-[#87919F]">
           © 2026 SmartProp · My Reports 2.0
         </p>
 
@@ -689,14 +689,14 @@ function goMap() {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
 }
 
 .sp-my-reports h1,
 .sp-my-reports h2,
 .sp-my-reports h3 {
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-variant-ligatures: none;
   word-spacing: normal;
 }

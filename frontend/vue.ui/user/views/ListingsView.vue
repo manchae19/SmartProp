@@ -256,7 +256,7 @@ function goPost() {
           ></span>
 
           <span
-            class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#64748B]"
+            class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#64748B]"
           >
             SmartProp / Property Collection
           </span>
@@ -313,14 +313,14 @@ function goPost() {
               ></span>
 
               <p
-                class="text-[10px] font-bold uppercase tracking-[0.24em] text-[#B49362]"
+                class="text-[11px] font-bold uppercase tracking-[0.24em] text-[#B49362]"
               >
                 SMARTPROP / CURATED REAL ESTATE
               </p>
             </div>
 
             <h1
-              class="mt-6 max-w-[780px] text-[40px] font-medium leading-[1.18] tracking-[-0.035em] sm:text-[55px] lg:text-[65px]"
+              class="mt-6 max-w-[780px] text-[42px] font-medium leading-[1.18] tracking-[-0.035em] sm:text-[57px] lg:text-[67px]"
             >
               Không gian sống
               <span
@@ -331,7 +331,7 @@ function goPost() {
             </h1>
 
             <p
-              class="mt-6 max-w-[630px] text-sm leading-8 text-[#748194] sm:text-[15px]"
+              class="mt-6 max-w-[630px] text-sm leading-8 text-[#748194] sm:text-[16px]"
             >
               Khám phá những lựa chọn bất động sản tại Đà Nẵng.
               Tìm kiếm theo nhu cầu, so sánh mức giá và kết nối
@@ -340,13 +340,13 @@ function goPost() {
 
             <div class="mt-7 flex flex-wrap items-center gap-3">
               <span
-                class="rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#94774F]"
+                class="rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[#94774F]"
               >
                 Dữ liệu minh họa
               </span>
 
               <span
-                class="flex items-center gap-2 text-[11px] text-[#748194]"
+                class="flex items-center gap-2 text-[12px] text-[#748194]"
               >
                 <span
                   class="h-2 w-2 rounded-full bg-[#5CB9D3]"
@@ -371,13 +371,13 @@ function goPost() {
             <div class="relative">
               <div class="flex items-center justify-between gap-3">
                 <span
-                  class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7BD4E5]"
+                  class="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7BD4E5]"
                 >
                   Collection Overview
                 </span>
 
                 <span
-                  class="rounded-full border border-white/20 px-3 py-1 text-[10px] text-white/70"
+                  class="rounded-full border border-white/20 px-3 py-1 text-[11px] text-white/70"
                 >
                   2026
                 </span>
@@ -386,7 +386,7 @@ function goPost() {
               <div class="mt-10 grid grid-cols-2 gap-5">
                 <div>
                   <p
-                    class="text-[10px] uppercase tracking-[0.15em] text-white/50"
+                    class="text-[11px] uppercase tracking-[0.15em] text-white/50"
                   >
                     Kết quả hiển thị
                   </p>
@@ -403,7 +403,7 @@ function goPost() {
 
                 <div>
                   <p
-                    class="text-[10px] uppercase tracking-[0.15em] text-white/50"
+                    class="text-[11px] uppercase tracking-[0.15em] text-white/50"
                   >
                     Giá trung bình
                   </p>
@@ -431,7 +431,7 @@ function goPost() {
                   </p>
 
                   <p
-                    class="mt-1 text-[11px] leading-5 text-white/55"
+                    class="mt-1 text-[12px] leading-5 text-white/55"
                   >
                     Xem vị trí và các tin đăng trên GIS Explorer.
                   </p>
@@ -464,7 +464,7 @@ function goPost() {
         >
           <div>
             <p
-              class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]"
+              class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B49362]"
             >
               FIND YOUR PROPERTY
             </p>
@@ -591,7 +591,7 @@ function goPost() {
             class="flex flex-wrap items-center gap-2"
           >
             <span
-              class="mr-2 text-[11px] font-semibold text-[#87919F]"
+              class="mr-2 text-[12px] font-semibold text-[#87919F]"
             >
               Khám phá nhanh:
             </span>
@@ -601,7 +601,7 @@ function goPost() {
               :key="type"
               type="button"
               @click="selectedType = type"
-              class="rounded-full border px-4 py-2 text-[11px] font-semibold transition"
+              class="rounded-full border px-4 py-2 text-[12px] font-semibold transition"
               :class="
                 selectedType === type
                   ? 'border-[#142B4F] bg-[#142B4F] text-white'
@@ -615,7 +615,7 @@ function goPost() {
           <button
             type="button"
             @click="resetFilters"
-            class="text-[11px] font-semibold text-[#9B7952] underline underline-offset-4 transition hover:text-[#142B4F]"
+            class="text-[12px] font-semibold text-[#9B7952] underline underline-offset-4 transition hover:text-[#142B4F]"
           >
             Xóa bộ lọc
           </button>
@@ -632,7 +632,7 @@ function goPost() {
       >
         <div>
           <p
-            class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]"
+            class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B49362]"
           >
             PROPERTY COLLECTION / 01
           </p>
@@ -753,14 +753,14 @@ function goPost() {
             ></div>
 
             <span
-              class="absolute left-5 top-5 rounded-full px-4 py-2 text-[10px] font-bold shadow-sm"
+              class="absolute left-5 top-5 rounded-full px-4 py-2 text-[11px] font-bold shadow-sm"
               :class="statusClass(listing.statusType)"
             >
               {{ listing.status }}
             </span>
 
             <span
-              class="absolute bottom-5 left-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/90"
+              class="absolute bottom-5 left-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90"
             >
               {{ listing.label }}
             </span>
@@ -780,20 +780,20 @@ function goPost() {
               class="flex items-center justify-between gap-3"
             >
               <span
-                class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#B49362]"
+                class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#B49362]"
               >
                 {{ listing.type }}
               </span>
 
               <span
-                class="text-[10px] text-[#9AA4B1]"
+                class="text-[11px] text-[#9AA4B1]"
               >
                 Đà Nẵng
               </span>
             </div>
 
             <h3
-              class="mt-4 text-xl font-semibold leading-7 tracking-tight sm:text-[22px]"
+              class="mt-4 text-xl font-semibold leading-7 tracking-tight sm:text-[23px]"
             >
               {{ listing.title }}
             </h3>
@@ -854,13 +854,13 @@ function goPost() {
             >
               <div>
                 <p
-                  class="text-[10px] uppercase tracking-[0.12em] text-[#9AA4B1]"
+                  class="text-[11px] uppercase tracking-[0.12em] text-[#9AA4B1]"
                 >
                   Giá tham khảo
                 </p>
 
                 <p
-                  class="mt-2 text-[27px] font-semibold tracking-tight text-[#142B4F]"
+                  class="mt-2 text-[29px] font-semibold tracking-tight text-[#142B4F]"
                 >
                   {{ formatPrice(listing.price) }}
                   <span class="text-base text-[#B49362]">
@@ -932,7 +932,7 @@ function goPost() {
         >
           <div class="max-w-[680px]">
             <p
-              class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]"
+              class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]"
             >
               SMARTPROP / GIS EXPLORER
             </p>
@@ -968,7 +968,7 @@ function goPost() {
       </section>
 
       <p
-        class="mt-7 text-center text-[11px] leading-6 text-[#87919F]"
+        class="mt-7 text-center text-[12px] leading-6 text-[#87919F]"
       >
         Lưu ý: Tin đăng, hình ảnh, giá, số liệu và trạng thái
         đánh giá trên trang này đều là dữ liệu minh họa.
@@ -991,7 +991,7 @@ function goPost() {
           SmartProp<span class="text-[#C6A77A]">.</span>
         </button>
 
-        <p class="text-[11px] text-[#87919F]">
+        <p class="text-[12px] text-[#87919F]">
           © 2026 SmartProp · Property Collection 2.0
         </p>
 
@@ -1035,14 +1035,14 @@ function goPost() {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
 }
 
 .sp-collection h1,
 .sp-collection h2,
 .sp-collection h3 {
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-kerning: normal;
   font-variant-ligatures: none;
   letter-spacing: -0.025em;

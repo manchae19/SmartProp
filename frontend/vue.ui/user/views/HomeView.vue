@@ -983,7 +983,7 @@ const marketChart = computed(() => {
 
  
 
-            <span class="text-[10px] font-semibold uppercase tracking-[.24em] text-[#E4C89E]">
+            <span class="text-[11px] font-semibold uppercase tracking-[.24em] text-[#E4C89E]">
 
               Real Estate × Intelligence
 
@@ -995,7 +995,7 @@ const marketChart = computed(() => {
 
  
 
-            <span class="text-[10px] text-[#BCE6ED]">
+            <span class="text-[11px] text-[#BCE6ED]">
 
               SmartProp Experience
 
@@ -1069,7 +1069,7 @@ const marketChart = computed(() => {
 
           <!-- TECHNOLOGY HINT -->
 
-          <div class="mt-10 flex flex-wrap gap-5 text-[10px] uppercase tracking-[.16em] text-white/55">
+          <div class="mt-10 flex flex-wrap gap-5 text-[11px] uppercase tracking-[.16em] text-white/55">
 
             <span class="flex items-center gap-2">
 
@@ -1117,7 +1117,7 @@ const marketChart = computed(() => {
 
           <div>
 
-            <p class="text-[10px] uppercase tracking-[.18em] text-white/50">Location</p>
+            <p class="text-[11px] uppercase tracking-[.18em] text-white/50">Location</p>
 
             <p class="mt-2 text-xs font-semibold">Đà Nẵng, Việt Nam</p>
 
@@ -1127,7 +1127,7 @@ const marketChart = computed(() => {
 
           <div>
 
-            <p class="text-[10px] uppercase tracking-[.18em] text-white/50">Experience</p>
+            <p class="text-[11px] uppercase tracking-[.18em] text-white/50">Experience</p>
 
             <p class="mt-2 text-xs font-semibold">Luxury × Technology</p>
 
@@ -1377,7 +1377,7 @@ const marketChart = computed(() => {
                 :y="tick.y + 4"
                 text-anchor="end"
                 fill="#64748B"
-                font-size="12"
+                font-size="13"
               >
                 {{ tick.value.toFixed(0) }}
               </text>
@@ -1389,7 +1389,7 @@ const marketChart = computed(() => {
                 y="275"
                 text-anchor="middle"
                 fill="#64748B"
-                font-size="12"
+                font-size="13"
               >
                 {{ label.text }}
               </text>
@@ -3705,6 +3705,9 @@ const marketChart = computed(() => {
  
 
 <style>
+
+
+
 
 .sp-tech-grid { background-image: linear-gradient(rgba(216,184,135,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(216,184,135,.22) 1px, transparent 1px); background-size: 68px 68px; mask-image: linear-gradient(to right, transparent, black 60%); }
 

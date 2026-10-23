@@ -78,7 +78,7 @@
   flex-direction: column;
   min-height: 100vh;
   background-color: #e5e5e5;
-  font-family: sans-serif;
+  font-family: var(--font-sans);
 }
 
 .header {
@@ -135,18 +135,18 @@
 }
 
 .qu-n-tr {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1px;
 }
 
 .b-ng-i-u-khi-n {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: bold;
   margin-bottom: 6px;
 }
 
 .theo-d-i-tin-ng-n {
-  font-size: 13px;
+  font-size: 14px;
   color: #cbd5e1;
 }
 
@@ -184,7 +184,7 @@
 }
 
 .m-c-qu-n-tr {
-  font-size: 11px;
+  font-size: 12px;
   color: #6b7280;
   font-weight: bold;
   margin-bottom: 8px;
@@ -200,7 +200,7 @@
   border-radius: 8px;
   color: #374151;
   text-decoration: none;
-  font-size: 14px;
+  font-size: var(--text-sm);
   text-align: left;
   transition: background 0.2s;
 }
@@ -217,7 +217,7 @@
   color: #1e293b;
   padding: 2px 10px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
 }
 

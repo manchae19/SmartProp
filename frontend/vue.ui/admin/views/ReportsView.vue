@@ -91,7 +91,7 @@ export default {
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: bold;
   color: #1e325a;
   margin-bottom: 4px;
@@ -124,7 +124,7 @@ export default {
 }
 
 .report-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
   color: #1e325a;
 }
@@ -139,13 +139,13 @@ export default {
 }
 
 .reason-text {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   color: #dc2626;
 }
 
 .report-meta {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
@@ -161,7 +161,7 @@ export default {
   background: transparent;
   color: #1e325a;
   border: none;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   padding: 6px 10px;
@@ -177,7 +177,7 @@ export default {
   border: none;
   padding: 7px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: opacity 0.2s;
@@ -193,7 +193,7 @@ export default {
   border: 1px solid #d1d5db;
   padding: 7px 14px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;

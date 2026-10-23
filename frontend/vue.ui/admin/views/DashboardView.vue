@@ -115,26 +115,26 @@ export default {
 }
 
 .stat2 div:first-child {
-  font-size: 13px;
+  font-size: 14px;
   color: #9ca3af;
   text-align: left;
 }
 
 .stat2 ._9 {
   color: white;
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: bold;
   text-align: left;
 }
 
 .stat div:first-child {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   text-align: left;
 }
 
 .stat div:last-child {
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: bold;
   color: #1e325a;
   text-align: left;
@@ -156,7 +156,7 @@ export default {
 
 .tin-ng-m-i-theo-tu, .t-nh-tr-ng-d-ch-v-a {
   font-weight: bold;
-  font-size: 15px;
+  font-size: 16px;
   margin-bottom: 20px;
   color: #1e325a;
   text-align: left;
@@ -191,7 +191,7 @@ export default {
 }
 
 .label-day {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #6b7280;
 }
 
@@ -205,7 +205,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 14px;
   padding: 10px 0;
   border-bottom: 1px solid #f3f4f6;
   text-align: left;
@@ -228,7 +228,7 @@ export default {
 }
 
 ._82-ms-q-0, ._340-ms-q-2, .l-i-q-5 {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #6b7280;
 }
 .l-i-q-5 {

@@ -285,7 +285,7 @@ const goAccount = () => router.push('/account')
               <div>
 
                 <div
-                  class="inline-flex px-3 py-1 rounded-full bg-[#e5f3ea] text-[#438665] text-[10px] mb-3"
+                  class="inline-flex px-3 py-1 rounded-full bg-[#e5f3ea] text-[#438665] text-[11px] mb-3"
                 >
                   {{ listing.type }}
                 </div>
@@ -309,7 +309,7 @@ const goAccount = () => router.push('/account')
                   {{ listing.price }}
                 </p>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-[11px] text-gray-400 mt-1">
                   {{ listing.pricePerM2 }}
                 </p>
 
@@ -322,7 +322,7 @@ const goAccount = () => router.push('/account')
               class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-7 pt-6 border-t border-gray-100"
             >
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-[11px] text-gray-400">
                   Diện tích
                 </p>
 
@@ -332,7 +332,7 @@ const goAccount = () => router.push('/account')
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-[11px] text-gray-400">
                   Phòng ngủ
                 </p>
 
@@ -345,7 +345,7 @@ const goAccount = () => router.push('/account')
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-[11px] text-gray-400">
                   Phòng tắm
                 </p>
 
@@ -358,7 +358,7 @@ const goAccount = () => router.push('/account')
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-[11px] text-gray-400">
                   Hướng
                 </p>
 
@@ -470,25 +470,25 @@ const goAccount = () => router.push('/account')
               <div class="bg-[#f5f4ef] rounded-2xl p-4">
                 <div class="text-lg mb-2">🏫</div>
                 <p class="text-xs font-medium">Trường học</p>
-                <p class="text-[10px] text-gray-400 mt-1">450 m</p>
+                <p class="text-[11px] text-gray-400 mt-1">450 m</p>
               </div>
 
               <div class="bg-[#f5f4ef] rounded-2xl p-4">
                 <div class="text-lg mb-2">🏥</div>
                 <p class="text-xs font-medium">Bệnh viện</p>
-                <p class="text-[10px] text-gray-400 mt-1">1,2 km</p>
+                <p class="text-[11px] text-gray-400 mt-1">1,2 km</p>
               </div>
 
               <div class="bg-[#f5f4ef] rounded-2xl p-4">
                 <div class="text-lg mb-2">🛒</div>
                 <p class="text-xs font-medium">Siêu thị</p>
-                <p class="text-[10px] text-gray-400 mt-1">600 m</p>
+                <p class="text-[11px] text-gray-400 mt-1">600 m</p>
               </div>
 
               <div class="bg-[#f5f4ef] rounded-2xl p-4">
                 <div class="text-lg mb-2">🌳</div>
                 <p class="text-xs font-medium">Công viên</p>
-                <p class="text-[10px] text-gray-400 mt-1">850 m</p>
+                <p class="text-[11px] text-gray-400 mt-1">850 m</p>
               </div>
             </div>
           </section>
@@ -505,14 +505,14 @@ const goAccount = () => router.push('/account')
                   Vị trí
                 </h2>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-[11px] text-gray-400 mt-1">
                   {{ listing.location }}
                 </p>
               </div>
 
               <button
                 @click="goMap"
-                class="px-4 py-2 rounded-full bg-[#1E325A] text-white text-[10px]"
+                class="px-4 py-2 rounded-full bg-[#1E325A] text-white text-[11px]"
               >
                 Xem trên bản đồ
               </button>
@@ -545,7 +545,7 @@ const goAccount = () => router.push('/account')
             >
               <div>
                 <p
-                  class="text-[10px] text-white/50 uppercase tracking-widest"
+                  class="text-[11px] text-white/50 uppercase tracking-widest"
                 >
                   Định giá tham chiếu
                 </p>
@@ -554,14 +554,14 @@ const goAccount = () => router.push('/account')
                   {{ listing.valuation }}
                 </h2>
 
-                <p class="text-[10px] text-white/60 mt-2">
+                <p class="text-[11px] text-white/60 mt-2">
                   Ước tính bằng mô hình XGBoost từ dữ liệu khu vực.
                 </p>
               </div>
 
               <div class="bg-white/10 rounded-2xl px-5 py-4">
 
-                <p class="text-[10px] text-white/60">
+                <p class="text-[11px] text-white/60">
                   Giá tin đăng
                 </p>
 
@@ -569,7 +569,7 @@ const goAccount = () => router.push('/account')
                   {{ listing.price }}
                 </p>
 
-                <p class="text-[10px] text-emerald-300 mt-1">
+                <p class="text-[11px] text-emerald-300 mt-1">
                   Nằm trong khoảng hợp lý
                 </p>
               </div>
@@ -585,7 +585,7 @@ const goAccount = () => router.push('/account')
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-[11px] text-white/60 mb-1"
                   >
                     <span>Vị trí trung tâm</span>
                     <span>+12%</span>
@@ -600,7 +600,7 @@ const goAccount = () => router.push('/account')
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-[11px] text-white/60 mb-1"
                   >
                     <span>Diện tích</span>
                     <span>+8%</span>
@@ -615,7 +615,7 @@ const goAccount = () => router.push('/account')
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-[11px] text-white/60 mb-1"
                   >
                     <span>Khoảng cách tiện ích</span>
                     <span>+5%</span>
@@ -643,7 +643,7 @@ const goAccount = () => router.push('/account')
           <section
             class="bg-white rounded-[24px] p-6 shadow-sm"
           >
-            <p class="text-[10px] text-gray-400 mb-4">
+            <p class="text-[11px] text-gray-400 mb-4">
               Người đăng
             </p>
 
@@ -660,7 +660,7 @@ const goAccount = () => router.push('/account')
                   Nguyễn Thành
                 </p>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-[11px] text-gray-400 mt-1">
                   Môi giới xác thực
                 </p>
               </div>
@@ -684,7 +684,7 @@ const goAccount = () => router.push('/account')
             </div>
 
             <p
-              class="text-[9px] text-gray-400 text-center mt-4 leading-4"
+              class="text-[10px] text-gray-400 text-center mt-4 leading-4"
             >
               Không chuyển tiền hoặc đặt cọc trước khi xác minh
               thông tin bất động sản.
@@ -700,7 +700,7 @@ const goAccount = () => router.push('/account')
               Thông tin tin đăng
             </h3>
 
-            <div class="space-y-3 text-[10px]">
+            <div class="space-y-3 text-[11px]">
 
               <div class="flex justify-between">
                 <span class="text-gray-400">
@@ -750,14 +750,14 @@ const goAccount = () => router.push('/account')
           <section
             class="bg-white rounded-[24px] p-5 shadow-sm"
           >
-            <p class="text-[10px] text-gray-400 leading-5">
+            <p class="text-[11px] text-gray-400 leading-5">
               Bạn thấy thông tin hoặc hình ảnh của tin đăng này
               có vấn đề?
             </p>
 
             <button
   @click="router.push(`/listing/${route.params.id}/report`)"
-  class="mt-3 text-[11px] text-[#b65c3c] hover:underline cursor-pointer"
+  class="mt-3 text-[12px] text-[#b65c3c] hover:underline cursor-pointer"
 >
   ⚑ Báo cáo tin đăng
 </button>
@@ -800,7 +800,7 @@ const goAccount = () => router.push('/account')
                 </h2>
 
                 <p
-                  class="text-[9px] md:text-[10px] text-white/40 mt-1 truncate"
+                  class="text-[10px] md:text-[11px] text-white/40 mt-1 truncate"
                 >
                   {{ listing.location }}
                 </p>
@@ -810,7 +810,7 @@ const goAccount = () => router.push('/account')
               <!-- IMAGE NUMBER -->
 
               <div
-                class="hidden sm:block px-3 py-1 rounded-full bg-white/10 text-[10px] text-white/70 whitespace-nowrap"
+                class="hidden sm:block px-3 py-1 rounded-full bg-white/10 text-[11px] text-white/70 whitespace-nowrap"
               >
                 {{ currentImageIndex + 1 }} / {{ images.length }} ảnh
               </div>
@@ -822,13 +822,13 @@ const goAccount = () => router.push('/account')
             <div class="flex items-center gap-2 shrink-0">
 
               <button
-                class="hidden sm:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70 hover:bg-white/10 transition"
+                class="hidden sm:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[11px] text-white/70 hover:bg-white/10 transition"
               >
                 Tải ảnh
               </button>
 
               <button
-                class="hidden md:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70 hover:bg-white/10 transition"
+                class="hidden md:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[11px] text-white/70 hover:bg-white/10 transition"
               >
                 Báo cáo ảnh sai
               </button>
@@ -880,7 +880,7 @@ const goAccount = () => router.push('/account')
             <!-- MOBILE IMAGE COUNT -->
 
             <div
-              class="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-[10px]"
+              class="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-[11px]"
             >
               {{ currentImageIndex + 1 }} / {{ images.length }}
             </div>
@@ -913,7 +913,7 @@ const goAccount = () => router.push('/account')
                 />
 
                 <div
-                  class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full bg-black/60 text-white text-[8px]"
+                  class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-full bg-black/60 text-white text-[9px]"
                 >
                   {{ index + 1 }}
                 </div>

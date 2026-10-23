@@ -247,12 +247,12 @@ function goAccount() {
           <div>
             <div class="flex items-center gap-3">
               <span class="h-px w-9 bg-[#B49362]"></span>
-              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
+              <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
                 SMARTPROP / PROPERTY MANAGEMENT
               </p>
             </div>
 
-            <h1 class="mt-6 text-[39px] font-medium leading-tight tracking-tight sm:text-[56px]">
+            <h1 class="mt-6 text-[41px] font-medium leading-tight tracking-tight sm:text-[58px]">
               Quản lý
               <span class="block italic text-[#B49362]">bất động sản của bạn.</span>
             </h1>
@@ -262,7 +262,7 @@ function goAccount() {
               bất động sản của bạn trong một không gian trực quan.
             </p>
 
-            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94774F]">
+            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#94774F]">
               Dữ liệu minh họa
             </span>
           </div>
@@ -281,18 +281,18 @@ function goAccount() {
     <section class="mx-auto max-w-[1440px] px-5 pt-10 md:px-10">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng tin đăng
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ listings.length }}</span>
             <span class="text-xl text-[#C6A77A]">⌂</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Danh mục của bạn</p>
+          <p class="mt-3 text-[12px] text-[#8D99A8]">Danh mục của bạn</p>
         </div>
 
         <div class="rounded-[20px] bg-[#142B4F] p-5 text-white sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-white/60">
             Đang hiển thị
           </p>
           <div class="mt-4 flex items-end justify-between">
@@ -301,29 +301,29 @@ function goAccount() {
             </span>
             <span class="h-3 w-3 rounded-full bg-[#7BD4B0]"></span>
           </div>
-          <p class="mt-3 text-[11px] text-white/55">Tin đang hoạt động</p>
+          <p class="mt-3 text-[12px] text-white/55">Tin đang hoạt động</p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng lượt xem
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ totalViews }}</span>
             <span class="text-xl text-[#C6A77A]">↗</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Tương tác minh họa</p>
+          <p class="mt-3 text-[12px] text-[#8D99A8]">Tương tác minh họa</p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Lượt lưu tin
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ totalSaves }}</span>
             <span class="text-xl text-[#C6A77A]">♡</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Người dùng quan tâm</p>
+          <p class="mt-3 text-[12px] text-[#8D99A8]">Người dùng quan tâm</p>
         </div>
       </div>
     </section>
@@ -333,7 +333,7 @@ function goAccount() {
 
       <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
             YOUR COLLECTION / 01
           </p>
           <h2 class="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">
@@ -362,7 +362,7 @@ function goAccount() {
           v-for="filter in filters"
           :key="filter.id"
           @click="activeFilter = filter.id"
-          class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition sm:px-5"
+          class="rounded-full border px-4 py-2.5 text-[12px] font-semibold transition sm:px-5"
           :class="activeFilter === filter.id
             ? 'border-[#142B4F] bg-[#142B4F] text-white'
             : 'border-[#E4DED3] bg-white text-[#64748B] hover:border-[#C6A77A]'"
@@ -376,7 +376,7 @@ function goAccount() {
         <p class="text-xs text-[#87919F]">
           Hiển thị <strong class="text-[#142B4F]">{{ filteredListings.length }}</strong> tin đăng
         </p>
-        <span class="text-[10px] uppercase tracking-widest text-[#B49362]">
+        <span class="text-[11px] uppercase tracking-widest text-[#B49362]">
           PROPERTY PORTFOLIO
         </span>
       </div>
@@ -399,7 +399,7 @@ function goAccount() {
 
             <div class="absolute inset-0 bg-gradient-to-t from-[#142B4F]/45 to-transparent"></div>
 
-            <span class="absolute bottom-4 left-4 text-[10px] font-bold uppercase tracking-[0.15em] text-white">
+            <span class="absolute bottom-4 left-4 text-[11px] font-bold uppercase tracking-[0.15em] text-white">
               {{ listing.location }}
             </span>
           </div>
@@ -408,13 +408,13 @@ function goAccount() {
           <div class="flex min-w-0 flex-col justify-center p-5 sm:p-7">
             <div class="flex flex-wrap items-center gap-3">
               <span
-                class="rounded-full px-3 py-1.5 text-[10px] font-bold"
+                class="rounded-full px-3 py-1.5 text-[11px] font-bold"
                 :class="statusClass(listing.status)"
               >
                 {{ listing.statusText }}
               </span>
 
-              <span v-if="listing.statusSub" class="text-[10px] text-[#9AA4B1]">
+              <span v-if="listing.statusSub" class="text-[11px] text-[#9AA4B1]">
                 {{ listing.statusSub }}
               </span>
             </div>
@@ -444,7 +444,7 @@ function goAccount() {
                 </span>
               </template>
 
-              <span v-else class="text-[11px] text-[#9AA4B1]">
+              <span v-else class="text-[12px] text-[#9AA4B1]">
                 Chưa có thống kê tương tác
               </span>
             </div>
@@ -453,13 +453,13 @@ function goAccount() {
           <!-- ACTIONS -->
           <div class="flex flex-col justify-between gap-6 border-t border-[#EEEAE3] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div class="lg:text-right">
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                 Giá đăng
               </p>
-              <p class="mt-2 text-[25px] font-semibold tracking-tight">
+              <p class="mt-2 text-[27px] font-semibold tracking-tight">
                 {{ listing.price }}
               </p>
-              <p class="mt-1 text-[10px] text-[#B49362]">
+              <p class="mt-1 text-[11px] text-[#B49362]">
                 {{ listing.priceUnit }}
               </p>
             </div>
@@ -467,14 +467,14 @@ function goAccount() {
             <div class="flex flex-wrap gap-2 lg:justify-end">
               <button
                 @click="openListing(listing)"
-                class="rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-[11px] font-semibold transition hover:border-[#C6A77A]"
+                class="rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-[12px] font-semibold transition hover:border-[#C6A77A]"
               >
                 Xem
               </button>
 
               <button
                 @click="editListing(listing)"
-                class="rounded-full px-5 py-3 text-[11px] font-semibold text-white transition hover:opacity-90"
+                class="rounded-full px-5 py-3 text-[12px] font-semibold text-white transition hover:opacity-90"
                 :class="listing.status === 'rejected'
                   ? 'bg-[#BD6A4C]'
                   : 'bg-[#142B4F]'"
@@ -514,7 +514,7 @@ function goAccount() {
 
         <div class="relative flex flex-wrap items-center justify-between gap-7">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
               SMARTPROP / YOUR NEXT LISTING
             </p>
 
@@ -536,7 +536,7 @@ function goAccount() {
         </div>
       </section>
 
-      <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
+      <p class="mt-7 text-center text-[12px] leading-6 text-[#87919F]">
         Dữ liệu, hình ảnh và thống kê trong trang quản lý này chỉ mang tính minh họa.
       </p>
     </main>
@@ -571,7 +571,7 @@ function goAccount() {
 
         <div class="p-6 sm:p-8">
           <span
-            class="rounded-full px-3 py-1.5 text-[10px] font-semibold"
+            class="rounded-full px-3 py-1.5 text-[11px] font-semibold"
             :class="statusClass(selectedListing.status)"
           >
             {{ selectedListing.statusText }}
@@ -655,7 +655,7 @@ function goAccount() {
           SmartProp<span class="text-[#C6A77A]">.</span>
         </button>
 
-        <p class="text-[11px] text-[#87919F]">
+        <p class="text-[12px] text-[#87919F]">
           © 2026 SmartProp · My Listings 2.0
         </p>
 
@@ -672,14 +672,14 @@ function goAccount() {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
 }
 
 .sp-my-listings h1,
 .sp-my-listings h2,
 .sp-my-listings h3 {
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-variant-ligatures: none;
   word-spacing: normal;
 }

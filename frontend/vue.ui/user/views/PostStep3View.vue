@@ -85,7 +85,7 @@ function goNext() {
         </h1>
 
         <p
-          class="mt-2 text-[11px] uppercase tracking-[0.22em]
+          class="mt-2 text-[12px] uppercase tracking-[0.22em]
                  text-gray-200 font-semibold"
         >
           BƯỚC 3 / 4 · XÁC MINH & PHÁP LÝ
@@ -128,7 +128,7 @@ function goNext() {
             <!-- Loại giấy tờ -->
             <div class="mb-4">
               <label
-                class="block text-[11px] font-medium
+                class="block text-[12px] font-medium
                        text-[#1E325A] mb-1.5"
               >
                 Loại giấy tờ
@@ -154,7 +154,7 @@ function goNext() {
               <!-- Số giấy -->
               <div>
                 <label
-                  class="block text-[11px] font-medium
+                  class="block text-[12px] font-medium
                          text-[#1E325A] mb-1.5"
                 >
                   Số giấy chứng nhận
@@ -173,7 +173,7 @@ function goNext() {
               <!-- Ngày cấp -->
               <div>
                 <label
-                  class="block text-[11px] font-medium
+                  class="block text-[12px] font-medium
                          text-[#1E325A] mb-1.5"
                 >
                   Ngày cấp
@@ -192,7 +192,7 @@ function goNext() {
               <!-- Chủ sở hữu -->
               <div>
                 <label
-                  class="block text-[11px] font-medium
+                  class="block text-[12px] font-medium
                          text-[#1E325A] mb-1.5"
                 >
                   Chủ sở hữu
@@ -225,7 +225,7 @@ function goNext() {
 
               <div>
                 <label
-                  class="block text-[11px] font-medium
+                  class="block text-[12px] font-medium
                          text-[#1E325A] mb-1.5"
                 >
                   Họ tên người đăng
@@ -243,7 +243,7 @@ function goNext() {
 
               <div>
                 <label
-                  class="block text-[11px] font-medium
+                  class="block text-[12px] font-medium
                          text-[#1E325A] mb-1.5"
                 >
                   Số điện thoại
@@ -264,7 +264,7 @@ function goNext() {
             <!-- Zalo / Email -->
             <div>
               <label
-                class="block text-[11px] font-medium
+                class="block text-[12px] font-medium
                        text-[#1E325A] mb-1.5"
               >
                 Zalo / Email liên hệ
@@ -295,13 +295,13 @@ function goNext() {
               class="inline-flex items-center gap-2
                      bg-emerald-50 text-emerald-600
                      rounded-full px-4 py-2
-                     text-[10px]"
+                     text-[11px]"
             >
               <span
                 class="w-4 h-4 rounded-full
                        bg-emerald-400 text-white
                        flex items-center justify-center
-                       text-[9px]"
+                       text-[10px]"
               >
                 ✓
               </span>
@@ -333,7 +333,7 @@ function goNext() {
                    p-6"
           >
             <p
-              class="text-[9px]
+              class="text-[10px]
                      tracking-[0.18em]
                      text-white/60"
             >
@@ -345,7 +345,7 @@ function goNext() {
             </div>
 
             <p
-              class="text-[9px]
+              class="text-[10px]
                      text-white/60
                      leading-relaxed mt-2"
             >
@@ -360,7 +360,7 @@ function goNext() {
               Yếu tố ảnh hưởng
             </h3>
 
-            <div class="space-y-4 text-[10px]">
+            <div class="space-y-4 text-[11px]">
 
               <!-- Hải Châu -->
               <div
@@ -431,7 +431,7 @@ function goNext() {
             <div class="h-px bg-white/10 my-6"></div>
 
             <p
-              class="text-[9px]
+              class="text-[10px]
                      leading-relaxed
                      text-white/50"
             >

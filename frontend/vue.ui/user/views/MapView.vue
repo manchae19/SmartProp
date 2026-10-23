@@ -347,7 +347,7 @@ function openListing(id) {
           </span>
         </button>
 
-        <div class="hidden items-center gap-2 rounded-full border border-[#E4DED3] bg-white px-4 py-2 text-[10px] font-semibold uppercase tracking-[.16em] text-[#64748B] lg:flex">
+        <div class="hidden items-center gap-2 rounded-full border border-[#E4DED3] bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[.16em] text-[#64748B] lg:flex">
           <span class="h-2 w-2 rounded-full bg-[#5CB9D3]"></span>
           Spatial Intelligence / GIS Explorer
         </div>
@@ -378,7 +378,7 @@ function openListing(id) {
 
         <div class="flex flex-wrap items-end justify-between gap-5">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[.25em] text-[#B49362]">
+            <p class="text-[11px] font-bold uppercase tracking-[.25em] text-[#B49362]">
               SMARTPROP / LOCATION INTELLIGENCE
             </p>
 
@@ -393,7 +393,7 @@ function openListing(id) {
             </p>
           </div>
 
-          <span class="rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-[.12em] text-[#94774F]">
+          <span class="rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[11px] font-bold uppercase tracking-[.12em] text-[#94774F]">
             Dữ liệu minh họa
           </span>
         </div>
@@ -441,7 +441,7 @@ function openListing(id) {
             :key="type"
             type="button"
             @click="selectedType = type; applyFilters()"
-            class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition"
+            class="rounded-full border px-4 py-2.5 text-[12px] font-semibold transition"
             :class="
               appliedFilters.type === type
                 ? 'border-[#142B4F] bg-[#142B4F] text-white'
@@ -454,7 +454,7 @@ function openListing(id) {
           <button
             type="button"
             @click="resetFilters"
-            class="ml-auto text-[11px] font-semibold text-[#9B7952] underline underline-offset-4"
+            class="ml-auto text-[12px] font-semibold text-[#9B7952] underline underline-offset-4"
           >
             Xóa bộ lọc
           </button>
@@ -596,7 +596,7 @@ function openListing(id) {
 
           <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p class="text-[10px] font-bold uppercase tracking-[.2em] text-[#B49362]">
+              <p class="text-[11px] font-bold uppercase tracking-[.2em] text-[#B49362]">
                 PROPERTY COLLECTION
               </p>
 
@@ -608,7 +608,7 @@ function openListing(id) {
             <select
               v-model="sortBy"
               aria-label="Sắp xếp bất động sản"
-              class="max-w-full rounded-lg border border-[#E2DDD3] bg-white px-3 py-3 text-[11px] outline-none"
+              class="max-w-full rounded-lg border border-[#E2DDD3] bg-white px-3 py-3 text-[12px] outline-none"
             >
               <option value="default">Mặc định</option>
               <option value="priceAsc">Giá thấp đến cao</option>
@@ -647,7 +647,7 @@ function openListing(id) {
 
                   <span
                     v-if="selectedId === listing.id"
-                    class="absolute left-3 top-3 rounded-full bg-[#142B4F] px-3 py-1.5 text-[9px] font-semibold text-white"
+                    class="absolute left-3 top-3 rounded-full bg-[#142B4F] px-3 py-1.5 text-[10px] font-semibold text-white"
                   >
                     Đang chọn
                   </span>
@@ -656,17 +656,17 @@ function openListing(id) {
                 <div class="min-w-0 flex-1 p-4">
 
                   <span
-                    class="inline-block max-w-full rounded-full px-3 py-1 text-[9px] font-semibold"
+                    class="inline-block max-w-full rounded-full px-3 py-1 text-[10px] font-semibold"
                     :class="statusClass(listing.statusType)"
                   >
                     {{ listing.status }}
                   </span>
 
-                  <h3 class="mt-3 text-[13px] font-bold leading-6 text-[#142B4F]">
+                  <h3 class="mt-3 text-[14px] font-bold leading-6 text-[#142B4F]">
                     {{ listing.title }}
                   </h3>
 
-                  <p class="mt-2 text-[11px] text-[#8190A0]">
+                  <p class="mt-2 text-[12px] text-[#8190A0]">
                     ⌖ {{ listing.location }}
                   </p>
 
@@ -674,7 +674,7 @@ function openListing(id) {
                     {{ priceLabel(listing.price) }}
                   </p>
 
-                  <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px] text-[#778394]">
+                  <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-[#778394]">
                     <span>{{ listing.area }} m²</span>
                     <span>{{ listing.type }}</span>
                     <span v-if="listing.beds">
@@ -707,7 +707,7 @@ function openListing(id) {
             </div>
           </div>
 
-          <p class="mt-5 text-[11px] leading-6 text-[#87919F]">
+          <p class="mt-5 text-[12px] leading-6 text-[#87919F]">
             Tin đăng, hình ảnh, giá và trạng thái đánh giá
             đều là dữ liệu minh họa.
           </p>
@@ -794,19 +794,19 @@ function openListing(id) {
               </svg>
 
               <!-- DISTRICT LABELS -->
-              <span class="pointer-events-none absolute left-[13%] top-[18%] text-[11px] font-bold uppercase tracking-[.2em] opacity-40">
+              <span class="pointer-events-none absolute left-[13%] top-[18%] text-[12px] font-bold uppercase tracking-[.2em] opacity-40">
                 Thanh Khê
               </span>
 
-              <span class="pointer-events-none absolute left-[43%] top-[43%] text-[11px] font-bold uppercase tracking-[.2em] opacity-40">
+              <span class="pointer-events-none absolute left-[43%] top-[43%] text-[12px] font-bold uppercase tracking-[.2em] opacity-40">
                 Hải Châu
               </span>
 
-              <span class="pointer-events-none absolute right-[7%] top-[16%] text-[11px] font-bold uppercase tracking-[.2em] opacity-40">
+              <span class="pointer-events-none absolute right-[7%] top-[16%] text-[12px] font-bold uppercase tracking-[.2em] opacity-40">
                 Sơn Trà
               </span>
 
-              <span class="pointer-events-none absolute left-[30%] bottom-[12%] text-[11px] font-bold uppercase tracking-[.2em] opacity-40">
+              <span class="pointer-events-none absolute left-[30%] bottom-[12%] text-[12px] font-bold uppercase tracking-[.2em] opacity-40">
                 Cẩm Lệ
               </span>
 
@@ -816,7 +816,7 @@ function openListing(id) {
                 :key="listing.id"
                 type="button"
                 @click="selectListing(listing.id)"
-                class="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-bold shadow-lg transition duration-300 hover:scale-110"
+                class="absolute z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border px-3 py-2 text-[12px] font-bold shadow-lg transition duration-300 hover:scale-110"
                 :class="
                   selectedId === listing.id
                     ? 'border-[#E8CAA0] bg-[#C6A77A] text-[#142B4F] ring-4 ring-[#C6A77A]/25'
@@ -837,7 +837,7 @@ function openListing(id) {
             <div class="pointer-events-none absolute left-4 right-4 top-4 z-20 flex flex-wrap items-start justify-between gap-3">
 
               <div class="pointer-events-auto rounded-xl border border-white/20 bg-[#142B4F]/95 px-5 py-4 text-white shadow-xl backdrop-blur-xl">
-                <p class="text-[10px] font-bold uppercase tracking-[.2em] text-[#6DD5E7]">
+                <p class="text-[11px] font-bold uppercase tracking-[.2em] text-[#6DD5E7]">
                   GIS EXPLORER
                 </p>
 
@@ -845,12 +845,12 @@ function openListing(id) {
                   Đà Nẵng · Spatial View
                 </p>
 
-                <p class="mt-1 text-[10px] text-white/55">
+                <p class="mt-1 text-[11px] text-white/55">
                   Sơ đồ vị trí minh họa
                 </p>
               </div>
 
-              <span class="pointer-events-auto rounded-full border border-white/30 bg-white/95 px-4 py-2 text-[10px] font-semibold text-[#142B4F] shadow-lg">
+              <span class="pointer-events-auto rounded-full border border-white/30 bg-white/95 px-4 py-2 text-[11px] font-semibold text-[#142B4F] shadow-lg">
                 {{ filteredListings.length }} điểm hiển thị
               </span>
             </div>
@@ -908,7 +908,7 @@ function openListing(id) {
                 />
 
                 <div class="min-w-0 flex-1">
-                  <p class="text-[10px] font-bold uppercase tracking-[.15em] text-[#B49362]">
+                  <p class="text-[11px] font-bold uppercase tracking-[.15em] text-[#B49362]">
                     PROPERTY INSIGHT
                   </p>
 
@@ -920,7 +920,7 @@ function openListing(id) {
                     {{ priceLabel(selectedListing.price) }}
                   </p>
 
-                  <p class="mt-1 text-[10px] text-[#778394]">
+                  <p class="mt-1 text-[11px] text-[#778394]">
                     {{ selectedListing.area }} m² ·
                     {{ selectedListing.location }}
                   </p>
@@ -937,7 +937,7 @@ function openListing(id) {
               </div>
 
               <div class="flex items-center justify-between border-t border-[#E7E2D8] px-4 py-3">
-                <span class="text-[10px] text-[#87919F]">
+                <span class="text-[11px] text-[#87919F]">
                   Tin đăng minh họa
                 </span>
 
@@ -952,7 +952,7 @@ function openListing(id) {
             </div>
 
             <!-- MAP FOOTER -->
-            <div class="absolute bottom-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-2 bg-[#142B4F]/95 px-5 py-4 text-[10px] text-white/70 backdrop-blur-xl">
+            <div class="absolute bottom-0 left-0 right-0 z-10 flex flex-wrap items-center justify-between gap-2 bg-[#142B4F]/95 px-5 py-4 text-[11px] text-white/70 backdrop-blur-xl">
               <span class="flex items-center gap-2">
                 <span class="h-2 w-2 rounded-full bg-[#6DD5E7]"></span>
                 Spatial Intelligence Demo
@@ -969,7 +969,7 @@ function openListing(id) {
 
     <!-- FOOTER -->
     <footer class="border-t border-[#E7E2D8] bg-[#F7F5F0]">
-      <div class="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-[11px] text-[#87919F] md:px-8 lg:px-10">
+      <div class="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-3 px-5 py-6 text-[12px] text-[#87919F] md:px-8 lg:px-10">
         <span>© 2026 SmartProp · GIS Explorer 2.1</span>
 
         <button
@@ -986,20 +986,19 @@ function openListing(id) {
 
 <style scoped>
 /* SmartProp GIS: chỉ thay font trong trang bản đồ */
-@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap');
 
 .sp-gis {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
-  font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 .sp-gis :deep(.font-serif) {
-  font-family: 'Noto Serif', 'Times New Roman', serif !important;
+  font-family: var(--font-serif);
   font-synthesis: none;
   font-kerning: normal;
   letter-spacing: normal;
@@ -1017,7 +1016,7 @@ function openListing(id) {
 .sp-gis input,
 .sp-gis select,
 .sp-gis textarea {
-  font-family: 'Be Vietnam Pro', 'Segoe UI', Arial, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .sp-gis main,
@@ -1038,7 +1037,7 @@ function openListing(id) {
   background: #faf9f6;
   padding: 12px;
   color: #142b4f;
-  font-size: 12px;
+  font-size: var(--text-xs);
   outline: none;
 }
 
@@ -1090,7 +1089,7 @@ function openListing(id) {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.96);
   color: #142b4f;
-  font-size: 20px;
+  font-size: var(--text-xl);
   font-weight: 700;
   box-shadow: 0 5px 20px rgba(20, 43, 79, 0.12);
   transition:

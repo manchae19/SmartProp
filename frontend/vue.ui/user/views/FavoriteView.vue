@@ -248,12 +248,12 @@ function resetFilters() {
           <div>
             <div class="flex items-center gap-3">
               <span class="h-px w-9 bg-[#B49362]"></span>
-              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
+              <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
                 SMARTPROP / SAVED COLLECTION
               </p>
             </div>
 
-            <h1 class="mt-6 text-[39px] font-medium leading-tight tracking-tight sm:text-[56px]">
+            <h1 class="mt-6 text-[41px] font-medium leading-tight tracking-tight sm:text-[58px]">
               Những lựa chọn
               <span class="block italic text-[#B49362]">bạn yêu thích.</span>
             </h1>
@@ -263,7 +263,7 @@ function resetFilters() {
               và dễ dàng quay lại khám phá những không gian sống phù hợp.
             </p>
 
-            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94774F]">
+            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#94774F]">
               Dữ liệu minh họa
             </span>
           </div>
@@ -282,29 +282,29 @@ function resetFilters() {
     <section class="mx-auto max-w-[1440px] px-5 pt-10 md:px-10">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5">
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Đã yêu thích
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ listings.length }}</span>
             <span class="text-xl text-[#C6A77A]">♥</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Bất động sản đã lưu</p>
+          <p class="mt-3 text-[12px] text-[#8D99A8]">Bất động sản đã lưu</p>
         </div>
 
         <div class="rounded-[20px] bg-[#142B4F] p-5 text-white sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-white/60">
             Loại hình quan tâm
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ propertyTypeCount }}</span>
             <span class="text-xl text-[#C6A77A]">⌂</span>
           </div>
-          <p class="mt-3 text-[11px] text-white/55">Nhà phố · Căn hộ · Đất nền</p>
+          <p class="mt-3 text-[12px] text-white/55">Nhà phố · Căn hộ · Đất nền</p>
         </div>
 
         <div class="col-span-2 rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7 lg:col-span-1">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-[11px] font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng giá trị tham khảo
           </p>
           <div class="mt-4 flex items-end justify-between">
@@ -314,7 +314,7 @@ function resetFilters() {
             </span>
             <span class="text-xl text-[#C6A77A]">↗</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Tổng giá niêm yết minh họa</p>
+          <p class="mt-3 text-[12px] text-[#8D99A8]">Tổng giá niêm yết minh họa</p>
         </div>
       </div>
     </section>
@@ -324,7 +324,7 @@ function resetFilters() {
 
       <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
+          <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
             YOUR FAVORITES / 01
           </p>
 
@@ -370,7 +370,7 @@ function resetFilters() {
           :key="filter"
           type="button"
           @click="activeFilter = filter"
-          class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition sm:px-5"
+          class="rounded-full border px-4 py-2.5 text-[12px] font-semibold transition sm:px-5"
           :class="
             activeFilter === filter
               ? 'border-[#142B4F] bg-[#142B4F] text-white'
@@ -426,7 +426,7 @@ function resetFilters() {
             <div class="absolute inset-0 bg-gradient-to-t from-[#142B4F]/50 via-transparent to-transparent"></div>
 
             <span
-              class="absolute left-4 top-4 rounded-full px-3 py-2 text-[10px] font-bold shadow-sm"
+              class="absolute left-4 top-4 rounded-full px-3 py-2 text-[11px] font-bold shadow-sm"
               :class="
                 item.badgeColor === 'green'
                   ? 'bg-[#E5F4EB] text-[#287B56]'
@@ -446,14 +446,14 @@ function resetFilters() {
               ♥
             </button>
 
-            <span class="absolute bottom-5 left-5 text-[10px] font-bold uppercase tracking-[0.15em] text-white">
+            <span class="absolute bottom-5 left-5 text-[11px] font-bold uppercase tracking-[0.15em] text-white">
               {{ item.type }} / Đà Nẵng
             </span>
           </div>
 
           <!-- CONTENT -->
           <div class="p-6 sm:p-7">
-            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#B49362]">
+            <p class="text-[11px] font-bold uppercase tracking-[0.15em] text-[#B49362]">
               {{ item.type }}
             </p>
 
@@ -473,11 +473,11 @@ function resetFilters() {
 
             <div class="mt-5 flex items-end justify-between gap-4">
               <div>
-                <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+                <p class="text-[11px] uppercase tracking-widest text-[#9AA4B1]">
                   Giá tham khảo
                 </p>
 
-                <p class="mt-2 text-[27px] font-semibold tracking-tight">
+                <p class="mt-2 text-[29px] font-semibold tracking-tight">
                   {{ formatPrice(item.price) }}
                   <span class="text-base text-[#B49362]">tỷ</span>
                 </p>
@@ -494,14 +494,14 @@ function resetFilters() {
             </div>
 
             <div class="mt-5 flex items-center justify-between border-t border-[#EEEAE3] pt-4">
-              <span class="text-[11px] text-[#9AA4B1]">
+              <span class="text-[12px] text-[#9AA4B1]">
                 ♡ {{ item.saved }}
               </span>
 
               <button
                 type="button"
                 @click="openListing(item.id)"
-                class="text-[11px] font-bold text-[#142B4F] hover:text-[#B49362]"
+                class="text-[12px] font-bold text-[#142B4F] hover:text-[#B49362]"
               >
                 Xem chi tiết →
               </button>
@@ -542,7 +542,7 @@ function resetFilters() {
 
         <div class="relative flex flex-wrap items-center justify-between gap-7">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
+            <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
               SMARTPROP / DISCOVER MORE
             </p>
 
@@ -566,7 +566,7 @@ function resetFilters() {
         </div>
       </section>
 
-      <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
+      <p class="mt-7 text-center text-[12px] leading-6 text-[#87919F]">
         Hình ảnh, giá và các trạng thái đánh giá đều là dữ liệu minh họa.
         Danh sách yêu thích chưa được đồng bộ với cơ sở dữ liệu.
       </p>
@@ -579,7 +579,7 @@ function resetFilters() {
           SmartProp<span class="text-[#C6A77A]">.</span>
         </RouterLink>
 
-        <p class="text-[11px] text-[#87919F]">
+        <p class="text-[12px] text-[#87919F]">
           © 2026 SmartProp · Favorites 2.0
         </p>
 
@@ -596,14 +596,14 @@ function resetFilters() {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
 }
 
 .sp-favorites h1,
 .sp-favorites h2,
 .sp-favorites h3 {
-  font-family: Arial, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   font-variant-ligatures: none;
   word-spacing: normal;
 }
