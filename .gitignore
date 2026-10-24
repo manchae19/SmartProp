@@ -1,1 +1,24 @@
 frontend/vue.ui/public/background.mp4
+.env
+.env.*
+!.env.example
+**/target/
+**/node_modules/
+**/dist/
+
+# Private uploads and report evidence
+backend/var/
+
+frontend/vue.ui/test-results/
+
+# Generated browser evidence / unexpected executables are never added by completion work.
+test-results/
+**/*.exe
+
+# Local caches, generated test output and logs
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/coverage/
+**/test-results/
+**/*.log

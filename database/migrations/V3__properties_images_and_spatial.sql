@@ -1,0 +1,137 @@
+-- SmartProp: MySQL 8.4.9 target; SQL also verified separately on available 8.0.43.
+-- Defaults use UTC; enum/check values not shown in the PNG are proposed decisions.
+CREATE TABLE projects (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  developer VARCHAR(255),
+  handover_year SMALLINT,
+  scale TEXT,
+  address TEXT,
+  location POINT SRID 4326,
+  amenities JSON NOT NULL DEFAULT (JSON_ARRAY()),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT ck_project_year CHECK (handover_year IS NULL OR handover_year BETWEEN 1900 AND 2200),
+  CONSTRAINT ck_project_amenities CHECK (JSON_TYPE(amenities)='ARRAY')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE properties (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  owner_id BIGINT NOT NULL,
+  project_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  property_type VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  transaction_type VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  price DECIMAL(18,2) NOT NULL,
+  currency CHAR(3) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'VND',
+  price_unit VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  area_sqm DECIMAL(12,2) NOT NULL,
+  bedrooms SMALLINT,
+  bathrooms SMALLINT,
+  floor VARCHAR(30),
+  block VARCHAR(50),
+  direction VARCHAR(30),
+  address TEXT,
+  city VARCHAR(100) NOT NULL DEFAULT 'Da Nang',
+  district VARCHAR(100),
+  ward VARCHAR(100),
+  location POINT NOT NULL SRID 4326,
+  contact_name VARCHAR(150),
+  contact_phone VARCHAR(30),
+  contact_email VARCHAR(254),
+  declared_amenities JSON NOT NULL DEFAULT (JSON_ARRAY()),
+  status VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'DRAFT',
+  content_version INT NOT NULL DEFAULT 1,
+  published_at DATETIME(6),
+  expires_at DATETIME(6),
+  closed_at DATETIME(6),
+  deleted_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_property_owner FOREIGN KEY (owner_id) REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_property_project FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT ck_property_type CHECK (property_type IN ('HOUSE', 'APARTMENT', 'LAND', 'VILLA', 'ROOM', 'COMMERCIAL')),
+  CONSTRAINT ck_transaction_type CHECK (transaction_type IN ('SALE', 'RENT')),
+  CONSTRAINT ck_price_unit CHECK (price_unit IN ('TOTAL', 'PER_MONTH', 'PER_YEAR', 'PER_DAY')),
+  CONSTRAINT ck_property_status CHECK (status IN ('DRAFT', 'PENDING', 'PUBLISHED', 'REJECTED', 'HIDDEN', 'EXPIRED', 'CLOSED')),
+  CONSTRAINT ck_property_price CHECK (price >= 0),
+  CONSTRAINT ck_property_area CHECK (area_sqm > 0),
+  CONSTRAINT ck_property_bedrooms CHECK (bedrooms IS NULL OR bedrooms >= 0),
+  CONSTRAINT ck_property_bathrooms CHECK (bathrooms IS NULL OR bathrooms >= 0),
+  CONSTRAINT ck_property_content_version CHECK (content_version > 0),
+  CONSTRAINT ck_property_price_period CHECK (transaction_type <> 'SALE' OR price_unit='TOTAL'),
+  CONSTRAINT ck_property_amenities CHECK (JSON_TYPE(declared_amenities)='ARRAY'),
+  KEY ix_properties_search (status,deleted_at,property_type,transaction_type,price),
+  KEY ix_properties_region (status,city,district,area_sqm),
+  KEY ix_properties_owner (owner_id,status,created_at),
+  KEY ix_properties_moderation (status,created_at),
+  SPATIAL KEY sx_properties_location (location)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE property_images (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  uploaded_by BIGINT NOT NULL,
+  storage_key VARCHAR(512) NOT NULL,
+  original_filename VARCHAR(255),
+  mime_type VARCHAR(50) NOT NULL,
+  byte_size BIGINT NOT NULL,
+  sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin,
+  width_px INT,
+  height_px INT,
+  sort_order INT NOT NULL,
+  is_cover BOOLEAN NOT NULL DEFAULT FALSE,
+  deleted_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  active_cover CHAR(36) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS (CASE WHEN is_cover=1 AND deleted_at IS NULL THEN property_id ELSE NULL END) STORED,
+  active_sort INT GENERATED ALWAYS AS (CASE WHEN deleted_at IS NULL THEN sort_order ELSE NULL END) STORED,
+  CONSTRAINT fk_image_property FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_image_uploader FOREIGN KEY (uploaded_by) REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_image_property (id,property_id),
+  UNIQUE KEY uq_image_cover (active_cover),
+  UNIQUE KEY uq_image_sort (property_id,active_sort),
+  CONSTRAINT ck_image_size CHECK (byte_size > 0),
+  CONSTRAINT ck_image_dimensions CHECK ((width_px IS NULL OR width_px > 0) AND (height_px IS NULL OR height_px > 0)),
+  CONSTRAINT ck_image_order CHECK (sort_order >= 0),
+  CONSTRAINT ck_image_cover_boolean CHECK (is_cover IN (0,1)),
+  KEY ix_image_checksum (sha256)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE saved_properties (
+  user_id BIGINT NOT NULL,
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  saved_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  PRIMARY KEY (user_id,property_id),
+  CONSTRAINT fk_saved_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_saved_property FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  KEY ix_saved_recent (user_id,saved_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE points_of_interest (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  location POINT NOT NULL SRID 4326,
+  source_name VARCHAR(255),
+  external_id VARCHAR(255),
+  source_url TEXT,
+  observed_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  UNIQUE KEY uq_poi_source (source_name,external_id),
+  KEY ix_poi_category (category),
+  SPATIAL KEY sx_poi_location (location)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE property_daily_stats (
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  stat_date DATE NOT NULL,
+  view_count BIGINT NOT NULL DEFAULT 0,
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  PRIMARY KEY (property_id,stat_date),
+  CONSTRAINT fk_stats_property FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT ck_stats_nonnegative CHECK (view_count >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

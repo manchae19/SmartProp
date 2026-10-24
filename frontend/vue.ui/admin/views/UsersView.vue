@@ -1,5 +1,6 @@
 <template>
   <div class="main">
+<LegacyState :state="state" />
     <!-- Tiêu đề danh sách người dùng -->
     <div class="section-title">
       <div class="danh-s-ch-ng-i-d-ng">Danh sách người dùng</div>
@@ -51,67 +52,18 @@
       </div>
     </div>
   </div>
-</template>
+<section v-if="target" class="bg-white rounded-2xl p-6"><h3>{{target.fullName}}</h3><label class="block text-xs mt-3">Lý do<textarea v-model="reason" maxlength="4000" class="block w-full border rounded-xl p-3 my-3"/></label><button @click="saveStatus" class="bg-[#1E325A] text-white rounded-full px-5 py-2 text-xs">Xác nhận</button></section><LegacyPager :state="state" /></template>
+<script setup>
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-<script>
-export default {
-  name: 'UsersView',
-  data() {
-    return {
-      usersList: [
-        {
-          id: 1,
-          avatarLetter: 'A',
-          name: 'Nguyễn Văn A',
-          email: 'nguyenvana@gmail.com',
-          roleText: 'Người dùng',
-          roleClass: 'role-user',
-          postsCount: '12 tin',
-          statusText: 'Hoạt động',
-          statusClass: 'status-active',
-          joinedDate: '12/03/2024',
-          isLocked: false
-        },
-        {
-          id: 2,
-          avatarLetter: 'B',
-          name: 'Trần Thị Bích',
-          email: 'tranthib@gmail.com',
-          roleText: 'Người dùng',
-          roleClass: 'role-user',
-          postsCount: '34 tin',
-          statusText: 'Hoạt động',
-          statusClass: 'status-active',
-          joinedDate: '28/06/2023',
-          isLocked: false
-        },
-        {
-          id: 3,
-          avatarLetter: 'N',
-          name: 'Lê Hoàng Nam',
-          email: 'lehoangnam@gmail.com',
-          roleText: 'Quản trị viên',
-          roleClass: 'role-admin',
-          postsCount: '3 tin',
-          statusText: 'Đã khóa',
-          statusClass: 'status-locked',
-          joinedDate: '04/01/2025',
-          isLocked: true
-        }
-      ]
-    }
-  },
-  methods: {
-    toggleLockUser(id) {
-      const user = this.usersList.find(u => u.id === id);
-      if (user) {
-        user.isLocked = !user.isLocked;
-        user.statusText = user.isLocked ? 'Đã khóa' : 'Hoạt động';
-        user.statusClass = user.isLocked ? 'status-locked' : 'status-active';
-      }
-    }
-  }
-}
+
+const state=useList('/admin/users'),target=ref(null),reason=ref(''),usersList=computed(()=>state.items.map(u=>({...u,name:u.fullName,avatarLetter:u.fullName.slice(0,1),roleText:u.role,roleClass:u.role==='ADMIN'?'role-admin':'role-user',postsCount:'—',statusText:states[u.status],statusClass:u.status==='LOCKED'?'status-locked':'status-active',joinedDate:date(u.createdAt),isLocked:u.status==='LOCKED'})));
+function toggleLockUser(id){target.value=state.items.find(u=>u.id===id);reason.value=''}
+async function saveStatus(){if(!reason.value.trim()){state.error='Nhập lý do thay đổi trạng thái.';return}await state.run(async()=>{await api('/admin/users/'+target.value.id+'/status',{method:'PATCH',body:{status:target.value.status==='LOCKED'?'ACTIVE':'LOCKED',reason:reason.value}});target.value=null;await state.load(state.page)})}
+
 </script>
 
 <style scoped>

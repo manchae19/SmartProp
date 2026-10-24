@@ -1,0 +1,7 @@
+{
+  "V8__project_management.sql": "e3fef21b1941bd413b512e36bd58b16515e08ffdaa49cdc603c654ad681caa12",
+  "V9__property_legal_documents.sql": "4f389b4f972e03f435dd6e5bbdd92625f2835cbad4d227035d1c78289b904caf",
+  "V10__refresh_sessions.sql": "3241a857535b4904bed7ebff1cb8c3ea988afd80d10ba7308827b01485a57c81",
+  "V11__email_verification_outbox.sql": "b0c11ad7daa29a2ab31a951e482e9c2bed6afed88dc60c6dd19f86c8cfbd003e",
+  "V12__messaging.sql": "4646820c29d4ad7740e6cacae1a90ce2537f8e6ef5d9c0e4b722677bf63fc441"
+}

@@ -1,5 +1,6 @@
 <template>
   <div class="main">
+<LegacyState :state="state" />
     <!-- Tiêu đề trang -->
     <div class="section-header">
       <div class="header-titles">
@@ -14,15 +15,15 @@
     <div class="stats-container">
       <div class="stat-card">
         <div class="stat-label">Thao tác hôm nay</div>
-        <div class="stat-value">6</div>
+        <div class="stat-value">—</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Tài khoản bị khoá</div>
-        <div class="stat-value">1</div>
+        <div class="stat-value">—</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Cảnh báo hệ thống</div>
-        <div class="stat-value">0</div>
+        <div class="stat-value">—</div>
       </div>
     </div>
 
@@ -40,7 +41,7 @@
 
     <!-- Danh sách hoạt động gần đây -->
     <div class="logs-section">
-      <div class="logs-header">10 hoạt động gần đây</div>
+      <div class="logs-header">{{state.totalElements}} hoạt động</div>
       
       <div class="logs-list">
         <div class="log-item" v-for="log in filteredLogs" :key="log.id">
@@ -54,119 +55,16 @@
       </div>
     </div>
   </div>
-</template>
+<LegacyPager :state="state" /></template>
+<script setup>
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-<script>
-export default {
-  name: 'AuditLogsView',
-  data() {
-    return {
-      currentTab: 'all',
-      tabs: [
-        { id: 'all', label: 'Tất cả · 10' },
-        { id: 'post', label: 'Duyệt / Từ chối tin' },
-        { id: 'account', label: 'Tài khoản' },
-        { id: 'ai', label: 'Cấu hình AI' },
-        { id: 'system', label: 'Hệ thống tự động' }
-      ],
-      logsList: [
-        {
-          id: 1,
-          category: 'post',
-          content: 'Trần Minh Đức (Admin) duyệt tin đăng "Căn hộ 2PN view sông Hàn" · Hải Châu',
-          meta: 'ADMIN-04 · IP 10.0.4.12',
-          time: '09:42, 18/09',
-          typeClass: 'type-approve'
-        },
-        {
-          id: 2,
-          category: 'post',
-          content: 'Trần Minh Đức (Admin) từ chối tin đăng "Villa sân vườn Điện Ngọc" · lý do: nghi ngờ ảnh giả mạo',
-          meta: 'ADMIN-04 · IP 10.0.4.12',
-          time: '08:15, 18/09',
-          typeClass: 'type-reject'
-        },
-        {
-          id: 3,
-          category: 'post',
-          content: 'Ngô Thuỳ Trang (Admin) gỡ tin đăng "Nhà 3 tầng hẻm xe hơi" theo báo cáo #204',
-          meta: 'ADMIN-02 · IP 10.0.4.31',
-          time: '16:30, 17/09',
-          typeClass: 'type-reject'
-        },
-        {
-          id: 4,
-          category: 'account',
-          content: 'Ngô Thuỳ Trang (Admin) khoá tài khoản "levan.hung@gmail.com" · lý do: spam tin đăng',
-          meta: 'ADMIN-02 · IP 10.0.4.31',
-          time: '14:02, 17/09',
-          typeClass: 'type-reject'
-        },
-        {
-          id: 5,
-          category: 'ai',
-          content: 'Trần Minh Đức (Admin) cập nhật ngưỡng cảnh báo trùng ảnh: 90% → 92%',
-          meta: 'ADMIN-04 · Cấu hình AI',
-          time: '11:20, 16/09',
-          typeClass: 'type-ai'
-        },
-        {
-          id: 6,
-          category: 'system',
-          content: 'Hệ thống (Tự động) ẩn 3 tin đăng đã quá hạn hiển thị 90 ngày',
-          meta: 'SYSTEM-JOB · scheduled',
-          time: '09:00, 16/09',
-          typeClass: 'type-system'
-        },
-        {
-          id: 7,
-          category: 'post',
-          content: 'Ngô Thuỳ Trang (Admin) bỏ qua báo cáo #198 — không phát hiện vi phạm',
-          meta: 'ADMIN-02 · IP 10.0.4.31',
-          time: '17:45, 15/09',
-          typeClass: 'type-approve'
-        },
-        {
-          id: 8,
-          category: 'post',
-          content: 'Trần Minh Đức (Admin) duyệt tin đăng "Đất nền Hoà Xuân" · Cẩm Lệ',
-          meta: 'ADMIN-04 · IP 10.0.4.12',
-          time: '10:10, 15/09',
-          typeClass: 'type-approve'
-        },
-        {
-          id: 9,
-          category: 'account',
-          content: 'Trần Minh Đức (Admin) mở khoá tài khoản "phamthu.ha@gmail.com"',
-          meta: 'ADMIN-04 · IP 10.0.4.12',
-          time: '15:33, 14/09',
-          typeClass: 'type-approve'
-        },
-        {
-          id: 10,
-          category: 'system',
-          content: 'Hệ thống (Tự động) cập nhật mô hình định giá XGBoost lên phiên bản v2.3',
-          meta: 'SYSTEM-JOB · model-deploy',
-          time: '08:47, 14/09',
-          typeClass: 'type-system'
-        }
-      ]
-    }
-  },
-  computed: {
-    filteredLogs() {
-      if (this.currentTab === 'all') {
-        return this.logsList;
-      }
-      return this.logsList.filter(log => log.category === this.currentTab);
-    }
-  },
-  methods: {
-    handlePostAction() {
-      alert('Chức năng đăng tin nhanh');
-    }
-  }
-}
+
+const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label:'Duyệt / Từ chối tin'},{id:'account',label:'Tài khoản'},{id:'report',label:'Báo cáo'}],state=useList('/admin/audit-logs'),logsList=computed(()=>state.items.map(l=>({...l,category:l.entityType==='USER'?'account':l.entityType==='REPORT'?'report':'post',content:l.action+' · '+(l.entityId||l.entityNumericId)+' · '+(l.oldValues?.status||'—')+' → '+(l.newValues?.status||'—'),meta:'Người thao tác #'+(l.actorId||'Hệ thống'),time:date(l.createdAt),typeClass:'type-approve'}))),filteredLogs=computed(()=>logsList.value.filter(l=>currentTab.value==='all'||l.category===currentTab.value));const handlePostAction=()=>{};
+
 </script>
 
 <style scoped>

@@ -1,0 +1,1 @@
+"""SmartProp AI application."""

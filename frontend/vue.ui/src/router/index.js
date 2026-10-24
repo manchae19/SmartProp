@@ -1,169 +1,52 @@
-import { createRouter, createWebHistory } from 'vue-router'
-
-import LoginView from '../components/LoginView.vue'
-import RegisterView from '../components/RegisterView.vue'
-
-// USER
-import HomeView from '../../user/views/HomeView.vue'
-import PostView from '../../user/views/PostView.vue'
-import PostStep2View from '../../user/views/PostStep2View.vue'
-import PostStep3View from '../../user/views/PostStep3View.vue'
-import PostStep4View from '../../user/views/PostStep4View.vue'
-import AccountView from '../../user/views/AccountView.vue'
-import FavoriteView from '../../user/views/FavoriteView.vue'
-import MyListingView from '../../user/views/MyListingView.vue'
-import MapView from '../../user/views/MapView.vue'
-import ListingDetailView from '../../user/views/ListingDetailView.vue'
-// ADMIN
-import AdminLayout from '../../admin/views/AdminLayout.vue'
-import DashboardView from '../../admin/views/DashboardView.vue'
-import PostsView from '../../admin/views/PostsView.vue'
-import UsersView from '../../admin/views/UsersView.vue'
-import ReportsView from '../../admin/views/ReportsView.vue'
-import AuditLogsView from '../../admin/views/AuditLogsView.vue'
-import AiConfigView from '../../admin/views/AiConfigView.vue'
-
-const routes = [
-  // Khi mở web -> Login
-  {
-    path: '/',
-    redirect: '/login'
-  },
-
-  // ================= USER =================
-
-  {
-    path: '/home',
-    name: 'Home',
-    component: HomeView
-  },
-  {
-  path: '/listings',
-  name: 'listings',
-  component: () => import('../../user/views/ListingsView.vue'),
-},
-  {
-  path: '/listing/:id',
-  name: 'ListingDetail',
-  component: ListingDetailView
-},
-{
-  path: '/listing/:id/report',
-  name: 'report-listing',
-  component: () => import('../../user/views/ReportListingView.vue'),
-},
-  {
-  path: '/map',
-  name: 'Map',
-  component: MapView
-},
-
-  {
-  path: '/account',
-  name: 'Account',
-  component: AccountView
-},
-{
-  path: '/account/reports',
-  name: 'my-reports',
-  component: () => import('../../user/views/MyReportsView.vue'),
-},
-{
-  path: '/favorites',
-  name: 'Favorites',
-  component: FavoriteView
-},
-
-{
-  path: '/my-listing',
-  name: 'MyListing',
-  component: MyListingView
-},
-
-  {
-    path: '/post',
-    name: 'Post',
-    component: PostView
-  },
-
-   {
-    path: '/post/step-2',
-    name: 'PostStep2',
-    component: PostStep2View
-  },
-
-  {
-  path: '/post/step-3',
-  name: 'PostStep3',
-  component: PostStep3View
-},
-
-{
-  path: '/post/step-4',
-  name: 'PostStep4',
-  component: PostStep4View
-},
-
-  {
-    path: '/login',
-    component: LoginView
-  },
-
-  {
-    path: '/register',
-    component: RegisterView
-  },
-
-  // ================= ADMIN =================
-
-  {
-    path: '/admin',
-    component: AdminLayout,
-    redirect: '/admin/dashboard',
-
-    children: [
-      {
-        path: 'dashboard',
-        name: 'AdminDashboard',
-        component: DashboardView
-      },
-
-      {
-        path: 'posts',
-        name: 'AdminPosts',
-        component: PostsView
-      },
-
-      {
-        path: 'users',
-        name: 'AdminUsers',
-        component: UsersView
-      },
-
-      {
-        path: 'reports',
-        name: 'AdminReports',
-        component: ReportsView
-      },
-
-      {
-        path: 'audit-logs',
-        name: 'AdminAuditLogs',
-        component: AuditLogsView
-      },
-
-      {
-        path: 'ai-config',
-        name: 'AdminAiConfig',
-        component: AiConfigView
-      }
-    ]
-  }
+import {createRouter,createWebHistory} from 'vue-router'
+import {session,loadProfile,restoreSession,refreshEnabled} from '../services/api'
+const restoredViews={
+ HomeView:()=>import('../../user/views/HomeView.vue'),
+ ListingsView:()=>import('../../user/views/ListingsView.vue'),
+ MapView:()=>import('../../user/views/MapView.vue'),
+ FavoriteView:()=>import('../../user/views/FavoriteView.vue'),
+ MyListingView:()=>import('../../user/views/MyListingView.vue'),
+ PostView:()=>import('../../user/views/PostView.vue'),
+ DashboardView:()=>import('../../admin/views/DashboardView.vue'),
+ PostsView:()=>import('../../admin/views/PostsView.vue'),
+ UsersView:()=>import('../../admin/views/UsersView.vue'),
+ ReportsView:()=>import('../../admin/views/ReportsView.vue'),
+ AuditLogsView:()=>import('../../admin/views/AuditLogsView.vue'),
+ ProjectsView:()=>import('../../admin/views/ProjectsView.vue'),
+ AiConfigView:()=>import('../../admin/views/AiConfigView.vue')
+}
+const routes=[
+ {path:'/',redirect:'/home'},
+ ...Object.entries({home:'HomeView',listings:'ListingsView',map:'MapView',favorites:'FavoriteView','my-listing':'MyListingView'}).map(([path,view])=>({path:'/'+path,component:restoredViews[view]})),
+ {path:'/listing/:id',component:()=>import('../../user/views/ListingDetailView.vue')},
+ {path:'/listing/:id/report',component:()=>import('../../user/views/ReportListingView.vue')},
+ {path:'/account/properties/:id/legal-documents',component:()=>import('../../user/views/LegalDocumentsView.vue')},
+ {path:'/account/sessions',component:()=>import('../../user/views/SessionsView.vue')},
+ {path:'/account/notifications',component:()=>import('../../user/views/NotificationsView.vue')},
+ {path:'/account/messages',component:()=>import('../../user/views/MessagesView.vue')},
+ {path:'/account/verify-email',component:()=>import('../../user/views/EmailActionView.vue')},
+ {path:'/reset-password',component:()=>import('../../user/views/EmailActionView.vue')},
+ {path:'/verify-email',component:()=>import('../../user/views/EmailActionView.vue')},
+ {path:'/account',component:()=>import('../../user/views/AccountView.vue')},
+ {path:'/account/reports',component:()=>import('../../user/views/MyReportsView.vue')},
+ ...['/post','/post/step-2','/post/step-3'].map(path=>({path,component:restoredViews.PostView})),
+ {path:'/post/step-4',redirect:to=>({path:'/post/step-3',query:to.query,hash:to.hash})},
+ {path:'/login',component:()=>import('../components/LoginView.vue')},
+ {path:'/register',component:()=>import('../components/RegisterView.vue')},
+ {path:'/admin',component:()=>import('../../admin/views/AdminLayout.vue'),redirect:'/admin/dashboard',children:Object.entries({dashboard:'DashboardView',posts:'PostsView',users:'UsersView',reports:'ReportsView','audit-logs':'AuditLogsView','ai-config':'AiConfigView',projects:'ProjectsView'}).map(([path,view])=>({path,component:restoredViews[view]}))},
+ {path:'/:pathMatch(.*)*',redirect:'/home'},
 ]
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes
+const router=createRouter({history:createWebHistory(),routes,scrollBehavior:(to,from,savedPosition)=>savedPosition||(['/home','/listings'].includes(to.path)&&to.path===from.path?false:to.path.startsWith('/post')&&to.hash?{el:to.hash,top:100,behavior:'smooth'}:{top:0})})
+router.beforeEach(async to=>{
+ const admin=to.path.startsWith('/admin'),publisher=to.path==='/post'||to.path.startsWith('/post/')
+ const protectedRoute=admin||publisher||['/account','/favorites','/my-listing'].some(path=>to.path===path||to.path.startsWith(path+'/'))||to.path.endsWith('/report')||to.query.own==='1'
+ if(!protectedRoute)return true
+ if(!session.token&&refreshEnabled)await restoreSession()
+ if(!session.token)return {path:'/login',query:{reason:'login-required'}}
+ try{await loadProfile()}catch{return {path:'/login',query:{reason:'session-unavailable'}}}
+ if(admin&&session.user.role!=='ADMIN')return '/home'
+ if(publisher&&!['ADMIN','BROKER'].includes(session.user.role))return '/my-listing'
+ return true
 })
-
+window.addEventListener('smartprop:session-expired',()=>router.replace({path:'/login',query:{reason:'session-expired'}}))
 export default router

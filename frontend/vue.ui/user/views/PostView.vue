@@ -1,495 +1,76 @@
 <script setup>
-import { ref } from 'vue'
-
-const transactionType = ref('Bán')
-const propertyType = ref('Nhà phố')
-const area = ref('Hải Châu')
-
-const transactionTypes = ['Bán', 'Cho thuê']
-
-const propertyTypes = [
-  { name: 'Nhà phố', icon: '🏠' },
-  { name: 'Căn hộ chung cư', icon: '▣' },
-  { name: 'Đất nền', icon: '▱' },
-  { name: 'Biệt thự', icon: '🏡' },
-  { name: 'Phòng trọ', icon: '🛏' },
-  { name: 'Kho / Mặt bằng', icon: '🏢' }
-]
-
-const areas = [
-  'Hải Châu',
-  'Thanh Khê',
-  'Sơn Trà',
-  'Ngũ Hành Sơn',
-  'Cẩm Lệ',
-  'Liên Chiểu',
-  'Hoà Vang'
-]
+import {computed,ref} from 'vue'
+import {useRoute} from 'vue-router'
+import {usePost} from '../../src/services/legacyPost.js'
+import {postSteps,propertyOptions,priceInput,areaInput,formatDecimal,hasRooms,locationConfirmed} from '../../src/services/postForm.js'
+import {districts} from '../../src/services/districts.js'
+import PostStepNav from '../../src/components/PostStepNav.vue'
+import PostValidationSummary from '../../src/components/PostValidationSummary.vue'
+import GooglePropertyLocation from '../../src/components/GooglePropertyLocation.vue'
+import PrivateImage from '../../src/components/business/PrivateImage.vue'
+import PostValuationPanel from '../../src/components/PostValuationPanel.vue'
+const route=useRoute(),editor=usePost()
+const {draft,state,managed,images,coverKey,imageCount,dirty,goStep,goNext,saveDraft,startNew,chooseFiles,removeImage,moveImage,chooseCover,selectLocation,clearLocation,confirmLocation,checkResult,reviewVersion,editAgain}=editor
+const step=computed(()=>postSteps.find(s=>s.path===route.path)?.step||3),fileInput=ref(null),showValuation=ref(false)
+const priceText=computed(()=>formatDecimal(priceInput(draft.price))),areaText=computed(()=>formatDecimal(areaInput(draft.area)))
+const unitText=computed(()=>draft.transactionType==='Bán'?'':({PER_MONTH:'/ tháng',PER_YEAR:'/ năm',PER_DAY:'/ ngày',TOTAL:'trọn kỳ thuê'})[draft.rentUnit])
+const currentTitle=computed(()=>postSteps[step.value-1].label)
+const locked=computed(()=>state.busy||!state.loaded||state.loadError)
+const cover=computed(()=>images.value.find(e=>e.key===coverKey.value)||images.value[0])
+const amenityOptions=['Máy lạnh','Tủ lạnh','Máy giặt','Giường','Sofa','Tivi','Bàn ăn','Ban công','Chỗ để xe']
+function pickFiles(event){chooseFiles(event.target.files||[]);event.target.value=''}
+function dropFiles(event){if(!locked.value)chooseFiles(event.dataTransfer.files)}
+function toggleAmenity(value){draft.selectedAmenities=draft.selectedAmenities.includes(value)?draft.selectedAmenities.filter(v=>v!==value):[...draft.selectedAmenities,value]}
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#e9e7e1] text-[#1E325A]">
-
-    <!-- ================= HERO ================= -->
-    <section class="relative h-[250px] overflow-hidden">
-
-      <!-- Video -->
-      <video
-        autoplay
-        muted
-        loop
-        playsinline
-        class="absolute inset-0 w-full h-full object-cover"
-      >
-        <source src="/background.mp4" type="video/mp4" />
-      </video>
-
-      <!-- Overlay -->
-      <div class="absolute inset-0 bg-black/50"></div>
-
-      <!-- Hero content -->
-      <div class="relative z-10 max-w-7xl mx-auto px-8 h-full">
-
-        <!-- Navbar -->
-        <header class="flex items-center justify-between pt-7">
-
-          <!-- Logo -->
-          <RouterLink
-            to="/home"
-            class="flex items-center gap-3"
-          >
-            <div
-              class="w-8 h-8 rounded-lg bg-white text-[#1E325A]
-                     flex items-center justify-center font-bold"
-            >
-              S
-            </div>
-
-            <span class="text-white text-lg font-semibold">
-              SmartProp
-            </span>
-          </RouterLink>
-
-          <!-- Account -->
-          <button
-            class="px-5 py-2 rounded-full border border-white/40
-                   text-white/90 text-sm hover:bg-white/10 transition"
-          >
-            Tài khoản
-          </button>
-        </header>
-
-        <!-- Page title -->
-        <div class="absolute left-8 bottom-8 text-white">
-
-          <h1 class="text-3xl font-light mb-2">
-            Đăng tin mới
-          </h1>
-
-          <div
-            class="text-[10px] uppercase tracking-[0.25em]
-                   text-white/70"
-          >
-            BƯỚC 1 / 4 · LOẠI HÌNH & HÌNH THỨC
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ================= PROGRESS ================= -->
-
-    <div class="max-w-7xl mx-auto px-8 py-6">
-      <div class="grid grid-cols-4 gap-1">
-
-        <div class="h-[2px] bg-[#1E325A]"></div>
-
-        <div class="h-[2px] bg-gray-300"></div>
-
-        <div class="h-[2px] bg-gray-300"></div>
-
-        <div class="h-[2px] bg-gray-300"></div>
-
-      </div>
-    </div>
-
-
-    <!-- ================= MAIN ================= -->
-
-    <main class="max-w-7xl mx-auto px-8 pb-16">
-
-      <div
-        class="grid grid-cols-1
-               lg:grid-cols-[minmax(0,1fr)_270px]
-               gap-4 items-start"
-      >
-
-        <!-- ===================================== -->
-        <!-- LEFT -->
-        <!-- ===================================== -->
-
-        <div class="space-y-4">
-
-
-          <!-- ========== TRANSACTION ========== -->
-
-          <section class="bg-white/80 rounded-3xl p-6">
-
-            <div class="mb-5">
-
-              <h2 class="text-sm font-semibold text-[#1E325A]">
-                Hình thức giao dịch
-              </h2>
-
-              <p class="text-[11px] text-gray-400 mt-1">
-                Chọn hình thức phù hợp với tin đăng của bạn.
-              </p>
-
-            </div>
-
-
-            <div class="grid grid-cols-2 gap-2">
-
-              <button
-                v-for="type in transactionTypes"
-                :key="type"
-                type="button"
-                @click="transactionType = type"
-                :class="[
-                  'h-12 rounded-xl border text-sm font-medium transition',
-                  
-                  transactionType === type
-                    ? 'bg-[#1E325A] border-[#1E325A] text-white'
-                    : 'bg-white border-gray-200 text-gray-400 hover:border-[#1E325A] hover:text-[#1E325A]'
-                ]"
-              >
-                {{ type }}
-              </button>
-
-            </div>
-
-          </section>
-
-
-          <!-- ========== PROPERTY TYPE ========== -->
-
-          <section class="bg-white/80 rounded-3xl p-6">
-
-            <div class="mb-5">
-
-              <h2 class="text-sm font-semibold text-[#1E325A]">
-                Loại hình bất động sản
-              </h2>
-
-              <p class="text-[11px] text-gray-400 mt-1">
-                Loại hình ảnh hưởng đến các trường thông tin ở bước tiếp theo.
-              </p>
-
-            </div>
-
-
-            <div
-              class="grid grid-cols-1
-                     sm:grid-cols-2
-                     lg:grid-cols-3
-                     gap-2"
-            >
-
-              <button
-                v-for="property in propertyTypes"
-                :key="property.name"
-                type="button"
-                @click="propertyType = property.name"
-                :class="[
-                  'h-[82px] rounded-xl border p-3 text-left transition',
-                  
-                  propertyType === property.name
-                    ? 'border-orange-500 bg-orange-50/40'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                ]"
-              >
-
-                <!-- icon -->
-                <div
-                  :class="[
-                    'w-7 h-7 rounded-lg flex items-center justify-center text-xs mb-2',
-
-                    propertyType === property.name
-                      ? 'bg-orange-100'
-                      : 'bg-gray-100'
-                  ]"
-                >
-                  {{ property.icon }}
-                </div>
-
-                <!-- name -->
-                <div
-                  :class="[
-                    'text-xs font-medium',
-
-                    propertyType === property.name
-                      ? 'text-orange-700'
-                      : 'text-gray-500'
-                  ]"
-                >
-                  {{ property.name }}
-                </div>
-
-              </button>
-
-            </div>
-
-          </section>
-
-
-          <!-- ========== AREA ========== -->
-
-          <section class="bg-white/80 rounded-3xl p-6">
-
-            <div class="mb-4">
-
-              <h2 class="text-sm font-semibold text-[#1E325A]">
-                Khu vực
-              </h2>
-
-              <p class="text-[11px] text-gray-400 mt-1">
-                Chọn quận/huyện tại Đà Nẵng để hệ thống gợi ý giá tham chiếu chính xác hơn.
-              </p>
-
-            </div>
-
-
-            <div class="flex flex-wrap gap-2">
-
-              <button
-                v-for="item in areas"
-                :key="item"
-                type="button"
-                @click="area = item"
-                :class="[
-                  'px-4 py-2 rounded-full border text-[11px] transition',
-
-                  area === item
-                    ? 'border-[#1E325A] bg-white text-[#1E325A]'
-                    : 'border-gray-200 bg-white text-gray-400 hover:border-[#1E325A]'
-                ]"
-              >
-                {{ item }}
-              </button>
-
-            </div>
-
-          </section>
-
-        </div>
-
-
-        <!-- ===================================== -->
-        <!-- RIGHT SIDEBAR -->
-        <!-- ===================================== -->
-
-        <aside class="lg:sticky lg:top-5">
-
-          <!-- Process box -->
-
-          <div
-            class="bg-[#1E325A]
-                   rounded-3xl
-                   p-6
-                   text-white"
-          >
-
-            <p
-              class="text-[9px]
-                     tracking-[0.2em]
-                     uppercase
-                     text-white/60"
-            >
-              Quy trình đăng tin
-            </p>
-
-
-            <h3 class="text-base font-medium mt-2">
-              4 bước, khoảng 5 phút
-            </h3>
-
-
-            <p
-              class="text-[10px]
-                     leading-relaxed
-                     text-white/50
-                     mt-2"
-            >
-              Giá tham chiếu XGBoost và các yếu tố ảnh hưởng
-              sẽ xuất hiện sau khi hoàn tất.
-            </p>
-
-
-            <!-- STEPS -->
-
-            <div
-              class="border-t
-                     border-white/10
-                     mt-14
-                     pt-4
-                     space-y-4"
-            >
-
-
-              <!-- STEP 1 -->
-
-              <div class="flex items-center gap-3 text-xs">
-
-                <div
-                  class="w-5 h-5
-                         rounded-full
-                         bg-emerald-300
-                         text-[#1E325A]
-                         flex items-center
-                         justify-center
-                         text-[9px]
-                         font-bold"
-                >
-                  1
-                </div>
-
-                <span>
-                  Loại hình & hình thức
-                </span>
-
-              </div>
-
-
-              <!-- STEP 2 -->
-
-              <div
-                class="flex items-center
-                       gap-3
-                       text-xs
-                       text-white/50"
-              >
-
-                <div
-                  class="w-5 h-5
-                         rounded-full
-                         bg-white/15
-                         flex items-center
-                         justify-center
-                         text-[9px]"
-                >
-                  2
-                </div>
-
-                <span>
-                  Thông tin & ảnh
-                </span>
-
-              </div>
-
-
-              <!-- STEP 3 -->
-
-              <div
-                class="flex items-center
-                       gap-3
-                       text-xs
-                       text-white/50"
-              >
-
-                <div
-                  class="w-5 h-5
-                         rounded-full
-                         bg-white/15
-                         flex items-center
-                         justify-center
-                         text-[9px]"
-                >
-                  3
-                </div>
-
-                <span>
-                  Xác minh & pháp lý
-                </span>
-
-              </div>
-
-
-              <!-- STEP 4 -->
-
-              <div
-                class="flex items-center
-                       gap-3
-                       text-xs
-                       text-white/50"
-              >
-
-                <div
-                  class="w-5 h-5
-                         rounded-full
-                         bg-white/15
-                         flex items-center
-                         justify-center
-                         text-[9px]"
-                >
-                  4
-                </div>
-
-                <span>
-                  Xem lại & đăng tin
-                </span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- CONTINUE -->
-
-          <button
-            type="button"
-             @click="$router.push('/post/step-2')"
-            class="w-full
-                   h-11
-                   mt-3
-                   rounded-full
-                   bg-[#1E325A]
-                   text-white
-                   text-xs
-                   hover:opacity-90
-                   transition"
-          >
-            Tiếp tục ↗
-          </button>
-
-
-          <!-- SAVE -->
-
-          <button
-            type="button"
-            class="w-full
-                   h-11
-                   mt-2
-                   rounded-full
-                   bg-white
-                   border
-                   border-gray-200
-                   text-gray-400
-                   text-xs
-                   hover:text-[#1E325A]
-                   hover:border-[#1E325A]
-                   transition"
-          >
-            Lưu nháp
-          </button>
-
-        </aside>
-
-      </div>
-
-    </main>
-
-  </div>
+ <div class="posting-page">
+  <header class="posting-header"><RouterLink to="/home" class="brand"><span>S</span>SmartProp</RouterLink><div class="header-links"><RouterLink to="/my-listing">Tin đăng của tôi</RouterLink><RouterLink to="/account">Tài khoản</RouterLink></div></header>
+  <main class="posting-main">
+   <div class="posting-title"><div><p class="eyebrow">ĐĂNG BÁN / CHO THUÊ</p><h1>{{managed?'Chỉnh sửa tin đăng':'Tạo tin đăng mới'}}</h1><p>Thông tin rõ ràng, hình ảnh thực tế và vị trí do bạn xác nhận.</p></div><span class="step-badge">Bước {{step}} / 3</span></div>
+   <PostStepNav :current="step" :busy="state.busy"/>
+   <PostValidationSummary :issues="state.issues"/>
+   <div v-if="state.error" class="posting-alert error" role="alert"><strong>Chưa hoàn tất thao tác</strong><p>{{state.error}}</p><button v-if="state.conflict" type="button" :disabled="state.busy" @click="reviewVersion">Đối chiếu phiên bản máy chủ</button><button v-if="state.uncertainCreate||state.uncertainUpload" type="button" :disabled="state.busy" @click="checkResult">Đối chiếu kết quả</button><button v-if="state.loadError" type="button" :disabled="state.busy" @click="editor.initialize(route.query.edit)">Thử tải lại tin</button></div>
+   <p v-if="state.notice&&!state.complete" role="status" class="posting-alert notice">{{state.notice}}</p>
+   <p v-if="state.localSaveError" role="status" class="posting-alert error">Trình duyệt chưa giữ được bản nháp. Nội dung vẫn ở tab này; hãy lưu nháp tài khoản khi đủ thông tin và vị trí.</p>
+   <section v-if="state.complete" class="posting-success" role="status"><span class="success-symbol">✓</span><p class="eyebrow">ĐÃ GỬI DUYỆT</p><h2>Tin của bạn đã được tiếp nhận</h2><p>{{managed?.property.title}}</p><p>Trạng thái trên máy chủ: <strong>{{managed?.property.status==='PENDING'?'Chờ duyệt':managed?.property.status==='PUBLISHED'?'Đã được duyệt':managed?.property.status}}</strong>. Tin chỉ hiển thị công khai khi được quản trị viên phê duyệt.</p><div class="success-actions"><RouterLink class="primary-button" to="/my-listing">Đến tin đăng của tôi</RouterLink><button type="button" class="secondary-button" @click="editAgain">Chỉnh sửa lại</button><button type="button" class="text-button" @click="startNew">Tạo tin khác</button></div></section>
+   <div v-else class="posting-layout">
+    <form class="posting-form" novalidate @submit.prevent="step<3&&goNext()">
+     <fieldset :disabled="locked">
+      <template v-if="step===1">
+       <section class="posting-card"><div class="card-heading"><span class="section-number">01</span><div><h2>Thông tin & giá</h2><p>Bắt đầu với nhu cầu và thông tin chính của bất động sản.</p></div></div>
+        <div class="field"><span id="transaction-label" class="field-label">Nhu cầu <span class="required">*</span></span><div id="post-transactionType" class="transaction-options" role="group" aria-labelledby="transaction-label" tabindex="-1"><button v-for="value in ['Bán','Cho thuê']" :key="value" type="button" :aria-pressed="draft.transactionType===value" :class="{selected:draft.transactionType===value}" @click="draft.transactionType=value">{{value==='Bán'?'Đăng bán':'Cho thuê'}}</button></div></div>
+        <label class="field" for="post-propertyType"><span>Loại bất động sản <span class="required">*</span></span><select id="post-propertyType" v-model="draft.propertyType"><option v-for="option in propertyOptions" :key="option.value" :value="option.value">{{option.label}}</option></select></label>
+        <label class="field" for="post-title"><span>Tiêu đề tin đăng <span class="required">*</span></span><input id="post-title" v-model="draft.title" maxlength="255" placeholder="Ví dụ: Bán căn hộ 2 phòng ngủ, ban công thoáng tại Hải Châu" autocomplete="off"><small>{{draft.title.length}} / 255 ký tự · Nêu điểm nổi bật, tránh viết toàn bộ bằng chữ in hoa.</small></label>
+        <div class="field-grid"><label class="field" for="post-area"><span>Diện tích <span class="required">*</span></span><div class="input-unit"><input id="post-area" v-model="draft.area" inputmode="decimal" placeholder="86,3"><span>m²</span></div><small v-if="areaInput(draft.area)!==null">{{areaText}} m²</small></label><label class="field" for="post-price"><span>{{draft.transactionType==='Bán'?'Giá bán':'Giá thuê'}} <span class="required">*</span></span><div class="input-unit"><input id="post-price" v-model="draft.price" inputmode="decimal" placeholder="Ví dụ: 2,5 tỷ hoặc 12.000.000"><span>VND</span></div><small v-if="priceInput(draft.price)!==null" class="exact-value">{{priceText}} VND {{unitText}}</small><small v-else>Nhập VND hoặc ghi rõ triệu/tỷ; ví dụ 2,5 tỷ.</small></label></div>
+        <label v-if="draft.transactionType==='Cho thuê'" class="field" for="post-priceUnit"><span>Đơn vị giá thuê <span class="required">*</span></span><select id="post-priceUnit" v-model="draft.rentUnit"><option value="PER_MONTH">VND / tháng</option><option value="PER_YEAR">VND / năm</option><option value="PER_DAY">VND / ngày</option><option value="TOTAL">VND / trọn kỳ thuê</option></select></label>
+        <div v-if="hasRooms(draft.propertyType)" class="field-grid optional-rooms"><label class="field" for="post-bedrooms"><span>Phòng ngủ <small>Tùy chọn</small></span><input id="post-bedrooms" v-model="draft.bedrooms" type="number" min="0" max="32767" step="1" placeholder="Không cung cấp"></label><label class="field" for="post-bathrooms"><span>Phòng tắm <small>Tùy chọn</small></span><input id="post-bathrooms" v-model="draft.bathrooms" type="number" min="0" max="32767" step="1" placeholder="Không cung cấp"></label></div>
+       </section>
+      </template>
+      <template v-else-if="step===2">
+       <section id="post-images" tabindex="-1" class="posting-card"><div class="card-heading"><span class="section-number">02</span><div><h2>Ảnh bất động sản</h2><p>Ảnh rõ ràng giúp người xem hiểu đúng bất động sản.</p></div><span class="count-badge">{{imageCount}} / 30</span></div>
+        <div class="upload-zone" @dragover.prevent @drop.prevent="dropFiles"><span class="upload-symbol" aria-hidden="true">↑</span><h3>Chọn nhiều ảnh hoặc kéo ảnh vào đây</h3><p>JPEG/PNG · tối đa 10 MB/ảnh · tối đa 30 ảnh</p><button type="button" class="secondary-button" @click="fileInput?.click()">Chọn ảnh từ thiết bị</button><input ref="fileInput" class="visually-hidden" type="file" accept="image/jpeg,image/png" multiple aria-label="Tải ảnh bất động sản" @change="pickFiles"></div>
+        <p class="field-help">Lưu nháp không bắt buộc ảnh; gửi duyệt cần ít nhất 1 ảnh. Ảnh tối đa 12000 px mỗi chiều và 40 triệu pixel. Chỉ đăng ảnh bạn có quyền sử dụng.</p>
+        <div v-if="images.length" class="photo-grid"><article v-for="(entry,index) in images" :key="entry.key" class="photo-card"><div class="photo-image"><PrivateImage v-if="entry.server" :src="entry.server.url" :alt="'Ảnh bất động sản '+(index+1)"/><img v-else :src="entry.preview" :alt="entry.file.name"><span v-if="coverKey===entry.key" class="cover-badge">Ảnh đại diện</span><span class="upload-badge">{{entry.server?'Đã tải':'Chưa tải'}}</span></div><p class="photo-name">{{entry.file?.name||'Ảnh '+(index+1)}}</p><button type="button" class="cover-button" :aria-pressed="coverKey===entry.key" @click="chooseCover(entry.key)">{{coverKey===entry.key?'✓ Ảnh đại diện':'Chọn làm đại diện'}}</button><div class="photo-actions"><button type="button" :disabled="index===0" :aria-label="'Đưa ảnh '+(index+1)+' lên trước'" @click="moveImage(entry.key,-1)">↑ Lên</button><button type="button" :disabled="index===images.length-1" :aria-label="'Đưa ảnh '+(index+1)+' xuống sau'" @click="moveImage(entry.key,1)">↓ Xuống</button><button type="button" :aria-label="'Xóa ảnh '+(index+1)" class="delete-image" @click="removeImage(entry.key)">Xóa</button></div></article></div>
+       </section>
+       <section class="posting-card"><div class="card-heading"><div><h2>Địa chỉ & vị trí</h2><p>Nhập địa chỉ thực tế, chọn ghim rồi xác nhận vị trí.</p></div></div><label class="field" for="post-address"><span>Địa chỉ đầy đủ <span class="required">*</span></span><input id="post-address" v-model="draft.address" autocomplete="street-address" maxlength="4000" placeholder="Số nhà, đường, phường và thành phố"><small>Ví dụ: 12 đường …, phường …, Đà Nẵng. Không điền địa chỉ minh họa thay cho địa chỉ thực.</small></label><div class="field-grid three"><label class="field" for="post-city"><span>Thành phố</span><select id="post-city" v-model="draft.city"><option value="Da Nang">Đà Nẵng</option><option v-if="draft.city&&draft.city!=='Da Nang'" :value="draft.city">{{draft.city}}</option></select></label><label class="field" for="post-district"><span>Quận/huyện <small>Tùy chọn</small></span><select id="post-district" v-model="draft.district"><option value="">Chọn khu vực</option><option v-for="district in districts.filter(d=>d!=='Tất cả')" :key="district">{{district}}</option><option v-if="draft.district&&!districts.includes(draft.district)" :value="draft.district">{{draft.district}}</option></select></label><label class="field" for="post-ward"><span>Phường/xã <small>Tùy chọn</small></span><input id="post-ward" v-model="draft.ward" maxlength="100" placeholder="Phường/xã"></label></div><GooglePropertyLocation :address="draft.address" :latitude="draft.latitude" :longitude="draft.longitude" :confirmed="locationConfirmed(draft)" :disabled="locked" @select="selectLocation" @invalidate="clearLocation" @confirm="confirmLocation"/></section>
+      </template>
+      <template v-else>
+       <section class="posting-card"><div class="card-heading"><span class="section-number">03</span><div><h2>Mô tả & liên hệ</h2><p>Bổ sung thông tin để người quan tâm dễ liên hệ với bạn.</p></div></div><label class="field" for="post-description"><span>Mô tả bất động sản <small>Tùy chọn</small></span><textarea id="post-description" v-model="draft.description" rows="5" maxlength="20000" placeholder="Mô tả không gian, hiện trạng, tiện ích và điều kiện bán hoặc cho thuê…"/><small>{{draft.description.length}} / 20000 ký tự</small></label><div class="field-grid"><label class="field" for="post-contactName"><span>Tên liên hệ <small>Tùy chọn</small></span><input id="post-contactName" v-model="draft.contactName" autocomplete="name" maxlength="150" placeholder="Tên người liên hệ"></label><label class="field" for="post-phone"><span>Số điện thoại <small>Tùy chọn</small></span><input id="post-phone" v-model="draft.phone" type="tel" autocomplete="tel" maxlength="30" placeholder="Số điện thoại liên hệ"></label></div><label class="field" for="post-contact"><span>Email liên hệ <small>Tùy chọn</small></span><input id="post-contact" v-model="draft.contact" type="email" autocomplete="email" maxlength="254" placeholder="Email người liên hệ"></label><p class="field-help">Thông tin liên hệ được gợi sẵn từ tài khoản và có thể chỉnh sửa. Chỉ cung cấp thông tin bạn có quyền sử dụng.</p></section>
+       <details class="posting-card extra-information"><summary>Thêm thông tin <span>Tùy chọn</span></summary><div class="field-grid three"><label class="field" for="post-direction"><span>Hướng nhà</span><select id="post-direction" v-model="draft.direction"><option value="">Không cung cấp</option><option v-for="value in ['Đông','Tây','Nam','Bắc','Đông Bắc','Đông Nam','Tây Bắc','Tây Nam']" :key="value">{{value}}</option></select></label><label class="field" for="post-floor"><span>Thông tin tầng</span><input id="post-floor" v-model="draft.floor" maxlength="30" placeholder="Ví dụ: Tầng 5 / 3 tầng"></label><label class="field" for="post-block"><span>Tòa / block</span><input id="post-block" v-model="draft.block" maxlength="50" placeholder="Tòa / block"></label></div><div id="post-declaredAmenities" tabindex="-1" class="amenities"><span class="field-label">Tiện ích & nội thất</span><label v-for="value in amenityOptions" :key="value"><input type="checkbox" :checked="draft.selectedAmenities.includes(value)" @change="toggleAmenity(value)">{{value}}</label></div></details>
+       <section class="posting-card preview-card" aria-label="Xem trước tin đăng"><div class="card-heading"><div><h2>Xem trước thông tin</h2><p>Kiểm tra lại trước khi gửi quản trị viên duyệt.</p></div></div><div class="preview-summary"><div v-if="cover" class="preview-photo"><PrivateImage v-if="cover.server" :src="cover.server.url" alt="Ảnh đại diện xem trước"/><img v-else :src="cover.preview" alt="Ảnh đại diện xem trước"></div><div><span class="preview-type">{{draft.transactionType}} · {{draft.propertyType}}</span><h3>{{draft.title||'Chưa có tiêu đề'}}</h3><p class="preview-price">{{priceText}} VND {{unitText}}</p><p>{{areaText}} m²<span v-if="hasRooms(draft.propertyType)&&draft.bedrooms"> · {{draft.bedrooms}} phòng ngủ</span></p><p>{{draft.address||'Chưa có địa chỉ'}}</p></div></div><dl class="preview-details"><div><dt>Ảnh</dt><dd>{{imageCount}} ảnh · {{images.filter(e=>!e.server).length}} ảnh chưa tải</dd></div><div><dt>Vị trí</dt><dd>{{locationConfirmed(draft)?'Đã xác nhận ghim':'Chưa xác nhận vị trí'}}</dd></div><div><dt>Liên hệ</dt><dd>{{[draft.contactName,draft.phone,draft.contact].filter(Boolean).join(' · ')||'Chưa cung cấp'}}</dd></div></dl><p v-if="draft.description" class="description-preview">{{draft.description}}</p><div class="legal-note"><p>Hồ sơ pháp lý không bắt buộc trong form cơ bản. Hồ sơ được quản lý riêng và chỉ có kết quả xác minh sau khi được kiểm duyệt.</p><RouterLink v-if="managed" :to="'/account/properties/'+managed.property.id+'/legal-documents'">Quản lý hồ sơ pháp lý riêng tư ↗</RouterLink></div><label id="post-consent" class="consent" tabindex="-1"><input v-model="draft.accepted" type="checkbox"><span>Tôi xác nhận có quyền đăng nội dung, hình ảnh và chịu trách nhiệm về tính chính xác của thông tin này.</span></label></section>
+      </template>
+     </fieldset>
+     <div class="posting-actions"><button type="button" class="secondary-button back-button" :disabled="locked||step===1" @click="goStep(step-1)">← Quay lại</button><button type="button" class="secondary-button save-button" :disabled="locked" @click="saveDraft(false)">{{state.busy?'Đang xử lý…':'Lưu nháp'}}</button><button v-if="step<3" type="submit" class="primary-button" :disabled="locked">Tiếp tục →</button><button v-else type="button" class="primary-button" :disabled="locked" @click="saveDraft(true)">{{state.busy?'Đang xử lý…':'Gửi duyệt'}}</button></div>
+     <p class="save-explanation">Nháp tài khoản cần đủ thông tin cơ bản và vị trí đã xác nhận. Nội dung chưa đủ điều kiện chỉ được giữ trên trình duyệt, không được báo là đã lưu máy chủ.</p>
+    </form>
+    <aside class="posting-sidebar"><section class="sidebar-card"><p class="eyebrow">TIN ĐĂNG CỦA BẠN</p><h2>{{currentTitle}}</h2><dl><div><dt>Nhu cầu</dt><dd>{{draft.transactionType}}</dd></div><div><dt>Loại</dt><dd>{{draft.propertyType}}</dd></div><div><dt>Diện tích</dt><dd>{{areaText}} m²</dd></div><div><dt>Giá</dt><dd>{{priceText}} VND {{unitText}}</dd></div><div><dt>Hình ảnh</dt><dd>{{imageCount}} / 30 ảnh</dd></div><div><dt>Vị trí</dt><dd>{{locationConfirmed(draft)?'Đã xác nhận':'Chưa xác nhận'}}</dd></div></dl><div class="draft-status"><strong>{{managed?'Nháp tài khoản đã có mã tin':'Nháp trên trình duyệt'}}</strong><p v-if="managed">{{dirty?'Còn thay đổi trong form cần lưu.':'Thông tin hiện tại khớp nháp trên máy chủ.'}}</p><p v-else>Nội dung chưa được lưu vào tài khoản.</p><p v-if="state.savedAt">Lưu tài khoản gần nhất: {{new Date(state.savedAt).toLocaleTimeString('vi-VN')}}</p></div><p class="sidebar-note">Gửi duyệt không tự công khai tin. Bạn có thể theo dõi kết quả tại Tin đăng của tôi.</p></section><details v-if="step===1" class="valuation-optional" @toggle="showValuation=$event.target.open"><summary>Giá tham khảo <span>Tùy chọn</span></summary><PostValuationPanel v-if="showValuation" :draft="draft"/></details></aside>
+   </div>
+  </main>
+ </div>
 </template>
+
+<style scoped>
+.posting-page{min-height:100vh;background:#f5f3ed;color:#1e325a;font-family:inherit}.posting-header{max-width:1160px;margin:auto;padding:24px 24px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #dcdedb}.brand{display:flex;gap:10px;align-items:center;font-weight:700;font-size:17px;text-decoration:none;color:#1e325a}.brand span{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#1e325a;color:white;font-size:15px}.header-links{display:flex;gap:20px;font-size:12px}.header-links a{color:#1e325a;text-decoration:none}.posting-main{max-width:1160px;margin:auto;padding:30px 24px 60px}.posting-title{display:flex;align-items:center;justify-content:space-between;gap:20px}.eyebrow{font-size:10px;letter-spacing:.18em;color:#a37b44;font-weight:700;margin:0 0 8px}.posting-title h1{font-size:29px;line-height:1.2;margin:0 0 10px;font-weight:600;letter-spacing:-.5px}.posting-title>div>p:last-child{font-size:13px;color:#68768a;margin:0;line-height:1.6}.step-badge{white-space:nowrap;border:1px solid #d5dbe1;border-radius:24px;padding:10px 14px;font-size:12px}.posting-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:22px;align-items:start}.posting-form{min-width:0}.posting-form fieldset{border:0;padding:0;margin:0;min-width:0}.posting-form fieldset:disabled{opacity:.75}.posting-card{background:#fff;border:1px solid #e6e5df;border-radius:20px;padding:26px;margin-bottom:18px}.card-heading{display:flex;align-items:center;gap:12px;margin-bottom:23px}.card-heading h2{font-size:17px;font-weight:600;margin:0 0 5px}.card-heading p{font-size:12px;color:#748092;margin:0;line-height:1.6}.section-number{display:grid;place-items:center;flex-shrink:0;width:35px;height:35px;background:#f0eee8;color:#98733f;font-size:12px;border-radius:11px}.field{display:flex;flex-direction:column;gap:8px;margin:0 0 20px;min-width:0;font-size:12px;font-weight:500}.field-label{font-size:12px;font-weight:500}.field span small{font-size:10px;color:#84909d;font-weight:400;margin-left:5px}.required{color:#ad6b38}.field input,.field select,.field textarea{box-sizing:border-box;width:100%;min-width:0;border:1px solid #d7dde5;border-radius:9px;padding:12px;color:#1e325a;background:white;font:inherit;font-size:13px;font-weight:400;line-height:1.4}.field input::placeholder,.field textarea::placeholder{color:#929aa7;font-size:12px}.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #bfa06e;outline-offset:1px;border-color:#bfa06e}.field small,.field-help{font-size:11px;line-height:1.6;color:#778495;font-weight:400}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.input-unit{display:flex;position:relative}.input-unit input{padding-right:48px}.input-unit>span{position:absolute;right:12px;top:13px;font-size:11px;color:#7a8799}.field small.exact-value{color:#1e325a;font-weight:600}.transaction-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}.transaction-options button{background:#fff;border:1px solid #d7dde5;border-radius:10px;padding:13px;color:#617086;font:inherit}.transaction-options button.selected{background:#1e325a;color:#fff;border-color:#1e325a}.optional-rooms{border-top:1px solid #eceeea;padding-top:19px}.optional-rooms .field{margin-bottom:0}.posting-sidebar{position:sticky;top:22px}.sidebar-card{background:#1e325a;color:white;border-radius:18px;padding:23px}.sidebar-card .eyebrow{color:#c3a575}.sidebar-card h2{font-size:20px;font-weight:500;margin:14px 0 23px}.sidebar-card dl{margin:0}.sidebar-card dl>div{display:flex;justify-content:space-between;gap:15px;margin:15px 0;font-size:12px}.sidebar-card dt{color:#b8c2d1}.sidebar-card dd{margin:0;text-align:right;max-width:155px;overflow-wrap:anywhere}.draft-status{margin-top:22px;padding-top:20px;border-top:1px solid #fff2}.draft-status strong{font-size:12px}.draft-status p,.sidebar-note{font-size:11px;line-height:1.7;color:#c1cbd9}.sidebar-note{margin:20px 0 0}.posting-actions{display:flex;gap:10px;align-items:center;padding:16px 0}.primary-button,.secondary-button,.text-button{display:inline-flex;align-items:center;justify-content:center;padding:12px 19px;min-height:44px;border-radius:11px;font:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;border:1px solid #d3dbe3}.primary-button{background:#1e325a;color:white;border-color:#1e325a}.secondary-button{background:white;color:#1e325a}.text-button{background:transparent;color:#1e325a;border-color:transparent}.save-button{margin-left:auto}.posting-actions button:disabled,.photo-actions button:disabled{opacity:.45;cursor:not-allowed}.save-explanation{font-size:11px;line-height:1.7;color:#7a8696;margin:0}.posting-alert{border-radius:12px;padding:15px 18px;font-size:12px;line-height:1.6;margin:0 0 18px;overflow-wrap:anywhere}.posting-alert p{margin:4px 0}.posting-alert button{margin-top:8px;border:1px solid currentColor;border-radius:7px;padding:7px 10px;font:inherit;background:transparent}.posting-alert.error{color:#923d2d;background:#fff0ec;border:1px solid #efd2c9}.posting-alert.notice{color:#2c654f;background:#eaf6ee;border:1px solid #c6dfce}.count-badge{margin-left:auto;white-space:nowrap;background:#f2f3ee;padding:6px 9px;border-radius:7px;font-size:11px}.upload-zone{border:1.5px dashed #bac4cf;border-radius:13px;background:#fafbf9;text-align:center;padding:24px 16px}.upload-symbol{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#e9edf0;font-size:22px;color:#1e325a}.upload-zone h3{font-size:13px;font-weight:500;margin:12px 0 6px}.upload-zone p{font-size:11px;color:#7c8997;margin:0 0 16px}.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}.photo-card{min-width:0;border:1px solid #dfe4e8;border-radius:11px;overflow:hidden;background:white}.photo-image{height:140px;position:relative;background:#eef0eb}.photo-image :deep(img),.preview-photo :deep(img),.photo-image>img,.preview-photo>img{width:100%;height:100%;object-fit:cover}.cover-badge,.upload-badge{position:absolute;left:7px;top:7px;background:#1e325a;color:white;border-radius:5px;padding:4px 6px;font-size:9px}.upload-badge{top:auto;bottom:6px;background:#fffffff0;color:#495f72}.photo-name{padding:0 9px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:10px 0}.cover-button{width:calc(100% - 16px);margin:0 8px 9px;padding:6px 3px;background:#f4f6f6;border:1px solid #dfe4e8;border-radius:6px;font:inherit;font-size:10px;color:#1e325a}.photo-actions{display:flex;border-top:1px solid #e2e6e9}.photo-actions button{flex:1;padding:8px 2px;font:inherit;font-size:10px;border:0;background:white;color:#52667b}.photo-actions .delete-image{color:#b34d3a}.extra-information summary{cursor:pointer;font-size:14px;font-weight:500}.extra-information summary span,.valuation-optional summary span{font-size:11px;color:#7a8796;font-weight:400;margin-left:7px}.extra-information[open] summary{margin-bottom:24px}.amenities{display:flex;flex-wrap:wrap;gap:10px}.amenities>.field-label{width:100%;margin-bottom:3px}.amenities label{display:flex;align-items:center;gap:7px;font-size:12px;background:#f6f7f4;border-radius:7px;padding:9px 11px}.preview-summary{display:flex;gap:18px}.preview-photo{width:130px;height:120px;flex-shrink:0;overflow:hidden;border-radius:10px}.preview-type{font-size:11px;color:#967344}.preview-summary h3{font-size:18px;line-height:1.4;margin:8px 0;overflow-wrap:anywhere}.preview-summary p{font-size:12px;line-height:1.7;margin:5px 0;color:#69788a}.preview-summary .preview-price{font-size:18px;color:#1e325a;font-weight:600}.preview-details{padding-top:10px;margin:15px 0;border-top:1px solid #e8eae6;font-size:12px}.preview-details>div{display:grid;grid-template-columns:90px 1fr;gap:10px;margin:12px 0}.preview-details dt{color:#82909e}.preview-details dd{margin:0;overflow-wrap:anywhere}.description-preview{font-size:13px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}.legal-note{font-size:11px;line-height:1.7;padding:12px;background:#f6f5ef;border-radius:9px;color:#718091}.legal-note p{margin:0}.legal-note a{display:inline-block;color:#1e325a;margin-top:7px}.consent{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.7;margin-top:20px}.consent input{margin-top:4px;width:16px;height:16px;flex-shrink:0;accent-color:#1e325a}.valuation-optional{background:white;border:1px solid #e3e4df;margin-top:14px;border-radius:14px;overflow:hidden}.valuation-optional summary{padding:16px;font-size:12px;cursor:pointer}.posting-success{background:white;border:1px solid #dce5dc;border-radius:20px;padding:40px;max-width:850px;margin:16px auto}.success-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#e6f5ed;color:#2a7854;font-size:23px;margin-bottom:22px}.posting-success h2{font-size:25px;margin:12px 0}.posting-success p{font-size:13px;line-height:1.8}.success-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:23px}:focus-visible{outline:2px solid #b5935b;outline-offset:3px}
+@media(max-width:900px){.posting-layout{grid-template-columns:1fr}.posting-sidebar{display:none}.posting-main{max-width:780px}}@media(max-width:600px){.posting-header{padding:17px 16px}.header-links{gap:12px;font-size:11px}.posting-main{padding:24px 14px 35px}.posting-title h1{font-size:23px}.posting-title>div>p:last-child{font-size:12px}.step-badge{padding:8px 10px;font-size:11px}.posting-card{padding:19px 16px;border-radius:15px}.card-heading{margin-bottom:21px}.card-heading h2{font-size:16px}.field-grid,.field-grid.three{grid-template-columns:1fr;gap:0}.optional-rooms{grid-template-columns:1fr 1fr;gap:10px}.field input,.field select,.field textarea{font-size:16px;min-height:44px}.photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.photo-image{height:140px}.posting-actions{position:sticky;bottom:0;z-index:10;background:#f5f3edf5;padding:13px 0;gap:7px}.posting-actions button{padding:11px 10px;flex:1;font-size:11px}.posting-actions .back-button:disabled{display:none}.save-button{margin-left:0}.preview-summary{flex-direction:column}.preview-photo{width:100%;height:190px}.posting-success{padding:25px 20px}.posting-success h2{font-size:22px}.success-actions>*{width:100%}.save-explanation{margin-top:8px}}
+</style>

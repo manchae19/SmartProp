@@ -1,282 +1,2864 @@
 <script setup>
-// Khởi tạo logic trang Home nếu cần
+import {ref,computed,onMounted,onUnmounted} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {districts,districtValue,districtLink} from '../../src/services/districts.js'
+import ListingCard from '../../src/components/business/ListingCard.vue'
+import {usePublicListings} from '../../src/services/usePublicListings.js'
+import ProjectDirectory from '../../src/components/ProjectDirectory.vue'
+import MarketSummary from '../../src/components/MarketSummary.vue'
+import {useList,LegacyState,LegacyPager,types} from '../../src/services/legacy.js'
+import {collectionProperty} from '../../src/services/collection.js'
+const router=useRouter(),route=useRoute()
+
+ 
+
+const menuOpen = ref(false)
+
+const searchOpen = ref(false)
+
+const compareOpen = ref(false)
+
+const viewingOpen = ref(false)
+
+const viewingSuccess = ref(false)
+
+const selectedProject = ref(null)
+
+const amenityDistrict = ref('Hải Châu')
+
+const amenityType = ref('Tất cả')
+
+const activeArea = computed({get:()=>districtValue(route.query.district)||'Tất cả',set:value=>{if(districtValue(value)!==districtValue(route.query.district))router.push({path:'/home',query:{...route.query,district:districtValue(value)||undefined},hash:route.hash})}})
+
+
+
+ 
+
+const areas=computed(()=>districts.filter(name=>name!=='Tất cả').map(name=>({name})))
+const projectState=useList('/projects')
+const projects=computed(()=>projectState.items.map(p=>({...p,location:p.address||'',description:p.scale||''})))
+
+const filters = ref({
+
+  keyword: '',
+
+  district: 'Tất cả',
+
+  type: 'Tất cả',
+
+  minPrice: '',
+
+  maxPrice: '',
+
+  minArea: '',
+
+  bedrooms: 'Tất cả',
+
+  legal: 'Tất cả',
+
+})
+
+ 
+
+const state=usePublicListings(()=>({keyword:filters.value.keyword,district:activeArea.value!=='Tất cả'?activeArea.value:districtValue(filters.value.district),propertyType:Object.keys(types).find(k=>types[k]===filters.value.type),minPrice:filters.value.minPrice?Number(filters.value.minPrice)*1e9:null,maxPrice:filters.value.maxPrice?Number(filters.value.maxPrice)*1e9:null,minArea:filters.value.minArea||null,bedrooms:filters.value.bedrooms==='Tất cả'?null:filters.value.bedrooms,sort:'newest'}),{size:6})
+const properties=computed(()=>state.items.map(collectionProperty))
+
+// The backend owns visibility and all supported filters across the entire collection.
+const filteredProperties=properties
+
+const displayedProperties = properties
+
+ 
+
+function resetFilters() {
+
+  filters.value = {
+
+    keyword: '',
+
+    district: 'Tất cả',
+
+    type: 'Tất cả',
+
+    minPrice: '',
+
+    maxPrice: '',
+
+    minArea: '',
+
+    bedrooms: 'Tất cả',
+
+    legal: 'Tất cả',
+
+  }
+
+  activeArea.value = 'Tất cả'
+
+}
+
+ 
+
+function scrollToSection(id) {
+
+  menuOpen.value = false
+
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+
+}
+
+ 
+
+function goToProperties() {
+  if(filters.value.district!=='Tất cả'){activeArea.value=filters.value.district;filters.value.district='Tất cả'}
+
+  searchOpen.value = false
+
+  menuOpen.value = false
+
+  document
+
+    .getElementById('properties')
+
+    ?.scrollIntoView({ behavior: 'smooth' })
+
+}
+
+ 
+
+function selectArea(name) { activeArea.value=name; filters.value.district='Tất cả'; compareIds.value=[] }
+
+ 
+
+const compareIds = ref([])
+
+ 
+
+const comparedProperties = computed(() =>
+
+  properties.value.filter((p) => compareIds.value.includes(p.id))
+
+)
+
+ 
+
+function toggleCompare(id) {
+
+  if (compareIds.value.includes(id)) {
+
+    compareIds.value = compareIds.value.filter((x) => x !== id)
+
+    return
+
+  }
+
+ 
+
+  if (compareIds.value.length >= 3) {
+
+    alert('Bạn chỉ có thể so sánh tối đa 3 bất động sản.')
+
+    return
+
+  }
+
+ 
+
+  compareIds.value = [...compareIds.value, id]
+
+}
+
+ 
+
+function formatPrice(value) {
+
+  return `${Number(value).toLocaleString('vi-VN')} tỷ`
+
+}
+
+ 
+
+function pricePerSquareMeter(property) {
+
+  return Math.round((property.price * 1000) / property.area)
+
+}
+
+ 
+
+const viewing = ref({
+
+  propertyId: null,
+
+  name: '',
+
+  phone: '',
+
+  date: '',
+
+  time: '',
+
+  note: '',
+
+})
+
+ 
+
+const minDate = new Date().toLocaleDateString('en-CA')
+
+ 
+
+const selectedViewingProperty = computed(() =>
+
+  properties.value.find((p) => p.id === viewing.value.propertyId)
+
+)
+
+ 
+
+function openViewing(id) {
+
+  viewing.value.propertyId = id
+
+  viewingSuccess.value = false
+
+  viewingOpen.value = true
+
+}
+
+ 
+
+function submitViewing() {
+
+  if (
+
+    !viewing.value.name.trim() ||
+
+    !viewing.value.phone.trim() ||
+
+    !viewing.value.date ||
+
+    !viewing.value.time
+
+  ) {
+
+    return
+
+  }
+
+ 
+
+  viewingSuccess.value = true
+
+}
+
+ 
+
+const amenities = [
+
+  { name: 'Trường học', icon: '🎓' },
+
+  { name: 'Bệnh viện', icon: '✚' },
+
+  { name: 'Siêu thị', icon: '🛍' },
+
+  { name: 'Công viên', icon: '🌳' },
+
+  { name: 'Giao thông', icon: '🚉' },
+
+]
+
+ 
+
+const visibleAmenities = computed(() =>
+
+  amenityType.value === 'Tất cả'
+
+    ? amenities
+
+    : amenities.filter((a) => a.name === amenityType.value)
+
+)
+
+ 
+
+const valuation = ref({
+
+  area: 80,
+
+  unitPrice: 45,
+
+  adjustment: 0,
+
+})
+
+ 
+
+const estimatedValue = computed(
+
+  () =>
+
+    (Number(valuation.value.area || 0) *
+
+      Number(valuation.value.unitPrice || 0) *
+
+      (1 + Number(valuation.value.adjustment || 0) / 100)) /
+
+    1000
+
+)
+
+ 
+
+const loan = ref({
+
+  propertyPrice: 4,
+
+  downPayment: 30,
+
+  years: 20,
+
+  interest: 9,
+
+})
+
+ 
+
+const loanPrincipal = computed(() =>
+
+  Math.max(
+
+    0,
+
+    Number(loan.value.propertyPrice || 0) *
+
+      1_000_000_000 *
+
+      (1 - Number(loan.value.downPayment || 0) / 100)
+
+  )
+
+)
+
+ 
+
+const monthlyPayment = computed(() => {
+
+  const principal = loanPrincipal.value
+
+  const months = Math.max(1, Number(loan.value.years || 1) * 12)
+
+  const rate = Number(loan.value.interest || 0) / 1200
+
+ 
+
+  if (rate === 0) return principal / months
+
+ 
+
+  const factor = Math.pow(1 + rate, months)
+
+  return (principal * rate * factor) / (factor - 1)
+
+})
+
+ 
+
+function moneyVnd(value) {
+
+  return Math.round(value).toLocaleString('vi-VN') + ' ₫'
+
+}
+
+ 
+
+function handleEscape(event) {
+
+  if (event.key === 'Escape') {
+
+    searchOpen.value = false
+
+    compareOpen.value = false
+
+    viewingOpen.value = false
+
+    selectedProject.value = null
+
+    menuOpen.value = false
+
+  }
+
+}
+
+ 
+
+onMounted(() => {
+
+  window.addEventListener('keydown', handleEscape)
+
+})
+
+ 
+
+onUnmounted(() => {
+
+  window.removeEventListener('keydown', handleEscape)
+
+})
+
+const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeArea.value:filters.value.district);
 </script>
 
-<template>
-  <div class="min-h-screen bg-[#f4f3ec] text-[#6b6375] font-sans antialiased selection:bg-blue-500 selection:text-white">
-    <!-- Hero Section (Giống Ảnh 2) -->
-    <div class="relative min-h-[430px] md:min-h-[500px] bg-[#1a1c23] text-white overflow-hidden">
-      <!-- Background Video & Gradient Overlay -->
-      <div class="absolute inset-0 opacity-40 overflow-hidden pointer-events-none">
-        <video autoplay muted loop playsinline class="w-full h-full object-cover">
-          <source src="/background.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-[#1a1c23]/90"></div>
+ 
 
-      <!-- Header / Navbar -->
-      <header class="relative z-10 max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div class="w-9 h-9 rounded-xl bg-white flex items-center justify-center font-bold text-lg text-gray-900 shadow-md">
-  S
-</div>
-          <span class="text-lg font-semibold tracking-wide text-white">SmartProp</span>
-        </div>
-        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
-          <RouterLink to="/post" class="hover:text-white transition">Đăng tin</RouterLink>
-          <RouterLink
-  to="/account"
-  class="hover:text-white transition"
->
-  Tài khoản
-</RouterLink>
+<template>
+
+  <div class="min-h-screen bg-[#F7F5F0] text-[#142B4F]">
+
+    <main>
+
+
+    <!-- ================= HERO ================= -->
+
+ 
+
+    <section
+
+      id="home"
+
+      class="relative flex min-h-[760px] flex-col overflow-hidden bg-[#091728] text-white lg:min-h-[820px]"
+
+    >
+
+      <video
+
+        autoplay
+
+        muted
+
+        loop
+
+        playsinline
+
+        class="absolute inset-0 h-full w-full object-cover"
+
+      >
+
+        <source src="/background.mp4" type="video/mp4" />
+
+      </video>
+
+ 
+
+      <div class="absolute inset-0 bg-gradient-to-r from-[#071525]/90 via-[#071525]/55 to-[#071525]/20"></div>
+
+      <div class="absolute inset-0 bg-gradient-to-t from-[#071525]/80 via-transparent to-[#071525]/30"></div>
+
+ 
+
+      <!-- Decorative tech grid -->
+
+      <div class="sp-tech-grid pointer-events-none absolute inset-0 opacity-20"></div>
+
+ 
+
+      <!-- Light accent -->
+
+      <div class="pointer-events-none absolute -right-32 top-20 h-[480px] w-[480px] rounded-full bg-[#5CB9D3]/10 blur-[110px]"></div>
+
+ 
+
+      <!-- NAV -->
+
+      <header class="relative z-30 mx-auto flex w-full max-w-[1360px] items-center justify-between px-6 py-7 md:px-10">
+
+ 
+
+        <button
+
+          type="button"
+
+          @click="scrollToSection('home')"
+
+          class="flex items-center gap-3"
+
+        >
+
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/60 font-serif text-lg">
+
+            S
+
+          </span>
+
+ 
+
+          <span class="text-xl font-semibold tracking-tight">
+
+            SmartProp<span class="text-[#D8B887]">.</span>
+
+          </span>
+
+        </button>
+
+ 
+
+        <nav class="hidden items-center gap-7 text-xs font-medium text-white/80 lg:flex">
+
+          <button @click="scrollToSection('projects')" class="transition hover:text-[#D8B887]">Dự án</button>
+
+          <button @click="scrollToSection('properties')" class="transition hover:text-[#D8B887]">Bất động sản</button>
+
+          <button @click="scrollToSection('gis')" class="transition hover:text-[#D8B887]">GIS Explorer</button>
+
+          <button @click="scrollToSection('valuation')" class="transition hover:text-[#D8B887]">Định giá</button>
+
+          <button @click="scrollToSection('investment')" class="transition hover:text-[#D8B887]">Tài chính</button>
+
         </nav>
-        <div>
-          <RouterLink
-  to="/map" class="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm backdrop-blur-md transition text-white border border-white/10">
-            <span>Xem bản đồ</span>
+
+ 
+
+        <div class="hidden items-center gap-3 lg:flex">
+
+          <RouterLink :to="areaLink('/listings')" class="hidden text-xs font-semibold hover:text-[#D8B887] xl:inline">Danh sách</RouterLink>
+
+          <RouterLink to="/map" class="hidden text-xs font-semibold hover:text-[#D8B887] xl:inline">Bản đồ</RouterLink>
+
+          <RouterLink to="/account" class="text-xs font-semibold hover:text-[#D8B887]">
+
+            Tài khoản
+
           </RouterLink>
+
+ 
+
+          <RouterLink
+
+            to="/post"
+
+            class="rounded-full border border-white/50 px-6 py-3 text-xs font-semibold transition hover:bg-white hover:text-[#142B4F]"
+
+          >
+
+            Đăng tin ↗
+
+          </RouterLink>
+
         </div>
+
+ 
+
+        <button
+
+          type="button"
+
+          aria-label="Mở menu"
+
+          @click="menuOpen = !menuOpen"
+
+          class="flex h-10 w-10 items-center justify-center rounded-full border border-white/50 lg:hidden"
+
+        >
+
+          ☰
+
+        </button>
+
       </header>
 
-      <!-- Hero Content -->
-      <div class="relative z-10 max-w-4xl mx-auto text-center px-6 pt-4 pb-16">
-        <div class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-medium tracking-wide mb-6 text-gray-200 border border-white/10 shadow-sm">
-          <span>◇</span>
-          <span>Định giá có giải thích</span>
-        </div>
-        <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-5 text-white leading-tight">
-          Nhìn xuyên một tin nhà đất
-        </h1>
-        <p class="text-gray-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
-          Bản đồ GIS, giá tham chiếu kèm lý do, và đối chiếu hình ảnh — đủ cơ sở để bạn tự đánh giá một tin đăng ở Đà Nẵng.
-        </p>
+ 
+
+      <!-- MOBILE MENU -->
+
+      <div
+
+        v-if="menuOpen"
+
+        class="relative z-40 mx-5 grid gap-4 rounded-2xl border border-white/20 bg-[#142B4F]/95 p-6 text-sm lg:hidden"
+
+      >
+
+        <button @click="scrollToSection('projects')" class="text-left">Dự án</button>
+
+        <button @click="scrollToSection('properties')" class="text-left">Bất động sản</button>
+
+        <button @click="scrollToSection('gis')" class="text-left">GIS Explorer</button>
+
+        <button @click="scrollToSection('valuation')" class="text-left">Định giá</button>
+
+        <button @click="scrollToSection('investment')" class="text-left">Tài chính</button>
+
+        <RouterLink to="/map">Bản đồ GIS</RouterLink>
+
+        <RouterLink :to="areaLink('/listings')">Danh sách bất động sản</RouterLink>
+
+        <RouterLink to="/account">Tài khoản</RouterLink>
+
+        <RouterLink to="/post">Đăng tin</RouterLink>
+
       </div>
 
-      <!-- Bottom floating elements inside Hero -->
-      <div class="relative z-10 max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-end gap-4 mt-4">
-        <!-- Stats Box (Left) -->
-        <div class="bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl px-4 py-3 flex items-center space-x-3 shadow-xl">
-          <div>
-            <div class="text-2xl font-bold text-white tracking-tight">2.417</div>
-            <div class="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">TIN ĐĂNG ĐÀ NẴNG</div>
-          </div>
-          <RouterLink
-  to="/listings" class="bg-white hover:bg-gray-100 text-gray-900 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1 shadow-md">
-  <span>Bắt đầu tìm</span>
-  </RouterLink>
-        </div>
+ 
 
-        <!-- Explain Box (Right) -->
-        <div class="bg-white/10 backdrop-blur-xl border border-white/15 rounded-xl px-3 py-2.5 flex items-center space-x-2.5 shadow-xl">
-          <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white text-xs">ℹ</div>
-          <div class="text-left">
-            <div class="text-xs font-semibold text-white">Giá này từ đâu ra?</div>
-            <a href="#" class="text-[11px] text-gray-300 hover:text-white transition underline">Xem cách hệ thống giải thích ›</a>
-          </div>
-        </div>
-      </div>
-    </div>
+      <!-- HERO CONTENT -->
 
-    <!-- Main Content Container (Giống Ảnh 3) -->
-    <main class="max-w-[1120px] mx-auto px-6 -mt-0 relative z-20 space-y-12 pb-20">
-      <!-- Section: Why Choose SmartProp -->
-     <section class="bg-[#e9e7e1] rounded-[28px] px-8 py-10 md:px-12 md:py-12 border-0 shadow-none">
-        <div class="text-center max-w-xl mx-auto mb-10">
-          <h2 class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-2">Vì sao chọn SmartProp</h2>
-          <h3 class="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Đủ dữ liệu để tự tin ra quyết định</h3>
-        </div>
+      <div class="relative z-10 mx-auto flex w-full max-w-[1360px] flex-1 items-center px-6 pb-32 pt-14 md:px-10">
 
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[760px] mx-auto">
-          <!-- Card 1 -->
-<div class="bg-[#fcfcfd] hover:bg-[#f8f8fa] transition p-4 rounded-xl border border-gray-100 flex flex-col justify-between shadow-sm">
-  <div>
-    <div class="w-10 h-10 rounded-xl bg-[#1E325A] text-white flex items-center justify-center font-bold mb-4 shadow-md">
-      ₫
-    </div>
+ 
 
-    <h4 class="font-bold text-base text-gray-900 mb-2">
-      Định giá minh bạch
-    </h4>
+        <div class="max-w-[900px]">
 
-    <p class="text-xs text-gray-500 leading-relaxed">
-      Mô hình XGBoost kèm biểu đồ SHAP giải thích từng yếu tố ảnh hưởng đến giá, không chỉ đưa ra một con số.
-    </p>
-  </div>
-</div>
+ 
 
-          <!-- Card 2 -->
-          <div class="bg-[#fcfcfd] hover:bg-[#f8f8fa] transition p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm">
-            <div>
-              <div class="w-10 h-10 rounded-xl bg-[#1E325A] text-white flex items-center justify-center font-bold mb-4 shadow-md">◎</div>
-              <h4 class="font-bold text-base text-gray-900 mb-2">Đối chiếu ảnh bằng AI</h4>
-              <p class="text-xs text-gray-500 leading-relaxed">
-                Mạng nơ-ron so khớp ảnh tin đăng để phát hiện ảnh trùng lặp, hỗ trợ quản trị viên xác minh trước khi hiển thị.
-              </p>
-            </div>
+          <div class="mb-7 flex flex-wrap items-center gap-3">
+
+            <span class="h-px w-10 bg-[#D8B887]"></span>
+
+ 
+
+            <span class="text-[10px] font-semibold uppercase tracking-[.24em] text-[#E4C89E]">
+
+              Real Estate × Intelligence
+
+            </span>
+
+ 
+
+            <span class="sp-pulse ml-1 h-1.5 w-1.5 rounded-full bg-[#6DD5E7]"></span>
+
+ 
+
+            <span class="text-[10px] text-[#BCE6ED]">
+
+              SmartProp Experience
+
+            </span>
+
           </div>
 
-          <!-- Card 3 -->
-          <div class="bg-[#fcfcfd] hover:bg-[#f8f8fa] transition p-6 rounded-2xl border border-gray-100 flex flex-col justify-between shadow-sm">
-            <div>
-              <div class="w-10 h-10 rounded-xl bg-[#1E325A] text-white flex items-center justify-center font-bold mb-4 shadow-md">⌖</div>
-              <h4 class="font-bold text-base text-gray-900 mb-2">Bản đồ GIS chi tiết</h4>
-              <p class="text-xs text-gray-500 leading-relaxed">
-                Toạ độ chính xác, khoảng cách đến tiện ích xung quanh tính theo dữ liệu không gian thực tế.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+ 
 
-      <!-- Section: Featured Listings -->
-      <section>
-        <div class="flex items-end justify-between mb-6">
-          <div>
-            <h3 class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1">Tin đăng nổi bật</h3>
-            <h4 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Vừa cập nhật tại Đà Nẵng</h4>
-          </div>
-          <RouterLink
-  to="/listings" class="text-gray-900 font-semibold text-xs hover:underline flex items-center space-x-1">
-            <span>Xem tất cả</span>
-            <span>›</span>
-          </RouterLink>
-        </div>
+          <h1 class="font-serif text-[clamp(3.5rem,7.5vw,7.8rem)] font-normal leading-[1.03] tracking-[-.045em]">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Property Item 1 -->
-          <RouterLink
-  to="/listing/1"
-  class="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100/80 flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
->
-            <div class="h-44 bg-gray-100 relative flex items-center justify-center border-b border-gray-500/10">
-              <span class="absolute top-3 left-3 bg-amber-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md z-10 shadow-sm">Ảnh trùng 94%</span>
-              <span class="text-gray-400 text-xs">Hình ảnh nhà ở</span>
-            </div>
-            <div class="p-5 flex flex-col flex-grow justify-between space-y-3">
-  <div>
-    <h5 class="font-bold text-gray-900 text-sm mb-1">
-      Nhà 3 tầng hẻm xe hơi, gần cầu Rồng
-    </h5>
+            Nhà không chỉ
 
-    <p class="text-xs text-gray-400">
-      Hải Châu, Đà Nẵng
-    </p>
-  </div>
+            <br>
 
-  <div class="text-base font-bold text-gray-900">
-    4,85 tỷ đ
-  </div>
-</div>
+            là một
 
-</RouterLink>
+            <span class="italic text-[#D8B887]">mức giá.</span>
 
-          <!-- Property Item 2 -->
-          <RouterLink
-  to="/listing/2"
-  class="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100/80 flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
->
-            <div class="h-44 bg-gray-100 relative flex items-center justify-center border-b border-gray-500/10">
-              <span class="absolute top-3 left-3 bg-emerald-600 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md z-10 shadow-sm">Không cảnh báo</span>
-              <span class="text-gray-400 text-xs">Hình ảnh căn hộ</span>
-            </div>
-            <div class="p-5 flex flex-col flex-grow justify-between space-y-3">
-              <div>
-                <h5 class="font-bold text-gray-900 text-sm mb-1">Căn hộ 2PN view sông Hàn</h5>
-                <p class="text-xs text-gray-400">Hải Châu, Đà Nẵng</p>
-              </div>
-              <div class="text-base font-bold text-gray-900">3,20 tỷ ₫</div>
-            </div>
-          </RouterLink>
+          </h1>
 
-          <!-- Property Item 3 -->
-<RouterLink
-  to="/listing/3"
-  class="bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100/80 flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
->
-  <!-- Image -->
-  <div
-    class="h-44 bg-gray-100 relative flex items-center justify-center border-b border-gray-500/10"
-  >
-    <span
-      class="absolute top-3 left-3 bg-emerald-600 text-white text-[11px] font-semibold px-3 py-1.5 rounded-lg"
-    >
-      Giá hợp lý
-    </span>
+ 
 
-    <span class="text-gray-400 text-xs">
-      Hình ảnh đất nền
-    </span>
-  </div>
+          <p class="mt-8 max-w-xl text-sm leading-8 text-white/75 sm:text-base">
 
-  <!-- Content -->
-  <div class="p-5 flex flex-col flex-grow justify-between space-y-3">
-    <div>
-      <h5 class="font-bold text-gray-900 text-sm mb-1">
-        Đất nền Hoà Xuân, sổ đỏ riêng
-      </h5>
+            Khám phá bất động sản Đà Nẵng từ góc nhìn mới.
 
-      <p class="text-xs text-gray-400">
-        Cẩm Lệ, Đà Nẵng
-      </p>
-    </div>
+            Nơi dữ liệu thị trường, bản đồ GIS và công nghệ
 
-    <div class="text-base font-bold text-gray-900">
-      2,95 tỷ đ
-    </div>
-  </div>
-</RouterLink>
-</div>
-      </section>
+            phân tích giúp bạn hiểu sâu hơn về giá trị của một ngôi nhà.
 
-      <!-- Section: 4 Steps to Post -->
-      <section class="bg-[#1E325A] text-white rounded-3xl p-8 md:p-10 relative overflow-hidden shadow-xl">
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
-          <div>
-            <h3 class="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-1">4 bước để đăng tin</h3>
-            <h4 class="text-xl md:text-2xl font-bold text-white tracking-tight">Đăng tin của bạn trong vài phút</h4>
-          </div>
-          <RouterLink to="/post" class="inline-flex items-center justify-center space-x-2 bg-white text-gray-900 hover:bg-gray-100 px-5 py-2.5 rounded-xl font-semibold text-xs transition shadow-md">
-            <span>Bắt đầu đăng tin</span>
+          </p>
+
+ 
+
+          <div class="mt-10 flex flex-wrap gap-3">
+
+            <button
+
+              type="button"
+
+              @click="searchOpen = true"
+
+              class="group rounded-full bg-[#D8B887] px-8 py-4 text-xs font-bold text-[#142B4F] transition duration-300 hover:-translate-y-1 hover:bg-[#E8CAA0]"
+
+            >
+
+              Khám phá bất động sản
+
+              <span class="ml-2 inline-block transition group-hover:translate-x-1">↗</span>
+
+            </button>
+
+ 
+
+            <RouterLink
+
+              to="/map"
+
+              class="rounded-full border border-white/50 px-8 py-4 text-xs font-semibold backdrop-blur-sm transition hover:border-[#6DD5E7] hover:bg-white/10"
+
+            >
+
+              Khám phá GIS
+
             </RouterLink>
+
+          </div>
+
+ 
+
+          <!-- TECHNOLOGY HINT -->
+
+          <div class="mt-10 flex flex-wrap gap-5 text-[10px] uppercase tracking-[.16em] text-white/55">
+
+            <span class="flex items-center gap-2">
+
+              <span class="h-1.5 w-1.5 rounded-full bg-[#6DD5E7]"></span>
+
+              Market Intelligence
+
+            </span>
+
+ 
+
+            <span class="flex items-center gap-2">
+
+              <span class="h-1.5 w-1.5 rounded-full bg-[#6DD5E7]"></span>
+
+              GIS Technology
+
+            </span>
+
+ 
+
+            <span class="flex items-center gap-2">
+
+              <span class="h-1.5 w-1.5 rounded-full bg-[#6DD5E7]"></span>
+
+              Explainable AI
+
+            </span>
+
+          </div>
+
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl">
-            <div class="text-gray-400 font-bold text-sm mb-1">01</div>
-            <div class="text-xs font-medium text-gray-200">Loại tin đăng</div>
+      </div>
+
+ 
+
+      <!-- HERO BOTTOM -->
+
+      <div class="absolute bottom-8 left-6 right-6 z-10 mx-auto flex max-w-[1280px] items-end justify-between border-t border-white/20 pt-5 md:left-10 md:right-10">
+
+ 
+
+        <div class="flex flex-wrap gap-8 sm:gap-14">
+
+          <div>
+
+            <p class="text-[10px] uppercase tracking-[.18em] text-white/50">Location</p>
+
+            <p class="mt-2 text-xs font-semibold">Đà Nẵng, Việt Nam</p>
+
           </div>
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl">
-            <div class="text-gray-400 font-bold text-sm mb-1">02</div>
-            <div class="text-xs font-medium text-gray-200">Thông tin & ảnh</div>
+
+ 
+
+          <div>
+
+            <p class="text-[10px] uppercase tracking-[.18em] text-white/50">Experience</p>
+
+            <p class="mt-2 text-xs font-semibold">Luxury × Technology</p>
+
           </div>
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl">
-            <div class="text-gray-400 font-bold text-sm mb-1">03</div>
-            <div class="text-xs font-medium text-gray-200">Xác nhận từ AI</div>
-          </div>
-          <div class="bg-white/5 border border-white/10 p-4 rounded-2xl">
-            <div class="text-gray-400 font-bold text-sm mb-1">04</div>
-            <div class="text-xs font-medium text-gray-200">Xem lại & đăng tin</div>
-          </div>
+
         </div>
+
+ 
+
+        <button
+
+          type="button"
+
+          @click="scrollToSection('projects')"
+
+          aria-label="Cuộn đến thị trường"
+
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/50 text-xl transition hover:bg-white hover:text-[#142B4F]"
+
+        >
+
+          ↓
+
+        </button>
+
+      </div>
+
+    </section>
+
+ 
+
+      <!-- QUICK SEARCH -->
+
+      <section class="relative z-10 mx-auto -mt-4 max-w-6xl px-5">
+
+        <div
+
+          class="rounded-3xl border border-[#E7E1D7] bg-white p-5 shadow-2xl shadow-[#142B4F]/10 md:p-7"
+
+        >
+
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+
+            <h2 class="text-xl font-bold">Tìm bất động sản phù hợp</h2>
+
+            <button
+
+              @click="searchOpen = true"
+
+              class="text-sm font-bold text-[#A27E4A] hover:underline"
+
+            >
+
+              Bộ lọc nâng cao ↗
+
+            </button>
+
+          </div>
+
+ 
+
+          <div class="grid gap-3 md:grid-cols-4">
+
+            <input
+
+              v-model="filters.keyword"
+
+              placeholder="Tên hoặc địa điểm..."
+
+              class="rounded-xl border border-[#E5E0D7] px-4 py-3 outline-none focus:border-[#B3915F]"
+
+            />
+
+ 
+
+            <select
+
+              v-model="filters.district"
+
+              class="rounded-xl border border-[#E5E0D7] px-4 py-3 outline-none focus:border-[#B3915F]"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option v-for="area in areas" :key="area.name" :value="area.name">{{ area.name }}</option>
+
+            </select>
+
+ 
+
+            <select
+
+              v-model="filters.type"
+
+              class="rounded-xl border border-[#E5E0D7] px-4 py-3 outline-none focus:border-[#B3915F]"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option>Nhà phố</option>
+
+              <option>Căn hộ</option>
+
+              <option>Đất nền</option>
+
+            </select>
+
+ 
+
+            <button
+
+              @click="activeArea = 'Tất cả'; goToProperties()"
+
+              class="rounded-xl bg-[#142B4F] px-5 py-3 font-bold text-white hover:bg-[#24456D]"
+
+            >
+
+              Tìm kiếm ↗
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+ 
+
+<MarketSummary :district="districtValue(activeArea!=='Tất cả'?activeArea:filters.district)" />
+
+      <!-- FEATURED PROJECTS -->
+
+      <section id="projects" class="mx-auto max-w-7xl px-5 py-16 lg:py-20 lg:px-8">
+
+        <div
+
+          class="mb-10 flex flex-wrap items-end justify-between gap-5"
+
+        >
+
+          <div>
+
+            <p
+
+              class="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
+
+            >
+
+              Projects · Đà Nẵng
+
+            </p>
+
+            <h2 class="text-4xl font-semibold md:text-5xl">
+
+              Dự án bất động sản
+
+
+
+            </h2>
+
+            <p class="mt-4 max-w-2xl text-sm leading-7 text-[#637083]">
+
+              Tìm hiểu các dự án tại Đà Nẵng qua website chính thức của chủ đầu tư và đơn vị phát triển.
+
+            </p>
+
+          </div>
+
+        </div>
+
+ 
+
+        <ProjectDirectory />
+
+        <div v-if="projects.length" class="mt-12"><h3 class="mb-6 text-xl font-semibold">Dự án trên SmartProp</h3><div class="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+
+          <article
+
+            v-for="project in projects"
+
+            :key="project.id"
+
+            class="group overflow-hidden rounded-3xl border border-[#E7E1D7] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+
+          >
+
+            <div class="relative h-64 overflow-hidden">
+
+              <div class="flex h-full items-center justify-center bg-[#E8E5DE] text-sm text-[#7B8795]">Chưa có ảnh dự án</div>
+
+              <span v-if="project.type"
+
+                class="absolute left-5 top-5 rounded-full bg-[#142B4F]/90 px-4 py-2 text-xs font-semibold text-white"
+
+              >
+
+                {{ project.type }}
+
+              </span>
+
+            </div>
+
+ 
+
+            <div class="p-6">
+
+              <p
+
+                class="mb-3 text-xs font-bold uppercase tracking-widest text-[#B3915F]"
+
+              >
+
+                Đà Nẵng
+
+              </p>
+
+              <h3 class="text-2xl font-bold">{{ project.name }}</h3>
+
+              <p class="mt-2 text-sm text-[#637083]">
+
+                📍 {{ project.location }}
+
+              </p>
+
+              <p class="mt-4 min-h-[72px] text-sm leading-6 text-[#637083]">
+
+                {{ project.description }}
+
+              </p>
+
+ 
+
+              <div class="mt-6 border-t border-[#EAE5DD] pt-5">
+
+                <p class="mb-4 text-xs text-[#637083]">
+
+                  Đơn vị phát triển: {{ project.developer }}
+
+                </p>
+
+                <button
+
+                  @click="selectedProject = project"
+
+                  class="w-full rounded-full bg-[#142B4F] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#24456D]"
+
+                >
+
+                  Khám phá dự án ↗
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+        </div>
+
+      </section>
+
+ 
+
+      <!-- AREAS -->
+
+      <section
+
+        id="properties"
+
+        class="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 lg:py-20 lg:px-8"
+
+      >
+
+        <div
+
+          class="mb-9 flex flex-wrap items-end justify-between gap-5"
+
+        >
+
+          <div>
+
+            <p
+
+              class="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
+
+            >
+
+              Tin đăng mới nhất
+
+            </p>
+
+            <h2 class="text-4xl font-semibold md:text-5xl">
+
+              Khám phá bất động sản
+
+            </h2>
+
+            <p class="mt-4 text-sm text-[#637083]">
+
+              Khám phá những bất động sản nổi bật tại Đà Nẵng và các khu vực lân cận.
+
+            </p>
+
+          </div>
+
+ 
+
+          <div class="flex flex-wrap gap-3">
+
+            <button
+
+              @click="searchOpen = true"
+
+              class="rounded-full border border-[#142B4F]/20 px-5 py-3 text-sm font-bold hover:bg-white"
+
+            >
+
+              Bộ lọc nâng cao
+
+            </button>
+
+            <button
+
+              @click="compareOpen = true"
+
+              :disabled="compareIds.length < 2"
+
+              class="rounded-full bg-[#142B4F] px-5 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+
+            >
+
+              So sánh ({{ compareIds.length }}/3)
+
+            </button>
+
+          </div>
+
+        </div>
+
+ 
+
+        <div class="mb-7 flex flex-wrap gap-2" role="group" aria-label="Lọc bất động sản theo khu vực"><button v-for="district in districts" :key="district" type="button" :aria-pressed="activeArea===district" @click="selectArea(district)" class="rounded-full border px-4 py-2 text-xs font-semibold transition" :class="activeArea===district?'border-[#142B4F] bg-[#142B4F] text-white':'border-[#DCD6CA] bg-white text-[#637083] hover:border-[#B3915F]'">{{district}}</button></div>
+        <LegacyState :state="state"/>
+        <p v-if="state.error" class="text-xs text-[#637083]">Chưa tải được danh sách; hãy thử lại.</p>
+        <div
+
+          v-if="activeArea !== 'Tất cả'"
+
+          class="mb-6 flex flex-wrap items-center gap-3"
+
+        >
+
+          <span class="text-sm text-[#637083]">
+
+            Khu vực: <strong>{{ activeArea }}</strong>
+
+          </span>
+
+          <button
+
+            @click="activeArea = 'Tất cả'"
+
+            class="text-sm font-bold text-[#B3915F] underline"
+
+          >
+
+            Xóa lựa chọn
+
+          </button>
+
+        </div>
+
+ 
+
+        <div
+
+          v-if="!state.busy&&!state.error&&displayedProperties.length === 0"
+
+          class="rounded-3xl border border-[#E7E1D7] bg-white px-6 py-20 text-center"
+
+        >
+
+          <h3 class="text-2xl font-bold">Chưa tìm thấy bất động sản</h3>
+
+          <p class="mt-3 text-[#637083]">
+
+            {{activeArea==='Tất cả'?'Hiện chưa có tin công khai phù hợp. Hãy thử lại sau hoặc điều chỉnh bộ lọc.':'Chưa có tin công khai tại '+activeArea+'. Bạn có thể chọn khu vực khác.'}}
+
+          </p>
+
+          <button
+
+            @click="resetFilters"
+
+            class="mt-6 rounded-full bg-[#142B4F] px-6 py-3 font-bold text-white"
+
+          >
+
+            Xóa bộ lọc
+
+          </button>
+
+        </div>
+
+ 
+
+        <div v-if="!state.busy&&!state.error&&displayedProperties.length" class="grid gap-7 md:grid-cols-2 xl:grid-cols-3"><ListingCard v-for="property in displayedProperties" :key="property.id" :property="property.raw"><button type="button" class="text-xs text-[#967344]" @click="toggleCompare(property.id)">{{compareIds.includes(property.id)?'Đã chọn ✓':'+ So sánh'}}</button></ListingCard></div>
+
+<div class="mt-10 flex justify-center">
+  <RouterLink
+    :to="areaLink('/listings')"
+    class="group inline-flex items-center gap-3 rounded-full
+           bg-[#142B4F] px-9 py-4 text-sm font-bold text-white
+           shadow-lg transition-all duration-300
+           hover:-translate-y-1 hover:bg-[#24456D] hover:shadow-xl"
+  >
+    Xem tất cả bất động sản
+
+    <span class="transition-transform duration-300 group-hover:translate-x-1">
+      →
+    </span>
+  </RouterLink>
+</div>
+
+
+        <p class="mt-5 text-xs text-[#8290A0]">
+
+          Danh sách hiển thị các tin đăng được duyệt trên SmartProp.
+
+        </p>
+
+      <LegacyPager :state="state" />
+</section>
+
+ 
+
+      <!-- GIS -->
+
+      <section id="gis" class="bg-[#10243F] py-24 text-white">
+
+        <div
+
+          class="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"
+
+        >
+
+          <div>
+
+            <p
+
+              class="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#D8B887]"
+
+            >
+
+              GIS Explorer
+
+            </p>
+
+            <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
+
+              Hiểu vị trí.
+
+              <span class="text-[#D8B887]">Nhìn xa hơn.</span>
+
+            </h2>
+
+            <p class="mt-6 max-w-xl leading-8 text-white/70">
+
+              Khám phá vị trí bất động sản và mối liên hệ với hạ tầng,
+
+              khu dân cư và các tiện ích đô thị.
+
+            </p>
+
+ 
+
+            <div class="mt-8 grid grid-cols-2 gap-4">
+
+              <div class="rounded-2xl border border-white/15 p-5">
+
+                <p class="text-2xl font-bold text-[#D8B887]">GIS</p>
+
+                <p class="mt-2 text-sm text-white/65">
+
+                  Phân tích không gian
+
+                </p>
+
+              </div>
+
+              <div class="rounded-2xl border border-white/15 p-5">
+
+                <p class="text-2xl font-bold text-[#D8B887]">360°</p>
+
+                <p class="mt-2 text-sm text-white/65">
+
+                  Góc nhìn khu vực
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+ 
+
+          <div
+
+            class="relative min-h-[400px] overflow-hidden rounded-3xl border border-white/15 bg-[#193654] p-6"
+
+          >
+
+            <div
+
+              class="absolute inset-0 opacity-20"
+
+              style="background-image: linear-gradient(#D8B887 1px, transparent 1px), linear-gradient(90deg, #D8B887 1px, transparent 1px); background-size: 45px 45px;"
+
+            ></div>
+
+ 
+
+            <div
+
+              class="absolute left-[15%] top-[25%] h-32 w-32 rounded-full border border-[#D8B887]/40"
+
+            ></div>
+
+            <div
+
+              class="absolute left-[45%] top-[42%] h-48 w-48 rounded-full border border-[#D8B887]/30"
+
+            ></div>
+
+            <div
+
+              class="absolute left-[55%] top-[18%] h-24 w-24 rounded-full border border-[#D8B887]/40"
+
+            ></div>
+
+ 
+
+            <div
+
+              class="absolute left-[28%] top-[34%] rounded-full bg-[#D8B887] px-3 py-2 text-xs font-bold text-[#142B4F]"
+
+            >
+
+              Hải Châu
+
+            </div>
+
+            <div
+
+              class="absolute left-[58%] top-[54%] rounded-full bg-white px-3 py-2 text-xs font-bold text-[#142B4F]"
+
+            >
+
+              Sơn Trà
+
+            </div>
+
+            <div
+
+              class="absolute left-[37%] top-[72%] rounded-full bg-white px-3 py-2 text-xs font-bold text-[#142B4F]"
+
+            >
+
+              Cẩm Lệ
+
+            </div>
+
+ 
+
+            <div class="absolute bottom-6 left-6 right-6">
+
+              <div
+
+                class="rounded-2xl border border-white/15 bg-[#10243F]/90 p-5 backdrop-blur"
+
+              >
+
+                <p class="text-sm font-bold">Spatial Intelligence</p>
+
+                <p class="mt-2 text-xs leading-6 text-white/60">
+
+                  Khu vực phân tích không gian. Bản đồ tương tác thực tế
+
+                  sẽ được tích hợp khi có dịch vụ bản đồ.
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+ 
+
+      <!-- AMENITIES -->
+
+      <section class="mx-auto max-w-7xl px-5 py-24 lg:px-8">
+
+        <p
+
+          class="mb-3 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
+
+        >
+
+          Neighborhood Intelligence
+
+        </p>
+
+        <h2 class="max-w-3xl text-4xl font-semibold md:text-5xl">
+
+          Không chỉ là ngôi nhà.
+
+          <span class="text-[#B3915F]">Còn là nơi sống.</span>
+
+        </h2>
+
+ 
+
+        <div class="mt-9 flex flex-wrap gap-4">
+
+          <select
+
+            v-model="amenityDistrict"
+
+            class="rounded-xl border border-[#E0D9CE] bg-white px-5 py-3"
+
+          >
+
+            <option v-for="area in areas" :key="area.name" :value="area.name">{{ area.name }}</option>
+
+          </select>
+
+ 
+
+          <select
+
+            v-model="amenityType"
+
+            class="rounded-xl border border-[#E0D9CE] bg-white px-5 py-3"
+
+          >
+
+            <option>Tất cả</option>
+
+            <option v-for="item in amenities" :key="item.name">
+
+              {{ item.name }}
+
+            </option>
+
+          </select>
+
+        </div>
+
+ 
+
+        <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+
+          <div
+
+            v-for="item in visibleAmenities"
+
+            :key="item.name"
+
+            class="rounded-3xl border border-[#E7E1D7] bg-white p-6"
+
+          >
+
+            <div class="text-3xl">{{ item.icon }}</div>
+
+            <h3 class="mt-5 text-lg font-bold">{{ item.name }}</h3>
+
+            <p class="mt-2 text-xs leading-6 text-[#637083]">
+
+              Khám phá tiện ích tại {{ amenityDistrict }}
+
+            </p>
+
+          </div>
+
+        </div>
+
+ 
+
+        <p class="mt-5 text-xs text-[#8290A0]">
+
+          Danh mục tiện ích chưa hiển thị địa chỉ và khoảng cách thực tế.
+
+        </p>
+
+      </section>
+
+ 
+
+      <!-- VALUATION -->
+
+      <section id="valuation" class="bg-[#EEEAE2] py-24">
+
+        <div
+
+          class="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"
+
+        >
+
+          <div>
+
+            <p
+
+              class="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
+
+            >
+
+              Property Valuation
+
+            </p>
+
+            <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
+
+              Định giá với
+
+              <span class="text-[#B3915F]">góc nhìn dữ liệu.</span>
+
+            </h2>
+
+            <p class="mt-6 max-w-xl leading-8 text-[#637083]">
+
+              Ước tính giá trị bất động sản từ diện tích, đơn giá tham
+
+              khảo và hệ số điều chỉnh. Kết quả chỉ là phép tính, chưa
+
+              phải định giá AI dựa trên giao dịch thực tế.
+
+            </p>
+
+          </div>
+
+ 
+
+          <div class="rounded-3xl bg-white p-7 shadow-xl md:p-9">
+
+            <h3 class="text-xl font-bold">Ước tính giá trị bất động sản</h3>
+
+ 
+
+            <div class="mt-7 space-y-5">
+
+              <label class="block">
+
+                <span class="mb-2 block text-sm font-semibold">
+
+                  Diện tích (m²)
+
+                </span>
+
+                <input
+
+                  v-model.number="valuation.area"
+
+                  type="number"
+
+                  min="1"
+
+                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+                />
+
+              </label>
+
+ 
+
+              <label class="block">
+
+                <span class="mb-2 block text-sm font-semibold">
+
+                  Đơn giá tham khảo (triệu/m²)
+
+                </span>
+
+                <input
+
+                  v-model.number="valuation.unitPrice"
+
+                  type="number"
+
+                  min="0"
+
+                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+                />
+
+              </label>
+
+ 
+
+              <label class="block">
+
+                <span class="mb-2 block text-sm font-semibold">
+
+                  Điều chỉnh (%)
+
+                </span>
+
+                <input
+
+                  v-model.number="valuation.adjustment"
+
+                  type="number"
+
+                  min="-90"
+
+                  max="100"
+
+                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+                />
+
+              </label>
+
+            </div>
+
+ 
+
+            <div class="mt-7 rounded-2xl bg-[#142B4F] p-6 text-white">
+
+              <p class="text-sm text-white/60">
+
+                Giá trị ước tính
+
+              </p>
+
+              <p class="mt-3 text-4xl font-bold text-[#D8B887]">
+
+                {{ estimatedValue.toFixed(2) }} tỷ
+
+              </p>
+
+              <p class="mt-3 text-xs text-white/55">
+
+                Tính toán theo thông số người dùng nhập.
+
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+ 
+
+      <!-- FINANCE -->
+
+      <section
+
+        id="investment"
+
+        class="mx-auto grid max-w-7xl items-center gap-12 px-5 py-24 lg:grid-cols-2 lg:px-8"
+
+      >
+
+        <div>
+
+          <p
+
+            class="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
+
+          >
+
+            Investment Studio
+
+          </p>
+
+          <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
+
+            Tính toán trước.
+
+            <span class="text-[#B3915F]">Quyết định vững vàng.</span>
+
+          </h2>
+
+          <p class="mt-6 leading-8 text-[#637083]">
+
+            Ước tính khoản trả góp hàng tháng theo phương pháp trả đều
+
+            gốc và lãi. Kết quả chưa bao gồm phí, bảo hiểm hoặc các thay
+
+            đổi lãi suất trong tương lai.
+
+          </p>
+
+        </div>
+
+ 
+
+        <div
+
+          class="rounded-3xl border border-[#E7E1D7] bg-white p-7 shadow-xl md:p-9"
+
+        >
+
+          <h3 class="text-xl font-bold">Tính khoản vay mua nhà</h3>
+
+ 
+
+          <div class="mt-7 grid gap-5 sm:grid-cols-2">
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Giá bất động sản (tỷ)
+
+              </span>
+
+              <input
+
+                v-model.number="loan.propertyPrice"
+
+                type="number"
+
+                min="0"
+
+                step="0.1"
+
+                class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+              />
+
+            </label>
+
+ 
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Trả trước (%)
+
+              </span>
+
+              <input
+
+                v-model.number="loan.downPayment"
+
+                type="number"
+
+                min="0"
+
+                max="100"
+
+                class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+              />
+
+            </label>
+
+ 
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Thời hạn (năm)
+
+              </span>
+
+              <input
+
+                v-model.number="loan.years"
+
+                type="number"
+
+                min="1"
+
+                class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+              />
+
+            </label>
+
+ 
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Lãi suất (%/năm)
+
+              </span>
+
+              <input
+
+                v-model.number="loan.interest"
+
+                type="number"
+
+                min="0"
+
+                step="0.1"
+
+                class="w-full rounded-xl border border-[#E0D9CE] p-3"
+
+              />
+
+            </label>
+
+          </div>
+
+ 
+
+          <div class="mt-7 rounded-2xl bg-[#142B4F] p-6 text-white">
+
+            <p class="text-sm text-white/60">
+
+              Khoản trả góp hàng tháng
+
+            </p>
+
+            <p class="mt-3 text-3xl font-bold text-[#D8B887]">
+
+              {{ moneyVnd(monthlyPayment) }}
+
+            </p>
+
+            <p class="mt-4 text-xs text-white/55">
+
+              Khoản vay: {{ moneyVnd(loanPrincipal) }}
+
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+ 
+
+      <!-- CTA -->
+
+      <section class="bg-[#142B4F] px-5 py-20 text-center text-white">
+
+        <p
+
+          class="text-xs font-bold uppercase tracking-[0.3em] text-[#D8B887]"
+
+        >
+
+          Your Next Move
+
+        </p>
+
+        <h2 class="mx-auto mt-5 max-w-3xl text-4xl font-semibold md:text-5xl">
+
+          Bắt đầu hành trình tìm kiếm không gian sống lý tưởng.
+
+        </h2>
+
+        <div class="mt-9 flex flex-wrap justify-center gap-4">
+
+          <button
+
+            @click="searchOpen = true"
+
+            class="rounded-full bg-[#D8B887] px-7 py-4 text-sm font-bold text-[#142B4F]"
+
+          >
+
+            Tìm bất động sản ↗
+
+          </button>
+
+          <a
+
+            href="#projects"
+
+            class="rounded-full border border-white/30 px-7 py-4 text-sm font-bold text-white"
+
+          >
+
+            Khám phá dự án
+
+          </a>
+
+        </div>
+
       </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-gray-200/60 bg-[#f4f3ec] py-10">
-      <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-gray-500">
-        <div class="flex items-center space-x-3">
-          <div class="w-7 h-7 rounded-lg bg-[#1E325A] flex items-center justify-center font-bold text-white text-xs">S</div>
-          <span class="font-bold text-gray-900 text-sm">SmartProp</span>
+ 
+
+    <!-- FOOTER -->
+
+    <footer class="bg-[#0C1B30] px-5 py-12 text-white/65">
+
+      <div
+
+        class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-6"
+
+      >
+
+        <div>
+
+          <p class="text-2xl font-bold text-white">
+
+            Smart<span class="text-[#D8B887]">Prop</span>
+
+          </p>
+
+          <p class="mt-3 text-sm">
+
+            Intelligent Real Estate Experience
+
+          </p>
+
         </div>
-        <div class="flex flex-wrap justify-center gap-6 font-medium">
-        </div>
-        <div class="text-gray-400">ĐÀ NẴNG</div>
+
+        <p class="text-xs">
+
+          © {{ new Date().getFullYear() }} SmartProp.
+
+        </p>
+
       </div>
-      <div class="max-w-7xl mx-auto px-6 mt-6 pt-6 border-t border-gray-200/40 text-center text-[11px] text-gray-400">
-        © 2026 SmartProp 
-      </div>
+
     </footer>
+
+ 
+
+    <!-- PROJECT DETAIL MODAL -->
+
+    <div
+
+      v-if="selectedProject"
+
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[#07162B]/75 p-4"
+
+      @click.self="selectedProject = null"
+
+    >
+
+      <div
+
+        class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white"
+
+        role="dialog"
+
+        aria-modal="true"
+
+      >
+
+        <div class="relative h-64">
+
+          <div class="flex h-full items-center justify-center bg-[#E8E5DE] text-sm text-[#7B8795]">Chưa có ảnh dự án</div>
+
+          <button
+
+            @click="selectedProject = null"
+
+            class="absolute right-5 top-5 rounded-full bg-white px-4 py-2 font-bold"
+
+          >
+
+            ✕
+
+          </button>
+
+        </div>
+
+ 
+
+        <div class="p-7">
+
+          <p class="text-xs font-bold uppercase tracking-widest text-[#B3915F]">
+
+            Project Overview
+
+          </p>
+
+          <h2 class="mt-3 text-3xl font-bold">
+
+            {{ selectedProject.name }}
+
+          </h2>
+
+          <p class="mt-3 text-sm text-[#637083]">
+
+            📍 {{ selectedProject.location }}
+
+          </p>
+
+ 
+
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+
+            <div class="rounded-xl bg-[#F7F5F0] p-4">
+
+              <p class="text-xs text-[#637083]">Quy mô</p>
+
+              <p class="mt-2 font-bold">
+
+                {{ selectedProject.scale||'Chưa cung cấp' }}
+
+              </p>
+
+            </div>
+
+            <div class="rounded-xl bg-[#F7F5F0] p-4">
+
+              <p class="text-xs text-[#637083]">Đơn vị phát triển</p>
+
+              <p class="mt-2 font-bold">
+
+                {{ selectedProject.developer }}
+
+              </p>
+
+            </div>
+
+          </div>
+
+ 
+
+          <p class="mt-6 leading-7 text-[#637083]">
+
+            {{ selectedProject.description }}
+
+          </p>
+
+ 
+
+          <a
+
+            v-if="selectedProject.website" :href="selectedProject.website"
+
+            target="_blank"
+
+            rel="noopener noreferrer"
+
+            class="mt-7 inline-flex rounded-full bg-[#142B4F] px-6 py-3 text-sm font-bold text-white"
+
+          >
+
+            Xem thông tin dự án ↗
+
+          </a>
+
+        </div>
+
+      </div>
+
+    </div>
+
+ 
+
+    <!-- ADVANCED SEARCH MODAL -->
+
+    <div
+
+      v-if="searchOpen"
+
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[#07162B]/75 p-4"
+
+      @click.self="searchOpen = false"
+
+    >
+
+      <div
+
+        class="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 md:p-8"
+
+        role="dialog"
+
+        aria-modal="true"
+
+      >
+
+        <div class="mb-7 flex items-center justify-between">
+
+          <h2 class="text-2xl font-bold">Tìm kiếm nâng cao</h2>
+
+          <button
+
+            @click="searchOpen = false"
+
+            class="rounded-full bg-[#F1EEE8] px-4 py-2"
+
+          >
+
+            ✕
+
+          </button>
+
+        </div>
+
+ 
+
+        <div class="grid gap-5 sm:grid-cols-2">
+
+          <label class="sm:col-span-2">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Từ khóa
+
+            </span>
+
+            <input
+
+              v-model="filters.keyword"
+
+              class="w-full rounded-xl border p-3"
+
+              placeholder="Tên bất động sản, địa điểm..."
+
+            />
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Khu vực
+
+            </span>
+
+            <select
+
+              v-model="filters.district"
+
+              class="w-full rounded-xl border p-3"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option v-for="area in areas" :key="area.name" :value="area.name">{{ area.name }}</option>
+
+            </select>
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Loại bất động sản
+
+            </span>
+
+            <select
+
+              v-model="filters.type"
+
+              class="w-full rounded-xl border p-3"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option>Nhà phố</option>
+
+              <option>Căn hộ</option>
+
+              <option>Đất nền</option>
+
+            </select>
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Giá từ (tỷ)
+
+            </span>
+
+            <input
+
+              v-model="filters.minPrice"
+
+              type="number"
+
+              min="0"
+
+              step="0.1"
+
+              class="w-full rounded-xl border p-3"
+
+            />
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Giá đến (tỷ)
+
+            </span>
+
+            <input
+
+              v-model="filters.maxPrice"
+
+              type="number"
+
+              min="0"
+
+              step="0.1"
+
+              class="w-full rounded-xl border p-3"
+
+            />
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Diện tích tối thiểu (m²)
+
+            </span>
+
+            <input
+
+              v-model="filters.minArea"
+
+              type="number"
+
+              min="0"
+
+              class="w-full rounded-xl border p-3"
+
+            />
+
+          </label>
+
+ 
+
+          <label>
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Phòng ngủ tối thiểu
+
+            </span>
+
+            <select
+
+              v-model="filters.bedrooms"
+
+              class="w-full rounded-xl border p-3"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option value="1">1</option>
+
+              <option value="2">2</option>
+
+              <option value="3">3</option>
+
+              <option value="4">4</option>
+
+            </select>
+
+          </label>
+
+ 
+
+          <label class="sm:col-span-2">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Pháp lý
+
+            </span>
+
+            <select
+
+              v-model="filters.legal" disabled title="Bộ lọc pháp lý chưa được backend hỗ trợ"
+
+              class="w-full rounded-xl border p-3"
+
+            >
+
+              <option>Tất cả</option>
+
+              <option>Sổ hồng</option>
+
+              <option>Sổ đỏ</option>
+
+            </select>
+
+          </label>
+
+        </div>
+
+ 
+
+        <div class="mt-8 flex flex-wrap gap-3">
+
+          <button
+
+            @click="resetFilters"
+
+            class="rounded-full border px-6 py-3 font-bold"
+
+          >
+
+            Xóa bộ lọc
+
+          </button>
+
+          <button
+
+            @click="activeArea = 'Tất cả'; goToProperties()"
+
+            class="flex-1 rounded-full bg-[#142B4F] px-6 py-3 font-bold text-white"
+
+          >
+
+            Xem {{ filteredProperties.length }} kết quả ↗
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+ 
+
+    <!-- COMPARISON MODAL -->
+
+    <div
+
+      v-if="compareOpen"
+
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[#07162B]/75 p-4"
+
+      @click.self="compareOpen = false"
+
+    >
+
+      <div
+
+        class="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white p-6 md:p-8"
+
+        role="dialog"
+
+        aria-modal="true"
+
+      >
+
+        <div class="mb-7 flex items-center justify-between">
+
+          <h2 class="text-2xl font-bold">So sánh bất động sản</h2>
+
+          <button
+
+            @click="compareOpen = false"
+
+            class="rounded-full bg-[#F1EEE8] px-4 py-2"
+
+          >
+
+            ✕
+
+          </button>
+
+        </div>
+
+ 
+
+        <div class="overflow-x-auto">
+
+          <table class="w-full min-w-[600px] text-left text-sm">
+
+            <thead>
+
+              <tr class="border-b">
+
+                <th class="p-4">Tiêu chí</th>
+
+                <th
+
+                  v-for="property in comparedProperties"
+
+                  :key="property.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ property.name }}
+
+                </th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr class="border-b">
+
+                <td class="p-4 font-bold">Giá</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ p.priceText }}
+
+                </td>
+
+              </tr>
+
+              <tr class="border-b">
+
+                <td class="p-4 font-bold">Khu vực</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ p.district }}
+
+                </td>
+
+              </tr>
+
+              <tr class="border-b">
+
+                <td class="p-4 font-bold">Diện tích</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ p.area }} m²
+
+                </td>
+
+              </tr>
+
+              <tr class="border-b">
+
+                <td class="p-4 font-bold">Giá/m²</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ pricePerSquareMeter(p) }} triệu
+
+                </td>
+
+              </tr>
+
+              <tr class="border-b">
+
+                <td class="p-4 font-bold">Phòng ngủ</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ p.bedrooms || '—' }}
+
+                </td>
+
+              </tr>
+
+              <tr>
+
+                <td class="p-4 font-bold">Pháp lý</td>
+
+                <td
+
+                  v-for="p in comparedProperties"
+
+                  :key="p.id"
+
+                  class="p-4"
+
+                >
+
+                  {{ p.legal }}
+
+                </td>
+
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+ 
+
+        <div class="mt-7 flex justify-end gap-3">
+
+          <button
+
+            @click="compareIds = []; compareOpen = false"
+
+            class="rounded-full border px-6 py-3 font-bold"
+
+          >
+
+            Xóa so sánh
+
+          </button>
+
+          <button
+
+            @click="compareOpen = false"
+
+            class="rounded-full bg-[#142B4F] px-6 py-3 font-bold text-white"
+
+          >
+
+            Đóng
+
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+ 
+
+    <!-- VIEWING MODAL -->
+
+    <div
+
+      v-if="viewingOpen"
+
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[#07162B]/75 p-4"
+
+      @click.self="viewingOpen = false"
+
+    >
+
+      <div
+
+        class="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl bg-white p-6 md:p-8"
+
+        role="dialog"
+
+        aria-modal="true"
+
+      >
+
+        <div class="mb-7 flex items-center justify-between">
+
+          <h2 class="text-2xl font-bold">Đặt lịch xem nhà</h2>
+
+          <button
+
+            @click="viewingOpen = false"
+
+            class="rounded-full bg-[#F1EEE8] px-4 py-2"
+
+          >
+
+            ✕
+
+          </button>
+
+        </div>
+
+ 
+
+        <div
+
+          v-if="viewingSuccess"
+
+          class="rounded-2xl bg-[#F1F7F1] p-6 text-center"
+
+        >
+
+          <div class="text-4xl">✓</div>
+
+          <h3 class="mt-4 text-xl font-bold">
+
+            Đã ghi nhận thông tin trên giao diện
+
+          </h3>
+
+          <p class="mt-3 text-sm leading-7 text-[#637083]">
+
+            Lịch hẹn chưa được gửi đến đơn vị môi giới vì SmartProp
+
+            chưa kết nối hệ thống đặt lịch.
+
+          </p>
+
+          <button
+
+            @click="viewingOpen = false"
+
+            class="mt-6 rounded-full bg-[#142B4F] px-6 py-3 font-bold text-white"
+
+          >
+
+            Hoàn tất
+
+          </button>
+
+        </div>
+
+ 
+
+        <form v-else class="space-y-5" @submit.prevent="submitViewing">
+
+          <label class="block">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Bất động sản
+
+            </span>
+
+            <select
+
+              v-model="viewing.propertyId"
+
+              class="w-full rounded-xl border p-3"
+
+            >
+
+              <option
+
+                v-for="property in properties"
+
+                :key="property.id"
+
+                :value="property.id"
+
+              >
+
+                {{ property.name }}
+
+              </option>
+
+            </select>
+
+          </label>
+
+ 
+
+          <p
+
+            v-if="selectedViewingProperty"
+
+            class="text-xs text-[#637083]"
+
+          >
+
+            {{ selectedViewingProperty.address }}
+
+          </p>
+
+ 
+
+          <label class="block">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Họ và tên
+
+            </span>
+
+            <input
+
+              v-model="viewing.name"
+
+              required
+
+              class="w-full rounded-xl border p-3"
+
+              placeholder="Nhập họ và tên"
+
+            />
+
+          </label>
+
+ 
+
+          <label class="block">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Số điện thoại
+
+            </span>
+
+            <input
+
+              v-model="viewing.phone"
+
+              required
+
+              type="tel"
+
+              pattern="[0-9]{9,11}"
+
+              class="w-full rounded-xl border p-3"
+
+              placeholder="Nhập số điện thoại"
+
+            />
+
+          </label>
+
+ 
+
+          <div class="grid gap-4 sm:grid-cols-2">
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Ngày xem
+
+              </span>
+
+              <input
+
+                v-model="viewing.date"
+
+                required
+
+                type="date"
+
+                :min="minDate"
+
+                class="w-full rounded-xl border p-3"
+
+              />
+
+            </label>
+
+ 
+
+            <label>
+
+              <span class="mb-2 block text-sm font-semibold">
+
+                Giờ xem
+
+              </span>
+
+              <input
+
+                v-model="viewing.time"
+
+                required
+
+                type="time"
+
+                class="w-full rounded-xl border p-3"
+
+              />
+
+            </label>
+
+          </div>
+
+ 
+
+          <label class="block">
+
+            <span class="mb-2 block text-sm font-semibold">
+
+              Ghi chú
+
+            </span>
+
+            <textarea
+
+              v-model="viewing.note"
+
+              rows="3"
+
+              class="w-full rounded-xl border p-3"
+
+              placeholder="Yêu cầu thêm..."
+
+            ></textarea>
+
+          </label>
+
+ 
+
+          <button
+
+            type="submit"
+
+            class="w-full rounded-full bg-[#142B4F] px-6 py-4 font-bold text-white"
+
+          >
+
+            Tiếp tục đặt lịch ↗
+
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
   </div>
+
 </template>
+
+ 
+
+<style>
+
+.sp-tech-grid { background-image: linear-gradient(rgba(216,184,135,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(216,184,135,.22) 1px, transparent 1px); background-size: 68px 68px; mask-image: linear-gradient(to right, transparent, black 60%); }
+
+.sp-pulse { animation: sp-pulse-animation 2.4s ease-in-out infinite; }
+
+@keyframes sp-pulse-animation { 0%,100% { opacity:.35; transform:scale(.85) } 50% { opacity:1; transform:scale(1.2) } }
+
+</style>
+

@@ -1,0 +1,17 @@
+{
+  "name": "smartprop-frontend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm --prefix vue.ui ci && npm --prefix vue.ui/admin-dashboard ci",
+    "dev": "npm --prefix vue.ui run dev -- --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "npm --prefix vue.ui run build --",
+    "preview": "npm --prefix vue.ui run preview --",
+    "dev:admin": "npm --prefix vue.ui/admin-dashboard run dev -- --host 127.0.0.1 --port 5174 --strictPort",
+    "build:admin": "npm --prefix vue.ui/admin-dashboard run build --",
+    "preview:admin": "npm --prefix vue.ui/admin-dashboard run preview --"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

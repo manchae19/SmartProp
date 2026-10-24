@@ -1,153 +1,89 @@
+
 <script setup>
-import { ref, computed } from 'vue'
+import {ref,computed} from 'vue'
+import { useRouter } from 'vue-router'
+import {api} from '../../src/services/api.js'
+import {useList,LegacyState,LegacyPager,PrivateImage} from '../../src/services/legacy.js'
+import {collectionProperty} from '../../src/services/collection.js'
+
+import {useCollection,typeCode} from '../../src/services/useCollection.js'
+const router = useRouter()
+
+// SMARTPROP FAVORITES 2.0
+// Data is loaded from the existing backend.
 
 const activeFilter = ref('Tất cả')
 const sortType = ref('Mới lưu')
+const searchText = ref('')
+const removedItem = ref(null)
 
 const filters = ['Tất cả', 'Nhà phố', 'Căn hộ', 'Đất nền']
 
-const listings = ref([
-  {
-    id: 1,
-    type: 'Nhà phố',
-    badge: 'Ảnh trùng 94%',
-    badgeColor: 'orange',
-    title: 'Nhà 3 tầng hẻm xe hơi, gần cầu Rồng',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '4,85 tỷ đ',
-    info: '92 m² · 3 PN · 2 WC',
-    saved: 'Lưu 2 ngày trước',
-  },
-  {
-    id: 2,
-    type: 'Căn hộ',
-    badge: 'Giá hợp lý',
-    badgeColor: 'green',
-    title: 'Căn hộ 2PN view sông Hàn',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '3,20 tỷ đ',
-    info: '68 m² · 2 PN · 2 WC',
-    saved: 'Lưu 3 ngày trước',
-  },
-  {
-    id: 3,
-    type: 'Nhà phố',
-    badge: 'Giá cao hơn tham chiếu',
-    badgeColor: 'orange',
-    title: 'Nhà mặt tiền Nguyễn Văn Linh',
-    location: 'Thanh Khê, Đà Nẵng',
-    price: '12,5 tỷ đ',
-    info: '140 m² · 4 PN · 3 WC',
-    saved: 'Lưu 5 ngày trước',
-  },
-  {
-    id: 4,
-    type: 'Đất nền',
-    badge: 'Giá hợp lý',
-    badgeColor: 'green',
-    title: 'Đất nền Hoà Xuân, sổ đỏ riêng',
-    location: 'Cẩm Lệ, Đà Nẵng',
-    price: '2,95 tỷ đ',
-    info: '100 m² · Đất nền',
-    saved: 'Lưu 1 tuần trước',
-  },
-  {
-    id: 5,
-    type: 'Căn hộ',
-    badge: 'Giá hợp lý',
-    badgeColor: 'green',
-    title: 'Căn hộ Studio gần Đại học Duy Tân',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '1,45 tỷ đ',
-    info: '32 m² · Studio · 1 WC',
-    saved: 'Lưu 1 tuần trước',
-  },
-  {
-    id: 6,
-    type: 'Đất nền',
-    badge: 'Giá hợp lý',
-    badgeColor: 'green',
-    title: 'Đất nền mặt tiền đường Nguyễn Tất Thành',
-    location: 'Thanh Khê, Đà Nẵng',
-    price: '6,30 tỷ đ',
-    info: '150 m² · Đất nền',
-    saved: 'Lưu 2 tuần trước',
-  },
-  {
-    id: 7,
-    type: 'Nhà phố',
-    badge: 'Giá hợp lý',
-    badgeColor: 'green',
-    title: 'Villa sân vườn Điện Ngọc, sổ hồng riêng',
-    location: 'Ngũ Hành Sơn, Đà Nẵng',
-    price: '9,80 tỷ đ',
-    info: '220 m² · 5 PN · 4 WC',
-    saved: 'Lưu 3 tuần trước',
-  },
-])
+const state=useCollection('/users/me/saved-properties','/users/me/saved-properties/summary',()=>({keyword:searchText.value.trim(),propertyType:typeCode[activeFilter.value],sort:({'Mới lưu':'newest','Cũ nhất':'oldest','Giá thấp':'priceAsc','Giá cao':'priceDesc'})[sortType.value]}));
+const listings=computed(()=>state.items.map(collectionProperty));
+const filteredListings=listings;
+const propertyTypeCount=computed(()=>state.summary?Object.keys(state.summary.byPropertyType||{}).length:'—');
+const priceGroups=computed(()=>state.summary?.priceGroups||[]);
+const filterCount=label=>state.summary?(label==='Tất cả'?state.summary.totalVisible:state.summary.byPropertyType?.[typeCode[label]]||0):'—';
 
-const filteredListings = computed(() => {
-  if (activeFilter.value === 'Tất cả') {
-    return listings.value
-  }
+function formatPrice(price) {
+  return price.toLocaleString('vi-VN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
 
-  return listings.value.filter(
-    (item) => item.type === activeFilter.value
-  )
-})
+async function removeFavorite(id){const item=listings.value.find(x=>x.id===id);if(!item||state.busy)return;await state.run(async()=>{await api('/users/me/saved-properties/'+id,{method:'DELETE'});removedItem.value=item;await state.reload()})}
+async function undoRemove(){if(!removedItem.value||state.busy)return;await state.run(async()=>{await api('/users/me/saved-properties/'+removedItem.value.id,{method:'PUT'});removedItem.value=null;await state.reload()})}
+function openListing(id){router.push('/listing/'+id)}
 
-function removeFavorite(id) {
-  listings.value = listings.value.filter((item) => item.id !== id)
+
+function resetFilters() {
+  activeFilter.value = 'Tất cả'
+  searchText.value = ''
+  sortType.value = 'Mới lưu'
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f3f1e9] text-[#1E325A]">
+  <div class="sp-favorites min-h-screen bg-[#F7F5F0] text-[#142B4F]">
 
     <!-- HEADER -->
-    <header class="border-b border-[#1E325A]/40">
-      <div
-        class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between"
-      >
-        <!-- Logo -->
-        <div class="flex items-center gap-4">
-          <RouterLink to="/home" class="flex items-center gap-2">
-            <div
-              class="w-7 h-7 rounded-lg bg-[#1E325A] text-white
-                     flex items-center justify-center text-xs font-bold"
-            >
+    <header class="border-b border-[#E7E2D8] bg-[#F7F5F0]">
+      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-10">
+        <div class="flex items-center gap-5">
+          <RouterLink to="/home" class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#142B4F] font-bold text-white">
               S
-            </div>
-
-            <span class="font-semibold text-sm">
-              SmartProp
+            </span>
+            <span class="text-xl font-bold">
+              SmartProp<span class="text-[#C6A77A]">.</span>
             </span>
           </RouterLink>
 
-          <span class="text-gray-300">|</span>
-
-          <RouterLink
-            to="/home"
-            class="text-xs text-gray-400 hover:text-[#1E325A]"
-          >
-            ‹ Trang chủ
+          <RouterLink to="/home" class="hidden text-xs text-[#8290A0] hover:text-[#142B4F] sm:block">
+            ← Trang chủ
           </RouterLink>
         </div>
 
-        <!-- Header buttons -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <RouterLink
+            to="/listings"
+            class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] sm:block"
+          >
+            Khám phá tin đăng ↗
+          </RouterLink>
+
           <RouterLink
             to="/post"
-            class="px-5 py-2 rounded-full bg-white border border-gray-200
-                   text-xs hover:bg-gray-50 transition"
+            class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] md:block"
           >
             Đăng tin
           </RouterLink>
 
           <RouterLink
             to="/account"
-            class="px-5 py-2 rounded-full bg-[#1E325A] text-white
-                   text-xs hover:opacity-90 transition"
+            class="rounded-full bg-[#142B4F] px-5 py-3 text-xs font-semibold text-white hover:bg-[#25466B]"
           >
             Tài khoản
           </RouterLink>
@@ -155,28 +91,122 @@ function removeFavorite(id) {
       </div>
     </header>
 
-    <!-- CONTENT -->
-    <main class="max-w-7xl mx-auto px-6 py-7">
+    <!-- INTRO -->
+    <section class="relative overflow-hidden border-b border-[#E7E2D8]">
+      <div class="pointer-events-none absolute -right-28 -top-32 h-[420px] w-[420px] rounded-full border border-[#C6A77A]/20"></div>
+      <div class="pointer-events-none absolute -right-10 -top-12 h-[280px] w-[280px] rounded-full border border-[#C6A77A]/20"></div>
 
-      <!-- TITLE -->
-      <div class="flex justify-between items-start mb-5">
+      <div class="relative mx-auto max-w-[1440px] px-5 py-12 md:px-10 md:py-16">
+        <div class="flex flex-wrap items-end justify-between gap-8">
+          <div>
+            <div class="flex items-center gap-3">
+              <span class="h-px w-9 bg-[#B49362]"></span>
+              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
+                SMARTPROP / SAVED COLLECTION
+              </p>
+            </div>
+
+            <h1 class="mt-6 text-[39px] font-medium leading-tight tracking-tight sm:text-[56px]">
+              Những lựa chọn
+              <span class="block italic text-[#B49362]">bạn yêu thích.</span>
+            </h1>
+
+            <p class="mt-5 max-w-2xl text-sm leading-7 text-[#7B8798]">
+              Lưu giữ những bất động sản đáng quan tâm, so sánh mức giá
+              và dễ dàng quay lại khám phá những không gian sống phù hợp.
+            </p>
+
+            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94774F]">
+              Dữ liệu từ hệ thống
+            </span>
+          </div>
+
+          <RouterLink
+            to="/listings"
+            class="rounded-full bg-[#142B4F] px-7 py-4 text-xs font-bold text-white transition hover:bg-[#25466B]"
+          >
+            Khám phá thêm bất động sản ↗
+          </RouterLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="mx-auto max-w-[1440px] px-5 pt-10 md:px-10">
+      <div class="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-5">
+        <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+            Đã yêu thích
+          </p>
+          <div class="mt-4 flex items-end justify-between">
+            <span class="text-4xl font-semibold">{{ state.summary?.totalVisible ?? '—' }}</span>
+            <span class="text-xl text-[#C6A77A]">♥</span>
+          </div>
+          <p class="mt-3 text-[11px] text-[#8D99A8]">Bất động sản đã lưu</p>
+        </div>
+
+        <div class="rounded-[20px] bg-[#142B4F] p-5 text-white sm:p-7">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">
+            Loại hình quan tâm
+          </p>
+          <div class="mt-4 flex items-end justify-between">
+            <span class="text-4xl font-semibold">{{ propertyTypeCount }}</span>
+            <span class="text-xl text-[#C6A77A]">⌂</span>
+          </div>
+          <p class="mt-3 text-[11px] text-white/55">Nhà phố · Căn hộ · Đất nền</p>
+        </div>
+
+        <div class="col-span-2 rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7 lg:col-span-1">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+            Tổng giá trị tham khảo
+          </p>
+          <div class="mt-4 flex items-end justify-between">
+            <span class="text-3xl font-semibold sm:text-4xl">
+              <span v-if="!priceGroups.length">—</span><span v-for="g in priceGroups" :key="g.transactionType+g.currency+g.priceUnit" class="block text-sm">{{Number(g.amounts.totalAskingPrice).toLocaleString('vi-VN')}} {{g.currency}} · {{g.transactionType==='SALE'?'Bán':'Thuê'}} / {{g.priceUnit}}</span>
+            </span>
+            <span class="text-xl text-[#C6A77A]">↗</span>
+          </div>
+          <p class="mt-3 text-[11px] text-[#8D99A8]">Giá chào toàn bộ tin còn hiển thị, tách theo giao dịch/đơn vị</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLLECTION -->
+    <main class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
+<LegacyState :state="state" /><p v-if="state.summaryError" role="alert">{{state.summaryError}} <button @click="state.loadSummary">Tải lại thống kê</button></p><p class="mb-4 text-xs text-[#87919F]">{{state.totalElements}} kết quả · kết quả đã lọc toàn bộ danh mục.</p>
+
+      <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 class="text-2xl font-medium mb-1">
-            Tin đăng yêu thích
-          </h1>
+          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
+            YOUR FAVORITES / 01
+          </p>
 
-          <p class="text-xs text-gray-400">
-            {{ listings.length }} tin đăng đã lưu
+          <h2 class="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">
+            Bộ sưu tập <span class="italic text-[#B49362]">của bạn.</span>
+          </h2>
+
+          <p class="mt-3 text-xs text-[#87919F]">
+            {{ state.totalElements }} bất động sản phù hợp với bộ lọc.
           </p>
         </div>
 
-        <!-- SORT -->
-        <div class="flex items-center gap-1 text-xs text-gray-400">
-          <span>Sắp xếp:</span>
+        <div class="flex w-full flex-wrap gap-3 sm:w-auto">
+          <div class="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-[#E4DED3] bg-white px-4 sm:w-[260px]">
+            <span class="text-lg text-[#B49362]">⌕</span>
+
+            <input
+              v-model="searchText"
+              type="search"
+              aria-label="Tìm kiếm tin đã lưu"
+              placeholder="Tìm tin đăng, khu vực..."
+              class="h-12 min-w-0 w-full bg-transparent text-xs outline-none"
+            />
+          </div>
 
           <select
             v-model="sortType"
-            class="bg-transparent text-[#1E325A] outline-none cursor-pointer"
+            aria-label="Sắp xếp tin yêu thích"
+            class="h-12 rounded-xl border border-[#E4DED3] bg-white px-4 text-xs outline-none"
           >
             <option>Mới lưu</option>
             <option>Cũ nhất</option>
@@ -186,122 +216,145 @@ function removeFavorite(id) {
         </div>
       </div>
 
-      <!-- FILTER -->
-      <div class="flex gap-2 mb-6">
+      <!-- FILTERS -->
+      <div class="mt-8 flex flex-wrap gap-2">
         <button
           v-for="filter in filters"
           :key="filter"
+          type="button"
           @click="activeFilter = filter"
-          :class="[
-            'px-4 py-2 rounded-full text-xs border transition',
+          class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition sm:px-5"
+          :class="
             activeFilter === filter
-              ? 'bg-[#1E325A] text-white border-[#1E325A]'
-              : 'bg-white text-gray-500 border-gray-200 hover:border-[#1E325A]'
-          ]"
+              ? 'border-[#142B4F] bg-[#142B4F] text-white'
+              : 'border-[#E4DED3] bg-white text-[#64748B] hover:border-[#C6A77A]'
+          "
         >
           {{ filter }}
-
-          <span class="ml-1">
-            ·
-            {{
-              filter === 'Tất cả'
-                ? listings.length
-                : listings.filter(item => item.type === filter).length
-            }}
+          <span class="ml-1 opacity-65">
+            {{ filterCount(filter) }}
           </span>
+        </button>
+      </div>
+
+      <!-- UNDO -->
+      <div
+        v-if="removedItem"
+        class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#DCD4C7] bg-[#EEE7DB] px-5 py-4"
+      >
+        <p class="text-xs text-[#7B6648]">
+          Đã bỏ yêu thích: <strong>{{ removedItem.title }}</strong>
+        </p>
+
+        <button
+          type="button"
+          @click="undoRemove"
+          class="text-xs font-bold text-[#142B4F] underline underline-offset-4"
+        >
+          Hoàn tác
         </button>
       </div>
 
       <!-- CARDS -->
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+        v-if="filteredListings.length"
+        class="mt-8 grid min-w-0 grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
       >
         <article
           v-for="item in filteredListings"
           :key="item.id"
-          class="bg-white rounded-2xl overflow-hidden
-                 border border-gray-100 shadow-sm"
+          class="group min-w-0 overflow-hidden rounded-[22px] border border-[#E8E3DA] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#C6A77A] hover:shadow-[0_18px_50px_rgba(20,43,79,.10)]"
         >
+          <!-- IMAGE -->
+          <div class="relative h-[260px] overflow-hidden bg-[#E7E2D8]">
+            <PrivateImage
+              :src="item.image"
+              :alt="`${item.title}`"
+              loading="lazy"
+              class="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+             />
 
-          <!-- IMAGE PLACEHOLDER -->
-          <div
-            class="relative h-44 bg-[#e4e1d8]
-                   overflow-hidden"
-          >
-            <!-- pattern -->
-            <div
-              class="absolute inset-0 opacity-40"
-              style="
-                background-image:
-                  repeating-linear-gradient(
-                    120deg,
-                    transparent,
-                    transparent 8px,
-                    rgba(255,255,255,.8) 8px,
-                    rgba(255,255,255,.8) 13px
-                  );
-              "
-            ></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#142B4F]/50 via-transparent to-transparent"></div>
 
-            <!-- Badge -->
             <span
-              :class="[
-                'absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] text-white',
+              class="absolute left-4 top-4 rounded-full px-3 py-2 text-[10px] font-bold shadow-sm"
+              :class="
                 item.badgeColor === 'green'
-                  ? 'bg-emerald-500'
-                  : 'bg-orange-500'
-              ]"
+                  ? 'bg-[#E5F4EB] text-[#287B56]'
+                  : 'bg-[#FFF1D9] text-[#A36A19]'
+              "
             >
               {{ item.badge }}
             </span>
 
-            <!-- Heart -->
             <button
+              type="button"
               @click="removeFavorite(item.id)"
-              class="absolute top-3 right-3 w-8 h-8
-                     rounded-full bg-[#1E325A]
-                     text-white flex items-center justify-center
-                     hover:scale-105 transition"
+              :aria-label="`Bỏ yêu thích ${item.title}`"
               title="Bỏ yêu thích"
+              class="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#142B4F] text-lg text-white transition hover:scale-110 hover:bg-[#BD6A4C]"
             >
               ♥
             </button>
+
+            <span class="absolute bottom-5 left-5 text-[10px] font-bold uppercase tracking-[0.15em] text-white">
+              {{ item.type }} / Đà Nẵng
+            </span>
           </div>
 
-          <!-- CARD CONTENT -->
-          <div class="p-4">
-            <h2
-              class="text-sm font-medium text-[#1E325A] mb-1
-                     line-clamp-1"
-            >
+          <!-- CONTENT -->
+          <div class="p-6 sm:p-7">
+            <p class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#B49362]">
+              {{ item.type }}
+            </p>
+
+            <h3 class="mt-3 min-h-[56px] text-xl font-semibold leading-7">
               {{ item.title }}
-            </h2>
+            </h3>
 
-            <p class="text-[11px] text-gray-400 mb-2">
-              {{ item.location }}
+            <p class="mt-3 text-xs text-[#87919F]">
+              ⌖ {{ item.location }}
             </p>
 
-            <p class="text-base font-semibold mb-1">
-              {{ item.price }}
-            </p>
+            <div class="mt-6 border-y border-[#EEEAE3] py-4">
+              <p class="text-xs text-[#64748B]">
+                {{ item.info }}
+              </p>
+            </div>
 
-            <p class="text-[11px] text-gray-400">
-              {{ item.info }}
-            </p>
+            <div class="mt-5 flex items-end justify-between gap-4">
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+                  Giá tham khảo
+                </p>
 
-            <div
-              class="flex items-center justify-between
-                     mt-4 pt-3 border-t border-gray-100"
-            >
-              <span class="text-[10px] text-gray-400">
-                {{ item.saved }}
+                <p class="mt-2 text-[27px] font-semibold tracking-tight">
+                  {{ item.priceText }}
+                  <span class="text-base text-[#B49362]"></span>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                @click="openListing(item.id)"
+                :aria-label="`Xem chi tiết ${item.title}`"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#E4DED3] text-lg transition group-hover:border-[#142B4F] group-hover:bg-[#142B4F] group-hover:text-white"
+              >
+                ↗
+              </button>
+            </div>
+
+            <div class="mt-5 flex items-center justify-between border-t border-[#EEEAE3] pt-4">
+              <span class="text-[11px] text-[#9AA4B1]">
+                ♡ {{ item.saved }}
               </span>
 
               <button
-                class="text-[11px] text-[#1E325A]
-                       hover:underline"
+                type="button"
+                @click="openListing(item.id)"
+                class="text-[11px] font-bold text-[#142B4F] hover:text-[#B49362]"
               >
-                Xem chi tiết ›
+                Xem chi tiết →
               </button>
             </div>
           </div>
@@ -310,16 +363,118 @@ function removeFavorite(id) {
 
       <!-- EMPTY -->
       <div
-        v-if="filteredListings.length === 0"
-        class="py-20 text-center"
+        v-else
+        class="mt-8 rounded-[24px] border border-[#E8E3DA] bg-white px-6 py-20 text-center"
       >
-        <div class="text-4xl mb-4">♡</div>
+        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#F7F5F0] text-3xl text-[#B49362]">
+          ♡
+        </div>
 
-        <p class="font-medium">
-          Chưa có tin đăng trong mục này
+        <h3 class="mt-6 text-xl font-semibold">
+          Chưa có bất động sản phù hợp
+        </h3>
+
+        <p class="mt-3 text-sm text-[#87919F]">
+          Hãy thay đổi bộ lọc hoặc khám phá thêm tin đăng.
         </p>
+
+        <button
+          type="button"
+          @click="resetFilters"
+          class="mt-6 rounded-full bg-[#142B4F] px-6 py-3 text-xs font-semibold text-white"
+        >
+          Xem tất cả tin yêu thích
+        </button>
       </div>
 
-    </main>
+      <!-- CTA -->
+      <section class="relative mt-14 overflow-hidden rounded-[25px] bg-[#142B4F] px-7 py-10 text-white sm:px-10">
+        <div class="pointer-events-none absolute -right-12 -top-24 h-72 w-72 rounded-full border border-[#C6A77A]/20"></div>
+
+        <div class="relative flex flex-wrap items-center justify-between gap-7">
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
+              SMARTPROP / DISCOVER MORE
+            </p>
+
+            <h2 class="mt-4 text-3xl font-medium">
+              Lựa chọn tiếp theo
+              <span class="italic text-[#C6A77A]"> đang chờ bạn.</span>
+            </h2>
+
+            <p class="mt-4 max-w-xl text-sm leading-7 text-white/60">
+              Tiếp tục khám phá các bất động sản, tìm kiếm theo nhu cầu
+              và mở rộng bộ sưu tập yêu thích của bạn.
+            </p>
+          </div>
+
+          <RouterLink
+            to="/listings"
+            class="rounded-full bg-[#C6A77A] px-7 py-4 text-xs font-bold text-[#142B4F] transition hover:bg-[#E1C394]"
+          >
+            Khám phá bất động sản ↗
+          </RouterLink>
+        </div>
+      </section>
+
+      <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
+        Tin đăng và trạng thái được tải từ hệ thống.
+        Danh sách yêu thích được lưu theo tài khoản của bạn.
+      </p>
+    <LegacyPager :state="state" /></main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-[#E7E2D8]">
+      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-7 md:px-10">
+        <RouterLink to="/home" class="text-lg font-bold">
+          SmartProp<span class="text-[#C6A77A]">.</span>
+        </RouterLink>
+
+        <p class="text-[11px] text-[#87919F]">
+          © 2026 SmartProp · Favorites 2.0
+        </p>
+
+        <RouterLink to="/home" class="text-xs text-[#64748B]">
+          Về trang chủ ↗
+        </RouterLink>
+      </div>
+    </footer>
   </div>
 </template>
+
+<style scoped>
+.sp-favorites {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+.sp-favorites h1,
+.sp-favorites h2,
+.sp-favorites h3 {
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-variant-ligatures: none;
+  word-spacing: normal;
+}
+
+.sp-favorites button,
+.sp-favorites input,
+.sp-favorites select {
+  font-family: inherit;
+}
+
+.sp-favorites img {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sp-favorites *,
+  .sp-favorites *::before,
+  .sp-favorites *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+</style>

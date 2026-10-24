@@ -1,5 +1,5 @@
 <template>
-  <div class="main">
+  <div class="main"><p class="text-xs text-gray-500 mb-4">Giao diện cấu hình AI; tính năng lưu chưa được kích hoạt.</p>
     <!-- Tiêu đề trang -->
     <div class="section-header">
       <div class="header-titles">
@@ -164,8 +164,8 @@
           Thay đổi cấu hình sẽ áp dụng cho các tin đăng mới và có thể mất vài phút để đồng bộ tới toàn hệ thống.
         </div>
         <div class="action-buttons">
-          <button class="btn-secondary" @click="resetDefaults">Khôi phục mặc định</button>
-          <button class="btn-success" @click="saveConfig">Lưu cấu hình</button>
+          <button disabled class="btn-secondary" @click="resetDefaults">Khôi phục mặc định</button>
+          <button disabled class="btn-success" @click="saveConfig">Lưu cấu hình</button>
         </div>
       </div>
     </div>

@@ -1,126 +1,30 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-const route = useRoute()
-const router = useRouter()
 
-const isFavorite = ref(false)
-
-// ==================== IMAGE GALLERY ====================
-
-const showGallery = ref(false)
-const currentImageIndex = ref(0)
-
-const images = [
-  '/images/image0.png',
-  '/images/image1.png',
-  '/images/image2.png',
-  '/images/image3.png'
-]
-
-const openGallery = (index = 0) => {
-  currentImageIndex.value = index
-  showGallery.value = true
-  document.body.style.overflow = 'hidden'
+import {isPublicProperty} from '../../src/services/usePublicListings.js'
+import ContactPanel from '../../src/components/ContactPanel.vue'
+const route=useRoute(),router=useRouter(),state=ref({busy:false,error:'',notice:'',notFound:false}),property=ref(null),isFavorite=ref(false),showGallery=ref(false),currentImageIndex=ref(0),pois=ref([]);
+const listing=computed(()=>adapt(property.value)),listingId=computed(()=>route.params.id),images=computed(()=>property.value?.images?.map(i=>i.url)||[]);
+const openGallery=(index=0)=>{if(!images.value.length)return;currentImageIndex.value=Math.min(index,images.value.length-1);showGallery.value=true;document.body.style.overflow='hidden'},closeGallery=()=>{showGallery.value=false;document.body.style.overflow=''},nextImage=()=>currentImageIndex.value=(currentImageIndex.value+1)%Math.max(images.value.length,1),prevImage=()=>currentImageIndex.value=(currentImageIndex.value-1+images.value.length)%Math.max(images.value.length,1),selectImage=i=>currentImageIndex.value=i;
+const goHome=()=>router.push('/home'),goMap=()=>router.push('/map'),goAccount=()=>router.push('/account');
+let loadSequence=0
+async function load(){
+ const run=++loadSequence,id=route.params.id,own=route.query.own==='1';closeGallery();property.value=null;pois.value=[];isFavorite.value=false;Object.assign(state.value,{busy:true,error:'',notice:'',notFound:false})
+ try{
+  const result=await api((own?'/users/me/properties/':'/properties/')+encodeURIComponent(id),{authenticated:own});if(run!==loadSequence)return
+  const value=own?result.property:result;if(!own&&!isPublicProperty(value))throw Object.assign(Error(),{status:404})
+  property.value=value
+  if(!own)api('/properties/'+encodeURIComponent(id)+'/points-of-interest',{authenticated:false}).then(items=>{if(run===loadSequence)pois.value=items}).catch(()=>{if(run===loadSequence)state.value.notice='Chưa tải được tiện ích xung quanh.'})
+ }catch(e){if(run===loadSequence){state.value.notFound=e.status===404||e.status===400;state.value.error=state.value.notFound?'Tin đăng không tồn tại hoặc không còn được công khai.':errorText(e)}}finally{if(run===loadSequence)state.value.busy=false}
 }
+async function messageOwner(){if(!session.token)return router.push('/login');state.value.busy=true;state.value.error='';try{const c=await api('/conversations',{method:'POST',body:{propertyId:route.params.id}});await router.push({path:'/account/messages',query:{conversation:c.id}})}catch(e){state.value.error=errorText(e)}finally{state.value.busy=false}}
+async function toggleFavorite(){if(!session.token)return router.push('/login');try{await api('/users/me/saved-properties/'+route.params.id,{method:isFavorite.value?'DELETE':'PUT'});isFavorite.value=!isFavorite.value}catch(e){state.value.error=errorText(e)}}
+watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmount(()=>{loadSequence++;closeGallery()});
 
-const closeGallery = () => {
-  showGallery.value = false
-  document.body.style.overflow = ''
-}
-
-const nextImage = () => {
-  currentImageIndex.value =
-    (currentImageIndex.value + 1) % images.length
-}
-
-const prevImage = () => {
-  currentImageIndex.value =
-    (currentImageIndex.value - 1 + images.length) % images.length
-}
-
-const selectImage = (index) => {
-  currentImageIndex.value = index
-}
-
-// ==================== LISTING DATA ====================
-
-const listings = {
-  1: {
-    title: 'Nhà 3 tầng hẻm xe hơi, gần cầu Rồng',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '4,85 tỷ đ',
-    priceShort: '4,85 tỷ',
-    type: 'Nhà phố',
-    area: '92 m²',
-    bedrooms: '3',
-    bathrooms: '2',
-    direction: 'Đông Nam',
-    status: 'Ảnh trùng 94%',
-    hasWarning: true,
-    pricePerM2: '≈ 52,7 triệu/m²',
-    valuation: '4,60 – 4,90 tỷ',
-    description1:
-      'Nhà 3 tầng nằm trong khu dân cư yên tĩnh tại Hải Châu, đường trước nhà rộng, ô tô có thể di chuyển thuận tiện. Vị trí gần cầu Rồng, trung tâm thành phố và nhiều tiện ích xung quanh.',
-    description2:
-      'Nhà gồm phòng khách, bếp, 3 phòng ngủ, 2 phòng tắm và khu vực ban công thoáng mát. Phù hợp để ở lâu dài hoặc đầu tư cho thuê.',
-  },
-
-  2: {
-    title: 'Căn hộ 2PN view sông Hàn',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '3,20 tỷ đ',
-    priceShort: '3,20 tỷ',
-    type: 'Căn hộ',
-    area: '68 m²',
-    bedrooms: '2',
-    bathrooms: '2',
-    direction: 'Đông',
-    status: 'Không cảnh báo',
-    hasWarning: false,
-    pricePerM2: '≈ 47,1 triệu/m²',
-    valuation: '3,00 – 3,35 tỷ',
-    description1:
-      'Căn hộ nằm tại khu vực Hải Châu, Đà Nẵng, có vị trí thuận tiện và tầm nhìn hướng về sông Hàn.',
-    description2:
-      'Căn hộ gồm 2 phòng ngủ, 2 phòng tắm và không gian sinh hoạt thoáng. Phù hợp để ở hoặc đầu tư cho thuê.',
-  },
-
-  3: {
-    title: 'Đất nền Hoà Xuân, sổ đỏ riêng',
-    location: 'Cẩm Lệ, Đà Nẵng',
-    price: '2,95 tỷ đ',
-    priceShort: '2,95 tỷ',
-    type: 'Đất nền',
-    area: '100 m²',
-    bedrooms: '—',
-    bathrooms: '—',
-    direction: '—',
-    status: 'Không cảnh báo',
-    hasWarning: false,
-    pricePerM2: '≈ 29,5 triệu/m²',
-    valuation: '2,80 – 3,10 tỷ',
-    description1:
-      'Đất nền tại khu vực Hoà Xuân, Cẩm Lệ, Đà Nẵng. Khu vực dân cư phát triển, giao thông thuận tiện.',
-    description2:
-      'Diện tích 100 m², sổ đỏ riêng. Phù hợp xây nhà ở lâu dài hoặc đầu tư.',
-  },
-}
-
-const listing = computed(() => {
-  return listings[route.params.id] || listings[1]
-})
-
-const listingId = computed(() => route.params.id || '1')
-
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value
-}
-
-const goHome = () => router.push('/home')
-const goMap = () => router.push('/map')
-const goAccount = () => router.push('/account')
 </script>
 
 <template>
@@ -168,6 +72,7 @@ const goAccount = () => router.push('/account')
     <!-- ==================== MAIN ==================== -->
 
     <main class="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 pb-20">
+<LegacyState :state="{...state,load}" />
 
       <!-- BACK -->
 
@@ -178,10 +83,10 @@ const goAccount = () => router.push('/account')
         ← Quay lại
       </button>
 
-      <!-- ==================== IMAGES ==================== -->
+      <div v-if="!property&&!state.busy" class="rounded-2xl bg-white p-6 text-sm"><p>{{state.notFound?'Không tìm thấy tin đăng công khai.':'Chưa tải được tin đăng.'}}</p><button type="button" class="mt-3 underline" @click="load">Thử tải lại</button><RouterLink to="/listings" class="ml-4 underline">Xem danh sách bất động sản</RouterLink></div><template v-if="property&&!state.busy"><!-- ==================== IMAGES ==================== -->
 
       <section
-        class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-3 h-auto lg:h-[430px]"
+        class="grid grid-cols-1 gap-3 h-auto lg:h-[430px]" :class="images.length>1?'lg:grid-cols-[2fr_1fr]':''"
       >
 
         <!-- BIG IMAGE -->
@@ -190,7 +95,7 @@ const goAccount = () => router.push('/account')
           @click="openGallery(0)"
           class="relative min-h-[300px] lg:min-h-0 rounded-[24px] overflow-hidden bg-[#d9d6ce] cursor-pointer group"
         >
-          <img
+          <PrivateImage
             :src="images[0]"
             :alt="listing.title"
             class="absolute inset-0 w-full h-full object-cover transition duration-300 group-hover:scale-[1.02]"
@@ -209,7 +114,7 @@ const goAccount = () => router.push('/account')
 
         <!-- RIGHT IMAGES -->
 
-        <div class="grid grid-cols-2 lg:grid-cols-1 gap-3">
+        <div v-if="images.length>1" class="grid grid-cols-2 lg:grid-cols-1 gap-3">
 
           <!-- IMAGE 2 -->
 
@@ -217,7 +122,7 @@ const goAccount = () => router.push('/account')
             @click="openGallery(1)"
             class="relative min-h-[150px] rounded-[20px] bg-[#d9d6ce] overflow-hidden cursor-pointer group"
           >
-            <img
+            <PrivateImage
               :src="images[1]"
               alt="Ảnh bất động sản"
               class="absolute inset-0 w-full h-full object-cover transition duration-300 group-hover:scale-105"
@@ -229,10 +134,10 @@ const goAccount = () => router.push('/account')
             <!-- IMAGE 3 -->
 
             <div
-              @click="openGallery(2)"
+              v-if="images.length>2" @click="openGallery(2)"
               class="relative min-h-[150px] rounded-[20px] bg-[#d9d6ce] overflow-hidden cursor-pointer group"
             >
-              <img
+              <PrivateImage
                 :src="images[2]"
                 alt="Ảnh bất động sản"
                 class="absolute inset-0 w-full h-full object-cover transition duration-300 group-hover:scale-105"
@@ -242,10 +147,10 @@ const goAccount = () => router.push('/account')
             <!-- IMAGE 4 / VIEW ALL -->
 
             <div
-              @click="openGallery(3)"
+              v-if="images.length>3" @click="openGallery(3)"
               class="relative min-h-[150px] rounded-[20px] bg-[#1E325A] overflow-hidden cursor-pointer group"
             >
-              <img
+              <PrivateImage
                 :src="images[3]"
                 alt="Ảnh bất động sản"
                 class="absolute inset-0 w-full h-full object-cover opacity-55 transition duration-300 group-hover:scale-105"
@@ -255,7 +160,7 @@ const goAccount = () => router.push('/account')
                 class="absolute inset-0 flex items-center justify-center bg-[#1E325A]/40"
               >
                 <span class="text-white text-lg font-semibold">
-                  +12 ảnh
+                  {{images.length>3?'+'+(images.length-3)+' ảnh':images.length+' ảnh'}}
                 </span>
               </div>
             </div>
@@ -337,8 +242,8 @@ const goAccount = () => router.push('/account')
                 </p>
 
                 <p class="text-sm font-semibold mt-1">
-                  {{ listing.bedrooms }}
-                  <span v-if="listing.bedrooms !== '—'">
+                  {{property.bedrooms??'Chưa cung cấp'}}
+                  <span v-if="property.bedrooms!=null">
                     PN
                   </span>
                 </p>
@@ -350,8 +255,8 @@ const goAccount = () => router.push('/account')
                 </p>
 
                 <p class="text-sm font-semibold mt-1">
-                  {{ listing.bathrooms }}
-                  <span v-if="listing.bathrooms !== '—'">
+                  {{property.bathrooms??'Chưa cung cấp'}}
+                  <span v-if="property.bathrooms!=null">
                     WC
                   </span>
                 </p>
@@ -423,7 +328,7 @@ const goAccount = () => router.push('/account')
               <div
                 class="px-4 py-2 rounded-full bg-[#c9683c] text-white text-xs whitespace-nowrap"
               >
-                {{ listing.status }}
+                {{ listing.statusText }}
               </div>
             </div>
           </section>
@@ -442,20 +347,20 @@ const goAccount = () => router.push('/account')
                 </h2>
 
                 <p class="text-xs text-[#438665]/80 mt-2">
-                  Hệ thống chưa phát hiện cảnh báo bất thường đối với
-                  hình ảnh của tin đăng này.
+                  Chưa có kết quả đối chiếu hình ảnh cho tin đăng này.
                 </p>
               </div>
 
               <div
                 class="px-4 py-2 rounded-full bg-[#438665] text-white text-xs"
               >
-                {{ listing.status }}
+                {{ listing.statusText }}
               </div>
             </div>
           </section>
 
-          <!-- ==================== AMENITIES ==================== -->
+          <section v-if="property.declaredAmenities?.length" class="bg-white rounded-[24px] p-6 md:p-8 shadow-sm"><h2 class="text-base font-semibold mb-4">Tiện ích trong bất động sản</h2><div class="flex flex-wrap gap-2"><span v-for="amenity in property.declaredAmenities" :key="amenity" class="rounded-full bg-[#f5f4ef] px-3 py-2 text-xs">{{amenity}}</span></div></section>
+<!-- ==================== AMENITIES ==================== -->
 
           <section
             class="bg-white rounded-[24px] p-6 md:p-8 shadow-sm"
@@ -464,34 +369,7 @@ const goAccount = () => router.push('/account')
               Tiện ích xung quanh
             </h2>
 
-            <div
-              class="grid grid-cols-2 md:grid-cols-4 gap-3"
-            >
-              <div class="bg-[#f5f4ef] rounded-2xl p-4">
-                <div class="text-lg mb-2">🏫</div>
-                <p class="text-xs font-medium">Trường học</p>
-                <p class="text-[10px] text-gray-400 mt-1">450 m</p>
-              </div>
-
-              <div class="bg-[#f5f4ef] rounded-2xl p-4">
-                <div class="text-lg mb-2">🏥</div>
-                <p class="text-xs font-medium">Bệnh viện</p>
-                <p class="text-[10px] text-gray-400 mt-1">1,2 km</p>
-              </div>
-
-              <div class="bg-[#f5f4ef] rounded-2xl p-4">
-                <div class="text-lg mb-2">🛒</div>
-                <p class="text-xs font-medium">Siêu thị</p>
-                <p class="text-[10px] text-gray-400 mt-1">600 m</p>
-              </div>
-
-              <div class="bg-[#f5f4ef] rounded-2xl p-4">
-                <div class="text-lg mb-2">🌳</div>
-                <p class="text-xs font-medium">Công viên</p>
-                <p class="text-[10px] text-gray-400 mt-1">850 m</p>
-              </div>
-            </div>
-          </section>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div v-for="poi in pois" :key="poi.id" class="bg-[#f5f4ef] rounded-2xl p-4"><p class="text-xs font-medium">{{poi.name}}</p><p class="text-[10px] text-gray-400 mt-1">{{Math.round(poi.distanceMeters)}} m</p></div><p v-if="!pois.length" class="text-xs text-gray-400">Chưa có dữ liệu tiện ích.</p></div></section>
 
           <!-- ==================== LOCATION ==================== -->
 
@@ -521,10 +399,10 @@ const goAccount = () => router.push('/account')
             <div
               class="relative h-[250px] rounded-[20px] overflow-hidden bg-[#dedbd2]"
             >
-              <div class="absolute inset-0 map-pattern"></div>
+              <iframe v-if="mapUrl(property)" :src="mapUrl(property)" title="Vị trí bất động sản" loading="lazy" class="absolute inset-0 w-full h-full border-0"/><p v-else class="p-6 text-sm text-gray-500">Chưa có vị trí bản đồ.</p>
 
               <div
-                class="absolute inset-0 flex items-center justify-center"
+                class="absolute bottom-3 left-3 pointer-events-none"
               >
                 <div
                   class="bg-[#1E325A] text-white px-4 py-2 rounded-full text-xs shadow-lg"
@@ -555,7 +433,7 @@ const goAccount = () => router.push('/account')
                 </h2>
 
                 <p class="text-[10px] text-white/60 mt-2">
-                  Ước tính bằng mô hình XGBoost từ dữ liệu khu vực.
+                  Chưa có dữ liệu định giá tự động cho tin này.
                 </p>
               </div>
 
@@ -570,7 +448,7 @@ const goAccount = () => router.push('/account')
                 </p>
 
                 <p class="text-[10px] text-emerald-300 mt-1">
-                  Nằm trong khoảng hợp lý
+                  Chưa có kết quả so sánh giá
                 </p>
               </div>
             </div>
@@ -588,12 +466,12 @@ const goAccount = () => router.push('/account')
                     class="flex justify-between text-[10px] text-white/60 mb-1"
                   >
                     <span>Vị trí trung tâm</span>
-                    <span>+12%</span>
+                    <span>—</span>
                   </div>
 
                   <div class="h-1.5 bg-white/10 rounded-full">
                     <div
-                      class="h-full w-[80%] bg-white/70 rounded-full"
+                      class="h-full w-0 bg-white/70 rounded-full"
                     ></div>
                   </div>
                 </div>
@@ -603,12 +481,12 @@ const goAccount = () => router.push('/account')
                     class="flex justify-between text-[10px] text-white/60 mb-1"
                   >
                     <span>Diện tích</span>
-                    <span>+8%</span>
+                    <span>—</span>
                   </div>
 
                   <div class="h-1.5 bg-white/10 rounded-full">
                     <div
-                      class="h-full w-[65%] bg-white/70 rounded-full"
+                      class="h-full w-0 bg-white/70 rounded-full"
                     ></div>
                   </div>
                 </div>
@@ -618,12 +496,12 @@ const goAccount = () => router.push('/account')
                     class="flex justify-between text-[10px] text-white/60 mb-1"
                   >
                     <span>Khoảng cách tiện ích</span>
-                    <span>+5%</span>
+                    <span>—</span>
                   </div>
 
                   <div class="h-1.5 bg-white/10 rounded-full">
                     <div
-                      class="h-full w-[45%] bg-white/70 rounded-full"
+                      class="h-full w-0 bg-white/70 rounded-full"
                     ></div>
                   </div>
                 </div>
@@ -651,37 +529,21 @@ const goAccount = () => router.push('/account')
 
               <div
                 class="w-11 h-11 rounded-full bg-[#1E325A] text-white flex items-center justify-center text-xs font-semibold"
-              >
-                NT
-              </div>
+              >S</div>
 
               <div>
                 <p class="text-sm font-semibold">
-                  Nguyễn Thành
+                  Thông tin người đăng
                 </p>
 
                 <p class="text-[10px] text-gray-400 mt-1">
-                  Môi giới xác thực
+                  Liên hệ được bảo vệ; bấm bên dưới để xem.
                 </p>
               </div>
 
             </div>
 
-            <div class="mt-5 space-y-2">
-
-              <button
-                class="w-full py-3 rounded-full bg-[#1E325A] text-white text-xs hover:opacity-90 transition"
-              >
-                Nhắn tin
-              </button>
-
-              <button
-                class="w-full py-3 rounded-full bg-white border border-[#1E325A] text-[#1E325A] text-xs hover:bg-[#1E325A]/5 transition"
-              >
-                Gọi 090 *** 789
-              </button>
-
-            </div>
+            <RouterLink v-if="route.query.own==='1'||session.user?.role==='ADMIN'" :to="'/account/properties/'+listingId+'/legal-documents'" class="mb-3 block text-xs underline">Quản lý hồ sơ pháp lý riêng</RouterLink><ContactPanel :key="listingId" :property-id="listingId" /><button type="button" class="mt-3 w-full rounded-full border p-3 text-xs" :disabled="state.busy" @click="messageOwner">Nhắn tin</button>
 
             <p
               class="text-[9px] text-gray-400 text-center mt-4 leading-4"
@@ -700,7 +562,7 @@ const goAccount = () => router.push('/account')
               Thông tin tin đăng
             </h3>
 
-            <div class="space-y-3 text-[10px]">
+            <div class="space-y-3 text-[10px] break-all">
 
               <div class="flex justify-between">
                 <span class="text-gray-400">
@@ -708,7 +570,7 @@ const goAccount = () => router.push('/account')
                 </span>
 
                 <span>
-                  #SP{{ listingId }}
+                  {{ listingId }}
                 </span>
               </div>
 
@@ -718,7 +580,7 @@ const goAccount = () => router.push('/account')
                 </span>
 
                 <span>
-                  01/10/2026
+                  {{ date(property?.publishedAt || property?.createdAt) }}
                 </span>
               </div>
 
@@ -727,9 +589,7 @@ const goAccount = () => router.push('/account')
                   Lượt xem
                 </span>
 
-                <span>
-                  1.240
-                </span>
+                <span>—</span>
               </div>
 
               <div class="flex justify-between">
@@ -737,9 +597,7 @@ const goAccount = () => router.push('/account')
                   Lượt lưu
                 </span>
 
-                <span>
-                  6
-                </span>
+                <span>—</span>
               </div>
 
             </div>
@@ -765,7 +623,7 @@ const goAccount = () => router.push('/account')
 
         </aside>
       </div>
-    </main>
+    </template></main>
 
     <!-- ====================================================== -->
     <!-- FULL SCREEN IMAGE GALLERY -->
@@ -851,7 +709,7 @@ const goAccount = () => router.push('/account')
             class="relative flex-1 min-h-0 flex items-center justify-center px-5 md:px-16"
           >
 
-            <img
+            <PrivateImage
               :src="images[currentImageIndex]"
               :alt="`Ảnh ${currentImageIndex + 1} của ${listing.title}`"
               class="w-full h-full object-contain rounded-[18px]"
@@ -906,7 +764,7 @@ const goAccount = () => router.push('/account')
                     : 'border-transparent opacity-50 hover:opacity-100'
                 "
               >
-                <img
+                <PrivateImage
                   :src="image"
                   :alt="`Ảnh thu nhỏ ${index + 1}`"
                   class="w-full h-full object-cover"

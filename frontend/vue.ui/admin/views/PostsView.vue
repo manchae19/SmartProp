@@ -1,15 +1,16 @@
 <template>
   <div class="main">
+<LegacyState :state="state" />
     <!-- Tiêu đề danh sách tin chờ duyệt -->
     <div class="section-title">
-      <div class="_18-tin-ang-ch-duy-t">{{ pendingPosts.length }} tin đang chờ duyệt</div>
+      <div class="_18-tin-ang-ch-duy-t">{{ state.totalElements }} tin đăng</div>
     </div>
 
     <!-- Danh sách các tin chờ duyệt -->
-    <div class="posts-list">
+    <select v-model="statusFilter" @change="selected=null;state.load(0)" class="bg-white border rounded-lg p-2 text-sm"><option v-for="key in ['PENDING','PUBLISHED','HIDDEN','REJECTED','DRAFT','EXPIRED','CLOSED']" :key="key" :value="key">{{states[key]}}</option></select><div class="posts-list">
       <div class="post-card" v-for="post in pendingPosts" :key="post.id">
         <!-- Ảnh thu nhỏ của tin đăng -->
-        <div class="post-thumb"></div>
+        <PrivateImage :src="post.image" alt="Ảnh tin đăng" class="post-thumb object-cover"/>
 
         <!-- Thông tin chi tiết tin đăng -->
         <div class="post-info">
@@ -24,66 +25,27 @@
 
         <!-- Khu vực nút thao tác -->
         <div class="post-actions">
-          <button class="btn-approve" @click="handleApprove(post.id)">Duyệt</button>
-          <button class="btn-reject" @click="handleReject(post.id)">Từ chối</button>
-          <button class="btn-detail" @click="handleViewDetail(post.id)">Xem chi tiết ›</button>
+          <button v-if="post.raw.status==='PENDING'" class="btn-approve" @click="handleApprove(post.id)">Duyệt</button>
+          <button v-if="post.raw.status==='PENDING'" class="btn-reject" @click="handleReject(post.id)">Từ chối</button>
+          <button v-if="post.raw.status==='PUBLISHED'" class="btn-reject" @click="moderate(post.id,'HIDE')">Ẩn tin</button><button v-if="post.raw.status==='HIDDEN'" class="btn-approve" @click="moderate(post.id,'RESTORE')">Khôi phục</button><button class="btn-detail" @click="handleViewDetail(post.id)">Xem chi tiết ›</button>
         </div>
       </div>
     </div>
   </div>
-</template>
+<section v-if="selected" class="bg-white rounded-2xl p-6"><h3 class="font-semibold">{{selected.property.title}}</h3><p class="text-xs py-3 whitespace-pre-wrap">{{selected.property.description}}</p><div class="grid grid-cols-3 gap-3"><PrivateImage v-for="image in selected.property.images" :key="image.id" :src="image.url" alt="Ảnh tin chờ duyệt" class="h-32 w-full object-cover rounded-xl"/></div><label class="block text-xs mt-4">Lý do<textarea v-model="reason" class="w-full mt-2 p-3 border rounded-xl" maxlength="4000"/></label><button v-if="selected.property.status==='PENDING'" class="px-4 py-2 rounded-full bg-[#1E325A] text-white text-xs" @click="handleApprove(selected.property.id)">Duyệt tin</button><button v-if="selected.property.status==='PENDING'" class="px-4 py-2 rounded-full border ml-2 text-xs" @click="handleReject(selected.property.id)">Từ chối</button><button v-if="selected.property.status==='PUBLISHED'" class="px-4 py-2 rounded-full border text-xs" @click="moderate(selected.property.id,'HIDE')">Ẩn tin</button><button v-if="selected.property.status==='HIDDEN'" class="px-4 py-2 rounded-full border text-xs" @click="moderate(selected.property.id,'RESTORE')">Khôi phục</button></section><LegacyPager :state="state" /></template>
+<script setup>
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-<script>
-export default {
-  name: 'PostsView',
-  data() {
-    return {
-      pendingPosts: [
-        {
-          id: 1,
-          title: 'Nhà 3 tầng hẻm xe hơi, gần cầu Rồng',
-          location: '123 Nguyễn Văn Linh, Hải Châu',
-          price: '4,8 tỷ',
-          time: '2 giờ trước',
-          badgeText: 'Ảnh trùng x2',
-          badgeClass: 'badge-warning' // Màu cảnh báo
-        },
-        {
-          id: 2,
-          title: 'Căn hộ 2PN view sông Hàn, nội thất đầy đủ',
-          location: '45 Trần Hưng Đạo, Sơn Trà',
-          price: '2,1 tỷ',
-          time: '5 giờ trước',
-          badgeText: 'Chờ đối chiếu',
-          badgeClass: 'badge-info' // Màu chờ xử lý
-        },
-        {
-          id: 3,
-          title: 'Đất nền mặt tiền đường Nguyễn Tất Thành',
-          location: 'Lô 12 Nguyễn Tất Thành, Thanh Khê',
-          price: '6,3 tỷ',
-          time: 'hôm qua',
-          badgeText: 'Sẵn sàng duyệt',
-          badgeClass: 'badge-success' // Màu sẵn sàng
-        }
-      ]
-    }
-  },
-  methods: {
-    handleApprove(id) {
-      // Logic xử lý duyệt tin
-      this.pendingPosts = this.pendingPosts.filter(p => p.id !== id);
-    },
-    handleReject(id) {
-      // Logic xử lý từ chối tin
-      this.pendingPosts = this.pendingPosts.filter(p => p.id !== id);
-    },
-    handleViewDetail(id) {
-      // Logic xem chi tiết tin đăng
-      console.log('Xem chi tiết tin:', id);
-    }
-  }
-}
+
+const statusFilter=ref('PENDING');
+const router=useRouter(),state=useList('/admin/properties',()=>({status:statusFilter.value})),selected=ref(null),reason=ref(''),pendingPosts=computed(()=>state.items.map(m=>({...adapt(m),location:adapt(m).location,time:date(m.property.createdAt),badgeText:states[m.property.status],badgeClass:'badge-info'})));
+const handleViewDetail=id=>{selected.value=state.items.find(m=>m.property.id===id);reason.value=''};
+async function moderate(id,action){if(!selected.value||selected.value.property.id!==id){handleViewDetail(id);return}if(!reason.value.trim()){state.error='Nhập lý do trước khi xử lý.';return}await state.run(async()=>{await api('/admin/properties/'+id+'/moderation',{method:'POST',body:{action,expectedVersion:selected.value.property.contentVersion,reason:reason.value}});selected.value=null;await state.load(state.page)})}
+const handleApprove=id=>moderate(id,'APPROVE'),handleReject=id=>moderate(id,'REJECT');
+
 </script>
 
 <style scoped>

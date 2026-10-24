@@ -1,3 +1,4 @@
+<script setup>import {ref} from 'vue';import {useRouter} from 'vue-router';import {api,session,logout} from '../../src/services/api.js';const router=useRouter(),pending=ref('—'),openReports=ref('—');api('/admin/dashboard').then(s=>{pending.value=s.pendingProperties;openReports.value=s.openReports}).catch(()=>{});async function signOut(){await logout();router.push('/login')}</script>
 <template>
   <div class="section">
     <!-- Header phía trên có chèn video nền -->
@@ -21,10 +22,10 @@
             Theo dõi tin đăng, người dùng và trạng thái xử lý AI trong toàn hệ thống.
           </div>
         </div>
-        <div class="postbtn">
+        <button type="button" class="postbtn" @click="router.push('/post')">
           <div class="ng-tin">Đăng tin</div>
           <div class="div">+</div>
-        </div>
+        </button>
       </div>
     </div>
 
@@ -41,7 +42,7 @@
         <router-link to="/admin/posts" class="nav2" active-class="active-nav">
           <div class="tin-ch-duy-t">Tin chờ duyệt</div>
           <div class="count">
-            <div class="_18">18</div>
+            <div class="_18">{{pending}}</div>
           </div>
         </router-link>
 
@@ -52,13 +53,14 @@
         <router-link to="/admin/reports" class="nav2" active-class="active-nav">
           <div class="b-o-c-o-tin-ng">Báo cáo tin đăng</div>
           <div class="count">
-            <div class="_7">7</div>
+            <div class="_7">{{openReports}}</div>
           </div>
         </router-link>
         <router-link to="/admin/audit-logs" class="nav" active-class="active-nav">
       <div class="nh-t-ký-ki-m-to-n">Nhật ký kiểm toán</div>
     </router-link>
 
+    <router-link to="/admin/projects" class="nav" active-class="active-nav"><div>Dự án</div></router-link>
     <router-link to="/admin/ai-config" class="nav" active-class="active-nav">
       <div class="c-u-h-nh-ai">Cấu hình AI</div>
     </router-link>
@@ -66,7 +68,7 @@
 
       <!-- Khu vực hiển thị các trang con -->
       <div class="main-content-area">
-        <router-view />
+        <div class="flex gap-4 justify-end text-xs mb-4"><RouterLink to="/home">Trang chủ</RouterLink><RouterLink to="/account">{{session.user?.fullName}}</RouterLink><button @click="signOut">Đăng xuất</button></div><router-view />
       </div>
     </div>
   </div>
@@ -233,4 +235,6 @@
   background: #fdfbf7;
   overflow-y: auto;
 }
+@media(max-width:900px){.body-layout{flex-direction:column}.sidebar{width:100%;display:flex;flex-wrap:wrap;gap:8px;border-right:0;border-bottom:1px solid #e4ded3;padding:16px}.sidebar>.m-c-qu-n-tr{width:100%;margin-bottom:4px}.sidebar>a{padding:10px 12px;margin:0;font-size:12px}.main-content-area{width:100%;min-width:0;padding:20px}.header{padding:24px}.hcontent{flex-wrap:wrap;gap:20px}}
+.main-content-area{min-width:0}
 </style>

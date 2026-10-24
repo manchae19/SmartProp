@@ -1,0 +1,44 @@
+<script setup>
+import {ref,computed,onMounted,onBeforeUnmount} from 'vue'
+import {validCoordinates} from '../services/postForm.js'
+import {projectPoint,unprojectPoint,visibleTiles} from '../services/postMap.js'
+const props=defineProps({latitude:{default:''},longitude:{default:''},disabled:Boolean})
+const emit=defineEmits(['select'])
+// This initial center is only a viewport. No point is selected until a deliberate action.
+const center=ref(validCoordinates(props.latitude,props.longitude)?{latitude:Number(props.latitude),longitude:Number(props.longitude)}:{latitude:16.0544,longitude:108.2022})
+const zoom=ref(validCoordinates(props.latitude,props.longitude)?17:13),host=ref(null),width=ref(600),failed=ref(false),attempt=ref(0),hint=ref('')
+const height=320,tiles=computed(()=>visibleTiles(center.value,zoom.value,width.value,height))
+const template=import.meta.env?.VITE_OSM_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const validTemplate=template.startsWith('https://')&&['{z}','{x}','{y}'].every(v=>template.includes(v))
+function tileUrl(tile){return validTemplate?template.replace('{z}',tile.z).replace('{x}',tile.x).replace('{y}',tile.y):''}
+const marker=computed(()=>{if(!validCoordinates(props.latitude,props.longitude))return null;const p=projectPoint(Number(props.latitude),Number(props.longitude),zoom.value),c=projectPoint(center.value.latitude,center.value.longitude,zoom.value);return {left:p.x-c.x+width.value/2,top:p.y-c.y+height/2}})
+let observer,drag
+function pan(dx,dy){const c=projectPoint(center.value.latitude,center.value.longitude,zoom.value);center.value=unprojectPoint(c.x+dx,c.y+dy,zoom.value)}
+function changeZoom(delta){if(!props.disabled)zoom.value=Math.max(3,Math.min(19,zoom.value+delta))}
+function selectAt(x,y){if(props.disabled)return;const c=projectPoint(center.value.latitude,center.value.longitude,zoom.value),wx=c.x+x-width.value/2,wy=c.y+y-height/2,n=2**zoom.value,tx=((Math.floor(wx/256)%n)+n)%n,ty=Math.floor(wy/256),key=zoom.value+'/'+tx+'/'+ty;const tile=[...(host.value?.querySelectorAll('[data-tile-key]')||[])].find(image=>image.dataset.tileKey===key);if(!tile?.complete||!tile.naturalWidth){hint.value='Phần bản đồ này chưa tải được. Hãy kiểm tra kết nối và thử lại trước khi chọn ghim.';return}const point=unprojectPoint(wx,wy,zoom.value);if(!validCoordinates(point.latitude,point.longitude))return;hint.value='Đã đặt ghim. Kiểm tra địa chỉ rồi bấm Xác nhận vị trí.';emit('select',point)}
+function pointerDown(event){if(props.disabled||event.button!==0||event.target.closest('[data-map-control]'))return;const box=host.value.getBoundingClientRect();drag={x:event.clientX,y:event.clientY,box,center:{...center.value},pin:!!event.target.closest('[data-location-pin]')};host.value.setPointerCapture(event.pointerId)}
+function pointerMove(event){if(!drag||drag.pin)return;const p=projectPoint(drag.center.latitude,drag.center.longitude,zoom.value);center.value=unprojectPoint(p.x-(event.clientX-drag.x),p.y-(event.clientY-drag.y),zoom.value)}
+function pointerUp(event){if(!drag)return;const start=drag;drag=null;if(start.pin||Math.hypot(event.clientX-start.x,event.clientY-start.y)<5)selectAt(event.clientX-start.box.left,event.clientY-start.box.top);try{host.value.releasePointerCapture(event.pointerId)}catch{}}
+function keyboard(event){if(props.disabled)return;const moves={ArrowLeft:[-64,0],ArrowRight:[64,0],ArrowUp:[0,-64],ArrowDown:[0,64]};if(moves[event.key]){event.preventDefault();pan(...moves[event.key])}else if(event.key==='Enter'||event.key===' '){event.preventDefault();selectAt(width.value/2,height/2)}else if(event.key==='+'||event.key==='='){event.preventDefault();changeZoom(1)}else if(event.key==='-'){event.preventDefault();changeZoom(-1)}}
+function retry(){failed.value=false;hint.value='';attempt.value++}
+onMounted(()=>{observer=new ResizeObserver(entries=>width.value=Math.max(1,entries[0].contentRect.width));observer.observe(host.value)})
+onBeforeUnmount(()=>observer?.disconnect())
+</script>
+<template>
+ <div class="manual-map-wrap">
+  <p id="manual-map-help" class="map-help">Bấm bản đồ để đặt ghim, kéo để di chuyển bản đồ hoặc kéo ghim để chỉnh. Dùng phím mũi tên rồi Enter để chọn điểm giữa bản đồ.</p>
+  <div ref="host" class="manual-map" tabindex="0" role="region" aria-label="Bản đồ chọn vị trí bất động sản" aria-describedby="manual-map-help" :aria-disabled="disabled||undefined" @pointerdown="pointerDown" @pointermove="pointerMove" @pointerup="pointerUp" @pointercancel="drag=null" @keydown="keyboard">
+   <img v-for="tile in tiles" :key="attempt+':'+tile.key" :src="tileUrl(tile)" alt="" draggable="false" referrerpolicy="strict-origin-when-cross-origin" class="map-tile" :data-tile-key="tile.key" :style="{left:tile.left+'px',top:tile.top+'px'}" @error="failed=true" />
+   <span class="map-crosshair" aria-hidden="true">+</span>
+   <span v-if="marker" data-location-pin class="location-pin" :style="{left:marker.left+'px',top:marker.top+'px'}" role="img" aria-label="Ghim vị trí đã chọn">●</span>
+   <div data-map-control class="map-controls" @pointerdown.stop @keydown.stop><button type="button" :disabled="disabled||zoom>=19" aria-label="Phóng to bản đồ" @click="changeZoom(1)">+</button><button type="button" :disabled="disabled||zoom<=3" aria-label="Thu nhỏ bản đồ" @click="changeZoom(-1)">−</button></div>
+   <button type="button" data-map-control class="choose-center" :disabled="disabled" @pointerdown.stop @keydown.stop @click="selectAt(width/2,height/2)">Đặt ghim ở dấu +</button>
+   <a data-map-control href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="map-attribution" @pointerdown.stop @keydown.stop>© OpenStreetMap contributors</a>
+  </div>
+  <p v-if="failed||!validTemplate" role="status" class="map-error">Chưa tải đầy đủ bản đồ. Kiểm tra mạng rồi <button type="button" class="underline" @click="retry">thử lại</button>. Chỉ chọn được ghim ở phần bản đồ đã tải.</p>
+  <p v-if="hint" role="status" class="map-help">{{hint}}</p>
+ </div>
+</template>
+<style scoped>
+.manual-map{height:320px;position:relative;overflow:hidden;isolation:isolate;background:#e9ece7;border:1px solid #d5dbd6;border-radius:14px;cursor:grab;touch-action:none;outline-offset:3px}.manual-map:active{cursor:grabbing}.manual-map:focus-visible{outline:3px solid #b48b51}.map-tile{position:absolute;width:256px;height:256px;max-width:none;user-select:none;pointer-events:none}.map-crosshair{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:25px Arial;color:#243b55;text-shadow:0 0 3px white;pointer-events:none}.location-pin{position:absolute;transform:translate(-50%,-100%);width:30px;height:38px;line-height:28px;text-align:center;background:#1e325a;color:white;border:3px solid white;border-radius:50% 50% 50% 0;rotate:-45deg;box-shadow:0 2px 8px #0005;cursor:move;touch-action:none}.map-controls{position:absolute;right:10px;top:10px;display:grid;gap:3px}.map-controls button{width:34px;height:34px;border:1px solid #ccd3dc;background:white;color:#1e325a;font-size:22px;border-radius:7px}.choose-center{position:absolute;left:10px;bottom:28px;padding:8px 12px;border:1px solid #cbd1d8;border-radius:8px;background:white;color:#1e325a;font-size:12px}.map-attribution{position:absolute;bottom:0;right:0;padding:3px 6px;background:#fffe;color:#1e325a;font-size:10px}.map-help,.map-error{font-size:12px;line-height:1.6;color:#576777;margin:10px 0}.map-error{color:#9a3412}button:disabled{opacity:.5;cursor:not-allowed}
+</style>

@@ -1,13 +1,14 @@
 <template>
   <div class="main">
+<LegacyState :state="state" />
     <!-- Tiêu đề phần báo cáo -->
     <div class="section-title">
-      <div class="title-text">3 báo cáo cần xử lý</div>
+      <div class="title-text">{{ state.totalElements }} báo cáo</div>
     </div>
 
     <!-- Danh sách các báo cáo vi phạm -->
-    <div class="reports-list">
-      <div class="report-card" v-for="report in reportsList" :key="report.id">
+    <select v-model="statusFilter" @change="selected=null;state.load(0)" class="bg-white border rounded-lg p-2 text-sm"><option value="OPEN">Mới tiếp nhận</option><option value="PROCESSING">Đang xử lý</option><option value="RESOLVED">Đã giải quyết</option><option value="REJECTED">Đã từ chối</option><option value="">Tất cả</option></select><div class="reports-list">
+      <div class="report-card" v-for="report in reportsList" :key="report.id" :data-report-id="report.id">
         <!-- Thông tin chi tiết báo cáo -->
         <div class="report-info">
           <div class="report-title">{{ report.title }}</div>
@@ -22,64 +23,33 @@
         <!-- Các nút thao tác xử lý -->
         <div class="report-actions">
           <button class="btn-view" @click="viewPost(report.id)">
-            Xem tin &rsaquo;
+            Xem báo cáo &rsaquo;
           </button>
-          <button class="btn-remove" @click="removePost(report.id)">
-            Gỡ tin
+          <button v-if="!['RESOLVED','REJECTED'].includes(report.status)" class="btn-remove" @click="removePost(report.id)">
+            Giải quyết
           </button>
-          <button class="btn-skip" @click="skipReport(report.id)">
+          <button v-if="!['RESOLVED','REJECTED'].includes(report.status)" class="btn-skip" @click="skipReport(report.id)">
             Bỏ qua
           </button>
         </div>
       </div>
     </div>
   </div>
-</template>
+<section v-if="selected" class="rounded-2xl bg-white p-6"><ReportDetails :report="selected" admin/><label class="block text-xs">Ghi chú xử lý<textarea v-model="note" maxlength="4000" class="w-full border rounded-xl p-3 my-3"/></label><button v-if="!['RESOLVED','REJECTED'].includes(selected.status)" @click="removePost(selected.id)" class="bg-[#1E325A] text-white rounded-full px-5 py-2 text-xs">Giải quyết</button><button v-if="!['RESOLVED','REJECTED'].includes(selected.status)" @click="skipReport(selected.id)" class="border rounded-full px-5 py-2 text-xs ml-2">Từ chối</button></section><LegacyPager :state="state" /></template>
+<script setup>
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-<script>
-export default {
-  name: 'ReportsView',
-  data() {
-    return {
-      reportsList: [
-        {
-          id: 1,
-          title: 'Villa sân vườn Điện Ngọc, sổ hồng riêng',
-          reason: 'Có dấu hiệu lừa đảo',
-          reporter: 'Phạm Thu Hà',
-          time: '2 giờ trước'
-        },
-        {
-          id: 2,
-          title: 'Nhà phố 2 mặt tiền gần chợ Cồn',
-          reason: 'Nghi ngờ ảnh giả mạo',
-          reporter: 'Đỗ Minh Khoa',
-          time: 'hôm qua'
-        },
-        {
-          id: 3,
-          title: 'Đất thổ cư Hòa Xuân, pháp lý đầy đủ',
-          reason: 'Sai lệch giá bán so với thực tế',
-          reporter: 'Vũ Thị Lan',
-          time: '3 ngày trước'
-        }
-      ]
-    }
-  },
-  methods: {
-    viewPost(id) {
-      alert(`Xem chi tiết tin đăng có ID báo cáo: ${id}`);
-    },
-    removePost(id) {
-      this.reportsList = this.reportsList.filter(item => item.id !== id);
-      alert('Đã gỡ tin đăng vi phạm thành công!');
-    },
-    skipReport(id) {
-      this.reportsList = this.reportsList.filter(item => item.id !== id);
-      alert('Đã bỏ qua báo cáo này.');
-    }
-  }
-}
+
+import ReportDetails from '../../src/components/business/ReportDetails.vue'
+const statusFilter=ref('OPEN');
+const router=useRouter(),state=useList('/admin/reports',()=>({status:statusFilter.value||undefined})),selected=ref(null),note=ref(''),reportsList=computed(()=>state.items.map(r=>({...r,title:'Tin '+r.propertyId,reason:reasonLabels[r.reasonCode]||r.reasonCode,reporter:'Người dùng #'+r.reporterId,time:date(r.createdAt)})));
+const viewPost=id=>{selected.value=state.items.find(r=>r.id===id);note.value=''};
+async function resolve(id,status){if(!selected.value||selected.value.id!==id){viewPost(id);return}if(!note.value.trim()){state.error='Nhập ghi chú xử lý.';return}await state.run(async()=>{await api('/admin/reports/'+id+'/status',{method:'PATCH',body:{status,note:note.value}});selected.value=null;await state.load(state.page)})}
+const removePost=id=>resolve(id,'RESOLVED'),skipReport=id=>resolve(id,'REJECTED');
+
 </script>
 
 <style scoped>

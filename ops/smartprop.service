@@ -1,0 +1,19 @@
+[Unit]
+Description=SmartProp backend
+After=network.target
+[Service]
+Type=simple
+User=smartprop
+Group=smartprop
+WorkingDirectory=/srv/smartprop/backend
+EnvironmentFile=/etc/smartprop/runtime.env
+ExecStart=/usr/bin/java -jar /srv/smartprop/backend/smartprop-backend-0.1.0.jar --server.address=127.0.0.1 --spring.flyway.enabled=false --spring.sql.init.mode=never --spring.jpa.hibernate.ddl-auto=validate --app.seed.enabled=false --app.database-seed.enabled=false
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/smartprop/uploads
+[Install]
+WantedBy=multi-user.target

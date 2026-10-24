@@ -1,144 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-const route = useRoute()
-const router = useRouter()
 
-// ==================== LISTING DATA ====================
+const route=useRoute(),router=useRouter(),state=ref({busy:false,error:'',notice:''}),property=ref(null),listing=computed(()=>adapt(property.value)),reasons=['Nghi ngờ ảnh giả mạo','Thông tin sai lệch','Nghi ngờ lừa đảo','Tin đăng trùng lặp','BĐS đã bán / đã cho thuê','Lý do khác'],codes=['FAKE_IMAGES','INACCURATE_INFORMATION','SUSPECTED_SCAM','DUPLICATE','UNAVAILABLE','OTHER'],selectedReason=ref(''),description=ref(''),email=ref(session.user?.email||''),confirmed=ref(false),selectedFile=ref(null),isSubmitted=ref(false),created=ref(null);
+const selectReason=r=>selectedReason.value=r,removeFile=()=>selectedFile.value=null,goBack=()=>router.push('/listing/'+route.params.id),goHome=()=>router.push('/home'),goAccount=()=>router.push('/account');
+onMounted(async()=>{try{property.value=await api('/properties/'+route.params.id)}catch(e){state.value.error=errorText(e)}});
+function handleFile(event){selectedFile.value=event.target.files?.[0]||null}
+async function submitReport(){if(state.value.busy)return;state.value.error='';if(!selectedReason.value||!description.value.trim()||!confirmed.value){state.value.error='Vui lòng chọn lý do, mô tả và xác nhận thông tin.';return}state.value.busy=true;try{if(!created.value)created.value=await api('/properties/'+route.params.id+'/reports',{method:'POST',body:{reasonCode:codes[reasons.indexOf(selectedReason.value)],description:description.value,contactEmail:email.value||null}});if(selectedFile.value){const data=new FormData();data.append('file',selectedFile.value);await api('/reports/'+created.value.id+'/attachments',{method:'POST',body:data})}isSubmitted.value=true}catch(e){state.value.error=errorText(e)}finally{state.value.busy=false}}
 
-const listings = {
-  1: {
-    title: 'Nhà 3 tầng hẻm xe hơi, gần cầu Rồng',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '4,85 tỷ đ',
-    image: '/images/image0.png',
-  },
-
-  2: {
-    title: 'Căn hộ 2PN view sông Hàn',
-    location: 'Hải Châu, Đà Nẵng',
-    price: '3,20 tỷ đ',
-    image: '/images/image1.png',
-  },
-
-  3: {
-    title: 'Đất nền Hoà Xuân, sổ đỏ riêng',
-    location: 'Cẩm Lệ, Đà Nẵng',
-    price: '2,95 tỷ đ',
-    image: '/images/image2.png',
-  },
-}
-
-const listing = computed(() => {
-  return listings[route.params.id] || listings[1]
-})
-
-// ==================== REPORT FORM ====================
-
-const reasons = [
-  'Nghi ngờ ảnh giả mạo',
-  'Thông tin sai lệch',
-  'Nghi ngờ lừa đảo',
-  'Tin đăng trùng lặp',
-  'BĐS đã bán / đã cho thuê',
-  'Lý do khác',
-]
-
-const selectedReason = ref('')
-
-const description = ref(
-  'Ảnh nội thất và mặt tiền trông giống hệt một tin đăng khác tôi từng xem ở khu vực Hải Châu, nghi ngờ ảnh không chụp tại địa chỉ này.'
-)
-
-const email = ref('hoang.binh@gmail.com')
-
-const confirmed = ref(false)
-
-const selectedFile = ref(null)
-
-const isSubmitted = ref(false)
-
-// ==================== FUNCTIONS ====================
-
-const selectReason = (reason) => {
-  selectedReason.value = reason
-}
-
-const handleFile = (event) => {
-  const file = event.target.files?.[0]
-
-  if (!file) return
-
-  const allowedTypes = [
-    'image/jpeg',
-    'image/png',
-    'application/pdf',
-  ]
-
-  if (!allowedTypes.includes(file.type)) {
-    alert('Chỉ hỗ trợ JPG, PNG hoặc PDF.')
-    event.target.value = ''
-    return
-  }
-
-  if (file.size > 10 * 1024 * 1024) {
-    alert('Tệp không được vượt quá 10MB.')
-    event.target.value = ''
-    return
-  }
-
-  selectedFile.value = file
-}
-
-const removeFile = () => {
-  selectedFile.value = null
-}
-
-const submitReport = () => {
-  if (!selectedReason.value) {
-    alert('Vui lòng chọn lý do báo cáo.')
-    return
-  }
-
-  if (!description.value.trim()) {
-    alert('Vui lòng nhập mô tả chi tiết.')
-    return
-  }
-
-  if (!email.value.trim()) {
-    alert('Vui lòng nhập email liên hệ.')
-    return
-  }
-
-  if (!confirmed.value) {
-    alert('Vui lòng xác nhận thông tin báo cáo.')
-    return
-  }
-
-  // Sau này có Backend/API thì gửi dữ liệu tại đây.
-  console.log({
-    listingId: route.params.id,
-    reason: selectedReason.value,
-    description: description.value,
-    email: email.value,
-    file: selectedFile.value,
-  })
-
-  isSubmitted.value = true
-}
-
-const goBack = () => {
-  router.push(`/listing/${route.params.id}`)
-}
-
-const goHome = () => {
-  router.push('/home')
-}
-
-const goAccount = () => {
-  router.push('/account')
-}
 </script>
 
 <template>
@@ -204,6 +76,7 @@ const goAccount = () => {
     <!-- ================= MAIN ================= -->
 
     <main class="max-w-[1180px] mx-auto px-6 md:px-10 py-10">
+<LegacyState :state="state" />
 
       <!-- MOBILE BACK -->
       <button
@@ -303,7 +176,7 @@ const goAccount = () => {
                 class="w-[105px] h-[78px] rounded-[14px]
                        overflow-hidden bg-[#d9d6ce] shrink-0"
               >
-                <img
+                <PrivateImage
                   :src="listing.image"
                   :alt="listing.title"
                   class="w-full h-full object-cover"

@@ -1,58 +1,52 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-
+import { api, loadProfile, logout as revokeSession, clearSession, session, errorText } from '../../src/services/api'
 const router = useRouter()
-
-// ==================== PROFILE ====================
-const fullName = ref('Hoàng Văn Bình')
-const phone = ref('090 456 7890')
-const email = ref('hoang.binh@gmail.com')
-const district = ref('Hải Châu, Đà Nẵng')
-const address = ref('')
-
-// ==================== PASSWORD ====================
-const currentPassword = ref('')
-const newPassword = ref('')
-const confirmPassword = ref('')
-
-// ==================== NOTIFICATIONS ====================
-const notification1 = ref(true)
-const notification2 = ref(true)
-const notification3 = ref(false)
-
-// ==================== SAVE PROFILE ====================
-const saveProfile = () => {
-  alert('Đã lưu thay đổi!')
+const fullName = ref(''), phone = ref(''), email = ref(''), district = ref(''), address = ref('')
+const currentPassword = ref(''), newPassword = ref(''), confirmPassword = ref('')
+const notification1 = ref(false), notification2 = ref(false), notification3 = ref(false)
+const busy = ref(true), loaded = ref(false), message = ref('')
+const roleLabel = computed(() => ({ BUYER: 'Người mua / người thuê', BROKER: 'Chủ nhà / môi giới', ADMIN: 'Quản trị viên' })[session.user?.role] || '')
+const initials = computed(() => fullName.value.split(' ').filter(Boolean).map(v => v[0]).slice(-2).join(''))
+function fill(user) {
+  fullName.value = user.fullName; email.value = user.email
+  phone.value = user.phone || ''; district.value = user.district || ''; address.value = user.address || ''
 }
-
-// ==================== CHANGE PASSWORD ====================
-const changePassword = () => {
-  if (
-    !currentPassword.value ||
-    !newPassword.value ||
-    !confirmPassword.value
-  ) {
-    alert('Vui lòng nhập đầy đủ thông tin mật khẩu.')
-    return
-  }
-
-  if (newPassword.value !== confirmPassword.value) {
-    alert('Mật khẩu xác nhận không khớp.')
-    return
-  }
-
-  alert('Đổi mật khẩu thành công!')
-
-  currentPassword.value = ''
-  newPassword.value = ''
-  confirmPassword.value = ''
+onMounted(async () => {
+  try { fill(await loadProfile()); const prefs=await api('/users/me/notification-preferences'); notification1.value=prefs.matchingListings; notification2.value=prefs.brokerMessages; notification3.value=prefs.statusUpdates; loaded.value = true }
+  catch (error) { message.value = errorText(error) }
+  finally { busy.value = false }
+})
+const saveProfile = async () => {
+  if (busy.value || !loaded.value) return
+  busy.value = true; message.value = ''
+  try {
+    const user = await api('/users/me', { method: 'PATCH', body: { fullName: fullName.value, phone: phone.value, district: district.value, address: address.value } })
+    session.user = user; fill(user); await api('/users/me/notification-preferences', {method:'PATCH',body:{matchingListings:notification1.value,brokerMessages:notification2.value,statusUpdates:notification3.value}}); message.value = 'Đã lưu hồ sơ và tùy chọn thông báo.'
+  } catch (error) { message.value = errorText(error) }
+  finally { busy.value = false }
 }
-
-// ==================== LOGOUT ====================
-const logout = () => {
-  router.push('/login')
+const savePreferences=async()=>{if(busy.value||!loaded.value)return;busy.value=true;message.value='';try{await api('/users/me/notification-preferences',{method:'PATCH',body:{matchingListings:notification1.value,brokerMessages:notification2.value,statusUpdates:notification3.value}});message.value='Đã lưu tùy chọn thông báo.'}catch(e){message.value=errorText(e)}finally{busy.value=false}}
+const changePassword = async () => {
+  if (busy.value || !loaded.value) return
+  if (newPassword.value !== confirmPassword.value) { message.value = 'Mật khẩu xác nhận không khớp.'; return }
+  busy.value = true; message.value = ''
+  try {
+    await api('/users/me/password', { method: 'PUT', body: { currentPassword: currentPassword.value, newPassword: newPassword.value } })
+    currentPassword.value = newPassword.value = confirmPassword.value = ''
+    clearSession(); await router.replace({ path: '/login', query: { reason: 'password-changed' } })
+  } catch (error) { message.value = errorText(error) }
+  finally { busy.value = false }
 }
+const logout = async () => {
+  if (busy.value) return
+  busy.value = true
+  try { await revokeSession(); await router.replace('/login') }
+  catch (error) { message.value = errorText(error) }
+  finally { busy.value = false }
+}
+const resetProfile = () => { if (session.user) fill(session.user) }
 </script>
 
 <template>
@@ -102,7 +96,7 @@ const logout = () => {
           </button>
 
           <button
-            @click="logout"
+            :disabled="busy" @click="logout"
             class="px-5 py-2 bg-[#1E325A] text-white rounded-full text-xs hover:bg-[#263f70] transition"
           >
             Đăng xuất
@@ -114,7 +108,7 @@ const logout = () => {
     <!-- ==================== PAGE ==================== -->
     <main class="max-w-[1400px] mx-auto px-8 pt-7 pb-16">
 
-      <!-- TITLE -->
+      <p v-if="message" role="status" aria-live="polite">{{ message }}</p><p v-if="busy">Đang xử lý…</p><!-- TITLE -->
       <div class="mb-5">
         <h1 class="text-2xl font-medium">
           Hồ sơ cá nhân
@@ -143,30 +137,30 @@ const logout = () => {
             <div
               class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-xl mb-4"
             >
-              HV
+              {{ initials }}
             </div>
 
             <h2 class="text-lg font-medium">
-              Hoàng Văn Bình
+              {{ fullName }}
             </h2>
 
             <p class="text-[11px] text-white/60 mt-1">
-              hoang.binh@gmail.com
+              {{ email }}
             </p>
 
             <div
               class="inline-flex mt-3 bg-emerald-400/20 text-emerald-200 px-3 py-1 rounded-full text-[10px]"
             >
-              Người mua / người thuê
+              {{ roleLabel }}
             </div>
 
             <div class="border-t border-white/10 mt-5 pt-5">
               <p class="text-[10px] text-white/50">
-                Thành viên từ 04/01/2025
+                Thành viên từ {{ session.user ? new Date(session.user.createdAt).toLocaleDateString("vi-VN") : "" }}
               </p>
 
               <p class="text-[10px] text-white/50 mt-2">
-                Đăng nhập gần nhất: hôm nay, 09:42
+                Trạng thái: {{ session.user?.status }}
               </p>
             </div>
           </section>
@@ -288,8 +282,7 @@ const logout = () => {
               bất động sản và nhận thêm công cụ hỗ trợ.
             </p>
 
-            <button
-              class="mt-7 bg-[#c9683c] hover:bg-[#b95b32] text-white rounded-full px-5 py-2.5 text-[10px] transition"
+            <button disabled title="Chức năng nâng cấp chưa hỗ trợ ở mốc 1" class="mt-7 bg-[#c9683c] hover:bg-[#b95b32] text-white rounded-full px-5 py-2.5 text-[10px] transition"
             >
               Đăng ký tài khoản môi giới
             </button>
@@ -360,7 +353,7 @@ const logout = () => {
                 </label>
 
                 <input
-                  v-model="email"
+                  v-model="email" readonly
                   type="email"
                   class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
                 />
@@ -403,13 +396,13 @@ const logout = () => {
             <div class="flex gap-3 mt-5">
 
               <button
-                @click="saveProfile"
+                :disabled="busy || !loaded" @click="saveProfile"
                 class="bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
               >
                 Lưu thay đổi
               </button>
 
-              <button
+              <button @click="resetProfile"
                 class="bg-white border border-gray-200 text-gray-500 rounded-full px-5 py-2.5 text-[11px]"
               >
                 Hủy
@@ -487,7 +480,7 @@ const logout = () => {
             </div>
 
             <button
-              @click="changePassword"
+              :disabled="busy || !loaded" @click="changePassword"
               class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
             >
               Đổi mật khẩu
@@ -505,7 +498,7 @@ const logout = () => {
             <p
               class="text-[10px] text-gray-400 mt-1 mb-5"
             >
-              Chọn kênh và loại thông báo bạn muốn nhận từ SmartProp.
+              Tùy chọn thông báo chưa được hỗ trợ ở mốc 1.
             </p>
 
             <!-- NOTIFICATION 1 -->
@@ -522,12 +515,11 @@ const logout = () => {
                 <p
                   class="text-[9px] text-gray-400 mt-1"
                 >
-                  Email khi có tin đăng khớp bộ lọc tìm kiếm đã lưu.
+                  Lưu tùy chọn nhận tin phù hợp. Gửi email sẽ được bổ sung sau.
                 </p>
               </div>
 
-              <button
-                @click="notification1 = !notification1"
+              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification1" aria-label="Tùy chọn thông báo 1" @click="notification1 = !notification1"
                 :class="[
                   'relative w-9 h-5 rounded-full transition',
                   notification1
@@ -560,12 +552,11 @@ const logout = () => {
                 <p
                   class="text-[9px] text-gray-400 mt-1"
                 >
-                  Thông báo khi có tin nhắn mới liên quan tới tin đăng.
+                  Lưu tùy chọn liên hệ. Nhắn tin sẽ được bổ sung sau.
                 </p>
               </div>
 
-              <button
-                @click="notification2 = !notification2"
+              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification2" aria-label="Tùy chọn thông báo 2" @click="notification2 = !notification2"
                 :class="[
                   'relative w-9 h-5 rounded-full transition',
                   notification2
@@ -602,8 +593,7 @@ const logout = () => {
                 </p>
               </div>
 
-              <button
-                @click="notification3 = !notification3"
+              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification3" aria-label="Tùy chọn thông báo 3" @click="notification3 = !notification3"
                 :class="[
                   'relative w-9 h-5 rounded-full transition',
                   notification3
@@ -622,7 +612,8 @@ const logout = () => {
               </button>
             </div>
 
-          </section>
+          <button :disabled="busy || !loaded" @click="savePreferences" class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-xs">Lưu tùy chọn thông báo</button>
+</section>
 
         </div>
       </div>

@@ -1,29 +1,30 @@
 <template>
   <div class="main">
+<LegacyState :state="state" />
     <!-- Các khối thống kê tổng quan -->
     <div class="stats">
       <div class="stat">
         <div class="tin-ang-hi-n-th">Tin đang hiển thị</div>
-        <div class="_2-417">2.417</div>
+        <div class="_2-417">{{stats.publishedProperties??0}}</div>
       </div>
       <div class="stat">
         <div class="ch-duy-t">Chờ duyệt</div>
-        <div class="_182">18</div>
+        <div class="_182">{{stats.pendingProperties??0}}</div>
       </div>
       <div class="stat2">
-        <div class="c-nh-b-o-nh-tr-ng">Cảnh báo ảnh trùng</div>
-        <div class="_9">9</div>
+        <div class="c-nh-b-o-nh-tr-ng">Báo cáo mới</div>
+        <div class="_9">{{stats.openReports??0}}</div>
       </div>
       <div class="stat">
         <div class="ng-i-d-ng-ho-t-ng">Người dùng hoạt động</div>
-        <div class="_1-043">1.043</div>
+        <div class="_1-043">{{stats.activeUsers??0}}</div>
       </div>
     </div>
 
     <!-- Hàng thứ 2: Biểu đồ và Tình trạng AI -->
     <div class="row-2">
       <div class="chart">
-        <div class="tin-ng-m-i-theo-tu">Tin đăng mới theo tuần</div>
+        <div class="tin-ng-m-i-theo-tu">Tin đăng mới theo tuần · Chưa có dữ liệu</div>
         <div class="bars">
           <div class="col" v-for="(item, index) in chartData" :key="index">
             <div class="bar-fill" :class="{ active: index === 5 }" :style="{ height: item.height }"></div>
@@ -38,42 +39,33 @@
         <div class="row">
           <div class="ellipse green"></div>
           <div class="nh-gi-xg-boost">Định giá XGBoost</div>
-          <div class="_82-ms-q-0">82ms · q:0</div>
+          <div class="_82-ms-q-0">Chưa tích hợp</div>
         </div>
 
         <div class="row">
           <div class="ellipse green"></div>
           <div class="nh-n-di-n-nh-tr-ng">Nhận diện ảnh trùng</div>
-          <div class="_340-ms-q-2">340ms · q:2</div>
+          <div class="_340-ms-q-2">Chưa tích hợp</div>
         </div>
 
         <div class="row">
           <div class="ellipse red"></div>
           <div class="g-i-ti-n-ch-t">Gợi ý tiện ích tự động</div>
-          <div class="l-i-q-5">lỗi · q:5</div>
+          <div class="l-i-q-5">Chưa tích hợp</div>
         </div>
       </div>
     </div>
   </div>
-</template>
+<LegacyPager :state="state" /></template>
+<script setup>
+import {ref,computed,watch,onMounted,onBeforeUnmount} from 'vue'
+import {useRouter,useRoute} from 'vue-router'
+import {api,session,errorText} from '../../src/services/api.js'
+import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,reasons as reasonLabels,date,mapUrl} from '../../src/services/legacy.js'
 
-<script>
-export default {
-  name: 'DashboardView',
-  data() {
-    return {
-      chartData: [
-        { day: 'T27', height: '40px' },
-        { day: 'T28', height: '60px' },
-        { day: 'T29', height: '35px' },
-        { day: 'T30', height: '80px' },
-        { day: 'T31', height: '55px' },
-        { day: 'T32', height: '110px' },
-        { day: 'T33', height: '70px' }
-      ]
-    }
-  }
-}
+
+const state=ref({busy:false,error:'',notice:''}),stats=ref({}),chartData=ref([]);onMounted(async()=>{state.value.busy=true;try{stats.value=await api('/admin/dashboard')}catch(e){state.value.error=errorText(e)}finally{state.value.busy=false}});
+
 </script>
 
 <style scoped>
