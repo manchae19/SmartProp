@@ -1,6 +1,6 @@
 # Đưa bản gọn lên nhánh GitHub
 
-Đã tách mã nguồn/tài liệu/bundle v6 khỏi dữ liệu và các kết quả sinh tự động trên **`develop-binh`**. Phần FE–AI đang tích hợp tại **`feature/fe-ai-v6`**, lấy frontend từ `origin/main` (`7368bc1`). Chưa tự commit, push hoặc viết lại lịch sử.
+Đã tách mã nguồn/tài liệu/bundle v6 khỏi dữ liệu trên `develop-binh`. Nhánh `feature/fe-ai-v6` đã có commit `3f2ca86` cho FE–AI và merge `97de3e1` ghép lịch sử `main`. Bản mở rộng dùng mã BE/database tại `Backend-Huy` (`ac13ec3`), thêm lịch sử định giá và chuẩn bị dữ liệu mới. Không viết lại lịch sử hoặc đẩy trực tiếp vào `main`; bàn giao qua PR.
 
 Ngày 17/10/2026: bỏ theo dõi **3.448 file**, giữ khoảng **4,99 GB dữ liệu/cache trên máy**; phần mã nguồn/tài liệu/model dự kiến commit có **296 file, khoảng 3,6 MB**. Một bản sao chỉ chứa phần này (không có raw/processed/.venv) đã chạy đạt 17 kiểm thử, đủ 299 dự đoán parity và smoke test HTTP cả ba loại tài sản bằng môi trường Python hiện có.
 
@@ -11,10 +11,12 @@ Các số kích thước trên là mốc trước khi đưa frontend vào. Front
 - Mã API, launcher, dependency, kiểm thử và fixture 299 trường hợp.
 - Bundle v6 khoảng 2 MB, đúng SHA-256 model/schema đã chốt.
 - Mã crawler, lọc, huấn luyện và kiểm chứng lịch sử.
-- README, bản đồ file, báo cáo Markdown và khung frontend/backend.
+- README, bản đồ file, báo cáo Markdown, frontend, BE Spring Boot, SQL nguồn và kiểm thử.
 - Cấu hình agent của dự án.
 
 Các thư mục dữ liệu raw/processed, CSV thô, cache, checkpoint và `.scratch/` đã được đưa vào `.gitignore`. Với các file đã có trong Git, chỉ bỏ khỏi index bằng `git rm --cached`: file cục bộ vẫn còn nguyên. `git status` sẽ hiện nhiều dòng **D** đã stage cho các file này; đó là xóa khỏi phiên bản Git kế tiếp.
+
+Phần bỏ theo dõi ở trên đã nằm trong commit chuẩn bị bản gọn; không cần chạy lại. `backend/target/` và `backend/var/` cũng bị ignore, gồm JAR, MySQL demo, JWT/config và lịch sử tài khoản. Chỉ SQL migration/test fixture tổng hợp được đưa lên Git, không đưa database thật hoặc mật khẩu vào PR.
 
 ## Tự kiểm tra và đẩy nhánh hiện tại
 

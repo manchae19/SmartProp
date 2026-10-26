@@ -1,8 +1,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { buildValuationPayload, createValuationClient, featureLabels, formatPrice, locationLabel, warningLabel } from '../services/valuation.js'
+import { session, errorText } from '../services/api.js'
+import { createHistoryClient } from '../services/history.js'
 
-const props = defineProps({ initialInput: { type: Object, default: () => ({}) }, demo: Boolean })
+const props = defineProps({ initialInput: { type: Object, default: () => ({}) }, demo: Boolean, historyEnabled: Boolean })
+const emit = defineEmits(['saved', 'options-loaded'])
+const history = createHistoryClient()
+const saving = ref(false), saved = ref(false), saveError = ref('')
+let resultInput, saveKey
 const client = createValuationClient()
 const options = ref(null)
 const optionsLoading = ref(false)
@@ -41,6 +47,11 @@ function invalidate() {
   result.value = null
   predictionError.value = ''
   predicting.value = false
+  saved.value = false
+  saving.value = false
+  saveError.value = ''
+  resultInput = null
+  saveKey = null
 }
 
 watch(form, invalidate, { deep: true, flush: 'sync' })
@@ -66,6 +77,7 @@ async function loadOptions() {
     const data = await client.getOptions({ signal: controller.signal })
     if (controller.signal.aborted) return
     options.value = data
+    emit('options-loaded', data.location_labels ?? {})
     if (!locations.value.includes(form.location_feature)) form.location_feature = ''
   } catch (error) {
     if (!controller.signal.aborted) optionsError.value = error.message
@@ -86,13 +98,31 @@ async function estimate() {
   predicting.value = true
   try {
     const prediction = await client.predict(payload, { signal: controller.signal })
-    if (current === generation && !controller.signal.aborted) result.value = prediction
+    if (current === generation && !controller.signal.aborted) {
+      result.value = prediction
+      resultInput = payload
+      saveKey = globalThis.crypto.randomUUID()
+    }
   } catch (error) {
     if (current === generation && !controller.signal.aborted) predictionError.value = error.message
   } finally {
     if (current === generation) predicting.value = false
   }
 }
+
+async function saveResult() {
+  if (!resultInput || !session.token || saving.value || saved.value) return
+  const current = generation, token = session.token
+  saving.value = true; saveError.value = ''
+  try {
+    await history.save(resultInput, saveKey)
+    if (current === generation && token === session.token) { saved.value = true; emit('saved') }
+  } catch (error) {
+    if (current === generation && token === session.token) saveError.value = errorText(error)
+  } finally { if (current === generation && token === session.token) saving.value = false }
+}
+
+watch(() => session.token, () => { saved.value = false; saveError.value = ''; saving.value = false })
 
 onMounted(loadOptions)
 onBeforeUnmount(() => { generation++; optionsController?.abort(); predictionController?.abort() })
@@ -172,6 +202,13 @@ onBeforeUnmount(() => { generation++; optionsController?.abort(); predictionCont
         <p class="text-sm text-white/70">Giá rao ước tính</p>
         <p class="text-3xl sm:text-4xl font-semibold mt-2" data-testid="estimated-price">{{ formatPrice(result.predicted_asking_price_vnd) }}</p>
         <p class="text-sm text-white/70 mt-2">{{ new Intl.NumberFormat('vi-VN').format(result.predicted_asking_price_vnd) }} đồng · Tổng giá bất động sản</p>
+        <div v-if="historyEnabled && !demo" class="mt-4">
+          <button v-if="session.token" type="button" :disabled="saving || saved" class="rounded-full border border-white/40 px-4 py-2 text-sm disabled:opacity-60" @click="saveResult">
+            {{ saved ? 'Đã lưu kết quả' : saving ? 'Đang lưu…' : 'Lưu kết quả' }}
+          </button>
+          <RouterLink v-else to="/login?next=/valuation" class="text-sm underline">Đăng nhập để lưu kết quả</RouterLink>
+          <p v-if="saveError" role="alert" class="mt-3 text-sm text-[#ffdfb8]">{{ saveError }}</p>
+        </div>
         <h3 class="font-medium text-sm mt-6">Thông tin đã dùng</h3>
         <dl class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
           <div v-for="feature in usedFeatures" :key="feature.label" class="rounded-xl bg-white/10 p-3">

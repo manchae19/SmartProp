@@ -20,6 +20,71 @@ const prediction = (payload, price = 3_829_364_014) => ({
 })
 const fulfill = (route, body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
+async function loginForHistory(page) {
+  await page.route('**/api/v1/auth/login', (route) => fulfill(route, {
+    accessToken: 'synthetic-browser-fixture', tokenType: 'Bearer', expiresIn: 1800,
+    user: { id: 42, fullName: 'Tài khoản kiểm thử', role: 'BUYER' },
+  }))
+  await page.goto('/login?next=/valuation')
+  await page.getByLabel('Email / tên quản trị').fill('fixture@example.test')
+  await page.getByLabel('Mật khẩu', { exact: true }).fill('SyntheticFixture123!')
+  await page.locator('form').getByRole('button', { name: 'Đăng nhập', exact: true }).click()
+  await expect(page).toHaveURL(/\/valuation$/)
+}
+
+test('authenticated user saves a server snapshot and deletes it from personal history', async ({ page }) => {
+  await page.route('**/api/ai/model/options', (route) => fulfill(route, options))
+  await page.route('**/api/ai/predict', (route) => fulfill(route, prediction(route.request().postDataJSON())))
+  let items = [], saveCalls = 0
+  await page.route('**/api/v1/users/me/valuation-history**', (route) => {
+    const request = route.request()
+    expect(request.headers().authorization).toBe('Bearer synthetic-browser-fixture')
+    if (request.method() === 'POST') {
+      saveCalls++
+      const input = request.postDataJSON()
+      expect(input).toEqual({ category: 'Nhà ở', area_sqm: 80, location_feature: 'Cẩm Lệ' })
+      expect(request.headers()['idempotency-key']).toMatch(/^[0-9a-f-]{36}$/)
+      items = [{ id: '10000000-0000-4000-8000-000000000001', createdAt: '2026-10-26T12:00:00Z', input, prediction: prediction(input) }]
+      return fulfill(route, items[0], 201)
+    }
+    if (request.method() === 'DELETE') { items = []; return route.fulfill({ status: 204 }) }
+    return fulfill(route, { items, page: 0, size: 10, totalElements: items.length, totalPages: items.length ? 1 : 0 })
+  })
+  await loginForHistory(page)
+  await expect(page.getByText('Chưa có kết quả đã lưu.')).toBeVisible()
+  await fillMinimum(page)
+  await page.getByRole('button', { name: 'Ước tính giá rao', exact: true }).click()
+  await page.getByRole('button', { name: 'Lưu kết quả', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Đã lưu kết quả' })).toBeDisabled()
+  await expect(page.getByTestId('history-item')).toContainText('Nhà ở · 80 m² · Cẩm Lệ')
+  expect(saveCalls).toBe(1)
+  await page.getByRole('button', { name: 'Xóa kết quả 3,83 tỷ đồng' }).click()
+  await expect(page.getByText('Chưa có kết quả đã lưu.')).toBeVisible()
+  await expect(page.getByTestId('estimated-price')).toHaveText('3,83 tỷ đồng')
+})
+
+test('history outage preserves the prediction and a failed save can be retried', async ({ page }) => {
+  await page.route('**/api/ai/model/options', (route) => fulfill(route, options))
+  await page.route('**/api/ai/predict', (route) => fulfill(route, prediction(route.request().postDataJSON())))
+  const keys = []
+  await page.route('**/api/v1/users/me/valuation-history**', (route) => {
+    if (route.request().method() === 'POST') {
+      keys.push(route.request().headers()['idempotency-key'])
+      return fulfill(route, { message: 'Lịch sử chưa sẵn sàng.' }, 503)
+    }
+    return fulfill(route, { items: [], totalPages: 0, totalElements: 0 })
+  })
+  await loginForHistory(page)
+  await fillMinimum(page)
+  await page.getByRole('button', { name: 'Ước tính giá rao', exact: true }).click()
+  await page.getByRole('button', { name: 'Lưu kết quả', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('Lịch sử chưa sẵn sàng.')
+  await expect(page.getByTestId('estimated-price')).toHaveText('3,83 tỷ đồng')
+  await page.getByRole('button', { name: 'Lưu kết quả', exact: true }).click()
+  await expect.poll(() => keys.length).toBe(2)
+  expect(keys[0]).toBe(keys[1])
+})
+
 async function fillMinimum(page) {
   await page.getByLabel('Địa bàn').selectOption('Cẩm Lệ')
   await page.getByLabel('Diện tích (m²)').fill('80')

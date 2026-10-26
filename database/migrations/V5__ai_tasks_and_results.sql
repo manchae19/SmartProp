@@ -1,0 +1,175 @@
+-- SmartProp: MySQL 8.4.9 target; SQL also verified separately on available 8.0.43.
+-- Defaults use UTC; enum/check values not shown in the PNG are proposed decisions.
+CREATE TABLE ai_tasks (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  requested_by BIGINT,
+  task_type VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  execution_mode VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  model_version_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  config_version_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  input_content_version INT NOT NULL,
+  input_snapshot JSON NOT NULL DEFAULT (JSON_OBJECT()),
+  idempotency_key VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  status VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'QUEUED',
+  attempt_count SMALLINT NOT NULL DEFAULT 0,
+  max_attempts SMALLINT NOT NULL DEFAULT 2,
+  error_code VARCHAR(100),
+  error_message TEXT,
+  finished_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_task_property FOREIGN KEY (property_id) REFERENCES properties (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_task_requester FOREIGN KEY (requested_by) REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_task_model FOREIGN KEY (task_type,model_version_id) REFERENCES model_versions (kind,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_task_config FOREIGN KEY (task_type,config_version_id) REFERENCES ai_config_versions (kind,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_task_idempotency (idempotency_key),
+  UNIQUE KEY uq_task_type_id (task_type,id),
+  UNIQUE KEY uq_task_property_id (id,property_id),
+  CONSTRAINT ck_task_kind CHECK (task_type IN ('VALUATION', 'SIMILARITY', 'AMENITY')),
+  CONSTRAINT ck_task_mode CHECK (execution_mode IN ('SYNC', 'ASYNC')),
+  CONSTRAINT ck_task_status CHECK (status IN ('QUEUED', 'RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED')),
+  CONSTRAINT ck_task_version CHECK (input_content_version > 0),
+  CONSTRAINT ck_task_attempts CHECK (attempt_count >= 0 AND max_attempts BETWEEN 1 AND 2 AND attempt_count <= max_attempts),
+  KEY ix_task_queue (status,execution_mode,created_at),
+  KEY ix_task_property (property_id,task_type,input_content_version,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE ai_task_attempts (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  task_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  attempt_no SMALLINT NOT NULL,
+  lease_token CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  worker_id VARCHAR(150) NOT NULL,
+  status VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'RUNNING',
+  started_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  lease_expires_at DATETIME(6) NOT NULL,
+  finished_at DATETIME(6),
+  error_code VARCHAR(100),
+  error_message TEXT,
+  CONSTRAINT fk_attempt_task FOREIGN KEY (task_id) REFERENCES ai_tasks (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_attempt_number (task_id,attempt_no),
+  UNIQUE KEY uq_attempt_task_id (task_id,id),
+  UNIQUE KEY uq_attempt_lease (lease_token),
+  CONSTRAINT ck_attempt_status CHECK (status IN ('RUNNING', 'SUCCEEDED', 'FAILED', 'CANCELLED')),
+  CONSTRAINT ck_attempt_number CHECK (attempt_no BETWEEN 1 AND 2),
+  CONSTRAINT ck_attempt_lease_time CHECK (lease_expires_at > started_at),
+  KEY ix_attempt_expiry (status,lease_expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE outbox_events (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  event_type VARCHAR(100) NOT NULL,
+  task_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+  payload JSON NOT NULL DEFAULT (JSON_OBJECT()),
+  idempotency_key VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  available_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  published_at DATETIME(6),
+  publish_attempts INT NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_outbox_task FOREIGN KEY (task_id) REFERENCES ai_tasks (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_outbox_idempotency (idempotency_key),
+  CONSTRAINT ck_outbox_attempts CHECK (publish_attempts >= 0),
+  KEY ix_outbox_ready (published_at,available_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE valuation_results (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  task_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  attempt_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  result_kind VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'VALUATION',
+  reference_price DECIMAL(18,2) NOT NULL,
+  currency CHAR(3) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'VND',
+  price_unit VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  base_value DOUBLE NOT NULL,
+  model_output DOUBLE NOT NULL,
+  output_scale VARCHAR(20) NOT NULL,
+  shap_values JSON NOT NULL DEFAULT (JSON_OBJECT()),
+  warnings JSON NOT NULL DEFAULT (JSON_ARRAY()),
+  latency_ms INT NOT NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_valuation_task_kind FOREIGN KEY (result_kind,task_id) REFERENCES ai_tasks (task_type,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_valuation_attempt FOREIGN KEY (task_id,attempt_id) REFERENCES ai_task_attempts (task_id,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_valuation_attempt (attempt_id),
+  CONSTRAINT ck_valuation_kind CHECK (result_kind='VALUATION'),
+  CONSTRAINT ck_valuation_price CHECK (reference_price >= 0),
+  CONSTRAINT ck_valuation_latency CHECK (latency_ms >= 0),
+  CONSTRAINT ck_valuation_price_unit CHECK (price_unit IN ('TOTAL', 'PER_MONTH', 'PER_YEAR', 'PER_DAY')),
+  CONSTRAINT ck_valuation_scale CHECK (output_scale IN ('PRICE', 'LOG_PRICE'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE image_index_versions (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  embedding_model_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  embedding_kind VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'SIMILARITY',
+  version VARCHAR(100) NOT NULL,
+  status VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'BUILDING',
+  artifact_key TEXT NOT NULL,
+  artifact_sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin,
+  vector_dimension INT NOT NULL,
+  metric VARCHAR(30) NOT NULL,
+  preprocessing JSON NOT NULL DEFAULT (JSON_OBJECT()),
+  image_count BIGINT NOT NULL DEFAULT 0,
+  ready_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_index_model_kind FOREIGN KEY (embedding_kind,embedding_model_id) REFERENCES model_versions (kind,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_index_version (embedding_model_id,version),
+  CONSTRAINT ck_index_kind CHECK (embedding_kind='SIMILARITY'),
+  CONSTRAINT ck_index_dimension CHECK (vector_dimension > 0),
+  CONSTRAINT ck_index_count CHECK (image_count >= 0),
+  CONSTRAINT ck_index_status CHECK (status IN ('BUILDING', 'READY', 'FAILED', 'RETIRED')),
+  CONSTRAINT ck_index_metric CHECK (metric IN ('COSINE', 'L2', 'INNER_PRODUCT'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE image_embeddings (
+  index_version_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  image_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  faiss_vector_id BIGINT NOT NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  PRIMARY KEY (index_version_id,image_id),
+  CONSTRAINT fk_embedding_index FOREIGN KEY (index_version_id) REFERENCES image_index_versions (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_embedding_image FOREIGN KEY (image_id) REFERENCES property_images (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_embedding_vector (index_version_id,faiss_vector_id),
+  CONSTRAINT ck_vector_id CHECK (faiss_vector_id >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE image_similarity_runs (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  task_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  attempt_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  index_version_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  source_image_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  result_kind VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'SIMILARITY',
+  threshold DOUBLE NOT NULL,
+  top_k SMALLINT NOT NULL,
+  latency_ms INT NOT NULL,
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_similarity_task_kind FOREIGN KEY (result_kind,task_id) REFERENCES ai_tasks (task_type,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_similarity_attempt FOREIGN KEY (task_id,attempt_id) REFERENCES ai_task_attempts (task_id,id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_similarity_task_property FOREIGN KEY (task_id,property_id) REFERENCES ai_tasks (id,property_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_similarity_source_property FOREIGN KEY (source_image_id,property_id) REFERENCES property_images (id,property_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_similarity_index FOREIGN KEY (index_version_id) REFERENCES image_index_versions (id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_run_index (id,index_version_id),
+  UNIQUE KEY uq_run_source (attempt_id,source_image_id),
+  CONSTRAINT ck_similarity_kind CHECK (result_kind='SIMILARITY'),
+  CONSTRAINT ck_similarity_threshold CHECK (threshold BETWEEN -1 AND 1),
+  CONSTRAINT ck_similarity_topk CHECK (top_k BETWEEN 1 AND 100),
+  CONSTRAINT ck_similarity_latency CHECK (latency_ms >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE image_matches (
+  run_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  index_version_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  matched_image_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  `rank` SMALLINT NOT NULL,
+  similarity_score DOUBLE NOT NULL,
+  PRIMARY KEY (run_id,matched_image_id),
+  CONSTRAINT fk_match_run_index FOREIGN KEY (run_id,index_version_id) REFERENCES image_similarity_runs (id,index_version_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_match_embedding FOREIGN KEY (index_version_id,matched_image_id) REFERENCES image_embeddings (index_version_id,image_id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  UNIQUE KEY uq_match_rank (run_id,`rank`),
+  CONSTRAINT ck_match_rank CHECK (`rank` > 0),
+  CONSTRAINT ck_match_score CHECK (similarity_score BETWEEN -1 AND 1)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+

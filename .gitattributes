@@ -11,3 +11,6 @@
 ai-services/artifacts/v6/** -text
 ai-services/app/data/training_v3_common.py -text
 ai-services/app/data/property_text_features_v6.py -text
+
+# Preserve migration bytes and their recorded checksums across Windows clones.
+database/migrations/*.sql -text

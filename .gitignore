@@ -11,6 +11,8 @@
 **/.next/
 **/dist/
 **/build/
+**/target/
+/backend/var/
 coverage/
 .coverage
 *.log

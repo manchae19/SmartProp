@@ -7,7 +7,7 @@
       </video>
 
       <div class="gradient-overlay"></div>
-      
+
       <!-- Chữ Đà Nẵng nằm ngang ở góc dưới bên trái -->
       <div class="horizontal-location">ĐÀ NẴNG</div>
 
@@ -21,179 +21,88 @@
             <div class="smart-prop">SmartProp</div>
           </div>
 
-          
+
           <div class="footer-spacer"></div>
         </div>
-        
+
         <!-- Cột phải: Các trạng thái form -->
         <div class="right-col">
-          <div class="auth-card">
-            
-            <!-- TRƯỜNG HỢP 3: ĐẶT MẬT KHẨU MỚI -->
-            <template v-if="isResettingPassword">
-              <div class="titles">
-                <h2 class="welcome-title">Đặt mật khẩu mới</h2>
-                <p class="welcome-desc">
-                  Tạo mật khẩu mới cho tài khoản <span class="highlight-email">{{ email || 'ban@email.com' }}</span>
-                </p>
-              </div>
-
-              <form class="form" @submit.prevent="handleResetPasswordSubmit">
-                <div class="field">
-                  <label class="label" for="new-password">Mật khẩu mới</label>
-                  <div class="input-box">
-                    <input 
-                      type="password" 
-                      id="new-password" 
-                      v-model="newPassword" 
-                      placeholder="Tối thiểu 8 ký tự" 
-                      required 
-                    />
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label class="label" for="confirm-new-password">Xác nhận mật khẩu mới</label>
-                  <div class="input-box">
-                    <input 
-                      type="password" 
-                      id="confirm-new-password" 
-                      v-model="confirmNewPassword" 
-                      placeholder="Nhập lại mật khẩu" 
-                      required 
-                    />
-                  </div>
-                  
-                  <div class="password-strength-container" v-if="newPassword.length > 0">
-                    <div class="strength-bars">
-                      <div class="strength-bar" :class="{ active: passwordScore >= 1, [strengthColorClass]: passwordScore >= 1 }"></div>
-                      <div class="strength-bar" :class="{ active: passwordScore >= 2, [strengthColorClass]: passwordScore >= 2 }"></div>
-                      <div class="strength-bar" :class="{ active: passwordScore >= 3, [strengthColorClass]: passwordScore >= 3 }"></div>
-                      <div class="strength-bar" :class="{ active: passwordScore >= 4, [strengthColorClass]: passwordScore >= 4 }"></div>
-                    </div>
-                    <span class="strength-label" :style="{ color: strengthHexColor }">{{ strengthText }}</span>
-                  </div>
-                </div>
-
-                <button type="submit" class="submit-btn mt-10">
-                  <span>Đặt lại mật khẩu</span>
-                </button>
-                
-              </form>
-            </template>
-
-            <!-- TRƯỜNG HỢP 2: ĐÃ GỬI EMAIL THÀNH CÔNG -->
-            <template v-else-if="isEmailSent">
-              <div class="sent-success-container">
-                <div class="success-icon-box">
-                  <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </div>
-                
-                <div class="titles text-center">
-                  <h2 class="welcome-title">Kiểm tra email của bạn</h2>
-                  <p class="welcome-desc">
-                    Chúng tôi đã gửi liên kết đặt lại mật khẩu đến <span class="highlight-email">{{ email || 'ban@email.com' }}</span>
-                  </p>
-                </div>
-
-                <div class="sent-actions">
-                  <button type="button" class="submit-btn" @click="handleOpenEmailApp">
-                    <span>Mở ứng dụng email</span>
-                  </button>
-                  
-                  <p class="resend-text">
-                    (Mock) Đã nhận được email? <a href="#" @click.prevent="goToResetPasswordStep">Nhấp để đặt lại mật khẩu</a>
-                  </p>
-                  
-                  <p class="resend-text mt-5">
-                    Không nhận được email? <a href="#" @click.prevent="handleResendEmail">Gửi lại</a>
-                  </p>
-                  
-                  <a href="#" class="admin-link mt-10" @click.prevent="backToLogin">
-                    Quay lại đăng nhập
-                  </a>
-                </div>
-              </div>
-            </template>
+          <div class="auth-card"><p v-if="message" role="status" aria-live="polite">{{ message }}</p>
 
             <!-- TRƯỜNG HỢP 1: ĐĂNG NHẬP / ĐĂNG KÝ / KHÔI PHỤC MẬT KHẨU -->
-            <template v-else>
               <!-- Nút Quay lại đăng nhập (Chỉ hiện khi đang ở màn hình Quên mật khẩu) -->
               <a href="#" class="back-link-top" v-if="isForgotPassword" @click.prevent="isForgotPassword = false">
                 &lt; Quay lại đăng nhập
               </a>
 
               <div class="toggle" v-if="!isForgotPassword">
-                <button 
-                  type="button"
-                  class="toggle-btn" 
-                  :class="{ active: isLoginTab }" 
+                <button
+                  :disabled="busy" type="button"
+                  class="toggle-btn"
+                  :class="{ active: isLoginTab }"
                   @click="isLoginTab = true"
                 >
                   Đăng nhập
                 </button>
-                <button 
-                  type="button"
-                  class="toggle-btn" 
-                  :class="{ active: !isLoginTab }" 
+                <button
+                  :disabled="busy" type="button"
+                  class="toggle-btn"
+                  :class="{ active: !isLoginTab }"
                   @click="isLoginTab = false"
                 >
                   Đăng ký
                 </button>
               </div>
-              
+
               <div class="titles" :class="{ 'mt-titles-forgot': isForgotPassword }">
                 <h2 class="welcome-title">
                   {{ isForgotPassword ? 'Khôi phục mật khẩu' : (isLoginTab ? 'Chào bạn trở lại' : 'Tạo tài khoản mới') }}
                 </h2>
                 <p class="welcome-desc">
-                  {{ isForgotPassword ? 'Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết để đặt lại mật khẩu.' : (isLoginTab ? 'Đăng nhập để xem lại tin yêu thích và kết quả đánh giá giá đã lưu.' : 'Đăng ký tài khoản mới để trải nghiệm đầy đủ tính năng hệ thống.') }}
+                  {{ isForgotPassword ? 'Nhập email tài khoản để yêu cầu liên kết đặt lại mật khẩu.' : (isLoginTab ? 'Đăng nhập để xem lại tin yêu thích và kết quả đánh giá giá đã lưu.' : 'Đăng ký tài khoản mới để trải nghiệm đầy đủ tính năng hệ thống.') }}
                 </p>
               </div>
-              
+
               <form class="form" @submit.prevent="handleSubmit">
-                <div class="field" v-if="!isLoginTab && !isForgotPassword">
+                <div v-if="!isLoginTab && !isForgotPassword" class="field"><label class="label">Vai trò</label><select v-model="role"><option value="BUYER">Người mua / người thuê</option><option value="BROKER">Chủ nhà / môi giới</option></select></div><div class="field" v-if="!isLoginTab && !isForgotPassword">
                   <label class="label" for="name-input">Họ và tên</label>
                   <div class="input-box">
-                    <input 
-                      type="text" 
-                      id="name-input" 
-                      v-model="fullName" 
-                      placeholder="Nguyễn Văn A" 
-                      required 
+                    <input
+                      type="text"
+                      id="name-input"
+                      v-model="fullName"
+                      placeholder="Nguyễn Văn A"
+                      required
                     />
                   </div>
                 </div>
 
                 <div class="field">
-                  <label class="label" for="email-input">Email</label>
+                  <label class="label" for="email-input">{{ isLoginTab && !isForgotPassword ? 'Email / tên quản trị' : 'Email' }}</label>
                   <div class="input-box">
-                    <input 
-                      type="email" 
-                      id="email-input" 
-                      v-model="email" 
-                      placeholder="ban@email.com" 
-                      required 
+                    <input
+                      :type="isLoginTab && !isForgotPassword ? 'text' : 'email'"
+                      id="email-input"
+                      v-model="email"
+                      :placeholder="isLoginTab && !isForgotPassword ? 'Email hoặc Admin' : 'ban@email.com'"
+                      required
                     />
                   </div>
                 </div>
-                
+
                 <div class="field" v-if="!isForgotPassword">
                   <label class="label" for="password-input">Mật khẩu</label>
                   <div class="input-box">
-                    <input 
-                      type="password" 
-                      id="password-input" 
-                      v-model="password" 
-                      placeholder="Tối thiểu 8 ký tự" 
-                      required 
+                    <input minlength="8" maxlength="72" type="password"
+                      id="password-input"
+                      v-model="password"
+                      placeholder="Tối thiểu 8 ký tự"
+                      required
                     />
                   </div>
-                  
+
                   <div class="forgot-row" v-if="isLoginTab">
-                    <a href="#" class="forgot-link-new" @click.prevent="isForgotPassword = true">
+                    <a href="#" class="forgot-link-new" @click.prevent="isForgotPassword = true; message = ''">
                       Quên mật khẩu?
                     </a>
                   </div>
@@ -202,30 +111,29 @@
                 <div class="field" v-if="!isLoginTab && !isForgotPassword">
                   <label class="label" for="confirm-password-input">Xác nhận mật khẩu</label>
                   <div class="input-box">
-                    <input 
-                      type="password" 
-                      id="confirm-password-input" 
-                      v-model="confirmPassword" 
-                      placeholder="Nhập lại mật khẩu" 
-                      required 
+                    <input minlength="8" maxlength="72" type="password"
+                      id="confirm-password-input"
+                      v-model="confirmPassword"
+                      placeholder="Nhập lại mật khẩu"
+                      required
                     />
                   </div>
                 </div>
-                
+
                 <!-- Nút submit thay đổi chữ cho phù hợp màn hình quên mật khẩu -->
-                <button type="submit" class="submit-btn">
-                  <span>{{ isForgotPassword ? 'Gửi liên kết đặt lại ↗' : (isLoginTab ? 'Đăng nhập' : 'Đăng ký') }}</span>
+                <button :disabled="busy" type="submit" class="submit-btn">
+                  <span>{{ busy ? 'Đang xử lý…' : (isForgotPassword ? 'Gửi liên kết đặt lại ↗' : (isLoginTab ? 'Đăng nhập' : 'Đăng ký')) }}</span>
                 </button>
-                
-                <p v-if="isForgotPassword" class="security-note">
-                  Liên kết có hiệu lực trong 15 phút và chỉ dùng được một lần.
+
+                <!-- Chú thích chân trang thay đổi theo thiết kế mới khi ở màn hình quên mật khẩu -->
+                <p class="security-note">
+                  {{ isForgotPassword ? 'Vui lòng liên hệ quản trị viên khi cần hỗ trợ tài khoản.' : 'Phiên đăng nhập được xác thực bởi máy chủ SmartProp.' }}
                 </p>
-                
+
                 <a href="#" class="admin-link" v-if="!isForgotPassword" @click.prevent="handleLinkClick">
                   {{ isLoginTab ? 'Đăng nhập quản trị' : 'Đã có tài khoản? Đăng nhập' }}
                 </a>
               </form>
-            </template>
 
           </div>
         </div>
@@ -235,167 +143,58 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-
+import { ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { login, register, errorText,api } from '../services/api'
 const router = useRouter()
-
-const isLoginTab = ref(true)
+const props = defineProps({ initialRegister: Boolean })
+const isLoginTab = ref(!props.initialRegister)
 const isForgotPassword = ref(false)
-const isEmailSent = ref(false)
-const isResettingPassword = ref(false)
+const fullName = ref(''), email = ref(''), password = ref(''), confirmPassword = ref('')
+const role = ref('BUYER'), busy = ref(false), message = ref('')
+const route = useRoute()
+const reasons = {
+  'password-changed': 'Đổi mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.',
+  'session-expired': 'Phiên đã hết hạn hoặc bị thu hồi. Vui lòng đăng nhập lại.',
+  'session-unavailable': 'Không thể kiểm tra phiên. Vui lòng kiểm tra kết nối và đăng nhập lại.',
+  'login-required': 'Vui lòng đăng nhập để sử dụng chức năng này.',
+}
+message.value = reasons[route.query.reason] || ''
 
-const fullName = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const newPassword = ref('')
-const confirmNewPassword = ref('')
-
-const passwordScore = computed(() => {
-  const val = newPassword.value
-  if (!val) return 0
-  let score = 0
-  if (val.length >= 8) score++
-  if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++
-  if (/[0-9]/.test(val)) score++
-  if (/[^A-Za-z0-9]/.test(val)) score++
-  return Math.max(1, score)
-})
-
-const strengthText = computed(() => {
-  switch (passwordScore.value) {
-    case 1: return 'Yếu'
-    case 2: return 'Trung bình'
-    case 3: return 'Khá'
-    case 4: return 'Mạnh'
-    default: return ''
-  }
-})
-
-const strengthHexColor = computed(() => {
-  switch (passwordScore.value) {
-    case 1: return '#ef4444'
-    case 2: return '#f59e0b'
-    case 3: return '#3b82f6'
-    case 4: return '#10b981'
-    default: return '#10b981'
-  }
-})
-
-const strengthColorClass = computed(() => {
-  switch (passwordScore.value) {
-    case 1: return 'bar-weak'
-    case 2: return 'bar-medium'
-    case 3: return 'bar-good'
-    case 4: return 'bar-strong'
-    default: return 'bar-strong'
-  }
-})
-
-const handleSubmit = () => {
-  if (isForgotPassword.value) {
-    console.log('Xử lý gửi liên kết khôi phục cho email:', email.value)
-    isEmailSent.value = true
-  } else if (isLoginTab.value) {
-    // Logic xác thực và phân quyền đăng nhập
-    console.log('Xử lý đăng nhập:', { email: email.value, password: password.value })
-    
-    // Kiểm tra mẫu: Nếu email chứa từ khóa "admin" hoặc mật khẩu admin định sẵn
-    const isAdmin = email.value.toLowerCase().includes('admin') || email.value === 'admin@smartprop.vn'
-    
-    const token = 'mock-jwt-token-' + Date.now()
-    const role = isAdmin ? 'admin' : 'user'
-
-    // Lưu vào localStorage phục vụ cho Guard kiểm tra quyền
-    localStorage.setItem('token', token)
-    localStorage.setItem('role', role)
-
-    if (role === 'admin') {
-      
-      router.push('/admin')
+const handleSubmit = async () => {
+  if (busy.value) return
+  message.value = ''
+  if (isForgotPassword.value) { busy.value=true;try{await api('/auth/password/forgot',{method:'POST',body:{email:email.value.trim()},authenticated:false});message.value='Nếu tài khoản đủ điều kiện, yêu cầu đã được tiếp nhận. Vui lòng kiểm tra email.'}catch(e){message.value=errorText(e)}finally{busy.value=false}return }
+  if (!isLoginTab.value && password.value !== confirmPassword.value) { message.value = 'Mật khẩu xác nhận không khớp.'; return }
+  busy.value = true
+  try {
+    if (isLoginTab.value) {
+      const user = await login(email.value, password.value)
+      password.value = ''
+      await router.push(route.query.next === '/valuation' ? '/valuation' : (user.role === 'ADMIN' ? '/admin' : '/home'))
     } else {
-      
-      router.push('/home')
+      await register({ fullName: fullName.value, email: email.value, password: password.value, role: role.value })
+      password.value = confirmPassword.value = ''
+      isLoginTab.value = true
+      message.value = 'Đăng ký thành công. Vui lòng đăng nhập.'
     }
-  } else {
-    if (password.value !== confirmPassword.value) {
-      alert('Mật khẩu xác nhận không khớp!')
-      return
-    }
-    console.log('Xử lý đăng ký:', { fullName: fullName.value, email: email.value, password: password.value })
-    alert('Đăng ký thành công! Vui lòng đăng nhập.')
-    isLoginTab.value = true
-  }
+  } catch (error) { message.value = errorText(error) }
+  finally { busy.value = false }
 }
-
-const handleResetPasswordSubmit = () => {
-  if (newPassword.value.length < 8) {
-    alert('Mật khẩu mới phải có tối thiểu 8 ký tự!')
-    return
-  }
-  if (newPassword.value !== confirmNewPassword.value) {
-    alert('Mật khẩu mới và xác nhận mật khẩu không khớp!')
-    return
-  }
-  alert('Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.')
-  backToLogin()
-}
-
-const handleLinkClick = () => {
-  if (isLoginTab.value) {
-    // Tự động điền email admin để thuận tiện test
-    email.value = 'admin@smartprop.vn'
-    password.value = 'Admin@123'
-    alert('Đã điền sẵn tài khoản Quản trị mẫu. Bấm "Đăng nhập" để truy cập trang Admin!')
-  } else {
-    isLoginTab.value = true
-  }
-}
-
-const handleOpenEmailApp = () => {
-  window.location.href = 'mailto:'
-}
-
-const goToResetPasswordStep = () => {
-  isEmailSent.value = false
-  isResettingPassword.value = true
-}
-
-const handleResendEmail = () => {
-  alert('Đã gửi lại email hướng dẫn khôi phục mật khẩu!')
-}
-
-const backToLogin = () => {
-  isEmailSent.value = false
-  isForgotPassword.value = false
-  isResettingPassword.value = false
-  isLoginTab.value = true
-}
+const handleLinkClick = () => { isLoginTab.value = true; message.value = 'Dùng tài khoản được quản trị viên cấp để đăng nhập quản trị.' }
 </script>
-
-<style>
-html, body, #app {
-  margin: 0 !important;
-  padding: 0 !important;
-  min-width: 100vw;
-  min-height: 100vh;
-  overflow: auto !important;
-  background-color: #0b111e !important;
-}
-</style>
 
 <style scoped>
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: var(--font-sans);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .login-container {
   background: #0b111e;
-  min-width: 100vw;
+  width: 100%;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -449,8 +248,8 @@ html, body, #app {
   bottom: 40px;
   z-index: 4;
   color: rgba(255, 255, 255, 0.55);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-family: monospace;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -495,12 +294,12 @@ html, body, #app {
 .s {
   color: #1e325a;
   font-weight: 800;
-  font-size: var(--text-xl);
+  font-size: 20px;
 }
 
 .smart-prop {
   color: #ffffff;
-  font-size: var(--text-2xl);
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
@@ -523,7 +322,7 @@ html, body, #app {
 
 .main-title {
   color: #ffffff;
-  font-size: var(--text-4xl);
+  font-size: 36px;
   font-weight: 700;
   line-height: 1.2;
   text-align: left;
@@ -531,7 +330,7 @@ html, body, #app {
 
 .sub-title {
   color: rgba(255, 255, 255, 0.85);
-  font-size: 15.5px;
+  font-size: 14.5px;
   line-height: 1.5;
   text-align: left;
 }
@@ -558,21 +357,21 @@ html, body, #app {
 
 .role-num {
   color: rgba(255, 255, 255, 0.6);
-  font-family: var(--font-mono);
-  font-size: 14px;
+  font-family: monospace;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .role-title {
   color: #ffffff;
-  font-size: 15.5px;
+  font-size: 14.5px;
   font-weight: 600;
   margin-bottom: 2px;
 }
 
 .role-desc {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.35;
 }
 
@@ -605,7 +404,7 @@ html, body, #app {
   display: inline-flex;
   align-items: center;
   color: rgba(30, 50, 90, 0.7);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   margin-bottom: 14px;
@@ -632,7 +431,7 @@ html, body, #app {
   justify-content: center;
   flex: 1;
   cursor: pointer;
-  font-size: var(--text-sm);
+  font-size: 14px;
   color: rgba(30, 50, 90, 0.65);
   font-weight: 600;
   border: none;
@@ -662,14 +461,14 @@ html, body, #app {
 
 .welcome-title {
   color: #1e325a;
-  font-size: 23px;
+  font-size: 22px;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .welcome-desc {
   color: rgba(30, 50, 90, 0.65);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -712,7 +511,7 @@ html, body, #app {
 }
 
 .resend-text {
-  font-size: 13.5px;
+  font-size: 12.5px;
   color: rgba(30, 50, 90, 0.65);
   text-align: center;
 }
@@ -756,7 +555,7 @@ html, body, #app {
 .strength-bar.bar-strong { background: #10b981 !important; }
 
 .strength-label {
-  font-size: var(--text-xs);
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -785,7 +584,7 @@ html, body, #app {
 
 .label {
   color: #1e325a;
-  font-size: 13.5px;
+  font-size: 12.5px;
   font-weight: 600;
   text-align: left;
   display: block;
@@ -800,7 +599,7 @@ html, body, #app {
 
 .forgot-link-new {
   color: rgba(30, 50, 90, 0.7);
-  font-size: var(--text-xs);
+  font-size: 12px;
   text-decoration: none;
   font-weight: 500;
 }
@@ -822,7 +621,7 @@ html, body, #app {
 .input-box input {
   width: 100%;
   color: #1e325a;
-  font-size: var(--text-sm);
+  font-size: 14px;
   outline: none;
   background: transparent;
   border: none;
@@ -854,13 +653,13 @@ html, body, #app {
 
 .submit-btn span {
   color: #ffffff;
-  font-size: 15.5px;
+  font-size: 14.5px;
   font-weight: 600;
 }
 
 .security-note {
   color: rgba(30, 50, 90, 0.5);
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
   margin-top: 2px;
   line-height: 1.4;
@@ -869,7 +668,7 @@ html, body, #app {
 .admin-link {
   color: rgba(30, 50, 90, 0.7);
   text-align: center;
-  font-size: 13.5px;
+  font-size: 12.5px;
   cursor: pointer;
   margin-top: 2px;
   display: block;

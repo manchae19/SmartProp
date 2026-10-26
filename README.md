@@ -1,6 +1,6 @@
 # SmartProp
 
-Đồ án ước tính giá rao bất động sản Đà Nẵng bằng XGBoost. Nhánh tích hợp `feature/fe-ai-v6` kết hợp **API FastAPI v6** từ `develop-binh` với **frontend Vue 3/Vite** từ `origin/main` (`7368bc1`). Form ở trang chủ, trang định giá và chi tiết tin đã gọi model thật qua Vite proxy. Backend nghiệp vụ vẫn là khung và chưa cần cho luồng demo định giá.
+Đồ án ước tính giá rao bất động sản Đà Nẵng bằng XGBoost. Nhánh `feature/fe-ai-v6` kết hợp **API FastAPI v6**, **frontend Vue 3/Vite** từ `main` (`7368bc1`) và **BE Spring Boot/MySQL** từ `Backend-Huy` (`ac13ec3`). Form định giá gọi model thật; tại `/valuation`, tài khoản đăng nhập có thể lưu, xem và xóa lịch sử. Các màn hình nghiệp vụ khác của frontend vẫn cần nối riêng với BE.
 
 ## Chạy API trên Windows
 
@@ -24,6 +24,16 @@ npm.cmd run dev
 
 Mở **http://127.0.0.1:5173/valuation** để nhập thông tin và ước tính giá, hoặc **http://127.0.0.1:5173/listing/1** để thử từ tin minh họa. Giữ terminal API ở trên chạy cùng frontend. [Hướng dẫn FE–AI, cấu hình và kiểm thử](frontend/vue.ui/README.md).
 
+## Chạy BE để lưu lịch sử
+
+Máy hiện tại đã có runtime cục bộ. Terminal thứ ba tại gốc repo:
+
+```powershell
+.\ai-services\.venv\Scripts\python.exe -X utf8 backend/scripts/run-demo.py
+```
+
+BE 8080 và MySQL demo riêng 13306, dữ liệu giữ tại `backend/var/local-demo/`. Đăng ký/đăng nhập rồi quay lại `/valuation` để lưu kết quả. Launcher không dùng database nguồn hoặc `.env`. Máy mới cần JDK 21, Maven và MySQL ZIP. [Hướng dẫn và kiểm chứng lịch sử](docs/VALUATION_HISTORY.md).
+
 ## Cấu trúc chính
 
 ```text
@@ -38,11 +48,14 @@ ai-services/
   tests/                  Kiểm thử API và fixture parity 299 trường hợp
   scripts/                Đóng gói model từ kho dữ liệu cục bộ
 frontend/vue.ui/           Frontend Vue từ main, đã nối form định giá với API v6
-backend/                  Khung backend
+backend/                  Spring Boot: đăng nhập, nghiệp vụ và lịch sử định giá
+database/                 SQL nguồn và migration V13 cho lịch sử
 docs/                     Bản đồ dự án và hướng dẫn GitHub
 ```
 
 [Bản đồ các file](docs/PROJECT_MAP.md) · [Chuẩn bị commit/push](docs/GITHUB_PREPARATION.md) · [Tóm tắt chất lượng model](docs/MODEL_V6.md).
+
+[Chuẩn bị dữ liệu lần train tiếp theo](docs/GEOSPATIAL_NEXT.md): đã xuất 2.213 train + 299 validation, cách ly một mã địa bàn sai. Chưa thay model demo; chưa có tọa độ tài sản được xác minh để train đặc trưng khoảng cách.
 
 ## Kiểm thử bản gọn
 

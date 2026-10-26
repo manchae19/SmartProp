@@ -39,7 +39,16 @@ Các lần sàng lọc và chấm pilot đã khóa không được chạy lại 
 
 ## Các phần còn lại
 
-Nhánh `feature/fe-ai-v6` đã đưa frontend từ `origin/main` (`7368bc1`) vào `frontend/vue.ui` và nối phần định giá với FastAPI v6. Không thay đổi model hoặc kho dữ liệu để tích hợp FE. `backend/` và `docker-compose.yml` còn là khung.
+Nhánh `feature/fe-ai-v6` đã ghép lịch sử `main`, dùng FE từ `7368bc1`, nhập mã BE/database từ `Backend-Huy` tại `ac13ec3` và mở rộng lịch sử định giá. Model v6 vẫn giữ nguyên. `docker-compose.yml` trên nhánh này còn là khung; demo dùng launcher MySQL riêng.
+
+| Phần BE/dữ liệu mới | Vai trò |
+|---|---|
+| [VALUATION_HISTORY.md](VALUATION_HISTORY.md) | Cách chạy 3 thành phần, quyền truy cập và kết quả kiểm thử |
+| [backend/scripts/run-demo.py](../backend/scripts/run-demo.py) | Chạy Spring Boot/MySQL demo riêng, giữ dữ liệu và không đọc database nguồn |
+| [backend/src/main/java/vn/smartprop/valuation](../backend/src/main/java/vn/smartprop/valuation/) | Cổng v6 và API lưu/xem/xóa snapshot theo tài khoản |
+| [database/migrations/V13__valuation_history.sql](../database/migrations/V13__valuation_history.sql) | Bảng lịch sử, khóa chống trùng và chỉ mục owner/thời gian |
+| [prepare_training_next.py](../ai-services/app/data/prepare_training_next.py) | Bản chuẩn bị cohort mới, cách ly mã địa bàn sai và xuất readiness |
+| [GEOSPATIAL_NEXT.md](GEOSPATIAL_NEXT.md) | Số liệu v6 hiện tại, dữ liệu vị trí còn thiếu và nguồn được phép |
 
 | File FE | Vai trò |
 |---|---|
@@ -47,10 +56,11 @@ Nhánh `feature/fe-ai-v6` đã đưa frontend từ `origin/main` (`7368bc1`) và
 | [src/services/valuation.js](../frontend/vue.ui/src/services/valuation.js) | Kiểm tra đầu vào, gọi API, timeout/hủy yêu cầu và định dạng giá |
 | [app/core/location_catalog_v6.json](../ai-services/app/core/location_catalog_v6.json) | Mã địa bàn v6 được phép công khai, nhãn có dấu và mã bị chặn do sai nguồn |
 | [src/components/ValuationPanel.vue](../frontend/vue.ui/src/components/ValuationPanel.vue) | Form theo loại tài sản, tải lựa chọn từ model, hiển thị giá/feature/missing/cảnh báo |
+| [src/components/ValuationHistory.vue](../frontend/vue.ui/src/components/ValuationHistory.vue) | Lịch sử của tài khoản, phân trang, xóa và trạng thái lỗi |
 | [user/views/ValuationView.vue](../frontend/vue.ui/user/views/ValuationView.vue) | Trang `/valuation` để nhập thông tin riêng |
 | [user/views/HomeView.vue](../frontend/vue.ui/user/views/HomeView.vue) | Dùng form v6 tại mục Định giá của trang chủ |
 | [user/views/ListingDetailView.vue](../frontend/vue.ui/user/views/ListingDetailView.vue) | Dùng thông tin có cấu trúc của tin minh họa để gọi v6; đã bỏ giá và tỷ lệ ảnh hưởng mẫu |
-| [vite.config.js](../frontend/vue.ui/vite.config.js) | Proxy `/api/ai/*` tới FastAPI khi dev/preview |
+| [vite.config.js](../frontend/vue.ui/vite.config.js) | Proxy `/api/ai/*` tới FastAPI, `/api/v1/*` tới BE khi dev/preview |
 | [tests/valuation.test.js](../frontend/vue.ui/tests/valuation.test.js) | Kiểm thử payload, HTTP, hủy/timeout và đơn vị giá |
 | [e2e/valuation.spec.js](../frontend/vue.ui/e2e/valuation.spec.js) | Kiểm thử trình duyệt, trong đó có cả 3 loại gọi v6 thật |
 

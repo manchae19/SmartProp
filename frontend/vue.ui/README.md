@@ -1,6 +1,6 @@
 # SmartProp Vue — định giá bằng API v6
 
-Frontend Vue 3/Vite được lấy từ `origin/main` commit `7368bc1` và tích hợp trên nhánh `feature/fe-ai-v6`. Form định giá dùng API FastAPI hiện có, chưa cần BE nghiệp vụ riêng cho demo này.
+Frontend Vue 3/Vite dựa trên `main` commit `7368bc1`, tích hợp trên nhánh `feature/fe-ai-v6`. Form định giá dùng FastAPI; đăng nhập và lưu/xem/xóa lịch sử ở `/valuation` dùng BE Spring Boot/MySQL nhập từ `Backend-Huy`.
 
 ## Chạy tại máy
 
@@ -48,7 +48,17 @@ Kết quả hiển thị tổng giá theo tỷ/triệu đồng, giá VND đầy 
 
 Đổi đầu vào hoặc chuyển tin sẽ xóa kết quả cũ và hủy yêu cầu đang chờ; phản hồi cũ không được ghi lên form mới. Mỗi yêu cầu có timeout 12 giây. Mất kết nối/đầu vào sai có thông báo và cho phép thử lại.
 
-Tin trong `ListingDetailView.vue` vẫn là **tin minh họa của frontend**, có gắn nhãn; chỉ dự đoán giá được tính bằng model thật. Thông tin có cấu trúc được điền sẵn từ dữ liệu minh họa, người dùng có thể chỉnh để tính lại. Các luồng đăng nhập, quản lý tin và dữ liệu nghiệp vụ khác của FE chưa được nối với BE trong đợt này. Model, dữ liệu train và các luật trích đặc trưng giữ nguyên.
+Tin trong `ListingDetailView.vue` vẫn là **tin minh họa của frontend**, có gắn nhãn; chỉ dự đoán giá được tính bằng model thật. Thông tin có cấu trúc được điền sẵn từ dữ liệu minh họa, người dùng có thể chỉnh để tính lại. Quản lý tin và các màn hình nghiệp vụ khác của FE cần nối riêng với BE. Model, snapshot dữ liệu train v6 và các luật trích đặc trưng giữ nguyên.
+
+## Lịch sử định giá
+
+Chạy BE ở terminal thứ ba từ gốc repo:
+
+```powershell
+.\ai-services\.venv\Scripts\python.exe -X utf8 backend/scripts/run-demo.py
+```
+
+Runtime local hiện có tại `.scratch/devtools/`; máy khác cần JDK 21, Maven và MySQL ZIP trước. Vite proxy `/api/v1` tới `BE_API_TARGET` mặc định `http://127.0.0.1:8080`. Mở `/login?next=/valuation`, đăng ký/đăng nhập tài khoản thật rồi ước tính và chọn **Lưu kết quả**. JWT ở bộ nhớ, không dùng token/role giả trong localStorage; tải lại tab cần đăng nhập lại. Lịch sử vẫn được giữ trong MySQL theo tài khoản. [Hướng dẫn và kiểm chứng](../../docs/VALUATION_HISTORY.md).
 
 ## Kiểm thử
 
@@ -60,7 +70,7 @@ npm.cmd run test:e2e
 ```
 
 - `npm test`: 10 kiểm thử payload, loại bỏ trường không áp dụng/giá/ID, nhãn địa bàn có dấu, chặn tiêu đề tin, đơn vị giá, HTTP, timeout và hủy request.
-- E2E: 12 kiểm thử trên trình duyệt; 3 loại tài sản gọi API v6 thật qua proxy và đối chiếu với FastAPI trực tiếp, form mobile/desktop, lỗi kết nối, retry, nhập sai, phản hồi chậm và nhãn địa bàn có dấu giữ nguyên mã/giá.
+- E2E: 14 kiểm thử trên trình duyệt; 3 loại tài sản gọi API v6 thật qua proxy, cộng luồng đăng nhập/lưu/xóa và lỗi lịch sử. Lịch sử được mock trong trình duyệt; suite BE kiểm tra riêng với JWT/MySQL/model thật.
 - E2E tự chạy API tại cổng **18080** và Vite tại **15173**, không tái sử dụng dịch vụ đang chạy. Hai cổng này phải trống. Môi trường Python phải có dependencies theo `ai-services/requirements.txt`.
 - Trên Windows, E2E mặc định dùng Edge có sẵn. Có thể đặt `$env:PLAYWRIGHT_CHANNEL='chrome'` nếu dùng Chrome. Trên Linux/macOS, chạy `npx playwright install chromium` trước lần kiểm thử đầu.
 - `test-results/`, `playwright-report/`, `node_modules/`, `dist/` được bỏ qua khỏi Git.

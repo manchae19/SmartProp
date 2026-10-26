@@ -1,0 +1,8 @@
+# Development runs against existing MySQL80; seed is explicitly disabled.
+app:
+  seed:
+    enabled: false
+    email: ${DEV_ADMIN_EMAIL:}
+    password: ${DEV_ADMIN_PASSWORD:}
+  database-seed:
+    enabled: false
