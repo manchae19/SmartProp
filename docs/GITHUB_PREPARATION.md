@@ -1,8 +1,10 @@
 # Đưa bản gọn lên nhánh GitHub
 
-Đã tách mã nguồn/tài liệu/bundle v6 khỏi dữ liệu và các kết quả sinh tự động. Nhánh hiện tại khi chuẩn bị: **`develop-binh`**. Không tự commit, push, đổi nhánh hoặc viết lại lịch sử.
+Đã tách mã nguồn/tài liệu/bundle v6 khỏi dữ liệu và các kết quả sinh tự động trên **`develop-binh`**. Phần FE–AI đang tích hợp tại **`feature/fe-ai-v6`**, lấy frontend từ `origin/main` (`7368bc1`). Chưa tự commit, push hoặc viết lại lịch sử.
 
 Ngày 17/10/2026: bỏ theo dõi **3.448 file**, giữ khoảng **4,99 GB dữ liệu/cache trên máy**; phần mã nguồn/tài liệu/model dự kiến commit có **296 file, khoảng 3,6 MB**. Một bản sao chỉ chứa phần này (không có raw/processed/.venv) đã chạy đạt 17 kiểm thử, đủ 299 dự đoán parity và smoke test HTTP cả ba loại tài sản bằng môi trường Python hiện có.
+
+Các số kích thước trên là mốc trước khi đưa frontend vào. Frontend mới giữ tài nguyên từ `main`, gồm video nền có sẵn; `node_modules`, bản build và kết quả kiểm thử vẫn bị ignore. Kho CSV/HTML/raw/processed tiếp tục ở ngoài Git.
 
 ## Phần được giữ trong repo
 
@@ -24,11 +26,11 @@ git diff --cached --stat
 git add -A
 git diff --cached --stat
 git diff --cached --check
-git commit -m "Prepare compact SmartProp v6 API release"
-git push -u origin develop-binh
+git commit -m "Integrate Vue frontend with v6 valuation API"
+git push -u origin feature/fe-ai-v6
 ```
 
-Chỉ dùng lệnh push trên nếu bạn vẫn đang ở `develop-binh`. Nếu muốn một nhánh mới, chạy `git switch -c feature/smartprop-v6-demo` trước bước commit và push đúng tên nhánh đó. Không dùng `git clean` để dọn các file bị ignore: đó là kho dữ liệu/môi trường cục bộ vẫn cần giữ.
+Chỉ dùng lệnh push trên nếu vẫn đang ở `feature/fe-ai-v6`. Kiểm tra tên nhánh trước khi commit/push. Không dùng `git clean` để dọn các file bị ignore: đó là kho dữ liệu/môi trường cục bộ vẫn cần giữ.
 
 ## Kiểm thử trước commit
 

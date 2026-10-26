@@ -17,9 +17,16 @@ def port_number(value):
 def main():
     parser = argparse.ArgumentParser(description="Chạy API SmartProp AI v6 trên localhost.")
     parser.add_argument("--port", type=port_number, default=8000)
+    parser.add_argument("--diagnose", action="store_true", help="Ghi tín hiệu dừng và vòng đời API vào .scratch/api-diagnostics/.")
     args = parser.parse_args()
 
     print(f"SmartProp AI v6 [PID {os.getpid()}]: đang nạp thư viện và model, vui lòng giữ terminal mở.", flush=True)
+    if args.diagnose:
+        from api_diagnostics import run_diagnosed
+
+        run_diagnosed(SERVICE_DIR, args.port)
+        return
+
     import uvicorn
 
     uvicorn.run("main:app", app_dir=str(SERVICE_DIR), host="127.0.0.1", port=args.port)

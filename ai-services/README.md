@@ -22,6 +22,18 @@ Ví dụ đổi cổng: thêm `--port 8001` vào cuối lệnh. Script tự xác
 
 Nếu lệnh `python -m uvicorn ...` chỉ hiện `Aborted!`, dùng lệnh `run_api.py` trên để thấy tiến trình nạp thư viện/model và lỗi gốc nếu có. `Aborted!` là thông báo của lớp CLI khi bị hủy/ngắt hoặc gặp EOF; riêng thông báo đó chưa xác định được nguyên nhân ở terminal. Trong đợt kiểm tra ngày 17/10/2026, lệnh CLI cũ chạy thành công ở cả chế độ có và không có terminal tương tác; chưa tái hiện được lần lỗi người dùng báo.
 
+### Nếu API khởi động rồi tự tắt
+
+Các dòng `Application startup complete` → `Shutting down` → `Application shutdown complete` cho thấy tiến trình đã khởi động rồi tắt có trình tự. Log đó chưa cho biết nguyên nhân. Chạy lại với chế độ chẩn đoán:
+
+```powershell
+.\ai-services\.venv\Scripts\python.exe -X utf8 .\ai-services\run_api.py --diagnose
+```
+
+Terminal in đường dẫn file JSONL trong `.scratch/api-diagnostics/`. Chế độ này ghi thời điểm UTC, thời gian từ lúc chạy, PID/PID cha, kết quả khởi động và tín hiệu dừng mà Uvicorn nhận được (`SIGINT`, `SIGTERM` hoặc `SIGBREAK`). Có tín hiệu không đồng nghĩa người dùng đã bấm dừng; log chưa xác định được ứng dụng nào gửi tín hiệu. Không có sự kiện thoát khi tiến trình bị kết thúc cưỡng bức hoặc máy tắt. Log không ghi nội dung tin, địa chỉ bất động sản hay request body và đã được Git bỏ qua. Chẩn đoán dùng một worker của demo, giữ cách xử lý tín hiệu của Uvicorn và không tự khởi động lại API.
+
+Ngày 26/10/2026: chạy lệnh bình thường tại gốc repo vẫn hoạt động qua 8 lần kiểm tra `/health`; chưa tái hiện được hiện tượng tự tắt ngay người dùng báo. Bổ sung chẩn đoán để thu bằng chứng, chưa coi là đã sửa nguyên nhân.
+
 ## Endpoint
 
 | Phương thức | Đường dẫn | Mục đích |
@@ -50,7 +62,7 @@ API trả HTTP **422** khi đầu vào sai và **503** khi model chưa sẵn sà
 
 Các số phải là JSON number, không phải chuỗi hoặc boolean. Trường không biết thì bỏ qua hoặc gửi `null` (riêng `title`/`description` dùng chuỗi rỗng). Không gửi giá/đơn giá vào đầu vào dự đoán; trường ngoài schema bị từ chối.
 
-`location_feature` là token của model, gồm tên quận/huyện cũ và một số token `new_unit:...` của bộ dữ liệu. Client cần dùng nguyên giá trị trả về cho đúng loại, không tự suy diễn ánh xạ địa giới cũ/mới. Phường/xã không có hoặc ít mẫu trong vocabulary được encode bằng trạng thái chưa biết/ít mẫu và có cảnh báo.
+`location_feature` là token của model, gồm tên quận/huyện cũ và một số token `new_unit:...` của bộ dữ liệu. `/model/options` chỉ trả các mã có trong model của đúng loại và có nhãn đã kiểm tra tại `app/core/location_catalog_v6.json`; `location_labels` cung cấp nhãn hiển thị có dấu. Client hiển thị nhãn nhưng gửi nguyên mã, không suy diễn ánh xạ địa giới cũ/mới. Mã tiêu đề tin đã xác định sai bị chặn ở cả lựa chọn và `/predict`. Phường/xã theo tin không có hoặc ít mẫu trong vocabulary được encode bằng trạng thái chưa biết/ít mẫu và có cảnh báo. [Nguyên nhân và kiểm chứng sửa địa bàn](../docs/LOCATION_LABELS.md).
 
 Tiêu đề/mô tả chỉ được bộ trích v6 lấy lời nêu rõ về phòng ngủ, tầng, mặt tiền/kiệt và subtype theo đúng luật đã dùng khi train. Model không nhận nguyên văn văn bản. Thông tin khai báo tùy chọn được ưu tiên khi không mâu thuẫn; nếu tầng/access/subtype mâu thuẫn với lời trích thì giữ thiếu và cảnh báo. Số phòng có cấu trúc được giữ khi mô tả mâu thuẫn, giống chính sách train. Các lời rao này chưa phải thông tin đã xác minh thực địa.
 
@@ -80,6 +92,7 @@ Kết quả có `predicted_asking_price_vnd`, `predicted_asking_price_million`, 
 .\ai-services\.venv\Scripts\python.exe -m pip install -r ai-services/requirements-dev.txt
 .\ai-services\.venv\Scripts\python.exe -X utf8 -m unittest discover -s ai-services/tests -v
 .\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/tests/smoke_http_v6.py
+.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/tests/smoke_http_v6.py --diagnose
 ```
 
 Kiểm thử bao gồm ba loại tài sản, trường thiếu, trích văn bản/mâu thuẫn, đầu vào không hợp lệ và ngăn nạp artifact sai. Bộ kiểm thử phát lại **299 dự đoán validation đã được đánh giá trước đó** qua API, đối chiếu với fixture `tests/fixtures/v6_validation_parity.json`. Fixture chứa đầu vào có cấu trúc và dự đoán đã lưu, kèm SHA-256 nguồn; không chứa ID tin, URL, mô tả, thông tin liên hệ hoặc giá rao thực tế. Đây là kiểm tra tính đúng của suy luận, không phải một lần đánh giá chất lượng trên test mới. Không cần kho CSV/HTML lịch sử để chạy các kiểm thử API.
@@ -112,4 +125,4 @@ Khi clone repo sang máy khác, các artifact trên và hai tệp `app/data/trai
 
 Đây là **giá rao ước tính** từ dữ liệu tin đăng, phục vụ thử nghiệm/demo. [Pilot 132 tin](app/data/V6_HOLDOUT_PILOT.md) có MAPE 35,86% và tỷ lệ sai số ≤20% là 59,09%; sai số này không phải mức bảo đảm cho từng dự đoán. Căn hộ chỉ có 8 mẫu trong pilot. API không xuất khoảng tin cậy khi chưa có hiệu chỉnh được kiểm chứng.
 
-Model có đặc trưng mặt tiền/kiệt theo lời mô tả; chưa có độ rộng hẻm, tọa độ tài sản được xác minh hoặc khoảng cách tới tiện ích. API này chưa được nối với giao diện/backend và chưa được triển khai công khai. [Kết quả huấn luyện v6](app/data/TRAINING_V6.md).
+Model có đặc trưng mặt tiền/kiệt theo lời mô tả; chưa có độ rộng hẻm, tọa độ tài sản được xác minh hoặc khoảng cách tới tiện ích. [Frontend Vue](../frontend/vue.ui/README.md) đã nối form định giá với API qua Vite proxy trên nhánh tích hợp. Backend nghiệp vụ và dữ liệu tin đăng thật chưa được nối vào; chưa triển khai công khai. [Kết quả huấn luyện v6](app/data/TRAINING_V6.md).

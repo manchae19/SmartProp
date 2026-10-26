@@ -39,6 +39,23 @@ Các lần sàng lọc và chấm pilot đã khóa không được chạy lại 
 
 ## Các phần còn lại
 
-`frontend/`, `backend/`, `docker-compose.yml` hiện là khung chưa có ứng dụng chạy hoàn chỉnh. `AGENTS.md`, `docs/agents/`, `.agents/skills/`, `skills-lock.json` chứa hướng dẫn làm việc cho agent.
+Nhánh `feature/fe-ai-v6` đã đưa frontend từ `origin/main` (`7368bc1`) vào `frontend/vue.ui` và nối phần định giá với FastAPI v6. Không thay đổi model hoặc kho dữ liệu để tích hợp FE. `backend/` và `docker-compose.yml` còn là khung.
+
+| File FE | Vai trò |
+|---|---|
+| [frontend/vue.ui/README.md](../frontend/vue.ui/README.md) | Chạy FE/API, proxy, dữ liệu minh họa và kiểm thử |
+| [src/services/valuation.js](../frontend/vue.ui/src/services/valuation.js) | Kiểm tra đầu vào, gọi API, timeout/hủy yêu cầu và định dạng giá |
+| [app/core/location_catalog_v6.json](../ai-services/app/core/location_catalog_v6.json) | Mã địa bàn v6 được phép công khai, nhãn có dấu và mã bị chặn do sai nguồn |
+| [src/components/ValuationPanel.vue](../frontend/vue.ui/src/components/ValuationPanel.vue) | Form theo loại tài sản, tải lựa chọn từ model, hiển thị giá/feature/missing/cảnh báo |
+| [user/views/ValuationView.vue](../frontend/vue.ui/user/views/ValuationView.vue) | Trang `/valuation` để nhập thông tin riêng |
+| [user/views/HomeView.vue](../frontend/vue.ui/user/views/HomeView.vue) | Dùng form v6 tại mục Định giá của trang chủ |
+| [user/views/ListingDetailView.vue](../frontend/vue.ui/user/views/ListingDetailView.vue) | Dùng thông tin có cấu trúc của tin minh họa để gọi v6; đã bỏ giá và tỷ lệ ảnh hưởng mẫu |
+| [vite.config.js](../frontend/vue.ui/vite.config.js) | Proxy `/api/ai/*` tới FastAPI khi dev/preview |
+| [tests/valuation.test.js](../frontend/vue.ui/tests/valuation.test.js) | Kiểm thử payload, HTTP, hủy/timeout và đơn vị giá |
+| [e2e/valuation.spec.js](../frontend/vue.ui/e2e/valuation.spec.js) | Kiểm thử trình duyệt, trong đó có cả 3 loại gọi v6 thật |
+
+[Giải thích lỗi tên địa bàn và cách sửa](LOCATION_LABELS.md). Catalog chỉ phục vụ API/hiển thị, không thay vocabulary hoặc model đã khóa.
+
+`AGENTS.md`, `docs/agents/`, `.agents/skills/`, `skills-lock.json` chứa hướng dẫn làm việc cho agent.
 
 `data_raw/`, `processed/`, CSV thô, checkpoint, cache HTML, `.venv/`, `__pycache__/` và `.scratch/` ở trên máy; được bỏ qua khỏi các commit mới. Việc bỏ theo dõi Git không xóa file cục bộ và không thay lịch sử commit cũ.

@@ -1,6 +1,6 @@
 # SmartProp
 
-Đồ án ước tính giá rao bất động sản Đà Nẵng bằng XGBoost. Hiện đã có **API FastAPI v6** cho nhà ở, đất nền và căn hộ. Frontend/backend đang là khung dự án.
+Đồ án ước tính giá rao bất động sản Đà Nẵng bằng XGBoost. Nhánh tích hợp `feature/fe-ai-v6` kết hợp **API FastAPI v6** từ `develop-binh` với **frontend Vue 3/Vite** từ `origin/main` (`7368bc1`). Form ở trang chủ, trang định giá và chi tiết tin đã gọi model thật qua Vite proxy. Backend nghiệp vụ vẫn là khung và chưa cần cho luồng demo định giá.
 
 ## Chạy API trên Windows
 
@@ -13,6 +13,16 @@ py -3.14 -m venv ai-services/.venv
 ```
 
 Nếu đã có môi trường ảo, dùng lại môi trường đó. Mở **http://127.0.0.1:8000/docs** để thử `POST /predict`. [Hướng dẫn API và đầu vào](ai-services/README.md).
+
+## Chạy frontend ở terminal thứ hai
+
+```powershell
+cd frontend/vue.ui
+npm.cmd ci
+npm.cmd run dev
+```
+
+Mở **http://127.0.0.1:5173/valuation** để nhập thông tin và ước tính giá, hoặc **http://127.0.0.1:5173/listing/1** để thử từ tin minh họa. Giữ terminal API ở trên chạy cùng frontend. [Hướng dẫn FE–AI, cấu hình và kiểm thử](frontend/vue.ui/README.md).
 
 ## Cấu trúc chính
 
@@ -27,7 +37,7 @@ ai-services/
   artifacts/v6/           Ba model, schema, manifest và metrics (~2 MB)
   tests/                  Kiểm thử API và fixture parity 299 trường hợp
   scripts/                Đóng gói model từ kho dữ liệu cục bộ
-frontend/                 Khung giao diện
+frontend/vue.ui/           Frontend Vue từ main, đã nối form định giá với API v6
 backend/                  Khung backend
 docs/                     Bản đồ dự án và hướng dẫn GitHub
 ```

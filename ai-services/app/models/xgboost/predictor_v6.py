@@ -12,6 +12,7 @@ import numpy as np
 import xgboost as xgb
 
 from app.core.model_registry import DATA_DIR, V6_MANIFEST_SHA256, V6_MODEL_DIR, V6_RUN
+from app.core.location_catalog import CATALOG, LOCATION_LABELS
 
 
 class ModelArtifactError(RuntimeError):
@@ -76,12 +77,16 @@ class PredictorV6:
             self.specs[category], self.models[category] = spec, booster
 
     def options(self):
+        categories = [
+            {"category": category, "locations": [code for code in spec["base_schema"]["locations"] if code in LOCATION_LABELS]}
+            for category, spec in self.specs.items()
+        ]
+        supported = {code for category in categories for code in category["locations"]}
         return {
             "model_version": "v6", "model_run": V6_RUN,
-            "categories": [
-                {"category": category, "locations": spec["base_schema"]["locations"]}
-                for category, spec in self.specs.items()
-            ],
+            "categories": categories,
+            "location_labels": {code: label for code, label in LOCATION_LABELS.items() if code in supported},
+            "location_catalog_version": CATALOG["version"],
             "access_types": {"alley": "Trong kiệt/hẻm", "frontage": "Mặt tiền"},
             "house_subtypes": {"villa": "Biệt thự", "house_c4": "Nhà cấp 4"},
         }
@@ -92,8 +97,8 @@ class PredictorV6:
             raise ValueError("Loại bất động sản không được hỗ trợ.")
         spec = self.specs[category]
         location = values["location_feature"]
-        if location not in spec["base_schema"]["locations"]:
-            raise ValueError("Địa bàn chưa có trong model của loại này. Chọn từ GET /model/options.")
+        if location not in spec["base_schema"]["locations"] or location not in LOCATION_LABELS:
+            raise ValueError("Địa bàn không được hỗ trợ. Vui lòng chọn lại trong danh sách của loại bất động sản này.")
         area = values["area_sqm"]
         if isinstance(area, bool) or not math.isfinite(float(area)) or not 20 <= float(area) <= 1000:
             raise ValueError("Diện tích phải trong phạm vi 20–1.000 m² của API v6.")

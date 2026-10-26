@@ -1,0 +1,49 @@
+{
+  "version": "v6-location-labels-2026-10-26",
+  "reviewed_on": "2026-10-26",
+  "reference": "https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-quyet-so-1659-nq-ubtvqh15-sap-xep-cac-dvhc-cap-xa-cua-thanh-pho-da-nang-nam-2025-119250616202714604.htm",
+  "scope": "Display names for existing v6 codes only. No inferred boundary or old/new district mapping.",
+  "legacy": {
+    "Cẩm Lệ": "Cẩm Lệ",
+    "Hòa Vang": "Hòa Vang",
+    "Hải Châu": "Hải Châu",
+    "Liên Chiểu": "Liên Chiểu",
+    "Ngũ Hành Sơn": "Ngũ Hành Sơn",
+    "Sơn Trà": "Sơn Trà",
+    "Thanh Khê": "Thanh Khê"
+  },
+  "expanded": {
+    "new_unit:an khe": "An Khê",
+    "new_unit:an thang": "An Thắng",
+    "new_unit:ban thach": "Bàn Thạch",
+    "new_unit:dai loc": "Đại Lộc",
+    "new_unit:dien ban": "Điện Bàn",
+    "new_unit:dien ban bac": "Điện Bàn Bắc",
+    "new_unit:dien ban dong": "Điện Bàn Đông",
+    "new_unit:duy xuyen": "Duy Xuyên",
+    "new_unit:hai van": "Hải Vân",
+    "new_unit:hoa khanh": "Hòa Khánh",
+    "new_unit:hoa xuan": "Hòa Xuân",
+    "new_unit:hoi an": "Hội An",
+    "new_unit:hoi an dong": "Hội An Đông",
+    "new_unit:hoi an tay": "Hội An Tây",
+    "new_unit:huong tra": "Hương Trà",
+    "new_unit:lien chieu": "Liên Chiểu",
+    "new_unit:nui thanh": "Núi Thành",
+    "new_unit:phu ninh": "Phú Ninh",
+    "new_unit:que son": "Quế Sơn",
+    "new_unit:tam ky": "Tam Kỳ",
+    "new_unit:tan hiep": "Tân Hiệp",
+    "new_unit:thang an": "Thăng An",
+    "new_unit:thang binh": "Thăng Bình",
+    "new_unit:thang phu": "Thăng Phú",
+    "new_unit:vu gia": "Vu Gia"
+  },
+  "blocked": {
+    "new_unit:ban nha rieng duong nguyen duy hieu - phuong cam chau": {
+      "reason": "listing_title_instead_of_location",
+      "source_record": "homedy:3205669",
+      "action": "Block public options/inference; review source before a future training version. Preserve frozen v6."
+    }
+  }
+}
