@@ -7,10 +7,11 @@ import {useList,adapt,money,LegacyState,LegacyPager,PrivateImage,types,states,re
 
 import {isPublicProperty} from '../../src/services/usePublicListings.js'
 import ContactPanel from '../../src/components/ContactPanel.vue'
+import {locationLabel} from '../../src/services/locationDisplay.js'
 const route=useRoute(),router=useRouter(),state=ref({busy:false,error:'',notice:'',notFound:false}),property=ref(null),isFavorite=ref(false),showGallery=ref(false),currentImageIndex=ref(0),pois=ref([]);
 const listing=computed(()=>adapt(property.value)),listingId=computed(()=>route.params.id),images=computed(()=>property.value?.images?.map(i=>i.url)||[]);
 const openGallery=(index=0)=>{if(!images.value.length)return;currentImageIndex.value=Math.min(index,images.value.length-1);showGallery.value=true;document.body.style.overflow='hidden'},closeGallery=()=>{showGallery.value=false;document.body.style.overflow=''},nextImage=()=>currentImageIndex.value=(currentImageIndex.value+1)%Math.max(images.value.length,1),prevImage=()=>currentImageIndex.value=(currentImageIndex.value-1+images.value.length)%Math.max(images.value.length,1),selectImage=i=>currentImageIndex.value=i;
-const goHome=()=>router.push('/home'),goMap=()=>router.push('/map'),goAccount=()=>router.push('/account');
+const goHome=()=>router.push('/home'),goMap=()=>router.push({path:'/map',query:{propertyId:String(route.params.id)}}),goAccount=()=>router.push('/account');
 let loadSequence=0
 async function load(){
  const run=++loadSequence,id=route.params.id,own=route.query.own==='1';closeGallery();property.value=null;pois.value=[];isFavorite.value=false;Object.assign(state.value,{busy:true,error:'',notice:'',notFound:false})
@@ -399,7 +400,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             <div
               class="relative h-[250px] rounded-[20px] overflow-hidden bg-[#dedbd2]"
             >
-              <iframe v-if="mapUrl(property)" :src="mapUrl(property)" title="Vị trí bất động sản" loading="lazy" class="absolute inset-0 w-full h-full border-0"/><p v-else class="p-6 text-sm text-gray-500">Chưa có vị trí bản đồ.</p>
+              <iframe v-if="mapUrl(property)" :src="mapUrl(property)" title="Vị trí bất động sản đang xem" loading="lazy" class="absolute inset-0 w-full h-full border-0"/><p v-else class="p-6 text-sm text-gray-500">Chưa có vị trí bản đồ.</p>
 
               <div
                 class="absolute bottom-3 left-3 pointer-events-none"
@@ -412,6 +413,8 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               </div>
             </div>
           </section>
+
+          <p class="text-xs leading-6 text-[#637083]">{{locationLabel(property)}} · Công cụ tìm địa chỉ: <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" class="underline">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="underline">© OpenStreetMap contributors</a></p>
 
           <!-- ==================== AI VALUATION ==================== -->
 

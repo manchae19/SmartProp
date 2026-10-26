@@ -51,3 +51,11 @@ Chưa có Google key vẫn chọn được ghim thủ công qua bản đồ Open
 Khi thay địa chỉ/phường/quận/thành phố, ghim cũ bị xóa và cần xác nhận lại. Nếu mất phản hồi tạo tin/tải ảnh, dùng nút Đối chiếu kết quả; hệ thống không tự tạo thêm tin hoặc tải lặp trong lúc chưa xác định được kết quả.
 
 API giữ các trường số hiện có; response property có thêm priceExact/areaSqmExact dạng chuỗi để mở lại tin mà không làm tròn số thập phân lớn. Không đổi schema hoặc quy trình nháp → chờ duyệt → ADMIN phê duyệt.
+
+## Tìm vị trí tự động (tùy chọn)
+
+Wizard giữ bước xác nhận ghim trước khi lưu. Có API POST /api/v1/geocoding/search cho BROKER/ADMIN ACTIVE, giới hạn theo user/IP và ngân sách outbound. Mặc định GEOCODING_ENABLED=false; xem các biến cấu hình trống trong .env.example. Key Geoapify hoặc Google Geocoding chỉ đặt ở Backend, không dùng biến VITE_ và không đưa key lên Git.
+
+Geoapify hỗ trợ đề xuất trên OSM; người đăng phải đối chiếu vị trí và đồng ý công khai. Gợi ý Google chỉ xem trên Google Maps, không tự lưu vào tin hoặc chuyển sang OSM. Kết quả cấp đường/khu vực hoặc nội suy cần chỉnh ghim. Chính sách lưu vị trí tương đối/riêng tư đang chờ duyệt schema/API; chưa có migration mới cho phần này. Không tự bật billing, migration hoặc seed khi chạy.
+
+Home hiện tại có video/ảnh dự án local, biểu đồ ghi rõ mô phỏng, thống kê API riêng, điều hướng bám cuộn và thẻ giá rút gọn. Danh sách thay đổi giao diện để nhóm FE review nằm trong FRONTEND_CHANGES.md. Đây là mốc trước Home V3.

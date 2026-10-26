@@ -1,4 +1,65 @@
-# Ghi chú thay đổi Frontend — Backend-Huy
+# Frontend cập nhật ngày 26/10/2026 — trước Home V3
+
+- Nhánh đích: manchae19/SmartProp / Backend-Huy.
+- Mốc đối chiếu: 8e27fae4360f839d43463c0868f272a23ee37051.
+- 28 file Frontend thay đổi trong lượt này; danh sách đầy đủ bên dưới.
+- Home hiện tại được giữ làm mốc trước khi thiết kế lại V3; chưa triển khai concept V3.
+
+## Thay đổi cần nhóm Frontend review
+
+- Home: khôi phục video nền/ảnh chờ, ảnh dự án local, menu ba gạch, thanh điều hướng bám cuộn và chọn mục đang xem.
+- Thị trường: thêm biểu đồ 3/6/12 tháng từ FE mẫu, ghi rõ dữ liệu mô phỏng; giữ riêng thống kê giá chào thật qua API.
+- Thẻ tin: giá rút gọn, tooltip giá đầy đủ, diện tích và số phòng nổi bật; giữ UUID và các thao tác hiện có.
+- Đăng tin: tìm vị trí tự động qua API, chọn đề xuất, xác nhận đúng cơ chế confirmedLocation, giữ ghim thủ công và hủy xác nhận khi sửa địa chỉ.
+- Map/Detail: mở đúng UUID, không thay tin thiếu tọa độ bằng marker của tin khác; ghi rõ độ chính xác chưa xác minh.
+- Geocoding vẫn tắt mặc định; cần server key riêng để dùng thật. Chế độ vị trí tương đối/riêng tư và migration mới chưa được triển khai.
+- Giữ nguyên các luồng nghiệp vụ khác, AI, Importer và database thật.
+
+## Kiểm tra đã thực hiện tại local
+
+- Backend geocoding/security/MVC: 33/33 PASS; spatial round-trip MySQL3307 riêng: 1/1 PASS.
+- FE unit geocoding: 19/19 PASS; giá: 15/15 PASS; browser geocoding: 28/28 PASS; browser thẻ giá: 15/15 PASS.
+- Backend package và FE production build thành công. Provider trả phí được mock trong test; chưa nghiệm thu Google/Geoapify thật do chưa cấu hình key.
+- Test source, test command riêng trong package.json, báo cáo và evidence chỉ giữ local theo yêu cầu không đưa test lên nhánh.
+- Video nền gốc từ ZIP được đưa cùng source để tránh mất ảnh/video khi checkout mới. Không đưa .exe, .env thật, uploads, node_modules hoặc build output.
+
+## Danh sách file Frontend của lượt cập nhật này
+
+| Trạng thái | File |
+|---|---|
+| Chỉnh sửa | [frontend/vue.ui/build/publicAssets.mjs](frontend/vue.ui/build/publicAssets.mjs) |
+| Thêm mới | [frontend/vue.ui/public/background.mp4](frontend/vue.ui/public/background.mp4) |
+| Thêm mới | [frontend/vue.ui/public/media/home/hero-poster.jpg](frontend/vue.ui/public/media/home/hero-poster.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/fpt-plaza-3.jpg](frontend/vue.ui/public/media/projects/fpt-plaza-3.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/sun-cosmo.jpg](frontend/vue.ui/public/media/projects/sun-cosmo.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/sun-ponte.jpg](frontend/vue.ui/public/media/projects/sun-ponte.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/sun-symphony.jpg](frontend/vue.ui/public/media/projects/sun-symphony.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/sunneva-island.jpg](frontend/vue.ui/public/media/projects/sunneva-island.jpg) |
+| Thêm mới | [frontend/vue.ui/public/media/projects/the-filmore.jpg](frontend/vue.ui/public/media/projects/the-filmore.jpg) |
+| Thêm mới | [frontend/vue.ui/src/components/AutomaticLocationSearch.vue](frontend/vue.ui/src/components/AutomaticLocationSearch.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/GooglePropertyLocation.vue](frontend/vue.ui/src/components/GooglePropertyLocation.vue) |
+| Thêm mới | [frontend/vue.ui/src/components/HeroBackground.vue](frontend/vue.ui/src/components/HeroBackground.vue) |
+| Thêm mới | [frontend/vue.ui/src/components/HomeAccountMenu.vue](frontend/vue.ui/src/components/HomeAccountMenu.vue) |
+| Thêm mới | [frontend/vue.ui/src/components/HomeSectionNav.vue](frontend/vue.ui/src/components/HomeSectionNav.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/ManualLocationMap.vue](frontend/vue.ui/src/components/ManualLocationMap.vue) |
+| Thêm mới | [frontend/vue.ui/src/components/MarketIntelligence.vue](frontend/vue.ui/src/components/MarketIntelligence.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/MarketSummary.vue](frontend/vue.ui/src/components/MarketSummary.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/ProjectDirectory.vue](frontend/vue.ui/src/components/ProjectDirectory.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/PropertyMap.vue](frontend/vue.ui/src/components/PropertyMap.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/components/business/ListingCard.vue](frontend/vue.ui/src/components/business/ListingCard.vue) |
+| Chỉnh sửa | [frontend/vue.ui/src/services/districts.js](frontend/vue.ui/src/services/districts.js) |
+| Thêm mới | [frontend/vue.ui/src/services/geocoding.js](frontend/vue.ui/src/services/geocoding.js) |
+| Thêm mới | [frontend/vue.ui/src/services/locationDisplay.js](frontend/vue.ui/src/services/locationDisplay.js) |
+| Chỉnh sửa | [frontend/vue.ui/src/services/property.js](frontend/vue.ui/src/services/property.js) |
+| Chỉnh sửa | [frontend/vue.ui/user/views/HomeView.vue](frontend/vue.ui/user/views/HomeView.vue) |
+| Chỉnh sửa | [frontend/vue.ui/user/views/ListingDetailView.vue](frontend/vue.ui/user/views/ListingDetailView.vue) |
+| Chỉnh sửa | [frontend/vue.ui/user/views/MapView.vue](frontend/vue.ui/user/views/MapView.vue) |
+| Chỉnh sửa | [frontend/vue.ui/user/views/PostView.vue](frontend/vue.ui/user/views/PostView.vue) |
+
+---
+
+## Lịch sử đợt đồng bộ trước
+
 
 - Nhánh đích: manchae19/SmartProp / Backend-Huy.
 - Mốc đối chiếu trước đồng bộ: 4210ef462156cf2362fc9c5d0f090d4b08d5e2a2.

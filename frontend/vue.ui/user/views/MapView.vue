@@ -1,9 +1,12 @@
 
 <script setup>
-import {ref,computed,watch} from 'vue'
+import {ref,computed,watch,onBeforeUnmount} from 'vue'
 import { useRouter,useRoute } from 'vue-router'
 import {districtValue,districts,districtLink} from '../../src/services/districts.js'
 import PropertyMap from '../../src/components/PropertyMap.vue'
+import {api} from '../../src/services/api.js'
+import {isPublicProperty} from '../../src/services/usePublicListings.js'
+import {publicMapPoint,locationLabel} from '../../src/services/locationDisplay.js'
 import {useList,LegacyState,LegacyPager,PrivateImage,types,mapUrl} from '../../src/services/legacy.js'
 import {collectionProperty} from '../../src/services/collection.js'
 import {googlePointUrl} from '../../src/services/googleMapsLocation.js'
@@ -20,7 +23,8 @@ const selectedDistrict=ref(districtValue(route.query.district)||'Tất cả')
 const searchText = ref('')
 const appliedSearch = ref('')
 const showFilters = ref(false)
-const selectedId = ref(null)
+const selectedId = ref(route.query.propertyId ? String(route.query.propertyId) : null)
+const requestedListing=ref(null),selectionError=ref('');let selectionSequence=0
 const showDetails = ref(false)
 const mapMode = ref('light')
 const mapZoom = ref(1)
@@ -58,7 +62,7 @@ const filteredListings=listings
 const selectedListing = computed(() =>
   filteredListings.value.find(
     (item) => item.id === selectedId.value
-  ) || null
+  ) || (requestedListing.value?.id === selectedId.value ? requestedListing.value : null)
 )
 
 const activeFilterCount = computed(() => {
@@ -99,6 +103,7 @@ function selectListing(id) {
 }
 
 function ensureSelectedVisible() {
+  if(route.query.propertyId)return
   if (
     !filteredListings.value.some(
       (item) => item.id === selectedId.value
@@ -202,7 +207,17 @@ function openListing(id) {
 watch(()=>route.query.district,value=>selectedDistrict.value=districtValue(value)||'Tất cả');
 watch(selectedDistrict,value=>{router.replace({query:{...route.query,district:districtValue(value)||undefined}});state.load()});
 watch(()=>state.items,ensureSelectedVisible);watch(sortBy,()=>state.load());watch(appliedFilters,()=>state.load(),{deep:true})
-const mapListing=computed(()=>selectedListing.value||filteredListings.value[0]);const embedUrl=computed(()=>mapListing.value?mapUrl(mapListing.value.raw):'')
+const mapListing=computed(()=>selectedListing.value);
+const mapItems=computed(()=>requestedListing.value&&requestedListing.value.id===selectedId.value&&!state.items.some(p=>p.id===selectedId.value)?[...state.items,requestedListing.value.raw]:state.items);
+watch(()=>route.query.propertyId,async value=>{
+ const run=++selectionSequence;requestedListing.value=null;selectionError.value='';
+ if(!value){selectedId.value=null;ensureSelectedVisible();return}
+ const id=String(value);selectedId.value=id;showDetails.value=true;
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)){selectionError.value='Mã tin trên bản đồ không hợp lệ.';return}
+ try{const property=await api('/properties/'+encodeURIComponent(id),{authenticated:false});if(run!==selectionSequence)return;if(!isPublicProperty(property))throw Error();requestedListing.value=collectionProperty(property)}catch{if(run===selectionSequence)selectionError.value='Không tìm thấy tin công khai đang chọn; không thay bằng ghim của tin khác.'}
+},{immediate:true});
+onBeforeUnmount(()=>selectionSequence++);
+const embedUrl=computed(()=>mapListing.value?mapUrl(mapListing.value.raw):'')
 </script>
 
 <template>
@@ -604,7 +619,7 @@ const mapListing=computed(()=>selectedListing.value||filteredListings.value[0]);
         >
           <div class="relative h-[520px] overflow-hidden sm:h-[650px] lg:h-full">
 
-            <PropertyMap :items="state.items" :selected-id="selectedId" @select="selectListing" />
+            <PropertyMap :items="mapItems" :selected-id="selectedId" @select="selectListing" /><p v-if="selectionError" role="alert" class="absolute left-4 right-4 top-40 z-30 rounded-xl bg-white p-4 text-sm text-rose-800">{{selectionError}}</p>
 <!-- MAP TOP BAR -->
             <div class="pointer-events-none absolute left-4 right-4 top-4 z-20 flex flex-wrap items-start justify-between gap-3">
 
@@ -620,7 +635,7 @@ const mapListing=computed(()=>selectedListing.value||filteredListings.value[0]);
                 <p class="mt-1 text-[10px] text-white/55">
                   Vị trí theo tọa độ tin đăng
                 </p>
-                <a v-if="mapListing" :href="googlePointUrl(mapListing.latitude,mapListing.longitude)" target="_blank" rel="noopener noreferrer" class="mt-2 block text-xs text-[#6DD5E7] underline">Mở vị trí trên Google Maps ↗</a>
+                <a v-if="mapListing&&publicMapPoint(mapListing.raw)" :href="googlePointUrl(mapListing.latitude,mapListing.longitude)" target="_blank" rel="noopener noreferrer" class="mt-2 block text-xs text-[#6DD5E7] underline">Mở vị trí trên Google Maps ↗</a>
               </div>
 
               <span class="pointer-events-auto rounded-full border border-white/30 bg-white/95 px-4 py-2 text-[10px] font-semibold text-[#142B4F] shadow-lg">
@@ -696,6 +711,7 @@ const mapListing=computed(()=>selectedListing.value||filteredListings.value[0]);
                   <p class="mt-1 text-[10px] text-[#778394]">
                     {{ selectedListing.area }} m² ·
                     {{ selectedListing.location }}
+                    <span class="mt-1 block">{{locationLabel(selectedListing.raw)}}</span>
                   </p>
                 </div>
 

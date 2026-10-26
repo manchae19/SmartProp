@@ -34,6 +34,11 @@ management:
     probes.enabled: true
     group.readiness.include: readinessState,db
 app:
+  geocoding:
+    enabled: ${GEOCODING_ENABLED:false}
+    provider: ${GEOCODING_PROVIDER:GEOAPIFY}
+    geoapify-key: ${GEOAPIFY_API_KEY:}
+    google-key: ${GEOCODING_GOOGLE_API_KEY:}
   valuation:
     enabled: false
     base-url: http://127.0.0.1:8000

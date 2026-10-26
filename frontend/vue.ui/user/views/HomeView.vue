@@ -5,6 +5,10 @@ import {districts,districtValue,districtLink} from '../../src/services/districts
 import ListingCard from '../../src/components/business/ListingCard.vue'
 import {usePublicListings} from '../../src/services/usePublicListings.js'
 import ProjectDirectory from '../../src/components/ProjectDirectory.vue'
+import HomeAccountMenu from '../../src/components/HomeAccountMenu.vue'
+import HomeSectionNav from '../../src/components/HomeSectionNav.vue'
+import HeroBackground from '../../src/components/HeroBackground.vue'
+import MarketIntelligence from '../../src/components/MarketIntelligence.vue'
 import MarketSummary from '../../src/components/MarketSummary.vue'
 import {useList,LegacyState,LegacyPager,types} from '../../src/services/legacy.js'
 import {collectionProperty} from '../../src/services/collection.js'
@@ -12,7 +16,6 @@ const router=useRouter(),route=useRoute()
 
  
 
-const menuOpen = ref(false)
 
 const searchOpen = ref(false)
 
@@ -100,8 +103,6 @@ function resetFilters() {
 
 function scrollToSection(id) {
 
-  menuOpen.value = false
-
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
 }
@@ -112,8 +113,6 @@ function goToProperties() {
   if(filters.value.district!=='Tất cả'){activeArea.value=filters.value.district;filters.value.district='Tất cả'}
 
   searchOpen.value = false
-
-  menuOpen.value = false
 
   document
 
@@ -383,8 +382,6 @@ function handleEscape(event) {
 
     selectedProject.value = null
 
-    menuOpen.value = false
-
   }
 
 }
@@ -412,7 +409,7 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
 
 <template>
 
-  <div class="min-h-screen bg-[#F7F5F0] text-[#142B4F]">
+  <div class="sp-home min-h-screen bg-[#F7F5F0] text-[#142B4F]">
 
     <main>
 
@@ -429,23 +426,7 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
 
     >
 
-      <video
-
-        autoplay
-
-        muted
-
-        loop
-
-        playsinline
-
-        class="absolute inset-0 h-full w-full object-cover"
-
-      >
-
-        <source src="/background.mp4" type="video/mp4" />
-
-      </video>
+      <HeroBackground />
 
  
 
@@ -467,137 +448,14 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
 
  
 
-      <!-- NAV -->
-
+      <!-- Brand and account menu; section links live below the hero. -->
       <header class="relative z-30 mx-auto flex w-full max-w-[1360px] items-center justify-between px-6 py-7 md:px-10">
-
- 
-
-        <button
-
-          type="button"
-
-          @click="scrollToSection('home')"
-
-          class="flex items-center gap-3"
-
-        >
-
-          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/60 font-serif text-lg">
-
-            S
-
-          </span>
-
- 
-
-          <span class="text-xl font-semibold tracking-tight">
-
-            SmartProp<span class="text-[#D8B887]">.</span>
-
-          </span>
-
+        <button type="button" aria-label="Về đầu trang SmartProp" @click="scrollToSection('home')" class="flex cursor-pointer items-center gap-3 rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D8B887]">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-white/60 font-serif text-lg">S</span>
+          <span class="text-xl font-semibold tracking-tight">SmartProp<span class="text-[#D8B887]">.</span></span>
         </button>
-
- 
-
-        <nav class="hidden items-center gap-7 text-xs font-medium text-white/80 lg:flex">
-
-          <button @click="scrollToSection('projects')" class="transition hover:text-[#D8B887]">Dự án</button>
-
-          <button @click="scrollToSection('properties')" class="transition hover:text-[#D8B887]">Bất động sản</button>
-
-          <button @click="scrollToSection('gis')" class="transition hover:text-[#D8B887]">GIS Explorer</button>
-
-          <button @click="scrollToSection('valuation')" class="transition hover:text-[#D8B887]">Định giá</button>
-
-          <button @click="scrollToSection('investment')" class="transition hover:text-[#D8B887]">Tài chính</button>
-
-        </nav>
-
- 
-
-        <div class="hidden items-center gap-3 lg:flex">
-
-          <RouterLink :to="areaLink('/listings')" class="hidden text-xs font-semibold hover:text-[#D8B887] xl:inline">Danh sách</RouterLink>
-
-          <RouterLink to="/map" class="hidden text-xs font-semibold hover:text-[#D8B887] xl:inline">Bản đồ</RouterLink>
-
-          <RouterLink to="/account" class="text-xs font-semibold hover:text-[#D8B887]">
-
-            Tài khoản
-
-          </RouterLink>
-
- 
-
-          <RouterLink
-
-            to="/post"
-
-            class="rounded-full border border-white/50 px-6 py-3 text-xs font-semibold transition hover:bg-white hover:text-[#142B4F]"
-
-          >
-
-            Đăng tin ↗
-
-          </RouterLink>
-
-        </div>
-
- 
-
-        <button
-
-          type="button"
-
-          aria-label="Mở menu"
-
-          @click="menuOpen = !menuOpen"
-
-          class="flex h-10 w-10 items-center justify-center rounded-full border border-white/50 lg:hidden"
-
-        >
-
-          ☰
-
-        </button>
-
+        <HomeAccountMenu :district="districtValue(activeArea !== 'Tất cả' ? activeArea : filters.district)" />
       </header>
-
- 
-
-      <!-- MOBILE MENU -->
-
-      <div
-
-        v-if="menuOpen"
-
-        class="relative z-40 mx-5 grid gap-4 rounded-2xl border border-white/20 bg-[#142B4F]/95 p-6 text-sm lg:hidden"
-
-      >
-
-        <button @click="scrollToSection('projects')" class="text-left">Dự án</button>
-
-        <button @click="scrollToSection('properties')" class="text-left">Bất động sản</button>
-
-        <button @click="scrollToSection('gis')" class="text-left">GIS Explorer</button>
-
-        <button @click="scrollToSection('valuation')" class="text-left">Định giá</button>
-
-        <button @click="scrollToSection('investment')" class="text-left">Tài chính</button>
-
-        <RouterLink to="/map">Bản đồ GIS</RouterLink>
-
-        <RouterLink :to="areaLink('/listings')">Danh sách bất động sản</RouterLink>
-
-        <RouterLink to="/account">Tài khoản</RouterLink>
-
-        <RouterLink to="/post">Đăng tin</RouterLink>
-
-      </div>
-
- 
 
       <!-- HERO CONTENT -->
 
@@ -791,9 +649,11 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
 
  
 
+      <HomeSectionNav :district="districtValue(activeArea !== 'Tất cả' ? activeArea : filters.district)" />
+
       <!-- QUICK SEARCH -->
 
-      <section class="relative z-10 mx-auto -mt-4 max-w-6xl px-5">
+      <section class="relative z-10 mx-auto max-w-6xl px-5 pt-6">
 
         <div
 
@@ -890,6 +750,8 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
       </section>
 
  
+
+<MarketIntelligence />
 
 <MarketSummary :district="districtValue(activeArea!=='Tất cả'?activeArea:filters.district)" />
 
@@ -2853,6 +2715,10 @@ const areaLink=path=>districtLink(path,activeArea.value!=='Tất cả'?activeAre
  
 
 <style>
+.sp-home section[id] { scroll-margin-top: 88px; }
+@media (max-width: 639px) { .sp-home section[id] { scroll-margin-top: 80px; } }
+@media (prefers-reduced-motion: reduce) { .sp-home .sp-pulse { animation: none; } }
+
 
 .sp-tech-grid { background-image: linear-gradient(rgba(216,184,135,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(216,184,135,.22) 1px, transparent 1px); background-size: 68px 68px; mask-image: linear-gradient(to right, transparent, black 60%); }
 

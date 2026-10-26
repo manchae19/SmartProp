@@ -93,6 +93,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties/valuation-options").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/geocoding/search").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties","/api/v1/properties/*/submit","/api/v1/properties/*/images").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.PATCH,"/api/v1/properties/*","/api/v1/properties/*/images/*").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.PUT,"/api/v1/properties/*/images/order").hasAnyRole("BROKER","ADMIN")
