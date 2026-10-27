@@ -34,6 +34,8 @@ Máy hiện tại đã có runtime cục bộ. Terminal thứ ba tại gốc rep
 
 BE 8080 và MySQL demo riêng 13306, dữ liệu giữ tại `backend/var/local-demo/`. Đăng ký/đăng nhập rồi quay lại `/valuation` để lưu kết quả. Launcher không dùng database nguồn hoặc `.env`. Máy mới cần JDK 21, Maven và MySQL ZIP. [Hướng dẫn và kiểm chứng lịch sử](docs/VALUATION_HISTORY.md).
 
+Nếu đăng nhập báo 502 hoặc launcher báo cổng đang được dùng, chạy `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-demo.py` để kiểm tra kết nối trước. Lệnh chỉ đọc, không dừng dịch vụ hoặc yêu cầu mật khẩu.
+
 ## Cấu trúc chính
 
 ```text

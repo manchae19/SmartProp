@@ -51,5 +51,7 @@ JPEG/PNG; bằng chứng nhận thêm PDF. Tối đa 10 MiB/tệp, 12 MiB/reques
 - GET `/actuator/health` và `/actuator/health/readiness` (gồm DB).
 - Suite mặc định là unit/MockMvc/config; thành công không thay thế persistence.
 - Từ gốc repo, chạy `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-history-mysql.py` để tạo MySQL/schema mới cổng 13317, AI riêng 18081 và kiểm tra JWT → model → lịch sử. Không ghi fixture vào database `smartprop` nguồn.
+- Thêm `--browser` để kiểm tra cả Vue trên trình duyệt với BE/MySQL/model thật. Cần thêm Node, dependencies frontend và hai cổng trống 18082/15174. [Luồng kiểm tra](../docs/VALUATION_HISTORY.md).
+- `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-demo.py` kiểm tra kết nối stack demo mặc định và proxy FE, không sửa database hoặc dừng dịch vụ; dùng khi gặp lỗi 502/cổng bận.
 
 Đây là bản tích hợp local, chưa triển khai server/domain thật. Database nguồn dùng quy trình migration/backup của nhóm; lịch sử yêu cầu áp dụng V13. Demo riêng đã có launcher giữ dữ liệu và dừng đúng tiến trình do nó tạo.

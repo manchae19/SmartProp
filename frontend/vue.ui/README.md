@@ -72,6 +72,7 @@ npm.cmd run test:e2e
 - `npm test`: 10 kiểm thử payload, loại bỏ trường không áp dụng/giá/ID, nhãn địa bàn có dấu, chặn tiêu đề tin, đơn vị giá, HTTP, timeout và hủy request.
 - E2E: 14 kiểm thử trên trình duyệt; 3 loại tài sản gọi API v6 thật qua proxy, cộng luồng đăng nhập/lưu/xóa và lỗi lịch sử. Lịch sử được mock trong trình duyệt; suite BE kiểm tra riêng với JWT/MySQL/model thật.
 - E2E tự chạy API tại cổng **18080** và Vite tại **15173**, không tái sử dụng dịch vụ đang chạy. Hai cổng này phải trống. Môi trường Python phải có dependencies theo `ai-services/requirements.txt`.
+- Kiểm tra toàn luồng lịch sử bằng BE/MySQL/model thật: từ gốc repo chạy `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-history-mysql.py --browser`. Suite riêng `e2e-live/` có ba kịch bản, dùng Vite 15174, BE 18082, AI 18081 và MySQL 13317 trong schema/datadir mới. Không chạy trực tiếp cấu hình live vào database cá nhân. [Chi tiết và giới hạn](../../docs/VALUATION_HISTORY.md).
 - Trên Windows, E2E mặc định dùng Edge có sẵn. Có thể đặt `$env:PLAYWRIGHT_CHANNEL='chrome'` nếu dùng Chrome. Trên Linux/macOS, chạy `npx playwright install chromium` trước lần kiểm thử đầu.
 - `test-results/`, `playwright-report/`, `node_modules/`, `dist/` được bỏ qua khỏi Git.
 
@@ -79,4 +80,8 @@ Ngày 23/10/2026: build thành công; **7 kiểm thử FE, 10 kiểm thử trìn
 
 Ngày 26/10/2026: sửa nhãn địa bàn và chặn mã bị tách từ tiêu đề; **19 kiểm thử API, 10 kiểm thử FE và 12 E2E đạt**, 299 dự đoán cũ và giá của case Hòa Xuân trong ảnh vẫn giữ nguyên.
 
+Ngày 27/10/2026: **3 kịch bản `e2e-live` đạt** qua Vue → BE → MySQL/model thật, gồm đủ ba loại tài sản, lịch sử sau đăng nhập lại, quyền sở hữu và thu hồi phiên. Không giả lập phản hồi API trong suite này. Harness cũng chạy đạt 13 kiểm thử BE; 10 kiểm thử FE và build đạt. Suite E2E thường 14 kịch bản là kết quả đã chốt trước đó, không cộng chung hoặc gọi cả hai suite là cùng một lần chạy.
+
 Giới hạn chất lượng model xem [MODEL_V6.md](../../docs/MODEL_V6.md). Kết quả là **giá rao ước tính để tham khảo**, chưa phải giá giao dịch hoặc thẩm định thực địa.
+
+Khi đăng nhập báo 502, từ gốc repo chạy `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-demo.py` để kiểm tra riêng BE/MySQL và các proxy. Công cụ chỉ đọc, không hỏi mật khẩu hoặc dừng tiến trình đang chiếm cổng.

@@ -1,6 +1,13 @@
-import json,os,re,signal,socket,subprocess,time,uuid
+import argparse,json,os,re,signal,socket,subprocess,time,uuid
 from pathlib import Path
+parser=argparse.ArgumentParser(description='Check valuation history only against a new isolated MySQL schema.')
+parser.add_argument('--browser',action='store_true',help='Also run Vue browser tests against the real backend and v6 model.')
+options=parser.parse_args()
 root=Path(__file__).resolve().parents[2]
+for checked_port in ([13317,18081,18082,15174] if options.browser else [13317,18081]):
+    with socket.socket() as probe:
+        try:probe.bind(('127.0.0.1',checked_port))
+        except OSError:raise SystemExit(f'Port {checked_port} is in use; leave its process running and stop this check.')
 runtime_path=root/'.scratch/devtools/runtime.json'
 runtime=json.loads(runtime_path.read_text(encoding='utf-8')) if runtime_path.exists() else {}
 for key, variable in [('jdk','JAVA_HOME'),('maven','MAVEN_HOME'),('mysql','SMARTPROP_MYSQL_HOME')]:
@@ -47,12 +54,16 @@ try:
     else:raise RuntimeError('Isolated AI did not become ready')
     env=os.environ.copy();env['JAVA_HOME']=runtime['jdk'];env['SMARTPROP_HISTORY_TEST_URL']=f'jdbc:mysql://127.0.0.1:{port}/{schema}?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false';env['SMARTPROP_HISTORY_AI_URL']=f'http://127.0.0.1:{ai_port}'
     maven=Path(runtime['maven']);launcher=next((maven/'boot').glob('plexus-classworlds-*.jar'))
-    command=[str(Path(runtime['jdk'])/'bin/java.exe'),f'-Dmaven.home={maven}',f'-Dclassworlds.conf={maven}/bin/m2.conf',f'-Dmaven.multiModuleProjectDirectory={root}/backend',f'-Dmaven.repo.local={root}/.scratch/m2','-classpath',str(launcher),'org.codehaus.plexus.classworlds.launcher.Launcher','-B','-ntp','-f',str(root/'backend/pom.xml'),'-DforkCount=0','test']
+    command=[str(Path(runtime['jdk'])/'bin/java.exe'),f'-Dmaven.home={maven}',f'-Dclassworlds.conf={maven}/bin/m2.conf',f'-Dmaven.multiModuleProjectDirectory={root}/backend',f'-Dmaven.repo.local={root}/.scratch/m2','-classpath',str(launcher),'org.codehaus.plexus.classworlds.launcher.Launcher','-B','-ntp','-f',str(root/'backend/pom.xml'),'-DforkCount=0','package' if options.browser else 'test']
     with (work/'maven.log').open('w',encoding='utf-8') as log:
         result=subprocess.run(command,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
     print((work/'maven.log').read_text(encoding='utf-8')[-5000:],flush=True)
     if result.returncode:raise RuntimeError('BE tests failed; see '+str(work/'maven.log'))
-    (root/'.scratch/history-mysql-verification.json').write_text(json.dumps({'passed':True,'mysql':'8.4.13','migrations':len(migrations),'schema':schema,'port':port,'log':str(work/'maven.log'),'test_server_pid':server.pid}),encoding='utf-8')
+    browser=None
+    if options.browser:
+        from browser_history_check import run_browser_check
+        browser=run_browser_check(root,runtime,env,work,ai_port)
+    (root/'.scratch/history-mysql-verification.json').write_text(json.dumps({'passed':True,'mysql':'8.4.13','migrations':len(migrations),'schema':schema,'port':port,'log':str(work/'maven.log'),'test_server_pid':server.pid,'browser':browser}),encoding='utf-8')
 finally:
     if ai is not None:
         ai_pid=re.search(r'\[PID (\d+)\]',(work/'ai.log').read_text(encoding='utf-8'))
