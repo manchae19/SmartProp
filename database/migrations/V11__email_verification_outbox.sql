@@ -1,0 +1,42 @@
+ALTER TABLE password_reset_tokens ADD COLUMN issued_token_version INT NULL;
+CREATE TABLE email_verification_tokens (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ email_snapshot VARCHAR(254) NOT NULL,
+ token_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ issued_token_version INT NOT NULL,
+ expires_at DATETIME(6) NOT NULL,
+ consumed_at DATETIME(6),
+ created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+ UNIQUE KEY uq_email_verification_hash(token_hash),
+ KEY ix_email_verification_user(user_id,created_at),
+ CONSTRAINT fk_email_verification_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE mail_outbox (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ purpose VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ verification_token_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+ password_reset_token_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+ recipient_email VARCHAR(254) NOT NULL,
+ payload_ciphertext BLOB,
+ nonce BINARY(12),
+ key_id VARCHAR(50) NOT NULL,
+ status VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'PENDING',
+ attempts SMALLINT NOT NULL DEFAULT 0,
+ available_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+ created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+ updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+ lease_until DATETIME(6),
+ lease_token CHAR(36) CHARACTER SET ascii COLLATE ascii_bin,
+ sent_at DATETIME(6),
+ last_error_code VARCHAR(50),
+ CONSTRAINT fk_mail_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+ CONSTRAINT fk_mail_verify FOREIGN KEY(verification_token_id) REFERENCES email_verification_tokens(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+ CONSTRAINT fk_mail_reset FOREIGN KEY(password_reset_token_id) REFERENCES password_reset_tokens(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+ CONSTRAINT ck_mail_purpose CHECK((purpose='EMAIL_VERIFICATION' AND verification_token_id IS NOT NULL AND password_reset_token_id IS NULL) OR (purpose='PASSWORD_RESET' AND password_reset_token_id IS NOT NULL AND verification_token_id IS NULL)),
+ CONSTRAINT ck_mail_status CHECK(status IN ('PENDING','PROCESSING','SENT','FAILED','CANCELLED')),
+ CONSTRAINT ck_mail_attempts CHECK(attempts>=0),
+ KEY ix_mail_delivery(status,available_at),
+ KEY ix_mail_user(user_id,created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

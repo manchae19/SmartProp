@@ -1,6 +1,7 @@
 <script setup>
 
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import ValuationPanel from '../../src/components/ValuationPanel.vue'
 
  
 
@@ -573,34 +574,6 @@ const visibleAmenities = computed(() =>
     ? amenities
 
     : amenities.filter((a) => a.name === amenityType.value)
-
-)
-
- 
-
-const valuation = ref({
-
-  area: 80,
-
-  unitPrice: 45,
-
-  adjustment: 0,
-
-})
-
- 
-
-const estimatedValue = computed(
-
-  () =>
-
-    (Number(valuation.value.area || 0) *
-
-      Number(valuation.value.unitPrice || 0) *
-
-      (1 + Number(valuation.value.adjustment || 0) / 100)) /
-
-    1000
 
 )
 
@@ -2317,162 +2290,22 @@ const marketChart = computed(() => {
  
 
       <!-- VALUATION -->
-
       <section id="valuation" class="bg-[#EEEAE2] py-24">
-
-        <div
-
-          class="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-2 lg:px-8"
-
-        >
-
+        <div class="mx-auto grid max-w-7xl items-start gap-12 px-5 lg:grid-cols-2 lg:px-8">
           <div>
-
-            <p
-
-              class="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]"
-
-            >
-
-              Property Valuation
-
-            </p>
-
+            <p class="mb-4 text-xs font-bold uppercase tracking-[0.3em] text-[#B3915F]">Property Valuation</p>
             <h2 class="text-4xl font-semibold leading-tight md:text-5xl">
-
-              Định giá với
-
-              <span class="text-[#B3915F]">góc nhìn dữ liệu.</span>
-
+              Định giá với <span class="text-[#B3915F]">góc nhìn dữ liệu.</span>
             </h2>
-
             <p class="mt-6 max-w-xl leading-8 text-[#637083]">
-
-              Ước tính giá trị bất động sản từ diện tích, đơn giá tham
-
-              khảo và hệ số điều chỉnh. Kết quả chỉ là phép tính, chưa
-
-              phải định giá AI dựa trên giao dịch thực tế.
-
+              Tham khảo tổng giá rao từ mô hình XGBoost v6, dựa trên diện tích,
+              địa bàn và các thông tin bất động sản bạn cung cấp.
             </p>
-
+            <RouterLink to="/valuation" class="inline-block mt-6 text-sm font-semibold underline underline-offset-4">Mở trang ước tính giá →</RouterLink>
           </div>
-
- 
-
-          <div class="rounded-3xl bg-white p-7 shadow-xl md:p-9">
-
-            <h3 class="text-xl font-bold">Ước tính giá trị bất động sản</h3>
-
- 
-
-            <div class="mt-7 space-y-5">
-
-              <label class="block">
-
-                <span class="mb-2 block text-sm font-semibold">
-
-                  Diện tích (m²)
-
-                </span>
-
-                <input
-
-                  v-model.number="valuation.area"
-
-                  type="number"
-
-                  min="1"
-
-                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
-
-                />
-
-              </label>
-
- 
-
-              <label class="block">
-
-                <span class="mb-2 block text-sm font-semibold">
-
-                  Đơn giá tham khảo (triệu/m²)
-
-                </span>
-
-                <input
-
-                  v-model.number="valuation.unitPrice"
-
-                  type="number"
-
-                  min="0"
-
-                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
-
-                />
-
-              </label>
-
- 
-
-              <label class="block">
-
-                <span class="mb-2 block text-sm font-semibold">
-
-                  Điều chỉnh (%)
-
-                </span>
-
-                <input
-
-                  v-model.number="valuation.adjustment"
-
-                  type="number"
-
-                  min="-90"
-
-                  max="100"
-
-                  class="w-full rounded-xl border border-[#E0D9CE] p-3"
-
-                />
-
-              </label>
-
-            </div>
-
- 
-
-            <div class="mt-7 rounded-2xl bg-[#142B4F] p-6 text-white">
-
-              <p class="text-sm text-white/60">
-
-                Giá trị ước tính
-
-              </p>
-
-              <p class="mt-3 text-4xl font-bold text-[#D8B887]">
-
-                {{ estimatedValue.toFixed(2) }} tỷ
-
-              </p>
-
-              <p class="mt-3 text-xs text-white/55">
-
-                Tính toán theo thông số người dùng nhập.
-
-              </p>
-
-            </div>
-
-          </div>
-
+          <ValuationPanel />
         </div>
-
       </section>
-
- 
 
       <!-- FINANCE -->
 

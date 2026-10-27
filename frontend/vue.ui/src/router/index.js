@@ -33,6 +33,12 @@ const routes = [
   // ================= USER =================
 
   {
+    path: '/valuation',
+    name: 'Valuation',
+    component: () => import('../../user/views/ValuationView.vue')
+  },
+
+  {
     path: '/home',
     name: 'Home',
     component: HomeView

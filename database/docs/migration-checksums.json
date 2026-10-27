@@ -1,0 +1,9 @@
+{
+  "V1__accounts_and_sessions.sql": "043da87be02939e384eafb7435495de391d09ec5348998d3cb7fd6f52532119c",
+  "V2__extend_accounts_and_roles.sql": "515fff1d5345fc4e517bd8100f271721bd6b08a143a5e982182393790ba4d793",
+  "V3__properties_images_and_spatial.sql": "81a99eca1e67f4c0c869a0d4f57175e9c70ef2cf1ca40b4475af318aa3fec192",
+  "V4__datasets_and_model_governance.sql": "db08b87b38a21105472db469805e084dbfa266f05377b80f94e39327463b9b56",
+  "V5__ai_tasks_and_results.sql": "355ce2a94b255323ded47a9051bc2bf4c6860a8dde0537c83bcd663e53190640",
+  "V6__reports_moderation_and_audit.sql": "5960127241b74b6c960376d20b18d6eeb12bc24eb8243255c5e8acfa7ee978a8",
+  "V7__amenity_analysis_extension.sql": "35340020ea9c0e57d13d1eb1dacd2e6fa6d3911d4aeb23cb9bfa9662218e6438"
+}

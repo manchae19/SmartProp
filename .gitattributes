@@ -1,0 +1,16 @@
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# The pinned model loader checks raw SHA-256, so preserve these exact bytes.
+ai-services/artifacts/v6/** -text
+ai-services/app/data/training_v3_common.py -text
+ai-services/app/data/property_text_features_v6.py -text
+
+# Preserve migration bytes and their recorded checksums across Windows clones.
+database/migrations/*.sql -text

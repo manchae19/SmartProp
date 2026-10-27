@@ -1,0 +1,37 @@
+CREATE TABLE property_legal_documents (
+  id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+  property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  uploaded_by BIGINT NOT NULL,
+  document_type VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  document_number VARCHAR(150),
+  issue_date DATE,
+  owner_name VARCHAR(150) NOT NULL,
+  storage_key VARCHAR(512) NOT NULL,
+  original_filename VARCHAR(255),
+  mime_type VARCHAR(100) NOT NULL,
+  size_bytes BIGINT NOT NULL,
+  sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+  content_version INT NOT NULL DEFAULT 1,
+  status VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT 'PENDING',
+  reviewed_by BIGINT,
+  review_reason VARCHAR(4000),
+  reviewed_at DATETIME(6),
+  deleted_at DATETIME(6),
+  created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  updated_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  CONSTRAINT fk_legal_property FOREIGN KEY(property_id) REFERENCES properties(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_legal_uploader FOREIGN KEY(uploaded_by) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT fk_legal_reviewer FOREIGN KEY(reviewed_by) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT ck_legal_type CHECK(document_type IN ('LAND_USE_RIGHT','HOME_OWNERSHIP','SALE_CONTRACT','OTHER')),
+  CONSTRAINT ck_legal_status CHECK(status IN ('PENDING','VERIFIED','REJECTED')),
+  CONSTRAINT ck_legal_version CHECK(content_version > 0),
+  CONSTRAINT ck_legal_size CHECK(size_bytes BETWEEN 1 AND 10485760),
+  CONSTRAINT ck_legal_mime CHECK(mime_type IN ('image/jpeg','image/png','application/pdf')),
+  CONSTRAINT ck_legal_review CHECK(
+    (status='PENDING' AND reviewed_by IS NULL AND review_reason IS NULL AND reviewed_at IS NULL)
+    OR (status IN ('VERIFIED','REJECTED') AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL
+        AND review_reason IS NOT NULL AND CHAR_LENGTH(TRIM(review_reason)) > 0)),
+  UNIQUE KEY uq_legal_storage(storage_key),
+  KEY ix_legal_property(property_id,deleted_at,created_at,id),
+  KEY ix_legal_review(status,deleted_at,created_at,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

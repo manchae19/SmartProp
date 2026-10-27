@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import ValuationPanel from '../../src/components/ValuationPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -60,7 +61,7 @@ const listings = {
     status: 'Ảnh trùng 94%',
     hasWarning: true,
     pricePerM2: '≈ 52,7 triệu/m²',
-    valuation: '4,60 – 4,90 tỷ',
+    valuationInput: { category: 'Nhà ở', area_sqm: 92, location_feature: 'Hải Châu', rooms: 3, floors: 3, access_type: 'alley' },
     description1:
       'Nhà 3 tầng nằm trong khu dân cư yên tĩnh tại Hải Châu, đường trước nhà rộng, ô tô có thể di chuyển thuận tiện. Vị trí gần cầu Rồng, trung tâm thành phố và nhiều tiện ích xung quanh.',
     description2:
@@ -80,7 +81,7 @@ const listings = {
     status: 'Không cảnh báo',
     hasWarning: false,
     pricePerM2: '≈ 47,1 triệu/m²',
-    valuation: '3,00 – 3,35 tỷ',
+    valuationInput: { category: 'Căn hộ chung cư', area_sqm: 68, location_feature: 'Hải Châu', rooms: 2 },
     description1:
       'Căn hộ nằm tại khu vực Hải Châu, Đà Nẵng, có vị trí thuận tiện và tầm nhìn hướng về sông Hàn.',
     description2:
@@ -100,7 +101,7 @@ const listings = {
     status: 'Không cảnh báo',
     hasWarning: false,
     pricePerM2: '≈ 29,5 triệu/m²',
-    valuation: '2,80 – 3,10 tỷ',
+    valuationInput: { category: 'Đất nền', area_sqm: 100, location_feature: 'Cẩm Lệ', ward: 'Hoà Xuân' },
     description1:
       'Đất nền tại khu vực Hoà Xuân, Cẩm Lệ, Đà Nẵng. Khu vực dân cư phát triển, giao thông thuận tiện.',
     description2:
@@ -536,101 +537,7 @@ const goAccount = () => router.push('/account')
           </section>
 
           <!-- ==================== AI VALUATION ==================== -->
-
-          <section
-            class="bg-[#1E325A] text-white rounded-[24px] p-6 md:p-8 shadow-sm"
-          >
-            <div
-              class="flex flex-col md:flex-row md:items-center justify-between gap-6"
-            >
-              <div>
-                <p
-                  class="text-[11px] text-white/50 uppercase tracking-widest"
-                >
-                  Định giá tham chiếu
-                </p>
-
-                <h2 class="text-2xl font-semibold mt-2">
-                  {{ listing.valuation }}
-                </h2>
-
-                <p class="text-[11px] text-white/60 mt-2">
-                  Ước tính bằng mô hình XGBoost từ dữ liệu khu vực.
-                </p>
-              </div>
-
-              <div class="bg-white/10 rounded-2xl px-5 py-4">
-
-                <p class="text-[11px] text-white/60">
-                  Giá tin đăng
-                </p>
-
-                <p class="text-lg font-semibold mt-1">
-                  {{ listing.price }}
-                </p>
-
-                <p class="text-[11px] text-emerald-300 mt-1">
-                  Nằm trong khoảng hợp lý
-                </p>
-              </div>
-            </div>
-
-            <div class="mt-7 border-t border-white/10 pt-5">
-
-              <p class="text-xs font-medium mb-4">
-                Các yếu tố ảnh hưởng đến giá
-              </p>
-
-              <div class="space-y-3">
-
-                <div>
-                  <div
-                    class="flex justify-between text-[11px] text-white/60 mb-1"
-                  >
-                    <span>Vị trí trung tâm</span>
-                    <span>+12%</span>
-                  </div>
-
-                  <div class="h-1.5 bg-white/10 rounded-full">
-                    <div
-                      class="h-full w-[80%] bg-white/70 rounded-full"
-                    ></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    class="flex justify-between text-[11px] text-white/60 mb-1"
-                  >
-                    <span>Diện tích</span>
-                    <span>+8%</span>
-                  </div>
-
-                  <div class="h-1.5 bg-white/10 rounded-full">
-                    <div
-                      class="h-full w-[65%] bg-white/70 rounded-full"
-                    ></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    class="flex justify-between text-[11px] text-white/60 mb-1"
-                  >
-                    <span>Khoảng cách tiện ích</span>
-                    <span>+5%</span>
-                  </div>
-
-                  <div class="h-1.5 bg-white/10 rounded-full">
-                    <div
-                      class="h-full w-[45%] bg-white/70 rounded-full"
-                    ></div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </section>
+          <ValuationPanel :initial-input="listing.valuationInput" demo />
 
         </div>
 
