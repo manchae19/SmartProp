@@ -59,13 +59,15 @@ class FollowupCollectorTest(unittest.TestCase):
         job.OUT.parent.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=job.OUT.parent,prefix='followup-test-') as directory:
             output=Path(directory);args=['collector','--target','1','--output',str(output)]
+            history=output/'history.csv';history.write_text('record_key\nold:1\n',encoding='utf8')
+            pilot=output/'pilot';pilot.mkdir();(pilot/'records.jsonl').write_text('',encoding='utf8')
             atomic=job.common.atomic
             def interrupt(path,value):
                 if path.name=='checkpoint.json':raise KeyboardInterrupt()
                 atomic(path,value)
-            with patch('sys.argv',args),patch.object(job,'Client',FakeClient),patch.object(job,'history_keys',return_value={'old:1'}),patch.object(job,'listing',return_value=([row],set())),patch.object(job.common,'atomic',side_effect=interrupt):
+            with patch('sys.argv',args),patch.object(job,'Client',FakeClient),patch.object(job,'history_keys',return_value={'old:1'}),patch.object(job,'listing',return_value=([row],set())),patch.object(job.common,'atomic',side_effect=interrupt),patch.object(job.common,'HISTORY',history),patch.object(job.common,'OUT',pilot):
                 self.assertEqual(job.main(),1)
-            with patch('sys.argv',args),patch.object(job,'history_keys',return_value={'old:1'}),patch.object(job,'Client',side_effect=AssertionError('No request on completed resume')):
+            with patch('sys.argv',args),patch.object(job,'history_keys',return_value={'old:1'}),patch.object(job,'Client',side_effect=AssertionError('No request on completed resume')),patch.object(job.common,'HISTORY',history),patch.object(job.common,'OUT',pilot):
                 self.assertEqual(job.main(),0)
             self.assertEqual(len((output/'records.jsonl').read_text(encoding='utf8').splitlines()),1)
             self.assertFalse((output/'collector.lock').exists())

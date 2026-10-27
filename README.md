@@ -65,6 +65,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Đã rà soát tiếp 90 tin](docs/APARTMENT_FOLLOWUP.md): bổ sung 3 ứng viên, loại 10 tin khỏi phạm vi, còn 77 cần bằng chứng. Tập kiểm chứng mở rộng có 13 nhóm; chưa train v7.
 
+[Mở rộng sau review](docs/APARTMENT_EXTENSION.md): thêm 120 ID, khóa 24 nhóm và hoàn tất [thử nghiệm v7](docs/TRAINING_V7_TRIAL.md). Cải thiện nhỏ, giữ v6 trong ứng dụng; 24 nhóm đã chấm không dùng để tối ưu tiếp.
+
 ## Kiểm thử bản gọn
 
 ```powershell

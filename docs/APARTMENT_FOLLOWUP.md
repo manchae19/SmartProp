@@ -68,8 +68,14 @@ chứng, bản khóa 13 nhóm và checksum bản v6/các tập cũ; không gọi
 Quy tắc và bộ đọc có kiểm thử riêng cho các lỗi ngữ cảnh, mâu thuẫn thật,
 ngắt trước checkpoint, nghi trùng xuyên nguồn và bảo vệ nhóm đã khóa.
 
-Không cần chạy lại collector: đã đạt hạn mức 12 trang. Lệnh cùng policy sẽ
-không vượt hạn mức để cào tiếp. Đợt sau cần một nguồn/đợt tin thực sự chưa có;
+Không gọi lại entry point collector lịch sử: đã đạt hạn mức 12 trang và mã cũ
+có thể đổi metadata đã khóa. Xem trạng thái bằng lệnh chỉ đọc:
+
+```powershell
+.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/collect_apartment_extension.py --status nhadat
+```
+
+Đợt sau cần một nguồn/đợt tin thực sự chưa có;
 giữ nguyên 13 nhóm đã khóa và so trùng cả 8.611 ID hiện có. Các tin thiếu diện
 tích nhãn, giá mâu thuẫn hoặc bảng hàng phải có bằng chứng nguồn mới trước
 khi xét lại, không tự điền từ tiêu đề hoặc giá AI.

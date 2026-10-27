@@ -41,12 +41,11 @@ script, kiểm thử và báo cáo tổng hợp; không đưa nội dung ngườ
 
 ## Chạy và kiểm chứng
 
-Từ `F:\SmartProp`, nếu lô còn dở, cùng lệnh tiếp tục từ checkpoint; đích là
-**100 tin tổng cộng trong lô**, không phải thêm 100 mỗi lần chạy. Mỗi lần duyệt
-tối đa 12 trang từ vị trí đã lưu. Hiện đã đủ 100, không cần cào lại.
+Lô này đã khóa. Chỉ kiểm tra trạng thái bằng lệnh chỉ đọc dưới đây. Không gọi
+lại entry point collector lịch sử: nó có thể đổi metadata ngay cả khi đã đủ tin.
 
 ```powershell
-.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/collect_apartment_pilot.py --target 100 --pages 12 --delay 3
+.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/collect_apartment_extension.py --status pilot
 ```
 
 Kiểm chứng lô đã khóa, hoàn toàn ngoại tuyến:
