@@ -61,6 +61,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Chuẩn bị dữ liệu lần train tiếp theo](docs/GEOSPATIAL_NEXT.md): đã xuất 2.213 train + 299 validation, cách ly một mã địa bàn sai. Chưa thay model demo; chưa có tọa độ tài sản được xác minh để train đặc trưng khoảng cách.
 
+[Lô thử 100 tin căn hộ mới](docs/APARTMENT_PILOT_100.md): 10 ứng viên khóa riêng để kiểm chứng, 90 tin cần rà soát. Chưa thêm vào train hoặc huấn luyện v7.
+
 ## Kiểm thử bản gọn
 
 ```powershell
