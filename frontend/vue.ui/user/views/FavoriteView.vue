@@ -49,47 +49,7 @@ function resetFilters() {
   <div class="sp-favorites min-h-screen bg-[#F7F5F0] text-[#142B4F]">
 
     <!-- HEADER -->
-    <header class="border-b border-[#E7E2D8] bg-[#F7F5F0]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-10">
-        <div class="flex items-center gap-5">
-          <RouterLink to="/home" class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#142B4F] font-bold text-white">
-              S
-            </span>
-            <span class="text-xl font-bold">
-              SmartProp<span class="text-[#C6A77A]">.</span>
-            </span>
-          </RouterLink>
 
-          <RouterLink to="/home" class="hidden text-xs text-[#8290A0] hover:text-[#142B4F] sm:block">
-            ← Trang chủ
-          </RouterLink>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <RouterLink
-            to="/listings"
-            class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] sm:block"
-          >
-            Khám phá tin đăng ↗
-          </RouterLink>
-
-          <RouterLink
-            to="/post"
-            class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] md:block"
-          >
-            Đăng tin
-          </RouterLink>
-
-          <RouterLink
-            to="/account"
-            class="rounded-full bg-[#142B4F] px-5 py-3 text-xs font-semibold text-white hover:bg-[#25466B]"
-          >
-            Tài khoản
-          </RouterLink>
-        </div>
-      </div>
-    </header>
 
     <!-- INTRO -->
     <section class="relative overflow-hidden border-b border-[#E7E2D8]">
@@ -172,7 +132,7 @@ function resetFilters() {
     </section>
 
     <!-- COLLECTION -->
-    <main class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
+    <div class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
 <LegacyState :state="state" /><p v-if="state.summaryError" role="alert">{{state.summaryError}} <button @click="state.loadSummary">Tải lại thống kê</button></p><p class="mb-4 text-xs text-[#87919F]">{{state.totalElements}} kết quả · kết quả đã lọc toàn bộ danh mục.</p>
 
       <div class="flex flex-wrap items-end justify-between gap-5">
@@ -421,24 +381,10 @@ function resetFilters() {
         Tin đăng và trạng thái được tải từ hệ thống.
         Danh sách yêu thích được lưu theo tài khoản của bạn.
       </p>
-    <LegacyPager :state="state" /></main>
+    <LegacyPager :state="state" /></div>
 
     <!-- FOOTER -->
-    <footer class="border-t border-[#E7E2D8]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-7 md:px-10">
-        <RouterLink to="/home" class="text-lg font-bold">
-          SmartProp<span class="text-[#C6A77A]">.</span>
-        </RouterLink>
 
-        <p class="text-[11px] text-[#87919F]">
-          © 2026 SmartProp · Favorites 2.0
-        </p>
-
-        <RouterLink to="/home" class="text-xs text-[#64748B]">
-          Về trang chủ ↗
-        </RouterLink>
-      </div>
-    </footer>
   </div>
 </template>
 

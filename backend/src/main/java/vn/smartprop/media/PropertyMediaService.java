@@ -16,7 +16,7 @@ public class PropertyMediaService {
     public record Order(@NotNull @Positive Integer expectedVersion,@NotNull @Size(min=1,max=30) List<@NotBlank String> imageIds) {}
     private final PropertyService properties;private final PropertyRepository repository;private final PropertyImageRepository images;private final LocalFileStore files;private final AccountAccess access;
     public PropertyMediaService(PropertyService properties,PropertyRepository repository,PropertyImageRepository images,LocalFileStore files,AccountAccess access) {this.properties=properties;this.repository=repository;this.images=images;this.files=files;this.access=access;}
-    private Property editable(Long actor,String id) {access.publisher(actor);Property p=properties.owned(actor,id);if(p.status==Property.Status.HIDDEN)throw ApiInputs.conflict("Tin bị ẩn không thể sửa ảnh");return p;}
+    private Property editable(Long actor,String id) {access.publisherForUpdate(actor);Property p=properties.owned(actor,id);if(p.status==Property.Status.HIDDEN)throw ApiInputs.conflict("Tin bị ẩn không thể sửa ảnh");return p;}
     private void draft(Property p) {p.status=Property.Status.DRAFT;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;}
     private PropertyDtos.Managed result(Property p) {repository.saveAndFlush(p);return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
     @Transactional public PropertyDtos.Managed upload(Long actor,String propertyId,int version,MultipartFile input) {

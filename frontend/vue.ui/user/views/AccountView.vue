@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import BrokerApplicationCard from '../../src/components/BrokerApplicationCard.vue'
 import { useRouter } from 'vue-router'
+import { canPublish } from '../../src/services/siteNavigation.js'
 import { api, loadProfile, logout as revokeSession, clearSession, session, errorText } from '../../src/services/api'
 const router = useRouter()
 const fullName = ref(''), phone = ref(''), email = ref(''), district = ref(''), address = ref('')
@@ -14,7 +16,7 @@ function fill(user) {
   phone.value = user.phone || ''; district.value = user.district || ''; address.value = user.address || ''
 }
 onMounted(async () => {
-  try { fill(await loadProfile()); const prefs=await api('/users/me/notification-preferences'); notification1.value=prefs.matchingListings; notification2.value=prefs.brokerMessages; notification3.value=prefs.statusUpdates; loaded.value = true }
+  try { fill(session.user || await loadProfile()); const prefs=await api('/users/me/notification-preferences'); notification1.value=prefs.matchingListings; notification2.value=prefs.brokerMessages; notification3.value=prefs.statusUpdates; loaded.value = true }
   catch (error) { message.value = errorText(error) }
   finally { busy.value = false }
 })
@@ -53,60 +55,10 @@ const resetProfile = () => { if (session.user) fill(session.user) }
   <div class="min-h-screen bg-[#e9e7e1] text-[#1E325A]">
 
     <!-- ==================== HEADER ==================== -->
-    <header class="max-w-[1400px] mx-auto px-8 pt-5">
-      <div
-        class="h-[70px] border-b border-[#1E325A] flex items-center justify-between"
-      >
-        <!-- LEFT -->
-        <div class="flex items-center gap-8">
-          <button
-            @click="router.push('/home')"
-            class="flex items-center gap-3"
-          >
-            <div
-              class="w-8 h-8 rounded-lg bg-[#1E325A] text-white flex items-center justify-center font-bold text-sm"
-            >
-              S
-            </div>
 
-            <span class="font-semibold">
-              SmartProp
-            </span>
-          </button>
-
-          <span class="text-gray-300">
-            •
-          </span>
-
-          <button
-            @click="router.push('/home')"
-            class="text-xs text-gray-500 hover:text-[#1E325A] transition"
-          >
-            &lt; Trang chủ
-          </button>
-        </div>
-
-        <!-- RIGHT -->
-        <div class="flex items-center gap-3">
-          <button
-            @click="router.push('/post')"
-            class="px-5 py-2 bg-white border border-gray-200 rounded-full text-xs text-gray-500 hover:bg-gray-50"
-          >
-            Đăng tin
-          </button>
-
-          <button
-            :disabled="busy" @click="logout"
-            class="px-5 py-2 bg-[#1E325A] text-white rounded-full text-xs hover:bg-[#263f70] transition"
-          >
-            Đăng xuất
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- ==================== PAGE ==================== -->
-    <main class="max-w-[1400px] mx-auto px-8 pt-7 pb-16">
+    <div class="max-w-[1400px] mx-auto px-8 pt-7 pb-16">
 
       <p v-if="message" role="status" aria-live="polite">{{ message }}</p><p v-if="busy">Đang xử lý…</p><!-- TITLE -->
       <div class="mb-5">
@@ -118,6 +70,8 @@ const resetProfile = () => { if (session.user) fill(session.user) }
           Quản lý thông tin tài khoản, bảo mật đăng nhập và tùy chọn thông báo.
         </p>
       </div>
+
+      <BrokerApplicationCard class="mb-5" />
 
       <!-- ==================== MAIN GRID ==================== -->
       <div
@@ -165,66 +119,11 @@ const resetProfile = () => { if (session.user) fill(session.user) }
             </div>
           </section>
 
-          <!-- ==================== STATS ==================== -->
-          <section
-            class="bg-white/90 rounded-[22px] p-4 grid grid-cols-3 shadow-sm"
-          >
-
-            <!-- TIN ĐÃ ĐĂNG -->
-            <RouterLink
-              to="/my-listing"
-              class="group min-w-0 h-[90px] flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all duration-200 hover:bg-[#1E325A]/10"
-            >
-              <div
-                class="text-lg font-medium text-[#1E325A]"
-              >
-                2
-              </div>
-
-              <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
-              >
-                Tin đã đăng
-              </div>
-            </RouterLink>
-
-            <!-- YÊU THÍCH -->
-            <RouterLink
-              to="/favorites"
-              class="group min-w-0 h-[90px] flex flex-col items-center justify-center rounded-xl cursor-pointer transition-all duration-200 hover:bg-[#1E325A]/10"
-            >
-              <div
-                class="text-lg font-medium text-[#1E325A]"
-              >
-                8
-              </div>
-
-              <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4 group-hover:text-[#1E325A] transition-colors duration-200"
-              >
-                Yêu thích
-              </div>
-            </RouterLink>
-
-            <!-- LƯỢT XEM HỒ SƠ -->
-            <div
-              class="min-w-0 h-[90px] flex flex-col items-center justify-center rounded-xl"
-            >
-              <div
-                class="text-lg font-medium text-[#1E325A]"
-              >
-                14
-              </div>
-
-              <div
-                class="text-[9px] text-gray-400 mt-1 text-center leading-4"
-              >
-                Lượt xem hồ sơ
-              </div>
-            </div>
-
+          <section aria-label="Truy cập nhanh" class="rounded-panel border border-brand-line bg-white p-4">
+            <h2 class="mb-3 text-sm font-semibold">Truy cập nhanh</h2>
+            <RouterLink v-if="canPublish(session.user)" to="/my-listing" class="block rounded-control p-3 text-sm hover:bg-brand-surface">Tin đăng của tôi ↗</RouterLink>
+            <RouterLink to="/favorites" class="block rounded-control p-3 text-sm hover:bg-brand-surface">Tin đã lưu ↗</RouterLink>
           </section>
-
           <!-- ==================== MY REPORTS ==================== -->
           <RouterLink
             to="/account/reports"
@@ -265,28 +164,7 @@ const resetProfile = () => { if (session.user) fill(session.user) }
             </span>
           </RouterLink>
 
-          <!-- ==================== AGENT ==================== -->
-          <section
-            class="bg-[#eadfd2] border border-[#d9c3ad] rounded-[22px] p-6"
-          >
-            <h3
-              class="text-sm font-medium text-[#9c4e2e]"
-            >
-              Bạn là môi giới hoặc chủ nhà?
-            </h3>
 
-            <p
-              class="text-[10px] text-[#a7745d] mt-3 leading-relaxed"
-            >
-              Nâng cấp lên tài khoản Môi giới để đăng tin, quản lý danh sách
-              bất động sản và nhận thêm công cụ hỗ trợ.
-            </p>
-
-            <button disabled title="Chức năng nâng cấp chưa hỗ trợ ở mốc 1" class="mt-7 bg-[#c9683c] hover:bg-[#b95b32] text-white rounded-full px-5 py-2.5 text-[10px] transition"
-            >
-              Đăng ký tài khoản môi giới
-            </button>
-          </section>
 
         </aside>
 
@@ -617,6 +495,6 @@ const resetProfile = () => { if (session.user) fill(session.user) }
 
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </template>

@@ -64,7 +64,7 @@
               </div>
               
               <form class="form" @submit.prevent="handleSubmit">
-                <div v-if="!isLoginTab && !isForgotPassword" class="field"><label class="label">Vai trò</label><select v-model="role"><option value="BUYER">Người mua / người thuê</option><option value="BROKER">Chủ nhà / môi giới</option></select></div><div class="field" v-if="!isLoginTab && !isForgotPassword">
+                <p v-if="!isLoginTab && !isForgotPassword" class="text-sm leading-6">Tài khoản mới là người mua / người thuê. Bạn có thể đăng ký quyền đăng tin tại trang Tài khoản để quản trị viên xét duyệt.</p><div class="field" v-if="!isLoginTab && !isForgotPassword">
                   <label class="label" for="name-input">Họ và tên</label>
                   <div class="input-box">
                     <input 
@@ -120,6 +120,7 @@
                   </div>
                 </div>
                 
+                <label v-if="isLoginTab && !isForgotPassword" class="flex items-start gap-3 text-sm leading-6"><input v-model="rememberMe" type="checkbox" class="mt-1"/>Ghi nhớ đăng nhập trong 30 ngày</label><p v-if="isLoginTab && !isForgotPassword" class="text-xs leading-5 text-gray-500">Tài khoản quản trị áp dụng giới hạn phiên riêng, tối đa 8 giờ.</p>
                 <!-- Nút submit thay đổi chữ cho phù hợp màn hình quên mật khẩu -->
                 <button :disabled="busy" type="submit" class="submit-btn">
                   <span>{{ busy ? 'Đang xử lý…' : (isForgotPassword ? 'Gửi liên kết đặt lại ↗' : (isLoginTab ? 'Đăng nhập' : 'Đăng ký')) }}</span>
@@ -151,7 +152,7 @@ const props = defineProps({ initialRegister: Boolean })
 const isLoginTab = ref(!props.initialRegister)
 const isForgotPassword = ref(false)
 const fullName = ref(''), email = ref(''), password = ref(''), confirmPassword = ref('')
-const role = ref('BUYER'), busy = ref(false), message = ref('')
+const busy = ref(false), message = ref(''), rememberMe=ref(false)
 const route = useRoute()
 const reasons = {
   'password-changed': 'Đổi mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.',
@@ -169,11 +170,11 @@ const handleSubmit = async () => {
   busy.value = true
   try {
     if (isLoginTab.value) {
-      const user = await login(email.value, password.value)
+      const user = await login(email.value, password.value, rememberMe.value)
       password.value = ''
       await router.push(user.role === 'ADMIN' ? '/admin' : '/home')
     } else {
-      await register({ fullName: fullName.value, email: email.value, password: password.value, role: role.value })
+      await register({ fullName: fullName.value, email: email.value, password: password.value, role: 'BUYER' })
       password.value = confirmPassword.value = ''
       isLoginTab.value = true
       message.value = 'Đăng ký thành công. Vui lòng đăng nhập.'

@@ -1,61 +1,59 @@
 # SmartProp
 
-Ứng dụng bất động sản sử dụng Java 21/Spring Boot, MySQL và Vue 3/Vite.
+Ứng dụng bất động sản sử dụng Java21/Spring Boot, MySQL8 và Vue3/Vite.
 
 ## Cấu trúc
 
-- backend/: REST API, phân quyền, tin đăng, ảnh, yêu thích, báo cáo, liên hệ, thông báo và các module mở rộng.
-- frontend/vue.ui/: ứng dụng Vue đang sử dụng; trang quản trị ở /admin/dashboard trong cùng ứng dụng.
-- database/migrations/: migration V1–V12; database/seeds/: dữ liệu seed tùy chọn.
-- ai-services/ và integrations/valuation-v6/: mã dịch vụ và model hiện có.
-- ops/: cấu hình triển khai và công cụ vận hành.
+- `backend/`: REST API, tài khoản/phân quyền, tin đăng, kiểm duyệt và tệp.
+- `frontend/vue.ui/`: ứng dụng người dùng và ADMIN, chung router; quản trị tại `/admin/dashboard`.
+- `database/`: migration V1–V13, schema tham chiếu và seed tùy chọn.
+- `ai-services/`, `integrations/valuation-v6/`: dịch vụ/model hiện có, cấu hình riêng.
+- `ops/`: cấu hình triển khai HTTPS/service và hướng dẫn backup/restore.
 
 ## Chạy Backend
 
-Cần JDK 21, MySQL và database được chuẩn bị đúng schema. Điền cấu hình riêng trong .env từ .env.example; không đưa mật khẩu hoặc JWT secret lên Git.
+Cần JDK21, MySQL và schema đã được người quản trị chuẩn bị. Tạo `.env` ở root theo `.env.example`; không ghi đè cấu hình riêng đang dùng hoặc đưa secrets lên Git.
 
-PowerShell tại backend/:
+Tại `backend/`:
 
-~~~powershell
+```powershell
 .\mvnw.cmd -B -Dmaven.test.skip=true package
 .\scripts\run-local.ps1 -Transport NIO2
-~~~
+```
 
-Nếu Maven đã được cache, có thể dùng .\scripts\run-maven.ps1 thay wrapper. Backend mặc định ở http://localhost:8080. Các script chạy local giữ Flyway/SQL init/seed tắt; không tự thay database. Không sửa migration đã áp dụng. Những module cần V8–V12 chỉ được bật sau khi schema/cấu hình được người quản trị duyệt.
+Nếu Maven đã cache, có thể dùng `scripts/run-maven.ps1`. Dừng Backend trước khi package nếu Windows khóa JAR. API ở `http://127.0.0.1:8080/api/v1`; health ở `/actuator/health`.
+
+Launcher tắt Flyway, SQL init và seed; Hibernate chỉ validate. Đóng gói không tự chạy migration. Không sửa migration đã áp dụng hoặc reset DB để khởi động app. Tính năng mở rộng chỉ bật khi schema/cấu hình đã được kiểm tra và phê duyệt.
 
 ## Chạy Frontend
 
-PowerShell tại frontend/vue.ui/:
+Tại `frontend/vue.ui/`:
 
-~~~powershell
+```powershell
 npm ci
-npm run dev -- --host 127.0.0.1 --port 5173
-~~~
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
 
-Mở http://127.0.0.1:5173. Build bằng npm run build. API base, Google Maps và refresh opt-in xem .env.example trong thư mục FE. Không đưa secret Backend vào biến VITE_.
+Mở `http://127.0.0.1:5173`, build bằng `npm run build`. Dev proxy chuyển `/api` về Backend loopback8080; production cần reverse proxy cùng domain. Cấu hình riêng trong `.env.local` theo `.env.example`; không đặt secrets Backend vào biến `VITE_`.
 
-## Vận hành
+## Tài khoản và đăng tin
 
-Giữ database MySQL, backend/var/uploads và các bản backup riêng ngoài Git. Script backup-local.ps1 và audit-storage.ps1 nằm trong backend/scripts/. Cấu hình deployment mẫu ở ops/; cần điều chỉnh domain, HTTPS và secrets trước khi triển khai.
+Đăng ký tạo BUYER. Người dùng xin quyền đăng tin ở Account; ADMIN xét duyệt riêng qua `/admin/broker-applications`. BROKER ACTIVE/ADMIN đăng tin theo quyền Backend, mỗi tin đi qua `DRAFT → PENDING → PUBLISHED`. Public chỉ thấy tin hợp lệ được duyệt.
 
-Đợt dọn repository đã bỏ tài liệu báo cáo, source test Backend/Frontend và kết quả UI test. Các thay đổi nghiệp vụ trước đó vẫn được giữ; đợt dọn chỉ kiểm tra build, không chạy lại test đã xóa.
+Đăng ký quyền đăng tin cần V13 và `BROKER_APPLICATIONS_ENABLED=true` sau khi schema/rollout được phê duyệt; cấu hình mẫu giữ tính năng tắt.
 
-## Đăng bán / cho thuê
+Wizard ba bước: thông tin/giá → ảnh/vị trí → mô tả/liên hệ. Vị trí phải xác nhận; sửa địa chỉ yêu cầu xác nhận lại. OSM hỗ trợ ghim thủ công; Google/Geoapify cần key/cấu hình riêng. API trống/lỗi không thay bằng tin giả.
 
-Luồng /post có 3 bước: thông tin & giá → ảnh & vị trí → mô tả & liên hệ. Lưu nháp tài khoản cần đủ các trường Backend bắt buộc và ghim đã xác nhận; gửi duyệt cần ít nhất một ảnh. Nháp chưa lưu server được ghi rõ là nháp trình duyệt, tách theo tài khoản và mã tin. Ảnh chưa tải chỉ được giữ trong tab; tải lại trang cần chọn lại các ảnh đó.
+Home V3, Listings và Map dùng điều hướng/bộ lọc chung; giữ so sánh, bản đồ và công cụ tài chính. Biểu đồ mô phỏng có nhãn, tách khỏi thống kê API thực. Ảnh/video Home nằm trong `frontend/vue.ui/public/`.
 
-Chưa có Google key vẫn chọn được ghim thủ công qua bản đồ OpenStreetMap. Đặt VITE_OSM_TILE_URL khi dùng tile provider khác và tuân thủ attribution/cache của provider. Không có ảnh bản đồ thì không tự gán vị trí.
+## Đăng nhập bền vững
 
-Để dùng gợi ý Google, đặt VITE_GOOGLE_MAPS_API_KEY và VITE_GOOGLE_MAPS_MAP_ID trong frontend/vue.ui/.env.local rồi khởi động lại Vite. Owner cần chuẩn bị Maps JavaScript API và Places API (New), giới hạn browser key theo HTTP referrer và đúng API; không gửi key vào chat/Git. Task không tự bật API hoặc billing. Gợi ý Places chỉ hiện trên Google trong phiên; không serialize toàn bộ Place, địa chỉ gợi ý hoặc tọa độ gợi ý vào nháp. Người đăng nhập địa chỉ của mình, chủ động đặt/kéo ghim rồi xác nhận vị trí. Không dùng kết quả Google làm cache lâu dài hoặc chuyển gợi ý Google sang bản đồ khác.
+Sau khi kiểm tra V10 và CORS/origin, bật root `.env`: `REFRESH_ENABLED=true`, `ACCESS_TOKEN_MINUTES=15`. FE `.env.local`: `VITE_ENABLE_REFRESH=true`, `VITE_API_BASE_URL=/api/v1`. Khởi động lại Backend/Vite và đăng nhập lại một lần để nhận cookie.
 
-Khi thay địa chỉ/phường/quận/thành phố, ghim cũ bị xóa và cần xác nhận lại. Nếu mất phản hồi tạo tin/tải ảnh, dùng nút Đối chiếu kết quả; hệ thống không tự tạo thêm tin hoặc tải lặp trong lúc chưa xác định được kết quả.
+Access token ở memory, refresh cookie HttpOnly. BUYER/BROKER có phiên7ngày hoặc30ngày khi chọn ghi nhớ; ADMIN tối đa8giờ, idle30phút. Local HTTP loopback dùng `REFRESH_SECURE_COOKIE=false`; HTTPS phải đặttrue. Giữ cùng hostname khi đăng nhập/F5.
 
-API giữ các trường số hiện có; response property có thêm priceExact/areaSqmExact dạng chuỗi để mở lại tin mà không làm tròn số thập phân lớn. Không đổi schema hoặc quy trình nháp → chờ duyệt → ADMIN phê duyệt.
+## Dữ liệu và vận hành
 
-## Tìm vị trí tự động (tùy chọn)
+MySQL lưu dữ liệu nghiệp vụ; ảnh/tài liệu ở `backend/var/uploads` hoặc `STORAGE_ROOT`. Giữ `.env`, uploads, backup, dependencies, build output và test/evidence local ngoài Git. Property Importer là công cụ độc lập, không thuộc bản source này.
 
-Wizard giữ bước xác nhận ghim trước khi lưu. Có API POST /api/v1/geocoding/search cho BROKER/ADMIN ACTIVE, giới hạn theo user/IP và ngân sách outbound. Mặc định GEOCODING_ENABLED=false; xem các biến cấu hình trống trong .env.example. Key Geoapify hoặc Google Geocoding chỉ đặt ở Backend, không dùng biến VITE_ và không đưa key lên Git.
-
-Geoapify hỗ trợ đề xuất trên OSM; người đăng phải đối chiếu vị trí và đồng ý công khai. Gợi ý Google chỉ xem trên Google Maps, không tự lưu vào tin hoặc chuyển sang OSM. Kết quả cấp đường/khu vực hoặc nội suy cần chỉnh ghim. Chính sách lưu vị trí tương đối/riêng tư đang chờ duyệt schema/API; chưa có migration mới cho phần này. Không tự bật billing, migration hoặc seed khi chạy.
-
-Home hiện tại có video/ảnh dự án local, biểu đồ ghi rõ mô phỏng, thống kê API riêng, điều hướng bám cuộn và thẻ giá rút gọn. Danh sách thay đổi giao diện để nhóm FE review nằm trong FRONTEND_CHANGES.md. Đây là mốc trước Home V3.
+Xem [Backend](backend/README.md), [Frontend](frontend/README.md), [Database](database/README.md), [vận hành/backup](ops/OPERATIONS.md).

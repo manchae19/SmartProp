@@ -34,6 +34,8 @@ management:
     probes.enabled: true
     group.readiness.include: readinessState,db
 app:
+  broker-applications:
+    enabled: ${BROKER_APPLICATIONS_ENABLED:false}
   geocoding:
     enabled: ${GEOCODING_ENABLED:false}
     provider: ${GEOCODING_PROVIDER:GEOAPIFY}
@@ -43,8 +45,8 @@ app:
     enabled: false
     base-url: http://127.0.0.1:8000
   refresh:
-    enabled: false
-    secure-cookie: true
+    enabled: ${REFRESH_ENABLED:false}
+    secure-cookie: ${REFRESH_SECURE_COOKIE:true}
   email:
     enabled: false
     worker-enabled: false
@@ -65,7 +67,7 @@ app:
   database-seed:
     enabled: false
   jwt-secret: ${JWT_SECRET}
-  token-minutes: 30
+  token-minutes: ${ACCESS_TOKEN_MINUTES:15}
   storage-root: ${STORAGE_ROOT:./var/uploads}
   cors-origins: ${CORS_ORIGINS:http://localhost:5173}
 

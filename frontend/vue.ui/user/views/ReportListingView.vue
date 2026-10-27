@@ -18,64 +18,11 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
 
     <!-- ================= HEADER ================= -->
 
-    <header class="max-w-[1400px] mx-auto px-6 md:px-10 pt-5">
-      <div
-        class="flex items-center justify-between border-b border-[#1E325A]/40 pb-4"
-      >
-        <!-- LEFT -->
-        <div class="flex items-center gap-5">
-          <button
-            @click="goHome"
-            class="flex items-center gap-2.5"
-          >
-            <div
-              class="w-7 h-7 rounded-lg bg-[#1E325A] text-white
-                     flex items-center justify-center text-xs font-bold"
-            >
-              S
-            </div>
 
-            <span class="font-semibold text-sm">
-              SmartProp
-            </span>
-          </button>
-
-          <div class="hidden sm:block w-px h-5 bg-[#1E325A]/20"></div>
-
-          <button
-            @click="goBack"
-            class="hidden sm:block text-xs text-gray-500
-                   hover:text-[#1E325A] transition"
-          >
-            ‹ Quay lại tin đăng
-          </button>
-        </div>
-
-        <!-- RIGHT -->
-        <div class="flex items-center gap-2">
-          <button
-            class="hidden sm:block px-5 py-2 rounded-full
-                   bg-white border border-gray-200
-                   text-xs text-gray-500"
-          >
-            Đăng tin
-          </button>
-
-          <button
-            @click="goAccount"
-            class="px-5 py-2 rounded-full
-                   bg-[#1E325A] text-white text-xs
-                   hover:opacity-90 transition"
-          >
-            Tài khoản
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- ================= MAIN ================= -->
 
-    <main class="max-w-[1180px] mx-auto px-6 md:px-10 py-10">
+    <div class="max-w-[1180px] mx-auto px-6 md:px-10 py-10">
 <LegacyState :state="state" />
 
       <!-- MOBILE BACK -->
@@ -570,6 +517,6 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
 
         </aside>
       </div>
-    </main>
+    </div>
   </div>
 </template>

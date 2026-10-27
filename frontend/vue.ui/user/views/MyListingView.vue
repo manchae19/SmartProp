@@ -1,6 +1,7 @@
 
 <script setup>
 import {computed,ref,watch} from 'vue'
+import PropertyModerationFeedback from '../../src/components/PropertyModerationFeedback.vue'
 import { useRouter } from 'vue-router'
 import {api,session} from '../../src/services/api.js'
 import {useList,LegacyState,LegacyPager,PrivateImage} from '../../src/services/legacy.js'
@@ -81,34 +82,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
   <div class="sp-my-listings min-h-screen bg-[#F7F5F0] text-[#142B4F]">
 
     <!-- HEADER -->
-    <header class="border-b border-[#E7E2D8] bg-[#F7F5F0]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-10">
-        <div class="flex items-center gap-5">
-          <button @click="goHome" class="flex items-center gap-3">
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#142B4F] font-bold text-white">
-              S
-            </span>
-            <span class="text-xl font-bold">
-              SmartProp<span class="text-[#C6A77A]">.</span>
-            </span>
-          </button>
 
-          <button @click="goHome" class="hidden text-xs text-[#8290A0] hover:text-[#142B4F] sm:block">
-            ← Trang chủ
-          </button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button @click="goMap" class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] sm:block">
-            GIS Explorer ↗
-          </button>
-
-          <button @click="goAccount" class="rounded-full bg-[#142B4F] px-5 py-3 text-xs font-semibold text-white hover:bg-[#25466B]">
-            Tài khoản
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- PAGE INTRO -->
     <section class="relative overflow-hidden border-b border-[#E7E2D8]">
@@ -202,7 +176,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
     </section>
 
     <!-- MANAGEMENT -->
-    <main class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
+    <div class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
 <LegacyState :state="state" /><p v-if="state.summaryError" role="alert">{{state.summaryError}} <button @click="state.loadSummary">Tải lại thống kê</button></p><p class="mb-4 text-xs text-[#87919F]">{{state.totalElements}} kết quả · kết quả đã lọc trên toàn bộ dữ liệu. Số đếm trạng thái là tổng danh mục.</p>
 
       <div class="flex flex-wrap items-end justify-between gap-5">
@@ -358,6 +332,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
             <button v-if="['draft','rejected'].includes(listing.status)" :disabled="state.busy" @click="act(listing,'submit')" class="rounded-full border px-4 py-2 text-xs">Gửi duyệt</button><button v-if="!['closed','expired'].includes(listing.status)" :disabled="state.busy" @click="act(listing,'close')" class="rounded-full border px-4 py-2 text-xs">Đóng tin</button><button :disabled="state.busy" @click="act(listing,'delete')" class="rounded-full border px-4 py-2 text-xs">Xóa tin</button>
 </div>
           </div>
+          <PropertyModerationFeedback :id="listing.id" />
         </article>
       </div>
 
@@ -414,7 +389,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
       <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
         Thông tin và trạng thái tin đăng được tải từ tài khoản của bạn.
       </p>
-    <LegacyPager :state="state" /></main>
+    <LegacyPager :state="state" /></div>
 
     <!-- DETAIL MODAL -->
     <div
@@ -524,21 +499,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
     </div>
 
     <!-- FOOTER -->
-    <footer class="border-t border-[#E7E2D8]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-7 md:px-10">
-        <button @click="goHome" class="text-lg font-bold">
-          SmartProp<span class="text-[#C6A77A]">.</span>
-        </button>
 
-        <p class="text-[11px] text-[#87919F]">
-          © 2026 SmartProp · My Listings 2.0
-        </p>
-
-        <button @click="goHome" class="text-xs text-[#64748B]">
-          Về trang chủ ↗
-        </button>
-      </div>
-    </footer>
   </div>
 </template>
 

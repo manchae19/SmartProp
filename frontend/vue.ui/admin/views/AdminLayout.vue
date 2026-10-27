@@ -46,6 +46,8 @@
           </div>
         </router-link>
 
+        <router-link to="/admin/broker-applications" class="nav2" active-class="active-nav"><div>Duyệt quyền đăng tin</div></router-link>
+
         <router-link to="/admin/users" class="nav2" active-class="active-nav">
           <div class="ng-i-d-ng">Người dùng</div>
         </router-link>

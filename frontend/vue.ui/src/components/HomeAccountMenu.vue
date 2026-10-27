@@ -1,9 +1,11 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { districtLink } from '../services/districts.js'
+import { listingLink } from '../services/listingFilters.js'
+import { session } from '../services/api.js'
+import NotificationBadge from './NotificationBadge.vue'
 
-defineProps({ district: String, light: Boolean })
+defineProps({ district: String, filters: Object, light: Boolean })
 const route = useRoute()
 const open = ref(false)
 const container = ref(null)
@@ -67,15 +69,17 @@ onBeforeUnmount(() => {
       class="absolute right-0 top-full z-50 mt-3 w-[min(19rem,calc(100vw-2.5rem))] rounded-2xl border border-[#E7E1D7] bg-white p-2.5 text-[#142B4F] shadow-2xl shadow-[#071525]/20"
     >
       <p class="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#967444]">Khám phá SmartProp</p>
-      <RouterLink :to="districtLink('/listings', district)" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Danh sách bất động sản</RouterLink>
-      <RouterLink to="/map" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Bản đồ GIS</RouterLink>
-      <RouterLink to="/account" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Tài khoản</RouterLink>
+      <RouterLink :to="listingLink('/listings', filters || { district })" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Danh sách bất động sản</RouterLink>
+      <RouterLink :to="listingLink('/map', filters || { district })" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Bản đồ GIS</RouterLink>
+      <RouterLink :to="session.token ? '/account' : '/login'" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">{{ session.token ? 'Tài khoản' : 'Đăng nhập' }}</RouterLink>
+      <template v-if="session.token"><RouterLink to="/favorites" class="account-item" @click="close">Tin đã lưu</RouterLink><div class="account-item"><NotificationBadge /></div><RouterLink to="/account/messages" class="account-item" @click="close">Tin nhắn</RouterLink><RouterLink to="/account/sessions" class="account-item" @click="close">Phiên đăng nhập</RouterLink><RouterLink to="/account/verify-email" class="account-item" @click="close">Xác minh email</RouterLink><RouterLink v-if="['BROKER', 'ADMIN'].includes(session.user?.role)" to="/my-listing" class="account-item" @click="close">Tin đăng của tôi</RouterLink><RouterLink v-if="session.user?.role === 'ADMIN'" to="/admin" class="account-item" @click="close">Quản trị</RouterLink></template><RouterLink v-else to="/register" class="account-item" @click="close">Tạo tài khoản</RouterLink>
       <div class="mx-3 my-2 border-t border-[#E7E1D7]"></div>
-      <RouterLink to="/post" class="block rounded-xl bg-[#142B4F] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#24456D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B3915F]" @click="close">Đăng tin <span aria-hidden="true">↗</span></RouterLink>
+      <RouterLink v-if="!session.token || ['BROKER', 'ADMIN'].includes(session.user?.role)" to="/post" class="block rounded-xl bg-[#142B4F] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#24456D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#B3915F]" @click="close">Đăng tin <span aria-hidden="true">↗</span></RouterLink>
     </nav>
   </div>
 </template>
 
 <style scoped>
-button { cursor: pointer; }
+nav{max-height:min(75dvh,40rem);overflow-y:auto;overscroll-behavior:contain}
+button { cursor: pointer; }.account-item{display:block;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500}.account-item:hover{background:#f1eee8}.account-item:focus-visible{outline:2px solid #b3915f}
 </style>

@@ -26,3 +26,9 @@ test-results/
 /backend/src/test/
 /frontend/vue.ui/tests/
 /docs/evidence/
+
+# Local reports, test runners and the older nested working copy.
+/docs/
+/backend/scripts/test-*.ps1
+/SmartProp/
+/FRONTEND_CHANGES.md

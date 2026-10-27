@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-navy: #142b4f;
+  --color-brand-cream: #f7f5f0;
+  --color-brand-surface: #f1eee8;
+  --color-brand-gold: #b3915f;
+  --color-brand-highlight: #dfbe86;
+  --color-brand-accent: #8b683a;
+  --color-brand-muted: #637083;
+  --color-brand-line: #e7e1d7;
+  --radius-panel: 1.5rem;
+  --radius-control: .75rem;
+}
+:root{--sp-header-height:72px;--sp-section-nav-height:52px}
+@media(max-width:639px){:root{--sp-header-height:64px;--sp-section-nav-height:48px}}
+@layer components {
+  .sp-container { @apply mx-auto w-full max-w-[1360px] px-4 sm:px-6 lg:px-10; }
+  .sp-button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-transparent px-5 py-2.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold disabled:cursor-not-allowed disabled:opacity-50; }
+  .sp-button-primary { @apply border-brand-navy bg-brand-navy text-white hover:bg-[#24456d]; }
+  .sp-button-secondary { @apply border-brand-line bg-white text-brand-navy hover:border-brand-gold hover:bg-brand-surface; }
+  .sp-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-control border border-brand-line bg-white text-brand-navy hover:bg-brand-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold; }
+  .sp-field { @apply flex min-w-0 flex-col gap-2 text-xs font-medium text-brand-muted; }
+  .sp-input { @apply min-h-11 w-full min-w-0 rounded-control border border-slate-300 bg-white px-3 py-2.5 text-sm text-brand-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold; }
+}
+
 html,
 body,
 #app {
@@ -11,9 +35,14 @@ body,
 
 body {
   min-width: 320px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 * {
   box-sizing: border-box;
 }
+button:not(:disabled),summary{cursor:pointer}
+#page-content{scroll-margin-top:var(--sp-header-height)}
+.app-footer a:focus-visible{outline:3px solid #dfbe86;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.page-layout .sp-button{transition:none}}
 

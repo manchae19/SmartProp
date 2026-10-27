@@ -2,14 +2,18 @@
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { hasGoogleMapsKey, loadGoogleMaps, googleMapId } from '../services/googleMaps.js'
 import { mapPoints } from '../services/districts.js'
-import { mapUrl, price } from '../services/property.js'
+import BrowseTileMap from './BrowseTileMap.vue'
+import { price } from '../services/property.js'
 import { locationLabel } from '../services/locationDisplay.js'
+import { poiHasPoint, poiSymbol, poiLabel } from '../services/nearbyPlaces.js'
 
-const props = defineProps({ items: { type: Array, default: () => [] }, selectedId: String, showCard: Boolean })
-const emit = defineEmits(['select'])
+const props = defineProps({ items: { type: Array, default: () => [] }, selectedId: String, showCard: Boolean, poiItems: { type: Array, default: () => [] }, selectedPoiId: String })
+const emit = defineEmits(['select', 'select-poi'])
 const points = computed(() => mapPoints(props.items))
 // An invalid/missing selected point must never be represented by another property's marker.
 const selected = computed(() => props.selectedId ? points.value.find(point => point.id === props.selectedId) || null : points.value[0] || null)
+const poiPoints = computed(() => selected.value ? props.poiItems.filter(p => poiHasPoint(p) && typeof p.id === 'string' && p.name) : [])
+const selectedPoi = computed(() => poiPoints.value.find(p => p.id === props.selectedPoiId) || null)
 const container = ref(null), ready = ref(false), unavailable = ref(false)
 let map, markerLibrary, maps, markers = [], disposed = false
 
@@ -18,19 +22,19 @@ function clear() {
   markers = []
 }
 function focus() {
-  const point = selected.value
+  const point = selectedPoi.value || selected.value
   if (!map) return
   if (point) {
     map.panTo({ lat: point.latitude, lng: point.longitude })
     map.setZoom(Math.max(map.getZoom?.() || 15, 15))
   }
   for (const marker of markers) {
-    const active = !!point && marker.propertyId === point.id
-    marker.zIndex = active ? 100 : 1
+    const active = marker.poiId ? marker.poiId === selectedPoi.value?.id : marker.propertyId === selected.value?.id
+    marker.zIndex = active ? (marker.poiId ? 200 : 100) : (marker.poiId ? 2 : 3)
     if (marker.content) {
-      marker.content.style.background = active ? '#b3915f' : '#142b4f'
+      marker.content.style.background = active ? (marker.poiId ? '#665086' : '#b3915f') : marker.baseColor
       marker.content.style.transform = active ? 'scale(1.18)' : 'scale(1)'
-      marker.content.setAttribute('aria-label', (active ? 'Tin đang chọn: ' : '') + marker.title)
+      marker.content.setAttribute('aria-label', (active ? (marker.poiId ? 'Tiện ích đang chọn: ' : 'Tin đang chọn: ') : '') + marker.title)
     }
   }
 }
@@ -44,15 +48,26 @@ function render() {
     Object.assign(content.style, { color: 'white', background: '#142b4f', border: '3px solid white', borderRadius: '50%', width: '30px', height: '30px', textAlign: 'center', lineHeight: '24px', boxShadow: '0 2px 8px #0005' })
     const marker = new markerLibrary.AdvancedMarkerElement({ map, position: { lat: point.latitude, lng: point.longitude }, title: point.title || 'Bất động sản', gmpClickable: true, content })
     marker.propertyId = point.id
+    marker.baseColor = point.transactionType === 'RENT' ? '#207760' : '#142b4f'
     marker.addListener('click', () => emit('select', point.id))
     markers.push(marker)
     bounds.extend({ lat: point.latitude, lng: point.longitude })
   }
+  for (const point of poiPoints.value) {
+    const content = document.createElement('div')
+    content.textContent = poiSymbol(point.category)
+    Object.assign(content.style, { color: 'white', background: '#8870ac', border: '2px solid white', borderRadius: '9px', width: '30px', height: '30px', textAlign: 'center', lineHeight: '25px', boxShadow: '0 2px 8px #0004' })
+    const marker = new markerLibrary.AdvancedMarkerElement({ map, position: { lat: point.latitude, lng: point.longitude }, title: point.name + ' · ' + poiLabel(point.category), gmpClickable: true, content })
+    marker.poiId = point.id; marker.baseColor = '#8870ac'
+    marker.addListener('click', () => emit('select-poi', point.id))
+    markers.push(marker)
+  }
   if (selected.value) focus()
   else if (points.value.length && !props.selectedId) map.fitBounds(bounds, 48)
 }
-watch(points, render)
+watch([points, poiPoints], render)
 watch(() => props.selectedId, focus)
+watch(() => props.selectedPoiId, focus)
 onMounted(async () => {
   if (!hasGoogleMapsKey() && !globalThis.google?.maps?.importLibrary) return
   try {
@@ -71,13 +86,13 @@ onBeforeUnmount(() => { disposed = true; clear(); if (map) maps?.event?.clearIns
 <template>
   <div class="absolute inset-0 bg-[#e7e2d8]">
     <div ref="container" class="h-full w-full" aria-label="Bản đồ bất động sản"></div>
-    <div v-if="!ready" class="absolute inset-0"><iframe v-if="selected" :key="selected.id" :src="mapUrl(selected)" title="Vị trí tin đăng đang chọn" class="h-full w-full border-0" loading="lazy"></iframe><p v-else class="p-8">Tin đang chọn chưa có tọa độ hợp lệ để hiển thị.</p></div>
-    <p v-if="ready && selectedId && !selected" class="absolute left-4 right-4 top-1/2 rounded-xl bg-white/95 p-4 text-sm text-[#142B4F]">Tin đang chọn chưa có vị trí được phép hiển thị; các ghim khác thuộc những tin khác.</p>
+    <BrowseTileMap v-if="!ready" :points="points" :selected-id="selectedId" :poi-items="poiPoints" :selected-poi-id="selectedPoiId" @select="emit('select', $event)" @select-poi="emit('select-poi', $event)" />
+    <p v-if="selectedId && !selected" class="absolute left-4 right-4 top-1/2 rounded-xl bg-white/95 p-4 text-sm text-[#142B4F]">Tin đang chọn chưa có vị trí được phép hiển thị; các ghim khác thuộc những tin khác.</p>
     <div v-if="showCard && selected" class="absolute bottom-24 left-4 right-4 z-10 max-w-sm rounded-2xl bg-white/95 p-4 text-[#142B4F] shadow-lg">
       <strong class="block text-sm">{{ selected.title }}</strong><p class="mt-1 text-sm font-semibold">{{ price(selected) }}</p><p class="mt-1 text-xs">{{ [selected.address, selected.ward, selected.district, selected.city].filter(Boolean).join(', ') }}</p><p class="mt-2 text-xs text-[#637083]">{{ locationLabel(selected) }}</p><RouterLink :to="'/listing/' + selected.id" class="mt-3 inline-block rounded-full bg-[#142B4F] px-4 py-2 text-xs font-semibold text-white">Xem chi tiết ↗</RouterLink>
     </div>
-    <div class="absolute bottom-2 left-2 right-2 z-10 rounded bg-white/95 p-2 text-[10px] leading-5 text-[#142B4F]" role="status">
-      <p>{{ ready ? points.length + ' điểm trên trang hiện tại.' : (unavailable ? 'Google Maps tạm không khả dụng. ' : '') + 'Bản đồ dự phòng ghim tin đang chọn.' }} {{ selected ? locationLabel(selected) : 'Không dùng vị trí mặc định thay cho bất động sản.' }}</p>
+    <div class="absolute bottom-6 left-2 right-2 z-10 rounded bg-white/95 p-2 text-[10px] leading-5 text-[#142B4F]" role="status">
+<p>{{ unavailable ? 'Google Maps tạm không khả dụng. ' : '' }}{{ points.length }} ghim tin trên trang<span v-if="poiPoints.length"> · {{ poiPoints.length }} tiện ích</span> · {{ ready ? 'Google Maps' : 'OpenStreetMap' }}. {{ selected ? locationLabel(selected) : 'Chỉ hiển thị tọa độ do Backend cung cấp.' }}</p>
       <p>Công cụ tìm địa chỉ: <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" class="underline">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="underline">© OpenStreetMap contributors</a></p>
     </div>
   </div>

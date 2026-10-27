@@ -59,12 +59,12 @@ public class PropertyService {
             throw ApiInputs.bad("Giá/diện tích không hợp lệ; tin bán phải dùng priceUnit TOTAL");
     }
     @Transactional public PropertyDtos.Managed create(Long actor,PropertyDtos.Write r) {
-        access.publisher(actor);Property p=new Property();p.id=UUID.randomUUID().toString();p.ownerId=actor;
+        access.publisherForUpdate(actor);Property p=new Property();p.id=UUID.randomUUID().toString();p.ownerId=actor;
         p.status=Property.Status.DRAFT;p.contentVersion=1;p.currency="VND";p.city="Da Nang";p.declaredAmenities=JsonNodeFactory.instance.arrayNode();
         fill(p,r);properties.saveAndFlush(p);return managed(p,List.of());
     }
     @Transactional public PropertyDtos.Managed patch(Long actor,String id,int version,PropertyDtos.Write r) {
-        access.publisher(actor);Property p=owned(actor,id);if(p.status==Property.Status.HIDDEN) throw ApiInputs.conflict("Tin bị ẩn cần quản trị viên xử lý");
+        access.publisherForUpdate(actor);Property p=owned(actor,id);if(p.status==Property.Status.HIDDEN) throw ApiInputs.conflict("Tin bị ẩn cần quản trị viên xử lý");
         reserve(p,version);fill(p,r);p.status=Property.Status.DRAFT;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;
         properties.saveAndFlush(p);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));
     }
@@ -72,7 +72,7 @@ public class PropertyService {
         if(!Set.of("submit","close","delete").contains(action))throw ApiInputs.bad("Hành động không hợp lệ");
         Property p=owned(actor,id);
         if(action.equals("submit")) {
-            access.publisher(actor);
+            access.publisherForUpdate(actor);
             if(p.status!=Property.Status.DRAFT && p.status!=Property.Status.REJECTED) throw ApiInputs.conflict("Chỉ gửi duyệt tin DRAFT/REJECTED");
             if(images.countByPropertyIdAndDeletedAtIsNull(p.id)<1) throw ApiInputs.bad("Cần ít nhất một ảnh trước khi gửi duyệt");
         }

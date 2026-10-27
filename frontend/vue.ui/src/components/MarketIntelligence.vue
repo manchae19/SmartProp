@@ -74,7 +74,7 @@ const marketChart = computed(() => {
 </script>
 
 <template>
-<section id="market" aria-labelledby="market-heading" class="bg-[#F1EEE8] py-14 text-[#142B4F] md:py-20">
+<section id="market-demo" aria-labelledby="market-heading" class="bg-[#F1EEE8] py-14 text-[#142B4F] md:py-20">
   <div class="mx-auto max-w-7xl px-5 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-6">
       <div>

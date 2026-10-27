@@ -75,51 +75,7 @@ function goMap() {
   <div class="sp-my-reports min-h-screen bg-[#F7F5F0] text-[#142B4F]">
 
     <!-- HEADER -->
-    <header class="border-b border-[#E7E2D8] bg-[#F7F5F0]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-10">
-        <div class="flex items-center gap-5">
-          <button
-            type="button"
-            @click="goHome"
-            class="flex items-center gap-3"
-          >
-            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#142B4F] font-bold text-white">
-              S
-            </span>
 
-            <span class="text-xl font-bold">
-              SmartProp<span class="text-[#C6A77A]">.</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            @click="goHome"
-            class="hidden text-xs text-[#8290A0] hover:text-[#142B4F] sm:block"
-          >
-            ← Trang chủ
-          </button>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            @click="goPost"
-            class="hidden rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold hover:border-[#C6A77A] sm:block"
-          >
-            Đăng tin ↗
-          </button>
-
-          <button
-            type="button"
-            @click="goAccount"
-            class="rounded-full bg-[#142B4F] px-5 py-3 text-xs font-semibold text-white hover:bg-[#25466B]"
-          >
-            Tài khoản
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- INTRO -->
     <section class="relative overflow-hidden border-b border-[#E7E2D8]">
@@ -230,7 +186,7 @@ function goMap() {
     </section>
 
     <!-- REPORTS -->
-    <main class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
+    <div class="mx-auto max-w-[1440px] px-5 pb-20 pt-12 md:px-10">
 <LegacyState :state="state" /><p v-if="state.summaryError" role="alert">{{state.summaryError}} <button @click="state.loadSummary">Tải lại thống kê</button></p><p class="mb-4 text-xs text-[#87919F]">{{state.totalElements}} kết quả · kết quả đã lọc trên toàn bộ báo cáo.</p>
 
       <div class="flex flex-wrap items-end justify-between gap-5">
@@ -466,7 +422,7 @@ function goMap() {
       <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
         Báo cáo và kết quả xử lý được tải từ tài khoản của bạn.
       </p>
-    <LegacyPager :state="state" /></main>
+    <LegacyPager :state="state" /></div>
 
     <!-- REPORT DETAIL MODAL -->
     <div
@@ -570,21 +526,7 @@ function goMap() {
     </div>
 
     <!-- FOOTER -->
-    <footer class="border-t border-[#E7E2D8]">
-      <div class="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 py-7 md:px-10">
-        <button @click="goHome" class="text-lg font-bold">
-          SmartProp<span class="text-[#C6A77A]">.</span>
-        </button>
 
-        <p class="text-[11px] text-[#87919F]">
-          © 2026 SmartProp · My Reports 2.0
-        </p>
-
-        <button @click="goHome" class="text-xs text-[#64748B]">
-          Về trang chủ ↗
-        </button>
-      </div>
-    </footer>
   </div>
 </template>
 

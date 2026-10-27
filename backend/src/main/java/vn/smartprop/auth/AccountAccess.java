@@ -12,5 +12,11 @@ public class AccountAccess {
         return u;
     }
     public User publisher(Long id) { User u=active(id); if(u.role!=User.Role.BROKER && u.role!=User.Role.ADMIN) throw ApiInputs.forbidden(); return u; }
+    @org.springframework.transaction.annotation.Transactional(propagation=org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public User publisherForUpdate(Long id) {
+        User u=users.lockById(id).orElseThrow(ApiInputs::forbidden);
+        if(u.deletedAt!=null || u.status!=User.Status.ACTIVE || (u.role!=User.Role.BROKER && u.role!=User.Role.ADMIN))throw ApiInputs.forbidden();
+        return u;
+    }
     public User admin(Long id) { User u=active(id); if(u.role!=User.Role.ADMIN) throw ApiInputs.forbidden(); return u; }
 }

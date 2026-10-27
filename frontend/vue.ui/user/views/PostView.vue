@@ -25,8 +25,8 @@ function toggleAmenity(value){draft.selectedAmenities=draft.selectedAmenities.in
 
 <template>
  <div class="posting-page">
-  <header class="posting-header"><RouterLink to="/home" class="brand"><span>S</span>SmartProp</RouterLink><div class="header-links"><RouterLink to="/my-listing">Tin đăng của tôi</RouterLink><RouterLink to="/account">Tài khoản</RouterLink></div></header>
-  <main class="posting-main">
+
+  <div class="posting-main">
    <div class="posting-title"><div><p class="eyebrow">ĐĂNG BÁN / CHO THUÊ</p><h1>{{managed?'Chỉnh sửa tin đăng':'Tạo tin đăng mới'}}</h1><p>Thông tin rõ ràng, hình ảnh thực tế và vị trí do bạn xác nhận.</p></div><span class="step-badge">Bước {{step}} / 3</span></div>
    <PostStepNav :current="step" :busy="state.busy"/>
    <PostValidationSummary :issues="state.issues"/>
@@ -66,7 +66,7 @@ function toggleAmenity(value){draft.selectedAmenities=draft.selectedAmenities.in
     </form>
     <aside class="posting-sidebar"><section class="sidebar-card"><p class="eyebrow">TIN ĐĂNG CỦA BẠN</p><h2>{{currentTitle}}</h2><dl><div><dt>Nhu cầu</dt><dd>{{draft.transactionType}}</dd></div><div><dt>Loại</dt><dd>{{draft.propertyType}}</dd></div><div><dt>Diện tích</dt><dd>{{areaText}} m²</dd></div><div><dt>Giá</dt><dd>{{priceText}} VND {{unitText}}</dd></div><div><dt>Hình ảnh</dt><dd>{{imageCount}} / 30 ảnh</dd></div><div><dt>Vị trí</dt><dd>{{locationConfirmed(draft)?'Đã xác nhận':'Chưa xác nhận'}}</dd></div></dl><div class="draft-status"><strong>{{managed?'Nháp tài khoản đã có mã tin':'Nháp trên trình duyệt'}}</strong><p v-if="managed">{{dirty?'Còn thay đổi trong form cần lưu.':'Thông tin hiện tại khớp nháp trên máy chủ.'}}</p><p v-else>Nội dung chưa được lưu vào tài khoản.</p><p v-if="state.savedAt">Lưu tài khoản gần nhất: {{new Date(state.savedAt).toLocaleTimeString('vi-VN')}}</p></div><p class="sidebar-note">Gửi duyệt không tự công khai tin. Bạn có thể theo dõi kết quả tại Tin đăng của tôi.</p></section><details v-if="step===1" class="valuation-optional" @toggle="showValuation=$event.target.open"><summary>Giá tham khảo <span>Tùy chọn</span></summary><PostValuationPanel v-if="showValuation" :draft="draft"/></details></aside>
    </div>
-  </main>
+  </div>
  </div>
 </template>
 

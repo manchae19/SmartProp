@@ -1,25 +1,66 @@
-// Refresh is explicit opt-in. Tokens stay in memory; cookie is HttpOnly and never read here.
-export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(...args)=>fetch(...args),expired=()=>{},clear=()=>{},lock=null}){
- let refreshFlight=null,epoch=0;
+// Access tokens stay in memory. Refresh credentials are sent only as HttpOnly cookies.
+export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(...args)=>fetch(...args),expired=()=>{},clear=()=>{},lock=null,onState=()=>{},activity=()=>false}){
+ let refreshFlight=null,initialization=null,initialized=false,epoch=0
+ const state=(status,error=null)=>{session.status=status;session.error=error;onState(status,error)}
+ const terminal=e=>e?.status===401&&e?.code!=='AUTH_RETRY_REQUIRED'||e?.status===403&&e?.code==='ACCOUNT_LOCKED'
+ function invalidate(){epoch++}
+ function expire(redirect=true){invalidate();clear();session.token=null;session.user=null;initialized=true;state('UNAUTHENTICATED');if(redirect)expired()}
+ function unavailable(e){state('UNAVAILABLE',e?.message||'Không thể kiểm tra phiên. Vui lòng thử lại.')}
+ function accept(result,current){if(current!==epoch)throw Object.assign(Error('Phiên đã thay đổi.'),{code:'SESSION_CHANGED'});session.token=result.accessToken;session.user=result.user;state('AUTHENTICATED');initialized=true;return result}
  async function send(path,{method='GET',body,authenticated=true,responseType='json',headers:extra={}}={}){
-  const headers={Accept:'application/json',...extra};const multipart=typeof FormData!=='undefined'&&body instanceof FormData;
-  if(body!==undefined&&!multipart)headers['Content-Type']='application/json';if(authenticated&&session.token)headers.Authorization='Bearer '+session.token;
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
-  try{const response=await fetcher(baseUrl+path,{method,headers,body:body===undefined?undefined:multipart?body:JSON.stringify(body),signal:controller.signal,...(refreshEnabled?{credentials:'include'}:{})});
-   const data=response.status===204?null:response.ok&&responseType==='blob'?await response.blob():await response.json().catch(()=>null);
-   if(!response.ok){const e=Error(data?.message||'Yêu cầu thất bại ('+response.status+')');e.status=response.status;e.code=data?.code;e.fields=data?.fields||{};const retry=response.headers.get('Retry-After');e.retryAfter=retry&&/^\d+$/.test(retry)?Number(retry):undefined;throw e}return data;
+  const headers={Accept:'application/json',...extra},multipart=typeof FormData!=='undefined'&&body instanceof FormData
+  if(body!==undefined&&!multipart)headers['Content-Type']='application/json'
+  if(authenticated&&session.token)headers.Authorization='Bearer '+session.token
+  if((authenticated&&session.token||path==='/auth/refresh')&&activity())headers['X-Session-Activity']='true'
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000)
+  try{
+   const response=await fetcher(baseUrl+path,{method,headers,body:body===undefined?undefined:multipart?body:JSON.stringify(body),signal:controller.signal,...(refreshEnabled?{credentials:'include'}:{})})
+   const data=response.status===204?null:response.ok&&responseType==='blob'?await response.blob():await response.json().catch(()=>null)
+   if(!response.ok){const e=Error(data?.message||'Yêu cầu thất bại ('+response.status+')');e.status=response.status;e.code=data?.code;e.fields=data?.fields||{};const retry=response.headers.get('Retry-After');e.retryAfter=retry&&/^\d+$/.test(retry)?Number(retry):undefined;throw e}return data
   }catch(e){if(e.status)throw e;throw Error(e.name==='AbortError'?'Yêu cầu quá thời gian. Vui lòng thử lại.':'Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối.')}finally{clearTimeout(timeout)}
  }
- const csrf=()=>send('/auth/csrf',{authenticated:false});
- async function rotate(){const current=epoch;const run=async()=>{const c=await csrf();const result=await send('/auth/refresh',{method:'POST',authenticated:false,headers:{[c.headerName]:c.token}});if(current!==epoch)throw Object.assign(Error('Phiên đã thay đổi.'),{status:401});session.token=result.accessToken;session.user=result.user;return result};if(!refreshFlight)refreshFlight=(lock?lock(run):run()).finally(()=>refreshFlight=null);return refreshFlight}
- function invalidate(){epoch++}
- function expire(){invalidate();clear();expired()}
- async function request(path,options={}){const sentToken=session.token,current=epoch;try{return await send(path,options)}catch(e){
-  if(options.authenticated!==false&&e.status===401){
-   if(refreshEnabled&&sentToken&&current===epoch){try{if(session.token===sentToken)await rotate();if(current!==epoch)throw e;return await send(path,options)}catch(next){if(current===epoch)expire();throw next}}
-   if(current===epoch)expire();
-  }throw e;
- }}
- async function logout(){if(refreshEnabled){const c=await csrf();await send('/auth/logout',{method:'POST',authenticated:false,headers:{[c.headerName]:c.token}})}else await request('/auth/logout',{method:'POST'});invalidate();clear()}
- return {request,logout,invalidate,restore:async()=>{if(!refreshEnabled)return false;try{await rotate();return true}catch{return false}},login:body=>send('/auth/login',{method:'POST',authenticated:false,body,headers:refreshEnabled?{'X-Refresh-Session':'true'}:{}})};
+ const csrf=()=>send('/auth/csrf',{authenticated:false})
+ function rotate(){
+  if(refreshFlight)return refreshFlight
+  const current=epoch,run=async()=>{const c=await csrf();return accept(await send('/auth/refresh',{method:'POST',authenticated:false,headers:{[c.headerName]:c.token}}),current)}
+  refreshFlight=Promise.resolve().then(()=>lock?lock(run):run()).finally(()=>{refreshFlight=null})
+  return refreshFlight
+ }
+ async function request(path,options={}){
+  const sentToken=session.token,current=epoch
+  try{const result=await send(path,options);if(options.authenticated!==false&&sentToken&&current!==epoch)throw Object.assign(Error('Phiên đã thay đổi.'),{code:'SESSION_CHANGED'});return result}catch(e){
+   if(options.authenticated!==false&&terminal(e)){
+    if(refreshEnabled&&sentToken&&current===epoch&&!path.startsWith('/auth/')){
+     try{if(session.token===sentToken)await rotate();if(current!==epoch)throw Object.assign(Error('Phiên đã thay đổi.'),{code:'SESSION_CHANGED'})}
+     catch(next){if(current===epoch){if(terminal(next))expire();else if(next.code!=='SESSION_CHANGED')unavailable(next)}throw next}
+     // Renew credentials but require explicit resubmission for writes; never duplicate an uncertain mutation.
+     if(!['GET','HEAD','OPTIONS'].includes((options.method||'GET').toUpperCase()))throw Object.assign(Error('Phiên đã được gia hạn. Vui lòng thực hiện lại thao tác vừa gửi.'),{status:401,code:'AUTH_RETRY_REQUIRED',sessionRecovered:true})
+     try{return await send(path,options)}catch(next){if(current===epoch&&terminal(next))expire();throw next}
+    }
+    if(current===epoch)expire()
+   }throw e
+  }
+ }
+ function initialize({force=false}={}){
+  if(initialization)return initialization
+  if(initialized&&!force)return Promise.resolve(session.status)
+  const current=epoch;state('INITIALIZING')
+  initialization=(async()=>{
+   try{
+    if(session.token){try{const profile=await send('/users/me');if(current===epoch){session.user=profile;state('AUTHENTICATED')}}catch(e){if(!terminal(e)||!refreshEnabled)throw e;await rotate()}}
+    else if(refreshEnabled)await rotate()
+    else if(current===epoch)state('UNAUTHENTICATED')
+   }catch(e){if(current===epoch){if(terminal(e))expire(false);else if(e.code!=='SESSION_CHANGED')unavailable(e)}}
+   finally{if(current===epoch)initialized=true}
+   return session.status
+  })().finally(()=>{initialization=null})
+  return initialization
+ }
+ async function login(body){invalidate();const current=epoch;return accept(await send('/auth/login',{method:'POST',authenticated:false,body,headers:refreshEnabled?{'X-Refresh-Session':'true'}:{}}),current)}
+ async function logout(){
+  if(refreshEnabled){const c=await csrf(),options={method:'POST',headers:{[c.headerName]:c.token}};try{await send('/auth/logout',options)}catch(e){if(e.status!==401)throw e;await send('/auth/logout',{...options,authenticated:false})}}
+  else await send('/auth/logout',{method:'POST'})
+  expire(false);initialized=true
+ }
+ return {request,login,logout,invalidate,initialize,unavailable,restore:async()=>{await initialize({force:true});return session.status==='AUTHENTICATED'}}
 }

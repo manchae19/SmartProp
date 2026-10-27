@@ -58,11 +58,11 @@ public class AdminService {
             "openReports",reports.countByStatus(Report.Status.OPEN),"processingReports",reports.countByStatus(Report.Status.PROCESSING),"resolvedReports",reports.countByStatus(Report.Status.RESOLVED),"rejectedReports",reports.countByStatus(Report.Status.REJECTED));
     }
     private JsonNode safeValues(JsonNode input) {
-        var out=JsonNodeFactory.instance.objectNode();Set<String> states=Set.of("ACTIVE","LOCKED","DRAFT","PENDING","PUBLISHED","REJECTED","HIDDEN","EXPIRED","CLOSED","OPEN","PROCESSING","RESOLVED","ARCHIVED","VERIFIED");
+        var out=JsonNodeFactory.instance.objectNode();Set<String> states=Set.of("ACTIVE","LOCKED","DRAFT","PENDING","PUBLISHED","REJECTED","HIDDEN","EXPIRED","CLOSED","OPEN","PROCESSING","RESOLVED","ARCHIVED","VERIFIED","APPROVED","NEEDS_INFORMATION","SUSPENDED");
         if(input!=null&&input.path("status").isTextual()&&states.contains(input.path("status").asText()))out.put("status",input.path("status").asText());return out;
     }
     @Transactional(readOnly=true) public PageResponse<AuditView> audit(Long actor,String entityType,Long actorId,String action,int page,int size) {
-        access.admin(actor);Set<String> types=Set.of("USER","PROPERTY","REPORT","PROJECT","LEGAL_DOCUMENT");if(entityType!=null&&!types.contains(entityType))throw ApiInputs.bad("entityType phải là USER/PROPERTY/REPORT");
+        access.admin(actor);Set<String> types=Set.of("USER","PROPERTY","REPORT","PROJECT","LEGAL_DOCUMENT","BROKER_APPLICATION");if(entityType!=null&&!types.contains(entityType))throw ApiInputs.bad("entityType phải là USER/PROPERTY/REPORT");
         if(action!=null&&action.length()>100||actorId!=null&&actorId<1)throw ApiInputs.bad("Bộ lọc audit không hợp lệ");
         Specification<AuditLog> filter=(r,q,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();predicates.add(entityType==null?r.get("entityType").in(types):cb.equal(r.get("entityType"),entityType));

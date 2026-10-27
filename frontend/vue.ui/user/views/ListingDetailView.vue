@@ -33,46 +33,11 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
 
     <!-- ==================== HEADER ==================== -->
 
-    <header class="max-w-[1400px] mx-auto px-6 md:px-10 pt-5">
-      <div
-        class="flex items-center justify-between border-b border-[#1E325A]/50 pb-4"
-      >
-        <button
-          @click="goHome"
-          class="flex items-center gap-2.5"
-        >
-          <div
-            class="w-7 h-7 rounded-lg bg-[#1E325A] text-white flex items-center justify-center text-xs font-bold"
-          >
-            S
-          </div>
 
-          <span class="font-semibold text-sm">
-            SmartProp
-          </span>
-        </button>
-
-        <div class="flex items-center gap-2">
-          <button
-            @click="goMap"
-            class="px-5 py-2 rounded-full bg-white border border-gray-200 text-xs text-gray-500 hover:text-[#1E325A] transition"
-          >
-            Xem bản đồ
-          </button>
-
-          <button
-            @click="goAccount"
-            class="px-5 py-2 rounded-full bg-[#1E325A] text-white text-xs hover:opacity-90 transition"
-          >
-            Tài khoản
-          </button>
-        </div>
-      </div>
-    </header>
 
     <!-- ==================== MAIN ==================== -->
 
-    <main class="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 pb-20">
+    <div class="max-w-[1400px] mx-auto px-6 md:px-10 pt-6 pb-20">
 <LegacyState :state="{...state,load}" />
 
       <!-- BACK -->
@@ -626,7 +591,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
 
         </aside>
       </div>
-    </template></main>
+    </template></div>
 
     <!-- ====================================================== -->
     <!-- FULL SCREEN IMAGE GALLERY -->

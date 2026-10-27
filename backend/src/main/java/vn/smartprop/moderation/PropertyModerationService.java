@@ -26,6 +26,7 @@ public class PropertyModerationService {
     }
     @Transactional public PropertyDtos.Managed moderate(Long actor,String id,Command command) {
         access.admin(actor);Property p=service.existing(id);Property.Status after=target(p.status,command.action());String before=p.status.name();
+        if(after==Property.Status.PUBLISHED)access.publisherForUpdate(p.ownerId);
         service.reserve(p,command.expectedVersion());if(after==Property.Status.PUBLISHED && images.countByPropertyIdAndDeletedAtIsNull(p.id)<1)throw ApiInputs.bad("Tin phải có ảnh trước khi được duyệt");
         p.status=after;if(after==Property.Status.PUBLISHED){p.publishedAt=Instant.now();p.expiresAt=null;p.closedAt=null;}else if(after==Property.Status.PENDING)p.publishedAt=null;
         properties.saveAndFlush(p);events.moderation(actor,p.id,null,null,"PROPERTY_"+command.action().name(),command.reason().strip(),before,after.name(),p.ownerId);

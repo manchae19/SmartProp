@@ -34,26 +34,27 @@ public class SecurityConfig {
         return new SecretKeySpec(bytes,"HmacSHA256");
     }
     @Bean JwtEncoder jwtEncoder(SecretKeySpec key) { return new NimbusJwtEncoder(new ImmutableSecret<>(key)); }
-    @Bean JwtDecoder jwtDecoder(SecretKeySpec key,SessionRepository sessions,UserRepository users) {
+    @Bean JwtDecoder jwtDecoder(SecretKeySpec key,SessionRepository sessions,UserRepository users,SessionPolicy policy,java.time.Clock clock) {
         NimbusJwtDecoder decoder=NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
         OAuth2TokenValidator<Jwt> liveSession=jwt -> {
             try {
                 if(jwt.getId()==null || jwt.getSubject()==null || jwt.getExpiresAt()==null ||
-                   !jwt.getExpiresAt().isAfter(Instant.now()))
+                   !jwt.getExpiresAt().isAfter(clock.instant()))
                     return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token"));
                 AuthSession s=sessions.findById(jwt.getId()).orElse(null);
                 User u=users.findById(Long.valueOf(jwt.getSubject())).orElse(null);
                 if(s!=null && u!=null && s.userId.equals(u.id) && !s.revoked &&
-                   s.expiresAt.isAfter(Instant.now()) && u.status==User.Status.ACTIVE && u.deletedAt==null && versionMatches(jwt,u.tokenVersion))
+                   policy.valid(s,u) && u.status==User.Status.ACTIVE && u.deletedAt==null && versionMatches(jwt,u.tokenVersion))
                     return OAuth2TokenValidatorResult.success();
             } catch(IllegalArgumentException | NullPointerException ignored) { }
             return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token","Invalid or revoked session",null));
         };
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(JwtValidators.createDefaultWithIssuer("smartprop"),liveSession));
+        var timestamp=new JwtTimestampValidator(java.time.Duration.ZERO);timestamp.setClock(clock);
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamp,new JwtIssuerValidator("smartprop"),liveSession));
         return decoder;
     }
     @Bean SecurityFilterChain security(HttpSecurity http,UserRepository users,ObjectMapper mapper,
-                                      LoginThrottle throttle,@Value("${app.cors-origins}") String origins,@Value("${app.refresh.enabled:false}") boolean refreshEnabled,@Value("${app.refresh.secure-cookie:true}") boolean secureCookie) throws Exception {
+                                      LoginThrottle throttle,SessionRepository sessions,SessionPolicy policy,@Value("${app.cors-origins}") String origins,@Value("${app.refresh.enabled:false}") boolean refreshEnabled,@Value("${app.refresh.secure-cookie:true}") boolean secureCookie) throws Exception {
         Converter<Jwt,AbstractAuthenticationToken> converter=jwt -> {
             User u=users.findById(Long.valueOf(jwt.getSubject())).orElseThrow(() -> new OAuth2AuthenticationException(new OAuth2Error("invalid_token")));
             if(u.status!=User.Status.ACTIVE || u.deletedAt!=null || !versionMatches(jwt,u.tokenVersion))
@@ -63,7 +64,7 @@ public class SecurityConfig {
         CorsConfiguration cors=new CorsConfiguration();
         cors.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::strip).toList());
         cors.setAllowedMethods(List.of("GET","POST","PATCH","PUT","DELETE","OPTIONS"));
-        cors.setAllowedHeaders(List.of("Authorization","Content-Type","X-Refresh-Session","X-CSRF-TOKEN"));
+        cors.setAllowedHeaders(List.of("Authorization","Content-Type","X-Refresh-Session","X-CSRF-TOKEN","X-Session-Activity"));
         cors.setAllowCredentials(refreshEnabled);
         UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/**",cors);
         if(refreshEnabled){
@@ -84,6 +85,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/logout").access((authentication,context)->new org.springframework.security.authorization.AuthorizationDecision(refreshEnabled || authentication.get()!=null && authentication.get().isAuthenticated() && !(authentication.get() instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)))
                 .requestMatchers("/api/v1/users/me/sessions","/api/v1/users/me/sessions/*","/api/v1/auth/email-verification/request").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,"/api/v1/users/me/broker-application","/api/v1/users/me/properties/*/moderation").authenticated()
+                .requestMatchers(HttpMethod.POST,"/api/v1/users/me/broker-application").authenticated()
                 .requestMatchers("/api/v1/conversations","/api/v1/users/me/conversations","/api/v1/conversations/*/messages","/api/v1/conversations/*/read").authenticated()
                 .requestMatchers("/api/v1/properties/*/legal-documents","/api/v1/properties/*/legal-documents/*","/api/v1/properties/*/legal-documents/*/content").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/v1/users/me/notifications","/api/v1/users/me/notifications/unread-count").authenticated()
@@ -106,7 +109,8 @@ public class SecurityConfig {
                 .accessDeniedHandler((req,res,e) -> error(res,mapper,403,"FORBIDDEN","Bạn không có quyền truy cập")))
             .oauth2ResourceServer(c -> c.jwt(j -> j.jwtAuthenticationConverter(converter))
                 .authenticationEntryPoint((req,res,e) -> error(res,mapper,401,"UNAUTHENTICATED","Phiên không hợp lệ hoặc đã hết hạn")))
-            .addFilterBefore(throttle,UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(throttle,UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(new SessionActivityFilter(sessions,policy,mapper),org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
         return http.build();
     }
     private static boolean versionMatches(Jwt jwt,int expected) {

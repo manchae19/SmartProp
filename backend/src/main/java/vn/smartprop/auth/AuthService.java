@@ -26,11 +26,11 @@ public class AuthService {
             throw new ApiException(400,"VALIDATION_ERROR","Mật khẩu tối đa 72 byte UTF-8");
     }
     @Transactional public UserDtos.Profile register(AuthDtos.Register r) {
-        if(!"BUYER".equals(r.role()) && !"BROKER".equals(r.role())) throw new ApiException(400,"VALIDATION_ERROR","Vai trò đăng ký không hợp lệ");
+        if(!"BUYER".equals(r.role())) throw new ApiException(400,"VALIDATION_ERROR","Đăng ký tài khoản BUYER; yêu cầu quyền đăng tin tại trang Tài khoản");
         passwordLength(r.password());
         if(users.findByEmail(email(r.email())).isPresent()) throw new ApiException(409,"EMAIL_EXISTS","Email đã được đăng ký");
         User u=new User(); u.email=email(r.email()); u.fullName=r.fullName().strip();
-        u.passwordHash=passwords.encode(r.password()); u.role=User.Role.valueOf(r.role()); u.status=User.Status.ACTIVE;
+        u.passwordHash=passwords.encode(r.password()); u.role=User.Role.BUYER; u.status=User.Status.ACTIVE;
         try { return UserDtos.Profile.of(users.saveAndFlush(u)); }
         catch(DataIntegrityViolationException e) {
             Throwable cause=e.getMostSpecificCause();
@@ -48,7 +48,7 @@ public class AuthService {
         if(!passwords.matches(r.password(),u.passwordHash) || u.deletedAt!=null) throw invalidLogin();
         if(u.status!=User.Status.ACTIVE) throw new ApiException(403,"ACCOUNT_LOCKED","Tài khoản đã bị khóa");
         AuthSession s=new AuthSession(); s.id=UUID.randomUUID().toString(); s.userId=u.id;
-        s.createdAt=Instant.now(); s.expiresAt=s.createdAt.plusSeconds(tokens.seconds); sessions.save(s);
+        s.createdAt=tokens.now();s.lastUsedAt=s.createdAt; s.expiresAt=s.createdAt.plusSeconds(tokens.seconds); sessions.save(s);
         return new AuthDtos.Token(tokens.issue(s,u.tokenVersion),"Bearer",tokens.seconds,UserDtos.Profile.of(u));
     }
     private static ApiException invalidLogin() { return new ApiException(401,"INVALID_CREDENTIALS","Email hoặc mật khẩu không đúng"); }
