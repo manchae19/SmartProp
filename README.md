@@ -57,6 +57,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Bản đồ các file](docs/PROJECT_MAP.md) · [Chuẩn bị commit/push](docs/GITHUB_PREPARATION.md) · [Tóm tắt chất lượng model](docs/MODEL_V6.md).
 
+[Phân tích sai số v6 và kế hoạch bổ sung dữ liệu](docs/MODEL_V6_DIAGNOSTICS.md) · [Review tích hợp](docs/PR4_REVIEW.md) · [Thiết lập database trên máy hiện tại](docs/DATABASE_SETUP_LOCAL.md).
+
 [Chuẩn bị dữ liệu lần train tiếp theo](docs/GEOSPATIAL_NEXT.md): đã xuất 2.213 train + 299 validation, cách ly một mã địa bàn sai. Chưa thay model demo; chưa có tọa độ tài sản được xác minh để train đặc trưng khoảng cách.
 
 ## Kiểm thử bản gọn

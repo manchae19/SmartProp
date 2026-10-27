@@ -9,6 +9,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from local_runtime import datasource_arguments, spring_environment, stop_owned
 
 
 def run_browser_check(root, runtime, environment, work, ai_port):
@@ -21,15 +22,15 @@ def run_browser_check(root, runtime, environment, work, ai_port):
     if not node or not cli.is_file():
         raise RuntimeError('Install Node and run npm ci in frontend/vue.ui before the browser check.')
     backend_port = 18082
-    env = environment.copy()
+    env = spring_environment(environment,url=db_url,user='root',password='',jwt=secrets.token_urlsafe(48))
     env.update(
-        DB_URL=db_url, DB_USER='root', DB_PASSWORD='', JWT_SECRET=secrets.token_urlsafe(48),
         CORS_ORIGINS='http://127.0.0.1:15174',
         SMARTPROP_BROWSER_HISTORY_TEST='isolated',
         SMARTPROP_BROWSER_HISTORY_REPORT=str(work / 'browser-results.json'),
     )
     command = [
-        str(Path(runtime['jdk']) / 'bin/java.exe'), '-jar', str(root / 'backend/target/smartprop-backend-0.1.0.jar'),
+        str(Path(runtime['jdk']) / 'bin/java.exe'), '-jar', str(work / 'target/smartprop-backend-0.1.0.jar'),
+        *datasource_arguments(db_url,'root'), '--spring.profiles.active=default',
         f'--server.port={backend_port}', '--server.address=127.0.0.1',
         '--app.valuation.enabled=true', f'--app.valuation.base-url=http://127.0.0.1:{ai_port}',
         '--spring.flyway.enabled=false', '--spring.sql.init.mode=never', '--spring.jpa.hibernate.ddl-auto=validate',
@@ -68,10 +69,4 @@ def run_browser_check(root, runtime, environment, work, ai_port):
             return {'passed': 3, 'mocked_api_responses': False, 'backend_port': backend_port,
                     'frontend_port': 15174, 'report': str(work / 'browser-results.json')}
         finally:
-            if backend is not None and backend.poll() is None:
-                backend.terminate()
-                try:
-                    backend.wait(timeout=15)
-                except subprocess.TimeoutExpired:
-                    backend.kill()
-                    backend.wait(timeout=5)
+            stop_owned(backend,timeout=15)

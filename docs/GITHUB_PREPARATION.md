@@ -2,7 +2,9 @@
 
 Đã tách mã nguồn/tài liệu/bundle v6 khỏi dữ liệu trên `develop-binh`. Nhánh `feature/fe-ai-v6` đã có commit `3f2ca86` cho FE–AI và merge `97de3e1` ghép lịch sử `main`. Bản mở rộng dùng mã BE/database tại `Backend-Huy` (`ac13ec3`), thêm lịch sử định giá và chuẩn bị dữ liệu mới. Không viết lại lịch sử hoặc đẩy trực tiếp vào `main`; bàn giao qua PR.
 
-Ngày 26/10/2026: đã đẩy commit tính năng `2bc8d77` lên `origin/feature/fe-ai-v6` và tạo [PR #4 vào main](https://github.com/manchae19/SmartProp/pull/4), gắn [issue #3](https://github.com/manchae19/SmartProp/issues/3). PR đang chờ review, chưa merge. Các lệnh commit/push phía dưới là hướng dẫn cho thay đổi tiếp theo, không cần chạy lại để bàn giao bản này.
+Ngày 26/10/2026: đã đẩy commit tính năng `2bc8d77` lên `origin/feature/fe-ai-v6` và tạo [PR #4 vào main](https://github.com/manchae19/SmartProp/pull/4), gắn [issue #3](https://github.com/manchae19/SmartProp/issues/3). Tại thời điểm bàn giao đó, PR chờ review; trạng thái hiện tại xem trên PR. Các lệnh commit/push phía dưới là hướng dẫn cho thay đổi tiếp theo, không cần chạy lại để bàn giao bản này.
+
+Ngày 27/10/2026: đã kiểm chứng lịch sử bằng trình duyệt với BE/MySQL/model thật; review theo Standards và Spec phát hiện rồi sửa lỗi cách ly datasource và cleanup. Có [báo cáo review](PR4_REVIEW.md), [phân tích sai số v6](MODEL_V6_DIAGNOSTICS.md) và hướng dẫn database local. Các bản vá được kiểm tra bằng schema và JAR riêng, giữ nguyên phiên demo/dữ liệu của người dùng. Kết quả phân tích không phải model mới hoặc test độc lập.
 
 Ngày 17/10/2026: bỏ theo dõi **3.448 file**, giữ khoảng **4,99 GB dữ liệu/cache trên máy**; phần mã nguồn/tài liệu/model dự kiến commit có **296 file, khoảng 3,6 MB**. Một bản sao chỉ chứa phần này (không có raw/processed/.venv) đã chạy đạt 17 kiểm thử, đủ 299 dự đoán parity và smoke test HTTP cả ba loại tài sản bằng môi trường Python hiện có.
 

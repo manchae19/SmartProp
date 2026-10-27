@@ -51,6 +51,8 @@ Nhánh `feature/fe-ai-v6` đã ghép lịch sử `main`, dùng FE từ `7368bc1`
 | [database/migrations/V13__valuation_history.sql](../database/migrations/V13__valuation_history.sql) | Bảng lịch sử, khóa chống trùng và chỉ mục owner/thời gian |
 | [prepare_training_next.py](../ai-services/app/data/prepare_training_next.py) | Bản chuẩn bị cohort mới, cách ly mã địa bàn sai và xuất readiness |
 | [GEOSPATIAL_NEXT.md](GEOSPATIAL_NEXT.md) | Số liệu v6 hiện tại, dữ liệu vị trí còn thiếu và nguồn được phép |
+| [MODEL_V6_DIAGNOSTICS.md](MODEL_V6_DIAGNOSTICS.md) | Sai số validation theo loại/địa bàn và kế hoạch bổ sung độ phủ |
+| [PR4_REVIEW.md](PR4_REVIEW.md) | Review Standards/Spec và bản vá cách ly database/cleanup |
 
 | File FE | Vai trò |
 |---|---|

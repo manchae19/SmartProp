@@ -1,5 +1,6 @@
 import argparse,json,os,re,signal,socket,subprocess,time,uuid
 from pathlib import Path
+from local_runtime import cleanup_all, kill_owned_tree, spring_environment, stop_owned
 parser=argparse.ArgumentParser(description='Check valuation history only against a new isolated MySQL schema.')
 parser.add_argument('--browser',action='store_true',help='Also run Vue browser tests against the real backend and v6 model.')
 options=parser.parse_args()
@@ -52,9 +53,11 @@ try:
                 if response.status==200:break
         except OSError:time.sleep(.25)
     else:raise RuntimeError('Isolated AI did not become ready')
-    env=os.environ.copy();env['JAVA_HOME']=runtime['jdk'];env['SMARTPROP_HISTORY_TEST_URL']=f'jdbc:mysql://127.0.0.1:{port}/{schema}?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false';env['SMARTPROP_HISTORY_AI_URL']=f'http://127.0.0.1:{ai_port}'
+    db_url=f'jdbc:mysql://127.0.0.1:{port}/{schema}?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false'
+    env=spring_environment(os.environ,url=db_url,user='root',password='',jwt=uuid.uuid4().hex+uuid.uuid4().hex)
+    env['JAVA_HOME']=runtime['jdk'];env['SMARTPROP_HISTORY_TEST_URL']=db_url;env['SMARTPROP_HISTORY_AI_URL']=f'http://127.0.0.1:{ai_port}'
     maven=Path(runtime['maven']);launcher=next((maven/'boot').glob('plexus-classworlds-*.jar'))
-    command=[str(Path(runtime['jdk'])/'bin/java.exe'),f'-Dmaven.home={maven}',f'-Dclassworlds.conf={maven}/bin/m2.conf',f'-Dmaven.multiModuleProjectDirectory={root}/backend',f'-Dmaven.repo.local={root}/.scratch/m2','-classpath',str(launcher),'org.codehaus.plexus.classworlds.launcher.Launcher','-B','-ntp','-f',str(root/'backend/pom.xml'),'-DforkCount=0','package' if options.browser else 'test']
+    command=[str(Path(runtime['jdk'])/'bin/java.exe'),f'-Dmaven.home={maven}',f'-Dclassworlds.conf={maven}/bin/m2.conf',f'-Dmaven.multiModuleProjectDirectory={root}/backend',f'-Dmaven.repo.local={root}/.scratch/m2','-classpath',str(launcher),'org.codehaus.plexus.classworlds.launcher.Launcher','-B','-ntp','-f',str(root/'backend/pom.xml'),f'-Dsmartprop.build.directory={work}/target','-DforkCount=0','package' if options.browser else 'test']
     with (work/'maven.log').open('w',encoding='utf-8') as log:
         result=subprocess.run(command,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT)
     print((work/'maven.log').read_text(encoding='utf-8')[-5000:],flush=True)
@@ -65,11 +68,13 @@ try:
         browser=run_browser_check(root,runtime,env,work,ai_port)
     (root/'.scratch/history-mysql-verification.json').write_text(json.dumps({'passed':True,'mysql':'8.4.13','migrations':len(migrations),'schema':schema,'port':port,'log':str(work/'maven.log'),'test_server_pid':server.pid,'browser':browser}),encoding='utf-8')
 finally:
-    if ai is not None:
+    def terminate_ai():
         ai_pid=re.search(r'\[PID (\d+)\]',(work/'ai.log').read_text(encoding='utf-8'))
-        if ai.poll() is None and ai_pid:os.kill(int(ai_pid[1]),signal.SIGTERM)
-        ai.wait(timeout=5);ai_log.close()
-    subprocess.run([str(mysql/'mysqladmin.exe'),'--no-defaults','--protocol=TCP','--host=127.0.0.1',f'--port={port}','--user=root','shutdown'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-    try:server.wait(timeout=15)
-    except subprocess.TimeoutExpired:server.terminate();server.wait(timeout=5)
+        if ai_pid:os.kill(int(ai_pid[1]),signal.SIGTERM)
+        else:kill_owned_tree(ai)
+    def shutdown_mysql():
+        subprocess.run([str(mysql/'mysqladmin.exe'),'--no-defaults','--protocol=TCP','--host=127.0.0.1',f'--port={port}','--user=root','shutdown'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10)
+    cleanup_all(lambda:stop_owned(ai,graceful=terminate_ai,force=lambda:kill_owned_tree(ai),timeout=5),
+                lambda:ai_log.close() if ai is not None else None,
+                lambda:stop_owned(server,graceful=shutdown_mysql,timeout=15))
     print('Only the isolated MySQL process has stopped; source databases were not used.',flush=True)

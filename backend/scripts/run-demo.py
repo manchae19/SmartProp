@@ -9,6 +9,7 @@ import socket
 import subprocess
 import sys
 import time
+from local_runtime import cleanup_all, datasource_arguments, spring_environment, stop_owned
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "backend"
@@ -104,16 +105,16 @@ def main():
         sql(f"CREATE USER IF NOT EXISTS 'smartprop_demo'@'127.0.0.1' IDENTIFIED BY '{password}'; "
             f"ALTER USER 'smartprop_demo'@'127.0.0.1' IDENTIFIED BY '{password}'; "
             "GRANT SELECT,INSERT,UPDATE,DELETE ON smartprop_local_demo.* TO 'smartprop_demo'@'127.0.0.1';")
-        env = os.environ.copy()
-        env.update(DB_URL=f"jdbc:mysql://127.0.0.1:{args.db_port}/smartprop_local_demo?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false",
-            DB_USER="smartprop_demo", DB_PASSWORD=password, JWT_SECRET=config["jwt_secret"],
-            CORS_ORIGINS="http://127.0.0.1:5173,http://localhost:5173")
+        db_url = f"jdbc:mysql://127.0.0.1:{args.db_port}/smartprop_local_demo?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false"
+        env = spring_environment(os.environ, url=db_url, user="smartprop_demo", password=password, jwt=config["jwt_secret"])
+        env["CORS_ORIGINS"] = "http://127.0.0.1:5173,http://localhost:5173"
         print(f"BE demo: http://127.0.0.1:{args.port}; MySQL riêng: 127.0.0.1:{args.db_port}. Giữ terminal mở.", flush=True)
         print("Dữ liệu demo lưu tại backend/var/local-demo; không đọc .env hoặc database nguồn.", flush=True)
-        backend = subprocess.Popen([str(java_home / "bin/java.exe"), "-jar", str(jar), f"--server.port={args.port}",
+        backend = subprocess.Popen([str(java_home / "bin/java.exe"), "-jar", str(jar), *datasource_arguments(db_url,"smartprop_demo"), f"--server.port={args.port}",
             "--server.address=127.0.0.1", "--app.valuation.enabled=true", "--app.valuation.base-url=http://127.0.0.1:8000",
             "--spring.flyway.enabled=false", "--spring.sql.init.mode=never", "--spring.jpa.hibernate.ddl-auto=validate",
             "--app.seed.enabled=false", "--app.database-seed.enabled=false", "--app.email.enabled=false",
+            "--app.email.worker-enabled=false", "--app.refresh.enabled=false", "--spring.profiles.active=default",
             "--debug=false", "--logging.level.root=INFO", "--logging.level.org.springframework=INFO",
             f"--app.storage-root={STATE / 'uploads'}"], cwd=BACKEND, env=env)
         if args.check:
@@ -134,16 +135,10 @@ def main():
     except KeyboardInterrupt:
         return 130
     finally:
-        if backend is not None and backend.poll() is None:
-            backend.terminate()
-            backend.wait(timeout=10)
-        subprocess.run([str(mysql_home / "bin/mysqladmin.exe"), "--no-defaults", "--protocol=TCP", "--host=127.0.0.1",
-            f"--port={args.db_port}", "--user=root", "shutdown"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10, creationflags=hidden)
-        try:
-            mysql.wait(timeout=15)
-        except subprocess.TimeoutExpired:
-            mysql.terminate()
-            mysql.wait(timeout=5)
+        def shutdown_mysql():
+            subprocess.run([str(mysql_home / "bin/mysqladmin.exe"), "--no-defaults", "--protocol=TCP", "--host=127.0.0.1",
+                f"--port={args.db_port}", "--user=root", "shutdown"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10, creationflags=hidden)
+        cleanup_all(lambda: stop_owned(backend), lambda: stop_owned(mysql,graceful=shutdown_mysql,timeout=15))
 
 
 if __name__ == "__main__":
