@@ -63,6 +63,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Lô thử 100 tin căn hộ mới](docs/APARTMENT_PILOT_100.md): 10 ứng viên khóa riêng để kiểm chứng, 90 tin cần rà soát. Chưa thêm vào train hoặc huấn luyện v7.
 
+[Đã rà soát tiếp 90 tin](docs/APARTMENT_FOLLOWUP.md): bổ sung 3 ứng viên, loại 10 tin khỏi phạm vi, còn 77 cần bằng chứng. Tập kiểm chứng mở rộng có 13 nhóm; chưa train v7.
+
 ## Kiểm thử bản gọn
 
 ```powershell

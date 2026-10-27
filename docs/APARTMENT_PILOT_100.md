@@ -5,6 +5,10 @@ Theo [issue #7](https://github.com/manchae19/SmartProp/issues/7), đã thu thêm
 nối khi kiểm tra; Nhadat24h trả trang công khai nhưng chưa dùng cho đợt này.
 Đã tuân thủ robots.txt, nhịp tối thiểu 3 giây, giữ checkpoint và cache.
 
+**Đã có đợt rà soát tiếp:** [90 tin và nguồn bổ sung](APARTMENT_FOLLOWUP.md).
+Tập kiểm chứng mở rộng có 13 nhóm; số liệu 10/90 dưới đây thuộc bản đầu tiên,
+được giữ nguyên để đối chiếu.
+
 **Kết quả: 10 ứng viên kiểm chứng, 90 tin cần rà soát/cách ly.**
 Chưa thêm tin nào vào train và chưa huấn luyện v7. Mốc cân nhắc kiểm chứng
 đã chốt là 20 nhóm qua rà soát; còn thiếu ít nhất 10 nhóm. Mốc này không phải
