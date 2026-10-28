@@ -27,6 +27,33 @@ def event(identifier='1', when='2026-01-20T00:00:00+00:00', price=3000, group=No
 
 
 class ObservationTests(unittest.TestCase):
+    def test_partial_evidence_write_interrupt_does_not_poison_retry(self):
+        original_open = Path.open
+        def interrupted_open(path, *args, **kwargs):
+            stream = original_open(path, *args, **kwargs)
+            if not path.name.startswith('.pending_'):
+                return stream
+            class PartialWriter:
+                def __enter__(self):
+                    return self
+                def __exit__(self, *args):
+                    stream.close()
+                def write(self, content):
+                    stream.write(content[:5])
+                    raise KeyboardInterrupt()
+            return PartialWriter()
+        with tempfile.TemporaryDirectory() as temp:
+            store = core.ObservationStore(temp, create=True)
+            try:
+                with patch.object(Path, 'open', interrupted_open), self.assertRaises(KeyboardInterrupt):
+                    store.append(event(), BODY, PROOF)
+                self.assertEqual(store.read_verified(), [])
+                self.assertEqual(list((Path(temp) / 'evidence').iterdir()), [])
+                self.assertTrue(store.append(event(), BODY, PROOF))
+                self.assertEqual(len(store.read_verified()), 1)
+            finally:
+                store.close()
+
     def test_retry_is_idempotent_but_same_listing_new_time_keeps_changed_price(self):
         with tempfile.TemporaryDirectory() as temp:
             store = core.ObservationStore(temp, create=True)
@@ -144,6 +171,22 @@ def fake_context():
 
 
 class PipelineTests(unittest.TestCase):
+    def test_empty_200_response_is_preserved_as_parse_error_and_replayed(self):
+        class Client:
+            def __init__(self, output, delay):
+                pass
+            def fetch(self, url):
+                self.last_url = url
+                return b'', 200
+        with tempfile.TemporaryDirectory() as temp, patch.object(pipeline, 'review_context', side_effect=fake_context):
+            result = pipeline.observe('empty-body', 1, temp, Client)
+            self.assertEqual(result['status'], 'completed')
+            self.assertEqual(result['observed'], 1)
+            rows = pipeline.verify(temp)
+            self.assertEqual(rows[0]['availability'], 'parse_error')
+            self.assertIsNone(rows[0]['price_million'])
+            self.assertIn('parse_error:ParserError', rows[0]['quality_flags'])
+
     def test_real_parser_changed_price_and_evidence_replay(self):
         from test_collect_apartment_pilot import fixture
         original_body, card = fixture()

@@ -4,9 +4,11 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
 import sqlite3
+import uuid
 from statistics import median
 
 VN = timezone(timedelta(hours=7))
@@ -76,6 +78,31 @@ def normalize(event):
     return event
 
 
+def persist_evidence(directory, content, suffix):
+    """Publish a complete body without replacing an existing evidence file."""
+    path = directory / (digest(content) + suffix)
+    directory.mkdir(exist_ok=True)
+    if path.exists():
+        if path.read_bytes() != content:
+            raise ValueError('Evidence store changed: ' + path.name)
+        return
+    temporary = directory / ('.pending_' + uuid.uuid4().hex)
+    try:
+        with temporary.open('xb') as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            # Same-directory hard link publishes atomically and refuses to
+            # overwrite. A killed writer can only leave an unreferenced temp.
+            os.link(temporary, path)
+        except FileExistsError:
+            if path.read_bytes() != content:
+                raise ValueError('Evidence store changed: ' + path.name)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 class ObservationStore:
     """SQLite transactions serialize writers; evidence is content addressed."""
     def __init__(self, root, *, create=False):
@@ -125,17 +152,7 @@ class ObservationStore:
         # Write immutable evidence before the transaction; an interrupted append
         # may leave unreferenced evidence but cannot leave a row without a body.
         for content, suffix in [(body, '.html'), (provenance, '.json')]:
-            path = self.root / 'evidence' / (digest(content) + suffix)
-            path.parent.mkdir(exist_ok=True)
-            try:
-                with path.open('xb') as stream:
-                    stream.write(content)
-                    stream.flush()
-                    import os
-                    os.fsync(stream.fileno())
-            except FileExistsError:
-                if path.read_bytes() != content:
-                    raise ValueError('Evidence store changed: ' + path.name)
+            persist_evidence(self.root / 'evidence', content, suffix)
         payload = canonical(event)
         identifier = digest(payload.encode('utf8'))
         with self.db:

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import re
+from lxml.etree import LxmlError
 
 import apartment_followup_rules as rules
 import collect_apartment_pilot as cafe
@@ -146,6 +147,17 @@ def parse_revisit(body, seed, decision, observed_at, resolved_url, catalog):
     return row, decision
 
 
+def interpret_response(body, original, decision, observed_at, resolved_url, status, catalog):
+    row = dict(original, collected_at=observed_at, detail_url=resolved_url)
+    error = None
+    if status == 200:
+        try:
+            row, decision = parse_revisit(body, original, decision, observed_at, resolved_url, catalog)
+        except (ValueError, KeyError, TypeError, IndexError, LxmlError) as exc:
+            error = 'parse_error:' + type(exc).__name__
+    return row, decision, error
+
+
 def run_progress(events, root, run_id, plan):
     done = set()
     for event in events:
@@ -212,14 +224,7 @@ def observe(run_id, count=20, root=STORE, client_factory=cafe.Client):
                 continue
             body, http = client.fetch(original['detail_url'])
             observed_at = datetime.now(timezone.utc).isoformat()
-            error = None
-            row = dict(original, collected_at=observed_at, detail_url=client.last_url)
-            checked = decision
-            if http == 200:
-                try:
-                    row, checked = parse_revisit(body, original, decision, observed_at, client.last_url, catalog)
-                except (ValueError, KeyError, TypeError, IndexError) as exc:
-                    error = 'parse_error:' + type(exc).__name__
+            row, checked, error = interpret_response(body, original, decision, observed_at, client.last_url, http, catalog)
             provenance = canonical(dict(mode='detail_revisit', collection_run=run_id, plan=plan,
                 seed_record=original, baseline_review=decision, current_review=checked,
                 observed_at=observed_at, resolved_url=client.last_url, http_status=http, error=error)).encode('utf8')
@@ -258,13 +263,8 @@ def verify(root=STORE):
             replay = event_for(row, decision, body, provenance)
         elif proof['mode'] == 'detail_revisit':
             original, decision = proof['seed_record'], proof['baseline_review']
-            row = dict(original, collected_at=proof['observed_at'], detail_url=proof['resolved_url'])
-            error = None
-            if proof['http_status'] == 200:
-                try:
-                    row, decision = parse_revisit(body, original, decision, proof['observed_at'], proof['resolved_url'], catalog)
-                except (ValueError, KeyError, TypeError, IndexError) as exc:
-                    error = 'parse_error:' + type(exc).__name__
+            row, decision, error = interpret_response(body, original, decision, proof['observed_at'],
+                                                     proof['resolved_url'], proof['http_status'], catalog)
             if error != proof['error'] or decision != proof['current_review']:
                 raise ValueError('Revisit interpretation changed')
             replay = event_for(row, decision, body, provenance, status=proof['http_status'], error=error, current=True)
