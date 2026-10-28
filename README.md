@@ -67,6 +67,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Mở rộng sau review](docs/APARTMENT_EXTENSION.md): thêm 120 ID, khóa 24 nhóm và hoàn tất [thử nghiệm v7](docs/TRAINING_V7_TRIAL.md). Cải thiện nhỏ, giữ v6 trong ứng dụng; 24 nhóm đã chấm không dùng để tối ưu tiếp.
 
+[Quan sát giá rao và chuẩn bị xu hướng](docs/MARKET_PRICE_OBSERVATIONS.md): lưu nhiều thời điểm cho một ID, rà độ phủ đặc trưng và xuất thống kê mẫu theo tháng. Chưa có dự báo xu hướng hoặc model thay thế v6.
+
 ## Kiểm thử bản gọn
 
 ```powershell
