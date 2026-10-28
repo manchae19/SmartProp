@@ -37,7 +37,7 @@ Lịch sử người dùng lưu định giá trong BE vẫn là nghiệp vụ ri
 
 ## Báo cáo để xem
 
-Đầu ra hiện tại:
+Đầu ra của lượt28/10:
 `ai-services/app/data/processed/market_price_observations/runs/9e4d4e006ab405f8/`.
 `processed/market_price_observations/latest.json` trỏ tới bản hiện hành.
 
@@ -129,3 +129,10 @@ run chưa hoàn tất mà đổi code phải dùng phiên bản/run mới. Run �
 
 [Quy tắc đầy đủ](../ai-services/app/data/MARKET_PRICE_PROTOCOL.md) ·
 [Thuật ngữ](../GLOSSARY.md) · [Quyết định về thời gian giá](adr/0001-price-observation-time.md).
+
+## Cập nhật29/10/2026
+
+Đã review, sửa2 lỗi vận hành và tiếp tục20 quan sát trong watchlist. Kho có260
+quan sát/220 ID, vẫn chỉ tháng10/2026 và chưa dự báo xu hướng. Báo cáo thị trường
+mới là run `d35795a6459768ca`; các run28/10 được giữ nguyên. Chi tiết dữ liệu
+đặc trưng và20 trang train thu bổ sung tại [báo cáo ngày29/10](PROPERTY_EVIDENCE_AUDIT.md).

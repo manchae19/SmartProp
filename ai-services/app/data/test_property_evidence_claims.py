@@ -8,6 +8,24 @@ def source(text, kind='verified_detail_body'):
 
 
 class PropertyClaimTests(unittest.TestCase):
+    def test_nearby_relation_after_attribute_does_not_describe_property_access(self):
+        values, _ = extract('Nhà ở', [source('Kiệt ô tô cách nhà 50m, nhà nằm trong kiệt đi bộ.')])
+        self.assertEqual(values['car_access_claim'], '')
+        values, _ = extract('Nhà ở', [source('Kiệt rộng 3m ở gần nhà.')])
+        self.assertEqual(values['alley_width_m_claim'], '')
+
+    def test_postfix_negation_and_pending_certificate_are_not_positive_claims(self):
+        for text in ['Sổ hồng chưa có.', 'Sổ hồng đang chờ cấp.']:
+            values, _ = extract('Nhà ở', [source(text)])
+            self.assertEqual(values['legal_document_claim'], 'certificate_not_available_claimed')
+        values, _ = extract('Nhà ở', [source('Nội thất cơ bản chưa có.')])
+        self.assertEqual(values['interior_claim'], '')
+
+    def test_word_ranges_or_alternatives_do_not_become_exact_width(self):
+        for text in ['Kiệt rộng 3m đến 5m.', 'Kiệt rộng 3m hoặc 5m.']:
+            values, _ = extract('Nhà ở', [source(text)])
+            self.assertEqual(values['alley_width_m_claim'], '')
+
     def test_alley_width_is_not_land_width_or_distance(self):
         good, proof = extract('Nhà ở', [source('Nhà kiệt rộng 3,5m, ngang đất 5m.')])
         self.assertEqual(good['alley_width_m_claim'], 3.5)

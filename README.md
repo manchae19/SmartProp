@@ -69,6 +69,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Quan sát giá rao và chuẩn bị xu hướng](docs/MARKET_PRICE_OBSERVATIONS.md): lưu nhiều thời điểm cho một ID, rà độ phủ đặc trưng và xuất thống kê mẫu theo tháng. Chưa có dự báo xu hướng hoặc model thay thế v6.
 
+[Rà đặc trưng tài sản ngày29/10](docs/PROPERTY_EVIDENCE_AUDIT.md): sidecar/quote cho2.213 train +299 validation; thu20 mô tả train còn thiếu và tiếp tục watchlist20 tin. Chưa phát hành feature matrix hoặc thay v6.
+
 ## Kiểm thử bản gọn
 
 ```powershell

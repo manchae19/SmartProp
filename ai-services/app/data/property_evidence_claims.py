@@ -26,16 +26,18 @@ def extract(category, sources, *, observed_year=2026):
     proof = []
     multi = any(MULTIPLE.search(normalized(s['text'])) for s in sources if s['kind'] != 'structured_legal_status')
 
-    def claim(field, value, source, quote, text, start, rule, reason=None):
+    def claim(field, value, source, quote, text, start, rule, reason=None, *, end=None):
         prefix = text[:start]
+        suffix = text[end:] if end is not None else ''
         why = reason
         if multi:
             why = 'multiple_assets_or_inventory'
         elif FUTURE.search(text):
             why = 'future_or_hypothetical'
-        elif NEAR.search(prefix[-65:]):
+        elif NEAR.search(text):
             why = 'nearby_or_other_subject'
-        elif re.search(r'\b(?:khong|chua)(?:\s+(?:phai|co|o))?\s*$', prefix[-25:]) and rule not in ['explicit_car_no', 'certificate_pending', 'unfurnished']:
+        elif (re.search(r'\b(?:khong|chua)(?:\s+(?:phai|co|o))?\s*$', prefix[-25:]) or
+              re.match(r'\s*(?:thi\s+)?(?:khong|chua)\b', suffix)) and rule not in ['explicit_car_no', 'certificate_pending', 'unfurnished']:
             why = 'negated_or_uncertain'
         proof.append(dict(field=field, value=value, source_kind=source['kind'], source_sha256=source['sha256'],
                           source_quote=quote, rule=rule, status='rejected' if why else 'candidate', reason=why or ''))
@@ -53,18 +55,18 @@ def extract(category, sources, *, observed_year=2026):
                 width = r'\b(?:kiet|hem)\s+(?:(?:o\s*to|oto)\s+)?(?:rong\s+)?(\d+(?:[.,]\d+)?)\s*m(?![\w²])'
                 for match in re.finditer(width, text):
                     number = float(match[1].replace(',', '.'))
-                    reason = 'width_range_or_bound' if re.match(r'\s*[-–/]\s*\d|\s*(?:tro len|tro xuong|do lai)\b', text[match.end():]) else None
+                    reason = 'width_range_or_bound' if re.match(r'\s*[-–/]\s*\d|\s*(?:tro len|tro xuong|do lai)\b|\s*(?:den|hoac|va)\s+\d', text[match.end():]) else None
                     if not 1 <= number <= 20:
                         reason = 'width_outside_review_range'
                     claim('alley_width_m_claim', number, source, quote, text, match.start(), 'explicit_alley_width',
-                          reason)
+                          reason, end=match.end())
                 car_no = r'\b(?:o\s*to|oto)\s+(?:khong|chua)\s+vao(?:\s+duoc)?|\b(?:kiet|hem)\s+khong\s+(?:co\s+)?(?:o\s*to|oto)\b'
                 no_matches = list(re.finditer(car_no, text))
                 for match in no_matches:
-                    claim('car_access_claim', 'no', source, quote, text, match.start(), 'explicit_car_no')
+                    claim('car_access_claim', 'no', source, quote, text, match.start(), 'explicit_car_no', end=match.end())
                 for match in re.finditer(r'\b(?:kiet|hem)\s+(?:o\s*to|oto)\b|\b(?:o\s*to|oto)\s+(?:vao|den)\s+tan\s+(?:nha|dat|noi|cua)\b', text):
                     claim('car_access_claim', 'yes', source, quote, text, match.start(), 'explicit_car_access',
-                          'car_access_negated_in_clause' if no_matches else None)
+                          'car_access_negated_in_clause' if no_matches else None, end=match.end())
             if category == APARTMENT:
                 for match in re.finditer(r'\btang\s+(?:thu\s+)?(\d{1,2})(?!\d)', text):
                     number = int(match[1])
@@ -76,11 +78,11 @@ def extract(category, sources, *, observed_year=2026):
                         reason = 'floor_range_or_multiple_units'
                     elif not 1 <= number <= 80:
                         reason = 'floor_outside_review_range'
-                    claim('apartment_floor_claim', number, source, quote, text, match.start(), 'explicit_unit_floor', reason)
+                    claim('apartment_floor_claim', number, source, quote, text, match.start(), 'explicit_unit_floor', reason, end=match.end())
                 for match in re.finditer(r'\bban giao\s+(?:(?:tu|vao)\s+)?(?:nam\s+)?(20\d{2})\b', text):
                     year = int(match[1])
                     reason = 'unknown_observation_year' if observed_year is None else 'year_after_observation' if year > observed_year else None
-                    claim('handover_year_claim', year, source, quote, text, match.start(), 'literal_handover_year', reason)
+                    claim('handover_year_claim', year, source, quote, text, match.start(), 'literal_handover_year', reason, end=match.end())
                 for field, pattern in [('project_name', r'(?:dự án|du an)\s*:\s*([^,:;|]{2,80})'),
                                        ('building_name', r'(?:Tòa|Toà|Block|block)\s+([A-Z][A-Z0-9-]{0,9})\b')]:
                     for match in re.finditer(pattern, quote, flags=re.I if field == 'project_name' else 0):
@@ -95,16 +97,16 @@ def extract(category, sources, *, observed_year=2026):
                             ('empty', r'\b(?:khong|chua)\s+(?:co\s+)?noi that\b', 'unfurnished')]
                 for value, pattern, rule in patterns:
                     for match in re.finditer(pattern, text):
-                        claim('interior_claim', value, source, quote, text, match.start(), rule)
-            pending = list(re.finditer(r'\b(?:chua co|cho cap|dang cho cap|chua cap)\s+so(?:\s+(?:hong|do))?\b', text))
+                        claim('interior_claim', value, source, quote, text, match.start(), rule, end=match.end())
+            pending = list(re.finditer(r'\b(?:chua co|cho cap|dang cho cap|chua cap)\s+so(?:\s+(?:hong|do))?\b|\bso(?:\s+(?:hong|do))?\s+(?:chua co|chua cap|dang cho cap|cho cap)\b', text))
             for match in pending:
-                claim('legal_document_claim', 'certificate_pending_claimed', source, quote, text, match.start(), 'certificate_pending')
+                claim('legal_document_claim', 'certificate_not_available_claimed', source, quote, text, match.start(), 'certificate_pending', end=match.end())
             for match in re.finditer(r'\bso\s+(?:hong|do)\b', text):
                 if any(m.start() <= match.start() < m.end() for m in pending):
                     continue
-                claim('legal_document_claim', 'certificate_claimed', source, quote, text, match.start(), 'literal_certificate_claim')
+                claim('legal_document_claim', 'certificate_claimed', source, quote, text, match.start(), 'literal_certificate_claim', end=match.end())
             for match in re.finditer(r'\bphap ly\s*:\s*hop dong mua ban\b', text):
-                claim('legal_document_claim', 'sale_contract_claimed', source, quote, text, match.start(), 'literal_legal_contract')
+                claim('legal_document_claim', 'sale_contract_claimed', source, quote, text, match.start(), 'literal_legal_contract', end=match.end())
     candidates = defaultdict(list)
     for item in proof:
         if item['status'] == 'candidate':
