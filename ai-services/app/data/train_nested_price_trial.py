@@ -58,13 +58,24 @@ def check_unchanged(inputs,protected):
 def writer_lock(root):
     root.mkdir(parents=True,exist_ok=True)
     path=root/'writer.lock';token=uuid.uuid4().hex
+    created=None;published=False
     try:
-        with path.open('x',encoding='utf8') as stream:
+        try:stream=path.open('x',encoding='utf8')
+        except FileExistsError as exc:raise ValueError('Another trial writer owns the lock') from exc
+        with stream:
+            created=os.fstat(stream.fileno())
             json.dump(dict(pid=os.getpid(),owner=token),stream)
-    except FileExistsError as exc:raise ValueError('Another trial writer owns the lock') from exc
-    try:yield
+        published=True
+        yield
     finally:
-        if path.exists() and json.loads(path.read_text(encoding='utf8')).get('owner')==token:path.unlink()
+        if created is not None:
+            try:
+                current=path.stat()
+                if (current.st_dev,current.st_ino)==(created.st_dev,created.st_ino):
+                    try:owned=json.loads(path.read_text(encoding='utf8')).get('owner')==token
+                    except json.JSONDecodeError:owned=not published
+                    if owned:path.unlink()
+            except FileNotFoundError:pass
 
 
 class ModelArtifacts:

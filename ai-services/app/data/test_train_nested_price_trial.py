@@ -17,6 +17,23 @@ class ArtifactTests(unittest.TestCase):
                     with job.writer_lock(root):pass
             self.assertFalse((root/'writer.lock').exists())
 
+    def test_interrupted_lock_metadata_write_removes_only_owned_partial_lock(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary)
+            with patch.object(job.json,'dump',side_effect=KeyboardInterrupt),self.assertRaises(KeyboardInterrupt):
+                with job.writer_lock(root):self.fail('Must not enter writer body')
+            self.assertFalse((root/'writer.lock').exists())
+            with job.writer_lock(root):self.assertTrue((root/'writer.lock').exists())
+
+    def test_owned_cleanup_keeps_another_token_and_existing_lock(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);path=root/'writer.lock'
+            with job.writer_lock(root):path.write_text('{"owner":"another"}',encoding='utf8')
+            self.assertEqual(json.loads(path.read_text(encoding='utf8'))['owner'],'another')
+            with self.assertRaisesRegex(ValueError,'Another trial'):
+                with job.writer_lock(root):pass
+            self.assertTrue(path.exists())
+
     def test_csv_replay_detects_identity_count_and_numeric_tampering(self):
         expected=[dict(record_key='x:1',outer_fold='0',predicted_million='1000.0')]
         job.compare_csv(expected,expected)

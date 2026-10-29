@@ -93,12 +93,13 @@ def evaluate(predictions):
 
 
 def nomination_gate(metrics,folds):
+    policy=PROTOCOL['final_gate']
     values={(r['category'],r['method']):r for r in metrics}
     before=values['ALL','control']['mae_million'];after=values['ALL','selected']['mae_million']
     gain=100*(before-after)/before if before>0 else 0
-    checks=[dict(check='aggregate_mae_reduction_at_least_5pct',passed=gain>=5,value=gain)]
+    checks=[dict(check='aggregate_mae_reduction_minimum',passed=gain>=policy['aggregate_mae_reduction_pct'],value=gain)]
     simple=values['ALL','median_unit_location']['mae_million']
-    checks.append(dict(check='selected_beats_simple_median_aggregate',passed=after<simple,
+    checks.append(dict(check='selected_beats_simple_median_aggregate',passed=after<simple or not policy['must_beat_simple_median'],
                        value=100*(simple-after)/simple if simple>0 else None))
     for category in data.CATEGORIES:
         a,b=values[category,'control'],values[category,'selected']
@@ -106,9 +107,9 @@ def nomination_gate(metrics,folds):
         nonworse=sum(next(r['mae_million'] for r in folds if (r['category'],r['method'],r['outer_fold'])==(category,'selected',f))
                      <=next(r['mae_million'] for r in folds if (r['category'],r['method'],r['outer_fold'])==(category,'control',f))
                      for f in range(PROTOCOL['outer_folds']))
-        checks += [dict(category=category,check='category_mae_increase_at_most_5pct',passed=increase is not None and increase<=5,value=increase),
-                   dict(category=category,check='within20_decrease_at_most_5pp',passed=a['within_20pct']-b['within_20pct']<=5,value=a['within_20pct']-b['within_20pct']),
-                   dict(category=category,check='at_least_2_nonworse_folds',passed=nonworse>=2,value=nonworse)]
+        checks += [dict(category=category,check='category_mae_increase_maximum',passed=increase is not None and increase<=policy['category_max_mae_increase_pct'],value=increase),
+                   dict(category=category,check='within20_decrease_maximum',passed=a['within_20pct']-b['within_20pct']<=policy['category_max_within20_decrease_pp'],value=a['within_20pct']-b['within_20pct']),
+                   dict(category=category,check='nonworse_folds_minimum',passed=nonworse>=policy['min_nonworse_folds'],value=nonworse)]
     return dict(passed=all(c['passed'] for c in checks),checks=checks,aggregate_mae_reduction_pct=gain,
                 independent_test=False,production_promotion_allowed=False)
 
