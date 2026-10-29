@@ -1,0 +1,2 @@
+-r requirements_apartment_review.txt
+matplotlib>=3.10,<4
