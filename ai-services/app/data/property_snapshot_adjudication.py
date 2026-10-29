@@ -4,12 +4,23 @@ import hashlib
 import re
 
 from smartprop_geography import norm
+from review_apartment_labels import MONEY
 
 CORROBORATION = 'single_unit_price_area_not_corroborated_in_seller_description'
 NUMBER = r'(?<![\w.,])(\d+(?:[.,]\d+)?)'
 AREA = re.compile(NUMBER + r'\s*m[2²](?!\d)', re.I)
 ROOM = re.compile(r'(?<![\w.,])(\d{1,2})\s*(?:PN\b|BR\b|phòng\s+ngủ\b)', re.I)
 VND = re.compile(r'(?<![\w.,])(\d{1,3}(?:[.,]\d{3}){2,}|\d{9,12})\s*(?:VNĐ|VND|đồng)\b', re.I)
+PRICE_LABEL = re.compile(r'\bgia\s*(?:ban(?:\s+sau\s+chiet\s+khau)?|chuyen\s+nhuong|goc\s+chu\s+dau\s+tu|niem\s+yet)?\s*[:=]?\s*$')
+
+
+def price_status(before, after):
+    if not PRICE_LABEL.search(before):return 'not_unconditional_total'
+    conditional=re.search(r'\b(?:sau chiet khau|thanh toan (?:som|nhanh)|ap dung khi|voi dieu kien|neu (?:mua|thanh toan|tra)|mua theo nhom)\b',before+' '+after)
+    if conditional:return 'conditional_total_requires_review'
+    if re.search(r'\b(?:thue|tra truoc|thanh toan|booking|dat coc|vay|qua tang|tu|hon|duoi|khoang)\b[^.;:]{0,45}$',before):return 'not_unconditional_total'
+    if re.match(r'\s*(?:/\s*|moi\s+|mot\s+)(?:m[2²]|th(?:ang)?|nam|dem|ngay|gio)\b',after):return 'not_unconditional_total'
+    return 'total_candidate'
 
 
 def close(a, b, tolerance=.01):
@@ -33,13 +44,31 @@ def full_vnd_proofs(body):
     proofs = []
     for match in VND.finditer(body):
         before = norm(body[max(0,match.start()-95):match.start()])
-        after = norm(body[match.end():match.end()+45])
-        total_label = re.search(r'\bgia\s*(?:ban(?:\s+sau\s+chiet\s+khau)?|chuyen\s+nhuong|goc\s+chu\s+dau\s+tu|niem\s+yet)?\s*[:=]?\s*$', before)
-        blocked = re.search(r'\b(?:thue|tra truoc|thanh toan|booking|dat coc|vay|qua tang|tu|hon|duoi|khoang)\b[^.;:]{0,45}$', before)
-        blocked = blocked or re.match(r'\s*(?:/|moi\s+|mot\s+)(?:m[2²]|thang|nam|dem|ngay)', after)
+        after = norm(body[match.end():match.end()+120])
         amount = int(re.sub(r'[.,]', '', match[1]))/1e6
         proofs.append(evidence('description', body, match, 'explicit_full_vnd_total', value=amount,
-                               status='total_candidate' if total_label and not blocked else 'not_unconditional_total'))
+                               status=price_status(before,after)))
+    return proofs
+
+
+def labelled_money_checks(body):
+    """Extra consistency checks on the full seller prose, never corroboration."""
+    text=norm(body);proofs=[]
+    for match in MONEY.finditer(text):
+        before=text[max(0,match.start()-95):match.start()]
+        after=text[match.end():match.end()+120]
+        status=price_status(before,after)
+        if status=='not_unconditional_total':continue
+        # The old matcher does not consume compact suffixes such as 2ty590.
+        # Keep those ambiguous here instead of silently ignoring a later price.
+        explicit_unit_tail=re.match(r'^\s*\d+(?:[.,]\d+)?\s*(?:trieu|tr)\s*/\s*m[2²]\b',after)
+        if re.match(r'^\s*\d',after) and not explicit_unit_tail:
+            proofs.append(evidence('normalized_seller_text',text,match,'explicit_ty_trieu_consistency',
+                                   status='ambiguous_total_requires_review'))
+            continue
+        amount=float(match[1].replace(',','.'))*(1000 if match[2] in ['ty','ti'] else 1)
+        if match[3]:amount+=float(match[3])
+        proofs.append(evidence('normalized_seller_text',text,match,'explicit_ty_trieu_consistency',value=amount,status=status))
     return proofs
 
 
@@ -66,6 +95,17 @@ def scan(row):
         resolved.append(dict(code=CORROBORATION, rule='full_vnd_total_and_literal_area_match_same_response'))
     normalized = norm(body)
     new_flags = set()
+    consistency=labelled_money_checks(body)
+    proofs+=consistency
+    if any(p['status']=='total_candidate' and not close(p['value'],row['price_million'])
+           for p in proofs if p['rule'] in ['explicit_full_vnd_total','explicit_ty_trieu_consistency']):
+        new_flags.add('full_seller_total_price_disagrees_with_header')
+    if any(p['status']=='conditional_total_requires_review' for p in proofs):
+        new_flags.add('conditional_total_price_requires_review')
+    if any(p['status']=='ambiguous_total_requires_review' for p in proofs):
+        new_flags.add('ambiguous_compact_total_requires_review')
+    if any(p['status']=='property_area_candidate' and not close(p['value'],row['area_sqm']) for p in area_proofs):
+        new_flags.add('full_seller_property_area_disagrees_with_header')
     exclusions = list(row['exclusion_codes'])
     if 'whole_building_not_single_apartment' in exclusions:
         # An opening "Tòa căn hộ ..." can introduce a project followed by a

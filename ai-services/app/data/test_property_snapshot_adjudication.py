@@ -34,6 +34,8 @@ class SourceAdjudicationTests(unittest.TestCase):
 
     def test_unit_rental_and_funding_amounts_are_not_totals(self):
         for text in ['Giá thuê: 2.500.000.000 VND.', 'Giá bán: 2.500.000.000 VND/m².',
+                     'Giá bán: 2.500.000.000 VND / m².', 'Giá bán: 2.500.000.000 VND / tháng.',
+                     'Giá bán: 2.500.000.000 VND / th.', 'Giá bán: 2.500.000.000 VND mỗi tháng.',
                      'Trả trước: 2.500.000.000 VND.', 'Giá từ 2.500.000.000 VND.']:
             with self.subTest(text=text):
                 result=rules.scan(row(description='Căn hộ. Diện tích: 55m². '+text))
@@ -47,6 +49,35 @@ class SourceAdjudicationTests(unittest.TestCase):
         for text in ['Giá bán: 2.800.000.000 VND.', 'Giá bán: 2.500.000.000 VND. Giá bán: 2.800.000.000 VND.']:
             result=rules.scan(row(description='Căn hộ. Diện tích: 55m². '+text))
             self.assertIn(rules.CORROBORATION,result['remaining_codes'])
+
+    def test_new_price_conflict_blocks_previous_source_candidate(self):
+        for price in ['2.800.000.000 VND','2,8 tỷ']:
+            result=rules.scan(row(review_codes=[],description='Căn hộ. Diện tích: 55m². Giá bán: 2,5 tỷ. Liên hệ. Giá bán: '+price+'.'))
+            self.assertIn('full_seller_total_price_disagrees_with_header',result['remaining_codes'])
+            self.assertEqual(result['source_decision'],'needs_evidence')
+
+    def test_later_compact_price_is_reviewed_instead_of_ignored(self):
+        result=rules.scan(row(review_codes=[],description='Căn hộ. Diện tích: 55m². Giá bán: 2,5 tỷ. Liên hệ. Giá bán: 2ty8.'))
+        self.assertIn('ambiguous_compact_total_requires_review',result['remaining_codes'])
+
+    def test_explicit_unit_price_after_total_is_not_a_compact_suffix(self):
+        result=rules.scan(row(review_codes=[],description='Căn hộ. Diện tích: 55m². Giá bán: 2,5 tỷ 45,45 triệu/m², có thương lượng.'))
+        self.assertEqual(result['remaining_codes'],[])
+        self.assertEqual(result['source_decision'],'source_candidate')
+
+    def test_new_area_conflict_after_contact_blocks_previous_candidate(self):
+        result=rules.scan(row(review_codes=[],description='Căn hộ. Diện tích: 55m². Giá bán: 2,5 tỷ. Liên hệ. Diện tích: 75m².'))
+        self.assertIn('full_seller_property_area_disagrees_with_header',result['remaining_codes'])
+        self.assertEqual(result['source_decision'],'needs_evidence')
+
+    def test_conditional_price_never_resolves_corroboration(self):
+        for price in ['Giá bán sau chiết khấu: 2.500.000.000 VND.',
+                      'Giá bán: 2.500.000.000 VND áp dụng khi mua theo nhóm.',
+                      'Giá bán: 2.500.000.000 VND với điều kiện thanh toán sớm.',
+                      'Giá bán sau chiết khấu: 2,5 tỷ.']:
+            result=rules.scan(row(description='Căn hộ. Diện tích: 55m². '+price))
+            self.assertIn(rules.CORROBORATION,result['remaining_codes'])
+            self.assertIn('conditional_total_price_requires_review',result['remaining_codes'])
 
     def test_inventory_after_contact_excludes_previous_candidate(self):
         result=rules.scan(row(review_codes=[],description='Căn hộ diện tích 55m² giá 2,5 tỷ. Liên hệ 0900000000. Ngoài ra tôi còn giỏ hàng 5 căn khác.'))

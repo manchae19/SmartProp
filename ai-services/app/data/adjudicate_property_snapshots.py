@@ -37,6 +37,10 @@ ACTIONS={
     'nonstandard_apartment_review':'Cần xác định căn hộ ở hay condotel/dịch vụ và thời hạn sở hữu.',
     'apartment_not_supported_by_seller_description':'Cần lời rao xác định đúng một căn hộ, không suy từ sidebar.',
     'whole_building_scope_not_resolved':'Heading “tòa căn hộ” chưa chứng minh bán nguyên tòa; cần xác định một căn và điều kiện giá.',
+    'full_seller_total_price_disagrees_with_header':'Giá tổng có nhãn rõ trong toàn bộ lời rao khác header; cần đối chiếu, kể cả phần sau liên hệ.',
+    'full_seller_property_area_disagrees_with_header':'Diện tích có nhãn trong toàn bộ lời rao khác header; cần xác định cơ sở diện tích.',
+    'conditional_total_price_requires_review':'Giá có điều kiện/chiết khấu chưa xác định điều kiện tương ứng; chưa nhận làm giá tổng vô điều kiện.',
+    'ambiguous_compact_total_requires_review':'Giá tổng viết tắt chưa phân tích chắc chắn; cần lời rao có đơn vị và số tiền đầy đủ.',
 }
 
 

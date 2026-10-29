@@ -10,16 +10,15 @@ cũ. Không truy cập website, huấn luyện hoặc chấm mô hình trong đ�
 | Kết luận không chồng lặp | Số tin |
 |---|---:|
 | Tách khỏi tập một căn hộ vì chào bán rõ nhiều căn | 2 |
-| Chưa đủ bằng chứng hoặc còn quan hệ nhóm cần làm rõ | 217 |
-| Đại diện một nhóm mới, giữ ngoài train | 1 |
-| Tin thứ hai của cùng nhóm mới, không đếm thêm tài sản | 1 |
+| Chưa đủ bằng chứng hoặc còn quan hệ nhóm cần làm rõ | 219 |
 | Đại diện một nhóm train được đọc lại | 1 |
 | **Tổng** | **222** |
 
-Ba lỗi thiếu corroboration được giải quyết bằng giá VND đầy đủ có nhãn giá
-tổng rõ trong lời rao và diện tích cùng phản hồi. Hai trong ba tin là cùng
-một mã căn/dự án/diện tích, nên gộp thành một nhóm ứng viên. Tin còn lại là
-ID đã thuộc train: đọc lại không làm tăng số tài sản train.
+Một lỗi thiếu corroboration được giải quyết bằng giá VND đầy đủ có nhãn giá
+tổng rõ trong lời rao và diện tích cùng phản hồi. Đây là ID đã thuộc train:
+đọc lại không làm tăng số tài sản train. Hai tin cùng mã căn/dự án/diện tích
+được nối nhóm để tránh đếm trùng, nhưng giá ghi “sau chiết khấu” chưa làm rõ
+điều kiện nên vẫn chờ, không được nhận vào tập kiểm chứng mới.
 
 Hai cờ loại cũ chỉ dựa vào heading “tòa căn hộ” được chuyển về cần làm rõ.
 Heading này không chứng minh chủ tin đang bán nguyên tòa. Các tin đó vẫn bị
@@ -31,17 +30,16 @@ dữ liệu đủ chất lượng. Mọi giá trị và kết quả cổng cũ �
 | Vai trò trong phiên bản nghiên cứu mới | Số tin/đại diện |
 |---|---:|
 | Đại diện nhóm train đọc lại | 6 |
-| Đại diện nhóm mới giữ ngoài train | 6 |
-| Bản trùng trong cùng nhóm ứng viên | 1 |
-| Cần bổ sung bằng chứng/giải quyết quan hệ nhóm | 218 |
+| Đại diện nhóm mới giữ ngoài train | 5 |
+| Cần bổ sung bằng chứng/giải quyết quan hệ nhóm | 220 |
 | Tách khỏi tập một căn hộ | 3 |
 | **Tổng** | **234** |
 
 Kiểm tra lại 12 ứng viên cũ phát hiện hai trường hợp cần rút: một tin tiếp
 tục liệt kê giỏ hàng sau đoạn “liên hệ”; một tin chưa thống nhất nhận nhà/
-dự kiến bàn giao. Có hai đại diện mới qua bước giải quyết lỗi giá VND để bù
-vào danh sách ứng viên. Vì vậy tổng vẫn **6 nhóm train đọc lại + 6 nhóm mới**,
-nhưng thành viên đã thay đổi. Không dùng kết quả cổng cũ như quyết định cuối.
+dự kiến bàn giao. Một ID train khác được giải quyết lỗi giá VND. Kết quả cuối
+là **6 nhóm train đọc lại + 5 nhóm mới**, thành viên đã thay đổi. Hai tin giá
+sau chiết khấu vẫn giữ cần review. Không dùng kết quả cổng cũ như quyết định cuối.
 
 Các nhóm là nhóm tài sản **ứng viên** dựa trên nguồn và so khớp, chưa chứng
 minh tài sản độc lập ngoài thực tế. Tách khỏi tập một căn hộ không đồng nghĩa
@@ -54,7 +52,7 @@ Cờ còn lại trên toàn bộ 234 snapshot, có chồng lặp:
 
 | Nội dung cần làm rõ | Số tin có cờ |
 |---|---:|
-| Chưa có giá tổng và diện tích khớp trong lời người bán | 196 |
+| Chưa có giá tổng và diện tích khớp trong lời người bán | 198 |
 | Giá khởi điểm/trả trước/booking hoặc điều kiện thanh toán | 93 |
 | Diện tích mô tả khác trường cấu trúc | 88 |
 | Có dấu hiệu nhiều căn/giỏ hàng theo cổng cũ | 57 |
@@ -75,8 +73,7 @@ giá theo m² là giá tổng. Mỗi tin có `next_action` cụ thể trong bả
 
 Thư mục gốc tính từ `ai-services/app/data/`:
 `processed/property_source_adjudication/`. Pointer `latest.json` trỏ đến run
-bất biến mới nhất. Run đã tạo: `43b35a827f99077a`, có 1.120 dòng bằng chứng/
-claim (không phải 1.120 tin). Bộ dữ liệu gồm:
+bất biến mới nhất. Run đã tạo: `4fd1c013b621ac45`. Bộ dữ liệu gồm:
 
 - `pending_222_decisions.csv`: đúng 222 tin chờ, giữ cờ cũ/mới, bằng chứng,
   kết luận và việc cần làm cho từng tin.
@@ -85,9 +82,9 @@ claim (không phải 1.120 tin). Bộ dữ liệu gồm:
   điểm quan sát, nguồn/hash, nhóm và vai trò của từng snapshot.
 - `features_DO_NOT_TRAIN.csv`: đặc trưng cùng snapshot; thiếu/mâu thuẫn giữ
   trống. Không nhập giá/đơn giá hoặc nguyên văn mô tả vào tập biến dự đoán.
-- `candidate_groups_DO_NOT_TRAIN.csv`: 12 đại diện, một hàng mỗi nhóm.
+- `candidate_groups_DO_NOT_TRAIN.csv`: 11 đại diện, một hàng mỗi nhóm.
 - `train_refresh_DO_NOT_TRAIN.csv`: 6 đại diện nhóm train đọc lại.
-- `fresh_evaluation_RESERVED_DO_NOT_TRAIN.csv`: 6 nhóm mới giữ ngoài train.
+- `fresh_evaluation_RESERVED_DO_NOT_TRAIN.csv`: 5 nhóm mới giữ ngoài train.
 - `evidence_private.csv`, `additional_group_links.json`: quote, hash và
   liên kết bổ sung; giữ cục bộ cùng kho dữ liệu nguồn.
 - `schema.json`, `experiment_reservation.json`, `manifest.json`: hợp đồng
@@ -98,7 +95,7 @@ claim (không phải 1.120 tin). Bộ dữ liệu gồm:
 | Nhóm | Phòng ngủ có lời khai thống nhất | Tầng căn hộ | Nội thất | Giấy tờ | Năm bàn giao |
 |---|---:|---:|---:|---:|---:|
 | 6 nhóm train đọc lại | 6 | 3 | 2 | 3 | 0 |
-| 6 nhóm mới giữ ngoài train | 6 | 1 | 3 | 1 | 0 |
+| 5 nhóm mới giữ ngoài train | 5 | 1 | 3 | 1 | 0 |
 
 Giấy tờ chỉ là lời khai từ nguồn. Tên dự án dùng để đối chiếu mã căn chưa
 trở thành registry dự án hoặc một biến mô hình. Tọa độ/POI đủ điều kiện vẫn 0.
@@ -110,11 +107,10 @@ thời reservation này và ledger cũ; không gọi cohort đã tiêu thụ là
 ## Có train XGBoost mới ngay không?
 
 **Chưa phát hành bộ X mới hoặc fit model mới từ lô này.** Bộ sạch cũ vẫn có
-**2.213 train + 299 validation phát triển**, model ứng dụng vẫn v6. Không có
-2.225 tài sản train: sáu nhóm đọc lại là nhóm train đã có, sáu nhóm mới đang
-giữ riêng để kiểm chứng.
+**2.213 train + 299 validation phát triển**, model ứng dụng vẫn v6. Sáu nhóm
+đọc lại là nhóm train đã có; năm nhóm mới đang giữ riêng để kiểm chứng.
 
-Hiện chỉ có 6 nhóm mới; chưa đạt mốc vận hành 20 nhóm của pilot. Mốc 20 cũng
+Hiện chỉ có 5 nhóm mới; chưa đạt mốc vận hành 20 nhóm của pilot. Mốc 20 cũng
 không bảo đảm tính đại diện hoặc độ chính xác thống kê. Chỉ có 6 nhóm train
 đọc lại qua cổng nguồn, độ phủ đặc trưng mới còn ít; không ghép các mô tả hiện
 tại vào nhãn quá khứ của 2.213 tin. Cần một protocol thử nghiệm riêng về cohort,
@@ -154,12 +150,36 @@ phân vai dữ liệu mới. Liên kết mã căn chỉ được thêm, không x
 
 ## Kiểm thử và review
 
-28 fixture mới kiểm tra giá VND, metadata echo, giá thuê/đặt cọc/đơn giá,
+33 fixture mới kiểm tra giá VND, metadata echo, giá thuê/đặt cọc/đơn giá,
 diện tích công viên, giỏ hàng sau liên hệ, heading nguyên tòa, phòng ngủ giả
 định/BR, liên kết mã căn, hidden historical/protected bridge, khử trùng nhóm,
 nhãn/hash/thời điểm bất biến và hợp đồng trường dữ liệu.
 
-Kết quả review mã nguồn và replay cuối được ghi sau khi hoàn tất kiểm chứng.
-
-Đã chạy **133 unit test đạt**, gồm 105 kiểm thử pipeline trước và 28 fixture
+Đã chạy **138 unit test đạt**, gồm 105 kiểm thử pipeline trước và 33 fixture
 mới. Các test mới không cần kho dữ liệu thật hoặc mạng.
+
+## Standards
+
+Review riêng: **0 vi phạm tiêu chuẩn repo, 1 heuristic P3** về logic union/find
+lặp giữa phục hồi thành phần toàn graph và gộp overlay hiện tại. Hai hàm giữ
+contract/định danh khác nhau; ghi nhận việc gom primitive dùng chung cho lần
+bảo trì, không refactor các module lịch sử đã khóa.
+
+Reviewer còn phát hiện một lỗi chức năng P2 ngoài axis Standards: suffix
+`VND / m²` hoặc `VND / tháng` có khoảng trắng bị nhận thành tổng giá. Đã sửa,
+thêm biến thể khoảng trắng/đơn vị và reviewer chạy lại xác nhận chặn đúng.
+
+## Spec
+
+Review ban đầu: **2 lỗi P2**. Giá/diện tích mới sau “liên hệ” chỉ được ghi
+proof mà chưa chặn ứng viên cũ; và điều kiện hậu vị hoặc “sau chiết khấu”
+chưa chặn việc giải quyết cờ corroboration. Đã thêm kiểm tra cho mọi dòng,
+giữ cờ khi tổng giá/diện tích khác header, giá có điều kiện và giá viết gọn
+chưa phân giải được. Reviewer chạy lại fixture lỗi và 32 test tại thời điểm
+xác nhận: đạt, không phát hiện lỗi còn mở trong phạm vi các bản sửa.
+
+Kiểm tra dữ liệu thật bổ sung regression thứ 33 cho trường hợp giá tổng có
+đơn giá theo m² ngay sau: không nhầm đơn giá có đơn vị rõ với hậu tố giá viết
+gọn. Kết quả cuối vẫn giữ 5 nhóm mới; không dùng giá sau chiết khấu để tăng
+số lượng ứng viên. Tổng review còn mở: Standards 0 hard/1 heuristic P3;
+Spec 0 P2 sau sửa và xác nhận. Không thay model/API/database.
