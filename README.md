@@ -71,6 +71,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Rà đặc trưng tài sản ngày29/10](docs/PROPERTY_EVIDENCE_AUDIT.md): sidecar/quote cho2.213 train +299 validation; thu20 mô tả train còn thiếu và tiếp tục watchlist20 tin. Chưa phát hành feature matrix hoặc thay v6.
 
+[Bổ sung nguồn và đường cong học](docs/PROPERTY_EXPANSION_RESULTS.md): thu tiếp154 mô tả và60 ID mới, hậu kiểm ra6 nhóm mới +6 nhóm train ứng viên; đo36 model chỉ trong train để định hướng bổ sung dữ liệu. V6 giữ nguyên.
+
 ## Kiểm thử bản gọn
 
 ```powershell
