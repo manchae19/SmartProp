@@ -60,6 +60,23 @@ class CollectionTests(unittest.TestCase):
             self.assertFalse((root/'plan.json').exists())
             self.assertEqual(json.loads((root/'checkpoint.json').read_text())['completed'], ['Nhà ở'])
 
+    def test_bad_detail_html_is_saved_then_stops_without_next_request(self):
+        _, row = fixture(source_category='ban-nha-rieng')
+        row['sampling_category'] = 'Nhà ở'
+        requests = []
+        class Client:
+            def __init__(self, *_): pass
+            def fetch(self, url):
+                requests.append(url)
+                self.last_url = url
+                return b'<html><h1>Unexpected document</h1></html>', 200
+        with tempfile.TemporaryDirectory() as temp, patch.object(job, 'listing_page', return_value=([row, dict(row, record_key='cafeland:9990002')], set())):
+            result = job.collect(Path(temp), Client, lambda: (set(), dict(self.plan(), target_each=2)))
+            self.assertEqual(result['status'], 'stopped_error')
+            self.assertIn('Property container changed', result['error'])
+            self.assertEqual(len(requests), 2)
+            self.assertEqual(len(job.old.verified_records(Path(temp))), 1)
+
     def test_partial_lock_write_cleanup_does_not_leave_own_lock(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

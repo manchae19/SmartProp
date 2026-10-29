@@ -8,6 +8,7 @@ import re
 
 from lxml import html
 import collect_property_expansion as old
+from crawler_cafeland import crawl_cafeland_danang as cafe_parser
 from source_feature_io import atomic_json, writer_lock
 
 BASE = old.BASE
@@ -25,14 +26,14 @@ CATEGORIES = {'ban-nha-rieng': 'Nhà ở', 'ban-nha-pho': 'Nhà ở', 'ban-biet-
 
 def listing_page(body, url, category):
     doc = html.fromstring(body.decode('utf8'))
-    headings = ' '.join(old.cafe.cafe.norm(x.text_content()) for x in doc.xpath('//h1'))
+    headings = ' '.join(cafe_parser.norm(x.text_content()) for x in doc.xpath('//h1'))
     token = {'Nhà ở': 'nha', 'Đất nền': 'dat', 'Căn hộ chung cư': 'can ho'}[category]
     if 'da nang' not in headings or token not in headings:
         raise ValueError('Listing scope/structure differs')
     rows = []
     seen = set()
-    for card in old.cafe.cafe.nodes(doc, 'row-item'):
-        anchors = old.cafe.cafe.nodes(card, 'realTitle')
+    for card in cafe_parser.nodes(doc, 'row-item'):
+        anchors = cafe_parser.nodes(card, 'realTitle')
         if not anchors:
             continue
         link = anchors[0].get('href', '')
@@ -43,10 +44,10 @@ def listing_page(body, url, category):
             continue
         seen.add(match[1])
         rows.append(dict(record_key='cafeland:' + match[1], source='cafeland', source_listing_id=match[1],
-            detail_url=link, listing_title=old.cafe.cafe.clean(anchors[0].text_content()),
-            listing_price_raw=old.cafe.cafe.value(card, 'reales-price'),
-            listing_area_raw=old.cafe.cafe.value(card, 'reales-area'),
-            listing_address_raw=old.cafe.cafe.value(card, 'info-location'), listing_page=url,
+            detail_url=link, listing_title=cafe_parser.clean(anchors[0].text_content()),
+            listing_price_raw=cafe_parser.value(card, 'reales-price'),
+            listing_area_raw=cafe_parser.value(card, 'reales-area'),
+            listing_address_raw=cafe_parser.value(card, 'info-location'), listing_page=url,
             sampling_category=category))
     if not rows:
         raise ValueError('No expected listing cards')
@@ -169,6 +170,10 @@ def collect(output=OUT, factory=old.SourceClient, context_factory=plan_context):
                                 seen.add(key)
                                 counts[category] += 1
                                 localities[(category, locality)] += 1
+                                if code == 200:
+                                    # Preserve the raw response even if parsing fails, then stop
+                                    # this invocation before fetching another card/category.
+                                    parse_detail(detail, record)
                                 print(old.canonical(dict(total=len(rows), category=category,
                                     count=counts[category], record_key=key, http_status=code)), flush=True)
                         attempted.add(key)
