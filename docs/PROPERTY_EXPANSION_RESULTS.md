@@ -111,7 +111,7 @@ XGBoost 3.4.1. Máy mới dùng `requirements_learning_curve.txt`.
 .\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/collect_property_expansion_v2.py
 
 # Replay giá/đặc trưng/nhóm từ snapshot, không gọi mạng
-.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/review_property_expansion.py --verify
+.\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/verify_property_expansion.py
 
 # Replay model, dự đoán và mọi metric đường cong học, không fit
 .\ai-services\.venv\Scripts\python.exe -X utf8 ai-services/app/data/verify_training_learning_curve.py
@@ -131,18 +131,25 @@ này giữ trong `data_raw/property_expansion_20261029`, chưa nhập chung SQLi
 
 ### Standards
 
-Không có vi phạm tiêu chuẩn repo. Một heuristic P 3 về chuỗi module nội bộ
+Không có vi phạm tiêu chuẩn repo. Một heuristic P3 về chuỗi module nội bộ
 (`audit.parser.audit`, `grouping.previous.old`) được ghi nhận; không refactor
 các helper lịch sử đã khóa chỉ để xử lý heuristic. Phiên bản v2 dùng lại HTTP/
 publish helpers và giữ v1 để tái tạo provenance.
 
 ### Spec
 
-Một lỗi P 2 đã tái hiện: checkpoint có thể tiến trong lúc đợi lock mà records
+Một lỗi P2 đã tái hiện: checkpoint có thể tiến trong lúc đợi lock mà records
 không đổi, khiến collector v1 ghi lùi checkpoint. V2 chụp/recheck bytes plan,
 checkpoint và records sau khóa, dừng/nhả khóa trước mạng hoặc metadata khi có
 race. Hai regression và hai reviewer đã xác nhận sửa đúng ở entry point v2.
 
-Tổng review: Standards 0 hard violation/1 heuristic P 3; Spec 0 lỗi còn mở ở
-entry point vận hành mới. **103 unit test đạt**. Fullverifier cần kho nguồn
+Replay cuối phát hiện thêm lỗi so đồ thị theo thứ tự: thứ tự duyệt shingle có
+thể thay đổi giữa tiến trình. Bộ giá trị/nhóm/quote và 830 liên kết vẫn khớp.
+Verifier vận hành mới chuẩn hóa chiều/thứ tự của graph vô hướng, giữ mọi
+liên kết, quy tắc, score, trường bổ sung và số lần lặp. Nó vẫn kiểm SHA,
+fingerprint và dựng lại toàn bộ CSV/summary; không sửa run gốc hoặc nới so sánh
+giá trị. Không dùng trực tiếp `--verify` của reporter v1 để kiểm lô này.
+
+Tổng review: Standards 0 hard violation/1 heuristic P3; Spec 0 lỗi còn mở ở
+entry point vận hành mới sau hai bản sửa. **105 unit test đạt**. Verifier đầy đủ cần kho nguồn
 cục bộ; unit test dùng fixture, không cần dữ liệu cào hoặc gọi website.
