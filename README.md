@@ -73,6 +73,8 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Bổ sung nguồn và đường cong học](docs/PROPERTY_EXPANSION_RESULTS.md): thu tiếp154 mô tả và60 ID mới, hậu kiểm ra6 nhóm mới +6 nhóm train ứng viên; đo36 model chỉ trong train để định hướng bổ sung dữ liệu. V6 giữ nguyên.
 
+[Rà soát 222 tin còn chờ](docs/PROPERTY_SOURCE_ADJUDICATION.md): đọc đủ 234 snapshot, giữ bằng chứng và phân vai nhóm trong phiên bản nghiên cứu mới. Các bảng vẫn chưa phát hành cho train; model ứng dụng v6 giữ nguyên.
+
 ## Kiểm thử bản gọn
 
 ```powershell
