@@ -84,15 +84,16 @@ class ModelArtifacts:
             if len(self.records)>=len(self.saved) or self.saved[len(self.records)]!=record:raise ValueError('Nested model membership/selection differs')
             if json.loads((self.directory/record['schema']).read_text(encoding='utf8'))!=schema:raise ValueError('Subset-only vocabulary/schema differs')
             booster=xgb.Booster();booster.load_model(self.directory/record['model'])
+            booster.set_param(dict(nthread=4,device='cpu'))
             objective=json.loads(booster.save_config())['learner']['objective']['name']
             if objective!=trial.params(arm)['objective'] or booster.num_boosted_rounds()!=trial.PROTOCOL['rounds']:
                 raise ValueError('Model objective/rounds differ')
         else:
-            matrix=xgb.DMatrix(feature.encode(fit,self.features,spec),label=trial.labels(fit,arm),feature_names=spec['feature_names'])
+            matrix=xgb.DMatrix(feature.encode(fit,self.features,spec),label=trial.labels(fit,arm),feature_names=spec['feature_names'],nthread=4)
             booster=xgb.train(trial.params(arm),matrix,num_boost_round=trial.PROTOCOL['rounds'])
             (self.directory/'models').mkdir(exist_ok=True)
             booster.save_model(self.directory/record['model']);data.write_json(self.directory/record['schema'],schema)
-        matrix=xgb.DMatrix(feature.encode(held,self.features,spec),feature_names=spec['feature_names'])
+        matrix=xgb.DMatrix(feature.encode(held,self.features,spec),feature_names=spec['feature_names'],nthread=4)
         predicted=trial.inverse(booster.predict(matrix),held,arm)
         self.records.append(record)
         self.predictions += [dict(model_key=key,phase=phase,record_key=r['record_key'],

@@ -94,11 +94,14 @@ class TrialContractTests(unittest.TestCase):
     def test_nomination_gate_requires_all_predeclared_checks(self):
         metric=[];folds=[]
         for category in trial.data.CATEGORIES+['ALL']:
-            for method,mae in [('control',100),('selected',90)]:
+            for method,mae in [('control',100),('selected',90),('median_unit_location',110)]:
                 metric.append(dict(category=category,method=method,mae_million=mae,within_20pct=60))
                 if category!='ALL':
                     for f in range(3):folds.append(dict(category=category,method=method,outer_fold=f,mae_million=mae))
         self.assertTrue(trial.nomination_gate(metric,folds)['passed'])
+        simple_better=copy.deepcopy(metric)
+        next(r for r in simple_better if (r['category'],r['method'])==('ALL','median_unit_location'))['mae_million']=80
+        self.assertFalse(trial.nomination_gate(simple_better,folds)['passed'])
         for category in trial.data.CATEGORIES:
             altered=copy.deepcopy(metric)
             next(r for r in altered if (r['category'],r['method'])==(category,'selected'))['within_20pct']=54

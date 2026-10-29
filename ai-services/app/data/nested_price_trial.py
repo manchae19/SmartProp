@@ -15,7 +15,7 @@ PROTOCOL=dict(arms=ARMS,rounds=300,params=PARAMS,outer_folds=3,inner_folds=2,
     min_location_median_count=5,feature_arm='v6/all',selection='pooled inner MAE million VND; arm order tie break',
     early_stopping=False,train_only=True,dev_validation_scored=False,pilot_scored=False,
     final_gate=dict(aggregate_mae_reduction_pct=5,category_max_mae_increase_pct=5,
-                    category_max_within20_decrease_pp=5,min_nonworse_folds=2),automatic_deployment=False)
+                    category_max_within20_decrease_pp=5,min_nonworse_folds=2,must_beat_simple_median=True),automatic_deployment=False)
 
 
 def partition(rows, folds, salt):
@@ -97,6 +97,9 @@ def nomination_gate(metrics,folds):
     before=values['ALL','control']['mae_million'];after=values['ALL','selected']['mae_million']
     gain=100*(before-after)/before if before>0 else 0
     checks=[dict(check='aggregate_mae_reduction_at_least_5pct',passed=gain>=5,value=gain)]
+    simple=values['ALL','median_unit_location']['mae_million']
+    checks.append(dict(check='selected_beats_simple_median_aggregate',passed=after<simple,
+                       value=100*(simple-after)/simple if simple>0 else None))
     for category in data.CATEGORIES:
         a,b=values[category,'control'],values[category,'selected']
         increase=100*(b['mae_million']-a['mae_million'])/a['mae_million'] if a['mae_million']>0 else (0 if b['mae_million']==0 else None)

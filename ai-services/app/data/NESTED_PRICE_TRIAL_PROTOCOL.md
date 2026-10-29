@@ -58,6 +58,7 @@ Không so trực tiếp điểm này với 299 validation hoặc 24 nhóm đã t
 Đánh giá thuật toán chọn arm so với control trên outer OOF:
 
 - MAE gộp giảm ít nhất 5%.
+- MAE gộp cũng phải tốt hơn baseline median đơn giá đơn giản.
 - Mỗi loại không tăng MAE quá 5% và tỷ lệ trong20% không giảm quá 5 điểm phần trăm.
 - Mỗi loại có ít nhất 2/3 outer folds không tệ hơn control về MAE.
 

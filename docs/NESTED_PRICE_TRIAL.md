@@ -16,7 +16,8 @@ log tổng giá/absolute loss. Đơn giá là **target**, không được thêm 
 Thêm baseline median đơn giá theo địa bàn học trên outer train để biết
 XGBoost hơn một phép ước tính đơn giản hay chưa.
 
-Cổng đề cử: MAE gộp giảm ít nhất 5%; từng loại không tăng MAE quá 5%, tỷ lệ
+Cổng đề cử: MAE gộp giảm ít nhất 5% và tốt hơn baseline median đơn giản;
+từng loại không tăng MAE quá 5%, tỷ lệ
 trong20% không giảm quá 5 điểm phần trăm, ít nhất 2/3 outer folds mỗi loại
 không tệ hơn control. Candidate cuối chỉ được fit nếu qua toàn cổng; không
 tự thay v6. Nếu không qua, giữ v6 và không mở thêm search theo điểm outer.
