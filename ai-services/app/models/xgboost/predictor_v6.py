@@ -13,6 +13,7 @@ import xgboost as xgb
 
 from app.core.model_registry import DATA_DIR, V6_MANIFEST_SHA256, V6_MODEL_DIR, V6_RUN
 from app.core.location_catalog import CATALOG, LOCATION_LABELS
+from app.core.reference_support import ReferenceSupport
 
 
 class ModelArtifactError(RuntimeError):
@@ -63,6 +64,7 @@ class PredictorV6:
         if selection["best_global_arm"] != "all":
             raise ModelArtifactError("API này chỉ dùng bản v6/all đã chốt.")
         self.specs, self.models = {}, {}
+        self.reference_support = ReferenceSupport()
         for category, info in selection["category_artifacts"].items():
             spec_path = _checked_path(self.model_dir, info["schema_file"], manifest["output_sha256"][info["schema_file"]])
             model_path = _checked_path(self.model_dir, info["model_file"], manifest["output_sha256"][info["model_file"]])
@@ -127,6 +129,7 @@ class PredictorV6:
             warnings.append("Một số câu gần đó, dự kiến xây hoặc nhiều tài sản không được dùng để tự điền đặc trưng.")
         if ward and location + "|" + ward not in spec["base_schema"]["wards"]:
             warnings.append("Phường/xã chưa đủ mẫu hoặc chưa có trong vocabulary; model dùng trạng thái chưa biết/ít mẫu.")
+        warnings.extend(self.reference_support.warnings(category, location, float(area)))
         matrix = self.extractor.encode([row], {row["record_key"]: feature}, spec)
         if np.isinf(matrix).any():
             raise ValueError("Đầu vào chứa giá trị không hợp lệ.")

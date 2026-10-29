@@ -1,0 +1,333 @@
+{
+  "version": "v6_clean_reference_support_1",
+  "model_run": "b4b1339d3f35857e",
+  "model_manifest_sha256": "6e8c8cb6351b19245bf7e9c70698f786f19c8f8b6deff0d8f161f670569ccba1",
+  "reference_manifest_sha256": "18a08bda8c2543d7bcd8842d1f943966bfb9d95d7c93e948ee0edf8acbe174c7",
+  "reference_groups": 2213,
+  "reference_semantics": "Cleaned training reference, not the exact complete 2214-row release training dataset",
+  "policy": {
+    "low_reference_groups_below": 10,
+    "area_percentiles": [
+      0.05,
+      0.95
+    ],
+    "minimum_groups_for_area_range": 10
+  },
+  "interpretation": "Sample coverage and descriptive area range only; not confidence or a prediction interval",
+  "categories": {
+    "Nhà ở": {
+      "Cẩm Lệ": {
+        "reference_groups": 177,
+        "area_percentiles_sqm": {
+          "p05": 55.0,
+          "p95": 150.2
+        }
+      },
+      "Hòa Vang": {
+        "reference_groups": 15,
+        "area_percentiles_sqm": {
+          "p05": 98.5,
+          "p95": 239.2
+        }
+      },
+      "Hải Châu": {
+        "reference_groups": 279,
+        "area_percentiles_sqm": {
+          "p05": 38.9,
+          "p95": 155.2
+        }
+      },
+      "Liên Chiểu": {
+        "reference_groups": 154,
+        "area_percentiles_sqm": {
+          "p05": 60.0,
+          "p95": 200.98
+        }
+      },
+      "Ngũ Hành Sơn": {
+        "reference_groups": 113,
+        "area_percentiles_sqm": {
+          "p05": 56.6,
+          "p95": 377.2
+        }
+      },
+      "Sơn Trà": {
+        "reference_groups": 150,
+        "area_percentiles_sqm": {
+          "p05": 51.45,
+          "p95": 166.85
+        }
+      },
+      "Thanh Khê": {
+        "reference_groups": 328,
+        "area_percentiles_sqm": {
+          "p05": 33.35,
+          "p95": 134.16
+        }
+      },
+      "new_unit:an khe": {
+        "reference_groups": 56,
+        "area_percentiles_sqm": {
+          "p05": 50.0,
+          "p95": 125.0
+        }
+      },
+      "new_unit:ban thach": {
+        "reference_groups": 4,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dien ban bac": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dien ban dong": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:duy xuyen": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:hai van": {
+        "reference_groups": 4,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:hoa khanh": {
+        "reference_groups": 58,
+        "area_percentiles_sqm": {
+          "p05": 60.85,
+          "p95": 116.5
+        }
+      },
+      "new_unit:hoa xuan": {
+        "reference_groups": 32,
+        "area_percentiles_sqm": {
+          "p05": 100.0,
+          "p95": 122.25
+        }
+      },
+      "new_unit:hoi an": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:hoi an tay": {
+        "reference_groups": 2,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:huong tra": {
+        "reference_groups": 4,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:lien chieu": {
+        "reference_groups": 29,
+        "area_percentiles_sqm": {
+          "p05": 60.0,
+          "p95": 129.2
+        }
+      },
+      "new_unit:tam ky": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      }
+    },
+    "Đất nền": {
+      "Cẩm Lệ": {
+        "reference_groups": 62,
+        "area_percentiles_sqm": {
+          "p05": 71.05,
+          "p95": 169.0
+        }
+      },
+      "Hòa Vang": {
+        "reference_groups": 151,
+        "area_percentiles_sqm": {
+          "p05": 100.0,
+          "p95": 245.0
+        }
+      },
+      "Hải Châu": {
+        "reference_groups": 26,
+        "area_percentiles_sqm": {
+          "p05": 56.25,
+          "p95": 368.2
+        }
+      },
+      "Liên Chiểu": {
+        "reference_groups": 27,
+        "area_percentiles_sqm": {
+          "p05": 76.5,
+          "p95": 191.3
+        }
+      },
+      "Ngũ Hành Sơn": {
+        "reference_groups": 82,
+        "area_percentiles_sqm": {
+          "p05": 82.05,
+          "p95": 310.225
+        }
+      },
+      "Sơn Trà": {
+        "reference_groups": 93,
+        "area_percentiles_sqm": {
+          "p05": 71.2,
+          "p95": 320.0
+        }
+      },
+      "Thanh Khê": {
+        "reference_groups": 23,
+        "area_percentiles_sqm": {
+          "p05": 54.6,
+          "p95": 270.0
+        }
+      },
+      "new_unit:an khe": {
+        "reference_groups": 12,
+        "area_percentiles_sqm": {
+          "p05": 66.85,
+          "p95": 114.95
+        }
+      },
+      "new_unit:an thang": {
+        "reference_groups": 3,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dai loc": {
+        "reference_groups": 5,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dien ban": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dien ban bac": {
+        "reference_groups": 2,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:dien ban dong": {
+        "reference_groups": 10,
+        "area_percentiles_sqm": {
+          "p05": 93.5,
+          "p95": 222.9
+        }
+      },
+      "new_unit:hai van": {
+        "reference_groups": 17,
+        "area_percentiles_sqm": {
+          "p05": 74.0,
+          "p95": 174.0
+        }
+      },
+      "new_unit:hoa khanh": {
+        "reference_groups": 52,
+        "area_percentiles_sqm": {
+          "p05": 75.0,
+          "p95": 179.75
+        }
+      },
+      "new_unit:hoa xuan": {
+        "reference_groups": 19,
+        "area_percentiles_sqm": {
+          "p05": 99.5,
+          "p95": 424.2
+        }
+      },
+      "new_unit:hoi an": {
+        "reference_groups": 3,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:hoi an dong": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:hoi an tay": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:huong tra": {
+        "reference_groups": 3,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:lien chieu": {
+        "reference_groups": 23,
+        "area_percentiles_sqm": {
+          "p05": 92.8,
+          "p95": 187.9
+        }
+      },
+      "new_unit:nui thanh": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:phu ninh": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:que son": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:tan hiep": {
+        "reference_groups": 3,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:thang an": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:thang binh": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:thang phu": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:vu gia": {
+        "reference_groups": 1,
+        "area_percentiles_sqm": null
+      }
+    },
+    "Căn hộ chung cư": {
+      "Cẩm Lệ": {
+        "reference_groups": 14,
+        "area_percentiles_sqm": {
+          "p05": 32.145,
+          "p95": 90.0
+        }
+      },
+      "Hải Châu": {
+        "reference_groups": 24,
+        "area_percentiles_sqm": {
+          "p05": 43.45,
+          "p95": 104.85
+        }
+      },
+      "Liên Chiểu": {
+        "reference_groups": 4,
+        "area_percentiles_sqm": null
+      },
+      "Ngũ Hành Sơn": {
+        "reference_groups": 66,
+        "area_percentiles_sqm": {
+          "p05": 36.25,
+          "p95": 110.75
+        }
+      },
+      "Sơn Trà": {
+        "reference_groups": 60,
+        "area_percentiles_sqm": {
+          "p05": 36.65,
+          "p95": 111.2
+        }
+      },
+      "Thanh Khê": {
+        "reference_groups": 6,
+        "area_percentiles_sqm": null
+      },
+      "new_unit:lien chieu": {
+        "reference_groups": 3,
+        "area_percentiles_sqm": null
+      }
+    }
+  }
+}

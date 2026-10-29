@@ -75,6 +75,10 @@ docs/                     Bản đồ dự án và hướng dẫn GitHub
 
 [Rà soát 222 tin còn chờ](docs/PROPERTY_SOURCE_ADJUDICATION.md): đọc đủ 234 snapshot, giữ bằng chứng và phân vai nhóm trong phiên bản nghiên cứu mới. Các bảng vẫn chưa phát hành cho train; model ứng dụng v6 giữ nguyên.
 
+[Thử cách học giá với nested CV](docs/NESTED_PRICE_TRIAL.md): 70 model trên 2.213 train, không đạt cổng đề cử; giữ v6 và xuất ưu tiên dữ liệu theo độ phủ/kiểm chứng nội bộ.
+
+[Cảnh báo độ phủ dữ liệu](docs/VALUATION_DATA_SUPPORT.md): kết quả định giá báo địa bàn ít mẫu hoặc diện tích ngoài khoảng phổ biến của bộ tham chiếu sạch. Giá/model v6 giữ nguyên; số mẫu không phải độ tin cậy.
+
 ## Kiểm thử bản gọn
 
 ```powershell
