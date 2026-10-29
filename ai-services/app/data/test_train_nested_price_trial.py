@@ -1,4 +1,5 @@
 import json
+from contextlib import nullcontext
 from pathlib import Path
 import tempfile
 import unittest
@@ -42,10 +43,17 @@ class ArtifactTests(unittest.TestCase):
             with self.assertRaises(ValueError):job.compare_csv(altered,expected)
 
     def test_saved_study_replays_without_fitting_and_rejects_tampered_metric(self):
+        self._saved_study(force_candidate=False)
+
+    def test_final_candidates_replay_without_fitting_when_gate_allows(self):
+        self._saved_study(force_candidate=True)
+
+    def _saved_study(self,force_candidate):
         sample=[]
         for index,category in enumerate(job.data.CATEGORIES):sample+=rows(90,category,prefix='c'+str(index))
         features=values(sample)
-        with tempfile.TemporaryDirectory() as temporary,patch.dict(job.trial.PROTOCOL,rounds=3),patch('builtins.print'):
+        gate_context=patch.object(job.trial,'nomination_gate',return_value=dict(passed=True,fixture_only=True)) if force_candidate else nullcontext()
+        with tempfile.TemporaryDirectory() as temporary,patch.dict(job.trial.PROTOCOL,rounds=3),patch('builtins.print'),gate_context:
             root=Path(temporary);source=root/'fixture.txt';source.write_text('unchanged')
             inputs={str(source):job.data.sha(source)}
             directory=root/job.fingerprint(inputs);directory.mkdir()
@@ -53,6 +61,10 @@ class ArtifactTests(unittest.TestCase):
             tables,objects=job.study(sample,features,store)
             self.assertEqual(len(tables['outer_predictions']),len(sample)*3)
             self.assertEqual(objects['summary']['train_groups'],len(sample))
+            self.assertEqual(objects['summary']['candidate_final_models'],3 if force_candidate else 0)
+            if force_candidate:
+                self.assertEqual(sum(r['phase']=='final_training_replay' for r in store.records),3)
+                self.assertEqual(sum(r['phase']=='final_selection' for r in store.records),27)
             # Assert every inner fit/check is inside its outer training cohort.
             for index,category in enumerate(job.data.CATEGORIES):
                 part=[r for r in sample if r['category']==category]
