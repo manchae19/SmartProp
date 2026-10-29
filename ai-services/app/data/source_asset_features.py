@@ -27,8 +27,9 @@ def street_claim(raw):
     if not name:
         return '', 'missing'
     if (not 2 <= len(name) <= 65 or not (any(c.isalpha() for c in name) or re.fullmatch(r'\d{1,2}/\d{1,2}', name))
-            or re.search(r'[,;|:!?()]', name)
-            or re.search(r'\b(?:gan|cach|doi dien|khong ten|chua ro|dang cap nhat|khu do thi|du an|ban nha|ban dat|gia|rong|hem|kiet)\b', subject_text)
+            or re.search(r'[,;|:!?()\[\]<>]', name)
+            or re.search(r'\b(?:gan|cach|doi dien|khong ten|chua ro|dang cap nhat|khu do thi|du an|ban nha|ban dat|gia ban|rong|hem|kiet|ty|trieu|vnd|dong|usd|lien he|hotline|zalo|sdt|dien thoai)\b', subject_text)
+            or re.search(r'\d[\d .-]{6,}\d', name)
             or re.search(r'\d\s*m(?:2|²)?\b', normalized)
             or re.search(r'\s[-–&]\s|\s/\s', name)):
         return '', 'ambiguous_keep_missing'
@@ -75,7 +76,7 @@ def extract_claims(category, sources, area):
                     break
                 patterns = {
                     'residential_area_sqm_claim': r'\b(?:dien tich dat o|dat tho cu|tho cu|dat o)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*m[2²]\b',
-                    'parcel_width_m_claim': r'\b(?:lo dat|dat)\s+(?:co\s+)?(?:chieu ngang|ngang|rong)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*m(?![\w²])',
+                    'parcel_width_m_claim': r'\b(?:lo dat\s+(?:co\s+)?(?:chieu ngang|ngang|rong)|dat\s+(?:co\s+)?(?:chieu ngang|ngang))\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*m(?![\w²])',
                 }
                 for field, pattern in patterns.items():
                     for m in re.finditer(pattern, text):
@@ -83,7 +84,9 @@ def extract_claims(category, sources, area):
                         reason = ''
                         if multi or claims.FUTURE.search(text) or claims.NEAR.search(text) or re.search(r'\b(?:khong|chua)\b', text):
                             reason = 'multiple_future_nearby_or_negated'
-                        elif re.match(r'\s*[-–/]\s*\d|\s*(?:den|toi|tro len|tro xuong)\b', text[m.end():]):
+                        elif field == 'parcel_width_m_claim' and re.search(r'\b(?:duong|loi di)\s*$', text[:m.start()]):
+                            reason = 'road_or_access_subject_not_parcel'
+                        elif re.match(r'\s*[-–/]\s*\d|\s*(?:den|toi|hoac|va|tro len|tro xuong)\b', text[m.end():]):
                             reason = 'range_or_bound'
                         elif not 0 < number <= (area if field == 'residential_area_sqm_claim' else 100):
                             reason = 'outside_property_area_or_width_bound'

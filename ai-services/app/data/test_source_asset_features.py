@@ -13,7 +13,9 @@ class SourceFeaturesTests(unittest.TestCase):
         self.assertEqual(feature.street_claim('  Đường  Võ Văn Kiệt  ')[0], 'vo van kiet')
         self.assertEqual(feature.street_claim('Đường 2/9')[0], '2/9')
         self.assertEqual(feature.street_claim('Đường Cách Mạng Tháng Tám')[0], 'cach mang thang tam')
-        for raw in ['Gần đường Võ Văn Kiệt', 'Đường A, đường B', 'Kiệt 4m', 'Chưa rõ', '']:
+        for raw in ['Gần đường Võ Văn Kiệt', 'Đường A, đường B', 'Kiệt 4m', 'Chưa rõ', '',
+                    'Le Duan 3 ty', 'Ha Huy Tap 0901234567', 'Le Duan lien he 0901234567',
+                    '[Le Duan]', 'Le <Duan>']:
             self.assertFalse(feature.street_claim(raw)[0])
 
     def test_width_land_area_conflicts_and_street_name_do_not_become_alley(self):
@@ -27,6 +29,11 @@ class SourceFeaturesTests(unittest.TestCase):
         self.assertEqual(v['residential_area_sqm_claim'], '')
         self.assertEqual(v['parcel_width_m_claim'], '')
         self.assertTrue(any(r['status']=='conflict_keep_missing' for r in p))
+        for text in ['Đất ngang 5m hoặc 7m', 'Đất ở 50m2 hoặc 70m2', 'Lô đất 100m2 đường đất rộng 6m',
+                     'Lô đất 100m2 đường đất ngang 6m', 'Lô đất 100m2 đường đất có chiều ngang 6m']:
+            v, _ = feature.extract_claims('Đất nền', self.sources(text), 100)
+            self.assertEqual(v['residential_area_sqm_claim'], '')
+            self.assertEqual(v['parcel_width_m_claim'], '')
 
     def test_original_join_never_reads_later_description_or_price_text_as_x(self):
         row = dict(category='Nhà ở', area_sqm=100)
