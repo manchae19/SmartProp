@@ -156,7 +156,10 @@ diện tích công viên, giỏ hàng sau liên hệ, heading nguyên tòa, phò
 nhãn/hash/thời điểm bất biến và hợp đồng trường dữ liệu.
 
 Đã chạy **138 unit test đạt**, gồm 105 kiểm thử pipeline trước và 33 fixture
-mới. Các test mới không cần kho dữ liệu thật hoặc mạng.
+mới, trên workspace và checkout sạch từ Git archive. Các test mới không cần
+kho dữ liệu thật hoặc mạng. CLI `--verify` đã dựng lại nguồn, đối chiếu đủ
+234 kết luận/đặc trưng/quote, schema, phân vai thử nghiệm và SHA của run
+`4fd1c013b621ac45`; đạt. Mọi protected input/cohort/ledger/model giữ nguyên.
 
 ## Standards
 
