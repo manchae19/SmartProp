@@ -27,8 +27,9 @@ def street_claim(raw):
     if not name:
         return '', 'missing'
     if (not 2 <= len(name) <= 65 or not (any(c.isalpha() for c in name) or re.fullmatch(r'\d{1,2}/\d{1,2}', name))
-            or re.search(r'[,;|:!?()\[\]<>]', name)
-            or re.search(r'\b(?:gan|cach|doi dien|khong ten|chua ro|dang cap nhat|khu do thi|du an|ban nha|ban dat|gia ban|rong|hem|kiet|ty|trieu|vnd|dong|usd|lien he|hotline|zalo|sdt|dien thoai)\b', subject_text)
+            or re.search(r'[,;|:!?()\[\]<>$€₫]', name)
+            or re.search(r'\b(?:gan|cach|doi dien|khong ten|chua ro|dang cap nhat|khu do thi|du an|ban nha|ban dat|gia ban|rong|hem|kiet|vnd|usd|lien he|hotline|zalo|sdt|dien thoai)\b', subject_text)
+            or re.search(r'\d[\d.,]*\s*(?:ty|trieu|dong)\b', subject_text)
             or re.search(r'\d[\d .-]{6,}\d', name)
             or re.search(r'\d\s*m(?:2|²)?\b', normalized)
             or re.search(r'\s[-–&]\s|\s/\s', name)):

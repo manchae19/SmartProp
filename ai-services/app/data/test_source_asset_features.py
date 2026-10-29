@@ -13,6 +13,8 @@ class SourceFeaturesTests(unittest.TestCase):
         self.assertEqual(feature.street_claim('  Đường  Võ Văn Kiệt  ')[0], 'vo van kiet')
         self.assertEqual(feature.street_claim('Đường 2/9')[0], '2/9')
         self.assertEqual(feature.street_claim('Đường Cách Mạng Tháng Tám')[0], 'cach mang thang tam')
+        self.assertEqual(feature.street_claim('Đường Mỹ Đa Đông 8')[0], 'my da dong 8')
+        self.assertEqual(feature.street_claim('Đường Triệu Nữ Vương')[0], 'trieu nu vuong')
         for raw in ['Gần đường Võ Văn Kiệt', 'Đường A, đường B', 'Kiệt 4m', 'Chưa rõ', '',
                     'Le Duan 3 ty', 'Ha Huy Tap 0901234567', 'Le Duan lien he 0901234567',
                     '[Le Duan]', 'Le <Duan>']:
