@@ -75,3 +75,26 @@ Nghiên cứu train cho thấy nhiều cặp địa bàn mỏng có sai số n�
 lớn. Profile chỉ giúp người dùng nhận ra giới hạn dữ liệu; nó không làm model
 chính xác hơn. Muốn cải thiện định giá cần bổ sung nguồn/đặc trưng đủ bằng
 chứng và kiểm chứng mới; muốn dự báo xu hướng cần quan sát qua nhiều thời điểm.
+
+Kết quả cuối: **157 kiểm thử pipeline dữ liệu + 32 kiểm thử API đạt trên
+checkout sạch**, gồm replay 299 prediction đã công bố. **10 kiểm thử FE đạt**.
+Smoke HTTP launcher với stdin đóng/cwd khác đạt cho cả 3 loại, theo dõi health
+5 giây và dừng đúng tiến trình kiểm thử. Không dừng dịch vụ người dùng.
+
+## Standards
+
+Review riêng: 0 hard violation, 0 heuristic đáng kể cần xử lý. Thuật ngữ là
+độ phủ tham chiếu, số nhóm/percentile không trở thành confidence hoặc khoảng
+dự đoán. Profile phân biệt bộ sạch/release, không xuất dữ liệu riêng tư.
+Reviewer chạy lại 6 test loader/API và 3 test builder: đạt.
+
+## Spec
+
+Review riêng: không có P1/P2 hoặc yêu cầu còn thiếu trong phạm vi #19.
+Reviewer xác nhận profile binding/fallback, ngưỡng ít mẫu/diện tích, warnings
+cũ, giá/feature matrix/API keys giữ nguyên và BE/FE/DB không sửa. Fixture
+review chạy độc lập đạt; không fit dữ liệu riêng tư hoặc chấm cohort mới.
+
+Mốc bàn giao là demo có kiểm chứng và thông báo giới hạn rõ, kèm quyết định
+giữ model hiện tại từ thử nghiệm đã khóa. Đây chưa là chứng nhận độ chính
+xác ngoài thị trường; chưa có model dự báo xu hướng được phát hành.

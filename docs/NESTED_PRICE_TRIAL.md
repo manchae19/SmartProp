@@ -127,3 +127,6 @@ vocabulary, inverse target, baseline, cổng đã chốt trước điểm số, 
 final fit và replay không fit. Góp ý bổ sung fixture final-model path sau
 cổng median mới đã thực hiện và đạt. Bổ sung cổng hơn median/CPU4 được ghi
 trong issue và commit trước first fit thật. Không thay cấu hình theo kết quả.
+
+Phần cải thiện demo tiếp theo là [cảnh báo độ phủ dữ liệu](VALUATION_DATA_SUPPORT.md),
+không thay model/giá v6 và không lấy nghiên cứu này làm confidence cho người dùng.
