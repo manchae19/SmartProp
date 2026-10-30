@@ -1,6 +1,7 @@
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { api } from '../../src/services/api.js'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -8,7 +9,7 @@ const router = useRouter()
 /*
   SMARTPROP PROPERTY COLLECTION 2.0
   Vue 3 + Tailwind CSS
-  Dữ liệu minh họa, chưa kết nối backend
+  Đã tích hợp API Spring Boot với fallback dữ liệu mẫu
 */
 
 const searchText = ref('')
@@ -40,7 +41,7 @@ const districts = [
   'Thanh Khê'
 ]
 
-const listings = [
+const defaultListings = [
   {
     id: 1,
     title: 'Nhà 3 tầng hẻm xe hơi, gần cầu Rồng',
@@ -94,12 +95,44 @@ const listings = [
   }
 ]
 
+const listings = ref([...defaultListings])
+const loading = ref(false)
+
+onMounted(async () => {
+  try {
+    loading.value = true
+    const res = await api('/properties', { authenticated: false })
+    if (res && Array.isArray(res.content) && res.content.length > 0) {
+      listings.value = res.content.map((item, idx) => ({
+        id: item.id,
+        title: item.title,
+        location: [item.ward, item.district, item.city].filter(Boolean).join(', ') || item.address || 'Đà Nẵng',
+        district: item.district || 'Hải Châu',
+        price: Number((Number(item.price || 0) / 1_000_000_000).toFixed(2)),
+        type: item.propertyType === 'APARTMENT' ? 'Căn hộ' : item.propertyType === 'LAND' ? 'Đất nền' : 'Nhà phố',
+        area: Number(item.areaSqm || 0),
+        bedrooms: item.bedrooms,
+        bathrooms: item.bathrooms,
+        status: 'Đã xác thực',
+        statusType: 'safe',
+        image: item.images && item.images.length > 0 ? item.images[0].url : 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85',
+        label: item.propertyType || 'Property',
+        number: String(idx + 1).padStart(2, '0')
+      }))
+    }
+  } catch (err) {
+    // Fallback to defaultListings
+  } finally {
+    loading.value = false
+  }
+})
+
 const filteredListings = computed(() => {
   const keyword = searchText.value
     .trim()
     .toLocaleLowerCase('vi-VN')
 
-  const result = listings.filter((item) => {
+  const result = listings.value.filter((item) => {
     const searchContent = [
       item.title,
       item.location,

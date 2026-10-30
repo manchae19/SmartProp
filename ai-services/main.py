@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.valuation import router
@@ -23,6 +24,13 @@ def create_app(model_dir=None):
         version="6.0.0",
         description="Ước tính giá rao nhà ở, đất nền và căn hộ từ model v6.",
         lifespan=lifespan,
+    )
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     @application.exception_handler(RequestValidationError)
     async def validation_error(request, error):
