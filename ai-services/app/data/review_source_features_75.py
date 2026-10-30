@@ -14,6 +14,7 @@ import source_asset_features as feature
 import property_snapshot_adjudication as adjudicate
 import apartment_followup_rules as apartment
 import review_apartment_pilot as pilot
+import review_apartment_extension as grouping
 from build_training_v1 import group_records
 from source_feature_io import atomic_json, writer_lock
 
@@ -56,7 +57,7 @@ def quality(row, catalog):
     if len(body.split()) < 15: flags.add('description_insufficient')
     if re.search(r'\b(?:gio hang|nhieu can|cac can|nhieu lo|cac lo|bang gia|quy can|[2-9]\d* lo dat)\b', text):
         flags.add('multiple_assets_or_inventory')
-    if re.search(r'\b(?:booking|dat coc|tra truoc|gia tu|chi tu|thanh toan|sau chiet khau)\b', text):
+    if re.search(r'\b(?:booking|dat coc|tra truoc|gia tu|chi tu|thanh toan|sau chiet khau|von ban dau|von chi|von tu co|tra gop|chi can dong truoc)\b', text):
         flags.add('conditional_partial_or_starting_price')
     if re.search(r'\d+[.,]x|\d+\s*(?:ty|ti)\s*\d*x|\d+\s*trieu\s*x', text):
         flags.add('masked_price_requires_review')
@@ -64,17 +65,22 @@ def quality(row, catalog):
         flags.add('nonstandard_asset_requires_review')
     if re.match(r'^(?:cho thue|can thue)\b', data.normalized(row['title'])):
         flags.add('rental_offer')
+    if re.search(r'\b(?:tp\.?|thanh pho|tinh)\s+(?:hue|ha noi|ho chi minh|nha trang|quy nhon|quang ngai|binh dinh)\b', text):
+        flags.add('content_outside_da_nang_requires_review')
     subject_pattern = r'\b(?:nha|biet thu)\b' if row['category']=='Nhà ở' else r'\b(?:dat|lo)\b'
     if not re.search(subject_pattern, data.normalized(body)): flags.add('asset_type_not_in_seller_body')
     proofs = adjudicate.full_vnd_proofs(body) + adjudicate.labelled_money_checks(body)
     total = [x for x in proofs if x['status'] == 'total_candidate']
     mentions = apartment.money_mentions(body)
+    for match in apartment.MONEY.finditer(data.normalized(body)):
+        if re.match(r'\s*\d', data.normalized(body)[match.end():]):
+            flags.add('ambiguous_compact_total')
     values = [x['amount_million'] for x in mentions if x['kind']=='total_candidate'] + [x['value'] for x in total]
     if not values or p is None or not any(adjudicate.close(v, p) for v in values):
         flags.add('seller_total_price_not_corroborated')
     if p is not None and any(not adjudicate.close(v, p) for v in values):
         flags.add('seller_total_price_conflict')
-    if any(x['status'] in ['conditional_total_price_requires_review', 'ambiguous_total_requires_review'] for x in proofs):
+    if any(x['status'] in ['conditional_total_requires_review', 'ambiguous_total_requires_review'] for x in proofs):
         flags.add('conditional_or_ambiguous_total')
     area_values = []
     for m in adjudicate.AREA.finditer(body):
@@ -110,7 +116,11 @@ def grouped_decisions(current, history, prior, links, evidence):
         frozen_links += [dict(left=members[0], right=k, rule='preserve_original_group', title_similarity=1) for k in members[1:]]
     old_evidence = dict(evidence)
     old_evidence.update({r['record_key']: dict(identity_verified=True, description=r.get('description','')) for r in prior})
-    new_links = pilot.extra_pairs(current, list(old_rows.values()), old_evidence)
+    prepared = [dict(r, description=grouping.dedup_text(r['description'])) for r in current]
+    old_evidence = {k: dict(v, description=grouping.dedup_text(v.get('description','')),
+        **({'asset_description': grouping.dedup_text(v['asset_description'])} if 'asset_description' in v else {}))
+        for k, v in old_evidence.items()}
+    new_links = pilot.extra_pairs(prepared, list(old_rows.values()), old_evidence)
     membership, _ = group_records([dict(r) for r in [*old_rows.values(), *current]], frozen_links + new_links)
     historical = {membership[k] for k in old_rows}
     groups = defaultdict(list)
@@ -123,7 +133,7 @@ def grouped_decisions(current, history, prior, links, evidence):
         if len({r['location_feature'] for r in members}) > 1: codes.append('group_location_conflict')
         for f, tolerance in [('area_sqm', .01), ('price_million', .05)]:
             values = [r[f] for r in members if r[f] is not None]
-            if values and not all(adjudicate.close(v, values[0], tolerance) for v in values): codes.append('group_'+f+'_conflict')
+            if values and not adjudicate.close(min(values), max(values), tolerance): codes.append('group_'+f+'_conflict')
         representative = min(r['record_key'] for r in members)
         for r in members:
             role = 'quarantine' if codes else 'fresh_reserved' if r['record_key']==representative else 'suppressed_duplicate'
@@ -141,7 +151,7 @@ def artifacts():
     rows, failed, proof_rows, feature_rows = [], [], [], []
     inputs = dict(plan['input_sha256'])
     for p in [Path(__file__), Path(feature.__file__), Path(apartment.__file__), Path(adjudicate.__file__),
-              Path(pilot.__file__), BASE/'build_training_v1.py', BASE/'review_apartment_labels.py',
+              Path(pilot.__file__), Path(grouping.__file__), BASE/'build_training_v1.py', BASE/'review_apartment_labels.py',
               BASE/'remaining_diversity_rules.py', BASE/'run_source_feature_trial.py']:
         inputs[str(p.resolve())] = data.sha(p)
     for p in collect.OUT.rglob('*'):
