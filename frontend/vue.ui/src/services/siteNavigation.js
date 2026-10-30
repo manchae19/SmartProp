@@ -8,7 +8,7 @@ export function siteNavigation(filters = {}) {
     { key: 'projects', label: 'Dự án', to: { path: '/projects' } },
     { key: 'gis', label: 'Bản đồ GIS', to: listingLink('/map', filters) },
     { key: 'market', label: 'Dữ liệu thị trường', to: { ...listingLink('/home', filters), hash: '#market' } },
-    { key: 'tools', label: 'Công cụ', to: { ...listingLink('/home', filters), hash: '#finance' } },
+    { key: 'tools', label: 'Công cụ', to: { path: '/valuation' } },
   ]
 }
 export function activeNavigation(key, route) {
@@ -17,10 +17,11 @@ export function activeNavigation(key, route) {
   if (key === 'projects') return path === '/projects' || path.startsWith('/projects/') || path === '/home' && hash === '#projects'
   if (key === 'gis') return path === '/map' || path === '/home' && hash === '#gis'
   if (key === 'market') return path === '/home' && ['#market', '#market-current'].includes(hash)
-  if (key === 'tools') return path === '/home' && ['#finance', '#valuation', '#investment'].includes(hash)
+  if (key === 'tools') return path === '/valuation' || path === '/home' && ['#finance', '#valuation', '#investment'].includes(hash)
   return key === 'home' && path === '/home' && !['#properties', '#search', '#projects', '#gis', '#market', '#market-current', '#finance', '#valuation', '#investment'].includes(hash)
 }
 export const canPublish = isPublisher
+export const canAccessAdmin = user => user?.status === 'ACTIVE' && user?.role === 'ADMIN'
 export const usesPageLayout = path => !['/login', '/register', '/reset-password'].includes(path) && path !== '/admin' && !path.startsWith('/admin/')
 export function homeSectionId(hash) {
   const id = String(hash || '').replace(/^#/, '')

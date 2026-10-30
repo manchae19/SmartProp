@@ -84,7 +84,7 @@ const marketChart = computed(() => {
         <h2 id="market-heading" class="text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
           Dữ liệu kể <span class="text-[#B3915F]">câu chuyện thị trường.</span>
         </h2>
-        <p class="mt-4 max-w-2xl text-sm leading-7 text-[#637083]">
+        <p class="mt-4 max-w-2xl text-sm leading-7 text-[#536178]">
           Khám phá xu hướng giá căn hộ, nhà phố và đất nền tại Đà Nẵng.
           <span class="ml-1 inline-block font-semibold text-[#8B683A]">Dữ liệu mô phỏng.</span>
         </p>
@@ -109,7 +109,7 @@ const marketChart = computed(() => {
 
     <div class="mt-9 grid gap-4 sm:grid-cols-3">
       <div class="rounded-2xl border border-[#E7E1D7] bg-white p-6">
-        <p class="text-xs font-semibold text-[#637083]">
+        <p class="text-xs font-semibold text-[#536178]">
           Giá trung bình theo loại hình
         </p>
         <p class="mt-3 text-3xl font-bold text-[#142B4F]">
@@ -119,7 +119,7 @@ const marketChart = computed(() => {
       </div>
 
       <div class="rounded-2xl border border-[#E7E1D7] bg-white p-6">
-        <p class="text-xs font-semibold text-[#637083]">
+        <p class="text-xs font-semibold text-[#536178]">
           Biến động trong kỳ
         </p>
         <p
@@ -131,7 +131,7 @@ const marketChart = computed(() => {
       </div>
 
       <div class="rounded-2xl border border-[#E7E1D7] bg-white p-6">
-        <p class="text-xs font-semibold text-[#637083]">
+        <p class="text-xs font-semibold text-[#536178]">
           Phạm vi phân tích
         </p>
         <p class="mt-3 text-3xl font-bold text-[#142B4F]">
@@ -149,7 +149,7 @@ const marketChart = computed(() => {
             <h3 class="text-xl font-bold">
               Xu hướng giá theo loại hình
             </h3>
-            <p class="mt-1 text-xs text-[#637083]">
+            <p class="mt-1 text-xs text-[#536178]">
               Đơn vị: triệu đồng/m²
             </p>
           </div>
@@ -164,7 +164,7 @@ const marketChart = computed(() => {
               class="cursor-pointer rounded-full px-3 py-2.5 text-xs font-bold transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#B3915F]"
               :class="marketPeriod === period
                 ? 'bg-[#D8B887] text-[#142B4F]'
-                : 'bg-[#F1EEE8] text-[#637083] hover:bg-[#E7E1D7]'"
+                : 'bg-[#F1EEE8] text-[#536178] hover:bg-[#E7E1D7]'"
             >
               {{ period }} tháng
             </button>
@@ -227,7 +227,7 @@ const marketChart = computed(() => {
           <div
             v-for="line in marketChart.lines"
             :key="line.name"
-            class="flex items-center gap-2 text-xs text-[#637083]"
+            class="flex items-center gap-2 text-xs text-[#536178]"
           >
             <span
               class="h-2.5 w-2.5 rounded-full"

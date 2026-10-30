@@ -54,7 +54,7 @@ public class SecurityConfig {
         return decoder;
     }
     @Bean SecurityFilterChain security(HttpSecurity http,UserRepository users,ObjectMapper mapper,
-                                      LoginThrottle throttle,SessionRepository sessions,SessionPolicy policy,@Value("${app.cors-origins}") String origins,@Value("${app.refresh.enabled:false}") boolean refreshEnabled,@Value("${app.refresh.secure-cookie:true}") boolean secureCookie) throws Exception {
+                                      LoginThrottle throttle,SessionRepository sessions,SessionPolicy policy,@Value("${app.cors-origins}") String origins,@Value("${app.refresh.enabled:false}") boolean refreshEnabled,@Value("${app.refresh.secure-cookie:true}") boolean secureCookie,org.springframework.beans.factory.ObjectProvider<vn.smartprop.auth.google.GoogleOAuthConfigurer> google) throws Exception {
         Converter<Jwt,AbstractAuthenticationToken> converter=jwt -> {
             User u=users.findById(Long.valueOf(jwt.getSubject())).orElseThrow(() -> new OAuth2AuthenticationException(new OAuth2Error("invalid_token")));
             if(u.status!=User.Status.ACTIVE || u.deletedAt!=null || !versionMatches(jwt,u.tokenVersion))
@@ -64,7 +64,7 @@ public class SecurityConfig {
         CorsConfiguration cors=new CorsConfiguration();
         cors.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::strip).toList());
         cors.setAllowedMethods(List.of("GET","POST","PATCH","PUT","DELETE","OPTIONS"));
-        cors.setAllowedHeaders(List.of("Authorization","Content-Type","X-Refresh-Session","X-CSRF-TOKEN","X-Session-Activity"));
+        cors.setAllowedHeaders(List.of("Authorization","Content-Type","X-Refresh-Session","X-CSRF-TOKEN","X-Session-Activity","Idempotency-Key"));
         cors.setAllowCredentials(refreshEnabled);
         UrlBasedCorsConfigurationSource source=new UrlBasedCorsConfigurationSource(); source.registerCorsConfiguration("/**",cors);
         if(refreshEnabled){
@@ -72,18 +72,22 @@ public class SecurityConfig {
             csrfRepository.setCookieCustomizer(c->c.httpOnly(true).secure(secureCookie).sameSite("Lax").path("/api/v1/auth"));
             http.csrf(c->c.csrfTokenRepository(csrfRepository).csrfTokenRequestHandler(new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler()).requireCsrfProtectionMatcher(req->{
                 if(!"POST".equals(req.getMethod()))return false;String path=req.getServletPath();if(path.isEmpty())path=req.getRequestURI();
-                if(path.equals("/api/v1/auth/refresh"))return true;
+                if(path.equals("/api/v1/auth/refresh")||path.equals("/api/v1/auth/oauth2/complete"))return true;
                 if(path.equals("/api/v1/auth/logout")&&req.getCookies()!=null)for(var cookie:req.getCookies())if(cookie.getName().equals("SMARTPROP_REFRESH"))return true;
                 return false;
             }));
         }else http.csrf(c->c.disable());
+        var googleLogin=google.getIfAvailable();if(googleLogin!=null)googleLogin.configure(http);
         http.cors(c -> c.configurationSource(source))
             .sessionManagement(c -> c.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(c -> c
                 .requestMatchers("/api/v1/auth/csrf","/api/v1/auth/refresh","/api/v1/auth/email-verification/confirm","/api/v1/auth/password/forgot","/api/v1/auth/password/reset").permitAll()
+                .requestMatchers("/api/v1/auth/google/config","/api/v1/auth/oauth2/authorize/google","/api/v1/auth/oauth2/callback/google","/api/v1/auth/oauth2/complete").permitAll()
                 .requestMatchers("/api/v1/auth/register","/api/v1/auth/login","/actuator/health","/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/auth/logout").access((authentication,context)->new org.springframework.security.authorization.AuthorizationDecision(refreshEnabled || authentication.get()!=null && authentication.get().isAuthenticated() && !(authentication.get() instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)))
                 .requestMatchers("/api/v1/users/me/sessions","/api/v1/users/me/sessions/*","/api/v1/auth/email-verification/request").authenticated()
+                .requestMatchers("/api/v1/users/me/valuation-history","/api/v1/users/me/valuation-history/*").authenticated()
+                .requestMatchers("/api/v1/users/me/avatar","/api/v1/users/me/avatar/content").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/users/me/broker-application","/api/v1/users/me/properties/*/moderation").authenticated()
                 .requestMatchers(HttpMethod.POST,"/api/v1/users/me/broker-application").authenticated()
@@ -97,6 +101,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/v1/geocoding/search").hasAnyRole("BROKER","ADMIN")
+                .requestMatchers(HttpMethod.GET,"/api/v1/geocoding/config").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties","/api/v1/properties/*/submit","/api/v1/properties/*/images").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.PATCH,"/api/v1/properties/*","/api/v1/properties/*/images/*").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.PUT,"/api/v1/properties/*/images/order").hasAnyRole("BROKER","ADMIN")

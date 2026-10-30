@@ -21,6 +21,8 @@ const restoredViews={
 const routes=[
  {path:'/',redirect:'/home'},
  ...Object.entries({home:'HomeView',listings:'ListingsView',map:'MapView',favorites:'FavoriteView','my-listing':'MyListingView'}).map(([path,view])=>({path:'/'+path,component:restoredViews[view]})),
+ {path:'/auth/google/complete',component:()=>import('../../user/views/GoogleCompleteView.vue')},
+ {path:'/valuation',component:()=>import('../../user/views/ValuationView.vue')},
  {path:'/projects',component:()=>import('../../user/views/ProjectsView.vue')},
  {path:'/projects/:id',component:()=>import('../../user/views/ProjectDetailView.vue')},
  {path:'/listing/:id',component:()=>import('../../user/views/ListingDetailView.vue')},

@@ -57,3 +57,11 @@ Access token ở memory, refresh cookie HttpOnly. BUYER/BROKER có phiên7ngày 
 MySQL lưu dữ liệu nghiệp vụ; ảnh/tài liệu ở `backend/var/uploads` hoặc `STORAGE_ROOT`. Giữ `.env`, uploads, backup, dependencies, build output và test/evidence local ngoài Git. Property Importer là công cụ độc lập, không thuộc bản source này.
 
 Xem [Backend](backend/README.md), [Frontend](frontend/README.md), [Database](database/README.md), [vận hành/backup](ops/OPERATIONS.md).
+
+## Đồng bộ các nhánh
+
+Bản hợp nhất giữ đăng nhập bền vững, duyệt quyền BROKER và Home V3 từ Backend-Huy; bổ sung định giá v6, lịch sử riêng tư và dữ liệu nghiên cứu từ các nhánh đã nằm trong feature/apartment-pilot-100. Dữ liệu nghiên cứu trên Git không tự trở thành tin công khai trong MySQL.
+
+Trang /valuation dùng API AI v6 chuẩn tại ai-services/run_api.py, qua proxy /api/ai; Home vẫn giữ công cụ ước tính theo giả định và tính khoản vay. Chuẩn bị môi trường bằng backend/scripts/setup-valuation-runtime.ps1, chạy AI bằng backend/scripts/run-valuation.ps1. Không tự chạy crawler hoặc training khi khởi động web.
+
+Migration V13__broker_applications.sql của môi trường Backend-Huy được giữ nguyên. Lịch sử định giá nằm trong V14__valuation_history.sql và cần phê duyệt rollout riêng. Chưa áp dụng V14 thì các API lịch sử báo chưa sẵn sàng. Môi trường đã dùng V13__valuation_history.sql từ nhánh khác phải đối chiếu Flyway history riêng trước rollout; không đổi migration đã áp dụng hoặc chạy clean/reset.

@@ -46,5 +46,6 @@ defineExpose({ id: titleId })
   </dialog>
 </template>
 <style scoped>
+.mobile-drawer[open]{animation:drawer-enter .18s ease-out}.mobile-drawer[open]::backdrop{animation:drawer-fade .18s ease-out}@keyframes drawer-enter{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes drawer-fade{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.mobile-drawer[open],.mobile-drawer[open]::backdrop{animation:none}}
 .mobile-drawer::backdrop{background:#07162bb3;backdrop-filter:blur(4px)}
 </style>

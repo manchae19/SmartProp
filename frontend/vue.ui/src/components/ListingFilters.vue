@@ -39,7 +39,7 @@ defineExpose({ expand: () => { expanded.value = true } })
       <label v-if="draft.ward" class="sp-field">Phường / xã<input v-model="draft.ward" class="sp-input" name="ward" maxlength="100" /></label>
       <div class="advanced-actions flex flex-wrap justify-end gap-3 sm:col-span-2 lg:col-span-3"><button type="submit" class="sp-button sp-button-primary">Áp dụng bộ lọc</button></div>
     </div>
-    <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-[11px] leading-6 text-brand-muted">Có thể kết hợp hình thức, khu vực và loại hình.</p><button type="button" class="reset-filters min-h-11 rounded-control px-2 text-xs font-semibold text-brand-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-brand-gold" @click="reset">Xóa bộ lọc</button></div>
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3"><p class="text-xs leading-6 text-brand-muted">Có thể kết hợp hình thức, khu vực và loại hình.</p><button type="button" class="reset-filters min-h-11 rounded-control px-2 text-xs font-semibold text-brand-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-brand-gold" @click="reset">Xóa bộ lọc</button></div>
     <p v-if="error" ref="errorNode" role="alert" tabindex="-1" class="filter-error mt-4 rounded-control bg-red-50 p-4 text-sm leading-6 text-red-800 focus-visible:outline-2 focus-visible:outline-red-700">{{ error }}</p>
   </form>
 </template>

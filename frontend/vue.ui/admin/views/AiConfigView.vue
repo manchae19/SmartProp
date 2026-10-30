@@ -222,7 +222,7 @@ export default {
 }
 
 .badge-tag {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   color: #4f46e5;
   background: #eef2ff;
@@ -232,13 +232,13 @@ export default {
 }
 
 .section-title {
-  font-size: 22px;
+  font-size: 23px;
   font-weight: bold;
   color: #1e325a;
 }
 
 .section-desc {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #6b7280;
 }
 
@@ -248,7 +248,7 @@ export default {
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
 }
@@ -297,7 +297,7 @@ export default {
 }
 
 .card-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: bold;
   color: #1e325a;
 }
@@ -305,14 +305,14 @@ export default {
 .badge-version {
   background: #f3f4f6;
   color: #374151;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
 }
 
 .card-desc {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #6b7280;
 }
 
@@ -324,13 +324,13 @@ export default {
 }
 
 .meta-highlight {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: bold;
   color: #059669;
 }
 
 .meta-date {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #9ca3af;
 }
 
@@ -350,13 +350,13 @@ export default {
 }
 
 .option-title {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: #1f2937;
 }
 
 .option-desc {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
 }
 
@@ -413,7 +413,7 @@ export default {
 }
 
 .control-value {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: bold;
   color: #1f2937;
   min-width: 50px;
@@ -432,7 +432,7 @@ export default {
 }
 
 .action-notice {
-  font-size: 13px;
+  font-size: 14px;
   color: #6b7280;
   max-width: 60%;
 }
@@ -448,7 +448,7 @@ export default {
   border: 1px solid #d1d5db;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
 }
@@ -463,7 +463,7 @@ export default {
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
 }

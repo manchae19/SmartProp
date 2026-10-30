@@ -156,7 +156,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               <div>
 
                 <div
-                  class="inline-flex px-3 py-1 rounded-full bg-[#e5f3ea] text-[#438665] text-[10px] mb-3"
+                  class="inline-flex px-3 py-1 rounded-full bg-[#e5f3ea] text-[#438665] text-xs mb-3"
                 >
                   {{ listing.type }}
                 </div>
@@ -180,7 +180,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                   {{ listing.price }}
                 </p>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-xs text-gray-400 mt-1">
                   {{ listing.pricePerM2 }}
                 </p>
 
@@ -193,7 +193,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-7 pt-6 border-t border-gray-100"
             >
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-xs text-gray-400">
                   Diện tích
                 </p>
 
@@ -203,7 +203,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-xs text-gray-400">
                   Phòng ngủ
                 </p>
 
@@ -216,7 +216,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-xs text-gray-400">
                   Phòng tắm
                 </p>
 
@@ -229,7 +229,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               </div>
 
               <div>
-                <p class="text-[10px] text-gray-400">
+                <p class="text-xs text-gray-400">
                   Hướng
                 </p>
 
@@ -335,7 +335,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               Tiện ích xung quanh
             </h2>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div v-for="poi in pois" :key="poi.id" class="bg-[#f5f4ef] rounded-2xl p-4"><p class="text-xs font-medium">{{poi.name}}</p><p class="text-[10px] text-gray-400 mt-1">{{Math.round(poi.distanceMeters)}} m</p></div><p v-if="!pois.length" class="text-xs text-gray-400">Chưa có dữ liệu tiện ích.</p></div></section>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><div v-for="poi in pois" :key="poi.id" class="bg-[#f5f4ef] rounded-2xl p-4"><p class="text-xs font-medium">{{poi.name}}</p><p class="text-xs text-gray-400 mt-1">{{Math.round(poi.distanceMeters)}} m</p></div><p v-if="!pois.length" class="text-xs text-gray-400">Chưa có dữ liệu tiện ích.</p></div></section>
 
           <!-- ==================== LOCATION ==================== -->
 
@@ -349,14 +349,14 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                   Vị trí
                 </h2>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-xs text-gray-400 mt-1">
                   {{ listing.location }}
                 </p>
               </div>
 
               <button
                 @click="goMap"
-                class="px-4 py-2 rounded-full bg-[#1E325A] text-white text-[10px]"
+                class="px-4 py-2 rounded-full bg-[#1E325A] text-white text-xs"
               >
                 Xem trên bản đồ
               </button>
@@ -379,7 +379,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             </div>
           </section>
 
-          <p class="text-xs leading-6 text-[#637083]">{{locationLabel(property)}} · Công cụ tìm địa chỉ: <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" class="underline">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="underline">© OpenStreetMap contributors</a></p>
+          <p class="text-xs leading-6 text-[#536178]">{{locationLabel(property)}} · Công cụ tìm địa chỉ: <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer" class="underline">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" class="underline">© OpenStreetMap contributors</a></p>
 
           <!-- ==================== AI VALUATION ==================== -->
 
@@ -391,7 +391,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             >
               <div>
                 <p
-                  class="text-[10px] text-white/50 uppercase tracking-widest"
+                  class="text-xs text-white/50 uppercase tracking-widest"
                 >
                   Định giá tham chiếu
                 </p>
@@ -400,14 +400,14 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                   {{ listing.valuation }}
                 </h2>
 
-                <p class="text-[10px] text-white/60 mt-2">
+                <p class="text-xs text-white/60 mt-2">
                   Chưa có dữ liệu định giá tự động cho tin này.
                 </p>
               </div>
 
               <div class="bg-white/10 rounded-2xl px-5 py-4">
 
-                <p class="text-[10px] text-white/60">
+                <p class="text-xs text-white/60">
                   Giá tin đăng
                 </p>
 
@@ -415,7 +415,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                   {{ listing.price }}
                 </p>
 
-                <p class="text-[10px] text-emerald-300 mt-1">
+                <p class="text-xs text-emerald-300 mt-1">
                   Chưa có kết quả so sánh giá
                 </p>
               </div>
@@ -431,7 +431,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-xs text-white/60 mb-1"
                   >
                     <span>Vị trí trung tâm</span>
                     <span>—</span>
@@ -446,7 +446,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-xs text-white/60 mb-1"
                   >
                     <span>Diện tích</span>
                     <span>—</span>
@@ -461,7 +461,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
 
                 <div>
                   <div
-                    class="flex justify-between text-[10px] text-white/60 mb-1"
+                    class="flex justify-between text-xs text-white/60 mb-1"
                   >
                     <span>Khoảng cách tiện ích</span>
                     <span>—</span>
@@ -489,7 +489,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
           <section
             class="bg-white rounded-[24px] p-6 shadow-sm"
           >
-            <p class="text-[10px] text-gray-400 mb-4">
+            <p class="text-xs text-gray-400 mb-4">
               Người đăng
             </p>
 
@@ -504,7 +504,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                   Thông tin người đăng
                 </p>
 
-                <p class="text-[10px] text-gray-400 mt-1">
+                <p class="text-xs text-gray-400 mt-1">
                   Liên hệ được bảo vệ; bấm bên dưới để xem.
                 </p>
               </div>
@@ -514,7 +514,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             <RouterLink v-if="route.query.own==='1'||session.user?.role==='ADMIN'" :to="'/account/properties/'+listingId+'/legal-documents'" class="mb-3 block text-xs underline">Quản lý hồ sơ pháp lý riêng</RouterLink><ContactPanel :key="listingId" :property-id="listingId" /><button type="button" class="mt-3 w-full rounded-full border p-3 text-xs" :disabled="state.busy" @click="messageOwner">Nhắn tin</button>
 
             <p
-              class="text-[9px] text-gray-400 text-center mt-4 leading-4"
+              class="text-xs text-gray-400 text-center mt-4 leading-4"
             >
               Không chuyển tiền hoặc đặt cọc trước khi xác minh
               thông tin bất động sản.
@@ -530,7 +530,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               Thông tin tin đăng
             </h3>
 
-            <div class="space-y-3 text-[10px] break-all">
+            <div class="space-y-3 text-xs break-all">
 
               <div class="flex justify-between">
                 <span class="text-gray-400">
@@ -576,14 +576,14 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
           <section
             class="bg-white rounded-[24px] p-5 shadow-sm"
           >
-            <p class="text-[10px] text-gray-400 leading-5">
+            <p class="text-xs text-gray-400 leading-5">
               Bạn thấy thông tin hoặc hình ảnh của tin đăng này
               có vấn đề?
             </p>
 
             <button
   @click="router.push(`/listing/${route.params.id}/report`)"
-  class="mt-3 text-[11px] text-[#b65c3c] hover:underline cursor-pointer"
+  class="mt-3 text-xs text-[#b65c3c] hover:underline cursor-pointer"
 >
   ⚑ Báo cáo tin đăng
 </button>
@@ -626,7 +626,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
                 </h2>
 
                 <p
-                  class="text-[9px] md:text-[10px] text-white/40 mt-1 truncate"
+                  class="text-xs md:text-xs text-white/40 mt-1 truncate"
                 >
                   {{ listing.location }}
                 </p>
@@ -636,7 +636,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
               <!-- IMAGE NUMBER -->
 
               <div
-                class="hidden sm:block px-3 py-1 rounded-full bg-white/10 text-[10px] text-white/70 whitespace-nowrap"
+                class="hidden sm:block px-3 py-1 rounded-full bg-white/10 text-xs text-white/70 whitespace-nowrap"
               >
                 {{ currentImageIndex + 1 }} / {{ images.length }} ảnh
               </div>
@@ -648,13 +648,13 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             <div class="flex items-center gap-2 shrink-0">
 
               <button
-                class="hidden sm:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70 hover:bg-white/10 transition"
+                class="hidden sm:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-white/70 hover:bg-white/10 transition"
               >
                 Tải ảnh
               </button>
 
               <button
-                class="hidden md:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-[10px] text-white/70 hover:bg-white/10 transition"
+                class="hidden md:block px-4 py-2 rounded-full border border-white/10 bg-white/5 text-xs text-white/70 hover:bg-white/10 transition"
               >
                 Báo cáo ảnh sai
               </button>
@@ -706,7 +706,7 @@ watch(()=>[route.params.id,route.query.own],load,{immediate:true});onBeforeUnmou
             <!-- MOBILE IMAGE COUNT -->
 
             <div
-              class="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-[10px]"
+              class="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-xs"
             >
               {{ currentImageIndex + 1 }} / {{ images.length }}
             </div>

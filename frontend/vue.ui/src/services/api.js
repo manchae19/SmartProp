@@ -22,3 +22,5 @@ export async function login(email,password,rememberMe=false){const value=email.t
 export const register=body=>api('/auth/register',{method:'POST',body:{...body,email:body.email.trim()},authenticated:false})
 export async function loadProfile(){session.user=await api('/users/me');return session.user}
 export async function logout(){await client.logout();channel?.postMessage('logout')}
+
+export async function completeGoogleLogin(){const result=await client.google();return result.user}

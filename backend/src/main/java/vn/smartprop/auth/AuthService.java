@@ -51,6 +51,13 @@ public class AuthService {
         s.createdAt=tokens.now();s.lastUsedAt=s.createdAt; s.expiresAt=s.createdAt.plusSeconds(tokens.seconds); sessions.save(s);
         return new AuthDtos.Token(tokens.issue(s,u.tokenVersion),"Bearer",tokens.seconds,UserDtos.Profile.of(u));
     }
+    /** Called only after the OIDC subject has been verified and resolved server-side. */
+    @Transactional public AuthDtos.Token federatedLogin(Long id) {
+        User u=users.lockById(id).orElseThrow(AuthService::invalidLogin);
+        if(u.deletedAt!=null||u.status!=User.Status.ACTIVE)throw new ApiException(403,"ACCOUNT_LOCKED","Tài khoản đã bị khóa hoặc không còn hoạt động.");
+        AuthSession session=new AuthSession();session.id=UUID.randomUUID().toString();session.userId=u.id;session.createdAt=tokens.now();session.lastUsedAt=session.createdAt;session.expiresAt=session.createdAt.plusSeconds(tokens.seconds);sessions.saveAndFlush(session);
+        return new AuthDtos.Token(tokens.issue(session,u.tokenVersion),"Bearer",tokens.seconds,UserDtos.Profile.of(u));
+    }
     private static ApiException invalidLogin() { return new ApiException(401,"INVALID_CREDENTIALS","Email hoặc mật khẩu không đúng"); }
     @Transactional public void logout(String sessionId) {
         sessions.findById(sessionId).ifPresent(s -> { s.revoked=true; sessions.save(s); });

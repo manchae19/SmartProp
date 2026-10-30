@@ -1,5 +1,16 @@
-<script setup>import {ref} from 'vue';import {useRouter} from 'vue-router';import {api,session,logout} from '../../src/services/api.js';const router=useRouter(),pending=ref('—'),openReports=ref('—');api('/admin/dashboard').then(s=>{pending.value=s.pendingProperties;openReports.value=s.openReports}).catch(()=>{});async function signOut(){await logout();router.push('/login')}</script>
+<script setup>
+import {ref,nextTick,watch} from 'vue'
+import {useRoute,useRouter} from 'vue-router'
+import {api} from '../../src/services/api.js'
+import AppHeader from '../../src/components/layout/AppHeader.vue'
+const router=useRouter(),route=useRoute(),pending=ref('—'),openReports=ref('—')
+api('/admin/dashboard').then(s=>{pending.value=s.pendingProperties;openReports.value=s.openReports}).catch(()=>{})
+watch(()=>route.path,async()=>{await nextTick();document.getElementById('page-content')?.focus({preventScroll:true})})
+</script>
 <template>
+  <div class="admin-layout">
+    <a href="#page-content" class="fixed -top-20 left-4 z-[100] rounded-control bg-white px-5 py-3 text-sm font-semibold shadow-lg focus:top-3">Đến nội dung chính</a>
+    <AppHeader />
   <div class="section">
     <!-- Header phía trên có chèn video nền -->
     <div class="header">
@@ -32,7 +43,7 @@
     <!-- Phần thân chứa Sidebar và Nội dung thay đổi -->
     <div class="body-layout">
       <!-- Sidebar bên trái -->
-      <div class="sidebar">
+      <aside class="sidebar" aria-label="Điều hướng quản trị">
         <div class="m-c-qu-n-tr">MỤC QUẢN TRỊ</div>
         
         <router-link to="/admin/dashboard" class="nav" active-class="active-nav">
@@ -66,23 +77,23 @@
     <router-link to="/admin/ai-config" class="nav" active-class="active-nav">
       <div class="c-u-h-nh-ai">Cấu hình AI</div>
     </router-link>
-      </div>
+      </aside>
 
       <!-- Khu vực hiển thị các trang con -->
-      <div class="main-content-area">
-        <div class="flex gap-4 justify-end text-xs mb-4"><RouterLink to="/home">Trang chủ</RouterLink><RouterLink to="/account">{{session.user?.fullName}}</RouterLink><button @click="signOut">Đăng xuất</button></div><router-view />
-      </div>
+      <main id="page-content" tabindex="-1" class="main-content-area outline-none"><router-view /></main>
     </div>
+  </div>
   </div>
 </template>
 
 <style scoped>
+.admin-layout{min-height:100dvh;background:var(--color-brand-cream);color:var(--color-brand-navy)}
 .section {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: calc(100dvh - var(--sp-header-height));
   background-color: #e5e5e5;
-  font-family: sans-serif;
+  font-family: var(--font-sans);
 }
 
 .header {
@@ -139,18 +150,18 @@
 }
 
 .qu-n-tr {
-  font-size: 10px;
+  font-size:13px;
   letter-spacing: 1px;
 }
 
 .b-ng-i-u-khi-n {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: bold;
   margin-bottom: 6px;
 }
 
 .theo-d-i-tin-ng-n {
-  font-size: 13px;
+  font-size: 14px;
   color: #cbd5e1;
 }
 
@@ -188,7 +199,7 @@
 }
 
 .m-c-qu-n-tr {
-  font-size: 11px;
+  font-size: 12px;
   color: #6b7280;
   font-weight: bold;
   margin-bottom: 8px;
@@ -204,7 +215,7 @@
   border-radius: 8px;
   color: #374151;
   text-decoration: none;
-  font-size: 14px;
+  font-size: var(--text-sm);
   text-align: left;
   transition: background 0.2s;
 }
@@ -221,7 +232,7 @@
   color: #1e293b;
   padding: 2px 10px;
   border-radius: 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
 }
 
@@ -237,6 +248,6 @@
   background: #fdfbf7;
   overflow-y: auto;
 }
-@media(max-width:900px){.body-layout{flex-direction:column}.sidebar{width:100%;display:flex;flex-wrap:wrap;gap:8px;border-right:0;border-bottom:1px solid #e4ded3;padding:16px}.sidebar>.m-c-qu-n-tr{width:100%;margin-bottom:4px}.sidebar>a{padding:10px 12px;margin:0;font-size:12px}.main-content-area{width:100%;min-width:0;padding:20px}.header{padding:24px}.hcontent{flex-wrap:wrap;gap:20px}}
+@media(max-width:900px){.body-layout{flex-direction:column}.sidebar{width:100%;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;border-right:0;border-bottom:1px solid #e4ded3;padding:16px}.sidebar>.m-c-qu-n-tr{width:100%;margin-bottom:4px}.sidebar>a{padding:10px 12px;margin:0;font-size:13px}.main-content-area{width:100%;min-width:0;padding:20px}.header{padding:24px}.hcontent{flex-wrap:wrap;gap:20px}}
 .main-content-area{min-width:0}
 </style>

@@ -32,3 +32,60 @@ test-results/
 /backend/scripts/test-*.ps1
 /SmartProp/
 /FRONTEND_CHANGES.md
+
+# Additional AI environments and dataset exclusions from the team branches.
+# Local environments and generated files
+**/.venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/target/
+/backend/var/
+coverage/
+.coverage
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Local credentials and editor settings
+.env
+.env.*
+!.env.example
+!.env.*.example
+.aws/
+.codex/
+.idea/
+.vscode/
+
+# Local work and full data archive (never remove these files from disk)
+/.scratch/
+/data/raw/
+/data/processed/
+/ai-services/app/data/data_raw/
+/ai-services/app/data/raw/
+/ai-services/app/data/data_processed/
+/ai-services/app/data/processed/
+/ai-services/app/data/*.csv
+/ai-services/app/data/*.jsonl
+/ai-services/app/data/sample/
+/ai-services/app/data/crawler_cafeland/sample/
+/ai-services/app/data/crawler_cafeland/verification.json
+
+# Large weights from future experiments; v6 JSON release is kept in artifacts/v6
+*.buffer
+*.pt
+*.pth
+*.onnx
+*.h5
+*.hdf5
+*.pkl
+*.joblib

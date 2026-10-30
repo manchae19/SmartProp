@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
       aria-label="Menu tài khoản và tiện ích"
       class="absolute right-0 top-full z-50 mt-3 w-[min(19rem,calc(100vw-2.5rem))] rounded-2xl border border-[#E7E1D7] bg-white p-2.5 text-[#142B4F] shadow-2xl shadow-[#071525]/20"
     >
-      <p class="px-4 pb-2 pt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#967444]">Khám phá SmartProp</p>
+      <p class="px-4 pb-2 pt-3 text-xs font-bold uppercase tracking-[0.2em] text-[#967444]">Khám phá SmartProp</p>
       <RouterLink :to="listingLink('/listings', filters || { district })" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Danh sách bất động sản</RouterLink>
       <RouterLink :to="listingLink('/map', filters || { district })" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">Bản đồ GIS</RouterLink>
       <RouterLink :to="session.token ? '/account' : '/login'" class="block rounded-xl px-4 py-3 text-sm font-medium transition hover:bg-[#F1EEE8] focus-visible:outline-2 focus-visible:outline-[#B3915F]" @click="close">{{ session.token ? 'Tài khoản' : 'Đăng nhập' }}</RouterLink>

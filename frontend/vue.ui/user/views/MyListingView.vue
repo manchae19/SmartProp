@@ -94,7 +94,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
           <div>
             <div class="flex items-center gap-3">
               <span class="h-px w-9 bg-[#B49362]"></span>
-              <p class="text-[10px] font-bold uppercase tracking-[0.22em] text-[#B49362]">
+              <p class="text-xs font-bold uppercase tracking-[0.22em] text-[#B49362]">
                 SMARTPROP / PROPERTY MANAGEMENT
               </p>
             </div>
@@ -109,7 +109,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
               bất động sản của bạn trong một không gian trực quan.
             </p>
 
-            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94774F]">
+            <span class="mt-5 inline-flex rounded-full border border-[#E2D8C8] bg-[#EEE7DB] px-4 py-2 text-xs font-bold uppercase tracking-widest text-[#94774F]">
               Dữ liệu từ hệ thống
             </span>
           </div>
@@ -128,18 +128,18 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
     <section class="mx-auto max-w-[1440px] px-5 pt-10 md:px-10">
       <div class="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-5">
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-xs font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng tin đăng
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ state.summary?.totalListings ?? '—' }}</span>
             <span class="text-xl text-[#C6A77A]">⌂</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Danh mục của bạn</p>
+          <p class="mt-3 text-xs text-[#8D99A8]">Danh mục của bạn</p>
         </div>
 
         <div class="rounded-[20px] bg-[#142B4F] p-5 text-white sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/60">
+          <p class="text-xs font-bold uppercase tracking-widest text-white/60">
             Đang hiển thị
           </p>
           <div class="mt-4 flex items-end justify-between">
@@ -148,29 +148,29 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
             </span>
             <span class="h-3 w-3 rounded-full bg-[#7BD4B0]"></span>
           </div>
-          <p class="mt-3 text-[11px] text-white/55">Tin đang hoạt động</p>
+          <p class="mt-3 text-xs text-white/55">Tin đang hoạt động</p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-xs font-bold uppercase tracking-widest text-[#8D99A8]">
             Tổng lượt xem
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ totalViews }}</span>
             <span class="text-xl text-[#C6A77A]">↗</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Chưa có số liệu tương tác</p>
+          <p class="mt-3 text-xs text-[#8D99A8]">Chưa có số liệu tương tác</p>
         </div>
 
         <div class="rounded-[20px] border border-[#E8E3DA] bg-white p-5 sm:p-7">
-          <p class="text-[10px] font-bold uppercase tracking-widest text-[#8D99A8]">
+          <p class="text-xs font-bold uppercase tracking-widest text-[#8D99A8]">
             Lượt lưu tin
           </p>
           <div class="mt-4 flex items-end justify-between">
             <span class="text-4xl font-semibold">{{ totalSaves }}</span>
             <span class="text-xl text-[#C6A77A]">♡</span>
           </div>
-          <p class="mt-3 text-[11px] text-[#8D99A8]">Người dùng quan tâm</p>
+          <p class="mt-3 text-xs text-[#8D99A8]">Người dùng quan tâm</p>
         </div>
       </div>
     </section>
@@ -181,7 +181,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
 
       <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#B49362]">
+          <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#B49362]">
             YOUR COLLECTION / 01
           </p>
           <h2 class="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">
@@ -210,7 +210,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
           v-for="filter in filters"
           :key="filter.id"
           @click="activeFilter = filter.id"
-          class="rounded-full border px-4 py-2.5 text-[11px] font-semibold transition sm:px-5"
+          class="rounded-full border px-4 py-2.5 text-xs font-semibold transition sm:px-5"
           :class="activeFilter === filter.id
             ? 'border-[#142B4F] bg-[#142B4F] text-white'
             : 'border-[#E4DED3] bg-white text-[#64748B] hover:border-[#C6A77A]'"
@@ -224,7 +224,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
         <p class="text-xs text-[#87919F]">
           Hiển thị <strong class="text-[#142B4F]">{{ filteredListings.length }}</strong> tin đăng
         </p>
-        <span class="text-[10px] uppercase tracking-widest text-[#B49362]">
+        <span class="text-xs uppercase tracking-widest text-[#B49362]">
           PROPERTY PORTFOLIO
         </span>
       </div>
@@ -247,7 +247,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
 
             <div class="absolute inset-0 bg-gradient-to-t from-[#142B4F]/45 to-transparent"></div>
 
-            <span class="absolute bottom-4 left-4 text-[10px] font-bold uppercase tracking-[0.15em] text-white">
+            <span class="absolute bottom-4 left-4 text-xs font-bold uppercase tracking-[0.15em] text-white">
               {{ listing.location }}
             </span>
           </div>
@@ -256,13 +256,13 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
           <div class="flex min-w-0 flex-col justify-center p-5 sm:p-7">
             <div class="flex flex-wrap items-center gap-3">
               <span
-                class="rounded-full px-3 py-1.5 text-[10px] font-bold"
+                class="rounded-full px-3 py-1.5 text-xs font-bold"
                 :class="statusClass(listing.status)"
               >
                 {{ listing.statusText }}
               </span>
 
-              <span v-if="listing.statusSub" class="text-[10px] text-[#9AA4B1]">
+              <span v-if="listing.statusSub" class="text-xs text-[#9AA4B1]">
                 {{ listing.statusSub }}
               </span>
             </div>
@@ -292,7 +292,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
                 </span>
               </template>
 
-              <span v-else class="text-[11px] text-[#9AA4B1]">
+              <span v-else class="text-xs text-[#9AA4B1]">
                 Chưa có thống kê tương tác
               </span>
             </div>
@@ -301,13 +301,13 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
           <!-- ACTIONS -->
           <div class="flex flex-col justify-between gap-6 border-t border-[#EEEAE3] p-5 sm:p-7 lg:border-l lg:border-t-0">
             <div class="lg:text-right">
-              <p class="text-[10px] uppercase tracking-widest text-[#9AA4B1]">
+              <p class="text-xs uppercase tracking-widest text-[#9AA4B1]">
                 Giá đăng
               </p>
               <p class="mt-2 text-[25px] font-semibold tracking-tight">
                 {{ listing.priceText }}
               </p>
-              <p class="mt-1 text-[10px] text-[#B49362]">
+              <p class="mt-1 text-xs text-[#B49362]">
                 {{ listing.priceUnit }}
               </p>
             </div>
@@ -315,14 +315,14 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
             <div class="flex flex-wrap gap-2 lg:justify-end">
               <button
                 @click="openListing(listing)"
-                class="rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-[11px] font-semibold transition hover:border-[#C6A77A]"
+                class="rounded-full border border-[#E4DED3] bg-white px-5 py-3 text-xs font-semibold transition hover:border-[#C6A77A]"
               >
                 Xem
               </button>
 
               <button
                 @click="editListing(listing)"
-                class="rounded-full px-5 py-3 text-[11px] font-semibold text-white transition hover:opacity-90"
+                class="rounded-full px-5 py-3 text-xs font-semibold text-white transition hover:opacity-90"
                 :class="listing.status === 'rejected'
                   ? 'bg-[#BD6A4C]'
                   : 'bg-[#142B4F]'"
@@ -364,7 +364,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
 
         <div class="relative flex flex-wrap items-center justify-between gap-7">
           <div>
-            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-[#7BD4E5]">
               SMARTPROP / YOUR NEXT LISTING
             </p>
 
@@ -386,7 +386,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
         </div>
       </section>
 
-      <p class="mt-7 text-center text-[11px] leading-6 text-[#87919F]">
+      <p class="mt-7 text-center text-xs leading-6 text-[#87919F]">
         Thông tin và trạng thái tin đăng được tải từ tài khoản của bạn.
       </p>
     <LegacyPager :state="state" /></div>
@@ -421,7 +421,7 @@ async function act(p,action){await state.run(async()=>{await api('/properties/'+
 
         <div class="p-6 sm:p-8">
           <span
-            class="rounded-full px-3 py-1.5 text-[10px] font-semibold"
+            class="rounded-full px-3 py-1.5 text-xs font-semibold"
             :class="statusClass(selectedListing.status)"
           >
             {{ selectedListing.statusText }}

@@ -36,7 +36,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
       <!-- TITLE -->
       <section class="mb-8">
         <h1
-          class="text-3xl md:text-[36px] font-semibold
+          class="text-3xl md:text-4xl font-semibold
                  tracking-tight text-[#1E325A]"
         >
           Báo cáo tin đăng
@@ -140,7 +140,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                   {{ listing.title }}
                 </h3>
 
-                <p class="text-[11px] text-gray-400 mt-1">
+                <p class="text-[12px] text-gray-400 mt-1">
                   {{ listing.location }}
                 </p>
 
@@ -233,7 +233,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
               ></textarea>
 
               <div
-                class="text-right text-[10px]
+                class="text-right text-xs
                        text-gray-400 mt-1"
               >
                 {{ description.length }}/1000
@@ -283,7 +283,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                     hoặc bấm để chọn
                   </p>
 
-                  <p class="text-[10px] text-gray-400 mt-1">
+                  <p class="text-xs text-gray-400 mt-1">
                     Hỗ trợ JPG, PNG, PDF · tối đa 10MB
                   </p>
                 </template>
@@ -304,7 +304,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                     {{ selectedFile.name }}
                   </p>
 
-                  <p class="text-[10px] text-gray-400 mt-1">
+                  <p class="text-xs text-gray-400 mt-1">
                     {{
                       (selectedFile.size / 1024 / 1024).toFixed(2)
                     }} MB
@@ -316,7 +316,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                 v-if="selectedFile"
                 type="button"
                 @click="removeFile"
-                class="text-[10px] text-red-500
+                class="text-xs text-red-500
                        mt-2 hover:underline"
               >
                 Xoá tệp
@@ -343,7 +343,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                        focus:ring-1 focus:ring-[#1E325A]"
               />
 
-              <p class="text-[10px] text-gray-400 mt-2">
+              <p class="text-xs text-gray-400 mt-2">
                 Chúng tôi sẽ gửi kết quả xử lý báo cáo tới email này.
               </p>
             </div>
@@ -360,7 +360,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
               />
 
               <span
-                class="text-[11px] text-gray-500 leading-5"
+                class="text-[12px] text-gray-500 leading-5"
               >
                 Tôi xác nhận thông tin báo cáo trên là đúng sự thật.
                 Báo cáo sai sự thật có thể ảnh hưởng đến tài khoản
@@ -409,7 +409,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                    rounded-[24px] p-6 shadow-sm"
           >
             <p
-              class="text-[9px] text-white/40
+              class="text-xs text-white/40
                      tracking-[0.18em] font-semibold"
             >
               SAU KHI BẠN GỬI BÁO CÁO
@@ -428,13 +428,13 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                   class="w-7 h-7 rounded-full
                          bg-white/10 border border-white/10
                          flex items-center justify-center
-                         text-[10px] shrink-0"
+                         text-xs shrink-0"
                 >
                   1
                 </div>
 
                 <p
-                  class="text-[11px] text-white/65
+                  class="text-[12px] text-white/65
                          leading-5 pt-1"
                 >
                   Đội ngũ quản trị xem xét trong vòng
@@ -449,13 +449,13 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                   class="w-7 h-7 rounded-full
                          bg-white/10 border border-white/10
                          flex items-center justify-center
-                         text-[10px] shrink-0"
+                         text-xs shrink-0"
                 >
                   2
                 </div>
 
                 <p
-                  class="text-[11px] text-white/65
+                  class="text-[12px] text-white/65
                          leading-5 pt-1"
                 >
                   Tin đăng có thể bị tạm ẩn nếu vi phạm
@@ -470,13 +470,13 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
                   class="w-7 h-7 rounded-full
                          bg-white/10 border border-white/10
                          flex items-center justify-center
-                         text-[10px] shrink-0"
+                         text-xs shrink-0"
                 >
                   3
                 </div>
 
                 <p
-                  class="text-[11px] text-white/65
+                  class="text-[12px] text-white/65
                          leading-5 pt-1"
                 >
                   Bạn nhận kết quả qua email và tại trang
@@ -507,7 +507,7 @@ async function submitReport(){if(state.value.busy)return;state.value.error='';if
             </div>
 
             <p
-              class="text-[11px] text-gray-400
+              class="text-[12px] text-gray-400
                      leading-5 mt-3"
             >
               Danh tính người báo cáo được giữ kín và

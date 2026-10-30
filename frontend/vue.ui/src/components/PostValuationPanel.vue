@@ -26,26 +26,26 @@ const featureValue=value=>({alley:'Trong kiệt/hẻm',frontage:'Mặt tiền',v
 </script>
 <template>
  <section data-testid="valuation-panel" class="bg-[#1E325A] text-white rounded-[22px] p-6">
-  <h2 class="text-[9px] tracking-[0.18em] text-white/60">GIÁ THAM CHIẾU XGBOOST · v6</h2>
+  <h2 class="text-xs tracking-[0.18em] text-white/60">GIÁ THAM CHIẾU XGBOOST · v6</h2>
   <div data-testid="valuation-price" aria-live="polite" class="text-xl font-light mt-3 break-words">{{state.result?.available?exactVnd(state.result.predictedAskingPriceVnd):'—'}}</div>
-  <p class="text-[10px] text-white/70 mt-2">Giá rao ước tính; giá chào của bạn được giữ nguyên.</p>
-  <label class="block mt-5 text-[11px]">Khu vực tham khảo
+  <p class="text-xs text-white/70 mt-2">Giá rao ước tính; giá chào của bạn được giữ nguyên.</p>
+  <label class="block mt-5 text-xs">Khu vực tham khảo
    <select data-testid="valuation-location" :value="location" @change="draft.valuationLocation=$event.target.value" class="mt-2 w-full bg-white text-[#1E325A] rounded-lg p-2" :disabled="loading||!locations.length">
     <option value="">Chọn đúng khu vực</option><option v-for="item in locations" :key="item" :value="item">{{item}}</option>
    </select>
   </label>
-  <p class="text-[10px] text-white/60 mt-2">Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế.</p>
-  <p v-if="optionsError" role="status" class="mt-3 text-[11px] text-amber-200">{{optionsError}} <button type="button" class="underline" @click="loadOptions">Thử lại</button></p>
-  <p v-else-if="input.reason" class="mt-3 text-[11px] text-white/80">{{input.reason}}</p>
+  <p class="text-xs text-white/60 mt-2">Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế.</p>
+  <p v-if="optionsError" role="status" class="mt-3 text-xs text-amber-200">{{optionsError}} <button type="button" class="underline" @click="loadOptions">Thử lại</button></p>
+  <p v-else-if="input.reason" class="mt-3 text-xs text-white/80">{{input.reason}}</p>
   <button type="button" data-testid="valuation-preview" :disabled="loading||state.busy||!options||!!input.reason" @click="preview.preview(input.body)" class="mt-4 w-full rounded-full border border-white/40 py-2 text-xs disabled:opacity-50">{{state.busy?'Đang tính…':'Xem giá tham khảo'}}</button>
-  <p v-if="state.error" role="status" class="mt-3 text-[11px] text-amber-200">{{state.error}}</p>
-  <p v-if="state.result&&!state.result.available" role="status" class="mt-3 text-[11px]">{{state.result.reason}}</p>
-  <div v-if="state.result?.available" class="mt-5 border-t border-white/10 pt-4 text-[10px] space-y-2">
+  <p v-if="state.error" role="status" class="mt-3 text-xs text-amber-200">{{state.error}}</p>
+  <p v-if="state.result&&!state.result.available" role="status" class="mt-3 text-xs">{{state.result.reason}}</p>
+  <div v-if="state.result?.available" class="mt-5 border-t border-white/10 pt-4 text-xs space-y-2">
    <h3 class="font-semibold">Thông tin model đã dùng</h3>
    <p v-for="(value,key) in state.result.featuresUsed" :key="key">{{featureLabels[key]||key}}: {{featureValue(value)}}</p>
    <p v-if="state.result.missingFeatures?.length">Chưa có: {{state.result.missingFeatures.map(missingLabel).join(', ')}}</p>
    <p v-for="(warning,index) in state.result.warnings" :key="index" class="text-amber-200">{{warning}}</p>
   </div>
-  <p class="mt-5 text-[9px] text-white/60 leading-relaxed">Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin.</p>
+  <p class="mt-5 text-xs text-white/60 leading-relaxed">Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin.</p>
  </section>
 </template>

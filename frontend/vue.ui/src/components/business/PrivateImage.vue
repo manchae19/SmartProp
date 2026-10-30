@@ -8,4 +8,4 @@ watch(()=>[props.src,session.token],async()=>{const run=++serial;release();faile
 onBeforeUnmount(()=>{serial++;release()})
 </script>
 <template><img v-if="url" :src="url" :alt="alt" loading="lazy" @error="release();failed=true"><div v-else class="sp-placeholder" role="img" :aria-label="alt">{{failed?'Không tải được ảnh':src?'Đang tải ảnh…':'Chưa có ảnh'}}</div></template>
-<style scoped>.sp-placeholder{display:flex;align-items:center;justify-content:center;background:#dedbd3;color:#89909b;font-size:11px;min-height:100px;width:100%;height:100%}</style>
+<style scoped>.sp-placeholder{display:flex;align-items:center;justify-content:center;background:#dedbd3;color:#536178;font-size:13px;min-height:100px;width:100%;height:100%}</style>

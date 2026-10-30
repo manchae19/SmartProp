@@ -1,500 +1,56 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import {ref,onMounted,computed} from 'vue'
+import {useRouter} from 'vue-router'
+import {api,loadProfile,logout as revokeSession,clearSession,session,errorText} from '../../src/services/api.js'
 import BrokerApplicationCard from '../../src/components/BrokerApplicationCard.vue'
-import { useRouter } from 'vue-router'
-import { canPublish } from '../../src/services/siteNavigation.js'
-import { api, loadProfile, logout as revokeSession, clearSession, session, errorText } from '../../src/services/api'
-const router = useRouter()
-const fullName = ref(''), phone = ref(''), email = ref(''), district = ref(''), address = ref('')
-const currentPassword = ref(''), newPassword = ref(''), confirmPassword = ref('')
-const notification1 = ref(false), notification2 = ref(false), notification3 = ref(false)
-const busy = ref(true), loaded = ref(false), message = ref('')
-const roleLabel = computed(() => ({ BUYER: 'Người mua / người thuê', BROKER: 'Chủ nhà / môi giới', ADMIN: 'Quản trị viên' })[session.user?.role] || '')
-const initials = computed(() => fullName.value.split(' ').filter(Boolean).map(v => v[0]).slice(-2).join(''))
-function fill(user) {
-  fullName.value = user.fullName; email.value = user.email
-  phone.value = user.phone || ''; district.value = user.district || ''; address.value = user.address || ''
-}
-onMounted(async () => {
-  try { fill(session.user || await loadProfile()); const prefs=await api('/users/me/notification-preferences'); notification1.value=prefs.matchingListings; notification2.value=prefs.brokerMessages; notification3.value=prefs.statusUpdates; loaded.value = true }
-  catch (error) { message.value = errorText(error) }
-  finally { busy.value = false }
-})
-const saveProfile = async () => {
-  if (busy.value || !loaded.value) return
-  busy.value = true; message.value = ''
-  try {
-    const user = await api('/users/me', { method: 'PATCH', body: { fullName: fullName.value, phone: phone.value, district: district.value, address: address.value } })
-    session.user = user; fill(user); await api('/users/me/notification-preferences', {method:'PATCH',body:{matchingListings:notification1.value,brokerMessages:notification2.value,statusUpdates:notification3.value}}); message.value = 'Đã lưu hồ sơ và tùy chọn thông báo.'
-  } catch (error) { message.value = errorText(error) }
-  finally { busy.value = false }
-}
-const savePreferences=async()=>{if(busy.value||!loaded.value)return;busy.value=true;message.value='';try{await api('/users/me/notification-preferences',{method:'PATCH',body:{matchingListings:notification1.value,brokerMessages:notification2.value,statusUpdates:notification3.value}});message.value='Đã lưu tùy chọn thông báo.'}catch(e){message.value=errorText(e)}finally{busy.value=false}}
-const changePassword = async () => {
-  if (busy.value || !loaded.value) return
-  if (newPassword.value !== confirmPassword.value) { message.value = 'Mật khẩu xác nhận không khớp.'; return }
-  busy.value = true; message.value = ''
-  try {
-    await api('/users/me/password', { method: 'PUT', body: { currentPassword: currentPassword.value, newPassword: newPassword.value } })
-    currentPassword.value = newPassword.value = confirmPassword.value = ''
-    clearSession(); await router.replace({ path: '/login', query: { reason: 'password-changed' } })
-  } catch (error) { message.value = errorText(error) }
-  finally { busy.value = false }
-}
-const logout = async () => {
-  if (busy.value) return
-  busy.value = true
-  try { await revokeSession(); await router.replace('/login') }
-  catch (error) { message.value = errorText(error) }
-  finally { busy.value = false }
-}
-const resetProfile = () => { if (session.user) fill(session.user) }
+import ValuationHistory from '../../src/components/ValuationHistory.vue'
+import UserAvatar from '../../src/components/UserAvatar.vue'
+import AvatarEditor from '../../src/components/AvatarEditor.vue'
+import AppIcon from '../../src/components/AppIcon.vue'
+const router=useRouter(),form=ref({fullName:'',email:'',phone:'',district:'',address:''})
+const prefs=ref({matchingListings:false,brokerMessages:false,statusUpdates:false}),securityTab=ref('password')
+const currentPassword=ref(''),newPassword=ref(''),confirmPassword=ref(''),showPassword=ref(false)
+const busy=ref(false),loading=ref(true),loaded=ref(false),preferencesLoaded=ref(false),message=ref(''),error=ref(''),prefsError=ref(''),nameInput=ref(null)
+const roleLabel=computed(()=>({BUYER:'Người mua / người thuê',BROKER:'Chủ nhà / môi giới',ADMIN:'Quản trị viên'})[session.user?.role]||'Thành viên')
+const statusLabel=computed(()=>({ACTIVE:'Đang hoạt động',LOCKED:'Đã khóa'})[session.user?.status]||'Đang kiểm tra')
+const joined=computed(()=>session.user?.createdAt?new Date(session.user.createdAt).toLocaleDateString('vi-VN',{day:'2-digit',month:'long',year:'numeric'}):'Chưa có thông tin')
+const tools=[{to:'/favorites',icon:'heart',title:'Tin đã lưu',text:'Những không gian bạn quan tâm'},{to:'/account/reports',icon:'report',title:'Báo cáo của tôi',text:'Theo dõi phản hồi và xử lý'},{to:'/account/notifications',icon:'bell',title:'Thông báo',text:'Cập nhật hoạt động tài khoản'},{to:'/account/messages',icon:'messages',title:'Tin nhắn',text:'Tiếp tục những cuộc trò chuyện'}]
+const preferenceLabels=[{key:'matchingListings',title:'Tin phù hợp với bạn',text:'Lưu tùy chọn nhận thông báo tin đăng phù hợp.'},{key:'brokerMessages',title:'Tin nhắn liên quan',text:'Lưu tùy chọn thông báo khi có trao đổi.'},{key:'statusUpdates',title:'Trạng thái tin và báo cáo',text:'Lưu tùy chọn cập nhật xử lý từ hệ thống.'}]
+function fill(user){form.value={fullName:user.fullName,email:user.email,phone:user.phone||'',district:user.district||'',address:user.address||''}}
+async function load(){loading.value=true;error.value='';try{const user=await loadProfile();fill(user);loaded.value=true;await loadPreferences()}catch(e){error.value=errorText(e)}finally{loading.value=false}}
+async function loadPreferences(){prefsError.value='';try{prefs.value=await api('/users/me/notification-preferences');preferencesLoaded.value=true}catch(e){preferencesLoaded.value=false;prefsError.value=errorText(e)}}
+async function saveProfile(){if(busy.value||!loaded.value)return;busy.value=true;message.value=error.value='';try{const {email,...body}=form.value;const user=await api('/users/me',{method:'PATCH',body});session.user=user;fill(user);message.value='Thông tin cá nhân đã được cập nhật.'}catch(e){error.value=errorText(e)}finally{busy.value=false}}
+function resetProfile(){if(session.user)fill(session.user);message.value=error.value=''}
+async function savePreferences(){if(busy.value||!preferencesLoaded.value)return;busy.value=true;prefsError.value='';message.value='';try{await api('/users/me/notification-preferences',{method:'PATCH',body:prefs.value});message.value='Đã lưu tùy chọn thông báo.'}catch(e){prefsError.value=errorText(e)}finally{busy.value=false}}
+async function changePassword(){if(busy.value)return;message.value=error.value='';if(newPassword.value!==confirmPassword.value){error.value='Mật khẩu xác nhận không khớp.';return}if(new TextEncoder().encode(newPassword.value).length>72){error.value='Mật khẩu tối đa 72 byte UTF-8. Vui lòng dùng mật khẩu ngắn hơn.';return}busy.value=true;try{await api('/users/me/password',{method:'PUT',body:{currentPassword:currentPassword.value,newPassword:newPassword.value}});currentPassword.value=newPassword.value=confirmPassword.value='';clearSession();await router.replace({path:'/login',query:{reason:'password-changed'}})}catch(e){error.value=errorText(e)}finally{busy.value=false}}
+function editProfile(){document.getElementById('personal-information')?.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});nameInput.value?.focus({preventScroll:true})}
+async function signOut(){if(busy.value)return;busy.value=true;try{await revokeSession();await router.replace('/login')}catch(e){error.value=errorText(e)}finally{busy.value=false}}
+onMounted(load)
 </script>
-
 <template>
-  <div class="min-h-screen bg-[#e9e7e1] text-[#1E325A]">
-
-    <!-- ==================== HEADER ==================== -->
-
-
-    <!-- ==================== PAGE ==================== -->
-    <div class="max-w-[1400px] mx-auto px-8 pt-7 pb-16">
-
-      <p v-if="message" role="status" aria-live="polite">{{ message }}</p><p v-if="busy">Đang xử lý…</p><!-- TITLE -->
-      <div class="mb-5">
-        <h1 class="text-2xl font-medium">
-          Hồ sơ cá nhân
-        </h1>
-
-        <p class="text-xs text-gray-400 mt-1">
-          Quản lý thông tin tài khoản, bảo mật đăng nhập và tùy chọn thông báo.
-        </p>
-      </div>
-
-      <BrokerApplicationCard class="mb-5" />
-
-      <!-- ==================== MAIN GRID ==================== -->
-      <div
-        class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 items-start"
-      >
-
-        <!-- ================================================= -->
-        <!-- LEFT -->
-        <!-- ================================================= -->
-        <aside class="space-y-4">
-
-          <!-- PROFILE CARD -->
-          <section
-            class="bg-[#1E325A] text-white rounded-[25px] p-6"
-          >
-            <!-- Avatar -->
-            <div
-              class="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center text-xl mb-4"
-            >
-              {{ initials }}
-            </div>
-
-            <h2 class="text-lg font-medium">
-              {{ fullName }}
-            </h2>
-
-            <p class="text-[11px] text-white/60 mt-1">
-              {{ email }}
-            </p>
-
-            <div
-              class="inline-flex mt-3 bg-emerald-400/20 text-emerald-200 px-3 py-1 rounded-full text-[10px]"
-            >
-              {{ roleLabel }}
-            </div>
-
-            <div class="border-t border-white/10 mt-5 pt-5">
-              <p class="text-[10px] text-white/50">
-                Thành viên từ {{ session.user ? new Date(session.user.createdAt).toLocaleDateString("vi-VN") : "" }}
-              </p>
-
-              <p class="text-[10px] text-white/50 mt-2">
-                Trạng thái: {{ session.user?.status }}
-              </p>
-            </div>
-          </section>
-
-          <section aria-label="Truy cập nhanh" class="rounded-panel border border-brand-line bg-white p-4">
-            <h2 class="mb-3 text-sm font-semibold">Truy cập nhanh</h2>
-            <RouterLink v-if="canPublish(session.user)" to="/my-listing" class="block rounded-control p-3 text-sm hover:bg-brand-surface">Tin đăng của tôi ↗</RouterLink>
-            <RouterLink to="/favorites" class="block rounded-control p-3 text-sm hover:bg-brand-surface">Tin đã lưu ↗</RouterLink>
-          </section>
-          <!-- ==================== MY REPORTS ==================== -->
-          <RouterLink
-            to="/account/reports"
-            class="group bg-white/90 rounded-[22px] p-5 shadow-sm flex items-center justify-between transition-all duration-200 hover:bg-white hover:shadow-md"
-          >
-            <div class="flex items-center gap-3">
-
-              <!-- ICON -->
-              <div
-                class="w-10 h-10 shrink-0 rounded-full bg-[#1E325A]/10 flex items-center justify-center text-[#1E325A]"
-              >
-                <span class="text-lg">
-                  ⚑
-                </span>
-              </div>
-
-              <!-- TEXT -->
-              <div>
-                <h3
-                  class="text-xs font-medium text-[#1E325A]"
-                >
-                  Báo cáo của tôi
-                </h3>
-
-                <p
-                  class="text-[9px] text-gray-400 mt-1"
-                >
-                  Xem trạng thái các báo cáo đã gửi
-                </p>
-              </div>
-            </div>
-
-            <!-- ARROW -->
-            <span
-              class="text-[#1E325A] text-lg transition-transform duration-200 group-hover:translate-x-1"
-            >
-              →
-            </span>
-          </RouterLink>
-
-
-
-        </aside>
-
-        <!-- ================================================= -->
-        <!-- RIGHT -->
-        <!-- ================================================= -->
-        <div class="space-y-5">
-
-          <!-- ==================== PERSONAL INFORMATION ==================== -->
-          <section
-            class="bg-white/90 rounded-[25px] p-7 shadow-sm"
-          >
-            <h2 class="font-semibold text-sm">
-              Thông tin cá nhân
-            </h2>
-
-            <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
-            >
-              Thông tin này hiển thị với môi giới khi bạn nhắn tin hoặc yêu cầu
-              liên hệ.
-            </p>
-
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4"
-            >
-
-              <!-- NAME -->
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Họ và tên
-                </label>
-
-                <input
-                  v-model="fullName"
-                  type="text"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-              <!-- PHONE -->
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Số điện thoại
-                </label>
-
-                <input
-                  v-model="phone"
-                  type="text"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-              <!-- EMAIL -->
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Email
-                </label>
-
-                <input
-                  v-model="email" readonly
-                  type="email"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-              <!-- DISTRICT -->
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Khu vực quan tâm
-                </label>
-
-                <input
-                  v-model="district"
-                  type="text"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-              <!-- ADDRESS -->
-              <div class="md:col-span-2">
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Địa chỉ liên hệ
-                </label>
-
-                <input
-                  v-model="address"
-                  type="text"
-                  placeholder="Chưa cập nhật"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-            </div>
-
-            <!-- BUTTONS -->
-            <div class="flex gap-3 mt-5">
-
-              <button
-                :disabled="busy || !loaded" @click="saveProfile"
-                class="bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
-              >
-                Lưu thay đổi
-              </button>
-
-              <button @click="resetProfile"
-                class="bg-white border border-gray-200 text-gray-500 rounded-full px-5 py-2.5 text-[11px]"
-              >
-                Hủy
-              </button>
-
-            </div>
-          </section>
-
-          <!-- ==================== SECURITY ==================== -->
-          <section
-            class="bg-white/90 rounded-[25px] p-7 shadow-sm"
-          >
-            <h2 class="font-semibold text-sm">
-              Bảo mật
-            </h2>
-
-            <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
-            >
-              Đổi mật khẩu định kỳ để bảo vệ tài khoản của bạn.
-            </p>
-
-            <!-- CURRENT PASSWORD -->
-            <div>
-              <label
-                class="text-[10px] text-gray-500"
-              >
-                Mật khẩu hiện tại
-              </label>
-
-              <input
-                v-model="currentPassword"
-                type="password"
-                placeholder="••••••••"
-                class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-              />
-            </div>
-
-            <!-- NEW PASSWORD -->
-            <div
-              class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"
-            >
-
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Mật khẩu mới
-                </label>
-
-                <input
-                  v-model="newPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-              <!-- CONFIRM PASSWORD -->
-              <div>
-                <label
-                  class="text-[10px] text-gray-500"
-                >
-                  Xác nhận mật khẩu mới
-                </label>
-
-                <input
-                  v-model="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  class="mt-1 w-full h-10 border border-gray-200 rounded-xl px-4 text-xs outline-none focus:border-[#1E325A]"
-                />
-              </div>
-
-            </div>
-
-            <button
-              :disabled="busy || !loaded" @click="changePassword"
-              class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-[11px] hover:bg-[#263f70] transition"
-            >
-              Đổi mật khẩu
-            </button>
-          </section>
-
-          <!-- ==================== NOTIFICATIONS ==================== -->
-          <section
-            class="bg-white/90 rounded-[25px] p-7 shadow-sm"
-          >
-            <h2 class="font-semibold text-sm">
-              Thông báo
-            </h2>
-
-            <p
-              class="text-[10px] text-gray-400 mt-1 mb-5"
-            >
-              Tùy chọn thông báo chưa được hỗ trợ ở mốc 1.
-            </p>
-
-            <!-- NOTIFICATION 1 -->
-            <div
-              class="flex items-center justify-between py-4 border-b border-[#1E325A]/30"
-            >
-              <div>
-                <h3
-                  class="text-xs font-medium"
-                >
-                  Tin đăng mới phù hợp
-                </h3>
-
-                <p
-                  class="text-[9px] text-gray-400 mt-1"
-                >
-                  Lưu tùy chọn nhận tin phù hợp. Gửi email sẽ được bổ sung sau.
-                </p>
-              </div>
-
-              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification1" aria-label="Tùy chọn thông báo 1" @click="notification1 = !notification1"
-                :class="[
-                  'relative w-9 h-5 rounded-full transition',
-                  notification1
-                    ? 'bg-emerald-500'
-                    : 'bg-gray-300'
-                ]"
-              >
-                <span
-                  :class="[
-                    'absolute top-[2px] w-4 h-4 bg-white rounded-full transition-all',
-                    notification1
-                      ? 'left-[18px]'
-                      : 'left-[2px]'
-                  ]"
-                ></span>
-              </button>
-            </div>
-
-            <!-- NOTIFICATION 2 -->
-            <div
-              class="flex items-center justify-between py-4 border-b border-[#1E325A]/30"
-            >
-              <div>
-                <h3
-                  class="text-xs font-medium"
-                >
-                  Tin nhắn từ môi giới
-                </h3>
-
-                <p
-                  class="text-[9px] text-gray-400 mt-1"
-                >
-                  Lưu tùy chọn liên hệ. Nhắn tin sẽ được bổ sung sau.
-                </p>
-              </div>
-
-              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification2" aria-label="Tùy chọn thông báo 2" @click="notification2 = !notification2"
-                :class="[
-                  'relative w-9 h-5 rounded-full transition',
-                  notification2
-                    ? 'bg-emerald-500'
-                    : 'bg-gray-300'
-                ]"
-              >
-                <span
-                  :class="[
-                    'absolute top-[2px] w-4 h-4 bg-white rounded-full transition-all',
-                    notification2
-                      ? 'left-[18px]'
-                      : 'left-[2px]'
-                  ]"
-                ></span>
-              </button>
-            </div>
-
-            <!-- NOTIFICATION 3 -->
-            <div
-              class="flex items-center justify-between pt-4"
-            >
-              <div>
-                <h3
-                  class="text-xs font-medium"
-                >
-                  Trạng thái tin đăng & báo cáo
-                </h3>
-
-                <p
-                  class="text-[9px] text-gray-400 mt-1"
-                >
-                  Cập nhật khi tin đăng hoặc báo cáo của bạn được xử lý.
-                </p>
-              </div>
-
-              <button :disabled="busy || !loaded" role="switch" :aria-checked="notification3" aria-label="Tùy chọn thông báo 3" @click="notification3 = !notification3"
-                :class="[
-                  'relative w-9 h-5 rounded-full transition',
-                  notification3
-                    ? 'bg-emerald-500'
-                    : 'bg-gray-300'
-                ]"
-              >
-                <span
-                  :class="[
-                    'absolute top-[2px] w-4 h-4 bg-white rounded-full transition-all',
-                    notification3
-                      ? 'left-[18px]'
-                      : 'left-[2px]'
-                  ]"
-                ></span>
-              </button>
-            </div>
-
-          <button :disabled="busy || !loaded" @click="savePreferences" class="mt-5 bg-[#1E325A] text-white rounded-full px-6 py-2.5 text-xs">Lưu tùy chọn thông báo</button>
-</section>
-
-        </div>
-      </div>
-    </div>
-  </div>
+ <div class="account-page sp-container py-8 sm:py-12" :aria-busy="loading">
+  <div class="mb-7"><p class="account-eyebrow">KHÔNG GIAN CỦA BẠN</p><h1 class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Hồ sơ cá nhân</h1><p class="mt-3 text-[15px] leading-7 text-brand-muted">Quản lý thông tin, bảo mật và những điều bạn quan tâm.</p></div>
+  <p v-if="loading" role="status" class="account-notice mb-5">Đang tải thông tin tài khoản…</p>
+  <div v-if="error" role="alert" class="account-notice account-error mb-5">{{error}} <button v-if="!loaded" type="button" class="underline" @click="load">Thử lại</button></div>
+  <p v-if="message" role="status" class="account-notice account-success mb-5">{{message}}</p>
+  <section data-profile-overview class="profile-overview account-card mb-6" aria-labelledby="profile-name">
+   <div class="flex min-w-0 flex-wrap items-center gap-6"><div class="relative"><UserAvatar :name="session.user?.fullName" :size="96"/></div><div class="min-w-0 flex-1"><p class="account-eyebrow">SMARTPROP · TÀI KHOẢN CÁ NHÂN</p><h2 id="profile-name" class="mt-2 break-words text-2xl font-semibold">{{session.user?.fullName||'Tài khoản SmartProp'}}</h2><p class="mt-2 break-all text-[15px] text-brand-muted">{{session.user?.email}}</p><div class="mt-4 flex flex-wrap gap-2"><span class="account-chip">{{roleLabel}}</span><span class="account-chip" :class="session.user?.status==='ACTIVE'?'text-emerald-800':'text-red-800'">● {{statusLabel}}</span></div><p class="mt-3 text-[13px] text-brand-muted">Tham gia từ {{joined}}</p></div></div>
+   <div class="profile-actions"><button type="button" class="sp-button sp-button-primary" :disabled="!loaded||busy" @click="editProfile"><AppIcon name="edit"/>Chỉnh sửa hồ sơ</button><AvatarEditor/></div>
+  </section>
+  <section id="personal-information" class="account-card mb-6" aria-labelledby="personal-heading"><div class="account-section-heading"><span class="account-section-icon"><AppIcon name="user"/></span><div><h2 id="personal-heading">Thông tin cá nhân</h2><p>Giữ thông tin liên hệ của bạn luôn chính xác.</p></div></div>
+   <form class="grid gap-5 sm:grid-cols-2" @submit.prevent="saveProfile"><label class="account-field">Họ và tên<input ref="nameInput" v-model="form.fullName" required maxlength="100" autocomplete="name" class="sp-input" :disabled="!loaded||busy"/></label><label class="account-field">Email<input v-model="form.email" type="email" readonly autocomplete="email" class="sp-input bg-brand-surface"/><small>Email dùng để đăng nhập và xác thực tài khoản.</small></label><label class="account-field">Số điện thoại<input v-model="form.phone" type="tel" maxlength="30" autocomplete="tel" class="sp-input" :disabled="!loaded||busy"/></label><label class="account-field">Khu vực quan tâm<input v-model="form.district" maxlength="100" class="sp-input" :disabled="!loaded||busy" placeholder="Ví dụ: Hải Châu, Đà Nẵng"/></label><label class="account-field sm:col-span-2">Địa chỉ liên hệ<input v-model="form.address" maxlength="255" autocomplete="street-address" class="sp-input" :disabled="!loaded||busy"/></label><div class="flex flex-wrap gap-3 sm:col-span-2"><button class="sp-button sp-button-primary" :disabled="!loaded||busy">{{busy?'Đang lưu…':'Lưu thay đổi'}}</button><button type="button" class="sp-button sp-button-secondary" :disabled="busy" @click="resetProfile">Hủy thay đổi</button></div></form>
+  </section>
+  <section id="security-settings" class="account-card mb-6" aria-labelledby="security-heading"><div class="account-section-heading"><span class="account-section-icon"><AppIcon name="shield"/></span><div><h2 id="security-heading">Bảo mật & cài đặt</h2><p>Chủ động bảo vệ tài khoản và quản lý cách nhận thông tin.</p></div></div>
+   <div class="account-tabs mb-6" role="group" aria-label="Cài đặt tài khoản"><button v-for="tab in [{id:'password',label:'Mật khẩu'},{id:'notifications',label:'Thông báo'}]" :key="tab.id" type="button" :aria-pressed="securityTab===tab.id" @click="securityTab=tab.id">{{tab.label}}</button><RouterLink to="/account/sessions">Phiên đăng nhập ↗</RouterLink></div>
+   <form v-if="securityTab==='password'" class="grid gap-5 sm:grid-cols-2" @submit.prevent="changePassword"><label class="account-field sm:col-span-2">Mật khẩu hiện tại<input v-model="currentPassword" :type="showPassword?'text':'password'" required maxlength="72" autocomplete="current-password" class="sp-input"/></label><label class="account-field">Mật khẩu mới<input v-model="newPassword" :type="showPassword?'text':'password'" required minlength="8" maxlength="72" autocomplete="new-password" class="sp-input"/><small>Từ 8 ký tự, tối đa 72 byte UTF-8.</small></label><label class="account-field">Xác nhận mật khẩu mới<input v-model="confirmPassword" :type="showPassword?'text':'password'" required minlength="8" maxlength="72" autocomplete="new-password" class="sp-input"/></label><div class="flex flex-wrap items-center justify-between gap-4 sm:col-span-2"><button type="button" class="text-sm font-medium underline" :aria-pressed="showPassword" @click="showPassword=!showPassword">{{showPassword?'Ẩn mật khẩu':'Hiện mật khẩu'}}</button><button class="sp-button sp-button-primary" :disabled="busy||!loaded">Đổi mật khẩu</button></div></form>
+   <div v-else><div v-if="prefsError" role="alert" class="account-notice account-error mb-4">{{prefsError}} <button type="button" class="underline" @click="loadPreferences">Thử lại</button></div><label v-for="item in preferenceLabels" :key="item.key" class="flex cursor-pointer items-center justify-between gap-6 border-b border-brand-line py-4"><span><strong class="block text-[15px] font-semibold">{{item.title}}</strong><span class="mt-1 block text-sm leading-6 text-brand-muted">{{item.text}}</span></span><input v-model="prefs[item.key]" type="checkbox" class="size-5 shrink-0 accent-brand-navy" :disabled="!preferencesLoaded||busy"/></label><button type="button" class="sp-button sp-button-primary mt-5" :disabled="!preferencesLoaded||busy" @click="savePreferences">Lưu tùy chọn</button></div>
+   <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-brand-line pt-5 text-sm"><span>{{session.user?.emailVerifiedAt?'Email của bạn đã được xác minh.':'Hoàn tất xác minh để bảo vệ tài khoản.'}}</span><RouterLink v-if="!session.user?.emailVerifiedAt" to="/account/verify-email" class="font-semibold underline">Xác minh email ↗</RouterLink></div>
+  </section>
+  <section id="property-management" class="mb-6" aria-label="Quản lý bất động sản"><BrokerApplicationCard/></section>
+  <section id="valuation-history" class="mb-6" aria-label="Lịch sử định giá"><ValuationHistory/></section>
+  <section id="account-tools" class="account-card" aria-labelledby="account-tools-heading"><div class="account-section-heading"><span class="account-section-icon"><AppIcon name="briefcase"/></span><div><h2 id="account-tools-heading">Tiện ích của bạn</h2><p>Tiếp tục từ những nội dung và trao đổi đã lưu.</p></div></div><div class="grid gap-3 sm:grid-cols-2"><RouterLink v-for="tool in tools" :key="tool.to" :to="tool.to" class="account-tool"><AppIcon :name="tool.icon"/><span class="min-w-0 flex-1"><strong>{{tool.title}}</strong><small>{{tool.text}}</small></span><AppIcon name="arrow"/></RouterLink></div><button type="button" class="mt-6 inline-flex items-center gap-2 text-sm font-medium text-brand-muted underline" :disabled="busy" @click="signOut"><AppIcon name="logout"/>Đăng xuất tài khoản</button></section>
+ </div>
 </template>
+<style scoped>
+.account-page{max-width:1220px;color:#10233f}.account-eyebrow{font-size:12px;letter-spacing:.16em;font-weight:650;color:#78572f}.account-card{padding:28px;border:1px solid #e5ded3;border-radius:24px;background:white;box-shadow:0 3px 12px #10233f03}.profile-overview{display:grid;grid-template-columns:1fr auto;align-items:center;gap:32px;border-top:3px solid #c39a5d}.profile-actions{display:grid;gap:12px}.account-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#f2f4f5;font-size:13px;font-weight:550}.account-section-heading{display:flex;align-items:flex-start;gap:14px;margin-bottom:26px}.account-section-heading h2{font-size:22px;font-weight:650;line-height:1.4}.account-section-heading p{font-size:14px;color:#536178;line-height:1.7;margin-top:5px}.account-section-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:#f5f1e9;flex-shrink:0}.account-field{display:flex;min-width:0;flex-direction:column;gap:8px;font-size:14px;font-weight:550}.account-field small{font-size:13px;line-height:1.6;font-weight:400;color:#536178}.account-field input{min-height:48px}.account-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:5px;border-radius:14px;background:#f6f3ee;width:fit-content}.account-tabs button,.account-tabs a{padding:10px 16px;border-radius:10px;font-size:14px;font-weight:550}.account-tabs button[aria-pressed=true]{background:white;box-shadow:0 2px 6px #10233f08}.account-tool{display:flex;align-items:center;gap:14px;border:1px solid #e5ded3;padding:18px;border-radius:16px;transition:background .15s}.account-tool:hover{background:#f6f3ee}.account-tool strong{display:block;font-size:15px;font-weight:600}.account-tool small{display:block;font-size:13px;line-height:1.6;color:#536178;margin-top:4px}.account-notice{padding:14px 18px;border:1px solid #e4ddd2;border-radius:14px;font-size:14px;line-height:1.7;background:white}.account-error{color:#8d302d;background:#fff4f1;border-color:#edd9d2}.account-success{color:#176047;background:#edf7f0;border-color:#cce5d4}.account-page section[id]{scroll-margin-top:calc(var(--sp-header-height) + 24px)}.account-page :focus-visible{outline:3px solid #8b683a;outline-offset:3px}@media(max-width:767px){.profile-overview{grid-template-columns:1fr;gap:24px}.profile-actions{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.account-card{padding:22px}.profile-actions .sp-button{font-size:13px;padding-inline:12px}}@media(max-width:420px){.profile-actions{grid-template-columns:1fr}.account-card{padding:20px}.account-section-heading h2{font-size:21px}}
+</style>

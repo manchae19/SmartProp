@@ -5,12 +5,14 @@ import {coordinatesFromPlace} from '../services/googleMapsLocation.js'
 import {validCoordinates} from '../services/postForm.js'
 import ManualLocationMap from './ManualLocationMap.vue'
 import AutomaticLocationSearch from './AutomaticLocationSearch.vue'
-import {candidateCanBeConfirmed} from '../services/geocoding.js'
+import {candidateCanBeConfirmed,accuracyLabel} from '../services/geocoding.js'
+import {locationPreviewRegion} from '../services/locationPreview.js'
 const props=defineProps({address:{default:''},city:{default:''},district:{default:''},ward:{default:''},latitude:{default:''},longitude:{default:''},confirmed:Boolean,disabled:Boolean})
 const emit=defineEmits(['select','confirm','invalidate'])
 const searchHost=ref(null),mapHost=ref(null),ready=ref(false),loading=ref(false),selecting=ref(false),message=ref(''),suggestion=ref('')
 const automaticSearch=ref(null),automaticCandidate=ref(null),verifiedExact=ref(false),publicExact=ref(false)
 const osmCandidate=computed(()=>automaticCandidate.value?.provider==='GEOAPIFY'?automaticCandidate.value:null)
+const previewRegion=computed(()=>locationPreviewRegion(osmCandidate.value))
 function clearAutomatic(){automaticCandidate.value=null;verifiedExact.value=false;publicExact.value=false}
 function previewAutomatic(candidate){
  revision++;selecting.value=false;suggestion.value='';automaticCandidate.value=candidate;verifiedExact.value=false;publicExact.value=false;emit('invalidate')
@@ -81,8 +83,8 @@ onBeforeUnmount(()=>{disposed=true;revision++;globalThis.removeEventListener('sm
   <p v-if="ready&&suggestion" class="location-guide">Gợi ý trên Google: {{suggestion}}. Giữ địa chỉ tin đăng do bạn nhập ở trên.</p>
   <p v-if="loading||selecting" role="status" class="location-guide">{{loading?'Đang tải bản đồ…':'Đang tìm vị trí địa chỉ…'}}</p>
   <div v-show="ready&&!osmCandidate" ref="mapHost" class="google-map" aria-label="Bản đồ Google chọn vị trí" />
-  <template v-if="(!ready&&!loading)||osmCandidate"><p class="location-guide">{{osmCandidate?'Ghim đề xuất chưa được xác nhận. Kiểm tra vị trí thực tế hoặc chỉnh lại ghim.':'Đặt ghim thủ công trên bản đồ dưới đây khi bạn biết vị trí thực tế.'}}</p><ManualLocationMap :latitude="osmCandidate?.latitude??latitude" :longitude="osmCandidate?.longitude??longitude" :preview="!!osmCandidate" :disabled="disabled" @select="movePin($event.latitude,$event.longitude)" /></template>
-  <p v-if="message" role="status" class="location-message">{{message}}</p>
+  <template v-if="(!ready&&!loading)||osmCandidate"><p class="location-guide">{{osmCandidate?'Ghim đề xuất chưa được xác nhận. '+accuracyLabel(osmCandidate):'Đặt ghim thủ công trên bản đồ dưới đây khi bạn biết vị trí thực tế.'}}</p><ManualLocationMap :latitude="osmCandidate?.latitude??latitude" :longitude="osmCandidate?.longitude??longitude" :precision="osmCandidate?.context?.precision||''" :preview="!!osmCandidate" :preview-region="previewRegion" :disabled="disabled" @select="movePin($event.latitude,$event.longitude)" /></template>
+  <p v-if="message" role="status" class="location-message">{{message}}</p><p v-if="selected&&!automaticCandidate" class="location-guide">Ghim do người đăng chọn; chưa được xác minh độc lập. Xác nhận vị trí không phải chứng nhận độ chính xác.</p>
   <p v-if="!selected&&!suggestion" class="location-guide">Chưa chọn vị trí. Tâm bản đồ đang xem không được lưu thành vị trí của tin.</p>
   <label v-if="automaticCandidate&&candidateCanBeConfirmed(automaticCandidate)" class="location-consent"><input v-model="verifiedExact" type="checkbox" :disabled="disabled">Tôi đã kiểm tra đây là đúng vị trí bất động sản, không chỉ là tâm đường hoặc khu vực.</label>
   <label class="location-consent"><input v-model="publicExact" type="checkbox" :disabled="disabled">Tôi đồng ý công khai ghim và địa chỉ này. Nếu chỉ muốn hiển thị vị trí tương đối, chưa lưu tin bằng chế độ hiện tại.</label>

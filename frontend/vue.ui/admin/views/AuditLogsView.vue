@@ -90,7 +90,7 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
 }
 
 .badge-tag {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: bold;
   color: #4f46e5;
   background: #eef2ff;
@@ -100,13 +100,13 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
 }
 
 .section-title {
-  font-size: 22px;
+  font-size: 23px;
   font-weight: bold;
   color: #1e325a;
 }
 
 .section-desc {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #6b7280;
 }
 
@@ -116,7 +116,7 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
   border: none;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
 }
@@ -144,13 +144,13 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
 }
 
 .stat-label {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #6b7280;
   font-weight: 500;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: var(--text-2xl);
   font-weight: bold;
   color: #1e325a;
 }
@@ -168,7 +168,7 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
   color: #4b5563;
   padding: 8px 16px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -197,7 +197,7 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
 }
 
 .logs-header {
-  font-size: 16px;
+  font-size: var(--text-base);
   font-weight: bold;
   color: #1e325a;
   border-bottom: 1px solid #e5e7eb;
@@ -240,18 +240,18 @@ const currentTab=ref('all'),tabs=[{id:'all',label:'Tất cả'},{id:'post',label
 }
 
 .log-text {
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #1f2937;
   font-weight: 500;
 }
 
 .log-meta {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: #6b7280;
 }
 
 .log-time {
-  font-size: 13px;
+  font-size: 14px;
   color: #4b5563;
   font-weight: 500;
   white-space: nowrap;

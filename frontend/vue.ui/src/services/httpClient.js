@@ -62,5 +62,6 @@ export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(
   else await send('/auth/logout',{method:'POST'})
   expire(false);initialized=true
  }
- return {request,login,logout,invalidate,initialize,unavailable,restore:async()=>{await initialize({force:true});return session.status==='AUTHENTICATED'}}
+ async function google(){invalidate();const current=epoch,c=await csrf();return accept(await send('/auth/oauth2/complete',{method:'POST',authenticated:false,headers:{[c.headerName]:c.token}}),current)}
+ return {request,login,google,logout,invalidate,initialize,unavailable,restore:async()=>{await initialize({force:true});return session.status==='AUTHENTICATED'}}
 }
