@@ -7,7 +7,7 @@
 - `backend/`: REST API, tài khoản/phân quyền, tin đăng, kiểm duyệt và tệp.
 - `frontend/vue.ui/`: ứng dụng người dùng và ADMIN, chung router; quản trị tại `/admin/dashboard`.
 - `database/`: migration V1–V13, schema tham chiếu và seed tùy chọn.
-- `ai-services/`, `integrations/valuation-v6/`: dịch vụ/model hiện có, cấu hình riêng.
+- `ai-services/`, `frontend/integrations/valuation-v6/`: dịch vụ/model hiện có, cấu hình riêng.
 - `ops/`: cấu hình triển khai HTTPS/service và hướng dẫn backup/restore.
 
 ## Chạy Backend

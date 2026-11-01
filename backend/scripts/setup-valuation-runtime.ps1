@@ -12,6 +12,6 @@ if(-not(Test-Path -LiteralPath $python)){Expand-Archive -LiteralPath (Join-Path 
 [IO.File]::WriteAllText((Join-Path $runtime 'python/python314._pth'),"python314.zip`n.`nLib/site-packages`nimport site`n",[Text.UTF8Encoding]::new($false))
 Download-Verified 'https://bootstrap.pypa.io/pip/pip.pyz' (Join-Path $runtime 'pip.pyz') '91d5fd9f6f25549fd839c60536c6f1b945316ce3588d34a605635b6071c91526'
 # Vendored dependencies; no global Python/pip/PATH/registry installation.
-& $python (Join-Path $runtime 'pip.pyz') install --require-hashes --only-binary=:all: --no-compile --disable-pip-version-check --target (Join-Path $runtime 'python/Lib/site-packages') -r (Join-Path $root 'integrations/valuation-v6/requirements-windows.lock')
+& $python (Join-Path $runtime 'pip.pyz') install --require-hashes --only-binary=:all: --no-compile --disable-pip-version-check --target (Join-Path $runtime 'python/Lib/site-packages') -r (Join-Path $root 'frontend/integrations/valuation-v6/requirements-windows.lock')
 if($LASTEXITCODE -ne 0){throw 'Private valuation dependency setup failed'}
 Write-Output 'Private valuation runtime ready. Start with backend/scripts/run-valuation.ps1.'
