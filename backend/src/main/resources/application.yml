@@ -34,6 +34,37 @@ management:
     probes.enabled: true
     group.readiness.include: readinessState,db
 app:
+  recommendation:
+    tinix-enabled: ${APP_RECOMMENDATION_TINIX_ENABLED:false}
+    tinix-revision: ca3fedcbb089bf65f7e4cfb03316cce4bd0d779f
+    allow-unverified-external: ${APP_RECOMMENDATION_ALLOW_UNVERIFIED_EXTERNAL:false}
+    demo-key: ${APP_RECOMMENDATION_DEMO_KEY:}
+    # Step 19.4.3A: on-disk snapshot cache for the TiniX research candidate set.
+    # Disable (APP_RECOMMENDATION_TINIX_DISK_CACHE_ENABLED=false) to fall back to the
+    # original behaviour: rebuild the snapshot from MySQL on every JVM start.
+    tinix-disk-cache-enabled: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_ENABLED:true}
+    tinix-disk-cache-dir: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_DIR:var/recommendation}
+    tinix-disk-cache-max-payload-mb: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_PAYLOAD_MB:128}
+    tinix-disk-cache-max-candidates: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_CANDIDATES:120000}
+    tinix-disk-cache-max-age-hours: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_AGE_HOURS:720}
+    # Hybrid V1.1 amenity-aware scoring. Off keeps the V1 heuristic byte-identical.
+    v11-enabled: ${APP_RECOMMENDATION_V11_ENABLED:false}
+    v11:
+      living:
+        budget: ${APP_RECOMMENDATION_V11_LIVING_BUDGET:0.38}
+        area: ${APP_RECOMMENDATION_V11_LIVING_AREA:0.17}
+        type: ${APP_RECOMMENDATION_V11_LIVING_TYPE:0.20}
+        amenity: ${APP_RECOMMENDATION_V11_LIVING_AMENITY:0.25}
+      investment:
+        budget: ${APP_RECOMMENDATION_V11_INVESTMENT_BUDGET:0.45}
+        area: ${APP_RECOMMENDATION_V11_INVESTMENT_AREA:0.25}
+        type: ${APP_RECOMMENDATION_V11_INVESTMENT_TYPE:0.20}
+        amenity: ${APP_RECOMMENDATION_V11_INVESTMENT_AMENITY:0.10}
+      rental:
+        budget: ${APP_RECOMMENDATION_V11_RENTAL_BUDGET:0.40}
+        area: ${APP_RECOMMENDATION_V11_RENTAL_AREA:0.20}
+        type: ${APP_RECOMMENDATION_V11_RENTAL_TYPE:0.25}
+        amenity: ${APP_RECOMMENDATION_V11_RENTAL_AMENITY:0.15}
   google:
     enabled: ${GOOGLE_LOGIN_ENABLED:false}
     client-id: ${GOOGLE_CLIENT_ID:}

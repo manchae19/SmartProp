@@ -33,6 +33,18 @@ test-results/
 /SmartProp/
 /FRONTEND_CHANGES.md
 
+# Versionable Hybrid Recommendation integration tests and handoff documentation.
+!/backend/src/test/
+!/frontend/vue.ui/tests/
+!/docs/
+/docs/*
+!/docs/HYBRID_RECOMMENDATION_V1.md
+!/docs/BACKEND_HUY_INTEGRATION.md
+!/docs/FLYWAY_LOCAL_FORWARD_ONLY.md
+!/docs/FLYWAY_LOCAL_V18_RESULT.md
+!/docs/ADVISOR_FRONTEND.md
+!/docs/STEP17_RECOMMENDATION_LIVE.md
+
 # Additional AI environments and dataset exclusions from the team branches.
 # Local environments and generated files
 **/.venv/
