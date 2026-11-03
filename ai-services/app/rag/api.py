@@ -1,6 +1,5 @@
 """Separate chat app: valuation/XGBoost lifespan and all Java modules remain unchanged."""
 from contextlib import asynccontextmanager
-import re
 import importlib.util
 from pathlib import Path
 from threading import BoundedSemaphore
@@ -90,14 +89,6 @@ def create_chat_app(settings=None, orchestrator=None):
     def chat(payload: ChatRequest):
         # No caller-controlled mode, SQL, source filter or forwarded credentials on this route.
         return run(payload)
-
-    @app.delete("/chat/session/{session_id}")
-    def end_session(session_id: str):
-        """Forget one PUBLIC conversation. Session ids carry no authority."""
-        if not re.fullmatch(r"[a-f0-9]{32}", session_id):
-            raise HTTPException(404, "Không tìm thấy hội thoại.")
-        orchestrator.sessions.reset(session_id, scope="PUBLIC")
-        return {"cleared": True}
 
     @app.post("/chat/research", response_model=ChatResponse)
     def research_chat(payload: ChatRequest, request: Request, authorization: str | None = Header(default=None)):

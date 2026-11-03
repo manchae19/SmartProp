@@ -4,10 +4,11 @@ import unicodedata
 from .config import GroundingError, RagUnavailable
 from .knowledge import digest
 from .schemas import ChatResponse, Citation
-from .validator import render_answer, validate_plan, validate_generated_answer
+from .validator import render_answer, validate_plan, validate_generated_answer, validate_generated_relevance
+from urllib.parse import quote
 from .gis import gis_evidence
 from .diagnostics import traced, event, reason
-from .intent import asks_for_amenities, empty_search_answer
+from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
 
 
 LIMITATIONS = [
@@ -56,6 +57,8 @@ class ChatOrchestrator:
         if not district:
             names = sorted({d["metadata"].get("district", "") for d in documents}, key=len, reverse=True)
             district = next((d for d in names if d and re.search(r"(?<!\w)" + re.escape(norm(d)) + r"(?!\w)", norm(request.question))), None)
+        # Explicit POI categories are a routing rule, never a similarity guess.
+        categories = poi_categories(request.question)
         budget = request.budgetVnd if request.budgetVnd is not None else budget_from_question(request.question)
         criteria = request.model_dump(exclude={"question", "requireGeneration"}, exclude_none=True)
         criteria["district"] = district
@@ -105,7 +108,7 @@ class ChatOrchestrator:
 
         retrieval_mode = "E5_FAISS"
         try:
-            retrieved = traced("semantic_retrieval", lambda: self.retriever.search(request.question, documents, internal=research, district=district, k=3))
+            retrieved = traced("semantic_retrieval", lambda: self.retriever.search(request.question, documents, internal=research, district=district, categories=categories or None, k=3))
         except (RagUnavailable, ImportError):
             retrieval_mode = "TOOL_EVIDENCE_ONLY"
             limitations.append("E5/FAISS chưa sẵn sàng: chỉ dùng bằng chứng API theo khu vực chính xác, không giả lập semantic retrieval.")
@@ -114,19 +117,55 @@ class ChatOrchestrator:
                          ((d["metadata"].get("district") == district and d["metadata"].get("areaLevel") == "DISTRICT") or
                           d["metadata"]["areaId"] in area_ids)][:3]
             # Exact category routing is an evidence tool, not a replacement embedding model.
-            categories = {"HOSPITAL": ["benh vien", "y te"], "SCHOOL": ["truong", "giao duc"],
-                          "MARKET": ["cho"], "SUPERMARKET": ["sieu thi"], "PARK": ["cong vien"], "BEACH": ["bai bien"]}
-            requested = {c for c, terms in categories.items() if any(re.search(r"(?<!\w)" + re.escape(t) + r"(?!\w)", norm(request.question)) for t in terms)}
-            if district and requested:
-                retrieved = retrieved[:1] + [d for d in documents if d["kind"] == "POI_EVIDENCE" and d["scope"] == "PUBLIC"
-                    and d["metadata"].get("district") == district and d["metadata"].get("category") in requested][:2]
-            # Exact category routing is an evidence tool, not a replacement embedding model.
-            categories = {"HOSPITAL": ["benh vien", "y te"], "SCHOOL": ["truong", "giao duc"],
-                          "MARKET": ["cho"], "SUPERMARKET": ["sieu thi"], "PARK": ["cong vien"], "BEACH": ["bai bien"]}
-            requested = {c for c, terms in categories.items() if any(re.search(r"(?<!\w)" + re.escape(t) + r"(?!\w)", norm(request.question)) for t in terms)}
-            if district and requested:
-                retrieved = retrieved[:1] + [d for d in documents if d["kind"] == "POI_EVIDENCE" and d["scope"] == "PUBLIC"
-                    and d["metadata"].get("district") == district and d["metadata"].get("category") in requested][:2]
+            if categories:
+                ranked = [d for d in documents if d["kind"] == "POI_EVIDENCE" and d["scope"] == "PUBLIC"
+                          and d["metadata"].get("category") in categories
+                          and (not district or d["metadata"].get("district") == district)]
+                retrieved = ranked[:3]
+
+        # Hard guarantee: an explicit POI category may never be answered with another category.
+        if categories:
+            matched = [d for d in retrieved if d["kind"] == "POI_EVIDENCE" and d["metadata"].get("category") in categories]
+            if not matched and not research and district:
+                # FAISS had no in-category evidence: use the same read-only, VALID-only POI
+                # projection that already backs the map card. Never substitute another category.
+                from .knowledge import document
+                area_url = self.backend.settings.backend_url + "/api/v1/amenities/" + (
+                    next((d["metadata"]["areaId"] for d in documents
+                          if d["kind"] == "AREA_AMENITY" and d["metadata"].get("areaLevel") == "DISTRICT"
+                          and d["metadata"].get("district") == district), "district"))
+                for category in categories:
+                    try:
+                        mapped = traced("amenity_map_fallback", lambda c=category: self.backend.amenity_map(district, c))
+                    except (RagUnavailable, GroundingError):
+                        mapped = None
+                    items = (mapped or {}).get("items") if isinstance(mapped, dict) else None
+                    for item in (items or [])[:3]:
+                        metadata = {"areaId": "map:" + item["id"], "district": item["district"],
+                                    "name": item["name"], "category": item["category"],
+                                    "attributionBasis": "OPENSTREETMAP_VALID"}
+                        retrieved.append(document("poi-map:" + item["id"],
+                            f"Bằng chứng tiện ích {item['name']}, loại {item['category']}, tại {item['district']}; "
+                            "nguồn OpenStreetMap đã kiểm tra nguồn. Không có khoảng cách tới căn nhà.",
+                            area_url, item.get("observedAt", "POI_MAP_V1"), "POI_EVIDENCE", metadata))
+            # With an explicit category only in-category POI evidence may reach the model.
+            retrieved = [d for d in retrieved
+                         if d["kind"] == "POI_EVIDENCE" and d["metadata"].get("category") in categories][:3]
+            if not retrieved:
+                event("amenity_no_evidence", categories=list(categories), district=district)
+                if request.requireGeneration:
+                    raise RagUnavailable("NO_MATCHING_AMENITY_EVIDENCE")
+                limitations.append("Chưa có bằng chứng tiện ích đúng loại yêu cầu trong kho tri thức công khai; "
+                                   "hệ thống không thay bằng loại tiện ích khác và không suy đoán vị trí.")
+                return ChatResponse(answer=insufficient_amenity_answer(district, categories), mode="SAFE",
+                    generationMode="EVIDENCE_ONLY", retrievalMode=retrieval_mode, citations=[], recommendedProperties=properties,
+                    evidence={"responseKind": "INSUFFICIENT_AMENITY_EVIDENCE", "criteria": criteria if budget else None,
+                        "amenityIntent": {"district": district, "categories": list(categories)},
+                        "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
+                        "sql": {"status": sql_status, "matchedRows": sql_count},
+                        "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_MISSING_EVIDENCE"},
+                        "gis": gis_evidence(rows, properties, []), "warnings": (response or {}).get("warnings", [])},
+                    dataLimitations=limitations)
 
         facts = {}
         citations = {}
@@ -156,6 +195,9 @@ class ChatOrchestrator:
             if not research and d["scope"] != "PUBLIC":
                 raise GroundingError("PUBLIC_CORPUS_PERMISSION_VIOLATION")
             area_facts.append(add(d["text"], d["sourceId"], d["url"], d["version"], d["kind"], d["scope"], d["metadata"], d["contentHash"]))
+            fact = facts["f" + str(len(facts) - 1)]
+            fact["category"] = d["metadata"].get("category")
+            fact["district"] = d["metadata"].get("district")
         selected = property_facts + area_facts
         generation_mode = "EVIDENCE_ONLY"
         generation_evidence = {"accepted": False}
@@ -165,6 +207,7 @@ class ChatOrchestrator:
                 generated = traced("ollama_generation", lambda: self.llm.answer(request.question, {k: facts[k] for k in selected}))
                 event("generation_metrics", **generated.metrics)
                 generated_sentences = traced("answer_validation", lambda: validate_generated_answer(generated.raw, facts, property_facts))
+                traced("intent_alignment", lambda: validate_generated_relevance(generated_sentences, facts, categories, district))
                 selected = list(dict.fromkeys(property_facts + [s["factId"] for s in generated_sentences]))
                 generation_evidence = {**generated.metrics, "accepted": True, "outputSha256": digest(generated.raw),
                                        "sentences": generated_sentences, "style": "GROUNDED_EXTRACTIVE_TEXT"}
@@ -172,6 +215,8 @@ class ChatOrchestrator:
             else:
                 plan = self.llm.plan(request.question, {k: facts[k] for k in selected})
                 chosen = validate_plan(plan, set(selected))
+                traced("intent_alignment", lambda: validate_generated_relevance(
+                    [{"factId": k} for k in chosen], facts, categories, district))
                 # Legacy plan adapter remains available; it never qualifies as an Ollama answer.
                 selected = property_facts + [k for k in chosen if k not in property_facts]
                 generation_mode = "QWEN_GROUNDED_PLAN"
@@ -201,6 +246,7 @@ class ChatOrchestrator:
                       "corpusVersion": corpus["contentHash"], "catalogSummary": corpus["summary"],
                       "retrievedSourceIds": [d["sourceId"] for d in retrieved], "sql": {"status": sql_status, "matchedRows": sql_count},
                       "generation": generation_evidence, "gis": gis_evidence(rows, properties, retrieved),
+                      "amenityIntent": {"district": district, "categories": list(categories)},
                       "semanticRetrieval": {"indexVersion": getattr(self.retriever, "manifest", None).get("version") if isinstance(getattr(self.retriever, "manifest", None), dict) else None,
                                             "hits": [{"sourceId": d["sourceId"], "similarity": d.get("similarity")} for d in retrieved]},
                       "warnings": (response or {}).get("warnings", [])}, dataLimitations=limitations)

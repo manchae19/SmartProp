@@ -6,6 +6,11 @@ import httpx
 from .config import GroundingError, RagUnavailable
 
 
+def _is_number(value):
+    """json.loads(parse_float=Decimal) yields Decimal, so accept any finite real."""
+    return isinstance(value, (int, float, Decimal)) and not isinstance(value, bool) and Decimal(str(value)).is_finite()
+
+
 class UpstreamError(RuntimeError):
     def __init__(self, status=502):
         self.status = status if status in (401, 403, 404) else 502
@@ -85,6 +90,33 @@ class BackendTools:
 
     def amenity_areas(self):
         return self._call("GET", "/api/v1/amenities/areas")
+
+    AMENITY_CATEGORIES = ("SCHOOL", "HOSPITAL", "PHARMACY", "MARKET", "SUPERMARKET", "PARK", "BEACH", "PUBLIC_TRANSPORT")
+
+    def amenity_map(self, district, category):
+        """Read-only POI evidence lookup already proven public. Never invents or geocodes."""
+        if not district or category not in self.AMENITY_CATEGORIES:
+            raise GroundingError("INVALID_AMENITY_CATEGORY")
+        try:
+            response = self.client.get("/api/v1/amenities/map", params={"district": district, "category": category})
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if body.get("version") != "POI_MAP_V1" or body.get("visibility") != "PUBLIC":
+            raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
+        if body.get("district") != district or body.get("category") != category:
+            raise GroundingError("AMENITY_SCOPE_MISMATCH")
+        items = body.get("items")
+        if not isinstance(items, list) or len(items) > 80:
+            raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
+        for i in items:
+            if (i.get("category") != category or i.get("district") != district or i.get("reviewStatus") != "VALID"
+                    or i.get("sourceName") != "openstreetmap_overpass" or not i.get("sourceUrl", "").startswith("https://www.openstreetmap.org/")
+                    or not _is_number(i.get("latitude")) or not _is_number(i.get("longitude"))):
+                raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
+        return body
 
     def amenity_profile(self, area_id):
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,160}", area_id):

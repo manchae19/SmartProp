@@ -53,3 +53,23 @@ def render_answer(facts, selected, *, research, has_budget, has_properties):
     elif not has_properties:
         intro += " Không có bất động sản đủ điều kiện trong phạm vi tìm kiếm; không mở dữ liệu nghiên cứu để thay thế kết quả rỗng."
     return "\n".join([intro] + [facts[i]["text"] + f" [{facts[i]['sourceId']}]" for i in selected])
+
+
+def validate_generated_relevance(sentences, facts, categories, district):
+    """The answer must cite evidence of the requested category and geography.
+
+    A semantically close but differently categorised sentence can never back an
+    explicit POI category question. This runs on the already-validated sentences.
+    """
+    if not categories:
+        return sentences
+    for sentence in sentences:
+        fact = facts.get(sentence["factId"])
+        if fact is None:
+            raise GroundingError("UNSUPPORTED_GENERATED_CLAIM")
+        category = fact.get("category")
+        if category is not None and category not in categories:
+            raise GroundingError("AMENITY_SCOPE_MISMATCH")
+        if district and category is not None and fact.get("district") not in (None, district):
+            raise GroundingError("AMENITY_SCOPE_MISMATCH")
+    return sentences
