@@ -1,0 +1,41 @@
+from decimal import Decimal
+from typing import Any, Literal
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    question: str = Field(min_length=1, max_length=2000)
+    budgetVnd: Decimal | None = Field(default=None, ge=1, le=999999999999999, allow_inf_nan=False)
+    purpose: Literal["LIVING", "INVESTMENT", "RENTAL"] = "LIVING"
+    propertyType: Literal["ALL", "HOUSE", "APARTMENT", "LAND", "VILLA", "ROOM", "COMMERCIAL"] = "ALL"
+    minAreaSqm: Decimal | None = Field(default=None, gt=0, le=1000000, allow_inf_nan=False)
+    district: str | None = Field(default=None, min_length=1, max_length=100)
+    ward: str | None = Field(default=None, min_length=1, max_length=100)
+    limit: int = Field(default=10, ge=1, le=10, strict=True)
+    requireGeneration: bool = False
+    # Opaque server-issued conversation handle. It carries NO authority and NO facts;
+    # it only names an in-memory context entry. A public caller can never read a
+    # research session because the store is namespaced by authenticated scope.
+    sessionId: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+
+
+class Citation(BaseModel):
+    sourceId: str
+    url: str
+    version: str
+    contentHash: str
+    scope: Literal["PUBLIC", "INTERNAL_RESEARCH"]
+    kind: str
+    title: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    mode: Literal["SAFE", "INTERNAL_RESEARCH"]
+    generationMode: Literal["EVIDENCE_ONLY", "QWEN_GROUNDED_PLAN", "QWEN_GROUNDED_ANSWER"]
+    retrievalMode: Literal["TOOL_EVIDENCE_ONLY", "E5_FAISS"]
+    citations: list[Citation]
+    recommendedProperties: list[dict[str, Any]]
+    evidence: dict[str, Any]
+    dataLimitations: list[str]
