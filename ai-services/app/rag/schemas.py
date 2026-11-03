@@ -14,6 +14,10 @@ class ChatRequest(BaseModel):
     ward: str | None = Field(default=None, min_length=1, max_length=100)
     limit: int = Field(default=10, ge=1, le=10, strict=True)
     requireGeneration: bool = False
+    # Opaque server-issued conversation handle. It carries NO authority and NO facts;
+    # it only names an in-memory context entry. A public caller can never read a
+    # research session because the store is namespaced by authenticated scope.
+    sessionId: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
 
 
 class Citation(BaseModel):

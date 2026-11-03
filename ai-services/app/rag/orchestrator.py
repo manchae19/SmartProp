@@ -9,6 +9,8 @@ from urllib.parse import quote
 from .gis import gis_evidence
 from .diagnostics import traced, event, reason
 from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
+from .followup import (classification, detect_district, budget_from_followup)
+from .session import SessionStore, MAX_PROPERTY_IDS
 
 
 LIMITATIONS = [
@@ -40,38 +42,148 @@ def budget_from_question(question):
 
 
 class ChatOrchestrator:
-    def __init__(self, backend, repository, knowledge, retriever, llm):
+    def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None):
         self.backend, self.repository, self.knowledge = backend, repository, knowledge
         self.retriever, self.llm = retriever, llm
+        # Bounded in-memory conversation memory. Never persisted, never authoritative.
+        self.sessions = sessions or SessionStore()
+
+    # ------------------------------------------------------------------
+    def _reply(self, request, session_id, context, criteria, *, properties, citations, research,
+               answer, responseKind=None, limitations=None, response=None, extra=None,
+               evidence=None, generation_mode="EVIDENCE_ONLY", retrieval_mode="TOOL_EVIDENCE_ONLY",
+               result_properties=None, reference_id=None):
+        """Single exit point: every reply records bounded state and returns the session id.
+
+        `properties` is what the user sees; `result_properties` is the full verified
+        result set of this turn, which is what the next turn must be able to reference.
+        """
+        full = list(result_properties if result_properties is not None else properties)
+        property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
+        self.sessions.record(context,
+            criteria={**{k: v for k, v in (criteria or {}).items() if k not in ("sessionTurn", "_propertyIds")},
+                      "_propertyIds": property_ids} if criteria and (criteria.get("budgetVnd") or criteria.get("district")) else None,
+            property_ids=property_ids,
+            area_ids=[a.get("amenityAreaId") for a in (response or {}).get("topAreas", []) if a.get("amenityAreaId")],
+            evidence_ids=[c.sourceId for c in citations],
+            referenced_property_id=reference_id,
+            question=request.question)
+        payload = dict(evidence or {})
+        if responseKind:
+            payload["responseKind"] = responseKind
+        payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
+        if extra:
+            payload.update(extra)
+        return ChatResponse(answer=answer, mode="INTERNAL_RESEARCH" if research else "SAFE",
+            generationMode=generation_mode, retrievalMode=retrieval_mode, citations=list(citations),
+            recommendedProperties=list(properties), evidence=payload, dataLimitations=list(limitations or []))
 
     def chat(self, request, *, research=False, token=None):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
         if research:
             traced("research_authorization", lambda: self.backend.authorize_research(token))
+        # Session scope comes from the authenticated route, never from the client payload,
+        # so a public caller cannot address (or read) a research context.
+        scope = "INTERNAL_RESEARCH" if research else "PUBLIC"
+        context, session_id, resumed = traced("session_begin",
+            lambda: self.sessions.begin(request.sessionId, scope=scope))
+        turn = classification(request.question, context if resumed else None)
+        event("session_turn", resumed=resumed, turn=context.turns,
+              followup=bool(turn["searchChange"] or turn["ordinal"] or turn["mapRequest"] or turn["analytic"]))
         limitations = list(LIMITATIONS)
         corpus = traced("corpus_load", self.knowledge.load)
         if traced("amenity_summary", self.backend.amenity_summary)["catalogVersion"] != corpus["summary"]["catalogVersion"]:
             raise GroundingError("PUBLIC_CORPUS_VERSION_DRIFT")
         documents = corpus["documents"]
-        district = request.district
-        if not district:
-            names = sorted({d["metadata"].get("district", "") for d in documents}, key=len, reverse=True)
-            district = next((d for d in names if d and re.search(r"(?<!\w)" + re.escape(norm(d)) + r"(?!\w)", norm(request.question))), None)
+        names = sorted({d["metadata"].get("district", "") for d in documents}, key=len, reverse=True)
+        explicit_district = request.district or detect_district(request.question, names)
+        # A follow-up that only refines one criterion keeps every other stored criterion.
+        prior = context.criteria() if resumed else {}
+        district = explicit_district or prior.get("district")
         # Explicit POI categories are a routing rule, never a similarity guess.
         categories = poi_categories(request.question)
-        budget = request.budgetVnd if request.budgetVnd is not None else budget_from_question(request.question)
-        criteria = request.model_dump(exclude={"question", "requireGeneration"}, exclude_none=True)
-        criteria["district"] = district
+        asked_budget = budget_from_question(request.question)
+        if asked_budget is None and request.budgetVnd is None:
+            asked_budget = budget_from_followup(request.question)
+        budget = request.budgetVnd if request.budgetVnd is not None else (asked_budget if asked_budget is not None else (
+            Decimal(str(prior["budgetVnd"])) if prior.get("budgetVnd") is not None else None))
+        criteria = request.model_dump(exclude={"question", "requireGeneration", "sessionId"}, exclude_none=True)
+        # Defaults are not client intent: carry the stored value unless the caller overrides it.
+        if criteria.get("purpose") == "LIVING" and prior.get("purpose"):
+            criteria["purpose"] = prior["purpose"]
+        if criteria.get("propertyType") == "ALL" and prior.get("propertyType"):
+            criteria["propertyType"] = prior["propertyType"]
+        if "minAreaSqm" not in criteria and prior.get("minAreaSqm") is not None:
+            criteria["minAreaSqm"] = prior["minAreaSqm"]
+        if turn["purpose"]:
+            criteria["purpose"] = turn["purpose"]
+        if turn["propertyType"]:
+            criteria["propertyType"] = turn["propertyType"]
+        if not request.ward and prior.get("ward") and not explicit_district:
+            criteria["ward"] = prior["ward"]
+        if district is not None:
+            criteria["district"] = district
         response = None
         properties = []
+        # An amenity-only follow-up must not spend a Recommendation call.
+        amenity_only = bool(categories) and not turn["searchChange"] and turn["ordinal"] is None
+        referral = turn["needsPropertyReference"]
         if budget is not None:
             criteria["budgetVnd"] = str(budget)
             if "minAreaSqm" in criteria:
                 criteria["minAreaSqm"] = str(criteria["minAreaSqm"])
-            response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
-            properties = response["topProperties"]
+        # A changed budget/district always re-queries the live API. A stored list is
+        # never replayed as a new result set; it only names what to ask about.
+        must_search = (budget is not None and not amenity_only) or (referral and bool(prior))
+        if must_search:
+            if budget is None:
+                limitations.append("Chưa có ngân sách trong ngữ cảnh; không thể xác định lại danh sách bất động sản.")
+            else:
+                response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
+                properties = response["topProperties"]
         else:
             limitations.append("Chưa có một ngân sách rõ ràng; hệ thống chưa gọi công cụ lọc bất động sản.")
+
+        # ---- property reference resolution (deterministic, never guessed) ----
+        # `result_properties` is the full verified result set of THIS turn and stays the
+        # reference universe for the next turn; only the visible selection is narrowed.
+        result_properties = list(properties)
+        asked_index = turn["ordinal"]
+        referenced_id = None
+        if asked_index is not None and result_properties:
+            if not 1 <= asked_index <= len(result_properties):
+                if request.requireGeneration:
+                    raise RagUnavailable("AMBIGUOUS_PROPERTY_REFERENCE")
+                return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+                    answer=(f"Trong lượt trước chỉ có {len(result_properties)} bất động sản được đề xuất, nên không có "
+                            f"bất động sản thứ {asked_index}. Bạn muốn xem lại danh sách hay đổi tiêu chí tìm kiếm?"),
+                    responseKind="CLARIFICATION_REQUIRED", limitations=limitations, response=response,
+                    extra={"clarification": "PROPERTY_INDEX_OUT_OF_RANGE"})
+            properties = [result_properties[asked_index - 1]]
+            referenced_id = "recommendation:" + properties[0]["id"]
+        elif referral:
+            # An explicit "căn này" must resolve to the property the user just saw, even
+            # though the stored list is the full verified result set of the turn.
+            explicit = context.referenced_property_id or prior.get("referencedPropertyId")
+            if explicit is not None and result_properties:
+                match = [p for p in result_properties
+                         if p["id"] == explicit or "recommendation:" + p["id"] == explicit or "property:" + p["id"] == explicit]
+                if match:
+                    properties = match
+                    referenced_id = "recommendation:" + match[0]["id"]
+            if referenced_id is None:
+                previous = list(prior.get("_propertyIds") or [])
+                if len(previous) == 1:
+                    properties = [p for p in result_properties if p["id"] == previous[0]] or properties
+                    referenced_id = "recommendation:" + previous[0] if properties else None
+                elif len(previous) > 1 or len(result_properties) > 1:
+                    if request.requireGeneration:
+                        raise RagUnavailable("AMBIGUOUS_PROPERTY_REFERENCE")
+                    return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+                        answer=("Bạn đang nói tới bất động sản nào? Lượt trước có nhiều lựa chọn. "
+                                "Hãy nói rõ thứ tự, ví dụ “căn thứ hai”, hoặc gửi lại mã/tên bất động sản."),
+                        responseKind="CLARIFICATION_REQUIRED", limitations=limitations, response=response,
+                        extra={"clarification": "AMBIGUOUS_PROPERTY_REFERENCE"})
 
         if not research and budget is not None and not properties and not asks_for_amenities(request.question):
             # An empty authorized search is useful evidence. Do not replace it with
@@ -79,16 +191,16 @@ class ChatOrchestrator:
             event("no_match_response", strict=request.requireGeneration, generationRequired=False)
             if request.requireGeneration:
                 raise RagUnavailable("FULL_RAG_RUNTIME_UNAVAILABLE")
-            return ChatResponse(answer=empty_search_answer(criteria), mode="SAFE",
-                generationMode="EVIDENCE_ONLY", retrievalMode="TOOL_EVIDENCE_ONLY", citations=[], recommendedProperties=[],
-                evidence={"responseKind": "NO_MATCHES", "recommendationMethod": response.get("method"),
+            return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+                answer=empty_search_answer(criteria), responseKind="NO_MATCHES", limitations=limitations, response=response,
+                evidence={"recommendationMethod": response.get("method"),
                     "criteria": criteria, "eligibleCandidateCount": response.get("eligibleCandidateCount"), "topAreas": [],
                     "recommendationSearch": {"performed": True, "resultCount": 0,
                         "sourcePath": "/api/v1/recommendations", "criteriaHash": digest(criteria)},
                     "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_EMPTY_SEARCH"},
                     "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
                     "sql": {"status": "NO_PLATFORM_RESULTS", "matchedRows": 0},
-                    "gis": gis_evidence([], [], []), "warnings": response.get("warnings", [])}, dataLimitations=limitations)
+                    "gis": gis_evidence([], [], []), "warnings": response.get("warnings", [])})
 
         # SQL only cross-checks platform IDs obtained from the authorized API, never model text.
         platform = [p for p in properties if p.get("source", {}).get("kind") == "PROPERTY"]
@@ -157,15 +269,15 @@ class ChatOrchestrator:
                     raise RagUnavailable("NO_MATCHING_AMENITY_EVIDENCE")
                 limitations.append("Chưa có bằng chứng tiện ích đúng loại yêu cầu trong kho tri thức công khai; "
                                    "hệ thống không thay bằng loại tiện ích khác và không suy đoán vị trí.")
-                return ChatResponse(answer=insufficient_amenity_answer(district, categories), mode="SAFE",
-                    generationMode="EVIDENCE_ONLY", retrievalMode=retrieval_mode, citations=[], recommendedProperties=properties,
-                    evidence={"responseKind": "INSUFFICIENT_AMENITY_EVIDENCE", "criteria": criteria if budget else None,
+                return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+                    answer=insufficient_amenity_answer(district, categories), responseKind="INSUFFICIENT_AMENITY_EVIDENCE",
+                    limitations=limitations, response=response, retrieval_mode=retrieval_mode,
+                    evidence={"criteria": criteria if budget else None,
                         "amenityIntent": {"district": district, "categories": list(categories)},
                         "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
                         "sql": {"status": sql_status, "matchedRows": sql_count},
                         "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_MISSING_EVIDENCE"},
-                        "gis": gis_evidence(rows, properties, []), "warnings": (response or {}).get("warnings", [])},
-                    dataLimitations=limitations)
+                        "gis": gis_evidence(rows, properties, []), "warnings": (response or {}).get("warnings", [])})
 
         facts = {}
         citations = {}
@@ -199,6 +311,13 @@ class ChatOrchestrator:
             fact["category"] = d["metadata"].get("category")
             fact["district"] = d["metadata"].get("district")
         selected = property_facts + area_facts
+        # "Hiển thị chúng trên bản đồ" refers to the previous turn's own evidence.
+        # The server never resolves an address or invents a coordinate: it re-emits the
+        # same verified evidence and lets the map card render what it already had.
+        map_reuse = bool(turn["mapRequest"] and resumed and not categories)
+        if map_reuse and not retrieved:
+            previous_ids = set(context.evidence_source_ids)
+            retrieved = [d for d in documents if d["sourceId"] in previous_ids][:3]
         generation_mode = "EVIDENCE_ONLY"
         generation_evidence = {"accepted": False}
         generated_sentences = None
@@ -237,9 +356,11 @@ class ChatOrchestrator:
             intro = render_answer({}, [], research=research, has_budget=budget is not None, has_properties=bool(properties))
             answer = intro + "\n" + "\n".join(s["text"] + " [" + s["sourceId"] + "]" for s in generated_sentences)
         # Every recommended property retains a citation even when no auxiliary fact is selected.
-        return ChatResponse(answer=answer,
-            mode="INTERNAL_RESEARCH" if research else "SAFE", generationMode=generation_mode, retrievalMode=retrieval_mode,
-            citations=[c for key, c in citations.items() if key in used], recommendedProperties=properties,
+        return self._reply(request, session_id, context, criteria,
+            properties=properties, citations=[c for key, c in citations.items() if key in used], research=research,
+            answer=answer, limitations=limitations, response=response,
+            result_properties=result_properties, reference_id=referenced_id,
+            generation_mode=generation_mode, retrieval_mode=retrieval_mode,
             evidence={"recommendationMethod": (response or {}).get("method"), "criteria": criteria if budget else None,
                       "eligibleCandidateCount": (response or {}).get("eligibleCandidateCount"),
                       "topAreas": (response or {}).get("topAreas", []), "catalogVersion": corpus["summary"]["catalogVersion"],
@@ -249,4 +370,4 @@ class ChatOrchestrator:
                       "amenityIntent": {"district": district, "categories": list(categories)},
                       "semanticRetrieval": {"indexVersion": getattr(self.retriever, "manifest", None).get("version") if isinstance(getattr(self.retriever, "manifest", None), dict) else None,
                                             "hits": [{"sourceId": d["sourceId"], "similarity": d.get("similarity")} for d in retrieved]},
-                      "warnings": (response or {}).get("warnings", [])}, dataLimitations=limitations)
+                      "warnings": (response or {}).get("warnings", [])})
