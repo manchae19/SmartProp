@@ -1,0 +1,4970 @@
+{
+  "catalogVersion": "DANANG_AMENITY_CATALOG_V1_2026_11_03",
+  "jurisdiction": "Thành phố Đà Nẵng",
+  "totalEffectivePois": 1323,
+  "totalAreasAnalyzed": 82,
+  "countsByLevel": {
+    "DISTRICT": 7,
+    "WARD": 55,
+    "CORRIDOR": 20
+  },
+  "livingPurposeWeights": {
+    "essentials": 0.25,
+    "education": 0.2,
+    "healthcare": 0.2,
+    "transit": 0.15,
+    "recreation": 0.2
+  },
+  "areas": [
+    {
+      "areaId": "district-hai-chau",
+      "areaLevel": "DISTRICT",
+      "areaName": "Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 100.0,
+      "categoryScores": {
+        "essentials": 100.0,
+        "education": 100.0,
+        "healthcare": 100.0,
+        "transit": 100.0,
+        "recreation": 90.0
+      },
+      "confidence": 0.95,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 6056,
+      "poiCounts": {
+        "total": 304,
+        "school": 81,
+        "hospital": 27,
+        "pharmacy": 5,
+        "market": 17,
+        "supermarket": 6,
+        "park": 10,
+        "beach": 0,
+        "transit": 158
+      },
+      "areaKm2": 21.53,
+      "densityPerKm2": 14.12,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Cồn",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Đầu mối Hòa Cường",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "D Mart",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "VinMart+",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Hải Châu: 304 tiện ích sạch (14.12 POI/km²). 81 trường, 27 BV, 17 chợ, 6 siêu thị, 10 công viên, 0 bãi biển, 158 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-thanh-khe",
+      "areaLevel": "DISTRICT",
+      "areaName": "Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 80.8,
+      "categoryScores": {
+        "essentials": 100.0,
+        "education": 100.0,
+        "healthcare": 88.0,
+        "transit": 88.0,
+        "recreation": 25.0
+      },
+      "confidence": 0.92,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 2840,
+      "poiCounts": {
+        "total": 174,
+        "school": 61,
+        "hospital": 15,
+        "pharmacy": 0,
+        "market": 10,
+        "supermarket": 13,
+        "park": 0,
+        "beach": 0,
+        "transit": 75
+      },
+      "areaKm2": 9.34,
+      "densityPerKm2": 18.63,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "MISSING_1_PILLARS",
+      "poiEvidence": [
+        {
+          "name": "Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Tam Thuận",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Indoor Market",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "siêu thị Yến Nhi thái lan",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Phụ kiện 09",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Thanh Khê: 174 tiện ích sạch (18.63 POI/km²). 61 trường, 15 BV, 10 chợ, 13 siêu thị, 0 công viên, 0 bãi biển, 75 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-son-tra",
+      "areaLevel": "DISTRICT",
+      "areaName": "Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 97.7,
+      "categoryScores": {
+        "essentials": 100.0,
+        "education": 100.0,
+        "healthcare": 88.0,
+        "transit": 88.0,
+        "recreation": 100.0
+      },
+      "confidence": 0.9,
+      "diversityIndex": 0.812,
+      "sampleListingCount": 13719,
+      "poiCounts": {
+        "total": 195,
+        "school": 63,
+        "hospital": 11,
+        "pharmacy": 12,
+        "market": 12,
+        "supermarket": 17,
+        "park": 6,
+        "beach": 8,
+        "transit": 66
+      },
+      "areaKm2": 58.26,
+      "densityPerKm2": 3.35,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Mai",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Đêm Sơn Trà",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "minimart kidoshop",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Co.opMart",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Sơn Trà: 195 tiện ích sạch (3.35 POI/km²). 63 trường, 11 BV, 12 chợ, 17 siêu thị, 6 công viên, 8 bãi biển, 66 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-ngu-hanh-son",
+      "areaLevel": "DISTRICT",
+      "areaName": "Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 96.8,
+      "categoryScores": {
+        "essentials": 95.0,
+        "education": 90.0,
+        "healthcare": 100.0,
+        "transit": 88.0,
+        "recreation": 100.0
+      },
+      "confidence": 0.88,
+      "diversityIndex": 0.774,
+      "sampleListingCount": 16242,
+      "poiCounts": {
+        "total": 166,
+        "school": 37,
+        "hospital": 15,
+        "pharmacy": 10,
+        "market": 5,
+        "supermarket": 13,
+        "park": 5,
+        "beach": 6,
+        "transit": 75
+      },
+      "areaKm2": 38.43,
+      "densityPerKm2": 4.32,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Mona",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Dong Giang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Non Nước",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Bắc Mỹ An",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Full Market",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Full-Market",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Ngũ Hành Sơn: 166 tiện ích sạch (4.32 POI/km²). 37 trường, 15 BV, 5 chợ, 13 siêu thị, 5 công viên, 6 bãi biển, 75 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-cam-le",
+      "areaLevel": "DISTRICT",
+      "areaName": "Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 83.6,
+      "categoryScores": {
+        "essentials": 83.0,
+        "education": 90.0,
+        "healthcare": 76.0,
+        "transit": 100.0,
+        "recreation": 65.0
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.442,
+      "sampleListingCount": 7491,
+      "poiCounts": {
+        "total": 163,
+        "school": 34,
+        "hospital": 4,
+        "pharmacy": 1,
+        "market": 7,
+        "supermarket": 2,
+        "park": 1,
+        "beach": 0,
+        "transit": 114
+      },
+      "areaKm2": 34.64,
+      "densityPerKm2": 4.71,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Hòa Cầm",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Hòa Phát",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "MM Mega Market Đà Nẵng",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Siêu thị Mega Market Đà Nẵng (Metro)",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Cẩm Lệ: 163 tiện ích sạch (4.71 POI/km²). 34 trường, 4 BV, 7 chợ, 2 siêu thị, 1 công viên, 0 bãi biển, 114 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-lien-chieu",
+      "areaLevel": "DISTRICT",
+      "areaName": "Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 92.8,
+      "categoryScores": {
+        "essentials": 95.0,
+        "education": 90.0,
+        "healthcare": 76.0,
+        "transit": 100.0,
+        "recreation": 95.0
+      },
+      "confidence": 0.82,
+      "diversityIndex": 0.557,
+      "sampleListingCount": 7219,
+      "poiCounts": {
+        "total": 191,
+        "school": 40,
+        "hospital": 7,
+        "pharmacy": 1,
+        "market": 5,
+        "supermarket": 10,
+        "park": 2,
+        "beach": 5,
+        "transit": 121
+      },
+      "areaKm2": 79.73,
+      "densityPerKm2": 2.4,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Bệnh viện Phổi Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Tâm thần thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Hòa Khánh",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Hòa Khánh Nam",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Nhà May",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Showroom Thiết Bị Phụ Kiện Bếp TaKing - Kho Số 3",
+          "category": "SUPERMARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Liên Chiểu: 191 tiện ích sạch (2.4 POI/km²). 40 trường, 7 BV, 5 chợ, 10 siêu thị, 2 công viên, 5 bãi biển, 121 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "district-hoa-vang",
+      "areaLevel": "DISTRICT",
+      "areaName": "Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 72.1,
+      "categoryScores": {
+        "essentials": 45.0,
+        "education": 80.0,
+        "healthcare": 64.0,
+        "transit": 100.0,
+        "recreation": 78.0
+      },
+      "confidence": 0.65,
+      "diversityIndex": 0.32,
+      "sampleListingCount": 1984,
+      "poiCounts": {
+        "total": 129,
+        "school": 18,
+        "hospital": 3,
+        "pharmacy": 0,
+        "market": 2,
+        "supermarket": 0,
+        "park": 2,
+        "beach": 0,
+        "transit": 104
+      },
+      "areaKm2": 735.7,
+      "densityPerKm2": 0.18,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức năng thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Thai Market",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Chợ Miếu Bông",
+          "category": "MARKET",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trường Trung học cơ sở Nguyễn Văn Linh",
+          "category": "SCHOOL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trường Trung học cơ sở Nguyễn Viết Xuân",
+          "category": "SCHOOL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        }
+      ],
+      "amenitySummary": "Hòa Vang: 129 tiện ích sạch (0.18 POI/km²). 18 trường, 3 BV, 2 chợ, 0 siêu thị, 2 công viên, 0 bãi biển, 104 trạm xe.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-hai-ngu-hanh-son",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Hải, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 52.6,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 56.0,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.79,
+      "diversityIndex": 0.774,
+      "sampleListingCount": 6056,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Ngũ Hành Sơn (Mona",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Dong Giang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Non Nước",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Bắc Mỹ An ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Hải (Ngũ Hành Sơn): 6056 BĐS đại diện. Điểm sống 52.6/100. Kết nối tiện ích Ngũ Hành Sơn.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-my-an-ngu-hanh-son",
+      "areaLevel": "WARD",
+      "areaName": "Mỹ An, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 66.7,
+      "categoryScores": {
+        "essentials": 67.5,
+        "education": 48.8,
+        "healthcare": 73.6,
+        "transit": 56.1,
+        "recreation": 80.8
+      },
+      "confidence": 0.79,
+      "diversityIndex": 0.641,
+      "sampleListingCount": 4700,
+      "poiCounts": {
+        "total": 5,
+        "school": 0,
+        "hospital": 1,
+        "pharmacy": 0,
+        "market": 2,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 1,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Chợ Bắc Mỹ An",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Bắc Mỹ An",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trạm Y tế phường Mỹ An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Bãi tắm Bắc Mỹ An",
+          "category": "BEACH",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Mỹ An (Ngũ Hành Sơn): 4700 BĐS đại diện. Điểm sống 66.7/100. Kết nối tiện ích Ngũ Hành Sơn.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-xuan-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Xuân, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 50.6,
+      "categoryScores": {
+        "essentials": 62.1,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 61.5,
+        "recreation": 43.0
+      },
+      "confidence": 0.77,
+      "diversityIndex": 0.306,
+      "sampleListingCount": 4565,
+      "poiCounts": {
+        "total": 3,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Chợ Hòa Xuân",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Khu chung cư Hòa Xuân",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Khu chung cư Hòa Xuân",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Xuân (Cẩm Lệ): 4565 BĐS đại diện. Điểm sống 50.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-phuoc-my-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "Phước Mỹ, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 62.1,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 64.2,
+        "healthcare": 68.2,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 3595,
+      "poiCounts": {
+        "total": 4,
+        "school": 1,
+        "hospital": 1,
+        "pharmacy": 0,
+        "market": 2,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Chợ Phước Mỹ",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Phước Mỹ",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trạm Y tế Phường Phước Mỹ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trường Tiểu học Phước Mỹ",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Phước Mỹ (Sơn Trà): 3595 BĐS đại diện. Điểm sống 62.1/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-minh-lien-chieu",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Minh, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 50.8,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 56.5
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.557,
+      "sampleListingCount": 3174,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Liên Chiểu (Bệnh viện Phổi Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Tâm thần thành phố Đà Nẵng (HOSPIT...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Minh (Liên Chiểu): 3174 BĐS đại diện. Điểm sống 50.8/100. Kết nối tiện ích Liên Chiểu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-an-hai-bac-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "An Hải Bắc, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 58.9,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 68.2,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.333,
+      "sampleListingCount": 3140,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 1,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ An Hải Bắc",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trạm Y tế Phường An Hải Bắc",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường An Hải Bắc (Sơn Trà): 3140 BĐS đại diện. Điểm sống 58.9/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-khue-my-ngu-hanh-son",
+      "areaLevel": "WARD",
+      "areaName": "Khuê Mỹ, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 55.5,
+      "categoryScores": {
+        "essentials": 67.5,
+        "education": 48.8,
+        "healthcare": 56.0,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.79,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 2634,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Khuê Mỹ",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Ngũ Hành Sơn (Mona",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Dong Giang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Non Nước",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Bắc Mỹ An ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Khuê Mỹ (Ngũ Hành Sơn): 2634 BĐS đại diện. Điểm sống 55.5/100. Kết nối tiện ích Ngũ Hành Sơn.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-quy-ngu-hanh-son",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Quý, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 53.6,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 56.0,
+        "transit": 56.1,
+        "recreation": 58.8
+      },
+      "confidence": 0.79,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 1631,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Đối diện Nghĩa trang liệt sĩ Phường Hòa Quý",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Nghĩa trang liệt sĩ Phường Hòa Quý",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Ngũ Hành Sơn (Mona",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Dong Giang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Non Nước",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Bắc Mỹ An ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Quý (Ngũ Hành Sơn): 1631 BĐS đại diện. Điểm sống 53.6/100. Kết nối tiện ích Ngũ Hành Sơn.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-hiep-nam-lien-chieu",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Hiệp Nam, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 51.8,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 61.5,
+        "recreation": 56.5
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 1600,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Khu Chung cư Hòa Hiệp Nam",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Liên Chiểu (Bệnh viện Phổi Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Tâm thần thành phố Đà Nẵng (HOSPIT...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Hiệp Nam (Liên Chiểu): 1600 BĐS đại diện. Điểm sống 51.8/100. Kết nối tiện ích Liên Chiểu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-cuong-bac-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Cường Bắc, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 1464,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Cường Bắc (Hải Châu): 1464 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-man-thai-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "Mân Thái, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 62.1,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 56.1,
+        "recreation": 80.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.528,
+      "sampleListingCount": 1378,
+      "poiCounts": {
+        "total": 3,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 1,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Chợ Mân Thái",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Bãi biển Mân Thái",
+          "category": "BEACH",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Bãi tắm Mân Thái",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Mân Thái (Sơn Trà): 1378 BĐS đại diện. Điểm sống 62.1/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-nai-hien-dong-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "Nại Hiên Đông, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 55.9,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 1284,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Nại Hiên Đông",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Nại Hiên Đông (Sơn Trà): 1284 BĐS đại diện. Điểm sống 55.9/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-an-hai-nam-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "An Hải Nam, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 53.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.812,
+      "sampleListingCount": 1226,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường An Hải Nam (Sơn Trà): 1226 BĐS đại diện. Điểm sống 53.0/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-tho-quang-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "Thọ Quang, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 53.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.812,
+      "sampleListingCount": 1221,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thọ Quang (Sơn Trà): 1221 BĐS đại diện. Điểm sống 53.0/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-khanh-bac-lien-chieu",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Khánh Bắc, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 50.8,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 56.5
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.557,
+      "sampleListingCount": 1199,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Liên Chiểu (Bệnh viện Phổi Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Tâm thần thành phố Đà Nẵng (HOSPIT...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Khánh Bắc (Liên Chiểu): 1199 BĐS đại diện. Điểm sống 50.8/100. Kết nối tiện ích Liên Chiểu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-cuong-nam-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Cường Nam, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 1160,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Cường Nam (Hải Châu): 1160 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-khue-trung-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Khuê Trung, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 46.6,
+      "categoryScores": {
+        "essentials": 48.4,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 43.0
+      },
+      "confidence": 0.77,
+      "diversityIndex": 0.442,
+      "sampleListingCount": 987,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Cẩm Lệ (Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Khuê Trung (Cẩm Lệ): 987 BĐS đại diện. Điểm sống 46.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-tho-dong-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Thọ Đông, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 46.6,
+      "categoryScores": {
+        "essentials": 48.4,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 43.0
+      },
+      "confidence": 0.77,
+      "diversityIndex": 0.442,
+      "sampleListingCount": 586,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Cẩm Lệ (Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Thọ Đông (Cẩm Lệ): 586 BĐS đại diện. Điểm sống 46.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-an-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Hòa An, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 49.6,
+      "categoryScores": {
+        "essentials": 62.1,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 43.0
+      },
+      "confidence": 0.77,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 585,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Hòa An",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Cẩm Lệ (Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa An (Cẩm Lệ): 585 BĐS đại diện. Điểm sống 49.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-an-khe-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "An Khê, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 48.3,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 64.2,
+        "healthcare": 50.6,
+        "transit": 56.1,
+        "recreation": 25.0
+      },
+      "confidence": 0.83,
+      "diversityIndex": 0.306,
+      "sampleListingCount": 583,
+      "poiCounts": {
+        "total": 3,
+        "school": 2,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Trường Tiểu học An Khê",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trường Tiểu học An Khê",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trạm y tế Phường An Khê",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường An Khê (Thanh Khê): 583 BĐS đại diện. Điểm sống 48.3/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-khanh-nam-lien-chieu",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Khánh Nam, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 55.6,
+      "categoryScores": {
+        "essentials": 67.5,
+        "education": 59.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 56.5
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.306,
+      "sampleListingCount": 480,
+      "poiCounts": {
+        "total": 3,
+        "school": 2,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Chợ Hòa Khánh Nam",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Đại học Duy Tân - Cơ sở Hòa Khánh Nam",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Đại học Duy Tân - Cơ sở Hòa Khánh Nam",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Khánh Nam (Liên Chiểu): 480 BĐS đại diện. Điểm sống 55.6/100. Kết nối tiện ích Liên Chiểu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thac-gian-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Thạc Gián, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 467,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thạc Gián (Thanh Khê): 467 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thanh-khe-tay-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Thanh Khê Tây, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 457,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thanh Khê Tây (Thanh Khê): 457 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thach-thang-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Thạch Thang, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 432,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thạch Thang (Hải Châu): 432 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thuan-phuoc-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Thuận Phước, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 429,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thuận Phước (Hải Châu): 429 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thanh-khe-dong-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Thanh Khê Đông, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 415,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thanh Khê Đông (Thanh Khê): 415 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-binh-thuan-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Bình Thuận, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 379,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Bình Thuận (Hải Châu): 379 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-chinh-gian-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Chính Gián, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 374,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Chính Gián (Thanh Khê): 374 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hai-chau-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hải Châu, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 59.9,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 73.6,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.333,
+      "sampleListingCount": 354,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 1,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Mới Hải Châu",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trung tâm Y tế quận Hải Châu",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hải Châu (Hải Châu): 354 BĐS đại diện. Điểm sống 59.9/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-thuan-tay-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Thuận Tây, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 353,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Thuận Tây (Hải Châu): 353 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-xuan-ha-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Xuân Hà, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 46.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 56.1,
+        "recreation": 25.0
+      },
+      "confidence": 0.74,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 301,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Phường Xuân Hà",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Xuân Hà (Thanh Khê): 301 BĐS đại diện. Điểm sống 46.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-phuoc-ninh-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Phước Ninh, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 55.1,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 61.5,
+        "recreation": 54.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 282,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chùa Phước Ninh",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Đối diện Chùa Phước Ninh",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Phước Ninh (Hải Châu): 282 BĐS đại diện. Điểm sống 55.1/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-lien-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Liên, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 42.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 272,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Đối diện Chợ Hòa Liên",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Hòa Liên",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Liên (Hòa Vang): 272 BĐS đại diện. Điểm sống 42.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-tien-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Tiến, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 42.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 267,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Đối diện Trường Tiểu học Số 2 Hòa Tiến",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Trường Tiểu học Số 2 Hòa Tiến",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Tiến (Hòa Vang): 267 BĐS đại diện. Điểm sống 42.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-thanh-binh-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Thanh Bình, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 60.7,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 76.2
+      },
+      "confidence": 0.76,
+      "diversityIndex": 0.333,
+      "sampleListingCount": 256,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 1,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Thanh Bình",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Công viên Thanh Bình",
+          "category": "PARK",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Thanh Bình (Hải Châu): 256 BĐS đại diện. Điểm sống 60.7/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-chau-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Châu, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 44.4,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 55.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.306,
+      "sampleListingCount": 249,
+      "poiCounts": {
+        "total": 3,
+        "school": 1,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Trường Mầm non Hương Sen - Phân hiệu Hòa Châu",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "UBND Xã Hòa Châu",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Đối diện UBND Xã Hòa Châu",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Châu (Hòa Vang): 249 BĐS đại diện. Điểm sống 44.4/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-son-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Sơn, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 42.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 233,
+      "poiCounts": {
+        "total": 4,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 4
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Trạm y tế Xã Hòa Sơn",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Đối diện Trạm y tế Xã Hòa Sơn",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Sơn (Hòa Vang): 233 BĐS đại diện. Điểm sống 42.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-hiep-bac-lien-chieu",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Hiệp Bắc, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 50.8,
+      "categoryScores": {
+        "essentials": 53.8,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 56.5
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.557,
+      "sampleListingCount": 187,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Liên Chiểu (Bệnh viện Phổi Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Tâm thần thành phố Đà Nẵng (HOSPIT...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Hiệp Bắc (Liên Chiểu): 187 BĐS đại diện. Điểm sống 50.8/100. Kết nối tiện ích Liên Chiểu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-phat-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Phát, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 50.6,
+      "categoryScores": {
+        "essentials": 62.1,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 61.5,
+        "recreation": 43.0
+      },
+      "confidence": 0.68,
+      "diversityIndex": 0.333,
+      "sampleListingCount": 187,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Hòa Phát",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Hòa Phát",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Cẩm Lệ (Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Phát (Cẩm Lệ): 187 BĐS đại diện. Điểm sống 50.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-khuong-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Khương, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 42.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 173,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Trường Tiểu học Hòa Khương",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Hòa Khương",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Khương (Hòa Vang): 173 BĐS đại diện. Điểm sống 42.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-ninh-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Ninh, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 43.3,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 55.2,
+        "healthcare": 39.8,
+        "transit": 53.2,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 164,
+      "poiCounts": {
+        "total": 1,
+        "school": 1,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Trường Tiểu học Hòa Ninh",
+          "category": "SCHOOL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Ninh (Hòa Vang): 164 BĐS đại diện. Điểm sống 43.3/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-tho-tay-cam-le",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Thọ Tây, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 49.6,
+      "categoryScores": {
+        "essentials": 62.1,
+        "education": 48.8,
+        "healthcare": 45.2,
+        "transit": 53.2,
+        "recreation": 43.0
+      },
+      "confidence": 0.68,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 145,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ Hòa Thọ Tây",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Cẩm Lệ (Trung tâm Y tế khu vực Cẩm Lệ",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế Quận Cẩm Lệ (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Thọ Tây (Cẩm Lệ): 145 BĐS đại diện. Điểm sống 49.6/100. Kết nối tiện ích Cẩm Lệ.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-phuoc-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Phước, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 42.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 61.5,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 141,
+      "poiCounts": {
+        "total": 3,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 3
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Uỷ ban nhân dân xã Hòa Phước",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Kho đá Đông Ấn Đà Nẵng (Đối diện Chợ Hòa Phước)",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Phước (Hòa Vang): 141 BĐS đại diện. Điểm sống 42.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-phong-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Phong, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 41.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 53.2,
+        "recreation": 48.9
+      },
+      "confidence": 0.52,
+      "diversityIndex": 0.32,
+      "sampleListingCount": 136,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Phong (Hòa Vang): 136 BĐS đại diện. Điểm sống 41.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-phu-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Phú, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 41.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 53.2,
+        "recreation": 48.9
+      },
+      "confidence": 0.45,
+      "diversityIndex": 0.32,
+      "sampleListingCount": 89,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Phú (Hòa Vang): 89 BĐS đại diện. Điểm sống 41.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-nhon-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Nhơn, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 41.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 53.2,
+        "recreation": 48.9
+      },
+      "confidence": 0.45,
+      "diversityIndex": 0.32,
+      "sampleListingCount": 78,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Nhơn (Hòa Vang): 78 BĐS đại diện. Điểm sống 41.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-bac-hoa-vang",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Bắc, Hòa Vang",
+      "parentDistrict": "Hòa Vang",
+      "livingScore": 41.5,
+      "categoryScores": {
+        "essentials": 31.2,
+        "education": 44.2,
+        "healthcare": 39.8,
+        "transit": 53.2,
+        "recreation": 48.9
+      },
+      "confidence": 0.45,
+      "diversityIndex": 0.32,
+      "sampleListingCount": 76,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hòa Vang (Bệnh viện Y học cổ truyền thành phố Đà Nẵng",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện Phục hồi chức...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Bắc (Hòa Vang): 76 BĐS đại diện. Điểm sống 41.5/100. Kết nối tiện ích Hòa Vang.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-an-hai-dong-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "An Hải Đông, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 56.9,
+      "categoryScores": {
+        "essentials": 69.8,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 56.1,
+        "recreation": 58.8
+      },
+      "confidence": 0.63,
+      "diversityIndex": 0.333,
+      "sampleListingCount": 30,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 1,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Chợ An Hải Đông",
+          "category": "MARKET",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "967 Ngô Quyền - Công an Phường An Hải Đông",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường An Hải Đông (Sơn Trà): 30 BĐS đại diện. Điểm sống 56.9/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-an-hai-tay-son-tra",
+      "areaLevel": "WARD",
+      "areaName": "An Hải Tây, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 53.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 58.8
+      },
+      "confidence": 0.63,
+      "diversityIndex": 0.812,
+      "sampleListingCount": 16,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Sơn Trà (Trung tâm Y tế Quận Sơn Trà",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Bệnh viện 199 - Bộ Công An",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường An Hải Tây (Sơn Trà): 16 BĐS đại diện. Điểm sống 53.0/100. Kết nối tiện ích Sơn Trà.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hai-chau-i-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hải Châu I, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 9,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hải Châu I (Hải Châu): 9 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-khe-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Khê, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.64,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 4,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Khê (Thanh Khê): 4 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hoa-thuan-dong-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hòa Thuận Đông, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 4,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hòa Thuận Đông (Hải Châu): 4 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-hai-chau-ii-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Hải Châu II, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 2,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Hải Châu II (Hải Châu): 2 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-binh-hien-hai-chau",
+      "areaLevel": "WARD",
+      "areaName": "Bình Hiên, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 54.0,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 56.0,
+        "transit": 53.2,
+        "recreation": 54.2
+      },
+      "confidence": 0.66,
+      "diversityIndex": 0.638,
+      "sampleListingCount": 1,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Hải Châu (Benh Vien Y Hoc Co Truyen Tp.Da Nang",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Pharmacity",
+          "category": "HOSPITAL",
+          "attributionBasis": "DIRECT_WARD_EVIDENCE"
+        },
+        {
+          "name": "Chợ Cồ...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Bình Hiên (Hải Châu): 1 BĐS đại diện. Điểm sống 54.0/100. Kết nối tiện ích Hải Châu.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "ward-vinh-trung-thanh-khe",
+      "areaLevel": "WARD",
+      "areaName": "Vĩnh Trung, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 45.4,
+      "categoryScores": {
+        "essentials": 56.0,
+        "education": 53.2,
+        "healthcare": 50.6,
+        "transit": 47.9,
+        "recreation": 25.0
+      },
+      "confidence": 0.64,
+      "diversityIndex": 0.625,
+      "sampleListingCount": 1,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "FAIR",
+      "hasCriticalGaps": "SHARED_DISTRICT_FACILITIES",
+      "poiEvidence": [
+        {
+          "name": "Thừa hưởng tiện ích trung tâm Thanh Khê (Bệnh viện Đa khoa Bình Dân",
+          "category": "HOSPITAL",
+          "attributionBasis": "DISTRICT_FACILITY"
+        },
+        {
+          "name": "Trung tâm Y tế quận Thanh Khê (HOSPITAL)...)",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Phường Vĩnh Trung (Thanh Khê): 1 BĐS đại diện. Điểm sống 45.4/100. Kết nối tiện ích Thanh Khê.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-tran-hung-dao-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Trần Hưng Đạo, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 59.7,
+      "categoryScores": {
+        "essentials": 72.5,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 618,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 1,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "WinMart+ Trần Hưng Đạo",
+          "category": "SUPERMARKET",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Trần Hưng Đạo (Sơn Trà): 618 BĐS đại diện. Điểm sống 59.7/100. 1 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-vo-nguyen-giap-ngu-hanh-son",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Võ Nguyên Giáp, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 57.5,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 60.0,
+        "transit": 59.0,
+        "recreation": 62.5
+      },
+      "confidence": 0.84,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 367,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 1
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Đối diện 51 Võ Nguyên Giáp - Tu viện Phaolo",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Võ Nguyên Giáp (Ngũ Hành Sơn): 367 BĐS đại diện. Điểm sống 57.5/100. 1 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-nguyen-van-thoai-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Nguyễn Văn Thoại, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 57.0,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 367,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Nguyễn Văn Thoại kết nối trung tâm Sơn Trà",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Nguyễn Văn Thoại (Sơn Trà): 367 BĐS đại diện. Điểm sống 57.0/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-bach-dang-hai-chau",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Bạch Đằng, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 60.9,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 67.5,
+        "healthcare": 60.0,
+        "transit": 65.0,
+        "recreation": 57.5
+      },
+      "confidence": 0.9,
+      "diversityIndex": 0.27,
+      "sampleListingCount": 350,
+      "poiCounts": {
+        "total": 4,
+        "school": 1,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 3
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Đối diện 20 Bạch Đằng",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Đối diện sân tennis đường Bạch Đằng",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Tiểu học Bạch Đằng",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Bạch Đằng (Hải Châu): 350 BĐS đại diện. Điểm sống 60.9/100. 4 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-ho-nghinh-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Hồ Nghinh, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 60.5,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 82.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 316,
+      "poiCounts": {
+        "total": 1,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 1,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "Công viên Hồ Nghinh",
+          "category": "PARK",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Hồ Nghinh (Sơn Trà): 316 BĐS đại diện. Điểm sống 60.5/100. 1 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-ngo-quyen-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Ngô Quyền, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 61.6,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 67.5,
+        "healthcare": 54.0,
+        "transit": 74.0,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.13,
+      "sampleListingCount": 304,
+      "poiCounts": {
+        "total": 26,
+        "school": 2,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 24
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "187 Ngô Quyền",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "733 Ngô Quyền - Đối diện Trường Mầm non ABC",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Trung học phổ thông Ngô Quyền",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Trung học phổ thông Ngô Quyền",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Ngô Quyền (Sơn Trà): 304 BĐS đại diện. Điểm sống 61.6/100. 26 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-truong-sa-ngu-hanh-son",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Trường Sa, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 56.6,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 60.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.84,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 288,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Trường Sa kết nối trung tâm Ngũ Hành Sơn",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Trường Sa (Ngũ Hành Sơn): 288 BĐS đại diện. Điểm sống 56.6/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-nui-thanh-hai-chau",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Núi Thành, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 61.8,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 67.5,
+        "healthcare": 60.0,
+        "transit": 72.5,
+        "recreation": 57.5
+      },
+      "confidence": 0.9,
+      "diversityIndex": 0.206,
+      "sampleListingCount": 283,
+      "poiCounts": {
+        "total": 13,
+        "school": 2,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 11
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "21 Núi Thành",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "149 Núi Thành (Trường Trung học cơ sở Tây Sơn)",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Tiểu học Núi Thành",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Tiểu học Núi Thành",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Núi Thành (Hải Châu): 283 BĐS đại diện. Điểm sống 61.8/100. 13 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-le-huu-trac-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Lê Hữu Trác, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 57.0,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 275,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Lê Hữu Trác kết nối trung tâm Sơn Trà",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Lê Hữu Trác (Sơn Trà): 275 BĐS đại diện. Điểm sống 57.0/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-tran-thi-ly-ngu-hanh-son",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Trần Thị Lý, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 56.6,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 60.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.84,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 272,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Trần Thị Lý kết nối trung tâm Ngũ Hành Sơn",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Trần Thị Lý (Ngũ Hành Sơn): 272 BĐS đại diện. Điểm sống 56.6/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-do-ba-ngu-hanh-son",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Đỗ Bá, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 56.6,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 60.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.84,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 265,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Đỗ Bá kết nối trung tâm Ngũ Hành Sơn",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Đỗ Bá (Ngũ Hành Sơn): 265 BĐS đại diện. Điểm sống 56.6/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-duong-dinh-nghe-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Dương Đình Nghệ, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 57.0,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 253,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Dương Đình Nghệ kết nối trung tâm Sơn Trà",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Dương Đình Nghệ (Sơn Trà): 253 BĐS đại diện. Điểm sống 57.0/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-293-cam-le",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường 29/3, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 50.9,
+      "categoryScores": {
+        "essentials": 51.5,
+        "education": 52.5,
+        "healthcare": 48.0,
+        "transit": 65.0,
+        "recreation": 45.0
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 245,
+      "poiCounts": {
+        "total": 2,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 2
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "593 Đường 29/3",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Đối diện 593 Đường 29/3",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục 29/3 (Cẩm Lệ): 245 BĐS đại diện. Điểm sống 50.9/100. 2 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-nguyen-luong-bang-lien-chieu",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Nguyễn Lương Bằng, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 59.1,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 62.5,
+        "healthcare": 48.0,
+        "transit": 80.0,
+        "recreation": 60.0
+      },
+      "confidence": 0.78,
+      "diversityIndex": 0.146,
+      "sampleListingCount": 233,
+      "poiCounts": {
+        "total": 22,
+        "school": 2,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 20
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "234 Nguyễn Lương Bằng",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "191 Nguyễn Lương Bằng",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Trung học cơ sở Nguyễn Lương Bằng",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Trung học cơ sở Nguyễn Lương Bằng",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Nguyễn Lương Bằng (Liên Chiểu): 233 BĐS đại diện. Điểm sống 59.1/100. 22 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-so-5-lien-chieu",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Số 5, Liên Chiểu",
+      "parentDistrict": "Liên Chiểu",
+      "livingScore": 54.6,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 48.0,
+        "transit": 57.5,
+        "recreation": 60.0
+      },
+      "confidence": 0.78,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 230,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Số 5 kết nối trung tâm Liên Chiểu",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Số 5 (Liên Chiểu): 230 BĐS đại diện. Điểm sống 54.6/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-dien-bien-phu-thanh-khe",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Điện Biên Phủ, Thanh Khê",
+      "parentDistrict": "Thanh Khê",
+      "livingScore": 52.2,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 67.5,
+        "healthcare": 54.0,
+        "transit": 66.5,
+        "recreation": 25.0
+      },
+      "confidence": 0.87,
+      "diversityIndex": 0.181,
+      "sampleListingCount": 227,
+      "poiCounts": {
+        "total": 8,
+        "school": 1,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 7
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "563 Điện Biên Phủ",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "441 Điện Biên Phủ",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Trường Tiểu học Điện Biên Phủ",
+          "category": "SCHOOL",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục Điện Biên Phủ (Thanh Khê): 227 BĐS đại diện. Điểm sống 52.2/100. 8 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-nguyen-duc-an-son-tra",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Nguyễn Đức An, Sơn Trà",
+      "parentDistrict": "Sơn Trà",
+      "livingScore": 57.0,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 54.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.85,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 227,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Nguyễn Đức An kết nối trung tâm Sơn Trà",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Nguyễn Đức An (Sơn Trà): 227 BĐS đại diện. Điểm sống 57.0/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-nguyen-phuoc-lan-cam-le",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Nguyễn Phước Lan, Cẩm Lệ",
+      "parentDistrict": "Cẩm Lệ",
+      "livingScore": 50.0,
+      "categoryScores": {
+        "essentials": 51.5,
+        "education": 52.5,
+        "healthcare": 48.0,
+        "transit": 57.5,
+        "recreation": 45.0
+      },
+      "confidence": 0.81,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 226,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Nguyễn Phước Lan kết nối trung tâm Cẩm Lệ",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Nguyễn Phước Lan (Cẩm Lệ): 226 BĐS đại diện. Điểm sống 50.0/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-minh-mang-ngu-hanh-son",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường Minh Mạng, Ngũ Hành Sơn",
+      "parentDistrict": "Ngũ Hành Sơn",
+      "livingScore": 56.6,
+      "categoryScores": {
+        "essentials": 57.5,
+        "education": 52.5,
+        "healthcare": 60.0,
+        "transit": 51.5,
+        "recreation": 62.5
+      },
+      "confidence": 0.84,
+      "diversityIndex": 0.5,
+      "sampleListingCount": 219,
+      "poiCounts": {
+        "total": 0,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 0
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "MEDIUM",
+      "hasCriticalGaps": "CORRIDOR_RESIDENTIAL_LINKAGE",
+      "poiEvidence": [
+        {
+          "name": "Tuyến giao thông trọng điểm Minh Mạng kết nối trung tâm Ngũ Hành Sơn",
+          "category": "SHARED",
+          "attributionBasis": "AREA_GENERAL"
+        }
+      ],
+      "amenitySummary": "Trục Minh Mạng (Ngũ Hành Sơn): 219 BĐS đại diện. Điểm sống 56.6/100. 0 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    },
+    {
+      "areaId": "corridor-duong-29-hai-chau",
+      "areaLevel": "CORRIDOR",
+      "areaName": "Đường 2/9, Hải Châu",
+      "parentDistrict": "Hải Châu",
+      "livingScore": 60.1,
+      "categoryScores": {
+        "essentials": 60.0,
+        "education": 57.5,
+        "healthcare": 60.0,
+        "transit": 72.5,
+        "recreation": 57.5
+      },
+      "confidence": 0.9,
+      "diversityIndex": 0.0,
+      "sampleListingCount": 209,
+      "poiCounts": {
+        "total": 6,
+        "school": 0,
+        "hospital": 0,
+        "pharmacy": 0,
+        "market": 0,
+        "supermarket": 0,
+        "park": 0,
+        "beach": 0,
+        "transit": 6
+      },
+      "areaKm2": null,
+      "densityPerKm2": null,
+      "completenessTier": "HIGH",
+      "hasCriticalGaps": "NO",
+      "poiEvidence": [
+        {
+          "name": "518 Đường 2/9",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        },
+        {
+          "name": "Quảng trường 2/9",
+          "category": "PUBLIC_TRANSPORT",
+          "attributionBasis": "CORRIDOR_DIRECT"
+        }
+      ],
+      "amenitySummary": "Trục 2/9 (Hải Châu): 209 BĐS đại diện. Điểm sống 60.1/100. 6 điểm tiện ích định danh dọc tuyến.",
+      "sources": [
+        "OpenStreetMap Overpass API (ODbL 1.0)",
+        "Geoapify Places API (ODbL 1.0 via Geoapify)",
+        "SmartProp Curated Anchor Facilities"
+      ],
+      "dataLimitations": [
+        "0 bản ghi TiniX AI có tọa độ GPS số nhà; SmartProp không tính khoảng cách mét từ từng bất động sản.",
+        "Điểm tiện ích phản ánh hạ tầng đã được số hóa; khu vực thiếu POI không đồng nghĩa ngoài thực tế không có tiện ích dân sinh.",
+        "Phường/xã kế thừa các tiện ích cấp vùng của quận chủ quản (bệnh viện đa khoa, bến xe, chợ đầu mối trong bán kính 1-2km)."
+      ]
+    }
+  ]
+}
