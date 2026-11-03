@@ -1,0 +1,3760 @@
+{
+  "model_run": "b4b1339d3f35857e",
+  "model_manifest_sha256": "6e8c8cb6351b19245bf7e9c70698f786f19c8f8b6deff0d8f161f670569ccba1",
+  "purpose": "Replay already exposed validation; no new model evaluation.",
+  "source_sha256": {
+    "validation": "2f2148971bdfd3713a130b1ed30ab8889d9fb48195a7aed5e203d2536a35f1eb",
+    "features": "769e63f8574b79d438653cc43744511bb813ab6bdc2c5776ebd2b017effcd680",
+    "predictions": "5e49726f326e7cfcd025e2fe6fc3622c96164f03d8e98f0e1cd4e9d67057be9b"
+  },
+  "cases": [
+    {
+      "case": 1,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 90.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai",
+        "access_type": null
+      },
+      "expected_asking_price_million": 11766.28515625
+    },
+    {
+      "case": 2,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 45.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thanh khe",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4654.39013671875
+    },
+    {
+      "case": 3,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 225.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "ngu hanh son",
+        "rooms": 2,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 15549.548828125
+    },
+    {
+      "case": 4,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 85.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null
+      },
+      "expected_asking_price_million": 5213.24658203125
+    },
+    {
+      "case": 5,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 109.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2565.82568359375
+    },
+    {
+      "case": 6,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 60.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null
+      },
+      "expected_asking_price_million": 3468.014892578125
+    },
+    {
+      "case": 7,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3422.023193359375
+    },
+    {
+      "case": 8,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 45.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7208.599609375
+    },
+    {
+      "case": 9,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7338.41357421875
+    },
+    {
+      "case": 10,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 73.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8045.1875
+    },
+    {
+      "case": 11,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 59.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4213.46533203125
+    },
+    {
+      "case": 12,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 91.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11673.5263671875
+    },
+    {
+      "case": 13,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 130.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 14258.9453125
+    },
+    {
+      "case": 14,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 85.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8068.55322265625
+    },
+    {
+      "case": 15,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 128.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 17111.681640625
+    },
+    {
+      "case": 16,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 132.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": "villa",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8171.40478515625
+    },
+    {
+      "case": 17,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 78.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5425.77001953125
+    },
+    {
+      "case": 18,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7774.607421875
+    },
+    {
+      "case": 19,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 58.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.5,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4797.1376953125
+    },
+    {
+      "case": 20,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": 4.5,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13540.275390625
+    },
+    {
+      "case": 21,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 155.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": 4.5,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12347.009765625
+    },
+    {
+      "case": 22,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1803.03857421875
+    },
+    {
+      "case": 23,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9323.0625
+    },
+    {
+      "case": 24,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 102.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6498.62841796875
+    },
+    {
+      "case": 25,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 106.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1681.9691162109375
+    },
+    {
+      "case": 26,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 200.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11312.9248046875
+    },
+    {
+      "case": 27,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": "house_c4",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2792.138671875
+    },
+    {
+      "case": 28,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 516.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6617.87255859375
+    },
+    {
+      "case": 29,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:dien ban bac",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3058.87255859375
+    },
+    {
+      "case": 30,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 70.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5478.51953125
+    },
+    {
+      "case": 31,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 192.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1706.2451171875
+    },
+    {
+      "case": 32,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 58.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4735.4970703125
+    },
+    {
+      "case": 33,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 364.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 21844.96875
+    },
+    {
+      "case": 34,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 74.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7568.154296875
+    },
+    {
+      "case": 35,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:hoa xuan",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3388.61865234375
+    },
+    {
+      "case": 36,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 91.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11673.5263671875
+    },
+    {
+      "case": 37,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 83.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5428.4462890625
+    },
+    {
+      "case": 38,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 68.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 11125.5703125
+    },
+    {
+      "case": 39,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 105.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12025.9267578125
+    },
+    {
+      "case": 40,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 143.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 18447.416015625
+    },
+    {
+      "case": 41,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 89.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5454.62109375
+    },
+    {
+      "case": 42,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 87.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": 5,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13732.5869140625
+    },
+    {
+      "case": 43,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 153.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 18634.68359375
+    },
+    {
+      "case": 44,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 153.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11094.7587890625
+    },
+    {
+      "case": 45,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 43.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3650.730224609375
+    },
+    {
+      "case": 46,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 96.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12276.2802734375
+    },
+    {
+      "case": 47,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 129.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8250.759765625
+    },
+    {
+      "case": 48,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 81.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": "house_c4",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4095.015625
+    },
+    {
+      "case": 49,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 56.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3832.52392578125
+    },
+    {
+      "case": 50,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 150.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12959.130859375
+    },
+    {
+      "case": 51,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 10134.1015625
+    },
+    {
+      "case": 52,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 189.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11149.6494140625
+    },
+    {
+      "case": 53,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 162.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 20715.6640625
+    },
+    {
+      "case": 54,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 73.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4546.00341796875
+    },
+    {
+      "case": 55,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 83.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7462.75390625
+    },
+    {
+      "case": 56,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 95.0,
+        "location_feature": "new_unit:hoa xuan",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2728.482666015625
+    },
+    {
+      "case": 57,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 73.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4624.8955078125
+    },
+    {
+      "case": 58,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 72.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5592.53857421875
+    },
+    {
+      "case": 59,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "new_unit:hoa xuan",
+        "ward": null,
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7035.85986328125
+    },
+    {
+      "case": 60,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 95.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9581.078125
+    },
+    {
+      "case": 61,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 89.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10127.8896484375
+    },
+    {
+      "case": 62,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 138.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9167.1318359375
+    },
+    {
+      "case": 63,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 77.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6251.96533203125
+    },
+    {
+      "case": 64,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 77.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7668.9052734375
+    },
+    {
+      "case": 65,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 60.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": 2
+      },
+      "expected_asking_price_million": 3696.44580078125
+    },
+    {
+      "case": 66,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 99.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12011.015625
+    },
+    {
+      "case": 67,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 98.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5361.5966796875
+    },
+    {
+      "case": 68,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 144.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10236.568359375
+    },
+    {
+      "case": 69,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 125.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3100.657958984375
+    },
+    {
+      "case": 70,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 51.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3868.126708984375
+    },
+    {
+      "case": 71,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 63.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": 4,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 6259.416015625
+    },
+    {
+      "case": 72,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 63.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4524.36474609375
+    },
+    {
+      "case": 73,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7338.41357421875
+    },
+    {
+      "case": 74,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 138.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13283.65234375
+    },
+    {
+      "case": 75,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 86.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10127.8896484375
+    },
+    {
+      "case": 76,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5968.38134765625
+    },
+    {
+      "case": 77,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9412.712890625
+    },
+    {
+      "case": 78,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 73.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": "house_c4",
+        "access_type": null
+      },
+      "expected_asking_price_million": 6454.44775390625
+    },
+    {
+      "case": 79,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": 2,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7165.70556640625
+    },
+    {
+      "case": 80,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 160.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": "villa",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 10773.0546875
+    },
+    {
+      "case": 81,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11613.34375
+    },
+    {
+      "case": 82,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 105.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 14373.3291015625
+    },
+    {
+      "case": 83,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 105.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9930.2939453125
+    },
+    {
+      "case": 84,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 80.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7942.81103515625
+    },
+    {
+      "case": 85,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8747.9052734375
+    },
+    {
+      "case": 86,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 110.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10543.7197265625
+    },
+    {
+      "case": 87,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 268.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7163.30078125
+    },
+    {
+      "case": 88,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 106.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5175.43505859375
+    },
+    {
+      "case": 89,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 99.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": "house_c4",
+        "access_type": null
+      },
+      "expected_asking_price_million": 5474.9677734375
+    },
+    {
+      "case": 90,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 403.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": "villa",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13169.8876953125
+    },
+    {
+      "case": 91,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 236.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1764.919189453125
+    },
+    {
+      "case": 92,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 117.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7521.2705078125
+    },
+    {
+      "case": 93,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 200.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1706.2451171875
+    },
+    {
+      "case": 94,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 110.0,
+        "location_feature": "new_unit:dai loc",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 2075.623046875
+    },
+    {
+      "case": 95,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 70.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3823.080078125
+    },
+    {
+      "case": 96,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 30.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2711.917724609375
+    },
+    {
+      "case": 97,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 51.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4305.51904296875
+    },
+    {
+      "case": 98,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8072.09326171875
+    },
+    {
+      "case": 99,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 106.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9916.4296875
+    },
+    {
+      "case": 100,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 115.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 4728.763671875
+    },
+    {
+      "case": 101,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 144.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1765.32470703125
+    },
+    {
+      "case": 102,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4057.084716796875
+    },
+    {
+      "case": 103,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3600.666748046875
+    },
+    {
+      "case": 104,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 46.8,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3721.427978515625
+    },
+    {
+      "case": 105,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 101.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6498.62841796875
+    },
+    {
+      "case": 106,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 103.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12388.5400390625
+    },
+    {
+      "case": 107,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 6667.44921875
+    },
+    {
+      "case": 108,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13773.9013671875
+    },
+    {
+      "case": 109,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1843.0347900390625
+    },
+    {
+      "case": 110,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 2047.154541015625
+    },
+    {
+      "case": 111,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 50.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4617.70703125
+    },
+    {
+      "case": 112,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 76.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4502.859375
+    },
+    {
+      "case": 113,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 50.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3693.524169921875
+    },
+    {
+      "case": 114,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 120.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3329.592529296875
+    },
+    {
+      "case": 115,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5343.03173828125
+    },
+    {
+      "case": 116,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 140.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12234.0654296875
+    },
+    {
+      "case": 117,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 55.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3723.47314453125
+    },
+    {
+      "case": 118,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 120.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4937.92138671875
+    },
+    {
+      "case": 119,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 56.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4360.58154296875
+    },
+    {
+      "case": 120,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 44.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3650.730224609375
+    },
+    {
+      "case": 121,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 87.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8324.64453125
+    },
+    {
+      "case": 122,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 55.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "rooms": null
+      },
+      "expected_asking_price_million": 2008.843994140625
+    },
+    {
+      "case": 123,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 95.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7071.8291015625
+    },
+    {
+      "case": 124,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 80.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3310.585693359375
+    },
+    {
+      "case": 125,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 68.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4740.0380859375
+    },
+    {
+      "case": 126,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 63.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3693.524169921875
+    },
+    {
+      "case": 127,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5343.03173828125
+    },
+    {
+      "case": 128,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5968.38134765625
+    },
+    {
+      "case": 129,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:hoa xuan",
+        "ward": null,
+        "rooms": 4,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8024.6279296875
+    },
+    {
+      "case": 130,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 70.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4718.560546875
+    },
+    {
+      "case": 131,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 120.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 2,
+        "floors": null,
+        "house_subtype": "house_c4",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 4197.775390625
+    },
+    {
+      "case": 132,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 95.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7071.8291015625
+    },
+    {
+      "case": 133,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 276.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 27223.34375
+    },
+    {
+      "case": 134,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 200.0,
+        "location_feature": "new_unit:ban thach",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11830.1826171875
+    },
+    {
+      "case": 135,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:phu ninh",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3058.87255859375
+    },
+    {
+      "case": 136,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 175.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 11569.3251953125
+    },
+    {
+      "case": 137,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 107.5,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 4829.3115234375
+    },
+    {
+      "case": 138,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Hải Châu",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8999.7998046875
+    },
+    {
+      "case": 139,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 500.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6617.87255859375
+    },
+    {
+      "case": 140,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 81.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "rooms": 2,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4653.8310546875
+    },
+    {
+      "case": 141,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 250.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 28661.5390625
+    },
+    {
+      "case": 142,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 65.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null
+      },
+      "expected_asking_price_million": 4439.9501953125
+    },
+    {
+      "case": 143,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "rooms": 5,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4568.56005859375
+    },
+    {
+      "case": 144,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 80.0,
+        "location_feature": "new_unit:hai van",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 3918.22705078125
+    },
+    {
+      "case": 145,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7114.43212890625
+    },
+    {
+      "case": 146,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 80.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3310.585693359375
+    },
+    {
+      "case": 147,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 96.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3446.859619140625
+    },
+    {
+      "case": 148,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 130.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 6178.361328125
+    },
+    {
+      "case": 149,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 99.0,
+        "location_feature": "new_unit:hoa khanh",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3540.231689453125
+    },
+    {
+      "case": 150,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 125.0,
+        "location_feature": "new_unit:hoa xuan",
+        "ward": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5190.48095703125
+    },
+    {
+      "case": 151,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "new_unit:an khe",
+        "ward": null,
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4228.294921875
+    },
+    {
+      "case": 152,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 65.0,
+        "location_feature": "Sơn Trà",
+        "ward": null,
+        "rooms": null
+      },
+      "expected_asking_price_million": 4439.9501953125
+    },
+    {
+      "case": 153,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 75.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2470.96044921875
+    },
+    {
+      "case": 154,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 116.0,
+        "location_feature": "new_unit:lien chieu",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 2994.16064453125
+    },
+    {
+      "case": 155,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 50.0,
+        "location_feature": "Thanh Khê",
+        "ward": null,
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4023.991943359375
+    },
+    {
+      "case": 156,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 150.0,
+        "location_feature": "Hòa Vang",
+        "ward": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 1943.6728515625
+    },
+    {
+      "case": 157,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 76.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10777.7197265625
+    },
+    {
+      "case": 158,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thanh khe tay",
+        "rooms": 2,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4676.6552734375
+    },
+    {
+      "case": 159,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7898.35009765625
+    },
+    {
+      "case": 160,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "hoa quy",
+        "rooms": 4,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9599.955078125
+    },
+    {
+      "case": 161,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 62.0,
+        "location_feature": "Thanh Khê",
+        "ward": "chinh gian",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8596.28125
+    },
+    {
+      "case": 162,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 70.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4212.72216796875
+    },
+    {
+      "case": 163,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 105.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "khue my",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12582.9716796875
+    },
+    {
+      "case": 164,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 72.0,
+        "location_feature": "Liên Chiểu",
+        "ward": null,
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4297.3388671875
+    },
+    {
+      "case": 165,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 136.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5649.9521484375
+    },
+    {
+      "case": 166,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 203.0,
+        "location_feature": "Thanh Khê",
+        "ward": "an khe",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 15237.482421875
+    },
+    {
+      "case": 167,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 125.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa lien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1548.9345703125
+    },
+    {
+      "case": 168,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep nam",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4913.4052734375
+    },
+    {
+      "case": 169,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 90.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "access_type": null
+      },
+      "expected_asking_price_million": 11766.28515625
+    },
+    {
+      "case": 170,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 162.0,
+        "location_feature": "Hải Châu",
+        "ward": "binh hien",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12854.087890625
+    },
+    {
+      "case": 171,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 90.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4407.2177734375
+    },
+    {
+      "case": 172,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 125.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1392.3917236328125
+    },
+    {
+      "case": 173,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 140.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 8090.2119140625
+    },
+    {
+      "case": 174,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 61.0,
+        "location_feature": "Sơn Trà",
+        "ward": "tho quang",
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5791.74755859375
+    },
+    {
+      "case": 175,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 124.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1278.4776611328125
+    },
+    {
+      "case": 176,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 141.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "hoa hai",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 18957.04296875
+    },
+    {
+      "case": 177,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 150.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1552.0870361328125
+    },
+    {
+      "case": 178,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 120.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "khue my",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5208.0185546875
+    },
+    {
+      "case": 179,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 135.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1434.269775390625
+    },
+    {
+      "case": 180,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 99.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 8064.521484375
+    },
+    {
+      "case": 181,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Sơn Trà",
+        "ward": "man thai",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7696.23388671875
+    },
+    {
+      "case": 182,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 72.5,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5200.24169921875
+    },
+    {
+      "case": 183,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 65.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "my an",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 4309.158203125
+    },
+    {
+      "case": 184,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 129.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 16806.16015625
+    },
+    {
+      "case": 185,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 62.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5687.96435546875
+    },
+    {
+      "case": 186,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1205.97509765625
+    },
+    {
+      "case": 187,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4136.2236328125
+    },
+    {
+      "case": 188,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 50.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thac gian",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7950.25244140625
+    },
+    {
+      "case": 189,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 127.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 16386.314453125
+    },
+    {
+      "case": 190,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 60.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3510.226806640625
+    },
+    {
+      "case": 191,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 78.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3419.1162109375
+    },
+    {
+      "case": 192,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 122.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1327.234375
+    },
+    {
+      "case": 193,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 104.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5775.06298828125
+    },
+    {
+      "case": 194,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 283.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1969.81201171875
+    },
+    {
+      "case": 195,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 196,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1405.0390625
+    },
+    {
+      "case": 197,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 55.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai tay",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4877.87060546875
+    },
+    {
+      "case": 198,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 79.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "access_type": null
+      },
+      "expected_asking_price_million": 8605.7705078125
+    },
+    {
+      "case": 199,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 70.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "rooms": null,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 10235.4951171875
+    },
+    {
+      "case": 200,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong nam",
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 11891.08203125
+    },
+    {
+      "case": 201,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 30.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 1879.2437744140625
+    },
+    {
+      "case": 202,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep nam",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4913.4052734375
+    },
+    {
+      "case": 203,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "rooms": null,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7773.857421875
+    },
+    {
+      "case": 204,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 68.0,
+        "location_feature": "Hải Châu",
+        "ward": "hai chau i",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5097.525390625
+    },
+    {
+      "case": 205,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 206,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 133.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1292.00927734375
+    },
+    {
+      "case": 207,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 96.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 9744.7646484375
+    },
+    {
+      "case": 208,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 95.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12408.5224609375
+    },
+    {
+      "case": 209,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 64.0,
+        "location_feature": "Hải Châu",
+        "ward": "hai chau i",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 9154.009765625
+    },
+    {
+      "case": 210,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4296.6669921875
+    },
+    {
+      "case": 211,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 117.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4136.2236328125
+    },
+    {
+      "case": 212,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "access_type": null
+      },
+      "expected_asking_price_million": 3947.312744140625
+    },
+    {
+      "case": 213,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 137.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai tay",
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": "villa",
+        "access_type": null
+      },
+      "expected_asking_price_million": 17850.83203125
+    },
+    {
+      "case": 214,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 94.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1478.38916015625
+    },
+    {
+      "case": 215,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 80.0,
+        "location_feature": "Hải Châu",
+        "ward": "hai chau i",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7055.2109375
+    },
+    {
+      "case": 216,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1275.164306640625
+    },
+    {
+      "case": 217,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1390.1956787109375
+    },
+    {
+      "case": 218,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 13173.806640625
+    },
+    {
+      "case": 219,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa ninh",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1381.731201171875
+    },
+    {
+      "case": 220,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 122.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa ninh",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1396.70654296875
+    },
+    {
+      "case": 221,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 103.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "access_type": null
+      },
+      "expected_asking_price_million": 12746.12890625
+    },
+    {
+      "case": 222,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "rooms": 3,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6613.74609375
+    },
+    {
+      "case": 223,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa ninh",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1381.731201171875
+    },
+    {
+      "case": 224,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1205.97509765625
+    },
+    {
+      "case": 225,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 130.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa phu",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1294.183349609375
+    },
+    {
+      "case": 226,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 227,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 62.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong nam",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8661.7353515625
+    },
+    {
+      "case": 228,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 229,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 51.0,
+        "location_feature": "Hải Châu",
+        "ward": "thuan phuoc",
+        "rooms": 2,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 3659.891357421875
+    },
+    {
+      "case": 230,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 140.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa ninh",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1492.5335693359375
+    },
+    {
+      "case": 231,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 75.0,
+        "location_feature": "Sơn Trà",
+        "ward": "tho quang",
+        "access_type": null
+      },
+      "expected_asking_price_million": 8070.0615234375
+    },
+    {
+      "case": 232,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 110.5,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep nam",
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": "villa",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 8006.19091796875
+    },
+    {
+      "case": 233,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 118.0,
+        "location_feature": "Hải Châu",
+        "ward": "hai chau ii",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 10224.294921875
+    },
+    {
+      "case": 234,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thanh khe tay",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7821.3388671875
+    },
+    {
+      "case": 235,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 93.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 8460.982421875
+    },
+    {
+      "case": 236,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 271.0,
+        "location_feature": "Hải Châu",
+        "ward": "phuoc ninh",
+        "rooms": 4,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 30402.638671875
+    },
+    {
+      "case": 237,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thanh khe tay",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4346.1748046875
+    },
+    {
+      "case": 238,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 150.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1450.1492919921875
+    },
+    {
+      "case": 239,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 96.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa khuong",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1284.4185791015625
+    },
+    {
+      "case": 240,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 32.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thac gian",
+        "rooms": 2,
+        "floors": 2.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 3283.722900390625
+    },
+    {
+      "case": 241,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 50.0,
+        "location_feature": "Hải Châu",
+        "ward": "thanh binh",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5077.64697265625
+    },
+    {
+      "case": 242,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 46.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa thuan tay",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4799.04150390625
+    },
+    {
+      "case": 243,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 53.0,
+        "location_feature": "Thanh Khê",
+        "ward": "tam thuan",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4249.59912109375
+    },
+    {
+      "case": 244,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 138.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 12492.9345703125
+    },
+    {
+      "case": 245,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "rooms": null,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 6275.58447265625
+    },
+    {
+      "case": 246,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 27.7,
+        "location_feature": "Hải Châu",
+        "ward": "thanh binh",
+        "rooms": 2,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5381.8623046875
+    },
+    {
+      "case": 247,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 100.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 4,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12728.953125
+    },
+    {
+      "case": 248,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 249,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1405.0390625
+    },
+    {
+      "case": 250,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 63.1,
+        "location_feature": "Hải Châu",
+        "ward": "thach thang",
+        "rooms": 5,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 10501.712890625
+    },
+    {
+      "case": 251,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1405.0390625
+    },
+    {
+      "case": 252,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 57.6,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 2909.31689453125
+    },
+    {
+      "case": 253,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 35.0,
+        "location_feature": "Thanh Khê",
+        "ward": "xuan ha",
+        "rooms": 2,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 2995.2431640625
+    },
+    {
+      "case": 254,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 255,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 50.0,
+        "location_feature": "Thanh Khê",
+        "ward": "chinh gian",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4034.5400390625
+    },
+    {
+      "case": 256,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 140.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1509.59228515625
+    },
+    {
+      "case": 257,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 90.0,
+        "location_feature": "Thanh Khê",
+        "ward": "xuan ha",
+        "rooms": 4,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12022.681640625
+    },
+    {
+      "case": 258,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 80.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5857.6103515625
+    },
+    {
+      "case": 259,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 100.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 5242.16259765625
+    },
+    {
+      "case": 260,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 65.8,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai dong",
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5718.75
+    },
+    {
+      "case": 261,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 46.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 4367.873046875
+    },
+    {
+      "case": 262,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 63.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": 4,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4302.7109375
+    },
+    {
+      "case": 263,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Thanh Khê",
+        "ward": "an khe",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4756.59375
+    },
+    {
+      "case": 264,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 74.0,
+        "location_feature": "Thanh Khê",
+        "ward": "an khe",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4354.1611328125
+    },
+    {
+      "case": 265,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 55.0,
+        "location_feature": "Thanh Khê",
+        "ward": "thac gian",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 4497.99267578125
+    },
+    {
+      "case": 266,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 40.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong bac",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 7157.810546875
+    },
+    {
+      "case": 267,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 60.0,
+        "location_feature": "Thanh Khê",
+        "ward": "an khe",
+        "rooms": 2,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4424.51806640625
+    },
+    {
+      "case": 268,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": null
+      },
+      "expected_asking_price_million": 1313.00390625
+    },
+    {
+      "case": 269,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 72.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai tay",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5173.2685546875
+    },
+    {
+      "case": 270,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 30.55,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 2231.659423828125
+    },
+    {
+      "case": 271,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 70.3,
+        "location_feature": "Hải Châu",
+        "ward": "binh thuan",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 9528.3095703125
+    },
+    {
+      "case": 272,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 50.0,
+        "location_feature": "Sơn Trà",
+        "ward": "nai hien dong",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 3707.8212890625
+    },
+    {
+      "case": 273,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 80.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5857.6103515625
+    },
+    {
+      "case": 274,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 108.6,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong nam",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 12536.0556640625
+    },
+    {
+      "case": 275,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 120.0,
+        "location_feature": "Sơn Trà",
+        "ward": "phuoc my",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 11118.37890625
+    },
+    {
+      "case": 276,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 76.5,
+        "location_feature": "Hải Châu",
+        "ward": "binh thuan",
+        "rooms": 5,
+        "floors": 4.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 12671.4931640625
+    },
+    {
+      "case": 277,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 48.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "hoa quy",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 2437.59814453125
+    },
+    {
+      "case": 278,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa minh",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 6058.03466796875
+    },
+    {
+      "case": 279,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 120.0,
+        "location_feature": "Hòa Vang",
+        "ward": "hoa tien",
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 1405.0390625
+    },
+    {
+      "case": 280,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 120.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong nam",
+        "rooms": null,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 7444.69873046875
+    },
+    {
+      "case": 281,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "Hải Châu",
+        "ward": "thuan phuoc",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "alley"
+      },
+      "expected_asking_price_million": 5113.8369140625
+    },
+    {
+      "case": 282,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 38.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 2419.395751953125
+    },
+    {
+      "case": 283,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 47.0,
+        "location_feature": "Thanh Khê",
+        "ward": "chinh gian",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 2483.738525390625
+    },
+    {
+      "case": 284,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 49.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 4299.68798828125
+    },
+    {
+      "case": 285,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 58.0,
+        "location_feature": "Cẩm Lệ",
+        "ward": "hoa xuan",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 3098.225341796875
+    },
+    {
+      "case": 286,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 65.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5352.82421875
+    },
+    {
+      "case": 287,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 67.0,
+        "location_feature": "Sơn Trà",
+        "ward": "tho quang",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5393.7470703125
+    },
+    {
+      "case": 288,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 80.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep nam",
+        "rooms": 4,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4649.5986328125
+    },
+    {
+      "case": 289,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 81.2,
+        "location_feature": "Hải Châu",
+        "ward": "thach thang",
+        "rooms": 3,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 9094.7421875
+    },
+    {
+      "case": 290,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 52.0,
+        "location_feature": "Thanh Khê",
+        "ward": "xuan ha",
+        "rooms": 3,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4073.173095703125
+    },
+    {
+      "case": 291,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 35.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "hoa xuan",
+        "rooms": null
+      },
+      "expected_asking_price_million": 2389.26123046875
+    },
+    {
+      "case": 292,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 65.0,
+        "location_feature": "Sơn Trà",
+        "ward": "an hai bac",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 5352.82421875
+    },
+    {
+      "case": 293,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 60.0,
+        "location_feature": "Sơn Trà",
+        "ward": "tho quang",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 4489.93994140625
+    },
+    {
+      "case": 294,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 38.0,
+        "location_feature": "Ngũ Hành Sơn",
+        "ward": "hoa hai",
+        "rooms": 1
+      },
+      "expected_asking_price_million": 2233.556396484375
+    },
+    {
+      "case": 295,
+      "request": {
+        "category": "Căn hộ chung cư",
+        "area_sqm": 74.0,
+        "location_feature": "Sơn Trà",
+        "ward": "tho quang",
+        "rooms": 2
+      },
+      "expected_asking_price_million": 6210.62841796875
+    },
+    {
+      "case": 296,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 117.0,
+        "location_feature": "Hải Châu",
+        "ward": "hoa cuong bac",
+        "rooms": 5,
+        "floors": 3.0,
+        "house_subtype": null,
+        "access_type": "frontage"
+      },
+      "expected_asking_price_million": 16731.5234375
+    },
+    {
+      "case": 297,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 63.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": 4,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 4302.7109375
+    },
+    {
+      "case": 298,
+      "request": {
+        "category": "Nhà ở",
+        "area_sqm": 75.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "rooms": 4,
+        "floors": null,
+        "house_subtype": null,
+        "access_type": null
+      },
+      "expected_asking_price_million": 5004.59716796875
+    },
+    {
+      "case": 299,
+      "request": {
+        "category": "Đất nền",
+        "area_sqm": 80.0,
+        "location_feature": "Liên Chiểu",
+        "ward": "hoa hiep bac",
+        "access_type": null
+      },
+      "expected_asking_price_million": 4243.16015625
+    }
+  ]
+}
