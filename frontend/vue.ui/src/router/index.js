@@ -28,6 +28,7 @@ const routes=[
  {path:'/market-insights',redirect:'/market'},
  {path:'/market-insights/:district',redirect:to=>({path:'/market/'+to.params.district})},
  {path:'/advisor',component:()=>import('../../user/views/AdvisorView.vue')},
+ {path:'/advisor/chat',component:()=>import('../../user/views/ChatAdvisorView.vue')},
  {path:'/projects',component:()=>import('../../user/views/ProjectsView.vue')},
  {path:'/projects/:id',component:()=>import('../../user/views/ProjectDetailView.vue')},
  {path:'/listing/:id',component:()=>import('../../user/views/ListingDetailView.vue')},

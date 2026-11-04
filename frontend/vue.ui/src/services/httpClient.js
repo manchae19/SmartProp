@@ -1,5 +1,5 @@
 // Access tokens stay in memory. Refresh credentials are sent only as HttpOnly cookies.
-export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(...args)=>fetch(...args),expired=()=>{},clear=()=>{},lock=null,onState=()=>{},activity=()=>false}){
+export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(...args)=>fetch(...args),expired=()=>{},clear=()=>{},lock=null,onState=()=>{},activity=()=>false,timeoutForPath=path=>path==='/recommendations/research'?180000:15000}){
  let refreshFlight=null,initialization=null,initialized=false,epoch=0
  const state=(status,error=null)=>{session.status=status;session.error=error;onState(status,error)}
  const terminal=e=>e?.status===401&&e?.code!=='AUTH_RETRY_REQUIRED'||e?.status===403&&e?.code==='ACCOUNT_LOCKED'
@@ -12,12 +12,14 @@ export function createHttpClient({baseUrl,session,refreshEnabled=false,fetcher=(
   if(body!==undefined&&!multipart)headers['Content-Type']='application/json'
   if(authenticated&&session.token)headers.Authorization='Bearer '+session.token
   if((authenticated&&session.token||path==='/auth/refresh')&&activity())headers['X-Session-Activity']='true'
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000)
+  const duration=timeoutForPath(path)
+  if(!Number.isFinite(duration)||duration<1||duration>180000)throw Error('Invalid bounded request timeout')
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),duration)
   try{
    const response=await fetcher(baseUrl+path,{method,headers,body:body===undefined?undefined:multipart?body:JSON.stringify(body),signal:controller.signal,...(refreshEnabled?{credentials:'include'}:{})})
    const data=response.status===204?null:response.ok&&responseType==='blob'?await response.blob():await response.json().catch(()=>null)
    if(!response.ok){const e=Error(data?.message||'Yêu cầu thất bại ('+response.status+')');e.status=response.status;e.code=data?.code;e.fields=data?.fields||{};const retry=response.headers.get('Retry-After');e.retryAfter=retry&&/^\d+$/.test(retry)?Number(retry):undefined;throw e}return data
-  }catch(e){if(e.status)throw e;throw Error(e.name==='AbortError'?'Yêu cầu quá thời gian. Vui lòng thử lại.':'Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối.')}finally{clearTimeout(timeout)}
+  }catch(e){if(e.status)throw e;throw Object.assign(Error(e.name==='AbortError'?'Yêu cầu quá thời gian. Vui lòng thử lại.':'Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối.'),{code:e.name==='AbortError'?'REQUEST_TIMEOUT':'NETWORK_ERROR'})}finally{clearTimeout(timeout)}
  }
  const csrf=()=>send('/auth/csrf',{authenticated:false})
  function rotate(){
