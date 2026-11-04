@@ -5,7 +5,7 @@ import { mapPoints } from '../services/districts.js'
 import BrowseTileMap from './BrowseTileMap.vue'
 import { price } from '../services/property.js'
 import { locationLabel } from '../services/locationDisplay.js'
-import { poiHasPoint, poiSymbol, poiLabel } from '../services/nearbyPlaces.js'
+import { poiHasPoint, poiSymbol, poiLabel, poiColor, poiSvgIcon } from '../services/nearbyPlaces.js'
 
 const props = defineProps({ items: { type: Array, default: () => [] }, selectedId: String, showCard: Boolean, poiItems: { type: Array, default: () => [] }, selectedPoiId: String })
 const emit = defineEmits(['select', 'select-poi'])
@@ -13,40 +13,40 @@ const points = computed(() => mapPoints(props.items))
 // An invalid/missing selected point must never be represented by another property's marker.
 const selected = computed(() => props.selectedId ? points.value.find(point => point.id === props.selectedId) || null : points.value[0] || null)
 const poiPoints = computed(() => selected.value ? props.poiItems.filter(p => poiHasPoint(p) && typeof p.id === 'string' && p.name) : [])
-const selectedPoi = computed(() => poiPoints.value.find(p => p.id === props.selectedPoiId) || null)
 const container = ref(null), ready = ref(false), unavailable = ref(false)
-let map, markerLibrary, maps, markers = [], disposed = false
-
-function clear() {
-  for (const marker of markers) { maps?.event?.clearInstanceListeners(marker); marker.map = null }
-  markers = []
-}
+let map = null, markers = [], maps = null, markerLibrary = null, disposed = false
+function clear() { markers.forEach(marker => { marker.map = null }); markers = [] }
 function focus() {
-  const point = selectedPoi.value || selected.value
   if (!map) return
-  if (point) {
-    map.panTo({ lat: point.latitude, lng: point.longitude })
-    map.setZoom(Math.max(map.getZoom?.() || 15, 15))
+  if (props.selectedPoiId) {
+    const poi = props.poiItems.find(p => p.id === props.selectedPoiId)
+    if (poi) { map.panTo({ lat: poi.latitude, lng: poi.longitude }); map.setZoom(16) }
+    return
   }
-  for (const marker of markers) {
-    const active = marker.poiId ? marker.poiId === selectedPoi.value?.id : marker.propertyId === selected.value?.id
-    marker.zIndex = active ? (marker.poiId ? 200 : 100) : (marker.poiId ? 2 : 3)
-    if (marker.content) {
-      marker.content.style.background = active ? (marker.poiId ? '#665086' : '#b3915f') : marker.baseColor
-      marker.content.style.transform = active ? 'scale(1.18)' : 'scale(1)'
-      marker.content.setAttribute('aria-label', (active ? (marker.poiId ? 'Tiện ích đang chọn: ' : 'Tin đang chọn: ') : '') + marker.title)
-    }
-  }
+  const point = selected.value
+  if (!point) return
+  map.panTo({ lat: point.latitude, lng: point.longitude })
+  map.setZoom(15)
 }
 function render() {
-  if (!map || !markerLibrary) return
+  if (!ready.value || !map || !markerLibrary) return
   clear()
   const bounds = new maps.LatLngBounds()
   for (const point of points.value) {
-    const content = document.createElement('div')
-    content.textContent = '●'
-    Object.assign(content.style, { color: 'white', background: '#142b4f', border: '3px solid white', borderRadius: '50%', width: '30px', height: '30px', textAlign: 'center', lineHeight: '24px', boxShadow: '0 2px 8px #0005' })
-    const marker = new markerLibrary.AdvancedMarkerElement({ map, position: { lat: point.latitude, lng: point.longitude }, title: point.title || 'Bất động sản', gmpClickable: true, content })
+    const isSelected = selected.value?.id === point.id
+    const pin = new markerLibrary.PinElement({
+      background: isSelected ? '#b68a4c' : point.transactionType === 'RENT' ? '#207760' : '#142b4f',
+      glyphColor: '#ffffff',
+      borderColor: '#ffffff',
+      scale: isSelected ? 1.25 : 1.0,
+    })
+    const marker = new markerLibrary.AdvancedMarkerElement({
+      map,
+      position: { lat: point.latitude, lng: point.longitude },
+      title: point.title + ' · ' + price(point),
+      gmpClickable: true,
+      content: pin.element,
+    })
     marker.propertyId = point.id
     marker.baseColor = point.transactionType === 'RENT' ? '#207760' : '#142b4f'
     marker.addListener('click', () => emit('select', point.id))
@@ -55,10 +55,31 @@ function render() {
   }
   for (const point of poiPoints.value) {
     const content = document.createElement('div')
-    content.textContent = poiSymbol(point.category)
-    Object.assign(content.style, { color: 'white', background: '#8870ac', border: '2px solid white', borderRadius: '9px', width: '30px', height: '30px', textAlign: 'center', lineHeight: '25px', boxShadow: '0 2px 8px #0004' })
-    const marker = new markerLibrary.AdvancedMarkerElement({ map, position: { lat: point.latitude, lng: point.longitude }, title: point.name + ' · ' + poiLabel(point.category), gmpClickable: true, content })
-    marker.poiId = point.id; marker.baseColor = '#8870ac'
+    const color = poiColor(point.category)
+    const isSelected = props.selectedPoiId === point.id
+    Object.assign(content.style, {
+      color: 'white',
+      background: color,
+      border: isSelected ? '3px solid #10233f' : '2px solid white',
+      borderRadius: '9px',
+      width: isSelected ? '34px' : '28px',
+      height: isSelected ? '34px' : '28px',
+      display: 'grid',
+      placeItems: 'center',
+      boxShadow: '0 3px 10px rgba(0,0,0,0.3)',
+      cursor: 'pointer',
+      transform: isSelected ? 'scale(1.2)' : 'scale(1)',
+      transition: 'all 0.15s ease'
+    })
+    content.innerHTML = poiSvgIcon(point.category)
+    const marker = new markerLibrary.AdvancedMarkerElement({
+      map,
+      position: { lat: point.latitude, lng: point.longitude },
+      title: point.name + ' · ' + poiLabel(point.category),
+      gmpClickable: true,
+      content
+    })
+    marker.poiId = point.id; marker.baseColor = color
     marker.addListener('click', () => emit('select-poi', point.id))
     markers.push(marker)
   }
