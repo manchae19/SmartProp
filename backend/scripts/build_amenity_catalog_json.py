@@ -10,12 +10,13 @@ Outputs:
 - .scratch/tinix-integration/step19-4-1d/danang_amenity_catalog_v1.json
 """
 import csv
+import os
 import json
 import re
 import unicodedata
 from pathlib import Path
 
-ROOT = Path("F:/SmartProp")
+ROOT = Path(os.environ.get("SMARTPROP_ROOT", Path(__file__).resolve().parents[2]))
 STEP_1C = ROOT / ".scratch/tinix-integration/step19-4-1c"
 STEP_1D = ROOT / ".scratch/tinix-integration/step19-4-1d"
 RES_DIR = ROOT / "backend/src/main/resources/amenity"

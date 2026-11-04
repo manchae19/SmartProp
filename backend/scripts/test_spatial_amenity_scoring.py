@@ -9,13 +9,14 @@ Verifies:
 6. Immutability of TiniX dataset and POI effective view.
 """
 import csv
+import os
 import json
 import math
 from pathlib import Path
 import importlib.util
 import pymysql
 
-ROOT = Path("F:/SmartProp")
+ROOT = Path(os.environ.get("SMARTPROP_ROOT", Path(__file__).resolve().parents[2]))
 OUT_DIR = ROOT / ".scratch/tinix-integration/step19-4-1c"
 
 spec = importlib.util.spec_from_file_location("rec", ROOT / "backend/scripts/run-recommendation-local.py")

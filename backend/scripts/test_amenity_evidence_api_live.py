@@ -23,7 +23,7 @@ import urllib.request
 import urllib.error
 from pathlib import Path
 
-ROOT = Path("F:/SmartProp")
+ROOT = Path(os.environ.get("SMARTPROP_ROOT", Path(__file__).resolve().parents[2]))
 OUT_DIR = ROOT / ".scratch/tinix-integration/step19-4-1d"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -13,6 +13,7 @@ Strict constraints:
 - No fake coordinates, fake distances, or fake POIs.
 """
 import csv
+import os
 import json
 import math
 import re
@@ -21,7 +22,7 @@ from pathlib import Path
 import importlib.util
 import pymysql
 
-ROOT = Path("F:/SmartProp")
+ROOT = Path(os.environ.get("SMARTPROP_ROOT", Path(__file__).resolve().parents[2]))
 OUT_DIR = ROOT / ".scratch/tinix-integration/step19-4-1c"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
