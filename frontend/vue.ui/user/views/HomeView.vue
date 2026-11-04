@@ -9,6 +9,7 @@ import HomeGIS from '../../src/components/HomeGIS.vue'
 import HomeFinance from '../../src/components/HomeFinance.vue'
 import ProjectDirectory from '../../src/components/ProjectDirectory.vue'
 import MarketSummary from '../../src/components/MarketSummary.vue'
+import TopSearchedAreas from '../../src/components/TopSearchedAreas.vue'
 import { usePublicListings } from '../../src/services/usePublicListings.js'
 import { useListingFilters } from '../../src/services/useListingFilters.js'
 import { useComparison } from '../../src/services/useComparison.js'
@@ -46,7 +47,7 @@ watch(() => route.hash, hash => { if (['#valuation', '#investment'].includes(has
         <div class="hero-shade" aria-hidden="true"></div>
         <div class="hero-content home-container">
 
-          <div class="hero-intro"><p class="hero-location">⌖ &nbsp; ĐÀ NẴNG</p><h1 id="home-title">Sống trọn Đà Nẵng.<br /><span>Tìm nơi bạn thuộc về.</span></h1><p>Khám phá bất động sản, kết nối không gian sống.<br class="desktop-break" /> Chọn ngôi nhà bằng dữ liệu và góc nhìn của riêng bạn.</p><div class="hero-ctas"><button type="button" class="gold-button" @click="scrollTo('search')">Khám phá bất động sản ↓</button><button type="button" class="ghost-button" @click="scrollTo('gis')">Khám phá bản đồ ↗</button></div></div>
+          <div class="hero-intro"><p class="hero-location">⌖ &nbsp; ĐÀ NẴNG</p><h1 id="home-title">Sống trọn Đà Nẵng.<br /><span>Tìm nơi bạn thuộc về.</span></h1><p>Khám phá bất động sản, kết nối không gian sống.<br class="desktop-break" /> Chọn ngôi nhà bằng dữ liệu và góc nhìn của riêng bạn.</p><div class="hero-ctas"><button type="button" class="gold-button" @click="scrollTo('search')">Khám phá bất động sản ↓</button><button type="button" class="ghost-button" @click="scrollTo('gis')">Khám phá bản đồ ↗</button><RouterLink to="/market" class="ghost-button" data-market-home>Dữ liệu thị trường ↗</RouterLink><RouterLink to="/advisor" class="ghost-button" data-advisor-home>Tư vấn BĐS theo nhu cầu ↗</RouterLink></div></div>
         </div>
       </section>
       <HomeSectionNav :district="search.filters.value.district" :filters="search.filters.value" />
@@ -72,7 +73,53 @@ watch(() => route.hash, hash => { if (['#valuation', '#investment'].includes(has
         <div v-if="lifestyle" class="lifestyle-explanation" role="status"><strong>{{ lifestyle.title }}</strong><p>{{ lifestyle.explanation }}</p><div v-if="lifestyle.districts" class="district-suggestions"><button v-for="district in lifestyle.districts" :key="district" type="button" @click="search.patch({ district })">Gợi ý {{ district }} ↗</button></div><button type="button" @click="lifestyleId = ''; search.reset()">Xóa gợi ý và bộ lọc</button></div>
       </section>
 
-      <section id="market" class="home-section market-section" aria-labelledby="market-title"><div class="home-container"><div class="section-heading"><div><p class="eyebrow">MARKET INTELLIGENCE</p><h2 id="market-title">Dữ liệu cho <span>quyết định của bạn.</span></h2><p>Giá chào từ tin thật, trình bày riêng với biểu đồ mô phỏng.</p></div><span class="real-data-label">GIÁ CHÀO · KHÔNG PHẢI GIÁ GIAO DỊCH</span></div></div><MarketSummary :district="search.filters.value.district" /><div class="home-container demo-disclosure"><button type="button" class="outline-button" :aria-expanded="demoOpen" aria-controls="market-demo-panel" @click="demoOpen = !demoOpen">{{ demoOpen ? 'Thu gọn' : 'Xem' }} biểu đồ mô phỏng 3 / 6 / 12 tháng <span aria-hidden="true">⌄</span></button><p>Biểu đồ minh họa giao diện, không phản ánh lịch sử thị trường thực tế.</p></div><div v-show="demoOpen" id="market-demo-panel"><MarketIntelligence v-if="demoLoaded" /></div></section>
+      <section id="market" class="home-section market-section" aria-labelledby="market-title">
+        <div class="home-container">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">MARKET INTELLIGENCE</p>
+              <h2 id="market-title">Dữ liệu cho <span>quyết định của bạn.</span></h2>
+              <p>Giá chào từ tin thật, trình bày riêng với biểu đồ mô phỏng.</p>
+            </div>
+            <div class="heading-actions flex items-center gap-3">
+              <span class="real-data-label">GIÁ CHÀO · KHÔNG PHẢI GIÁ GIAO DỊCH</span>
+              <RouterLink to="/market" class="gold-button inline-flex items-center gap-2" data-market-section-btn>
+                <span>Chuyên trang Thị trường /market</span>
+                <span aria-hidden="true">→</span>
+              </RouterLink>
+            </div>
+          </div>
+        </div>
+        <MarketSummary :district="search.filters.value.district" />
+        <div class="home-container my-8">
+          <div class="rounded-3xl border border-[#e7e1d7] bg-white p-6 sm:p-8">
+            <TopSearchedAreas eyebrow="XU HƯỚNG TÌM KIẾM · ĐÀ NẴNG" mode="market" />
+          </div>
+        </div>
+        <div class="home-container my-6">
+          <div class="market-cta-card flex flex-col md:flex-row items-center justify-between gap-6 rounded-2xl border border-[#b3915f]/30 bg-gradient-to-r from-[#10233f] via-[#162f55] to-[#1a3866] p-6 sm:p-8 text-white shadow-lg">
+            <div class="space-y-2 text-center md:text-left">
+              <div class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 border border-emerald-500/20">
+                <span class="size-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                CHUYÊN TRANG PHÂN TÍCH THỊ TRƯỜNG BĐS ĐÀ NẴNG
+              </div>
+              <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Tra cứu biểu đồ giá, biến động 22 quận/huyện & xu hướng giao dịch</h3>
+              <p class="text-sm text-slate-300 max-w-2xl leading-relaxed">Xem báo cáo thị trường chi tiết theo từng quận Sơn Trà, Hải Châu, Ngũ Hành Sơn..., biểu đồ giá m² theo quý và danh sách tin đăng nổi bật.</p>
+            </div>
+            <RouterLink to="/market" class="shrink-0 inline-flex items-center gap-2.5 rounded-xl bg-[#dfbe86] hover:bg-[#cca86e] px-6 py-3.5 text-sm font-bold text-[#10233f] shadow-md transition active:scale-95" data-market-banner-cta>
+              <span>Mở /market ngay</span>
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </RouterLink>
+          </div>
+        </div>
+        <div class="home-container demo-disclosure">
+          <button type="button" class="outline-button" :aria-expanded="demoOpen" aria-controls="market-demo-panel" @click="demoOpen = !demoOpen">{{ demoOpen ? 'Thu gọn' : 'Xem' }} biểu đồ mô phỏng 3 / 6 / 12 tháng <span aria-hidden="true">⌄</span></button>
+          <p>Biểu đồ minh họa giao diện, không phản ánh lịch sử thị trường thực tế.</p>
+        </div>
+        <div v-show="demoOpen" id="market-demo-panel">
+          <MarketIntelligence v-if="demoLoaded" />
+        </div>
+      </section>
 
       <section id="projects" class="home-section home-container" aria-labelledby="projects-title"><div class="section-heading"><div><p class="eyebrow">PROJECTS · ĐÀ NẴNG</p><h2 id="projects-title">Dự án <span>định hình thành phố.</span></h2><p>Sáu dự án giới thiệu, liên kết đến website chủ đầu tư và đơn vị phát triển.</p></div><span class="section-number" aria-hidden="true">OFFICIAL DIRECTORY ↗</span></div><ProjectDirectory /><div class="backend-projects"><div class="backend-projects-heading"><h3>Dự án được công bố trên SmartProp</h3><p>Dữ liệu từ Backend, độc lập với danh mục giới thiệu phía trên.</p></div><LegacyState :state="projectState" /><p v-if="!projectState.busy && !projectState.error && !projectState.items.length" class="muted-text">Chưa có dữ liệu dự án được công bố.</p><div v-if="projectState.items.length" class="backend-project-grid"><button v-for="project in projectState.items" :key="project.id" class="backend-project-card" type="button" @click="openProject(project)"><span>{{ project.developer || 'Chưa rõ chủ đầu tư' }}</span><strong>{{ project.name }}</strong><p>{{ project.address || 'Chưa có địa chỉ' }}</p><b>Xem thông tin ↗</b></button></div><LegacyPager :state="projectState" /></div></section>
 

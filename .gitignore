@@ -103,3 +103,6 @@ Thumbs.db
 *.hdf5
 *.pkl
 *.joblib
+
+# Local handover note contains real DB/API credentials - never publish.
+/SMARTPROP_HANDOVER.md

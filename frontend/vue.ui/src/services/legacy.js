@@ -5,6 +5,19 @@ export {types,states,reasons,date,mapUrl}
 export {default as PrivateImage} from '../components/business/PrivateImage.vue'
 export {default as LegacyState} from '../components/LegacyState.vue'
 export {default as LegacyPager} from '../components/LegacyPager.vue'
-export function money(p){const n=Number(p?.price||0),unit=n>=1e9?1e9:n>=1e6?1e6:1;return new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(n/unit)+(unit===1e9?' tỷ':unit===1e6?' triệu':'')+' đ'+({PER_MONTH:'/tháng',PER_YEAR:'/năm',PER_DAY:'/ngày'}[p?.priceUnit]||'')}
+export function money(p){
+  const n = Number(p?.priceExact ?? p?.price ?? 0)
+  const suffix = ({PER_MONTH:'/tháng', PER_YEAR:'/năm', PER_DAY:'/ngày'})[p?.priceUnit] || ''
+  if (!n || n <= 0) return 'Thỏa thuận'
+  if (n >= 1e9) {
+    const val = (n / 1e9).toLocaleString('vi-VN', { maximumFractionDigits: 2 })
+    return `${val} tỷ${suffix}`
+  }
+  if (n >= 1e6) {
+    const val = (n / 1e6).toLocaleString('vi-VN', { maximumFractionDigits: 2 })
+    return `${val} triệu${suffix}`
+  }
+  return `${n.toLocaleString('vi-VN')} ₫${suffix}`
+}
 export function adapt(input){const p=input?.property||input||{};return {...p,raw:p,title:p.title||'',location:[p.address,p.ward,p.district,p.city].filter(Boolean).join(', '),type:types[p.propertyType]||'',area:(p.areaSqm??'—')+' m²',price:money(p),priceText:money(p),priceValue:Number(p.price||0)/1e9,priceShort:money(p),pricePerM2:p.areaSqm?money({price:Number(p.price)/Number(p.areaSqm)})+'/m²':'—',info:[(p.areaSqm??'—')+' m²',(p.bedrooms??'—')+' PN',(p.bathrooms??'—')+' WC'].join(' · '),detail:[(p.areaSqm??'—')+' m²',(p.bedrooms??'—')+' PN',(p.bathrooms??'—')+' WC'].join(' · '),image:(p.images?.find(i=>i.cover)||p.images?.[0])?.url,badge:states[p.status]||'Đã duyệt',badgeColor:'green',status:({PUBLISHED:'showing',PENDING:'pending',REJECTED:'rejected',EXPIRED:'expired',HIDDEN:'hidden',DRAFT:'draft',CLOSED:'closed'})[p.status]||'',statusText:states[p.status]||'',statusType:'good',saved:'Đã lưu',views:null,saves:null,hasWarning:false,valuation:'Chưa có dữ liệu',description1:p.description||'Chưa có mô tả.',description2:'',direction:p.direction||'—'}}
 export function useList(endpoint,filters=()=>({})){let sequence=0;const s=reactive({items:[],busy:false,error:'',notice:'',page:0,totalElements:0,totalPages:0,async load(page=0){const run=++sequence;s.busy=true;s.error='';try{const result=await api((typeof endpoint==='function'?endpoint():endpoint)+'?'+query({...filters(),page,size:20}));if(run===sequence)Object.assign(s,{items:result.items||[],page:result.page,totalElements:result.totalElements,totalPages:result.totalPages})}catch(e){if(run===sequence)s.error=errorText(e)}finally{if(run===sequence)s.busy=false}},async run(fn){if(s.busy)return;s.busy=true;s.error='';try{return await fn()}catch(e){s.error=errorText(e);return null}finally{s.busy=false}}});onMounted(()=>s.load());return s}
