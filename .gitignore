@@ -45,6 +45,10 @@ test-results/
 !/docs/ADVISOR_FRONTEND.md
 !/docs/STEP17_RECOMMENDATION_LIVE.md
 
+# Team handoff reports only: versionable, no secrets, no local evidence.
+!/docs/handoff/
+!/docs/handoff/**
+
 # Additional AI environments and dataset exclusions from the team branches.
 # Local environments and generated files
 **/.venv/
