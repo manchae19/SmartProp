@@ -59,6 +59,8 @@ test-results/
 **/.next/
 **/dist/
 **/build/
+# Vite build helpers are source, not output (chatProxy.mjs is imported by vite.config.js).
+!/frontend/vue.ui/build/
 **/target/
 /backend/var/
 coverage/
