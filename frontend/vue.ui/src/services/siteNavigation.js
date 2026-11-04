@@ -7,8 +7,9 @@ export function siteNavigation(filters = {}) {
     { key: 'properties', label: 'Bất động sản', to: listingLink('/listings', filters) },
     { key: 'projects', label: 'Dự án', to: { path: '/projects' } },
     { key: 'gis', label: 'Bản đồ GIS', to: listingLink('/map', filters) },
-    { key: 'market', label: 'Dữ liệu thị trường', to: { ...listingLink('/home', filters), hash: '#market' } },
+    { key: 'market', label: 'Dữ liệu thị trường', to: { path: '/market' } },
     { key: 'tools', label: 'Công cụ', to: { path: '/valuation' } },
+    { key: 'advisor', label: 'Tư vấn BĐS', to: { path: '/advisor' } },
   ]
 }
 export function activeNavigation(key, route) {
@@ -16,8 +17,9 @@ export function activeNavigation(key, route) {
   if (key === 'properties') return path === '/listings' || path.startsWith('/listing/') || path === '/home' && ['#properties', '#search'].includes(hash)
   if (key === 'projects') return path === '/projects' || path.startsWith('/projects/') || path === '/home' && hash === '#projects'
   if (key === 'gis') return path === '/map' || path === '/home' && hash === '#gis'
-  if (key === 'market') return path === '/home' && ['#market', '#market-current'].includes(hash)
+  if (key === 'market') return path === '/market' || path.startsWith('/market/') || path === '/home' && ['#market', '#market-current'].includes(hash)
   if (key === 'tools') return path === '/valuation' || path === '/home' && ['#finance', '#valuation', '#investment'].includes(hash)
+  if (key === 'advisor') return path === '/advisor' || path.startsWith('/advisor/')
   return key === 'home' && path === '/home' && !['#properties', '#search', '#projects', '#gis', '#market', '#market-current', '#finance', '#valuation', '#investment'].includes(hash)
 }
 export const canPublish = isPublisher
