@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 
 public final class CloudinarySyncCommand {
     public static void main(String[] args){

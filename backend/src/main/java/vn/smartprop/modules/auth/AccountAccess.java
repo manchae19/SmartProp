@@ -2,6 +2,7 @@ package vn.smartprop.modules.auth;
 import org.springframework.stereotype.Service;
 import vn.smartprop.modules.user.*;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class AccountAccess {
     private final UserRepository users;

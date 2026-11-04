@@ -24,7 +24,7 @@ function update() {
   if (!bar.value) return
   const headerHeight = document.querySelector('.app-header')?.offsetHeight || 0
   pinned.value = bar.value.getBoundingClientRect().top <= headerHeight + 1
-  const boundary = headerHeight + bar.value.offsetHeight + 24
+  const boundary = headerHeight + bar.value.offsetHeight + 64
   let current = ''
   for (const section of sections) {
     const target = document.getElementById(section.id)

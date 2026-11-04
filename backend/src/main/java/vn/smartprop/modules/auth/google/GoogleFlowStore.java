@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 import org.springframework.stereotype.Component;
 import vn.smartprop.modules.auth.SecretTokens;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 
 /** Short-lived server state; the browser sees only opaque HttpOnly handles. */
 @Component

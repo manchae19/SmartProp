@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class MailOutbox {
     private final JdbcTemplate jdbc;private final MailTransport transport;private final TransactionTemplate tx;private final String key,frontend,keyId;public final boolean enabled;

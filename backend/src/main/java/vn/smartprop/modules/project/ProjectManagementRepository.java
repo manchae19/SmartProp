@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Repository
 public class ProjectManagementRepository {
     private final JdbcTemplate jdbc;

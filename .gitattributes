@@ -14,6 +14,7 @@ ai-services/app/data/property_text_features_v6.py -text
 
 # Preserve migration bytes and their recorded checksums across Windows clones.
 database/migrations/*.sql -text
+database/research-migrations/*.sql -text
 
 # Preserve the relocated frozen integration bundle and its checksum manifest.
 frontend/integrations/valuation-v6/** -text whitespace=cr-at-eol

@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.http.HttpStatus;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @RestController @RequestMapping("/api/v1")
 public class MessagingController {
     public record Create(@NotBlank String propertyId) {}

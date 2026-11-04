@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 
 @RestController
 @RequestMapping("/api/v1/users/me/valuation-history")

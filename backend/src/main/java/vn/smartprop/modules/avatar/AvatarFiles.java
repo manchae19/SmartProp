@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import vn.smartprop.modules.media.LocalFileStore;
 
 /** Avatars have their own directory; property/report storage cleanup never scans it. */

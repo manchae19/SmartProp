@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import static vn.smartprop.modules.broker.BrokerApplicationDtos.*;
 
 @RestController @RequestMapping("/api/v1")

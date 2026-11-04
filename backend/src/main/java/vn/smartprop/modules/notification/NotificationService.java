@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.modules.auth.AccountAccess;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class NotificationService {
     private final NotificationRepository notifications;

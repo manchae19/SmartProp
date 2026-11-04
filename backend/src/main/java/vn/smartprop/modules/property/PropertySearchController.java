@@ -2,6 +2,7 @@ package vn.smartprop.modules.property;
 import java.math.BigDecimal;
 import org.springframework.web.bind.annotation.*;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @RestController @RequestMapping("/api/v1/properties")
 public class PropertySearchController {
     private final PropertySearch service;

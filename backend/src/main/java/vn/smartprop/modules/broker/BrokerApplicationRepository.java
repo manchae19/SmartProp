@@ -6,6 +6,7 @@ import java.util.*;
 import org.springframework.jdbc.core.*;
 import org.springframework.stereotype.Repository;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import static vn.smartprop.modules.broker.BrokerApplicationDtos.*;
 
 /** JDBC mapping keeps the disabled feature independent of V13 at application startup. */

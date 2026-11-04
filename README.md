@@ -89,3 +89,11 @@ Mở http://127.0.0.1:5173/home. Kiểm tra Backend: http://127.0.0.1:8080/actua
 Nếu MySQL chưa chạy, mở PowerShell với quyền Administrator và chạy `Start-Service MYSQL80`. Không cần chạy lại migration mỗi lần khởi động. Launcher Backend tự nạp root .env và backend/.env.cloudinary.local.
 
 Chỉ khi sửa code Java hoặc chưa có JAR: dừng Backend, tại root chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .\backend\scripts\run-maven.ps1 -B -Dmaven.test.skip=true package`, rồi khởi động lại Terminal 1. Nếu Frontend chưa có node_modules, chạy `npm ci` tại frontend trước khi chạy dev.
+
+## Đồng bộ develop-binh ngày 04/11/2026
+
+Nguồn: team/develop-binh tại 3235182. Nhánh làm việc: sync/develop-binh-20261104. Mốc local trước hợp nhất: e3441bc. Giữ Vue, cấu trúc modules/features, GIS tương tác và ảnh Cloudinary. .env giữ riêng trên máy và không còn thuộc snapshot Git mới.
+
+Migration V16 của develop-binh là lịch sử khác V16 listing_code đã áp dụng local. Bản nguyên gốc được lưu tại database/upstream-develop-binh/standard-migrations/V16__crawler_external_listings.sql, ngoài thư mục migration chuẩn. Không chạy profile standard-migrations hoặc legacy-hybrid-local trên database local hiện tại. Cần thiết kế migration kế tiếp riêng nếu muốn bổ sung external_listings; đồng bộ code không đồng nghĩa đã nhập dataset hoặc rollout schema của nhánh Bình.
+
+Các màn hình advisor/chat đã có code; dịch vụ AI, bộ dữ liệu nghiên cứu, Python dependencies và cổng chat 8001 cần cấu hình riêng theo README/ai-services/RAG.md. Không tự bật nghiên cứu, crawler hoặc import dữ liệu trong đợt đồng bộ này.

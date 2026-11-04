@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class StorageLifecycle {
     private final JdbcTemplate jdbc;private final Path root;private final ObjectMapper json;

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.*;
 import org.springframework.web.multipart.MultipartFile;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Component
 public class LocalFileStore {
     public static final long MAX_BYTES=10L*1024*1024;

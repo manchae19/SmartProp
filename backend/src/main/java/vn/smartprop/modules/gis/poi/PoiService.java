@@ -3,6 +3,7 @@ import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import vn.smartprop.modules.property.PropertyService;
 @Service
 public class PoiService {

@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.modules.auth.*;
 import vn.smartprop.modules.audit.*;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import vn.smartprop.modules.user.*;
 import static vn.smartprop.modules.broker.BrokerApplicationDtos.*;
 

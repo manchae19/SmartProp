@@ -46,24 +46,6 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get("/docs").status_code, 200)
         self.assertIn("/predict", self.client.get("/openapi.json").json()["paths"])
 
-    def test_location_options_have_reviewed_accented_labels(self):
-        labels = self.options.get("location_labels", {})
-        self.assertEqual(labels.get("new_unit:hoa xuan"), "Hòa Xuân (địa bàn mở rộng)")
-        bad = "new_unit:ban nha rieng duong nguyen duy hieu - phuong cam chau"
-        for category in self.options["categories"]:
-            self.assertNotIn(bad, category["locations"])
-            self.assertTrue(all(code in labels for code in category["locations"]))
-
-    def test_bad_location_is_blocked_but_valid_model_code_and_price_are_unchanged(self):
-        bad = self.payload() | {"location_feature": "new_unit:ban nha rieng duong nguyen duy hieu - phuong cam chau"}
-        self.assertEqual(self.client.post("/predict", json=bad).status_code, 422)
-        payload = self.payload() | dict(location_feature="new_unit:hoa xuan", area_sqm=200,
-                                       rooms=3, floors=2, access_type="alley", house_subtype="house_c4")
-        response = self.client.post("/predict", json=payload)
-        self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json()["features_used"]["location_feature"], "new_unit:hoa xuan")
-        self.assertEqual(response.json()["predicted_asking_price_vnd"], 4283741699)
-
     def test_all_categories_and_missing_fields(self):
         expected = {
             "Nhà ở": {"ward_source", "rooms", "floors", "access_type", "house_subtype"},

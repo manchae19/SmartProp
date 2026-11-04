@@ -7,6 +7,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 import vn.smartprop.modules.media.PropertyImageRepository;
 @Service
 public class PropertySearch {

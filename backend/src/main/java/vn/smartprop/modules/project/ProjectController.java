@@ -3,6 +3,7 @@ import java.util.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @RestController @RequestMapping("/api/v1/projects") @Transactional(readOnly=true)
 public class ProjectController {
     public record View(String id,String name,String developer,Short handoverYear,String scale,String address,Double latitude,Double longitude,List<String> amenities) {}

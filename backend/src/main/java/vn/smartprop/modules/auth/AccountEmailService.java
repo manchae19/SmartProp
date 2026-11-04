@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import vn.smartprop.modules.email.MailOutbox;
 import vn.smartprop.modules.user.*;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class AccountEmailService {
     private final JdbcTemplate jdbc;private final UserRepository users;private final SessionRepository sessions;private final MailOutbox outbox;private final PasswordEncoder passwords;

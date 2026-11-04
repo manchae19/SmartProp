@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 
 /** Protocol validation (signature, issuer, audience, timestamps, nonce) stays in Spring Security OIDC. */
 @Component

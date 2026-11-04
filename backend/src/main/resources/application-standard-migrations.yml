@@ -1,0 +1,9 @@
+# For databases using the unchanged standard V1..V16 lineage. No auto-migrate.
+spring:
+  flyway:
+    enabled: false
+    locations: classpath:database/migrations,classpath:database/research-migrations
+    target: '19'
+    clean-disabled: true
+    baseline-on-migrate: false
+    create-schemas: false

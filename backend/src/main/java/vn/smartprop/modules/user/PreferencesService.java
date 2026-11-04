@@ -3,6 +3,7 @@ import com.fasterxml.jackson.databind.node.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.smartprop.common.*;
+import vn.smartprop.config.*;
 @Service
 public class PreferencesService {
     public record Preferences(boolean matchingListings,boolean brokerMessages,boolean statusUpdates) {}
