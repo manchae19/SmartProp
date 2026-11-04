@@ -1,6 +1,6 @@
 # SmartProp Database
 
-`migrations/` chứa SQL nguồn V1–V13; `seeds/` chứa fixture development. Dữ liệu người dùng nằm trong MySQL server, không nằm trong thư mục này.
+`migrations/` chứa SQL nguồn V1–V16; `seeds/` chứa fixture development. Dữ liệu người dùng nằm trong MySQL server, không nằm trong thư mục này.
 
 ## Workflow local hiện tại
 
@@ -16,5 +16,3 @@
 - [Schema tham chiếu](docs/schema-reference.sql).
 - [SHA-256 migration V1–V7](docs/migration-checksums.json).
 - [Hướng dẫn backup/restore và môi trường thử](../ops/OPERATIONS.md).
-
-scripts/verify-schema.cjs là công cụ kiểm tra trên database thử riêng; có tạo cấu trúc/schema thử, không chạy vào DB ứng dụng. Fixture development không tự seed trong workflow local hiện tại.

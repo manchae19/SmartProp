@@ -8,7 +8,7 @@
 # Private uploads and report evidence
 backend/var/
 
-frontend/vue.ui/test-results/
+frontend/test-results/
 
 # Generated browser evidence / unexpected executables are never added by completion work.
 test-results/
@@ -24,7 +24,7 @@ test-results/
 
 # Local verification sources/evidence are intentionally not published
 /backend/src/test/
-/frontend/vue.ui/tests/
+/frontend/tests/
 /docs/evidence/
 
 # Local reports, test runners and the older nested working copy.

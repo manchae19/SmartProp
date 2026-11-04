@@ -1,0 +1,12 @@
+<script setup>
+import {onMounted,ref} from 'vue'
+import {api,refreshEnabled} from './api.js'
+defineProps({disabled:Boolean})
+const ready=ref(false),loading=ref(true),starting=ref(false)
+const base=(import.meta.env?.VITE_API_BASE_URL||'/api/v1').replace(/\/$/,'')
+async function load(){loading.value=true;try{const config=await api('/auth/google/config',{authenticated:false});ready.value=refreshEnabled&&config.available===true&&config.authorizationPath==='/auth/oauth2/authorize/google'}catch{ready.value=false}finally{loading.value=false}}
+function start(){if(!ready.value||starting.value)return;starting.value=true;window.location.assign(base+'/auth/oauth2/authorize/google')}
+onMounted(load)
+</script>
+<template><div class="google-login"><div class="auth-divider"><span>Hoặc tiếp tục với</span></div><button type="button" class="google-button" :disabled="disabled||loading||!ready||starting" @click="start"><svg class="size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.38a4.6 4.6 0 0 1-2 3.02v2.51h3.24c1.9-1.75 2.98-4.33 2.98-7.36Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.41l-3.24-2.51c-.9.6-2.05.96-3.38.96-2.6 0-4.81-1.76-5.6-4.12H3.05v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.4 13.92a6 6 0 0 1 0-3.84V7.49H3.05a10 10 0 0 0 0 9.02l3.35-2.59Z"/><path fill="#EA4335" d="M12 5.96c1.47 0 2.79.51 3.83 1.51l2.87-2.87A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.95 5.49l3.35 2.59C7.19 7.72 9.4 5.96 12 5.96Z"/></svg><span>{{starting?'Đang kết nối Google…':'Tiếp tục với Google'}}</span></button><p v-if="loading" class="google-help" role="status">Đang kiểm tra phương thức đăng nhập…</p><p v-else-if="!ready" class="google-help">Google chưa sẵn sàng. Bạn vẫn có thể đăng nhập bằng email.</p></div></template>
+<style scoped>.auth-divider{display:flex;align-items:center;gap:12px;margin:23px 0 17px;font-size:13px;color:#536178}.auth-divider::before,.auth-divider::after{content:'';height:1px;flex:1;background:#e5ded3}.google-button{display:flex;width:100%;min-height:48px;align-items:center;justify-content:center;gap:12px;border:1px solid #d5d9df;border-radius:12px;background:white;font-size:14px;font-weight:600;color:#10233f;transition:background .15s,border-color .15s}.google-button:hover:enabled{background:#f6f3ee;border-color:#b7a382}.google-button:disabled{opacity:.65;cursor:not-allowed}.google-button:focus-visible{outline:3px solid #8b683a;outline-offset:3px}.google-help{margin-top:10px;font-size:13px;line-height:1.6;color:#536178;text-align:center}</style>

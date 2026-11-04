@@ -28,7 +28,7 @@
       <resource>
         <directory>${project.basedir}/../database</directory>
         <targetPath>database</targetPath><filtering>false</filtering>
-        <includes><include>migrations/**/*.sql</include><include>seeds/**/*.sql</include></includes>
+        <includes><include>migrations/**/*.sql</include></includes>
       </resource>
     </resources>
     <plugins>

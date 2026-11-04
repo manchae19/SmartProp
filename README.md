@@ -5,8 +5,8 @@
 ## Cấu trúc
 
 - `backend/`: REST API, tài khoản/phân quyền, tin đăng, kiểm duyệt và tệp.
-- `frontend/vue.ui/`: ứng dụng người dùng và ADMIN, chung router; quản trị tại `/admin/dashboard`.
-- `database/`: migration V1–V13, schema tham chiếu và seed tùy chọn.
+- `frontend/`: ứng dụng người dùng và ADMIN, chung router; quản trị tại `/admin/dashboard`.
+- `database/`: migration V1–V17, schema tham chiếu và seed tùy chọn.
 - `ai-services/`, `frontend/integrations/valuation-v6/`: dịch vụ/model hiện có, cấu hình riêng.
 - `ops/`: cấu hình triển khai HTTPS/service và hướng dẫn backup/restore.
 
@@ -27,7 +27,7 @@ Launcher tắt Flyway, SQL init và seed; Hibernate chỉ validate. Đóng gói 
 
 ## Chạy Frontend
 
-Tại `frontend/vue.ui/`:
+Tại `frontend/`:
 
 ```powershell
 npm ci
@@ -44,7 +44,7 @@ Mở `http://127.0.0.1:5173`, build bằng `npm run build`. Dev proxy chuyển `
 
 Wizard ba bước: thông tin/giá → ảnh/vị trí → mô tả/liên hệ. Vị trí phải xác nhận; sửa địa chỉ yêu cầu xác nhận lại. OSM hỗ trợ ghim thủ công; Google/Geoapify cần key/cấu hình riêng. API trống/lỗi không thay bằng tin giả.
 
-Home V3, Listings và Map dùng điều hướng/bộ lọc chung; giữ so sánh, bản đồ và công cụ tài chính. Biểu đồ mô phỏng có nhãn, tách khỏi thống kê API thực. Ảnh/video Home nằm trong `frontend/vue.ui/public/`.
+Home V3, Listings và Map dùng điều hướng/bộ lọc chung; giữ so sánh và bản đồ. Biểu đồ mô phỏng có nhãn, tách khỏi thống kê API thực. Ảnh/video Home nằm trong `frontend/public/`.
 
 ## Đăng nhập bền vững
 
@@ -62,6 +62,30 @@ Xem [Backend](backend/README.md), [Frontend](frontend/README.md), [Database](dat
 
 Bản hợp nhất giữ đăng nhập bền vững, duyệt quyền BROKER và Home V3 từ Backend-Huy; bổ sung định giá v6, lịch sử riêng tư và dữ liệu nghiên cứu từ các nhánh đã nằm trong feature/apartment-pilot-100. Dữ liệu nghiên cứu trên Git không tự trở thành tin công khai trong MySQL.
 
-Trang /valuation dùng API AI v6 chuẩn tại ai-services/run_api.py, qua proxy /api/ai; Home vẫn giữ công cụ ước tính theo giả định và tính khoản vay. Chuẩn bị môi trường bằng backend/scripts/setup-valuation-runtime.ps1, chạy AI bằng backend/scripts/run-valuation.ps1. Không tự chạy crawler hoặc training khi khởi động web.
+Trang /valuation dùng API AI v6 chuẩn tại ai-services/run_api.py, qua proxy /api/ai. Chuẩn bị môi trường bằng backend/scripts/setup-valuation-runtime.ps1, chạy AI bằng backend/scripts/run-valuation.ps1. Không tự chạy crawler hoặc training khi khởi động web.
 
 Migration V13__broker_applications.sql của môi trường Backend-Huy được giữ nguyên. Lịch sử định giá nằm trong V14__valuation_history.sql và cần phê duyệt rollout riêng. Chưa áp dụng V14 thì các API lịch sử báo chưa sẵn sàng. Môi trường đã dùng V13__valuation_history.sql từ nhánh khác phải đối chiếu Flyway history riêng trước rollout; không đổi migration đã áp dụng hoặc chạy clean/reset.
+
+## Chạy nhanh bằng terminal Windows
+
+Mở hai terminal PowerShell trong VS Code và giữ cả hai chạy. MySQL service MYSQL80 phải ở trạng thái Running.
+
+Terminal 1 — Backend:
+
+```powershell
+cd D:\C2SE.01CMU\code\SmartProp
+powershell -NoProfile -ExecutionPolicy Bypass -File .\backend\scripts\run-local.ps1 -Transport NIO2
+```
+
+Terminal 2 — Frontend:
+
+```powershell
+cd D:\C2SE.01CMU\code\SmartProp\frontend
+npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
+
+Mở http://127.0.0.1:5173/home. Kiểm tra Backend: http://127.0.0.1:8080/actuator/health. Nhấn Ctrl+C ở từng terminal để dừng.
+
+Nếu MySQL chưa chạy, mở PowerShell với quyền Administrator và chạy `Start-Service MYSQL80`. Không cần chạy lại migration mỗi lần khởi động. Launcher Backend tự nạp root .env và backend/.env.cloudinary.local.
+
+Chỉ khi sửa code Java hoặc chưa có JAR: dừng Backend, tại root chạy `powershell -NoProfile -ExecutionPolicy Bypass -File .\backend\scripts\run-maven.ps1 -B -Dmaven.test.skip=true package`, rồi khởi động lại Terminal 1. Nếu Frontend chưa có node_modules, chạy `npm ci` tại frontend trước khi chạy dev.

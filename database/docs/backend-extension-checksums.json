@@ -3,5 +3,7 @@
   "V9__property_legal_documents.sql": "4f389b4f972e03f435dd6e5bbdd92625f2835cbad4d227035d1c78289b904caf",
   "V10__refresh_sessions.sql": "3241a857535b4904bed7ebff1cb8c3ea988afd80d10ba7308827b01485a57c81",
   "V11__email_verification_outbox.sql": "b0c11ad7daa29a2ab31a951e482e9c2bed6afed88dc60c6dd19f86c8cfbd003e",
-  "V12__messaging.sql": "4646820c29d4ad7740e6cacae1a90ce2537f8e6ef5d9c0e4b722677bf63fc441"
+  "V12__messaging.sql": "4646820c29d4ad7740e6cacae1a90ce2537f8e6ef5d9c0e4b722677bf63fc441",
+  "V16__immutable_property_listing_codes.sql": "82fa91b086d192e20be7bee77f619476056d864b9f8c28af439d9f46c5afb669",
+  "V17__cloudinary_property_images.sql": "77858e16dcfd9e2bfe762c801cd106a91aa36ff7d5157aef0a7b62d39a4ae1d5"
 }
