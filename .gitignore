@@ -106,3 +106,14 @@ Thumbs.db
 
 # Local handover note contains real DB/API credentials - never publish.
 /SMARTPROP_HANDOVER.md
+# Local-only AI tooling and throwaway debug scripts (never project content).
+/.continue/
+/.agents/skills/banner-design/
+/.agents/skills/brand/
+/.agents/skills/design/
+/.agents/skills/design-system/
+/.agents/skills/slides/
+/.agents/skills/ui-styling/
+/.agents/skills/ui-ux-pro-max/
+/ai-services/app/data/*.png
+/tests/
