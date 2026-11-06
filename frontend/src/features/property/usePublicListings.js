@@ -1,6 +1,6 @@
-import { reactive, watch, onMounted, onBeforeUnmount } from 'vue'
+import { reactive, watch, onMounted, onBeforeUnmount } from '../../shared/state/store.js'
 import { api } from '../auth/api.js'
-import { createPagedResource } from '../../hooks/pagedResource.js'
+import { createPagedResource } from '../../shared/hooks/pagedResource.js'
 export function isPublicProperty(p, now = Date.now()) {
   return !!p && p.status === 'PUBLISHED' && !p.deletedAt && !p.hiddenAt && (p.expiresAt == null || Date.parse(p.expiresAt) > now)
 }

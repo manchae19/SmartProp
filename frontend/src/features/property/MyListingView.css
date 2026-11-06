@@ -1,0 +1,31 @@
+
+.sp-my-listings[data-sp-51b40b91] {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+.sp-my-listings h1[data-sp-51b40b91],
+.sp-my-listings h2[data-sp-51b40b91],
+.sp-my-listings h3[data-sp-51b40b91] {
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-variant-ligatures: none;
+  word-spacing: normal;
+}
+.sp-my-listings button[data-sp-51b40b91],
+.sp-my-listings input[data-sp-51b40b91] {
+  font-family: inherit;
+}
+.sp-my-listings img[data-sp-51b40b91] {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+.sp-my-listings[data-sp-51b40b91] *,
+  .sp-my-listings[data-sp-51b40b91] *::before,
+  .sp-my-listings[data-sp-51b40b91] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+}
+}
+

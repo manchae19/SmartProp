@@ -1,0 +1,32 @@
+
+.market-card-action[data-sp-f9d979a0] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  border-radius: 20px;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  color: var(--ui-accent);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.market-card-action[data-sp-f9d979a0]:hover {
+  background: var(--ui-surface);
+  color: var(--ui-accent);
+  border-color: var(--ui-border);
+}
+.market-card-action[aria-pressed="true"][data-sp-f9d979a0] {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+  border-color: var(--ui-border);
+}
+.market-card-action.compare[aria-pressed="true"][data-sp-f9d979a0] {
+  background: var(--ui-surface);
+  color: var(--ui-accent);
+  border-color: var(--ui-border);
+}
+

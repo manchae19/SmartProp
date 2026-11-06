@@ -1,0 +1,143 @@
+
+.main[data-sp-9b34df92] {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: left;
+}
+.stats[data-sp-9b34df92] {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.stat[data-sp-9b34df92] {
+  background: var(--ui-surface);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px #00000014;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+/* Thẻ "Cảnh báo ảnh trùng" dùng chính xác màu #183e54 */
+.stat2[data-sp-9b34df92] {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px #00000014;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.stat2 div[data-sp-9b34df92]:first-child {
+  font-size: 14px;
+  color: var(--ui-ink);
+  text-align: left;
+}
+.stat2 ._9[data-sp-9b34df92] {
+  color: var(--ui-ink);
+  font-size: var(--text-2xl);
+  font-weight: bold;
+  text-align: left;
+}
+.stat div[data-sp-9b34df92]:first-child {
+  font-size: 14px;
+  color: var(--ui-muted);
+  text-align: left;
+}
+.stat div[data-sp-9b34df92]:last-child {
+  font-size: var(--text-2xl);
+  font-weight: bold;
+  color: var(--ui-accent);
+  text-align: left;
+}
+.row-2[data-sp-9b34df92] {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+.chart[data-sp-9b34df92], .ai[data-sp-9b34df92] {
+  background: var(--ui-surface);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px #00000014;
+  text-align: left;
+}
+.tin-ng-m-i-theo-tu[data-sp-9b34df92], .t-nh-tr-ng-d-ch-v-a[data-sp-9b34df92] {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: var(--ui-accent);
+  text-align: left;
+}
+.bars[data-sp-9b34df92] {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 160px;
+  padding-top: 20px;
+  border-bottom: 1px solid var(--ui-border);
+}
+.col[data-sp-9b34df92] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.bar-fill[data-sp-9b34df92] {
+  width: 24px;
+  background: var(--ui-soft);
+  border-radius: 4px 4px 0 0;
+}
+
+/* Cột biểu đồ nổi bật dùng đúng mã màu #183e54 */
+.bar-fill.active[data-sp-9b34df92] {
+  background: var(--ui-soft);
+}
+.label-day[data-sp-9b34df92] {
+  font-size: var(--text-xs);
+  color: var(--ui-muted);
+}
+.ai[data-sp-9b34df92] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.row[data-sp-9b34df92] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ui-border);
+  text-align: left;
+}
+.ellipse[data-sp-9b34df92] {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.green[data-sp-9b34df92] { background: var(--ui-soft);
+}
+.red[data-sp-9b34df92] { background: var(--ui-soft);
+}
+.row div[data-sp-9b34df92]:nth-child(2) {
+  flex: 1;
+  margin-left: 10px;
+  color: var(--ui-accent);
+  text-align: left;
+}
+._82-ms-q-0[data-sp-9b34df92], ._340-ms-q-2[data-sp-9b34df92], .l-i-q-5[data-sp-9b34df92] {
+  font-size: var(--text-xs);
+  color: var(--ui-muted);
+}
+.l-i-q-5[data-sp-9b34df92] {
+  color: var(--ui-ink);
+  font-weight: bold;
+}
+

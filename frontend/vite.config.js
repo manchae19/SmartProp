@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
+import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import {approvedPublicAssets} from './build/publicAssets.mjs'
 import {publicChatProxy, publicChatBoundary} from './build/chatProxy.mjs'
@@ -27,7 +27,7 @@ export default defineConfig(({mode}) => {
   }
   return {
     optimizeDeps:{include:['leaflet']},
-    plugins:[publicChatBoundary(),approvedPublicAssets(),vue({template:{transformAssetUrls:{includeAbsolute:false}}}),tailwindcss()],
+    plugins:[publicChatBoundary(),approvedPublicAssets(),react(),tailwindcss()],
     server:{host:'127.0.0.1',port:5173,strictPort:true,proxy},
     preview:{host:'127.0.0.1',port:4173,strictPort:true,proxy},
   }

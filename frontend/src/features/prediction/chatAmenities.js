@@ -1,4 +1,4 @@
-import { createHttpClient } from '../../lib/httpClient.js'
+import { createHttpClient } from '../../shared/lib/httpClient.js'
 import { publicChatResponse } from './chat.js'
 
 export const amenityCategories = Object.freeze({ SCHOOL: 'Trường học', HOSPITAL: 'Bệnh viện / cơ sở y tế',

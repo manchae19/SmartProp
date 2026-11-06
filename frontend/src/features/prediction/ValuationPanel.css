@@ -1,0 +1,8 @@
+
+.valuation-input[data-sp-018bbc28] { display: block; width: 100%; min-height: 44px; border: 1px solid color-mix(in srgb, var(--ui-border) 27%, transparent); border-radius: 12px; padding: 11px 12px; background: var(--ui-surface); color: var(--ui-accent); font-size: 14px;
+}
+.valuation-input[data-sp-018bbc28]:focus-visible { outline: 3px solid var(--ui-border); outline-offset: 2px;
+}
+.valuation-input[data-sp-018bbc28]::placeholder { color: var(--ui-muted);
+}
+

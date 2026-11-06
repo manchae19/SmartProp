@@ -1,5 +1,5 @@
-import {reactive} from 'vue'
-import {createHttpClient} from '../../lib/httpClient.js'
+import {reactive} from '../../shared/state/store.js'
+import {createHttpClient} from '../../shared/lib/httpClient.js'
 export const session=reactive({token:null,user:null,status:'INITIALIZING',error:null})
 export const refreshEnabled=import.meta.env?.VITE_ENABLE_REFRESH==='true'
 const baseUrl=(import.meta.env?.VITE_API_BASE_URL||'/api/v1').replace(/\/$/,'')

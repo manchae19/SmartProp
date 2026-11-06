@@ -1,5 +1,5 @@
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from '../../shared/state/store.js'
+import { useRoute, useRouter } from '../../shared/routing/router.jsx'
 import { normalizeFilters, listingLink } from './listingFilters.js'
 
 export function useListingFilters() {

@@ -1,5 +1,5 @@
-import { reactive } from 'vue'
-import { createHttpClient } from '../../lib/httpClient.js'
+import { reactive } from '../../shared/state/store.js'
+import { createHttpClient } from '../../shared/lib/httpClient.js'
 import { CHAT_TIMEOUT_MS, createChatClient, createChatSession } from './chat.js'
 
 const baseUrl = (import.meta.env?.VITE_CHAT_API_BASE_URL || '/api').replace(/\/$/, '')

@@ -2,7 +2,7 @@ import fs from 'node:fs';import path from 'node:path';
 // Reviewed public files only. Add a filename here when the team adds a new public asset.
 export const publicFiles=[
  'background.mp4','favicon.svg','icons.svg','vite.svg',
- "media/home/hero-poster.jpg",
+ "images/home/banner.png",
  "media/projects/sun-ponte.jpg",
  "media/projects/the-filmore.jpg",
  "media/projects/fpt-plaza-3.jpg",

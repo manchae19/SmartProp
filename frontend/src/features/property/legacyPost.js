@@ -1,5 +1,5 @@
-import {reactive,ref,computed,watch,nextTick} from 'vue'
-import {useRoute,useRouter} from 'vue-router'
+import {reactive,ref,computed,watch,nextTick} from '../../shared/state/store.js'
+import {useRoute,useRouter} from '../../shared/routing/router.jsx'
 import {api,session,errorText} from '../auth/api.js'
 import {validateFiles} from './property.js'
 import {postSteps,typeCodes,validatePost,fieldIssue,isPublisher,addressSignature,locationSignature,validCoordinates,buildPostPayload,payloadFromManaged,samePayload} from './postForm.js'

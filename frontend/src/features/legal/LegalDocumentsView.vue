@@ -1,6 +1,0 @@
-<script setup>
-import {ref,watch,onBeforeUnmount} from 'vue';import {useRoute} from 'vue-router';import {api,session,errorText} from '../auth/api.js';import BusinessPage from '../../components/BusinessPage.vue';import LegalDocuments from './LegalDocuments.vue';
-const route=useRoute(),managed=ref(null),error=ref(''),busy=ref(false);let sequence=0;
-async function load(){const run=++sequence;managed.value=null;error.value='';busy.value=true;try{const result=await api((session.user?.role==='ADMIN'?'/admin/properties/':'/users/me/properties/')+route.params.id);if(run===sequence)managed.value=result}catch(e){if(run===sequence)error.value=errorText(e)}finally{if(run===sequence)busy.value=false}}
-watch(()=>[route.params.id,session.user?.id],load,{immediate:true});onBeforeUnmount(()=>sequence++);
-</script><template><BusinessPage title="Quản lý hồ sơ pháp lý"><p v-if="busy" role="status">Đang tải quyền quản lý tin…</p><p v-if="error" role="alert">{{error}} <button @click="load">Thử lại</button></p><template v-if="managed"><h2>{{managed.property.title}}</h2><LegalDocuments :key="managed.property.id" :property-id="managed.property.id" :owner-id="managed.ownerId"/></template></BusinessPage></template>

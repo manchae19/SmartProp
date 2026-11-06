@@ -1,5 +1,5 @@
 import {listingStatus} from '../property/property.js'
-import {adapt,money,reasons,date} from '../../lib/legacy.js'
+import {adapt,money,reasons,date} from '../../shared/lib/legacy.js'
 // Presentation fields for the team's collection layouts; never substitute demo listings.
 export function collectionProperty(input,index=0){
  const a=adapt(input),p=a.raw,expired=listingStatus(p)==='EXPIRED';

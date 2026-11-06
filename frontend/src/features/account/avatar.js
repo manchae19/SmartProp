@@ -1,4 +1,4 @@
-import {reactive,watch} from 'vue'
+import {reactive,watch} from '../../shared/state/store.js'
 import {api,session} from '../auth/api.js'
 export const avatar=reactive({owner:null,enabled:false,available:false,url:null,revision:null,loading:false,error:''})
 let generation=0,flight=null

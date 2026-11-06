@@ -1,6 +1,6 @@
 # SmartProp
 
-Ứng dụng bất động sản sử dụng Java21/Spring Boot, MySQL8 và Vue3/Vite.
+Ứng dụng bất động sản sử dụng Java21/Spring Boot, MySQL8 và React/Vite.
 
 ## Cấu trúc
 
@@ -31,7 +31,7 @@ Tại `frontend/`:
 
 ```powershell
 npm ci
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+node .\node_modules\vite\bin\vite.js --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 Mở `http://127.0.0.1:5173`, build bằng `npm run build`. Dev proxy chuyển `/api` về Backend loopback8080; production cần reverse proxy cùng domain. Cấu hình riêng trong `.env.local` theo `.env.example`; không đặt secrets Backend vào biến `VITE_`.
@@ -81,7 +81,7 @@ Terminal 2 — Frontend:
 
 ```powershell
 cd D:\C2SE.01CMU\code\SmartProp\frontend
-npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+node .\node_modules\vite\bin\vite.js --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 Mở http://127.0.0.1:5173/home. Kiểm tra Backend: http://127.0.0.1:8080/actuator/health. Nhấn Ctrl+C ở từng terminal để dừng.

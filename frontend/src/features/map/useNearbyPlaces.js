@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount } from '../../shared/state/store.js'
 import { requestNearby } from './nearbyRequest.js'
 import { nearbyPath } from './nearbyExplorer.js'
 export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () => true) {

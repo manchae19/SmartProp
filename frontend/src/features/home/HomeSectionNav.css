@@ -1,0 +1,7 @@
+
+.home-section-nav[data-sp-7582756e]{padding-block:8px}.home-section-nav nav[data-sp-7582756e]{border:1px solid var(--ui-border);border-radius:999px;background:color-mix(in srgb, var(--ui-surface) 90%, transparent);box-shadow:0 2px 10px #00000014;scrollbar-width:thin;scrollbar-color:var(--ui-accent) transparent}.home-section-nav a[data-sp-7582756e]{line-height:1.4}
+@media (prefers-reduced-motion: reduce) {
+.home-section-nav a[data-sp-7582756e] { transition: none;
+}
+}
+
