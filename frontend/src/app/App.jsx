@@ -6,6 +6,7 @@ import SessionRecovery from "../features/auth/SessionRecovery.jsx";
 import PageLayout from "../shared/components/layout/PageLayout.jsx";
 import WelcomeNotice from "../shared/components/WelcomeNotice.jsx";
 import ComparisonTray from "../features/property/ComparisonTray.jsx";
+import ChatbotLauncher from "../shared/components/ChatbotLauncher.jsx";
 import { usesPageLayout } from "../shared/lib/siteNavigation.js";
 export default function App() {
   useStore(session);
@@ -30,6 +31,7 @@ export default function App() {
         <Outlet />
       )}
       <ComparisonTray />
+      <ChatbotLauncher />
       <WelcomeNotice />
     </>
   );

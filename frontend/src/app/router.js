@@ -28,8 +28,14 @@ const routes=[
  {path:'/market/:district',component:()=>import('../features/market/MarketInsightsView.jsx')},
  {path:'/market-insights',redirect:'/market'},
  {path:'/market-insights/:district',redirect:to=>({path:'/market/'+to.params.district})},
+ // Real-data market analytics (Step 21.5B) — additive, keeps the legacy /market page.
+ {path:'/market-analytics',component:()=>import('../features/market/MarketAnalyticsView.jsx')},
+ // Comparable listings lookup (BROKER/ADMIN) — additive.
+ {path:'/comparables',component:()=>import('../features/property/ComparablesView.jsx')},
  {path:'/advisor',component:()=>import('../features/prediction/AdvisorView.jsx')},
  {path:'/advisor/chat',component:()=>import('../features/prediction/ChatAdvisorView.jsx')},
+ // Unified AI Advisor (ADVISOR_ORCHESTRATOR_V1) — distinct from the RAG chat above.
+ {path:'/advisor/analysis',component:()=>import('../features/prediction/UnifiedAdvisorView.jsx')},
  {path:'/projects',component:()=>import('../features/project/ProjectsView.jsx')},
  {path:'/projects/:id',component:()=>import('../features/project/ProjectDetailView.jsx')},
  {path:'/listing/:id',component:()=>import('../features/property/ListingDetailView.jsx')},

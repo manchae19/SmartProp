@@ -1,0 +1,13 @@
+.cmpv-section{background:#f7f5f0;color:#142b4f;padding-block:48px;min-height:100vh}
+.cmpv-container{width:min(100% - 80px,1080px);margin-inline:auto;min-width:0}
+.cmpv-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.2em;color:#8b683a}
+.cmpv-title{font-size:1.6rem;font-weight:650;margin-top:.4rem}
+.cmpv-sub{font-size:.85rem;line-height:1.7;color:#536178;margin-top:.4rem;max-width:720px}
+.cmpv-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8rem;margin-top:1.2rem;align-items:end;
+  background:#fff;border:1px solid #e7e1d7;border-radius:1rem;padding:1rem}
+.cmpv-form label{display:flex;flex-direction:column;gap:.25rem;font-size:.74rem;font-weight:600;color:#3d4d63}
+.cmpv-form input,.cmpv-form select{min-height:40px;border:1px solid #dcd5ca;border-radius:.6rem;padding:.35rem .6rem;background:#fff;font:inherit;color:inherit}
+.cmpv-submit{grid-column:span 4;justify-self:start;min-height:42px;padding:0 1.3rem;border:none;border-radius:.7rem;background:#142b4f;color:#fff;font-weight:650;cursor:pointer}
+.cmpv-submit:disabled{opacity:.6;cursor:progress}
+@media(max-width:900px){.cmpv-form{grid-template-columns:repeat(2,minmax(0,1fr))}.cmpv-submit{grid-column:span 2}}
+@media(max-width:560px){.cmpv-container{width:calc(100% - 32px)}.cmpv-form{grid-template-columns:1fr}.cmpv-submit{grid-column:span 1}}
