@@ -69,6 +69,10 @@ app:
         area: ${APP_RECOMMENDATION_V11_RENTAL_AREA:0.20}
         type: ${APP_RECOMMENDATION_V11_RENTAL_TYPE:0.25}
         amenity: ${APP_RECOMMENDATION_V11_RENTAL_AMENITY:0.15}
+  advisor:
+    valuation-enabled: ${APP_ADVISOR_VALUATION_ENABLED:true}
+    valuation-base-url: ${APP_ADVISOR_VALUATION_BASE_URL:http://127.0.0.1:8000}
+    allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:true}
   google:
     enabled: ${GOOGLE_LOGIN_ENABLED:false}
     client-id: ${GOOGLE_CLIENT_ID:}
