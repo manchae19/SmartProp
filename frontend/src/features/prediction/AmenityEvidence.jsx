@@ -59,8 +59,8 @@ export default function AmenityEvidence({ evidence, compact = false, area = fals
         <div className="ae-pois">
           <p className="ae-pois-title">Tiện ích đã số hóa trong khu vực</p>
           <ul>
-            {visibleEvidence.map((poi) => (
-              <li key={poi.name + poi.category}>
+            {visibleEvidence.map((poi, index) => (
+              <li key={index + ':' + poi.name + ':' + poi.category}>
                 <span className="ae-poi-name">{poi.name}</span>
                 <span className="ae-poi-cat">{poi.category}</span>
               </li>
@@ -70,8 +70,8 @@ export default function AmenityEvidence({ evidence, compact = false, area = fals
       ) : hasProfile ? (
         <p className="ae-note">Hồ sơ khu vực không kèm tên tiện ích cụ thể.</p>
       ) : null}
-      {(evidence?.dataLimitations || []).slice(0, compact ? 1 : 3).map((limitation) => (
-        <p key={limitation} className="ae-note">{limitation}</p>
+      {(evidence?.dataLimitations || []).slice(0, compact ? 1 : 3).map((limitation, index) => (
+        <p key={index + ':' + limitation} className="ae-note">{limitation}</p>
       ))}
       {hasProfile ? <p className="ae-note ae-note-strong">{evidence.note}</p> : null}
     </section>

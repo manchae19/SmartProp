@@ -45,7 +45,12 @@ export function buildComparableBody(form = {}) {
 export function safeListingLink(candidate) {
   const url = typeof candidate?.listingUrl === 'string' ? candidate.listingUrl.trim() : ''
   if (candidate?.sourceKind === 'TINIX_RESEARCH') return ''
-  if (candidate?.sourceKind === 'SMARTPROP') return /^\/properties\/[\w-]{1,64}$/.test(url) ? url : ''
+  // SmartProp rows carry the API path /properties/<key>; the React app serves
+  // property detail at /listing/<key>, so remap it to a working client route.
+  if (candidate?.sourceKind === 'SMARTPROP') {
+    const match = /^\/properties\/([\w-]{1,64})$/.exec(url)
+    return match ? `/listing/${match[1]}` : ''
+  }
   return /^https?:\/\//i.test(url) ? url : ''
 }
 
@@ -80,11 +85,12 @@ export function validateComparableResponse(data) {
 }
 
 /**
- * True when the API refused the caller because comparable search needs
- * BROKER/ADMIN. The UI must not widen access; it explains the requirement.
+ * True when the API refused the caller for authorisation reasons: 401 means not
+ * signed in, 403 means signed in but without BROKER/ADMIN. The UI must not widen
+ * access; it explains the requirement instead.
  */
 export function isForbidden(error) {
-  return error?.status === 403
+  return error?.status === 403 || error?.status === 401
 }
 
 export async function loadComparables(body) {

@@ -50,8 +50,8 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
                   {item.amenityEvidenceBasis === 'DIRECT_WARD_EVIDENCE' ? 'Hồ sơ cấp phường/xã' : 'Hồ sơ cấp quận/huyện'}
                   {item.amenityConfidence != null ? ` · độ phủ ${Math.round(item.amenityConfidence * 100)}%` : ''}
                 </p>
-                {(item.warnings || []).map((warning) => (
-                  <p key={warning} className="quality-note">{advisorWarning(warning)}</p>
+                {(item.warnings || []).map((warning, index) => (
+                  <p key={index + ':' + warning} className="quality-note">{advisorWarning(warning)}</p>
                 ))}
               </article>
             ))}
@@ -102,8 +102,8 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
 
                   <AdvisorLocationCard property={property} selectedPoiId={selectedPoiId} onFocusPoi={onFocusPoi} />
 
-                  {(property.warnings || []).map((warning) => (
-                    <p key={warning} className="quality-note">{advisorWarning(warning)}</p>
+                  {(property.warnings || []).map((warning, index) => (
+                    <p key={index + ':' + warning} className="quality-note">{advisorWarning(warning)}</p>
                   ))}
 
                   {url ? <a className="ar-link" href={url}>Xem tin đăng →</a> : null}
@@ -116,7 +116,7 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
 
       {result?.warnings?.length ? (
         <ul className="ar-warnings">
-          {result.warnings.map((warning) => <li key={warning}>{advisorWarning(warning)}</li>)}
+          {result.warnings.map((warning, index) => <li key={index + ':' + warning}>{advisorWarning(warning)}</li>)}
         </ul>
       ) : null}
     </div>

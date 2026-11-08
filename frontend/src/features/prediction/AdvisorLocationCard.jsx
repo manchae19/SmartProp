@@ -48,7 +48,7 @@ export default function AdvisorLocationCard({ property, selectedPoiId = '', onFo
           </div>
           {fit.highlightsVi?.length ? (
             <ul className="purpose-list">
-              {fit.highlightsVi.map((line) => <li key={line}>{line}</li>)}
+              {fit.highlightsVi.map((line, index) => <li key={index + ':' + line}>{line}</li>)}
             </ul>
           ) : null}
           {fit.spatialBasisNote ? <p className="basis-note">{fit.spatialBasisNote}</p> : null}

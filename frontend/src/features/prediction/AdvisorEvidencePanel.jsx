@@ -42,8 +42,8 @@ export default function AdvisorEvidencePanel({ valuation, comparable }) {
               {shap.method ? <p className="shap-meta">Phương pháp: <strong>{shap.method}</strong></p> : null}
               {shap.topFactors?.length ? (
                 <ul className="shap-list">
-                  {shap.topFactors.map((factor) => (
-                    <li key={factor.featureName} className="shap-item">
+                  {shap.topFactors.map((factor, index) => (
+                    <li key={index + ':' + factor.featureName} className="shap-item">
                       <span>
                         {factor.labelVi || factor.featureName}
                         {factor.noteVi ? <small>{factor.noteVi}</small> : null}

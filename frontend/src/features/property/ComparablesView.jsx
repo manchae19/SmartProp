@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { errorText } from '../auth/api.js'
+import { errorText, session } from '../auth/api.js'
 import ComparableListingsCard from './ComparableListingsCard.jsx'
 import { COMPARABLE_DISTRICTS, buildComparableBody, isForbidden, loadComparables } from './comparables.js'
 import './ComparablesView.css'
@@ -27,6 +27,14 @@ export default function ComparablesView() {
 
   async function submit(event) {
     event.preventDefault()
+    // Anonymous callers get a clear notice instead of letting the global 401
+    // handler bounce them to /login; the server gate is unchanged (BROKER/ADMIN).
+    if (!session.token) {
+      setResult(null)
+      setError('')
+      setForbidden(true)
+      return
+    }
     setBusy(true)
     setError('')
     setForbidden(false)

@@ -11,12 +11,7 @@ export function siteNavigation(filters = {}) {
     },
     { key: "projects", label: "Dự án", to: { path: "/projects" } },
     { key: "gis", label: "Bản đồ GIS", to: listingLink("/map", filters) },
-    { key: "market", label: "Dữ liệu thị trường", to: { path: "/market" } },
-    {
-      key: "market-analytics",
-      label: "Phân tích thị trường",
-      to: { path: "/market-analytics" },
-    },
+    { key: "market", label: "Dữ liệu thị trường", to: { path: "/market-analytics" } },
     { key: "tools", label: "Công cụ", to: { path: "/valuation" } },
     { key: "advisor", label: "Tư vấn BĐS", to: { path: "/advisor" } },
     {
@@ -46,11 +41,11 @@ export function activeNavigation(key, route) {
     return path === "/map" || (path === "/home" && hash === "#gis");
   if (key === "market")
     return (
+      path === "/market-analytics" ||
       path === "/market" ||
       path.startsWith("/market/") ||
       (path === "/home" && ["#market", "#market-current"].includes(hash))
     );
-  if (key === "market-analytics") return path === "/market-analytics";
   if (key === "tools") return path === "/valuation";
   if (key === "advisor-analysis") return path === "/advisor/analysis";
   if (key === "comparables") return path === "/comparables";
