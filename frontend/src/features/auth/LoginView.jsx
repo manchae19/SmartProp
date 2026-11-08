@@ -544,51 +544,6 @@ export default React.forwardRef(function LoginView(props, ref) {
               <span {...mergeProps({})}>{display(ctx.error)}</span>
             </div>
           ) : null}
-          {ctx.isRegister && !ctx.forgot ? (
-            <div
-              {...mergeProps({
-                className:
-                  "p-3.5 rounded-xl bg-[var(--ui-surface)] border border-[var(--ui-border)] text-xs text-[var(--ui-accent)] flex items-start gap-2.5 mb-5",
-              })}
-            >
-              <svg
-                {...mergeProps({
-                  width: "16",
-                  height: "16",
-                  viewBox: "0 0 24 24",
-                  fill: "none",
-                  stroke: "currentColor",
-                  strokeWidth: "2",
-                  className: "shrink-0 text-[var(--ui-accent)] mt-0.5",
-                })}
-              >
-                <path
-                  {...mergeProps({
-                    d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
-                  })}
-                />
-              </svg>
-              <div {...mergeProps({})}>
-                <strong
-                  {...mergeProps({
-                    className: "font-bold",
-                  })}
-                >
-                  {"Thông tin tài khoản"}
-                </strong>
-                <p
-                  {...mergeProps({
-                    className:
-                      "text-[11px] text-[var(--ui-accent)] mt-0.5 leading-relaxed",
-                  })}
-                >
-                  {
-                    " Tài khoản mới có quyền người dùng thông thường. Để đăng bán hoặc cho thuê, bạn có thể đăng ký quyền đăng tin trong Hồ sơ cá nhân và chờ quản trị viên xét duyệt. "
-                  }
-                </p>
-              </div>
-            </div>
-          ) : null}
           <form
             {...mergeProps({
               className: "space-y-4",

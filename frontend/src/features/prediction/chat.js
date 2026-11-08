@@ -64,6 +64,12 @@ export function publicChatResponse(data) {
       || !Array.isArray(data.recommendedProperties) || data.recommendedProperties.length > 10
       || !Array.isArray(data.citations) || data.citations.length > 100
       || !strings(data.dataLimitations) || !data.evidence || typeof data.evidence !== 'object') throw invalid()
+  const needs = data.evidence.needs
+  if (needs !== undefined && (!needs || !strings(needs.summary) || needs.summary.length > 12
+      || !strings(needs.priorities) || needs.priorities.length > 4 || !strings(needs.limitations)
+      || needs.summary.some(v => v.length > 300))) throw invalid()
+  if (data.evidence.quickReplies !== undefined && (!strings(data.evidence.quickReplies)
+      || data.evidence.quickReplies.length > 8 || data.evidence.quickReplies.some(v => v.length > 100))) throw invalid()
   const ids = new Set(), groups = new Set(), sourceIds = new Set()
   if (data.evidence.topAreas && (!Array.isArray(data.evidence.topAreas) || data.evidence.topAreas.some(a => a.unverifiedCount !== 0 || a.needsReviewCount !== 0))) throw invalid()
   for (const p of data.recommendedProperties) {

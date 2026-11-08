@@ -163,15 +163,7 @@ export default React.forwardRef(function MapView(props, ref) {
           >
             {"Bản đồ bất động sản"}
           </h1>
-          <span
-            {...mergeProps({
-              "data-sp-2646eeb9": "",
-            })}
-          >
-            {
-              "Tin công khai và tiện ích từ Backend. Đồng bộ bộ lọc với trang chủ và danh sách."
-            }
-          </span>
+
         </div>
         <details
           {...mergeProps({
@@ -222,7 +214,7 @@ export default React.forwardRef(function MapView(props, ref) {
             })}
           >
             {
-              "Đang hiển thị thêm tin được mở trực tiếp theo UUID; tin này có thể nằm ngoài bộ lọc hoặc trang hiện tại."
+              "Tin đang xem có thể nằm ngoài bộ lọc hiện tại."
             }
           </p>
         ) : null}

@@ -423,15 +423,7 @@ export default React.forwardRef(function AdvisorResults(props, ref) {
               "Có thể chưa có tin khớp bộ lọc hoặc nguồn chưa đủ điều kiện công khai. Thử tăng ngân sách, giảm diện tích tối thiểu hoặc bỏ lọc khu vực."
             }
           </p>
-          <p
-            {...mergeProps({
-              "data-sp-c098318d": "",
-            })}
-          >
-            {
-              "Tin chưa xác minh không được đưa vào kết quả để lấp đầy danh sách."
-            }
-          </p>
+
           <button
             {...mergeProps({
               type: "button",
@@ -510,7 +502,7 @@ export default React.forwardRef(function AdvisorResults(props, ref) {
                 className: ["property-card", {
                   selected: ctx.selectedId === property.id,
                 }],
-                
+
                 "data-advisor-property": property.id,
                 "data-sp-c098318d": "",
               })}

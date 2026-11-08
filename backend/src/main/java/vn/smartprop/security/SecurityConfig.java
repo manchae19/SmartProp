@@ -92,6 +92,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/me/valuation-history","/api/v1/users/me/valuation-history/*").authenticated()
                 .requestMatchers("/api/v1/users/me/avatar","/api/v1/users/me/avatar/content").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,"/api/v1/users/me/advisor-context").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/v1/users/me/broker-application","/api/v1/users/me/properties/*/moderation").authenticated()
                 .requestMatchers(HttpMethod.POST,"/api/v1/users/me/broker-application").authenticated()
                 .requestMatchers("/api/v1/conversations","/api/v1/users/me/conversations","/api/v1/conversations/*/messages","/api/v1/conversations/*/read").authenticated()

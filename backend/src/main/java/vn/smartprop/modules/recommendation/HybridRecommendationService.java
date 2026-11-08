@@ -66,6 +66,8 @@ public class HybridRecommendationService {
         return recommend(request,true);
     }
     private Response recommend(Request request,boolean research) {
+        if(!request.amenityPriorities().isEmpty()&&!v11Enabled)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,"Personalized ranking requires APP_RECOMMENDATION_V11_ENABLED=true and V1.1 services");
         boolean demo=this.demo||research;
         var raw=new ArrayList<>(repository.find(request,this.demo));
         if(research)raw.addAll(tinix.find(request));

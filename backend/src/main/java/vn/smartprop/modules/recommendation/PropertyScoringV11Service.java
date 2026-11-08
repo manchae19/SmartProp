@@ -76,7 +76,7 @@ public class PropertyScoringV11Service {
         double areaFit = round(areaFit(c, r));
         double typeFit = round(typeFit(c.type(), r.purpose()));
         AmenityProfile profile = resolution != null && resolution.available() ? resolution.profile() : null;
-        Double amenityFit = profile == null ? null : round(clamp(profile.livingScore()));
+        Double amenityFit = amenityFit(profile, r);
 
         Map<String, Double> parts = new LinkedHashMap<>();
         Map<String, Double> appliedWeights = new LinkedHashMap<>();
@@ -114,6 +114,7 @@ public class PropertyScoringV11Service {
                 + "điểm tổng chỉ dựa trên ngân sách, diện tích và loại bất động sản.");
         } else {
             explanations.add(amenityExplanation(profile, resolution, amenityFit, w.amenity()));
+            explanations.addAll(priorityExplanations(profile, r));
         }
         if (penalty > 0) {
             explanations.add("Trừ " + num(penalty) + " điểm do cờ chất lượng dữ liệu nguồn"
@@ -145,7 +146,8 @@ public class PropertyScoringV11Service {
             explanations.add("Chưa có hồ sơ tiện ích cho địa bàn này nên điểm tiện ích không được tính; "
                 + "điểm tổng chỉ dựa trên ngân sách, diện tích và loại bất động sản.");
         } else {
-            explanations.add(amenityExplanation(profile, resolution, ranked.amenityFit(), w.amenity()));
+            if (ranked.amenityFit() != null) explanations.add(amenityExplanation(profile, resolution, ranked.amenityFit(), w.amenity()));
+            explanations.addAll(priorityExplanations(profile, r));
         }
         if (ranked.qualityPenalty() > 0) {
             explanations.add("Trừ " + num(ranked.qualityPenalty()) + " điểm do cờ chất lượng dữ liệu nguồn"
@@ -155,6 +157,51 @@ public class PropertyScoringV11Service {
         explanations.add("Điểm tổng " + num(ranked.score()) + "/100 = trung bình có trọng số của các thành phần "
             + "đã có bằng chứng" + (ranked.qualityPenalty() > 0 ? ", sau khi trừ điểm chất lượng" : "") + ".");
         return List.copyOf(explanations);
+    }
+
+    /** Preference scores are applied to EVERY eligible candidate, before top-N and dedup. */
+    static Double amenityFit(AmenityProfile profile, Request request) {
+        if (profile == null) return null;
+        if (request.amenityPriorities().isEmpty()) return round(clamp(profile.livingScore()));
+        if (profile.categoryScores() == null || profile.poiCounts() == null) return null;
+        double sum=0, weight=0;
+        var priorities = request.amenityPriorities().stream().distinct().toList();
+        for(int i=0;i<priorities.size();i++) {
+            AmenityPriority priority=priorities.get(i);
+            if(!hasEvidence(profile,priority)) continue;
+            double w=Math.pow(0.5,i); // main 1, secondary 0.5, then 0.25 / 0.125
+            double value=switch(priority) {
+                case SCHOOL -> profile.categoryScores().education();
+                case SUPERMARKET, MARKET -> profile.categoryScores().essentials();
+                case HOSPITAL, PHARMACY -> profile.categoryScores().healthcare();
+                case PARK, BEACH -> profile.categoryScores().recreation();
+                case PUBLIC_TRANSPORT -> profile.categoryScores().transit();
+            };
+            if(!Double.isFinite(value)) continue;
+            sum+=clamp(value)*w;weight+=w;
+        }
+        return weight==0?null:round(sum/weight);
+    }
+    static boolean hasEvidence(AmenityProfile p,AmenityPriority priority) {
+        if(p.poiCounts()==null)return false;
+        return switch(priority) {
+            case SCHOOL -> p.poiCounts().school()>0;
+            case SUPERMARKET -> p.poiCounts().supermarket()>0;
+            case MARKET -> p.poiCounts().market()>0;
+            case HOSPITAL -> p.poiCounts().hospital()>0;
+            case PHARMACY -> p.poiCounts().pharmacy()>0;
+            case PARK -> p.poiCounts().park()>0;
+            case BEACH -> p.poiCounts().beach()>0;
+            case PUBLIC_TRANSPORT -> p.poiCounts().transit()>0;
+        };
+    }
+    static List<String> priorityExplanations(AmenityProfile p,Request request) {
+        if(request.amenityPriorities().isEmpty())return List.of();
+        List<String> notes=new ArrayList<>();
+        notes.add("Ưu tiên do người dùng chọn theo thứ tự: "+request.amenityPriorities()+". Chấm theo nhóm tiện ích ở "+p.areaLevel()+", không phải khoảng cách từ căn nhà; điểm chợ/siêu thị dùng nhóm nhu yếu phẩm, không phải điểm siêu thị riêng.");
+        if(request.amenityPriorities().contains(AmenityPriority.SCHOOL))notes.add("Bằng chứng SCHOOL là trường học nói chung, chưa xác nhận trường tiểu học hoặc trường phù hợp cho từng trẻ.");
+        for(var priority:request.amenityPriorities())if(!hasEvidence(p,priority))notes.add("Chưa có bằng chứng về "+priority+" trong hồ sơ khu vực; bỏ thành phần này và chuẩn hóa lại trọng số, không kết luận khu vực không có tiện ích.");
+        return List.copyOf(notes);
     }
 
     private static String amenityExplanation(AmenityProfile p, Resolution res, double fit, double baseWeight) {

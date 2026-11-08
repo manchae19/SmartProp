@@ -6,6 +6,7 @@ import java.util.*;
 
 public final class RecommendationDtos {
     private RecommendationDtos() {}
+    public enum AmenityPriority { SCHOOL, SUPERMARKET, MARKET, HOSPITAL, PHARMACY, PARK, BEACH, PUBLIC_TRANSPORT }
     public enum Purpose { LIVING, INVESTMENT, RENTAL }
     public enum PropertyType { ALL, HOUSE, APARTMENT, LAND, VILLA, ROOM, COMMERCIAL }
     public record Request(
@@ -13,7 +14,16 @@ public final class RecommendationDtos {
         @NotNull Purpose purpose, @NotNull PropertyType propertyType,
         @DecimalMin(value="0",inclusive=false) @DecimalMax("1000000") BigDecimal minAreaSqm,
         @Size(max=100) String district, @Size(max=100) String ward,
-        @Min(1) @Max(10) Integer limit) {}
+        @Min(1) @Max(10) Integer limit,
+        @Size(max=4) List<@NotNull AmenityPriority> amenityPriorities) {
+        public Request {
+            amenityPriorities = amenityPriorities == null ? List.of() : Collections.unmodifiableList(new ArrayList<>(amenityPriorities));
+        }
+        public Request(BigDecimal budgetVnd, Purpose purpose, PropertyType propertyType, BigDecimal minAreaSqm,
+                String district, String ward, Integer limit) {
+            this(budgetVnd,purpose,propertyType,minAreaSqm,district,ward,limit,List.of());
+        }
+    }
     public record Source(String kind,String name,String recordKey,String detailUrl) {}
 
     /**

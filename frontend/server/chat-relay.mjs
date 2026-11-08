@@ -15,9 +15,17 @@ const server = http.createServer((request, response) => {
     if (response.writableEnded) return
     try {
       const body = JSON.parse(Buffer.concat(chunks).toString('utf8'))
-      if (!body || Object.keys(body).some(k => !['question','requireGeneration'].includes(k)) || typeof body.question !== 'string' || !body.question.trim() || body.question.length > 2000 || body.requireGeneration !== false) return error(422)
+      if (!body || Object.keys(body).some(k => !['question','requireGeneration','sessionId'].includes(k)) || typeof body.question !== 'string' || !body.question.trim() || body.question.length > 2000 || body.requireGeneration !== false) return error(422)
+      if (body.sessionId != null && !/^[a-f0-9]{32}$/.test(body.sessionId)) return error(422)
+      const auth = request.headers.authorization
+      if (auth && !/^Bearer [A-Za-z0-9._-]+$/.test(auth)) return error(401)
+      const endpoint = new URL(target)
+      if (auth) endpoint.pathname = '/chat/personalized'
+      const headers = {Accept:'application/json','Content-Type':'application/json','Accept-Encoding':'identity'}
+      if (auth) headers.Authorization = auth
       const wire = Buffer.from(JSON.stringify(body))
-      const upstream = (target.protocol === 'https:' ? https : http).request(target, {method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','Content-Length':wire.length,'Accept-Encoding':'identity'}}, incoming => relayChatResponse(incoming, response))
+      headers['Content-Length'] = wire.length
+      const upstream = (target.protocol === 'https:' ? https : http).request(endpoint, {method:'POST',headers}, incoming => relayChatResponse(incoming, response))
       upstream.setTimeout(90000, () => { upstream.destroy(); error(504) })
       upstream.on('error', () => error(502)); upstream.end(wire)
     } catch { error(422) }

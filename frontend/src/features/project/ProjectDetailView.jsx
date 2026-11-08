@@ -155,7 +155,7 @@ export default React.forwardRef(function ProjectDetailView(props, ref) {
             })}
           >
             {
-              "Thông tin được cung cấp trong hồ sơ dự án. Chưa có ảnh dự án trong API này."
+              "Chưa có ảnh dự án."
             }
           </p>
           <dl

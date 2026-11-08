@@ -6,11 +6,13 @@ import vn.smartprop.modules.auth.*;
 import vn.smartprop.common.ApiException;
 @Service
 public class UserService {
+    @org.springframework.beans.factory.annotation.Autowired private AdvisorPreferencesService advisor;
     private final UserRepository users;
     private final SessionRepository sessions;
     private final PasswordEncoder passwords;
     public UserService(UserRepository users,SessionRepository sessions,PasswordEncoder passwords) { this.users=users; this.sessions=sessions; this.passwords=passwords; }
-    @Transactional(readOnly=true) public UserDtos.Profile me(Long id) { return UserDtos.Profile.of(active(id,false)); }
+    @Transactional(readOnly=true) public UserDtos.Profile me(Long id) { return profile(active(id,false)); }
+    private UserDtos.Profile profile(User u) { return UserDtos.Profile.of(u).withAdvisor(advisor==null?null:advisor.get(u.id)); }
     private User active(Long id,boolean lock) {
         User u=(lock?users.lockById(id):users.findById(id)).orElseThrow(() -> new ApiException(401,"UNAUTHENTICATED","Vui lòng đăng nhập"));
         if(u.deletedAt!=null) throw new ApiException(401,"UNAUTHENTICATED","Vui lòng đăng nhập");
@@ -23,7 +25,8 @@ public class UserService {
         if(r.phone()!=null) u.phone=r.phone().strip();
         if(r.district()!=null) u.district=r.district().strip();
         if(r.address()!=null) u.address=r.address().strip();
-        return UserDtos.Profile.of(users.saveAndFlush(u));
+        if(r.advisorPreferences()!=null) advisor.save(id,r.advisorPreferences());
+        return profile(users.saveAndFlush(u));
     }
     @Transactional public void password(Long id,UserDtos.Password r) {
         AuthService.passwordLength(r.currentPassword()); AuthService.passwordLength(r.newPassword());

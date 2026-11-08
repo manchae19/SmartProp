@@ -62,18 +62,18 @@ def create_chat_app(settings=None, orchestrator=None):
                 "qwenModel": QwenLLM.model_id, "embeddingModel": E5Embedding.model_id,
                 "researchEnabled": settings.research_enabled, "corpusPresent": settings.corpus_path.is_file()}
 
-    def run(payload, research=False, token=None):
+    def run(payload, research=False, token=None, account=None):
         with request_trace("/chat/research" if research else "/chat", payload.requireGeneration):
-            result = execute(payload, research, token)
+            result = execute(payload, research, token, account)
             event("response", status=200, generationMode=result.generationMode, retrievalMode=result.retrievalMode)
             return result
 
-    def execute(payload, research, token):
+    def execute(payload, research, token, account=None):
         if not slots.acquire(blocking=False):
             event("response", status=429, reason="CHAT_BUSY")
             raise HTTPException(429, "Chat đang bận; vui lòng thử lại.")
         try:
-            return orchestrator.chat(payload, research=research, token=token)
+            return orchestrator.chat(payload, research=research, token=token, **({"account": account} if account else {}))
         except UpstreamError as e:
             event("response", status=e.status, reason="BACKEND_UPSTREAM_ERROR")
             raise HTTPException(e.status, "Công cụ Backend chưa sẵn sàng hoặc không đủ quyền truy cập.") from None
@@ -90,6 +90,16 @@ def create_chat_app(settings=None, orchestrator=None):
     def chat(payload: ChatRequest):
         # No caller-controlled mode, SQL, source filter or forwarded credentials on this route.
         return run(payload)
+
+    @app.post("/chat/personalized", response_model=ChatResponse)
+    def personalized_chat(payload: ChatRequest, authorization: str | None = Header(default=None)):
+        if not authorization:
+            raise HTTPException(401,"Authentication required")
+        try:
+            account=orchestrator.backend.account_context(authorization)
+        except UpstreamError as e:
+            raise HTTPException(e.status,"Account context unavailable") from None
+        return run(payload,account=account)
 
     @app.delete("/chat/session/{session_id}")
     def end_session(session_id: str):

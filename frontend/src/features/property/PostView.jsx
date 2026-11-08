@@ -1391,7 +1391,7 @@ export default React.forwardRef(function PostView(props, ref) {
                           })}
                         >
                           {
-                            "Ví dụ: 12 đường …, phường …, Đà Nẵng. Không điền địa chỉ minh họa thay cho địa chỉ thực."
+                            "Nhập số nhà, tên đường, phường và thành phố."
                           }
                         </small>
                       </label>

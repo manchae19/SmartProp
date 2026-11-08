@@ -357,7 +357,7 @@ export default React.forwardRef(function AdvisorView(props, ref) {
           className: ["safe-note", {
             "research-note": ctx.research,
           }],
-          
+
           "data-sp-731b6e1b": "",
         })}
       >
@@ -420,15 +420,7 @@ export default React.forwardRef(function AdvisorView(props, ref) {
                 : "Mở Internal Demo TiniX AI",
             )}
           </button>
-          <p
-            {...mergeProps({
-              "data-sp-731b6e1b": "",
-            })}
-          >
-            {
-              "Không thay đổi danh sách công khai. Quyền truy cập được kiểm tra tại Backend."
-            }
-          </p>
+
         </div>
       ) : null}
       <form

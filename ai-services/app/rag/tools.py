@@ -42,6 +42,20 @@ class BackendTools:
         except (httpx.HTTPError, ValueError) as e:
             raise UpstreamError() from e
 
+    def account_context(self, token):
+        if not isinstance(token,str) or not token.startswith("Bearer ") or len(token)>8192:
+            raise UpstreamError(401)
+        try:
+            response=self.client.get("/api/v1/users/me/advisor-context",headers={"Authorization":token})
+            if response.status_code!=200:
+                raise UpstreamError(response.status_code)
+            result=response.json()
+            if not re.fullmatch(r"[0-9]{1,19}",str(result.get("subject",""))) or type(result.get("enabled")) is not bool:
+                raise UpstreamError()
+            return result
+        except (httpx.HTTPError,ValueError) as e:
+            raise UpstreamError() from e
+
     def authorize_research(self, token):
         if not token:
             raise UpstreamError(401)

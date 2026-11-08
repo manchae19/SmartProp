@@ -100,13 +100,7 @@ export default React.forwardRef(function ProjectsView(props, ref) {
         >
           {"Dự án trên SmartProp"}
         </h2>
-        <p
-          {...mergeProps({
-            className: "mt-3 text-sm text-brand-muted",
-          })}
-        >
-          {"Thông tin dự án được công bố từ Backend."}
-        </p>
+
         <LegacyState
           {...mergeProps({
             state: ctx.state,

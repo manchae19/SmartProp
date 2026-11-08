@@ -4,6 +4,7 @@ import { useStore } from "../shared/state/store.js";
 import { session } from "../features/auth/api.js";
 import SessionRecovery from "../features/auth/SessionRecovery.jsx";
 import PageLayout from "../shared/components/layout/PageLayout.jsx";
+import WelcomeNotice from "../shared/components/WelcomeNotice.jsx";
 import ComparisonTray from "../features/property/ComparisonTray.jsx";
 import { usesPageLayout } from "../shared/lib/siteNavigation.js";
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
         <Outlet />
       )}
       <ComparisonTray />
+      <WelcomeNotice />
     </>
   );
 }

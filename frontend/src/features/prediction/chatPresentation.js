@@ -25,7 +25,8 @@ export function chatPresentation(packet) {
   const cards = data.recommendedProperties.map(p => {
     const budgetFit = p.scoreBreakdown?.budgetFit
     const validBudgetFit = budgetFit != null && Number.isFinite(Number(budgetFit)) && Number(budgetFit) >= 0 && Number(budgetFit) <= 100
-    const reason = validBudgetFit ? 'Mức phù hợp ngân sách: ' + formatChatNumber(budgetFit) + '/100.' : p.explanations[0] || ''
+    const preferenceReason = p.explanations.find(note => note.includes('Ưu tiên do người dùng'))
+    const reason = preferenceReason || (validBudgetFit ? 'Mức phù hợp ngân sách: ' + formatChatNumber(budgetFit) + '/100.' : p.explanations[0] || '')
     return { id: p.id, title: p.title, location: [p.ward, p.district].filter(Boolean).join(', ') || 'Nguồn chưa có địa bàn',
       price: compactChatPrice(p.priceVnd), area: formatChatNumber(p.areaSqm), score: formatChatNumber(p.score),
       reason: displayEvidenceText(reason), href: advisorListingUrl(p), platform: p.source.kind === 'PROPERTY',

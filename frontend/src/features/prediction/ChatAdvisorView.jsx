@@ -150,6 +150,10 @@ function setup(__props) {
     scrollLatest();
     await pending;
   }
+  async function quickReply(question) {
+    await choose(question);
+    await submit();
+  }
   function retry() {
     if (locked.value) return;
     follow.value = true;
@@ -239,6 +243,7 @@ function setup(__props) {
     currentConversation,
     newConversation,
     submit,
+    quickReply,
     retry,
     keydown,
   };
@@ -533,7 +538,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                         type: "button",
                         disabled: ctx.locked,
                         onClick: ($event) => {
-                          ctx.choose("Hải Châu có bằng chứng bệnh viện nào?");
+                          ctx.choose("Ở Hải Châu có những bệnh viện nào?");
                         },
                         "data-sp-b5f8ab84": "",
                       })}
@@ -554,7 +559,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                     })}
                   >
                     {
-                      "Chỉ dùng dữ liệu công khai. Mỗi câu hỏi được xử lý độc lập."
+                      "Nhập nhu cầu tìm nhà của bạn để bắt đầu."
                     }
                   </p>
                 </div>
@@ -611,6 +616,14 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                       >
                         {"S"}
                       </span>
+                      <div className="answer-with-actions">
+                        {message.response.evidence?.needs?.summary?.length ? (
+                          <aside className="chat-needs-summary" aria-label="Tiêu chí đang dùng">
+                            <strong>Tiêu chí đang dùng</strong>
+                            <ul>{message.response.evidence.needs.summary.map((item, index) => <li key={index}>{item}</li>)}</ul>
+                            <small>Bạn có thể gõ để sửa ngân sách, khu vực hoặc thứ tự ưu tiên.</small>
+                          </aside>
+                        ) : null}
                       <ChatAnswer
                         {...mergeProps({
                           result: message.response,
@@ -625,6 +638,14 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                           "data-sp-b5f8ab84": "",
                         })}
                       />
+                        {message.id === ctx.state.messages.at(-1)?.id && message.response.evidence?.quickReplies?.length ? (
+                          <div className="chat-quick-replies" role="group" aria-label="Lựa chọn trả lời nhanh">
+                            {message.response.evidence.quickReplies.map(choice => (
+                              <button key={choice} type="button" disabled={ctx.locked} onClick={() => ctx.quickReply(choice)}>{choice}</button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
                     </React.Fragment>
                   )}
                 </article>

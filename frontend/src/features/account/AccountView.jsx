@@ -31,6 +31,7 @@ import UserAvatar from "../../shared/components/UserAvatar.jsx";
 import AvatarEditor from "./AvatarEditor.jsx";
 import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./AccountView.css";
+import LifestyleFields, { emptyLifestyle } from "./LifestyleFields.jsx";
 function setup(__props) {
   const router = useRouter(),
     form = ref({
@@ -132,6 +133,7 @@ function setup(__props) {
       phone: user.phone || "",
       district: user.district || "",
       address: user.address || "",
+      advisorPreferences: {...emptyLifestyle(), ...user.advisorPreferences},
     };
   }
   async function load() {
@@ -746,6 +748,7 @@ export default React.forwardRef(function AccountView(props, ref) {
               )}
             />
           </label>
+          <LifestyleFields value={ctx.form.advisorPreferences} disabled={!ctx.loaded || ctx.busy} onChange={value => {ctx.form.advisorPreferences=value}} />
           <div
             {...mergeProps({
               className: "flex flex-wrap gap-3 sm:col-span-2",

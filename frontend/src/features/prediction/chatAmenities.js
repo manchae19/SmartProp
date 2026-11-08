@@ -20,7 +20,9 @@ export function amenityIntent(question, packet) {
   if (/chợ/iu.test(question) || /khu cho|cho nao|cac cho/.test(q)) categories.push('MARKET')
   if (/nha thuoc|hieu thuoc/.test(q)) categories.push('PHARMACY')
   if (/xe buyt|giao thong|ben xe/.test(q)) categories.push('PUBLIC_TRANSPORT')
-  const requested = categories.length > 0 || /tien ich/.test(q)
+  const housingResult = data.recommendedProperties.length > 0 && data.evidence?.needs
+    && !(data.evidence?.amenityIntent?.categories?.length)
+  const requested = !housingResult && (categories.length > 0 || /tien ich/.test(q))
   const narrow = /\b(phuong|xa|duong|kiet|hem)\b/.test(q)
   // A district the user typed always wins. A follow-up such as "co benh vien nao trong
   // khu vuc do?" names none, but the server resolved it from this conversation and the

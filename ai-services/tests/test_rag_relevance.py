@@ -62,7 +62,7 @@ class RelevanceTests(unittest.TestCase):
         service,backend,sql,retriever,model=self.service()
         backend.recommend.return_value['topProperties']=[{'id':'property:fixture','priceVnd':10,'areaSqm':2,'score':80,'district':'Hải Châu','ward':None,'source':{'kind':'PROPERTY','recordKey':'fixture'}}]
         sql.lookup.return_value=[{'id':'fixture','price':10,'area_sqm':2}]
-        result=service.chat(ChatRequest(question='Tôi có 2 tỷ, tìm nhà.'))
+        result=service.chat(ChatRequest(question='Tôi có 2 tỷ, tìm nhà ở Đà Nẵng.'))
         sql.lookup.assert_called_once();retriever.search.assert_called_once()
         self.assertTrue(any(c.sourceId=='recommendation:property:fixture' for c in result.citations))
         self.assertEqual(result.evidence['sql']['status'],'READ_ONLY_MATCHED')

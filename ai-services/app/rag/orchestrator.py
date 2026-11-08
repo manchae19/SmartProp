@@ -11,6 +11,7 @@ from .diagnostics import traced, event, reason
 from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
+from .personalization import intake, projection
 
 
 LIMITATIONS = [
@@ -41,6 +42,8 @@ def budget_from_question(question):
     return amount if 1 <= amount <= 999999999999999 else None
 
 
+from .account_preferences import fingerprint, seed
+
 class ChatOrchestrator:
     def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None):
         self.backend, self.repository, self.knowledge = backend, repository, knowledge
@@ -62,7 +65,7 @@ class ChatOrchestrator:
         property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
         self.sessions.record(context,
             criteria={**{k: v for k, v in (criteria or {}).items() if k not in ("sessionTurn", "_propertyIds")},
-                      "_propertyIds": property_ids} if criteria and (criteria.get("budgetVnd") or criteria.get("district")) else None,
+                      "_propertyIds": property_ids} if criteria else None,
             property_ids=property_ids,
             area_ids=[a.get("amenityAreaId") for a in (response or {}).get("topAreas", []) if a.get("amenityAreaId")],
             evidence_ids=[c.sourceId for c in citations],
@@ -74,19 +77,32 @@ class ChatOrchestrator:
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
         if extra:
             payload.update(extra)
+        if context.needs.get("active"):
+            needs = projection(context, criteria or {})
+            payload["needs"] = needs
+            if not payload.get("quickReplies"):
+                payload["quickReplies"] = ["Tìm kỹ hơn"] if properties else []
+            limitations = list(dict.fromkeys(list(limitations or []) + needs["limitations"]))
         return ChatResponse(answer=answer, mode="INTERNAL_RESEARCH" if research else "SAFE",
             generationMode=generation_mode, retrievalMode=retrieval_mode, citations=list(citations),
             recommendedProperties=list(properties), evidence=payload, dataLimitations=list(limitations or []))
 
-    def chat(self, request, *, research=False, token=None):
+    def chat(self, request, *, research=False, token=None, account=None):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
         if research:
             traced("research_authorization", lambda: self.backend.authorize_research(token))
         # Session scope comes from the authenticated route, never from the client payload,
         # so a public caller cannot address (or read) a research context.
-        scope = "INTERNAL_RESEARCH" if research else "PUBLIC"
+        scope = "INTERNAL_RESEARCH" if research else ("ACCOUNT:"+account["subject"] if account else "PUBLIC")
         context, session_id, resumed = traced("session_begin",
             lambda: self.sessions.begin(request.sessionId, scope=scope))
+        if account:
+            current_fingerprint=fingerprint(account)
+            if context.needs.get("accountFingerprint") not in (None,current_fingerprint):
+                # Revoke every profile-derived reference on consent/profile change, including an open session.
+                self.sessions.drop(context)
+                context,session_id,resumed=self.sessions.begin(None,scope=scope)
+            context.needs["accountFingerprint"]=current_fingerprint
         turn = classification(request.question, context if resumed else None)
         event("session_turn", resumed=resumed, turn=context.turns,
               followup=bool(turn["searchChange"] or turn["ordinal"] or turn["mapRequest"] or turn["analytic"]))
@@ -96,9 +112,11 @@ class ChatOrchestrator:
             raise GroundingError("PUBLIC_CORPUS_VERSION_DRIFT")
         documents = corpus["documents"]
         names = sorted({d["metadata"].get("district", "") for d in documents}, key=len, reverse=True)
+        if account and not resumed:
+            seed(context,account,names)
         explicit_district = request.district or detect_district(request.question, names)
         # A follow-up that only refines one criterion keeps every other stored criterion.
-        prior = context.criteria() if resumed else {}
+        prior = context.criteria()
         district = explicit_district or prior.get("district")
         # Explicit POI categories are a routing rule, never a similarity guess.
         categories = poi_categories(request.question)
@@ -123,6 +141,8 @@ class ChatOrchestrator:
             criteria["ward"] = prior["ward"]
         if district is not None:
             criteria["district"] = district
+        if prior.get("amenityPriorities"):
+            criteria["amenityPriorities"] = list(prior["amenityPriorities"])
         response = None
         properties = []
         # An amenity-only follow-up must not spend a Recommendation call.
@@ -132,6 +152,15 @@ class ChatOrchestrator:
             criteria["budgetVnd"] = str(budget)
             if "minAreaSqm" in criteria:
                 criteria["minAreaSqm"] = str(criteria["minAreaSqm"])
+        decision = intake(context, request.question, criteria, turn, explicit_district=explicit_district)
+        if decision["question"]:
+            return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+                answer=decision["question"], responseKind="CLARIFICATION_REQUIRED", limitations=limitations,
+                extra={"quickReplies": decision["choices"], "clarification": "LIFESTYLE_INTAKE"})
+        if decision["search"]:
+            # A mixed house+amenity request ranks houses; it is not a POI-only question.
+            categories = ()
+            amenity_only = False
         # A changed budget/district always re-queries the live API. A stored list is
         # never replayed as a new result set; it only names what to ask about.
         must_search = (budget is not None and not amenity_only) or (referral and bool(prior))
@@ -185,7 +214,7 @@ class ChatOrchestrator:
                         responseKind="CLARIFICATION_REQUIRED", limitations=limitations, response=response,
                         extra={"clarification": "AMBIGUOUS_PROPERTY_REFERENCE"})
 
-        if not research and budget is not None and not properties and not asks_for_amenities(request.question):
+        if not research and budget is not None and not properties and (decision["search"] or not asks_for_amenities(request.question)):
             # An empty authorized search is useful evidence. Do not replace it with
             # unrelated semantic POIs or claim that a templated answer came from Qwen.
             event("no_match_response", strict=request.requireGeneration, generationRequired=False)
@@ -295,6 +324,7 @@ class ChatOrchestrator:
             text = (f"Mã {p['id']}: giá rao {number(p['priceVnd'])} đồng; diện tích {number(p['areaSqm'])} m²; "
                     f"điểm phù hợp {number(p['score'])}/100; khu vực {p.get('district') or 'chưa rõ'}" +
                     (f", {p['ward']}" if p.get("ward") else "") + ".")
+            # Full preference explanations remain in the API cards/limitations, not repeated in each generated fact.
             parts = p.get("scoreBreakdown") or {}
             labels = {"budgetFit": "ngân sách", "areaFit": "diện tích", "propertyTypeFit": "loại bất động sản", "amenityFit": "tiện ích"}
             if parts:

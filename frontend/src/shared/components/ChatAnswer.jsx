@@ -170,7 +170,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             })}
           >
             {
-              "AI chưa sẵn sàng. Kết quả này được tổng hợp trực tiếp từ bằng chứng công khai."
+              "Kết quả tham khảo từ dữ liệu hiện có."
             }
           </p>
         ) : null}
@@ -630,8 +630,8 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             >
               {display(
                 ctx.view.generated
-                  ? "Xem phản hồi Qwen nguyên văn đã kiểm tra"
-                  : "Xem bản tổng hợp nguyên văn",
+                  ? "Xem câu trả lời đầy đủ"
+                  : "Xem nội dung đầy đủ",
               )}
             </summary>
             <p

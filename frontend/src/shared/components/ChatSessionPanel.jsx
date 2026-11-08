@@ -30,7 +30,7 @@ function setup(__props) {
     },
     {
       label: "Khám phá tiện ích khu vực",
-      text: "Hải Châu có bằng chứng bệnh viện nào?",
+      text: "Ở Hải Châu có những bệnh viện nào?",
     },
     {
       label: "Kiểm tra lựa chọn dưới 2 tỷ",
@@ -148,51 +148,6 @@ export default React.forwardRef(function ChatSessionPanel(props, ref) {
           </button>
         ))}
       </div>
-      <div
-        {...mergeProps({
-          className: "session-scope",
-          "data-sp-57e2adde": "",
-        })}
-      >
-        <AppIcon
-          {...mergeProps({
-            name: "shield",
-            "data-sp-57e2adde": "",
-          })}
-        />
-        <div
-          {...mergeProps({
-            "data-sp-57e2adde": "",
-          })}
-        >
-          <strong
-            {...mergeProps({
-              "data-sp-57e2adde": "",
-            })}
-          >
-            {"Chỉ dùng dữ liệu công khai"}
-          </strong>
-          <p
-            {...mergeProps({
-              "data-sp-57e2adde": "",
-            })}
-          >
-            {
-              "Giá rao để tham khảo. Không dùng dữ liệu nghiên cứu để lấp kết quả rỗng."
-            }
-          </p>
-        </div>
-      </div>
-      <p
-        {...mergeProps({
-          className: "session-privacy",
-          "data-sp-57e2adde": "",
-        })}
-      >
-        {
-          "Lịch sử chỉ ở tab hiện tại, không lưu vào tài khoản và mất khi tải lại. Mỗi câu hỏi được xử lý độc lập; hãy nhắc lại ngân sách và khu vực."
-        }
-      </p>
       <RouterLink
         {...mergeProps({
           to: "/advisor",

@@ -44,6 +44,7 @@ class Context:
     evidence_source_ids: list = field(default_factory=list)
     last_criteria: dict | None = None
     last_question: str | None = None
+    needs: dict = field(default_factory=dict)
 
     def criteria(self):
         """Stored search criteria, exactly the shape the Recommendation API consumed."""
@@ -88,7 +89,7 @@ class SessionStore:
     # -- lifecycle --------------------------------------------------------
     def begin(self, session_id, *, scope):
         """Return (context, session_id, resumed). Unknown/expired ids never error."""
-        if scope not in ("PUBLIC", "INTERNAL_RESEARCH"):
+        if scope not in ("PUBLIC", "INTERNAL_RESEARCH") and not re.fullmatch(r"ACCOUNT:[0-9]{1,19}", scope):
             raise ValueError("INVALID_SESSION_SCOPE")
         now = self._clock()
         with self._lock:
