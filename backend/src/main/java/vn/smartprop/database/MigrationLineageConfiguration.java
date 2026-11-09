@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public class MigrationLineageConfiguration {
     @Bean InitializingBean validateSelectedMigrationLineage(DataSource source,Environment env){
         return ()->{
-            boolean local=List.of(env.getActiveProfiles()).contains(MigrationProfileEnvironmentGuard.LOCAL);
+            boolean local=MigrationProfileEnvironmentGuard.isLocal(env);
             boolean standard=List.of(env.getActiveProfiles()).contains(MigrationProfileEnvironmentGuard.STANDARD);
             JdbcTemplate jdbc=new JdbcTemplate(source);
             if(!local&&!standard){
@@ -26,9 +26,7 @@ public class MigrationLineageConfiguration {
             }
             var history=jdbc.queryForList("SELECT version,type,checksum,success FROM flyway_schema_history ORDER BY installed_rank");
             checkHistory(history,local,env.getProperty("app.local-lineage.require-complete",Boolean.class,true));
-            if(local){
-                if(!Integer.valueOf(3306).equals(jdbc.queryForObject("SELECT @@port",Integer.class))||!"smartprop".equals(jdbc.queryForObject("SELECT DATABASE()",String.class)))throw new IllegalStateException("Wrong Local database identity.");
-            }
+            if(local)checkLocalIdentity(jdbc,MigrationProfileEnvironmentGuard.staging(env));
             boolean complete=env.getProperty("app.local-lineage.require-complete",Boolean.class,true);
             Flyway flyway=Flyway.configure().dataSource(source)
                 .locations("classpath:database/"+(local?"legacy-hybrid-local":"migrations"),"classpath:database/research-migrations")
@@ -44,6 +42,17 @@ public class MigrationLineageConfiguration {
             }
             flyway.validate();
         };
+    }
+    /** Refuses a live server that is not the expected instance: no implicit 3306 fallback on staging. */
+    static void checkLocalIdentity(JdbcTemplate jdbc,boolean staging){
+        Integer port=jdbc.queryForObject("SELECT @@port",Integer.class);
+        String schema=jdbc.queryForObject("SELECT DATABASE()",String.class);
+        if(!Integer.valueOf(staging?3307:3306).equals(port)||!"smartprop".equals(schema))throw new IllegalStateException("Wrong Local database identity.");
+        if(staging){
+            String datadir=jdbc.queryForObject("SELECT @@datadir",String.class);
+            String normalized=datadir==null?"":datadir.replace('\\','/');
+            if(!normalized.endsWith(MigrationProfileEnvironmentGuard.STAGING_DATADIR_SUFFIX))throw new IllegalStateException("Staging must use the isolated datadir; refusing "+datadir);
+        }
     }
     static void checkHistory(List<Map<String,Object>> history,boolean local,boolean complete){
         boolean legacy=history.stream().anyMatch(r->"14".equals(r.get("version"))&&Objects.equals(r.get("checksum"),-1382804267));

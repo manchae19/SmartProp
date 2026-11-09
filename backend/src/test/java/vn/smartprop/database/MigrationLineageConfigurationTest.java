@@ -13,6 +13,11 @@ class MigrationLineageConfigurationTest {
             .withProperty("spring.flyway.enabled","false").withProperty("spring.jpa.hibernate.ddl-auto","validate")
             .withProperty("spring.sql.init.mode","never");
     }
+    MockEnvironment staging(){
+        var e=local().withProperty("spring.datasource.url",MigrationProfileEnvironmentGuard.STAGING_URL);
+        e.setActiveProfiles(MigrationProfileEnvironmentGuard.STAGING);
+        return e;
+    }
     Map<String,Object> row(String version,String type,Integer checksum){
         var r=new HashMap<String,Object>();r.put("version",version);r.put("type",type);r.put("checksum",checksum);r.put("success",true);return r;
     }
@@ -30,4 +35,30 @@ class MigrationLineageConfigurationTest {
     @Test void rejectsWrongCrawlerChecksum(){assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(List.of(row("13","BASELINE",null),row("14","SQL",679419338)),true,false));}
     @Test void acceptsCompletedHistoryForValidation(){var r=new ArrayList<>(before());r.add(row("17","SQL",12));r.add(row("18","SQL",34));assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(r,true,true));}
     @Test void rejectsUnexpectedOrFailedHistory(){var r=new ArrayList<>(before());r.add(row("15","SQL",12));assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(r,true,false));var fail=new ArrayList<>(before());fail.get(1).put("success",false);assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(fail,true,false));}
+
+    // Staging is the same lineage on a fixed literal URL; nothing else may reach it.
+    @Test void stagingProfileAcceptsOnlyTheFixedStagingUrl(){assertDoesNotThrow(()->MigrationProfileEnvironmentGuard.check(staging()));}
+    @Test void stagingRejectsTheProductionUrl(){assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.datasource.url",MigrationProfileEnvironmentGuard.LOCAL_URL)));}
+    @Test void productionProfileRejectsTheStagingUrl(){assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(local().withProperty("spring.datasource.url",MigrationProfileEnvironmentGuard.STAGING_URL)));}
+    @Test void stagingRejectsAnyOtherHostPortOrSchema(){
+        for(String url:new String[]{
+            "jdbc:mysql://127.0.0.1:3307/otherdb?connectionTimeZone=UTC",
+            "jdbc:mysql://127.0.0.1:3308/smartprop?connectionTimeZone=UTC",
+            "jdbc:mysql://localhost:3307/smartprop?connectionTimeZone=UTC",
+            "jdbc:mysql://127.0.0.1:3306/smartprop",
+            "jdbc:mysql://10.0.0.5:3307/smartprop?connectionTimeZone=UTC"})
+            assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.datasource.url",url)),url);
+    }
+    @Test void stagingAndLocalProfilesCannotCombine(){var e=staging();e.setActiveProfiles(MigrationProfileEnvironmentGuard.LOCAL,MigrationProfileEnvironmentGuard.STAGING);assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(e));}
+    @Test void stagingCannotUsePendingSchemaReadOnlyMode(){assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("app.local-lineage.require-complete","false")));}
+    @Test void stagingKeepsAutoDdlAndMigrateForbidden(){
+        assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.jpa.hibernate.ddl-auto","update")));
+        assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.jpa.hibernate.ddl-auto","none")));
+        assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.flyway.enabled","true")));
+        assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(staging().withProperty("spring.sql.init.mode","always")));
+    }
+    @Test void stagingDatadirMustBeTheIsolatedOne(){
+        assertTrue("F:\\SmartProp-backups\\mysql-isolated\\data\\".replace('\\','/').endsWith(MigrationProfileEnvironmentGuard.STAGING_DATADIR_SUFFIX));
+        assertFalse("F:\\MySQL\\Data\\Data\\".replace('\\','/').endsWith(MigrationProfileEnvironmentGuard.STAGING_DATADIR_SUFFIX));
+    }
 }
