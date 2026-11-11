@@ -43,6 +43,7 @@ def budget_from_question(question):
 
 
 from .account_preferences import fingerprint, seed
+from .tools import UpstreamError
 
 class ChatOrchestrator:
     def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None):
@@ -50,6 +51,49 @@ class ChatOrchestrator:
         self.retriever, self.llm = retriever, llm
         # Bounded in-memory conversation memory. Never persisted, never authoritative.
         self.sessions = sessions or SessionStore()
+
+    def _enrich(self, properties):
+        """Attach real image + straight-line POI evidence to visible platform properties.
+
+        The existing public property/POI endpoints remain the source of truth. Missing or
+        non-public evidence is marked explicitly; nothing is invented and no travel time
+        is estimated.
+        """
+        for p in properties:
+            if not isinstance(p, dict):
+                continue
+            source = p.get("source") or {}
+            if source.get("kind") != "PROPERTY":
+                p["nearbyPoisStatus"] = "NOT_APPLICABLE"
+                continue
+            property_id = source.get("recordKey")
+            p["nearbyPois"] = []
+            p["nearbyPoisStatus"] = "UNAVAILABLE"
+            p["nearbyPoisDistanceType"] = "STRAIGHT_LINE"
+            p["nearbyPoisRadiusMeters"] = 1000
+            p["nearbyPoisLimitations"] = ["Khoảng cách là đường chim bay từ toạ độ tin đăng; chưa tính thời gian di chuyển thực tế."]
+            image_fn = getattr(self.backend, "property_image", None)
+            if callable(image_fn):
+                try:
+                    image = image_fn(property_id)
+                    if isinstance(image, str):
+                        p["imageUrl"] = image
+                except Exception:
+                    p["imageUrl"] = None
+            poi_fn = getattr(self.backend, "nearby_pois", None)
+            if not callable(poi_fn):
+                continue
+            try:
+                items = poi_fn(property_id)
+                if isinstance(items, list):
+                    p["nearbyPois"] = items
+                    p["nearbyPoisStatus"] = "AVAILABLE" if items else "NO_POIS_IN_RADIUS"
+                else:
+                    p["nearbyPoisStatus"] = "UNAVAILABLE"
+            except UpstreamError as error:
+                p["nearbyPoisStatus"] = "PROPERTY_NOT_PUBLIC" if error.status == 404 else "UNAVAILABLE"
+            except Exception:
+                p["nearbyPoisStatus"] = "UNAVAILABLE"
 
     # ------------------------------------------------------------------
     def _reply(self, request, session_id, context, criteria, *, properties, citations, research,
@@ -61,6 +105,8 @@ class ChatOrchestrator:
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
+        if properties:
+            self._enrich(properties)
         full = list(result_properties if result_properties is not None else properties)
         property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
         self.sessions.record(context,

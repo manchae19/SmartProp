@@ -45,15 +45,24 @@ class AdvisorPreferencesTest {
             assertTrue(factory.getValidator().validate(AdvisorPreferencesService.Preferences.empty()).isEmpty());
         }
     }
-    @Test void contextIsConsentGatedAndDoesNotContainFamilyOrOccupation() throws Exception {
+    @Test void contextIsConsentGatedAndDoesNotExposeOccupation() throws Exception {
         schema();var u=new User();u.id=1L;u.status=User.Status.ACTIVE;u.district="Cẩm Lệ";
         when(users.findById(1L)).thenReturn(Optional.of(u));
         var p=prefs(true,2,List.of(AdvisorPreferencesService.Need.SUPERMARKET),AdvisorPreferencesService.Need.SUPERMARKET,false);
         when(jdbc.queryForList(anyString(),eq(String.class),eq(1L))).thenReturn(List.of(mapper.writeValueAsString(p)));
         var c=service.context(1L);
         assertFalse(c.enabled());assertNull(c.district());assertTrue(c.selectedNeeds().isEmpty());
+        assertNull(c.familyStatus());assertNull(c.hasChildren());assertNull(c.childrenCount());assertNull(c.ageGroup());
         String wire=mapper.writeValueAsString(c);
-        assertFalse(wire.contains("occupation"));assertFalse(wire.contains("children"));
+        assertFalse(wire.contains("occupation"));assertFalse(wire.contains("Engineer"));
+        var enabled=new AdvisorPreferencesService.Preferences(AdvisorPreferencesService.Family.MARRIED,true,2,"Engineer","Cẩm Lệ",
+            List.of(AdvisorPreferencesService.Need.SUPERMARKET),AdvisorPreferencesService.Need.SUPERMARKET,"",true,
+            AdvisorPreferencesService.AgeGroup.AGE_35_44);
+        when(jdbc.queryForList(anyString(),eq(String.class),eq(1L))).thenReturn(List.of(mapper.writeValueAsString(enabled)));
+        var c2=service.context(1L);
+        assertTrue(c2.enabled());assertEquals(AdvisorPreferencesService.Family.MARRIED,c2.familyStatus());
+        assertTrue(c2.hasChildren());assertEquals(2,c2.childrenCount());assertEquals(AdvisorPreferencesService.AgeGroup.AGE_35_44,c2.ageGroup());
+        assertFalse(mapper.writeValueAsString(c2).contains("occupation"));
         u.status=User.Status.LOCKED;
         assertThrows(ApiException.class,()->service.context(1L));
     }

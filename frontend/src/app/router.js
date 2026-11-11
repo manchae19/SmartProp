@@ -24,11 +24,11 @@ const routes=[
  ...Object.entries({home:'HomeView',listings:'ListingsView',map:'MapView',favorites:'FavoriteView','my-listing':'MyListingView'}).map(([path,view])=>({path:'/'+path,component:restoredViews[view]})),
  {path:'/auth/google/complete',component:()=>import('../features/auth/GoogleCompleteView.jsx')},
  {path:'/valuation',component:()=>import('../features/prediction/ValuationView.jsx')},
- {path:'/market',component:()=>import('../features/market/MarketInsightsView.jsx')},
- {path:'/market/:district',component:()=>import('../features/market/MarketInsightsView.jsx')},
- {path:'/market-insights',redirect:'/market'},
- {path:'/market-insights/:district',redirect:to=>({path:'/market/'+to.params.district})},
- // Real-data market analytics (Step 21.5B) — additive, keeps the legacy /market page.
+ {path:'/market',redirect:'/market-analytics'},
+ {path:'/market/:district',redirect:'/market-analytics'},
+ {path:'/market-insights',redirect:'/market-analytics'},
+ {path:'/market-insights/:district',redirect:'/market-analytics'},
+ // Real-data market analytics (Step 21.5B) — legacy demo routes above now redirect here.
  {path:'/market-analytics',component:()=>import('../features/market/MarketAnalyticsView.jsx')},
  // Comparable listings lookup (BROKER/ADMIN) — additive.
  {path:'/comparables',component:()=>import('../features/property/ComparablesView.jsx')},

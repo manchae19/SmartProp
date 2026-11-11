@@ -156,5 +156,14 @@ export function createValuationClient({ fetchImpl = globalThis.fetch, timeoutMs 
       }
       return data
     },
+    async predictV13(payload, { signal } = {}) {
+      const data = await request('/predict/v1_3_preview', { payload, signal })
+      if (data?.model_version !== 'v1.3' || data.is_preview !== true || data.status !== 'PREVIEW_EXPERIMENTAL' ||
+          !Number.isFinite(data.predicted_asking_price_vnd) || data.predicted_asking_price_vnd <= 0 ||
+          typeof data.price_band !== 'string' || !data.price_band.trim() || !Array.isArray(data.missing_features)) {
+        throw new ValuationError('Kết quả V1.3 từ dịch vụ chưa hợp lệ. Vui lòng thử lại.')
+      }
+      return data
+    },
   }
 }

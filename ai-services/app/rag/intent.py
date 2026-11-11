@@ -87,7 +87,8 @@ def empty_search_answer(criteria):
     return (f"Chưa tìm thấy bất động sản đủ điều kiện công khai trong ngân sách {amount} đồng"
             + (f" tại {location}" if location else "")
             + ". Đây là kết quả trên dữ liệu hiện có, không phải kết luận về toàn bộ thị trường.\n"
-            "Bạn muốn tìm nhà ở, căn hộ hay đất nền, và tại địa bàn nào? "
+            "Bạn có thể nới ngân sách, mở rộng khu vực, giảm diện tích tối thiểu hoặc đổi loại bất động sản; "
+            "hệ thống không tự bỏ qua ngân sách. Bạn muốn tìm nhà ở, căn hộ hay đất nền, và tại địa bàn nào? "
             "Hãy nhắc lại ngân sách trong câu hỏi tiếp theo, hoặc chọn “Tìm bằng bộ lọc”.")
 
 

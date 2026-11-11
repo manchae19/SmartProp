@@ -23,7 +23,8 @@ import {
   ref,
   watch,
 } from "../../shared/state/store.js";
-import { chatSession } from "./chatRuntime.js";
+import { chatSession, setProfileMode } from "./chatRuntime.js";
+import { session, loadProfile } from "../auth/api.js";
 import { isNearChatBottom } from "./chatPresentation.js";
 import ChatAnswer from "../../shared/components/ChatAnswer.jsx";
 import ChatSessionPanel from "../../shared/components/ChatSessionPanel.jsx";
@@ -32,6 +33,54 @@ import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./ChatAdvisorView.css";
 function setup(__props) {
   const { state } = chatSession;
+  setProfileMode(false);
+  const profileLoading = ref(false),
+    profileError = ref(""),
+    profileEnabled = ref(false),
+    useProfile = ref(false),
+    profileNeedCount = ref(0);
+  const profileLabel = computed(() => {
+    if (!session.token) return "Đăng nhập để dùng hồ sơ cá nhân";
+    if (profileLoading.value) return "Đang tải hồ sơ cá nhân…";
+    if (profileError.value) return "Không tải được hồ sơ cá nhân";
+    if (!profileEnabled.value) return "Chưa bật tư vấn cá nhân";
+    return useProfile.value
+      ? "Đang dùng hồ sơ đã lưu (" + profileNeedCount.value + " ưu tiên)"
+      : "Không dùng hồ sơ trong phiên này";
+  });
+  async function loadChatProfile() {
+    if (!session.token) {
+      setProfileMode(false);
+      profileEnabled.value = false;
+      useProfile.value = false;
+      return;
+    }
+    profileLoading.value = true;
+    profileError.value = "";
+    try {
+      const user = await loadProfile();
+      const prefs = user?.advisorPreferences || {};
+      profileEnabled.value = !!prefs.enabled;
+      profileNeedCount.value = Array.isArray(prefs.selectedNeeds)
+        ? prefs.selectedNeeds.length
+        : 0;
+      useProfile.value = !!prefs.enabled;
+      setProfileMode(useProfile.value);
+    } catch (error) {
+      profileError.value = error?.message || "Không tải được hồ sơ cá nhân.";
+      profileEnabled.value = false;
+      useProfile.value = false;
+      setProfileMode(false);
+    } finally {
+      profileLoading.value = false;
+    }
+  }
+  function toggleProfile() {
+    if (locked.value || !session.token || !profileEnabled.value) return;
+    useProfile.value = !useProfile.value;
+    setProfileMode(useProfile.value);
+    newConversation();
+  }
   const draft = ref(""),
     input = ref(null),
     thread = ref(null),
@@ -154,6 +203,13 @@ function setup(__props) {
     await choose(question);
     await submit();
   }
+  async function restartIntake() {
+    if (locked.value) return;
+    chatSession.clear();
+    draft.value = "";
+    await nextTick();
+    await quickReply("Tư vấn từng bước");
+  }
   function retry() {
     if (locked.value) return;
     follow.value = true;
@@ -176,6 +232,7 @@ function setup(__props) {
     },
   );
   onMounted(() => {
+    loadChatProfile();
     timer = setInterval(() => {
       clock.value = Date.now();
     }, 1000);
@@ -205,6 +262,15 @@ function setup(__props) {
     ref,
     watch,
     chatSession,
+    session,
+    profileLoading,
+    profileError,
+    profileEnabled,
+    useProfile,
+    profileNeedCount,
+    profileLabel,
+    loadChatProfile,
+    toggleProfile,
     isNearChatBottom,
     ChatAnswer,
     ChatSessionPanel,
@@ -244,6 +310,7 @@ function setup(__props) {
     newConversation,
     submit,
     quickReply,
+    restartIntake,
     retry,
     keydown,
   };
@@ -441,6 +508,116 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
           </header>
           <div
             {...mergeProps({
+              className: "chat-profile-bar",
+              "data-chat-profile": "",
+              "data-sp-b5f8ab84": "",
+            })}
+          >
+            <span
+              {...mergeProps({
+                className: "chat-profile-label",
+                "data-chat-profile-label": "",
+                "data-sp-b5f8ab84": "",
+              })}
+            >
+              {display(ctx.profileLabel)}
+            </span>
+            {!ctx.session.token ? (
+              <RouterLink
+                {...mergeProps({
+                  to: "/login",
+                  className: "chat-profile-link",
+                  "data-chat-profile-login": "",
+                  "data-sp-b5f8ab84": "",
+                })}
+              >
+                {"Đăng nhập"}
+              </RouterLink>
+            ) : (
+              <React.Fragment {...mergeProps({})}>
+                {ctx.profileEnabled ? (
+                  <button
+                    {...mergeProps({
+                      type: "button",
+                      className: "chat-profile-link",
+                      disabled: ctx.locked,
+                      onClick: ($event) => {
+                        return ctx.toggleProfile?.($event);
+                      },
+                      "data-chat-profile-toggle": "",
+                      "data-sp-b5f8ab84": "",
+                    })}
+                  >
+                    {display(
+                      ctx.useProfile
+                        ? "Không dùng hồ sơ trong phiên này"
+                        : "Dùng hồ sơ trong phiên này",
+                    )}
+                  </button>
+                ) : (
+                  <RouterLink
+                    {...mergeProps({
+                      to: "/account#personal-information",
+                      className: "chat-profile-link",
+                      "data-chat-profile-setup": "",
+                      "data-sp-b5f8ab84": "",
+                    })}
+                  >
+                    {"Thiết lập hồ sơ"}
+                  </RouterLink>
+                )}
+                <RouterLink
+                  {...mergeProps({
+                    to: "/account#personal-information",
+                    className: "chat-profile-link",
+                    "data-sp-b5f8ab84": "",
+                  })}
+                >
+                  {"Quản lý hồ sơ"}
+                </RouterLink>
+              </React.Fragment>
+            )}
+            {ctx.profileError ? (
+              <button
+                {...mergeProps({
+                  type: "button",
+                  className: "chat-profile-link",
+                  onClick: ($event) => {
+                    return ctx.loadChatProfile?.($event);
+                  },
+                  "data-sp-b5f8ab84": "",
+                })}
+              >
+                {"Thử lại hồ sơ"}
+              </button>
+            ) : null}
+            <button
+              {...mergeProps({
+                type: "button",
+                className: "chat-profile-link",
+                disabled: ctx.locked,
+                onClick: ($event) => {
+                  ctx.restartIntake?.($event);
+                },
+                "data-chat-edit-needs": "",
+                "data-sp-b5f8ab84": "",
+              })}
+            >
+              {"Sửa nhu cầu"}
+            </button>
+            <RouterLink
+              {...mergeProps({
+                to: "/valuation",
+                className: "chat-profile-link chat-profile-valuation",
+                "data-chat-profile-valuation": "",
+                "data-sp-b5f8ab84": "",
+              })}
+            >
+              {"Định giá tham khảo ↗"}
+            </RouterLink>
+          </div>
+          <div
+            {...mergeProps({
               className: "thread-host",
               "data-sp-b5f8ab84": "",
             })}
@@ -544,6 +721,42 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                       })}
                     >
                       {"Hỏi tiện ích khu vực"}
+                      <AppIcon
+                        {...mergeProps({
+                          name: "arrow",
+                          "data-sp-b5f8ab84": "",
+                        })}
+                      />
+                    </button>
+                    <button
+                      {...mergeProps({
+                        type: "button",
+                        disabled: ctx.locked,
+                        onClick: ($event) => {
+                          ctx.quickReply("Tư vấn từng bước");
+                        },
+                        "data-sp-b5f8ab84": "",
+                      })}
+                    >
+                      {"Tư vấn từng bước"}
+                      <AppIcon
+                        {...mergeProps({
+                          name: "arrow",
+                          "data-sp-b5f8ab84": "",
+                        })}
+                      />
+                    </button>
+                    <button
+                      {...mergeProps({
+                        type: "button",
+                        disabled: ctx.locked,
+                        onClick: ($event) => {
+                          ctx.quickReply("Tư vấn theo hộ gia đình");
+                        },
+                        "data-sp-b5f8ab84": "",
+                      })}
+                    >
+                      {"Tư vấn theo hộ gia đình"}
                       <AppIcon
                         {...mergeProps({
                           name: "arrow",

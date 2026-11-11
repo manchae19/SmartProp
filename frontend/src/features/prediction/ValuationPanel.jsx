@@ -33,6 +33,11 @@ import {
 } from "./valuation.js";
 import { session, errorText } from "../auth/api.js";
 import { createHistoryClient } from "./history.js";
+import {
+  missingFeatureLabels,
+  normalizeShapFactors,
+  v13AssumptionNotes,
+} from "./valuationPresentation.js";
 import "./ValuationPanel.css";
 function setup(__props) {
   const props = propsForSetup(__props, {
@@ -56,6 +61,9 @@ function setup(__props) {
   const predicting = ref(false);
   const predictionError = ref("");
   const result = ref(null);
+  const v13 = ref(null);
+  const v13Loading = ref(false);
+  const v13Error = ref("");
   const form = reactive({});
   let optionsController;
   let predictionController;
@@ -100,10 +108,37 @@ function setup(__props) {
         };
       });
   });
+  const v6Shap = computed(() =>
+    normalizeShapFactors(result.value?.shap_explanation, result.value?.features_used),
+  );
+  const v13Shap = computed(() =>
+    normalizeShapFactors(v13.value?.shap_explanation, v13.value?.features_used),
+  );
+  const v13MissingLabels = computed(() =>
+    missingFeatureLabels(v13.value?.missing_features ?? []),
+  );
+  const v13Assumptions = computed(() =>
+    v13AssumptionNotes(v13.value?.features_used ?? {}),
+  );
+  async function previewV13() {
+    if (!resultInput || v13Loading.value) return
+    v13Loading.value = true
+    v13Error.value = ""
+    try {
+      v13.value = await client.predictV13(resultInput)
+    } catch (error) {
+      v13Error.value = error.message || "Không tải được dự đoán V1.3."
+    } finally {
+      v13Loading.value = false
+    }
+  }
   function invalidate() {
     generation++;
     predictionController?.abort();
     result.value = null;
+    v13.value = null;
+    v13Error.value = "";
+    v13Loading.value = false;
     predictionError.value = "";
     predicting.value = false;
     saved.value = false;
@@ -269,6 +304,10 @@ function setup(__props) {
     predicting,
     predictionError,
     result,
+    v13,
+    v13Loading,
+    v13Error,
+    previewV13,
     form,
     optionsController,
     predictionController,
@@ -282,6 +321,10 @@ function setup(__props) {
     hasRooms,
     missingLabels,
     usedFeatures,
+    v6Shap,
+    v13Shap,
+    v13MissingLabels,
+    v13Assumptions,
     invalidate,
     loadOptions,
     estimate,
@@ -901,7 +944,8 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 "data-sp-018bbc28": "",
               })}
             >
-              {"Giá rao ước tính"}
+              {"Giá rao ước tính · "}
+              {display(String(ctx.result.model_version).toUpperCase())}
             </p>
             <p
               {...mergeProps({
@@ -924,6 +968,12 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 ),
               )}
               {" đồng · Tổng giá bất động sản"}
+            </p>
+            <p className="mt-2 text-xs text-brand-navy/60" data-testid="v6-band">
+              {"API V6 hiện chỉ trả giá ước tính, không trả khoảng giá; V1.3 preview có khoảng giá riêng bên dưới."}
+            </p>
+            <p className="mt-1 text-xs text-brand-navy/55" data-testid="v6-governance">
+              {"V6 đang là luồng chính · nguồn đánh giá: development validation 299 mẫu; chưa có holdout độc lập."}
             </p>
             {ctx.historyEnabled && !ctx.demo ? (
               <div
@@ -977,6 +1027,154 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 ) : null}
               </div>
             ) : null}
+            <div
+              data-testid="v6-shap"
+              className="mt-6 rounded-2xl border border-brand-line/30 bg-[var(--ui-surface)] p-4"
+            >
+              <h3 className="text-sm font-medium">{"Giải thích yếu tố ảnh hưởng · V6"}</h3>
+              {ctx.v6Shap.length ? (
+                <ul className="mt-3 space-y-2" data-testid="v6-shap-factors">
+                  {ctx.v6Shap.map((factor) => (
+                    <li
+                      key={`${factor.feature_name}:${factor.shap_value}`}
+                      className="flex items-start justify-between gap-3 text-sm"
+                    >
+                      <span>{display(factor.displayLabel)}</span>
+                      <strong className={factor.direction === "increase" ? "text-emerald-700" : "text-rose-700"}>
+                        {display(factor.displayImpact)}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-sm text-brand-navy/70">
+                  {"Mô hình V6 không trả SHAP cho kết quả này."}
+                </p>
+              )}
+              <p className="mt-3 text-xs leading-5 text-brand-navy/60">
+                {"SHAP là đóng góp vào dự đoán của model, không phải quan hệ nhân quả. Các đặc trưng đang thiếu hoặc không áp dụng được ghi chú ngay trên nhãn."}
+              </p>
+            </div>
+            <div
+              {...mergeProps({
+                className:
+                  "mt-6 rounded-2xl border border-brand-line/30 bg-[var(--ui-surface)] p-4",
+                "data-testid": "v1-3-preview",
+                "data-sp-018bbc28": "",
+              })}
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">
+                    {"AI V1.3 · Xem trước thử nghiệm"}
+                  </p>
+                  <p className="mt-1 text-xs text-brand-navy/70">
+                    {
+                      "Kết quả tham khảo từ mô hình V1.3, không thay thế định giá V6."
+                    }
+                  </p>
+                  <p className="mt-1 text-[11px] text-brand-navy/55" data-testid="v1-3-governance">
+                    {"Nguồn đánh giá: dev-test 4.403 mẫu (không phải blind); MAE ≈3,77 tỷ; MAPE ≈19,8%. Không lấy trung bình với V6."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={ctx.v13Loading}
+                  onClick={() => ctx.previewV13()}
+                  className="rounded-full border border-brand-line/40 px-4 py-2 text-sm disabled:opacity-60"
+                >
+                  {display(
+                    ctx.v13
+                      ? "Tính lại V1.3"
+                      : ctx.v13Loading
+                        ? "Đang tính…"
+                        : "Xem dự đoán V1.3",
+                  )}
+                </button>
+              </div>
+              {ctx.v13Error ? (
+                <p role="alert" className="mt-3 text-sm text-[var(--ui-ink)]">
+                  {display(ctx.v13Error)}
+                </p>
+              ) : null}
+              {ctx.v13 ? (
+                <div className="mt-4 space-y-3" data-testid="v1-3-details">
+                <dl
+                  className="grid gap-2 text-sm"
+                  data-testid="v1-3-result"
+                >
+                  <div>
+                    <dt className="text-brand-navy/60">{"Giá V1.3"}</dt>
+                    <dd className="font-medium">
+                      {display(
+                        ctx.formatPrice(ctx.v13.predicted_asking_price_vnd),
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-brand-navy/60">{"Khoảng giá"}</dt>
+                    <dd>{display(ctx.v13.price_band)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-brand-navy/60">{"Phiên bản"}</dt>
+                    <dd>
+                      {display(ctx.v13.model_version)}
+                      {" · "}
+                      {display(ctx.v13.status)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-brand-navy/60">{"Lưu ý"}</dt>
+                    <dd className="text-xs text-brand-navy/70">
+                      {display(ctx.v13.disclaimer)}
+                    </dd>
+                  </div>
+                </dl>
+                {ctx.v13MissingLabels.length ? (
+                  <p className="mt-3 text-xs text-brand-navy/75" data-testid="v1-3-missing">
+                    {"Thông tin còn thiếu: "}
+                    {display(ctx.v13MissingLabels.join(", "))}
+                    {"."}
+                  </p>
+                ) : null}
+                {ctx.v13Assumptions.length ? (
+                  <div className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 p-3" data-testid="v1-3-assumptions">
+                    <p className="text-xs font-medium text-amber-900">{"Giả định của adapter V1.3"}</p>
+                    <ul className="mt-1 list-disc pl-4 text-xs leading-5 text-amber-900/90">
+                      {ctx.v13Assumptions.map((note) => (
+                        <li key={note}>{display(note)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                <div className="mt-4 border-t border-brand-line/20 pt-3" data-testid="v1-3-shap">
+                  <p className="text-xs font-medium">{"Giải thích yếu tố ảnh hưởng · V1.3"}</p>
+                  {ctx.v13Shap.length ? (
+                    <ul className="mt-2 space-y-2" data-testid="v1-3-shap-factors">
+                      {ctx.v13Shap.map((factor) => (
+                        <li
+                          key={`${factor.feature_name}:${factor.shap_value}`}
+                          className="flex items-start justify-between gap-3 text-sm"
+                        >
+                          <span>{display(factor.displayLabel)}</span>
+                          <strong className={factor.direction === "increase" ? "text-emerald-700" : "text-rose-700"}>
+                            {display(factor.displayImpact)}
+                          </strong>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-2 text-xs text-brand-navy/70">
+                      {"Mô hình V1.3 không trả SHAP cho kết quả này."}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs leading-5 text-brand-navy/60">
+                    {"SHAP là đóng góp vào dự đoán, không phải quan hệ nhân quả. Nhãn “đang thiếu/không có trong input” là trạng thái của model, không phải giá trị thực của bất động sản."}
+                  </p>
+                </div>
+                </div>
+              ) : null}
+            </div>
             <h3
               {...mergeProps({
                 className: "font-medium text-sm mt-6",

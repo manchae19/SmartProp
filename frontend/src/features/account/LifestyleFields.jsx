@@ -9,7 +9,7 @@ export const needGroups = [
   ['Y tế', [['HOSPITAL','Bệnh viện'],['CLINIC','Phòng khám'],['PHARMACY','Nhà thuốc']]],
   ['Đi lại', [['WORKPLACE','Gần khu vực làm việc'],['PUBLIC_TRANSPORT','Gần trạm xe buýt / phương tiện công cộng']]],
 ]
-export const emptyLifestyle = () => ({familyStatus:null,hasChildren:null,childrenCount:null,occupation:'',workArea:'',selectedNeeds:[],primaryNeed:null,otherNeeds:'',enabled:false})
+export const emptyLifestyle = () => ({familyStatus:null,hasChildren:null,childrenCount:null,ageGroup:null,occupation:'',workArea:'',selectedNeeds:[],primaryNeed:null,otherNeeds:'',enabled:false})
 export default function LifestyleFields({value, onChange, disabled}) {
   const p={...emptyLifestyle(),...value}, selected=p.selectedNeeds||[]
   const change=(key,v)=>onChange({...p,[key]:v})
@@ -24,6 +24,7 @@ export default function LifestyleFields({value, onChange, disabled}) {
       <label>Tình trạng gia đình<select className="sp-input" value={p.familyStatus||''} onChange={e=>change('familyStatus',e.target.value||null)}><option value="">Chưa cung cấp</option><option value="MARRIED">Đã lập gia đình</option><option value="SINGLE">Chưa lập gia đình</option></select></label>
       <label>Có con chưa?<select className="sp-input" value={p.hasChildren==null?'':String(p.hasChildren)} onChange={e=>onChange({...p,hasChildren:e.target.value===''?null:e.target.value==='true',childrenCount:e.target.value==='true'?p.childrenCount:null})}><option value="">Chưa cung cấp</option><option value="true">Có con</option><option value="false">Chưa có con</option></select></label>
       {p.hasChildren===true&&<label>Số con<select className="sp-input" value={p.childrenCount||''} onChange={e=>change('childrenCount',e.target.value?Number(e.target.value):null)}><option value="">Chưa cung cấp</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}</select></label>}
+      <label>Nhóm tuổi (tùy chọn)<select className="sp-input" value={p.ageGroup||''} onChange={e=>change('ageGroup',e.target.value||null)}><option value="">Không muốn cung cấp</option><option value="UNDER_25">Dưới 25</option><option value="AGE_25_34">25–34</option><option value="AGE_35_44">35–44</option><option value="AGE_45_54">45–54</option><option value="AGE_55_PLUS">55 trở lên</option><option value="PREFER_NOT_TO_SAY">Không muốn cung cấp</option></select></label>
       <label>Công việc hiện tại<input className="sp-input" maxLength={120} value={p.occupation||''} onChange={e=>change('occupation',e.target.value)}/></label>
       <label>Khu vực làm việc / nơi thường đến<input className="sp-input" maxLength={180} value={p.workArea||''} onChange={e=>change('workArea',e.target.value)}/></label>
     </div>

@@ -244,6 +244,18 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                 "data-sp-73584f77": "",
               })}
             >
+              {card.imageUrl ? (
+                <img
+                  {...mergeProps({
+                    src: card.imageUrl,
+                    alt: "",
+                    loading: "lazy",
+                    className: "chat-property-image",
+                    "data-chat-image": "",
+                    "data-sp-73584f77": "",
+                  })}
+                />
+              ) : null}
               <div
                 {...mergeProps({
                   className: "card-heading",
@@ -312,7 +324,21 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   {" m²"}
                 </p>
               </div>
-              {card.reason ? (
+              {card.reasons?.length ? (
+                <ul
+                  {...mergeProps({
+                    className: "card-reasons",
+                    "data-chat-reasons": "",
+                    "data-sp-73584f77": "",
+                  })}
+                >
+                  {renderList(card.reasons, (reason, index) => (
+                    <li key={index} {...mergeProps({ "data-sp-73584f77": "" })}>
+                      {display(reason)}
+                    </li>
+                  ))}
+                </ul>
+              ) : card.reason ? (
                 <p
                   {...mergeProps({
                     className: "card-reason",
@@ -321,6 +347,39 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   })}
                 >
                   {display(card.reason)}
+                </p>
+              ) : null}
+              {card.nearbyPois?.length ? (
+                <div
+                  {...mergeProps({
+                    className: "card-pois",
+                    "data-chat-pois": "",
+                    "data-sp-73584f77": "",
+                  })}
+                >
+                  <strong>{"Tiện ích gần nhất"}</strong>
+                  <ul>
+                    {renderList(card.nearbyPois, (poi, index) => (
+                      <li key={index} {...mergeProps({ "data-sp-73584f77": "" })}>
+                        {display(poi.name)}
+                        {" · "}
+                        {display(poi.label)}
+                        {" · "}
+                        {display(poi.distance)}
+                      </li>
+                    ))}
+                  </ul>
+                  <small>{display(card.nearbyPoisNote)}</small>
+                </div>
+              ) : card.nearbyPoisStatus && card.nearbyPoisStatus !== "NOT_APPLICABLE" ? (
+                <p
+                  {...mergeProps({
+                    className: "card-poi-note",
+                    "data-chat-poi-status": card.nearbyPoisStatus,
+                    "data-sp-73584f77": "",
+                  })}
+                >
+                  {display(card.nearbyPoisNote)}
                 </p>
               ) : null}
               <div
