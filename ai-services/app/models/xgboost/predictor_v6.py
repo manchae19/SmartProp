@@ -164,8 +164,12 @@ class PredictorV6:
                 label = "Lối vào mặt tiền đường"
                 note = "Vị trí mặt tiền đường chính có giá trị thương mại cao"
             elif name == "access_alley":
-                label = "Lối vào kiệt/hẻm"
-                note = "Bất động sản trong kiệt/hẻm thường có giá thấp hơn mặt tiền"
+                if feature.get("access_claim") == "frontage":
+                    label = "Lối vào kiệt/hẻm (không áp dụng cho input)"
+                    note = "One-hot không áp dụng cho lối vào mặt tiền; đóng góp SHAP không phải đặc điểm thực tế của tin."
+                else:
+                    label = "Lối vào kiệt/hẻm"
+                    note = "Bất động sản trong kiệt/hẻm thường có giá thấp hơn mặt tiền"
             elif name.startswith("ward:"):
                 w_name = name.split(":", 1)[1]
                 label = f"Phường: {w_name}"
@@ -177,10 +181,10 @@ class PredictorV6:
                 rm = feature.get("rooms_completed") or values.get("rooms") or "chưa rõ"
                 label = f"Số phòng ngủ ({rm} PN)"
                 note = "Quy mô công năng phòng ngủ"
-            elif name == "house_subtype_villa":
+            elif name in ("house_subtype_villa", "subtype_villa"):
                 label = "Loại nhà: Biệt thự"
                 note = "Phân khúc biệt thự cao cấp"
-            elif name == "house_subtype_house_c4":
+            elif name in ("house_subtype_house_c4", "subtype_house_c4"):
                 label = "Loại nhà: Nhà cấp 4"
                 note = "Phân khúc nhà cấp 4"
             elif "area" in name:

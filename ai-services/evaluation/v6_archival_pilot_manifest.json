@@ -1,0 +1,78 @@
+{
+  "schema_version": "model-evaluation-manifest.v1",
+  "model_version": "v6",
+  "name": "XGBoost V6 archival pilot",
+  "test_kind": "one_time_archival_pilot_not_prospective_or_verified_transaction_test",
+  "status": "COMPLETED_PILOT",
+  "distribution": {
+    "git": "aggregate metrics and provenance only",
+    "row_level_predictions": "local/controlled; not included",
+    "raw_training_data": "not included"
+  },
+  "source": {
+    "report": "ai-services/app/data/V6_HOLDOUT_PILOT.md",
+    "metrics": "ai-services/app/data/processed/v6_holdout_pilot/evaluation/runs/30daf763091ace37/metrics.json",
+    "verification": "ai-services/app/data/processed/v6_holdout_pilot/evaluation/verification.json",
+    "screening_run": "processed/v6_holdout_pilot/screening/runs/2e559a31023367eb",
+    "model_run": "processed/models_v6_ablation/runs/b4b1339d3f35857e",
+    "dataset_run": "processed/remaining_diversity_review/runs/1d45c8941172a52d"
+  },
+  "cohort": {
+    "candidate_ids": 133,
+    "scored_ids": 132,
+    "held_for_review": 1,
+    "reserved_ids_still_held": 684,
+    "source_counts": {
+      "cafeland": 62,
+      "nhadat24h": 57,
+      "homedy": 10,
+      "alonhadat": 3
+    },
+    "note": "Archival candidate pilot; one candidate held for suspected cross-group duplicate. Not a prospective/transaction-verified test."
+  },
+  "metrics": {
+    "scope": "132 scored rows; asking-price million VND; row-weighted",
+    "aggregate": {
+      "n": 132,
+      "mae_million_vnd": 1928.1827594179094,
+      "rmse_million_vnd": 4237.519747609668,
+      "mape_percent": 35.86301471812444,
+      "median_ape_percent": 15.36156704894498,
+      "within_20_percent": 59.09090909090909,
+      "above_50_percent_count": 16,
+      "r2": 0.5993468862452029
+    },
+    "categories": {
+      "Nhà ở": {"n": 78, "mae_million_vnd": 1647.741919571314, "mape_percent": 36.792574612929016, "median_ape_percent": 16.34560147453757, "within_20_percent": 60.256410256410255, "r2": 0.5063911068443344},
+      "Đất nền": {"n": 46, "mae_million_vnd": 2606.8196464206862, "mape_percent": 38.749881523757104, "median_ape_percent": 17.247526062809378, "within_20_percent": 52.17391304347826, "r2": 0.6215608044974948},
+      "Căn hộ chung cư": {"n": 8, "mae_million_vnd": 760.31884765625, "mape_percent": 10.200321611391953, "median_ape_percent": 3.8834798177083334, "within_20_percent": 87.5, "r2": 0.06771640765068077, "small_sample": true}
+    }
+  },
+  "validation_reference": {
+    "n": 299,
+    "mae_million_vnd": 2457.3333879859947,
+    "mape_percent": 36.13417105755985,
+    "median_ape_percent": 20.320167824074073,
+    "within_20_percent": 49.163879598662206,
+    "r2": 0.5570429191528914,
+    "note": "Development validation; not an independent test. Pilot has different IDs/distribution; do not interpret metric differences as same-set improvement."
+  },
+  "verification": {
+    "verified": true,
+    "models_reloaded": 3,
+    "all_predictions_and_metrics_verified": true,
+    "frozen_labels_features_models_and_train_validation_unchanged": true,
+    "cohort_and_policy_locked_before_predictions": true,
+    "training_performed": false,
+    "numeric_labels_changed": false,
+    "automatic_deployment": false,
+    "independent_physical_identity_certified": false
+  },
+  "caveats": [
+    "This is an archival pilot, not a prospective time holdout, blind test, or verified transaction-price test.",
+    "Do not use pilot results to tune features/calibration/model; 132 IDs are now exposed.",
+    "One candidate was held for suspected duplicate; hidden duplicates/unknown label errors may remain.",
+    "Apartment segment has only 8 rows and is not stable.",
+    "684 reserved IDs remain separate; pilot is not a replacement holdout."
+  ]
+}
