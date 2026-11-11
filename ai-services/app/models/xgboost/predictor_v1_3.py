@@ -195,13 +195,20 @@ class PredictorV1_3:
             impact_pct = round((math.exp(val_float) - 1.0) * 100, 2)
             direction = "increase" if val_float > 0 else "decrease"
             label = name_map.get(name, name)
+            note = f"Đóng góp {impact_pct:+.1f}% vào log-price"
+            if name == "ward" and not record.get("ward"):
+                label = "Phường/Xã (đang thiếu)"
+                note = "Giá trị phường/xã không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
+            elif name == "raw_street_name" and not record.get("street_name"):
+                label = "Tên tuyến đường (không có trong input)"
+                note = "Tên đường không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
             v1_3_factors.append({
                 "feature_name": name,
                 "label": label,
                 "shap_value": round(val_float, 4),
                 "impact_pct": impact_pct,
                 "direction": direction,
-                "context_note": f"Đóng góp {impact_pct:+.1f}% vào log-price",
+                "context_note": note,
             })
         v1_3_factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
         top_factors = v1_3_factors[:6]
