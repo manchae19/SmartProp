@@ -132,7 +132,7 @@ function setup(__props) {
         ? "Chọn một kết quả trong khu vực đã chọn để xem ghim đề xuất; chưa lưu hoặc xác nhận vị trí."
         : "Không tìm thấy địa điểm phù hợp trong khu vực đã chọn. Bạn có thể điều chỉnh địa chỉ hoặc chọn ghim thủ công." +
           (result.status === "SCOPE_UNAVAILABLE"
-            ? " Chưa có ranh giới đã kiểm chứng cho lựa chọn này; hệ thống không tự mở rộng phạm vi."
+            ? " Chưa có ranh giới đã kiểm chứng cho lựa chọn này; hệ thống không tự mở rộng phạm vi. Nếu địa chỉ có phường/xã cũ, hãy bỏ tên phường hoặc chọn ghim thủ công."
             : "");
       if (result.candidates.length === 1) {
         preview(result.candidates[0]);
