@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3
+from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3, real_feature_input_enabled
 from app.models.xgboost.features_v1_3 import (
     ALL_FEATURES,
     LIMITS,
@@ -113,6 +113,7 @@ class PredictorV1_3:
             "supported_districts": self.schema.get("vocabularies", {}).get("district", []),
             "supported_types": self.schema.get("vocabularies", {}).get("normalized_type", []),
             "target_bounds": LIMITS["area"],
+            "real_feature_input_enabled": real_feature_input_enabled(),
         }
 
     def predict(self, record: Dict[str, Any]) -> Dict[str, Any]:
@@ -225,7 +226,8 @@ class PredictorV1_3:
         # 6. Audit missing optional features and unknown categories
         optional_fields = [
             "floor_count", "frontage_width", "road_width",
-            "bedroom_count", "bathroom_count", "street_name", "project_name"
+            "bedroom_count", "bathroom_count", "street_name", "project_name",
+            "house_direction", "balcony_direction",
         ]
         missing = [f for f in optional_fields if record.get(f) in (None, "")]
 
@@ -263,6 +265,13 @@ class PredictorV1_3:
                 "floor_count": record.get("floor_count"),
                 "road_width": record.get("road_width"),
                 "frontage_width": record.get("frontage_width"),
+                "street_name": record.get("street_name"),
+                "project_name": record.get("project_name"),
+                "bathroom_count": record.get("bathroom_count"),
+                "house_direction": record.get("house_direction"),
+                "balcony_direction": record.get("balcony_direction"),
+                "road_width_source": record.get("road_width_source"),
+                "frontage_width_source": record.get("frontage_width_source"),
             },
             "missing_features": missing,
             "warnings": warnings,

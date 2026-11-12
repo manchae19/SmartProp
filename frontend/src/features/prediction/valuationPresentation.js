@@ -8,6 +8,7 @@ const RAW_FEATURE_LABELS = {
   access_frontage: "Lối vào mặt tiền",
   ward: "Phường/Xã",
   raw_street_name: "Tên tuyến đường",
+  street_name: "Tên tuyến đường",
   road_width: "Độ rộng đường vào",
   frontage_width: "Bề ngang mặt tiền",
   area: "Diện tích đất/sàn",
@@ -15,8 +16,10 @@ const RAW_FEATURE_LABELS = {
   normalized_type: "Loại tài sản",
   district: "Quận/Huyện",
   raw_project_name: "Dự án bất động sản",
+  project_name: "Dự án bất động sản",
   raw_bedroom_count: "Số phòng ngủ",
   raw_bathroom_count: "Số phòng tắm",
+  bathroom_count: "Số phòng tắm",
   raw_floor_count: "Số tầng",
   floor_count: "Số tầng",
   rooms: "Số phòng ngủ",
@@ -49,7 +52,8 @@ export function shapFactorLabel(factor, featuresUsed = {}) {
   if (name === "ward" && isMissing(featuresUsed.ward)) label += " (đang thiếu)";
   if (name === "raw_street_name" && isMissing(featuresUsed.street_name)) label += " (không có trong input)";
   if (name === "access_alley" && featuresUsed.access_type === "frontage") label += " (không áp dụng cho input)";
-  if ((name === "road_width" || name === "frontage_width") && !isMissing(featuresUsed[name])) {
+  if ((name === "road_width" || name === "frontage_width") && !isMissing(featuresUsed[name])
+      && !["user", "verified"].includes(featuresUsed[`${name}_source`])) {
     label += " (suy ra từ lối vào)";
   }
   return label;
@@ -74,10 +78,11 @@ export function missingFeatureLabels(features = []) {
 
 export function v13AssumptionNotes(featuresUsed = {}) {
   const notes = [];
-  if (!isMissing(featuresUsed.road_width)) {
+  const realSource = (value) => ["user", "verified"].includes(value);
+  if (!isMissing(featuresUsed.road_width) && !realSource(featuresUsed.road_width_source)) {
     notes.push(`Độ rộng đường ${Number(featuresUsed.road_width).toLocaleString("vi-VN")} m được suy ra từ lối vào, không phải số đo thực tế.`);
   }
-  if (!isMissing(featuresUsed.frontage_width)) {
+  if (!isMissing(featuresUsed.frontage_width) && !realSource(featuresUsed.frontage_width_source)) {
     notes.push(`Bề ngang mặt tiền ${Number(featuresUsed.frontage_width).toLocaleString("vi-VN")} m được suy ra từ lối vào, không phải số đo thực tế.`);
   }
   if (isMissing(featuresUsed.ward)) {

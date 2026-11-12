@@ -3,6 +3,7 @@
 Provides bidirectional mapping and field normalization for shadow evaluation
 and internal testing.
 """
+import os
 import re
 import unicodedata
 from typing import Any, Dict
@@ -46,8 +47,20 @@ def resolve_district(location_feature: str, ward: str | None = None) -> str:
     return "Hải Châu"
 
 
-def map_v6_to_v1_3(v6_request: Dict[str, Any]) -> Dict[str, Any]:
-    """Convert a SmartProp V6 ValuationRequest dictionary into V1.3 format."""
+def real_feature_input_enabled() -> bool:
+    """Staging/rollout switch; production defaults to legacy adapter behaviour."""
+    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = None) -> Dict[str, Any]:
+    """Convert a SmartProp V6 ValuationRequest dictionary into V1.3 format.
+
+    use_real_features=False preserves the legacy behavior byte-for-byte (including
+    synthetic road/frontage defaults). True passes only user/verified measurements and
+    leaves unknown fields missing. It never invents dimensions.
+    """
+    if use_real_features is None:
+        use_real_features = real_feature_input_enabled()
     category = v6_request.get("category", "")
     subtype = v6_request.get("house_subtype")
 
@@ -75,29 +88,46 @@ def map_v6_to_v1_3(v6_request: Dict[str, Any]) -> Dict[str, Any]:
         if cleaned_ward.lower() in ("không xác định", "đang cập nhật", "none", "nan", ""):
             cleaned_ward = None
 
-    # 3. Build V1.3 record
+    # 3. Build V1.3 record. Legacy mode intentionally ignores the new optional fields.
     record = {
         "area": float(v6_request.get("area_sqm", 0.0)),
         "normalized_type": norm_type,
         "district": district,
         "ward": cleaned_ward,
-        "street_name": v6_request.get("street_name"),
-        "project_name": v6_request.get("project_name"),
+        "street_name": None if not use_real_features else v6_request.get("street_name"),
+        "project_name": None if not use_real_features else v6_request.get("project_name"),
         "floor_count": v6_request.get("floors"),
         "bedroom_count": v6_request.get("rooms"),
-        "bathroom_count": v6_request.get("bathrooms"),
-        "house_direction": v6_request.get("house_direction"),
-        "balcony_direction": v6_request.get("balcony_direction"),
+        "bathroom_count": None if not use_real_features else v6_request.get("bathrooms"),
+        "house_direction": None if not use_real_features else v6_request.get("house_direction"),
+        "balcony_direction": None if not use_real_features else v6_request.get("balcony_direction"),
     }
 
-    # 4. Map access type to physical metrics
+    # 4. Legacy: synthesize physical metrics from access. Real mode: preserve only explicit measurements.
     access = v6_request.get("access_type")
-    if access == "frontage":
-        record["road_width"] = 10.0
-        record["frontage_width"] = 5.0
-    elif access == "alley":
-        record["road_width"] = 3.0
-        record["frontage_width"] = 4.0
+    if use_real_features:
+        record["road_width"] = v6_request.get("road_width_m")
+        record["frontage_width"] = v6_request.get("frontage_width_m")
+        record["road_width_source"] = (
+            v6_request.get("road_width_source") or ("user" if record["road_width"] is not None else None)
+        )
+        record["frontage_width_source"] = (
+            v6_request.get("frontage_width_source") or ("user" if record["frontage_width"] is not None else None)
+        )
+    else:
+        if access == "frontage":
+            record["road_width"] = 10.0
+            record["frontage_width"] = 5.0
+            record["road_width_source"] = "assumed"
+            record["frontage_width_source"] = "assumed"
+        elif access == "alley":
+            record["road_width"] = 3.0
+            record["frontage_width"] = 4.0
+            record["road_width_source"] = "assumed"
+            record["frontage_width_source"] = "assumed"
+        else:
+            record["road_width_source"] = None
+            record["frontage_width_source"] = None
 
     return record
 

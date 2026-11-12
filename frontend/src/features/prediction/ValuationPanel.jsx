@@ -64,6 +64,9 @@ function setup(__props) {
   const v13 = ref(null);
   const v13Loading = ref(false);
   const v13Error = ref("");
+  const selectedModel = ref("v1_3");
+  const modelTouched = ref(false);
+  const modelNotice = ref("");
   const form = reactive({});
   let optionsController;
   let predictionController;
@@ -93,7 +96,7 @@ function setup(__props) {
   const usedFeatures = computed(() => {
     if (!result.value) return [];
     return Object.entries(result.value.features_used)
-      .filter(([, value]) => value !== null)
+      .filter(([key, value]) => value !== null && !key.endsWith("_source"))
       .map(([key, value]) => {
         if (key === "area_sqm") value = `${value} m²`;
         if (key === "location_feature") value = displayLocation(value);
@@ -120,6 +123,33 @@ function setup(__props) {
   const v13Assumptions = computed(() =>
     v13AssumptionNotes(v13.value?.features_used ?? {}),
   );
+  const v13Capability = computed(() => options.value?.v1_3 ?? {});
+  const v13Available = computed(() => Boolean(v13Capability.value.available));
+  const v13SupportedCategories = computed(
+    () => v13Capability.value.supported_categories ?? [],
+  );
+  const v13SupportsCategory = computed(
+    () => v13Available.value && v13SupportedCategories.value.includes(form.category),
+  );
+  const optionalInputsVisible = computed(
+    () =>
+      selectedModel.value === "v1_3" &&
+      v13SupportsCategory.value &&
+      Boolean(v13Capability.value.real_features_enabled),
+  );
+  const activeModelLabel = computed(() =>
+    selectedModel.value === "v1_3" ? "V1.3 Preview" : "V6",
+  );
+  function defaultModelForCategory() {
+    return v13SupportsCategory.value ? "v1_3" : "v6";
+  }
+  function selectModel(value) {
+    modelTouched.value = true;
+    selectedModel.value = value;
+    modelNotice.value =
+      value === "v1_3" ? "" : "Bạn đã chọn V6; V6 dùng làm phương án dự phòng.";
+    invalidate();
+  }
   async function previewV13() {
     if (!resultInput || v13Loading.value) return
     v13Loading.value = true
@@ -166,6 +196,13 @@ function setup(__props) {
           floors: "",
           access_type: "",
           house_subtype: "",
+          road_width_m: "",
+          frontage_width_m: "",
+          street_name: "",
+          project_name: "",
+          bathrooms: "",
+          house_direction: "",
+          balcony_direction: "",
         },
         input,
       );
@@ -182,9 +219,36 @@ function setup(__props) {
         form.floors = "";
         form.house_subtype = "";
       }
-      if (isApartment.value) form.access_type = "";
+      if (isApartment.value) {
+        form.access_type = "";
+        form.road_width_m = "";
+        form.frontage_width_m = "";
+      }
+      if (!hasRooms.value) {
+        form.bathrooms = "";
+        form.house_direction = "";
+        form.balcony_direction = "";
+      }
       if (options.value && !locations.value.includes(form.location_feature))
         form.location_feature = "";
+    },
+  );
+  watch(
+    [options, () => form.category],
+    () => {
+      if (!modelTouched.value) selectedModel.value = defaultModelForCategory();
+    },
+    { immediate: true },
+  );
+  watch(
+    () => v13SupportsCategory.value,
+    (supported) => {
+      if (v13Available.value && !supported && selectedModel.value === "v1_3") {
+        selectedModel.value = "v6";
+        modelNotice.value =
+          "V1.3 chưa hỗ trợ loại bất động sản này; đã chuyển sang V6.";
+        invalidate();
+      }
     },
   );
   async function loadOptions() {
@@ -212,9 +276,11 @@ function setup(__props) {
   async function estimate() {
     invalidate();
     if (!options.value) return;
+    const useV13 = selectedModel.value === "v1_3" && v13SupportsCategory.value;
+    const allowOptional = useV13 && Boolean(v13Capability.value.real_features_enabled);
     let payload;
     try {
-      payload = buildValuationPayload(form, options.value);
+      payload = buildValuationPayload(form, options.value, allowOptional);
     } catch (error) {
       predictionError.value = error.message;
       return;
@@ -222,6 +288,45 @@ function setup(__props) {
     const current = generation;
     const controller = new AbortController();
     predictionController = controller;
+    predicting.value = true;
+    if (useV13) {
+      v13Loading.value = true;
+      try {
+        const prediction = await client.predictV13(payload, {
+          signal: controller.signal,
+        });
+        if (current === generation && !controller.signal.aborted) {
+          v13.value = prediction;
+          resultInput = payload;
+          saveKey = globalThis.crypto.randomUUID();
+          modelNotice.value = "";
+        }
+      } catch (error) {
+        if (current === generation && !controller.signal.aborted) {
+          v13Error.value = error.message;
+          modelNotice.value =
+            "V1.3 gặp lỗi; đã chuyển sang V6 để vẫn trả kết quả tham khảo.";
+          selectedModel.value = "v6";
+          try {
+            const fallback = buildValuationPayload(form, options.value, false);
+            const prediction = await client.predict(fallback, {
+              signal: controller.signal,
+            });
+            result.value = prediction;
+            resultInput = fallback;
+            saveKey = globalThis.crypto.randomUUID();
+          } catch (fallbackError) {
+            predictionError.value = fallbackError.message;
+          }
+        }
+      } finally {
+        if (current === generation) {
+          v13Loading.value = false;
+          predicting.value = false;
+        }
+      }
+      return;
+    }
     predicting.value = true;
     try {
       const prediction = await client.predict(payload, {
@@ -307,6 +412,13 @@ function setup(__props) {
     v13,
     v13Loading,
     v13Error,
+    selectedModel,
+    modelNotice,
+    v13Available,
+    v13SupportsCategory,
+    optionalInputsVisible,
+    activeModelLabel,
+    selectModel,
     previewV13,
     form,
     optionsController,
@@ -359,7 +471,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
               "data-sp-018bbc28": "",
             })}
           >
-            {"Định giá tham chiếu · XGBoost v6"}
+            {"Định giá tham chiếu · XGBoost V1.3 / V6"}
           </p>
           <h2
             {...mergeProps({
@@ -443,6 +555,40 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
             "data-sp-018bbc28": "",
           })}
         >
+          <div
+            className="mb-5 rounded-2xl border border-brand-line/30 bg-[var(--ui-surface)] p-4"
+            data-testid="model-choice"
+          >
+            <label className="block text-sm font-medium">
+              {"Mô hình định giá"}
+              <select
+                {...mergeProps({
+                  className: "valuation-input mt-2",
+                  "data-testid": "model-selector",
+                  value: ctx.selectedModel,
+                  onChange: ($event) => ctx.selectModel?.($event.target.value),
+                })}
+              >
+                <option
+                  value="v1_3"
+                  disabled={!ctx.v13Available || !ctx.v13SupportsCategory}
+                >
+                  {"V1.3 Preview (mặc định khi hỗ trợ)"}
+                </option>
+                <option value="v6">{"V6 (fallback)"}</option>
+              </select>
+            </label>
+            <p className="mt-2 text-sm" data-testid="active-model">
+              {"Đang dùng: "}
+              {display(ctx.activeModelLabel)}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-brand-navy/65" data-testid="model-notice">
+              {ctx.modelNotice ||
+                (ctx.v13Available
+                  ? "V1.3 là mặc định cho loại BĐS được hỗ trợ; V6 luôn có thể chọn."
+                  : "V1.3 không khả dụng; V6 đang được dùng làm phương án dự phòng.")}
+            </p>
+          </div>
           <div
             {...mergeProps({
               className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
@@ -887,6 +1033,92 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
               </label>
             ) : null}
           </div>
+          {ctx.optionalInputsVisible ? (
+          <fieldset className="mt-6 rounded-2xl border border-brand-line/30 p-4" data-testid="real-feature-inputs">
+            <legend className="px-2 text-sm font-medium">{"Thông tin đo đạc thực tế · tùy chọn"}</legend>
+            <p className="text-xs leading-5 text-brand-navy/60">
+              {"Chỉ nhập khi bạn biết số đo. Để trống nếu không biết; hệ thống không tự điền hoặc suy đoán chiều rộng."}
+            </p>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {!ctx.isApartment ? (
+                <>
+                  <label className="block text-sm">
+                    {"Chiều rộng đường/hẻm (m) · tùy chọn"}
+                    <input
+                      {...mergeProps({
+                        type: "number", min: "0.1", max: "100", step: "0.1", inputMode: "decimal",
+                        className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                        "data-testid": "road-width-m",
+                      }, modelProps(ctx.form.road_width_m, ($value) => { ctx.form.road_width_m = $value }, { kind: "number", value: "on", number: false, multiple: false }))}
+                    />
+                    <span className="block mt-1 text-xs text-brand-navy/60">{"Không nhập nếu chỉ biết lối vào là hẻm/mặt tiền."}</span>
+                  </label>
+                  <label className="block text-sm">
+                    {"Bề ngang mặt tiền (m) · tùy chọn"}
+                    <input
+                      {...mergeProps({
+                        type: "number", min: "0.1", max: "500", step: "0.1", inputMode: "decimal",
+                        className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                        "data-testid": "frontage-width-m",
+                      }, modelProps(ctx.form.frontage_width_m, ($value) => { ctx.form.frontage_width_m = $value }, { kind: "number", value: "on", number: false, multiple: false }))}
+                    />
+                  </label>
+                </>
+              ) : null}
+              <label className="block text-sm">
+                {"Tên đường · tùy chọn"}
+                <input
+                  {...mergeProps({
+                    maxLength: "200", className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                    "data-testid": "street-name",
+                  }, modelProps(ctx.form.street_name, ($value) => { ctx.form.street_name = $value }, { kind: "text", value: "on", number: false, multiple: false }))}
+                />
+              </label>
+              <label className="block text-sm">
+                {"Tên dự án · tùy chọn"}
+                <input
+                  {...mergeProps({
+                    maxLength: "200", className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                    "data-testid": "project-name",
+                  }, modelProps(ctx.form.project_name, ($value) => { ctx.form.project_name = $value }, { kind: "text", value: "on", number: false, multiple: false }))}
+                />
+              </label>
+              {ctx.hasRooms ? (
+                <label className="block text-sm">
+                  {"Số phòng tắm · tùy chọn"}
+                  <input
+                    {...mergeProps({
+                      type: "number", min: "1", max: "30", step: "1", inputMode: "numeric",
+                      className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                      "data-testid": "bathrooms",
+                    }, modelProps(ctx.form.bathrooms, ($value) => { ctx.form.bathrooms = $value }, { kind: "number", value: "on", number: false, multiple: false }))}
+                  />
+                </label>
+              ) : null}
+              <label className="block text-sm">
+                {"Hướng nhà · tùy chọn"}
+                <input
+                  {...mergeProps({
+                    maxLength: "50", className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                  }, modelProps(ctx.form.house_direction, ($value) => { ctx.form.house_direction = $value }, { kind: "text", value: "on", number: false, multiple: false }))}
+                />
+              </label>
+              <label className="block text-sm">
+                {"Hướng ban công · tùy chọn"}
+                <input
+                  {...mergeProps({
+                    maxLength: "50", className: "valuation-input mt-2", placeholder: "Không biết — để trống",
+                  }, modelProps(ctx.form.balcony_direction, ($value) => { ctx.form.balcony_direction = $value }, { kind: "text", value: "on", number: false, multiple: false }))}
+                />
+              </label>
+            </div>
+          </fieldset>
+          ) : null}
+          {ctx.selectedModel === "v1_3" && !ctx.optionalInputsVisible ? (
+            <p className="mt-4 text-xs leading-5 text-brand-navy/65" data-testid="v1-3-optional-hidden">
+              {"V1.3 đang dùng policy serving lịch sử: không có trường road/frontage để nhập; model dùng giá trị giả định theo lối vào và ghi rõ trong phần giả định."}
+            </p>
+          ) : null}
           <button
             {...mergeProps({
               type: "submit",
@@ -929,6 +1161,72 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
           >
             {display(ctx.predictionError)}
           </p>
+        ) : null}
+        {ctx.selectedModel === "v1_3" && ctx.v13 ? (
+          <div
+            className="border-t border-brand-line/20 pt-6"
+            data-testid="v1-3-primary"
+          >
+            <p className="text-sm text-brand-navy/70">
+              {"Giá rao ước tính · V1.3 · "}
+              {display(ctx.v13.status)}
+            </p>
+            <p
+              className="text-3xl sm:text-4xl font-semibold mt-2"
+              data-testid="v1-3-primary-price"
+            >
+              {display(ctx.formatPrice(ctx.v13.predicted_asking_price_vnd))}
+            </p>
+            <p className="text-sm text-brand-navy/70 mt-2" data-testid="v1-3-primary-band">
+              {"Khoảng giá: "}
+              {display(ctx.v13.price_band)}
+            </p>
+            <p className="mt-2 text-xs text-brand-navy/60" data-testid="v1-3-primary-governance">
+              {"V1.3 là mặc định trong demo khi available; V6 là fallback. Kết quả tham khảo, không phải định giá giao dịch."}
+            </p>
+            {ctx.v13MissingLabels.length ? (
+              <p className="mt-3 text-xs text-brand-navy/75" data-testid="v1-3-primary-missing">
+                {"Thông tin còn thiếu: "}
+                {display(ctx.v13MissingLabels.join(", "))}
+                {"."}
+              </p>
+            ) : null}
+            {ctx.v13Assumptions.length ? (
+              <div className="mt-3 rounded-xl border border-amber-300/60 bg-amber-50 p-3" data-testid="v1-3-primary-assumptions">
+                <p className="text-xs font-medium text-amber-900">{"Giả định của adapter V1.3"}</p>
+                <ul className="mt-1 list-disc pl-4 text-xs leading-5 text-amber-900/90">
+                  {ctx.v13Assumptions.map((note) => (
+                    <li key={note}>{display(note)}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <div className="mt-4 border-t border-brand-line/20 pt-3" data-testid="v1-3-primary-shap">
+              <p className="text-xs font-medium">{"Giải thích yếu tố ảnh hưởng · V1.3"}</p>
+              {ctx.v13Shap.length ? (
+                <ul className="mt-2 space-y-2" data-testid="v1-3-primary-shap-factors">
+                  {ctx.v13Shap.map((factor) => (
+                    <li
+                      key={`${factor.feature_name}:${factor.shap_value}`}
+                      className="flex items-start justify-between gap-3 text-sm"
+                    >
+                      <span>{display(factor.displayLabel)}</span>
+                      <strong className={factor.direction === "increase" ? "text-emerald-700" : "text-rose-700"}>
+                        {display(factor.displayImpact)}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-xs text-brand-navy/70">
+                  {"Mô hình V1.3 không trả SHAP cho kết quả này."}
+                </p>
+              )}
+              <p className="mt-2 text-xs leading-5 text-brand-navy/60">
+                {"SHAP là đóng góp vào dự đoán của model, không phải quan hệ nhân quả."}
+              </p>
+            </div>
+          </div>
         ) : null}
         {ctx.result ? (
           <div
@@ -973,7 +1271,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
               {"API V6 hiện chỉ trả giá ước tính, không trả khoảng giá; V1.3 preview có khoảng giá riêng bên dưới."}
             </p>
             <p className="mt-1 text-xs text-brand-navy/55" data-testid="v6-governance">
-              {"V6 đang là luồng chính · nguồn đánh giá: development validation 299 mẫu; chưa có holdout độc lập."}
+              {"V6 là fallback · nguồn đánh giá: development validation 299 mẫu; chưa có holdout độc lập."}
             </p>
             {ctx.historyEnabled && !ctx.demo ? (
               <div
@@ -1070,7 +1368,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                   </p>
                   <p className="mt-1 text-xs text-brand-navy/70">
                     {
-                      "Kết quả tham khảo từ mô hình V1.3, không thay thế định giá V6."
+                      "V1.3 là mặc định trong demo; V6 là fallback khi V1.3 không khả dụng hoặc bạn chủ động chọn."
                     }
                   </p>
                   <p className="mt-1 text-[11px] text-brand-navy/55" data-testid="v1-3-governance">

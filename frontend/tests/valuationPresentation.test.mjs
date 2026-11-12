@@ -32,10 +32,18 @@ test('normalizes SHAP factors and formats impact', () => {
 })
 
 test('reports V1.3 adapter assumptions without inventing measurements', () => {
-  const notes = v13AssumptionNotes({ road_width: 10, frontage_width: 5, ward: null })
+  const notes = v13AssumptionNotes({ road_width: 10, frontage_width: 5, ward: null, road_width_source: 'assumed', frontage_width_source: 'assumed' })
   assert.equal(notes.length, 3)
   assert.match(notes[0], /suy ra từ lối vào/)
   assert.match(notes[2], /chưa được cung cấp/)
+})
+
+test('does not label user/verified measurements as adapter assumptions', () => {
+  const notes = v13AssumptionNotes({
+    road_width: 7.5, frontage_width: 4.5, ward: 'Hải Châu 1',
+    road_width_source: 'user', frontage_width_source: 'verified',
+  })
+  assert.deepEqual(notes, [])
 })
 
 test('maps/dedupes missing features', () => {
