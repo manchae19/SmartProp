@@ -1,8 +1,66 @@
 """Explicit lifestyle preferences and single-question intake; memory-only, no inferred family traits."""
 import re
+from decimal import Decimal
 from .intent import fold, poi_categories, CATEGORY_LABELS
 
-PRIORITY_CHOICES = ["Trường học", "Chợ / siêu thị", "Y tế", "Công viên", "Xem gợi ý ngay"]
+PRIORITY_CHOICES = ["Trường học", "Chợ / siêu thị", "Y tế", "Công viên", "Giao thông công cộng", "Xem gợi ý ngay"]
+PURPOSE_CHOICES = ["Mua để ở", "Mua đầu tư", "Thuê để ở", "Bỏ qua"]
+PROPERTY_TYPE_CHOICES = ["Nhà phố", "Căn hộ", "Đất nền", "Biệt thự", "Phòng trọ", "Mặt bằng", "Tất cả"]
+AREA_CHOICES = ["30 m²", "50 m²", "80 m²", "100 m²", "Bỏ qua"]
+FAMILY_CHOICES = ["Đã lập gia đình", "Chưa lập gia đình", "Bỏ qua"]
+CHILDREN_CHOICES = ["Có trẻ nhỏ", "Chưa có trẻ nhỏ", "Bỏ qua"]
+CHILDREN_NEEDS_CHOICES = ["Có, ưu tiên trường học và công viên", "Không cần", "Bỏ qua"]
+AGE_CHOICES = ["Dưới 25", "25–34", "35–44", "45–54", "55 trở lên", "Không muốn cung cấp"]
+GUIDED_RE = re.compile(r"\b(?:tu van tung buoc|bat dau tu van|tu van theo tung buoc|huong dan tung buoc)\b")
+HOUSEHOLD_RE = re.compile(r"\b(?:tu van theo ho gia dinh|ho gia dinh|con nho|tre nho)\b")
+SKIP_RE = re.compile(r"\b(?:xem goi y ngay|tim ngay|bo qua|khong can hoi them|giu tieu chi)\b")
+
+def area_sqm(question):
+    value = fold(question).replace(",", ".")
+    match = re.search(r"(?<![\w.])(\d{1,5}(?:\.\d{1,2})?)\s*(?:m2|m²|met vuong|m\b)", value)
+    if not match:
+        match = re.fullmatch(r"\s*(\d{1,5}(?:\.\d{1,2})?)\s*", value)
+    if not match:
+        return None
+    area = Decimal(match.group(1))
+    return area if 0 < area <= 1000000 else None
+
+def family_status(value):
+    if "da lap gia dinh" in value or "da ket hon" in value or "married" in value:
+        return "MARRIED"
+    if "chua lap gia dinh" in value or "chua ket hon" in value or "doc than" in value or "single" in value:
+        return "SINGLE"
+    return None
+
+def has_children(value):
+    if any(term in value for term in ("chua co con", "khong co con", "chua co tre", "khong co tre")):
+        return False
+    if re.search(r"\b(?:co|dang co)\s+(?:con|tre)", value) or "co tre nho" in value:
+        return True
+    return None
+
+def age_group(value):
+    if "khong muon" in value or "prefer" in value:
+        return "PREFER_NOT_TO_SAY"
+    if "duoi 25" in value:
+        return "UNDER_25"
+    if re.search(r"25\s*[-–]\s*34", value):
+        return "AGE_25_34"
+    if re.search(r"35\s*[-–]\s*44", value):
+        return "AGE_35_44"
+    if re.search(r"45\s*[-–]\s*54", value):
+        return "AGE_45_54"
+    if "55" in value and ("tro len" in value or "+" in value):
+        return "AGE_55_PLUS"
+    return None
+
+def add_household_school(state, criteria):
+    priorities = list(state.get("priorities", []))
+    for category in ("PARK", "SCHOOL"):
+        if category not in priorities:
+            priorities.insert(0, category)
+    state["priorities"] = priorities[:4]
+    criteria["amenityPriorities"] = list(state["priorities"])
 
 def housing_search(question):
     value = fold(question)
@@ -32,16 +90,24 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
     value = fold(question)
     state = context.needs
     pending = state.get("pending")
-    skip = bool(re.search(r"\b(?:xem goi y ngay|tim ngay|bo qua|khong can hoi them|giu tieu chi)\b", value))
+    skip = bool(SKIP_RE.search(value))
+    skip_all = bool(re.search(r"\b(?:xem goi y ngay|tim ngay)\b", value))
     refine = "tim ky hon" in value
     explicit_priority = bool(re.search(r"\b(?:uu tien|quan trong|thi tot|gan truong|gan sieu thi)\b", value))
+    guided = bool(state.get("guided") or GUIDED_RE.search(value))
+    if guided:
+        state["guided"] = True
+    household = bool(state.get("householdMode") or HOUSEHOLD_RE.search(value))
+    if household:
+        state["householdMode"] = True
+        guided = True
     cats = preferences(question)
     search = housing_search(question) or bool(turn.get("budgetChange") and not cats) or refine or skip
     update = bool(cats and (explicit_priority or pending == "priorities" or (search and not turn.get("analytic"))))
     removal = bool(re.search(r"\b(?:bo uu tien|khong uu tien|xoa uu tien)\b", value))
-    active = search or update or removal or bool(pending)
+    active = search or update or removal or bool(pending) or guided
     # Explicit amenity questions continue along the existing POI path.
-    if cats and not update and not search and not removal:
+    if cats and not update and not search and not removal and not guided:
         return {"search": False, "question": None, "choices": []}
     if not active:
         return {"search": False, "question": None, "choices": []}
@@ -57,6 +123,11 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
         state["locationKnown"] = True
     if skip and pending == "location":
         state["locationKnown"] = True
+        state["pending"] = None
+    if pending == "budget" and criteria.get("budgetVnd"):
+        state["pending"] = None
+    if pending == "location" and (state.get("locationKnown") or criteria.get("district") or skip):
+        state["pending"] = None
     if explicit_priority and not cats and not removal:
         state["unmappedPreference"] = question[:160]
     if pending == "priorities" and not cats and not skip and not refine:
@@ -81,6 +152,149 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
         criteria["amenityPriorities"] = list(state["priorities"])
     else:
         criteria.pop("amenityPriorities", None)
+
+    if guided:
+        # Guided mode: purpose → budget → district → type → min area → optional household → priorities.
+        if pending == "purpose":
+            if turn.get("purpose"):
+                criteria["purpose"] = turn["purpose"]
+                state["purposeAsked"] = True
+                state["pending"] = None
+            elif skip:
+                state["purposeAsked"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Bạn muốn mua để ở, mua đầu tư, hay thuê để ở?", "choices": PURPOSE_CHOICES}
+        elif pending == "property_type":
+            if turn.get("propertyType"):
+                criteria["propertyType"] = turn["propertyType"]
+                state["typeAsked"] = True
+                state["pending"] = None
+            elif skip or "tat ca" in value:
+                criteria["propertyType"] = "ALL"
+                state["typeAsked"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Bạn muốn tìm loại bất động sản nào?", "choices": PROPERTY_TYPE_CHOICES}
+        elif pending == "min_area":
+            area = area_sqm(question)
+            if area is not None:
+                criteria["minAreaSqm"] = str(area)
+                state["areaAsked"] = True
+                state["pending"] = None
+            elif skip:
+                state["areaAsked"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Diện tích tối thiểu bạn cần là bao nhiêu m²? Nhập số hoặc chọn bên dưới.", "choices": AREA_CHOICES}
+        elif pending == "family":
+            status = family_status(value)
+            if status:
+                state["familyStatus"] = status
+                state["familyStatusProvided"] = True
+                state["pending"] = None
+            elif skip:
+                state["familyStatusProvided"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Tình trạng gia đình của bạn? (tùy chọn, có thể bỏ qua)", "choices": FAMILY_CHOICES}
+        elif pending == "children":
+            children = has_children(value)
+            if children is not None:
+                state["householdProfile"] = children
+                state["childrenAnswered"] = True
+                if children:
+                    add_household_school(state, criteria)
+                state["pending"] = None
+            elif skip:
+                state["householdProfile"] = False
+                state["childrenAnswered"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Bạn có trẻ nhỏ cần gần trường học không? (tùy chọn)", "choices": CHILDREN_CHOICES}
+        elif pending == "age":
+            age = age_group(value)
+            if age:
+                state["ageGroup"] = age
+                state["ageGroupProvided"] = True
+                state["pending"] = None
+            elif skip:
+                state["ageGroupProvided"] = True
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Bạn muốn chia sẻ nhóm tuổi để gợi ý phù hợp hơn không? (tùy chọn)", "choices": AGE_CHOICES}
+        elif pending == "children_needs":
+            if skip or "khong can" in value:
+                state["childrenNeedsConfirmation"] = False
+                state["pending"] = None
+            elif any(term in value for term in ("co", "uu tien", "truong", "cong vien")):
+                add_household_school(state, criteria)
+                state["childrenNeedsConfirmation"] = False
+                state["pending"] = None
+            else:
+                return {"search": True, "question": "Hồ sơ cho biết bạn có trẻ nhỏ. Bạn có muốn ưu tiên trường học và công viên không?", "choices": CHILDREN_NEEDS_CHOICES}
+
+        # "Bỏ qua" skips only the current question; "Xem gợi ý ngay" skips the remaining intake.
+        if skip_all:
+            skip = True
+        elif skip:
+            skip = False
+        if not state.get("purposeAsked"):
+            if turn.get("purpose"):
+                criteria["purpose"] = turn["purpose"]
+                state["purposeAsked"] = True
+            elif not skip:
+                state["purposeAsked"] = True
+                state["pending"] = "purpose"
+                return {"search": True, "question": "Bạn muốn mua để ở, mua đầu tư, hay thuê để ở?", "choices": PURPOSE_CHOICES}
+            else:
+                state["purposeAsked"] = True
+        if not criteria.get("budgetVnd"):
+            state["pending"] = "budget"
+            return {"search": True, "question": "Bạn muốn giới hạn tổng giá mua tối đa khoảng bao nhiêu? Tôi sẽ không tìm vượt mức bạn nhập.", "choices": ["2 tỷ", "3 tỷ", "5 tỷ", "10 tỷ", "Bỏ qua"]}
+        if not state.get("locationKnown") and not criteria.get("district") and not skip:
+            state["pending"] = "location"
+            return {"search": True, "question": "Bạn muốn tìm ở khu vực nào tại Đà Nẵng?", "choices": ["Toàn Đà Nẵng", "Hải Châu", "Sơn Trà", "Cẩm Lệ", "Xem gợi ý ngay"]}
+        if not state.get("typeAsked"):
+            if turn.get("propertyType"):
+                criteria["propertyType"] = turn["propertyType"]
+                state["typeAsked"] = True
+            elif criteria.get("propertyType", "ALL") == "ALL" and not skip:
+                state["typeAsked"] = True
+                state["pending"] = "property_type"
+                return {"search": True, "question": "Bạn muốn tìm loại bất động sản nào?", "choices": PROPERTY_TYPE_CHOICES}
+            else:
+                state["typeAsked"] = True
+        if not state.get("areaAsked"):
+            area = area_sqm(question)
+            if area is not None:
+                criteria["minAreaSqm"] = str(area)
+            if "minAreaSqm" not in criteria and not skip:
+                state["areaAsked"] = True
+                state["pending"] = "min_area"
+                return {"search": True, "question": "Diện tích tối thiểu bạn cần là bao nhiêu m²? Nhập số hoặc chọn bên dưới.", "choices": AREA_CHOICES}
+            state["areaAsked"] = True
+        if context.scope.startswith("ACCOUNT:") and state.get("profileUsed") and state.get("childrenNeedsConfirmation"):
+            state["pending"] = "children_needs"
+            return {"search": True, "question": "Hồ sơ cho biết bạn có trẻ nhỏ. Bạn có muốn ưu tiên trường học và công viên không?", "choices": CHILDREN_NEEDS_CHOICES}
+        if household and context.scope.startswith("ACCOUNT:") and state.get("profileUsed"):
+            if not state.get("familyStatusProvided"):
+                state["pending"] = "family"
+                return {"search": True, "question": "Tình trạng gia đình của bạn? (tùy chọn, có thể bỏ qua)", "choices": FAMILY_CHOICES}
+            if state.get("householdProfile") is None and not state.get("childrenAnswered"):
+                state["pending"] = "children"
+                return {"search": True, "question": "Bạn có trẻ nhỏ cần gần trường học không? (tùy chọn)", "choices": CHILDREN_CHOICES}
+            if not state.get("ageGroupProvided"):
+                state["pending"] = "age"
+                return {"search": True, "question": "Bạn muốn chia sẻ nhóm tuổi để gợi ý phù hợp hơn không? (tùy chọn)", "choices": AGE_CHOICES}
+        if not state.get("askedPriorities") and not skip:
+            state["askedPriorities"] = True
+            state["pending"] = "priorities"
+            return {"search": True, "question": "Điều gì quan trọng nhất với bạn khi chọn vị trí nhà?", "choices": PRIORITY_CHOICES}
+        state["pending"] = None
+        return {"search": True, "question": None, "choices": []}
+
+    # Free-form mode keeps the existing behaviour for backward compatibility.
     if not criteria.get("budgetVnd"):
         state["pending"] = "budget"
         return {"search": True, "question": "Bạn muốn giới hạn tổng giá mua tối đa khoảng bao nhiêu? Tôi sẽ không tìm vượt mức bạn nhập.", "choices": []}

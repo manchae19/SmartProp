@@ -25,6 +25,10 @@ def seed(context, profile, names):
     if not profile or not profile.get("enabled"):
         return
     selected=[n for n in profile.get("selectedNeeds",[]) if n in LABELS][:19]
+    raw_children = profile.get("hasChildren")
+    child_count = profile.get("childrenCount")
+    children = bool(raw_children) or (isinstance(child_count, int) and child_count > 0)
+    household_known = raw_children is not None or child_count is not None
     primary=profile.get("primaryNeed")
     if primary in selected:
         selected.remove(primary)
@@ -44,5 +48,9 @@ def seed(context, profile, names):
     state["unsupportedProfileNeeds"]=[LABELS[n] for n in selected if n not in MAPPING]
     state["priorities"]=priorities
     state["askedPriorities"]=bool(selected)
+    state["householdProfile"]=children if household_known else None
+    state["childrenNeedsConfirmation"]=children and not any(n in selected for n in ("KINDERGARTEN", "PRIMARY_SCHOOL", "SECONDARY_SCHOOL", "PARK"))
+    state["familyStatusProvided"]=bool(profile.get("familyStatus"))
+    state["ageGroupProvided"]=bool(profile.get("ageGroup"))
     if "PRIMARY_SCHOOL" in selected:
         state["schoolLevel"]="tiểu học"

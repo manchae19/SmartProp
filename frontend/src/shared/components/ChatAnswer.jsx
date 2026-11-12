@@ -1,771 +1,294 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "./rendering.js";
-import { RouterLink, RouterView } from "../routing/router.jsx";
-import {
-  computed,
-  ref,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
-} from "../state/store.js";
+import { afterPaint, classNames } from "../lib/ui.js";
+import { createStateStore } from "../state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
 import { chatPresentation } from "../../features/prediction/chatPresentation.js";
-import {
-  amenityIntent,
-  loadAmenityMap,
-  amenitySummary,
-} from "../../features/prediction/chatAmenities.js";
+import { amenityIntent, loadAmenityMap, amenitySummary } from "../../features/prediction/chatAmenities.js";
 import ChatAmenityMap from "./ChatAmenityMap.jsx";
 import AppIcon from "./AppIcon.jsx";
 import "./ChatAnswer.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    result: {
-      type: Object,
-      required: true,
-    },
-    messageId: {
-      type: Number,
-      required: true,
-    },
-    question: {
-      type: String,
-      default: "",
-    },
-  });
-  const emit = emitForProps(__props, ["reading", "resized"]);
-  const expanded = ref(false);
-  const view = computed(() => chatPresentation(props.result));
-  const intent = computed(() => amenityIntent(props.question, props.result));
-  const mapData = ref(null),
-    mapStatus = ref("idle");
-  const summary = computed(() =>
-    intent.value.requested && mapData.value
-      ? amenitySummary(mapData.value)
-      : view.value.summary,
-  );
-  let disposed = false;
+function useChatAnswerState(inputProps, forwardedRef) {
+  inputProps = {
+    question: "",
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    question: "",
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [expanded] = useState(() => createStateStore(false));
+  useSyncExternalStore(expanded.subscribe, expanded.getSnapshot);
+  const getView = () => chatPresentation(_props.current.result);
+  const getIntent = () => amenityIntent(_props.current.question, _props.current.result);
+  const [mapData] = useState(() => createStateStore(null)),
+    [mapStatus] = useState(() => createStateStore("idle"));
+  useSyncExternalStore(mapStatus.subscribe, mapStatus.getSnapshot);
+  useSyncExternalStore(mapData.subscribe, mapData.getSnapshot);
+  const getSummary = () => getIntent().requested && mapData.getSnapshot() ? amenitySummary(mapData.getSnapshot()) : getView().summary;
+  const _disposedRef = useRef(false);
   async function loadMap() {
-    if (!intent.value.enabled || mapStatus.value === "loading") return;
-    mapStatus.value = "loading";
+    if (!getIntent().enabled || mapStatus.getSnapshot() === "loading") return;
+    mapStatus.set("loading");
     try {
-      const data = await loadAmenityMap(intent.value);
-      if (!disposed) {
-        mapData.value = data;
-        mapStatus.value = "ready";
+      const data = await loadAmenityMap(getIntent());
+      if (!_disposedRef.current) {
+        mapData.set(data);
+        mapStatus.set("ready");
       }
     } catch {
-      if (!disposed) mapStatus.value = "error";
+      if (!_disposedRef.current) mapStatus.set("error");
     }
-    if (!disposed) {
-      await nextTick();
-      emit("resized");
+    if (!_disposedRef.current) {
+      await afterPaint();
+      _propsLatest.current.onResized?.();
     }
   }
-  onMounted(loadMap);
-  onBeforeUnmount(() => {
-    disposed = true;
-  });
-  const visibleCards = computed(() =>
-    expanded.value ? view.value.cards : view.value.cards.slice(0, 3),
-  );
+  useEffect(() => {
+    const result = loadMap();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => {
+    _disposedRef.current = true;
+  })(), []);
+  const getVisibleCards = () => expanded.getSnapshot() ? getView().cards : getView().cards.slice(0, 3);
   function expand() {
-    emit("reading");
-    expanded.value = !expanded.value;
+    _propsLatest.current.onReading?.();
+    expanded.set(!expanded.getSnapshot());
   }
   function reading(event) {
-    if (event.target.open) emit("reading");
+    if (event.target.open) _propsLatest.current.onReading?.();
   }
   return {
-    computed,
-    ref,
-    onMounted,
-    onBeforeUnmount,
-    nextTick,
-    chatPresentation,
-    amenityIntent,
-    loadAmenityMap,
-    amenitySummary,
-    ChatAmenityMap,
-    AppIcon,
-    props,
-    emit,
-    expanded,
-    view,
-    intent,
-    mapData,
-    mapStatus,
-    summary,
-    disposed,
+    ...inputProps,
+    expanded: expanded.getSnapshot(),
+    view: getView(),
+    intent: getIntent(),
+    mapData: mapData.getSnapshot(),
+    mapStatus: mapStatus.getSnapshot(),
+    summary: getSummary(),
     loadMap,
-    visibleCards,
+    visibleCards: getVisibleCards(),
     expand,
     reading,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["result", "messageId", "question", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function ChatAnswer(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <div
-      {...mergeProps({
-        className: "chat-answer",
-        "data-chat-answer": "",
-        "data-generation-mode": ctx.result.generationMode,
-        "data-sp-73584f77": "",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: "ai-bubble",
-          "data-chat-empty":
-            !ctx.view.cards.length &&
-            !ctx.view.clarification &&
-            ctx.result.evidence.criteria?.budgetVnd
-              ? ""
-              : undefined,
-          "data-sp-73584f77": "",
-        })}
-      >
-        <p
-          {...mergeProps({
-            className: "ai-summary",
-            "data-chat-summary": "",
-            "data-sp-73584f77": "",
-          })}
-        >
-          {display(ctx.summary)}
+  const view = useChatAnswerState(props, ref);
+  return <><div data-chat-answer="" data-generation-mode={view.result.generationMode} data-sp-73584f77="" {...view.rootAttributes} className={classNames(["chat-answer", view.rootAttributes.className])}>
+      <div className="ai-bubble" data-chat-empty={!view.view.cards.length && !view.view.clarification && view.result.evidence.criteria?.budgetVnd ? "" : undefined} data-sp-73584f77="">
+        <p className="ai-summary" data-chat-summary="" data-sp-73584f77="">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.summary)}
         </p>
-        {ctx.view.clarification ? (
-          <p
-            {...mergeProps({
-              className: "clarification-note",
-              role: "status",
-              "data-chat-clarification": "",
-              "data-sp-73584f77": "",
-            })}
-          >
-            {display(ctx.view.clarification)}
-          </p>
-        ) : null}
-        {ctx.view.fallback ? (
-          <p
-            {...mergeProps({
-              className: "fallback-note",
-              role: "status",
-              "data-chat-fallback": "",
-              "data-sp-73584f77": "",
-            })}
-          >
-            {
-              "Kết quả tham khảo từ dữ liệu hiện có."
-            }
-          </p>
-        ) : null}
-        {ctx.view.noMatches ? (
-          <p
-            {...mergeProps({
-              className: "empty-followup",
-              "data-sp-73584f77": "",
-            })}
-          >
-            {
-              "Hãy nhắc lại ngân sách, loại BĐS và địa bàn trong câu hỏi tiếp theo. "
-            }
-            <RouterLink
-              {...mergeProps({
-                to: "/advisor",
-                "data-sp-73584f77": "",
-              })}
-            >
+        {view.view.clarification ? <p className="clarification-note" role="status" data-chat-clarification="" data-sp-73584f77="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.clarification)}
+          </p> : null}
+        {view.view.fallback ? <p className="fallback-note" role="status" data-chat-fallback="" data-sp-73584f77="">
+            {"Kết quả tham khảo từ dữ liệu hiện có."}
+          </p> : null}
+        {view.view.noMatches ? <p className="empty-followup" data-sp-73584f77="">
+            {"Hãy nhắc lại ngân sách, loại BĐS và địa bàn trong câu hỏi tiếp theo. "}
+            <SiteLink to="/advisor" data-sp-73584f77="">
               {"Mở bộ lọc"}
-            </RouterLink>
-          </p>
-        ) : null}
-        <p
-          {...mergeProps({
-            className: "answer-basis",
-            "data-sp-73584f77": "",
-          })}
-        >
-          {display(
-            ctx.view.clarification
-              ? "Cần bạn xác nhận trước khi tra cứu"
-              : ctx.view.noMatches
-                ? "Kết quả tra cứu dữ liệu công khai"
-                : "Tổng hợp từ nguồn công khai · mở Nguồn để đối chiếu",
-          )}
+            </SiteLink>
+          </p> : null}
+        <p className="answer-basis" data-sp-73584f77="">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.clarification ? "Cần bạn xác nhận trước khi tra cứu" : view.view.noMatches ? "Kết quả tra cứu dữ liệu công khai" : "Tổng hợp từ nguồn công khai · mở Nguồn để đối chiếu")}
         </p>
       </div>
-      {ctx.intent.enabled || ctx.intent.requested ? (
-        <ChatAmenityMap
-          {...mergeProps({
-            data: ctx.mapData,
-            status: ctx.mapStatus,
-            message: ctx.intent.message,
-            onRetry: ($event) => {
-              return ctx.loadMap?.($event);
-            },
-            onReading: ($event) => {
-              ctx.emit("reading");
-            },
-            "data-sp-73584f77": "",
-          })}
-        />
-      ) : null}
-      {ctx.view.cards.length ? (
-        <section
-          {...mergeProps({
-            className: "chat-properties",
-            "aria-label":
-              "Bất động sản đề xuất trong phản hồi " + ctx.messageId,
-            "data-chat-properties": "",
-            "data-sp-73584f77": "",
-          })}
-        >
-          {renderList(ctx.visibleCards, (card, index) => (
-            <article
-              key={card.id}
-              {...mergeProps({
-                className: "chat-property",
-                "data-chat-property": card.id,
-                "data-sp-73584f77": "",
-              })}
-            >
-              <div
-                {...mergeProps({
-                  className: "card-heading",
-                  "data-sp-73584f77": "",
-                })}
-              >
-                <span
-                  {...mergeProps({
-                    className: "card-rank",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(String(index + 1).padStart(2, "0"))}
+      {view.intent.enabled || view.intent.requested ? <ChatAmenityMap data={view.mapData} status={view.mapStatus} message={view.intent.message} onRetry={$event => {
+        return view.loadMap?.($event);
+      }} onReading={$event => {
+        view.onReading?.();
+      }} data-sp-73584f77="" /> : null}
+      {view.view.cards.length ? <section className="chat-properties" aria-label={"Bất động sản đề xuất trong phản hồi " + view.messageId} data-chat-properties="" data-sp-73584f77="">
+          {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.visibleCards, (card, index) => <article key={card.id} className="chat-property" data-chat-property={card.id} data-sp-73584f77="">
+              <div className="card-heading" data-sp-73584f77="">
+                <span className="card-rank" data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(String(index + 1).padStart(2, "0"))}
                 </span>
-                <p
-                  {...mergeProps({
-                    className: "card-location",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  <AppIcon
-                    {...mergeProps({
-                      name: "gis",
-                      "data-sp-73584f77": "",
-                    })}
-                  />
-                  {display(card.location)}
+                <p className="card-location" data-sp-73584f77="">
+                  <AppIcon name="gis" data-sp-73584f77="" />
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.location)}
                 </p>
               </div>
-              <h3
-                {...mergeProps({
-                  "data-sp-73584f77": "",
-                })}
-              >
-                {display(card.title)}
+              <h3 data-sp-73584f77="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.title)}
               </h3>
-              <div
-                {...mergeProps({
-                  className: "card-facts",
-                  "data-sp-73584f77": "",
-                })}
-              >
-                <p
-                  {...mergeProps({
-                    className: "card-price",
-                    title: card.price.exact,
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(card.price.text)}
+              <div className="card-facts" data-sp-73584f77="">
+                <p className="card-price" title={card.price.exact} data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.price.text)}
                 </p>
-                <span
-                  {...mergeProps({
-                    "aria-hidden": "true",
-                    "data-sp-73584f77": "",
-                  })}
-                >
+                <span aria-hidden="true" data-sp-73584f77="">
                   {"·"}
                 </span>
-                <p
-                  {...mergeProps({
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(card.area)}
+                <p data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.area)}
                   {" m²"}
                 </p>
               </div>
-              {card.reason ? (
-                <p
-                  {...mergeProps({
-                    className: "card-reason",
-                    title: card.reason,
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(card.reason)}
-                </p>
-              ) : null}
-              <div
-                {...mergeProps({
-                  className: "card-footer",
-                  "data-sp-73584f77": "",
-                })}
-              >
-                <span
-                  {...mergeProps({
-                    className: "card-score",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  <strong
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(card.score)}
+              {card.reason ? <p className="card-reason" title={card.reason} data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.reason)}
+                </p> : null}
+              <div className="card-footer" data-sp-73584f77="">
+                <span className="card-score" data-sp-73584f77="">
+                  <strong data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.score)}
                   </strong>
                   {"/100 "}
-                  <span
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
+                  <span data-sp-73584f77="">
                     {"phù hợp"}
                   </span>
                 </span>
-                {card.href && card.platform ? (
-                  <RouterLink
-                    {...mergeProps({
-                      to: card.href,
-                      className: "card-link",
-                      "data-sp-73584f77": "",
-                    })}
-                  >
+                {card.href && card.platform ? <SiteLink to={card.href} className="card-link" data-sp-73584f77="">
                     {"Xem chi tiết "}
-                    <AppIcon
-                      {...mergeProps({
-                        name: "arrow",
-                        "data-sp-73584f77": "",
-                      })}
-                    />
-                  </RouterLink>
-                ) : card.href ? (
-                  <a
-                    {...mergeProps({
-                      href: card.href,
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                      className: "card-link",
-                      "data-sp-73584f77": "",
-                    })}
-                  >
+                    <AppIcon name="arrow" data-sp-73584f77="" />
+                  </SiteLink> : card.href ? <a href={card.href} target="_blank" rel="noopener noreferrer" className="card-link" data-sp-73584f77="">
                     {"Xem chi tiết "}
-                    <AppIcon
-                      {...mergeProps({
-                        name: "arrow",
-                        "data-sp-73584f77": "",
-                      })}
-                    />
-                  </a>
-                ) : (
-                  <span
-                    {...mergeProps({
-                      className: "no-link",
-                      "data-sp-73584f77": "",
-                    })}
-                  >
+                    <AppIcon name="arrow" data-sp-73584f77="" />
+                  </a> : <span className="no-link" data-sp-73584f77="">
                     {"Chưa có đường dẫn nguồn"}
-                  </span>
-                )}
+                  </span>}
               </div>
-              {card.warnings.length ? (
-                <p
-                  {...mergeProps({
-                    className: "quality-note",
-                    "data-sp-73584f77": "",
-                  })}
-                >
+              {card.warnings.length ? <p className="quality-note" data-sp-73584f77="">
                   {"Thông tin nguồn cần được đối chiếu trước khi quyết định."}
-                </p>
-              ) : null}
-            </article>
-          ))}
-          {ctx.view.cards.length > 3 ? (
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "expand-properties",
-                "aria-expanded": ctx.expanded,
-                onClick: ($event) => {
-                  return ctx.expand?.($event);
-                },
-                "data-chat-expand": "",
-                "data-sp-73584f77": "",
-              })}
-            >
-              {display(
-                ctx.expanded
-                  ? "Thu gọn danh sách"
-                  : "Xem tất cả " + ctx.view.cards.length + " bất động sản",
-              )}
-              <svg
-                {...mergeProps({
-                  viewBox: "0 0 24 24",
-                  fill: "none",
-                  stroke: "currentColor",
-                  strokeWidth: "1.7",
-                  "aria-hidden": "true",
-                  className: {
-                    rotated: ctx.expanded,
-                  },
-                  "data-sp-73584f77": "",
-                })}
-              >
-                <path
-                  {...mergeProps({
-                    d: "m6 9 6 6 6-6",
-                    "data-sp-73584f77": "",
-                  })}
-                />
+                </p> : null}
+            </article>)}
+          {view.view.cards.length > 3 ? <button type="button" className="expand-properties" aria-expanded={view.expanded} onClick={$event => {
+          return view.expand?.($event);
+        }} data-chat-expand="" data-sp-73584f77="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.expanded ? "Thu gọn danh sách" : "Xem tất cả " + view.view.cards.length + " bất động sản")}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className={classNames({
+            rotated: view.expanded
+          })} data-sp-73584f77="">
+                <path d="m6 9 6 6 6-6" data-sp-73584f77="" />
               </svg>
-            </button>
-          ) : null}
-        </section>
-      ) : null}
-      {ctx.view.citations.length ? (
-        <details
-          {...mergeProps({
-            className: "citation-panel",
-            "data-chat-sources": "",
-            onToggle: ($event) => {
-              return ctx.reading?.($event);
-            },
-            "data-sp-73584f77": "",
-          })}
-        >
-          <summary
-            {...mergeProps({
-              "data-sp-73584f77": "",
-            })}
-          >
-            <AppIcon
-              {...mergeProps({
-                name: "report",
-                "data-sp-73584f77": "",
-              })}
-            />
-            <span
-              {...mergeProps({
-                "data-sp-73584f77": "",
-              })}
-            >
+            </button> : null}
+        </section> : null}
+      {view.view.citations.length ? <details className="citation-panel" data-chat-sources="" onToggle={$event => {
+        return view.reading?.($event);
+      }} data-sp-73584f77="">
+          <summary data-sp-73584f77="">
+            <AppIcon name="report" data-sp-73584f77="" />
+            <span data-sp-73584f77="">
               {"Nguồn ("}
-              {display(ctx.view.citations.length)}
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.citations.length)}
               {")"}
             </span>
-            <svg
-              {...mergeProps({
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "1.7",
-                "aria-hidden": "true",
-                className: "source-chevron",
-                "data-sp-73584f77": "",
-              })}
-            >
-              <path
-                {...mergeProps({
-                  d: "m6 9 6 6 6-6",
-                  "data-sp-73584f77": "",
-                })}
-              />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" className="source-chevron" data-sp-73584f77="">
+              <path d="m6 9 6 6 6-6" data-sp-73584f77="" />
             </svg>
           </summary>
-          <ol
-            {...mergeProps({
-              className: "source-list",
-              "data-sp-73584f77": "",
-            })}
-          >
-            {renderList(ctx.view.citations, (source) => (
-              <li
-                key={source.sourceId}
-                {...mergeProps({
-                  "data-sp-73584f77": "",
-                })}
-              >
-                <span
-                  {...mergeProps({
-                    className: "source-number",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(source.number)}
+          <ol className="source-list" data-sp-73584f77="">
+            {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.view.citations, source => <li key={source.sourceId} data-sp-73584f77="">
+                <span className="source-number" data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.number)}
                 </span>
-                <div
-                  {...mergeProps({
-                    className: "source-body",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  <a
-                    {...mergeProps({
-                      href: source.href,
-                      target: "_blank",
-                      rel: "noopener noreferrer",
-                      "data-chat-citation": "",
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(source.label)}
+                <div className="source-body" data-sp-73584f77="">
+                  <a href={source.href} target="_blank" rel="noopener noreferrer" data-chat-citation="" data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.label)}
                   </a>
-                  <p
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(source.basis)}
+                  <p data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.basis)}
                   </p>
-                  <details
-                    {...mergeProps({
-                      className: "technical-source",
-                      onToggle: ($event) => {
-                        return ctx.reading?.($event);
-                      },
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    <summary
-                      {...mergeProps({
-                        "data-sp-73584f77": "",
-                      })}
-                    >
+                  <details className="technical-source" onToggle={$event => {
+                return view.reading?.($event);
+              }} data-sp-73584f77="">
+                    <summary data-sp-73584f77="">
                       {"Thông tin đối chiếu"}
                     </summary>
-                    <dl
-                      {...mergeProps({
-                        "data-sp-73584f77": "",
-                      })}
-                    >
-                      <dt
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
+                    <dl data-sp-73584f77="">
+                      <dt data-sp-73584f77="">
                         {"Nguồn"}
                       </dt>
-                      <dd
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
-                        {display(source.sourceId)}
+                      <dd data-sp-73584f77="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.sourceId)}
                       </dd>
-                      <dt
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
+                      <dt data-sp-73584f77="">
                         {"Phiên bản"}
                       </dt>
-                      <dd
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
-                        {display(source.version)}
+                      <dd data-sp-73584f77="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.version)}
                       </dd>
-                      <dt
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
+                      <dt data-sp-73584f77="">
                         {"SHA-256"}
                       </dt>
-                      <dd
-                        {...mergeProps({
-                          "data-sp-73584f77": "",
-                        })}
-                      >
-                        {display(source.contentHash)}
+                      <dd data-sp-73584f77="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.contentHash)}
                       </dd>
                     </dl>
                   </details>
                 </div>
-              </li>
-            ))}
+              </li>)}
           </ol>
-          <details
-            {...mergeProps({
-              className: "original-evidence",
-              onToggle: ($event) => {
-                return ctx.reading?.($event);
-              },
-              "data-sp-73584f77": "",
-            })}
-          >
-            <summary
-              {...mergeProps({
-                "data-sp-73584f77": "",
-              })}
-            >
-              {display(
-                ctx.view.generated
-                  ? "Xem câu trả lời đầy đủ"
-                  : "Xem nội dung đầy đủ",
-              )}
+          <details className="original-evidence" onToggle={$event => {
+          return view.reading?.($event);
+        }} data-sp-73584f77="">
+            <summary data-sp-73584f77="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.generated ? "Xem câu trả lời đầy đủ" : "Xem nội dung đầy đủ")}
             </summary>
-            <p
-              {...mergeProps({
-                className: "original-answer",
-                "data-chat-original": "",
-                "data-sp-73584f77": "",
-              })}
-            >
-              {display(ctx.view.originalAnswer)}
+            <p className="original-answer" data-chat-original="" data-sp-73584f77="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.originalAnswer)}
             </p>
           </details>
-          {ctx.result.recommendedProperties.length ? (
-            <details
-              {...mergeProps({
-                className: "original-evidence",
-                onToggle: ($event) => {
-                  return ctx.reading?.($event);
-                },
-                "data-sp-73584f77": "",
-              })}
-            >
-              <summary
-                {...mergeProps({
-                  "data-sp-73584f77": "",
-                })}
-              >
+          {view.result.recommendedProperties.length ? <details className="original-evidence" onToggle={$event => {
+          return view.reading?.($event);
+        }} data-sp-73584f77="">
+              <summary data-sp-73584f77="">
                 {"Chi tiết giá và thông tin nguồn"}
               </summary>
-              {renderList(ctx.result.recommendedProperties, (property) => (
-                <div
-                  key={property.id}
-                  {...mergeProps({
-                    className: "property-audit",
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  <strong
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(property.title)}
+              {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.result.recommendedProperties, property => <div key={property.id} className="property-audit" data-sp-73584f77="">
+                  <strong data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(property.title)}
                   </strong>
-                  <p
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(
-                      ctx.view.cards.find((c) => c.id === property.id).price
-                        .exact,
-                    )}
+                  <p data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.cards.find(c => c.id === property.id).price.exact)}
                     {" · Nguồn "}
-                    {display(property.source.name)}
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(property.source.name)}
                   </p>
-                  {renderList(property.explanations, (line) => (
-                    <p
-                      key={line}
-                      {...mergeProps({
-                        "data-sp-73584f77": "",
-                      })}
-                    >
-                      {display(line)}
-                    </p>
-                  ))}
-                  {renderList(property.warnings, (warning) => (
-                    <p
-                      key={warning}
-                      {...mergeProps({
-                        "data-sp-73584f77": "",
-                      })}
-                    >
-                      {display(warning)}
-                    </p>
-                  ))}
-                  <code
-                    {...mergeProps({
-                      "data-sp-73584f77": "",
-                    })}
-                  >
-                    {display(property.id)}
+                  {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(property.explanations, line => <p key={line} data-sp-73584f77="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(line)}
+                    </p>)}
+                  {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(property.warnings, warning => <p key={warning} data-sp-73584f77="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(warning)}
+                    </p>)}
+                  <code data-sp-73584f77="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(property.id)}
                   </code>
-                </div>
-              ))}
-            </details>
-          ) : null}
-          <details
-            {...mergeProps({
-              className: "original-evidence",
-              onToggle: ($event) => {
-                return ctx.reading?.($event);
-              },
-              "data-sp-73584f77": "",
-            })}
-          >
-            <summary
-              {...mergeProps({
-                "data-sp-73584f77": "",
-              })}
-            >
+                </div>)}
+            </details> : null}
+          <details className="original-evidence" onToggle={$event => {
+          return view.reading?.($event);
+        }} data-sp-73584f77="">
+            <summary data-sp-73584f77="">
               {"Giới hạn dữ liệu"}
             </summary>
-            <ul
-              {...mergeProps({
-                "data-sp-73584f77": "",
-              })}
-            >
-              {renderList(ctx.view.limitations, (item) => (
-                <li
-                  key={item}
-                  {...mergeProps({
-                    "data-sp-73584f77": "",
-                  })}
-                >
-                  {display(item)}
-                </li>
-              ))}
+            <ul data-sp-73584f77="">
+              {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.view.limitations, item => <li key={item} data-sp-73584f77="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item)}
+                </li>)}
             </ul>
           </details>
-        </details>
-      ) : null}
-      {ctx.view.citations.length ? (
-        <p
-          {...mergeProps({
-            className: "answer-caution",
-            "data-sp-73584f77": "",
-          })}
-        >
-          {
-            "Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."
-          }
-        </p>
-      ) : null}
-    </div>,
-  ]);
+        </details> : null}
+      {view.view.citations.length ? <p className="answer-caution" data-sp-73584f77="">
+          {"Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."}
+        </p> : null}
+    </div></>;
 });

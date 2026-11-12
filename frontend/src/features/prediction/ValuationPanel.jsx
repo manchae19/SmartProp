@@ -1,1068 +1,496 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import {
-  computed,
-  onBeforeUnmount,
-  onMounted,
-  reactive,
-  ref,
-  watch,
-} from "../../shared/state/store.js";
-import {
-  buildValuationPayload,
-  createValuationClient,
-  featureLabels,
-  formatPrice,
-  locationLabel,
-  warningLabel,
-} from "./valuation.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
+import { buildValuationPayload, createValuationClient, featureLabels, formatPrice, locationLabel, warningLabel } from "./valuation.js";
 import { session, errorText } from "../auth/api.js";
 import { createHistoryClient } from "./history.js";
 import "./ValuationPanel.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    initialInput: {
-      type: Object,
-      default: () => ({}),
-    },
-    demo: Boolean,
-    historyEnabled: Boolean,
-  });
-  const emit = emitForProps(__props, ["saved", "options-loaded"]);
-  const history = createHistoryClient();
-  const saving = ref(false),
-    saved = ref(false),
-    saveError = ref("");
-  let resultInput, saveKey;
-  const client = createValuationClient();
-  const options = ref(null);
-  const optionsLoading = ref(false);
-  const optionsError = ref("");
-  const predicting = ref(false);
-  const predictionError = ref("");
-  const result = ref(null);
-  const form = reactive({});
-  let optionsController;
-  let predictionController;
-  let generation = 0;
-  const locations = computed(
-    () =>
-      options.value?.categories.find((item) => item.category === form.category)
-        ?.locations ?? [],
-  );
-  const legacyLocations = computed(() =>
-    locations.value.filter((value) => !value.startsWith("new_unit:")),
-  );
-  const expandedLocations = computed(() =>
-    locations.value.filter((value) => value.startsWith("new_unit:")),
-  );
-  const displayLocation = (value) =>
-    locationLabel(value, options.value?.location_labels);
-  const isHouse = computed(() => form.category === "Nhà ở");
-  const isApartment = computed(() => form.category === "Căn hộ chung cư");
-  const hasRooms = computed(() => form.category !== "Đất nền");
-  const missingLabels = computed(
-    () =>
-      result.value?.missing_features.map(
-        (key) => featureLabels[key] ?? "Thông tin bổ sung",
-      ) ?? [],
-  );
-  const usedFeatures = computed(() => {
-    if (!result.value) return [];
-    return Object.entries(result.value.features_used)
-      .filter(([, value]) => value !== null)
-      .map(([key, value]) => {
-        if (key === "area_sqm") value = `${value} m²`;
-        if (key === "location_feature") value = displayLocation(value);
-        if (key === "ward_source")
-          value = String(form.ward ?? "").trim() || value;
-        if (key === "access_type") value = options.value.access_types[value];
-        if (key === "house_subtype")
-          value = options.value.house_subtypes[value];
-        return {
-          label: featureLabels[key],
-          value,
-        };
-      });
-  });
+function useValuationPanelState(inputProps, forwardedRef) {
+  inputProps = {
+    initialInput: (() => ({}))(),
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const props = {
+    initialInput: (() => ({}))(),
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [history] = useState(() => createHistoryClient());
+  const [saving] = useState(() => createStateStore(false)),
+    [saved] = useState(() => createStateStore(false)),
+    [saveError] = useState(() => createStateStore(""));
+  useSyncExternalStore(saveError.subscribe, saveError.getSnapshot);
+  useSyncExternalStore(saved.subscribe, saved.getSnapshot);
+  useSyncExternalStore(saving.subscribe, saving.getSnapshot);
+  const _resultInputRef = useRef(undefined),
+    _saveKeyRef = useRef(undefined);
+  const [client] = useState(() => createValuationClient());
+  const [options] = useState(() => createStateStore(null));
+  useSyncExternalStore(options.subscribe, options.getSnapshot);
+  const [optionsLoading] = useState(() => createStateStore(false));
+  useSyncExternalStore(optionsLoading.subscribe, optionsLoading.getSnapshot);
+  const [optionsError] = useState(() => createStateStore(""));
+  useSyncExternalStore(optionsError.subscribe, optionsError.getSnapshot);
+  const [predicting] = useState(() => createStateStore(false));
+  useSyncExternalStore(predicting.subscribe, predicting.getSnapshot);
+  const [predictionError] = useState(() => createStateStore(""));
+  useSyncExternalStore(predictionError.subscribe, predictionError.getSnapshot);
+  const [result] = useState(() => createStateStore(null));
+  useSyncExternalStore(result.subscribe, result.getSnapshot);
+  const [form] = useState(() => createStateStore({}));
+  useSyncExternalStore(form.subscribe, form.getSnapshot);
+  const _optionsControllerRef = useRef(undefined);
+  const _predictionControllerRef = useRef(undefined);
+  const _generationRef = useRef(0);
+  const getLocations = () => options.getSnapshot()?.categories.find(item => item.category === form.getSnapshot().category)?.locations ?? [];
+  const getLegacyLocations = () => getLocations().filter(value => !value.startsWith("new_unit:"));
+  const getExpandedLocations = () => getLocations().filter(value => value.startsWith("new_unit:"));
+  const displayLocation = value => locationLabel(value, options.getSnapshot()?.location_labels);
+  const getIsHouse = () => form.getSnapshot().category === "Nhà ở";
+  const getIsApartment = () => form.getSnapshot().category === "Căn hộ chung cư";
+  const getHasRooms = () => form.getSnapshot().category !== "Đất nền";
+  const getMissingLabels = () => result.getSnapshot()?.missing_features.map(key => featureLabels[key] ?? "Thông tin bổ sung") ?? [];
+  const getUsedFeatures = () => {
+    if (!result.getSnapshot()) return [];
+    return Object.entries(result.getSnapshot().features_used).filter(([, value]) => value !== null).map(([key, value]) => {
+      if (key === "area_sqm") value = `${value} m²`;
+      if (key === "location_feature") value = displayLocation(value);
+      if (key === "ward_source") value = String(form.getSnapshot().ward ?? "").trim() || value;
+      if (key === "access_type") value = options.getSnapshot().access_types[value];
+      if (key === "house_subtype") value = options.getSnapshot().house_subtypes[value];
+      return {
+        label: featureLabels[key],
+        value
+      };
+    });
+  };
   function invalidate() {
-    generation++;
-    predictionController?.abort();
-    result.value = null;
-    predictionError.value = "";
-    predicting.value = false;
-    saved.value = false;
-    saving.value = false;
-    saveError.value = "";
-    resultInput = null;
-    saveKey = null;
+    _generationRef.current++;
+    _predictionControllerRef.current?.abort();
+    result.set(null);
+    predictionError.set("");
+    predicting.set(false);
+    saved.set(false);
+    saving.set(false);
+    saveError.set("");
+    _resultInputRef.current = null;
+    _saveKeyRef.current = null;
   }
-  watch(form, invalidate, {
-    deep: true,
-    flush: "sync",
-  });
-  watch(
-    () => props.initialInput,
-    (input) => {
+  const _watched = form.getSnapshot();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    if (!_initialized.current) {
+      _initialized.current = true;
+      return;
+    }
+    const result = invalidate(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  const _watched2 = (() => _props.current.initialInput)();
+  const _previous2 = useRef(_watched2),
+    _initialized2 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous2.current;
+    _previous2.current = _watched2;
+    let dispose;
+    _initialized2.current = true;
+    const result = (input => {
       invalidate();
-      Object.assign(
-        form,
-        {
-          category: "Nhà ở",
-          area_sqm: "",
-          location_feature: "",
-          ward: "",
-          rooms: "",
-          floors: "",
-          access_type: "",
-          house_subtype: "",
-        },
-        input,
-      );
-    },
-    {
-      immediate: true,
-    },
-  );
-  watch(
-    () => form.category,
-    () => {
-      if (!hasRooms.value) form.rooms = "";
-      if (!isHouse.value) {
-        form.floors = "";
-        form.house_subtype = "";
+      form.edit(draftValue => Object.assign(draftValue, {
+        category: "Nhà ở",
+        area_sqm: "",
+        location_feature: "",
+        ward: "",
+        rooms: "",
+        floors: "",
+        access_type: "",
+        house_subtype: ""
+      }, input));
+    })(_watched2, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched2)]);
+  const _watched3 = (() => form.getSnapshot().category)();
+  const _previous3 = useRef(_watched3),
+    _initialized3 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous3.current;
+    _previous3.current = _watched3;
+    let dispose;
+    if (!_initialized3.current) {
+      _initialized3.current = true;
+      return;
+    }
+    const result = (() => {
+      if (!getHasRooms()) form.edit(draftValue => draftValue["rooms"] = "");
+      if (!getIsHouse()) {
+        form.edit(draftValue => draftValue["floors"] = "");
+        form.edit(draftValue => draftValue["house_subtype"] = "");
       }
-      if (isApartment.value) form.access_type = "";
-      if (options.value && !locations.value.includes(form.location_feature))
-        form.location_feature = "";
-    },
-  );
+      if (getIsApartment()) form.edit(draftValue => draftValue["access_type"] = "");
+      if (options.getSnapshot() && !getLocations().includes(form.getSnapshot().location_feature)) form.edit(draftValue => draftValue["location_feature"] = "");
+    })(_watched3, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched3)]);
   async function loadOptions() {
     invalidate();
-    optionsController?.abort();
+    _optionsControllerRef.current?.abort();
     const controller = new AbortController();
-    optionsController = controller;
-    optionsLoading.value = true;
-    optionsError.value = "";
+    _optionsControllerRef.current = controller;
+    optionsLoading.set(true);
+    optionsError.set("");
     try {
       const data = await client.getOptions({
-        signal: controller.signal,
+        signal: controller.signal
       });
       if (controller.signal.aborted) return;
-      options.value = data;
-      emit("options-loaded", data.location_labels ?? {});
-      if (!locations.value.includes(form.location_feature))
-        form.location_feature = "";
+      options.set(data);
+      _propsLatest.current.onOptionsLoaded?.(data.location_labels ?? {});
+      if (!getLocations().includes(form.getSnapshot().location_feature)) form.edit(draftValue => draftValue["location_feature"] = "");
     } catch (error) {
-      if (!controller.signal.aborted) optionsError.value = error.message;
+      if (!controller.signal.aborted) optionsError.set(error.message);
     } finally {
-      if (optionsController === controller) optionsLoading.value = false;
+      if (_optionsControllerRef.current === controller) optionsLoading.set(false);
     }
   }
   async function estimate() {
     invalidate();
-    if (!options.value) return;
+    if (!options.getSnapshot()) return;
     let payload;
     try {
-      payload = buildValuationPayload(form, options.value);
+      payload = buildValuationPayload(form.getSnapshot(), options.getSnapshot());
     } catch (error) {
-      predictionError.value = error.message;
+      predictionError.set(error.message);
       return;
     }
-    const current = generation;
+    const current = _generationRef.current;
     const controller = new AbortController();
-    predictionController = controller;
-    predicting.value = true;
+    _predictionControllerRef.current = controller;
+    predicting.set(true);
     try {
       const prediction = await client.predict(payload, {
-        signal: controller.signal,
+        signal: controller.signal
       });
-      if (current === generation && !controller.signal.aborted) {
-        result.value = prediction;
-        resultInput = payload;
-        saveKey = globalThis.crypto.randomUUID();
+      if (current === _generationRef.current && !controller.signal.aborted) {
+        result.set(prediction);
+        _resultInputRef.current = payload;
+        _saveKeyRef.current = globalThis.crypto.randomUUID();
       }
     } catch (error) {
-      if (current === generation && !controller.signal.aborted)
-        predictionError.value = error.message;
+      if (current === _generationRef.current && !controller.signal.aborted) predictionError.set(error.message);
     } finally {
-      if (current === generation) predicting.value = false;
+      if (current === _generationRef.current) predicting.set(false);
     }
   }
   async function saveResult() {
-    if (!resultInput || !session.token || saving.value || saved.value) return;
-    const current = generation,
-      token = session.token;
-    saving.value = true;
-    saveError.value = "";
+    if (!_resultInputRef.current || !session.getSnapshot().token || saving.getSnapshot() || saved.getSnapshot()) return;
+    const current = _generationRef.current,
+      token = session.getSnapshot().token;
+    saving.set(true);
+    saveError.set("");
     try {
-      await history.save(resultInput, saveKey);
-      if (current === generation && token === session.token) {
-        saved.value = true;
-        emit("saved");
+      await history.save(_resultInputRef.current, _saveKeyRef.current);
+      if (current === _generationRef.current && token === session.getSnapshot().token) {
+        saved.set(true);
+        _propsLatest.current.onSaved?.();
       }
     } catch (error) {
-      if (current === generation && token === session.token)
-        saveError.value = errorText(error);
+      if (current === _generationRef.current && token === session.getSnapshot().token) saveError.set(errorText(error));
     } finally {
-      if (current === generation && token === session.token)
-        saving.value = false;
+      if (current === _generationRef.current && token === session.getSnapshot().token) saving.set(false);
     }
   }
-  watch(
-    () => session.token,
-    () => {
-      saved.value = false;
-      saveError.value = "";
-      saving.value = false;
-    },
-  );
-  onMounted(loadOptions);
-  onBeforeUnmount(() => {
-    generation++;
-    optionsController?.abort();
-    predictionController?.abort();
-  });
+  const _watched4 = (() => session.getSnapshot().token)();
+  const _previous4 = useRef(_watched4),
+    _initialized4 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous4.current;
+    _previous4.current = _watched4;
+    let dispose;
+    if (!_initialized4.current) {
+      _initialized4.current = true;
+      return;
+    }
+    const result = (() => {
+      saved.set(false);
+      saveError.set("");
+      saving.set(false);
+    })(_watched4, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched4)]);
+  useEffect(() => {
+    const result = loadOptions();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => {
+    _generationRef.current++;
+    _optionsControllerRef.current?.abort();
+    _predictionControllerRef.current?.abort();
+  })(), []);
   return {
-    computed,
-    onBeforeUnmount,
-    onMounted,
-    reactive,
-    ref,
-    watch,
-    buildValuationPayload,
-    createValuationClient,
-    featureLabels,
+    ...inputProps,
     formatPrice,
-    locationLabel,
     warningLabel,
-    session,
-    errorText,
-    createHistoryClient,
-    props,
-    emit,
-    history,
-    saving,
-    saved,
-    saveError,
-    resultInput,
-    saveKey,
-    client,
-    options,
-    optionsLoading,
-    optionsError,
-    predicting,
-    predictionError,
-    result,
-    form,
-    optionsController,
-    predictionController,
-    generation,
-    locations,
-    legacyLocations,
-    expandedLocations,
+    session: session.getSnapshot(),
+    saving: saving.getSnapshot(),
+    saved: saved.getSnapshot(),
+    saveError: saveError.getSnapshot(),
+    options: options.getSnapshot(),
+    optionsLoading: optionsLoading.getSnapshot(),
+    optionsError: optionsError.getSnapshot(),
+    predicting: predicting.getSnapshot(),
+    predictionError: predictionError.getSnapshot(),
+    result: result.getSnapshot(),
+    form: form.getSnapshot(),
+    legacyLocations: getLegacyLocations(),
+    expandedLocations: getExpandedLocations(),
     displayLocation,
-    isHouse,
-    isApartment,
-    hasRooms,
-    missingLabels,
-    usedFeatures,
-    invalidate,
+    isHouse: getIsHouse(),
+    isApartment: getIsApartment(),
+    hasRooms: getHasRooms(),
+    missingLabels: getMissingLabels(),
+    usedFeatures: getUsedFeatures(),
     loadOptions,
     estimate,
     saveResult,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["initialInput", "demo", "historyEnabled", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    updateForm: form.edit
   };
 }
 export default React.forwardRef(function ValuationPanel(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <section data-ui-view="ValuationPanel"
-      {...mergeProps({
-        className:
-          "valuation-panel bg-[var(--ui-soft)] text-brand-navy rounded-[24px] p-6 md:p-8 shadow-sm",
-        "aria-labelledby": "valuation-heading",
-        "data-sp-018bbc28": "",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: "flex flex-wrap items-start justify-between gap-3",
-          "data-sp-018bbc28": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            "data-sp-018bbc28": "",
-          })}
-        >
-          <p
-            {...mergeProps({
-              className: "text-xs text-brand-navy/60 uppercase tracking-widest",
-              "data-sp-018bbc28": "",
-            })}
-          >
+  const view = useValuationPanelState(props, ref);
+  return <><section data-ui-view="ValuationPanel" aria-labelledby="valuation-heading" data-sp-018bbc28="" {...view.rootAttributes} className={classNames(["valuation-panel bg-[var(--ui-soft)] text-brand-navy rounded-[24px] p-6 md:p-8 shadow-sm", view.rootAttributes.className])}>
+      <div className="flex flex-wrap items-start justify-between gap-3" data-sp-018bbc28="">
+        <div data-sp-018bbc28="">
+          <p className="text-xs text-brand-navy/60 uppercase tracking-widest" data-sp-018bbc28="">
             {"Định giá tham chiếu · XGBoost v6"}
           </p>
-          <h2
-            {...mergeProps({
-              id: "valuation-heading",
-              className: "text-2xl font-semibold mt-2",
-              "data-sp-018bbc28": "",
-            })}
-          >
+          <h2 id="valuation-heading" className="text-2xl font-semibold mt-2" data-sp-018bbc28="">
             {"Ước tính giá rao"}
           </h2>
         </div>
-        {ctx.demo ? (
-          <span
-            {...mergeProps({
-              className:
-                "rounded-full bg-brand-card/10 px-3 py-1 text-xs text-brand-navy/80",
-              "data-sp-018bbc28": "",
-            })}
-          >
+        {view.demo ? <span className="rounded-full bg-brand-card/10 px-3 py-1 text-xs text-brand-navy/80" data-sp-018bbc28="">
             {"Tin minh họa"}
-          </span>
-        ) : null}
+          </span> : null}
       </div>
-      <p
-        {...mergeProps({
-          className: "text-sm text-brand-navy/70 mt-3 leading-6",
-          "data-sp-018bbc28": "",
-        })}
-      >
-        {
-          "Nhập thông tin hiện có. Các trường chưa rõ có thể để trống; kết quả được tính từ thông tin trong form này."
-        }
+      <p className="text-sm text-brand-navy/70 mt-3 leading-6" data-sp-018bbc28="">
+        {"Nhập thông tin hiện có. Các trường chưa rõ có thể để trống; kết quả được tính từ thông tin trong form này."}
       </p>
-      {ctx.optionsLoading ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "mt-5 text-sm text-brand-navy/80",
-            "data-sp-018bbc28": "",
-          })}
-        >
+      {view.optionsLoading ? <p role="status" className="mt-5 text-sm text-brand-navy/80" data-sp-018bbc28="">
           {"Đang tải địa bàn được hỗ trợ…"}
-        </p>
-      ) : ctx.optionsError ? (
-        <div
-          {...mergeProps({
-            role: "alert",
-            className: "mt-5 rounded-xl bg-brand-card/10 p-4",
-            "data-sp-018bbc28": "",
-          })}
-        >
-          <p
-            {...mergeProps({
-              "data-sp-018bbc28": "",
-            })}
-          >
-            {display(ctx.optionsError)}
+        </p> : view.optionsError ? <div role="alert" className="mt-5 rounded-xl bg-brand-card/10 p-4" data-sp-018bbc28="">
+          <p data-sp-018bbc28="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.optionsError)}
           </p>
-          <button
-            {...mergeProps({
-              type: "button",
-              className: "mt-3 underline underline-offset-4",
-              onClick: ($event) => {
-                return ctx.loadOptions?.($event);
-              },
-              "data-sp-018bbc28": "",
-            })}
-          >
+          <button type="button" className="mt-3 underline underline-offset-4" onClick={$event => {
+          return view.loadOptions?.($event);
+        }} data-sp-018bbc28="">
             {"Thử kết nối lại"}
           </button>
-        </div>
-      ) : ctx.options ? (
-        <form
-          {...mergeProps({
-            className: "mt-6",
-            noValidate: true,
-            onSubmit: ($event) => {
-              $event.preventDefault();
-              return ctx.estimate?.($event);
-            },
-            "data-sp-018bbc28": "",
-          })}
-        >
-          <div
-            {...mergeProps({
-              className: "grid grid-cols-1 sm:grid-cols-2 gap-4",
-              "data-sp-018bbc28": "",
-            })}
-          >
-            <label
-              {...mergeProps({
-                className: "block text-sm",
-                "data-sp-018bbc28": "",
-              })}
-            >
+        </div> : view.options ? <form className="mt-6" noValidate={true} onSubmit={$event => {
+        $event.preventDefault();
+        return view.estimate?.($event);
+      }} data-sp-018bbc28="">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-sp-018bbc28="">
+            <label className="block text-sm" data-sp-018bbc28="">
               {"Loại bất động sản "}
-              <span
-                {...mergeProps({
-                  "aria-hidden": "true",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <span aria-hidden="true" data-sp-018bbc28="">
                 {"*"}
               </span>
-              <select
-                {...mergeProps(
-                  {
-                    required: true,
-                    className: "valuation-input mt-2",
-                    "data-sp-018bbc28": "",
-                  },
-                  modelProps(
-                    ctx.form.category,
-                    ($value) => {
-                      ctx.form.category = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              >
-                {renderList(ctx.options.categories, (item) => (
-                  <option
-                    key={item.category}
-                    {...mergeProps({
-                      value: item.category,
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(item.category)}
-                  </option>
-                ))}
+              <select required={true} className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.category ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.category = $value);
+            })(event.target.value)}>
+                {((items, render) => typeof items === "number" ? Array.from({
+                length: Math.max(0, items)
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.categories, item => <option key={item.category} value={item.category} data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.category)}
+                  </option>)}
               </select>
             </label>
-            <label
-              {...mergeProps({
-                className: "block text-sm",
-                "data-sp-018bbc28": "",
-              })}
-            >
+            <label className="block text-sm" data-sp-018bbc28="">
               {"Địa bàn "}
-              <span
-                {...mergeProps({
-                  "aria-hidden": "true",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <span aria-hidden="true" data-sp-018bbc28="">
                 {"*"}
               </span>
-              <select
-                {...mergeProps(
-                  {
-                    required: true,
-                    className: "valuation-input mt-2",
-                    "data-sp-018bbc28": "",
-                  },
-                  modelProps(
-                    ctx.form.location_feature,
-                    ($value) => {
-                      ctx.form.location_feature = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              >
-                <option
-                  {...mergeProps({
-                    disabled: true,
-                    value: "",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
+              <select required={true} className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.location_feature ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.location_feature = $value);
+            })(event.target.value)}>
+                <option disabled={true} value="" data-sp-018bbc28="">
                   {"Chọn địa bàn"}
                 </option>
-                {ctx.legacyLocations.length ? (
-                  <optgroup
-                    {...mergeProps({
-                      label: "Quận/huyện cũ",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {renderList(ctx.legacyLocations, (location) => (
-                      <option
-                        key={location}
-                        {...mergeProps({
-                          value: location,
-                          "data-sp-018bbc28": "",
-                        })}
-                      >
-                        {display(ctx.displayLocation(location))}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : null}
-                {ctx.expandedLocations.length ? (
-                  <optgroup
-                    {...mergeProps({
-                      label: "Địa bàn mở rộng trong dữ liệu",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {renderList(ctx.expandedLocations, (location) => (
-                      <option
-                        key={location}
-                        {...mergeProps({
-                          value: location,
-                          "data-sp-018bbc28": "",
-                        })}
-                      >
-                        {display(ctx.displayLocation(location))}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : null}
+                {view.legacyLocations.length ? <optgroup label="Quận/huyện cũ" data-sp-018bbc28="">
+                    {((items, render) => typeof items === "number" ? Array.from({
+                  length: Math.max(0, items)
+                }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.legacyLocations, location => <option key={location} value={location} data-sp-018bbc28="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.displayLocation(location))}
+                      </option>)}
+                  </optgroup> : null}
+                {view.expandedLocations.length ? <optgroup label="Địa bàn mở rộng trong dữ liệu" data-sp-018bbc28="">
+                    {((items, render) => typeof items === "number" ? Array.from({
+                  length: Math.max(0, items)
+                }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.expandedLocations, location => <option key={location} value={location} data-sp-018bbc28="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.displayLocation(location))}
+                      </option>)}
+                  </optgroup> : null}
               </select>
             </label>
-            <label
-              {...mergeProps({
-                className: "block text-sm",
-                "data-sp-018bbc28": "",
-              })}
-            >
+            <label className="block text-sm" data-sp-018bbc28="">
               {"Diện tích (m²) "}
-              <span
-                {...mergeProps({
-                  "aria-hidden": "true",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <span aria-hidden="true" data-sp-018bbc28="">
                 {"*"}
               </span>
-              <input
-                {...mergeProps(
-                  {
-                    type: "number",
-                    min: "20",
-                    max: "1000",
-                    step: "any",
-                    inputMode: "decimal",
-                    required: true,
-                    className: "valuation-input mt-2",
-                    placeholder: "Ví dụ: 80",
-                    "data-sp-018bbc28": "",
-                  },
-                  modelProps(
-                    ctx.form.area_sqm,
-                    ($value) => {
-                      ctx.form.area_sqm = $value;
-                    },
-                    {
-                      kind: "number",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              />
-              <span
-                {...mergeProps({
-                  className: "block mt-1 text-xs text-brand-navy/60",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <input type="number" min="20" max="1000" step="any" inputMode="decimal" required={true} className="valuation-input mt-2" placeholder="Ví dụ: 80" data-sp-018bbc28="" value={view.form.area_sqm ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.area_sqm = $value);
+            })(event.target.value)} />
+              <span className="block mt-1 text-xs text-brand-navy/60" data-sp-018bbc28="">
                 {"Từ 20 đến 1.000 m²"}
               </span>
             </label>
-            <label
-              {...mergeProps({
-                className: "block text-sm",
-                "data-sp-018bbc28": "",
-              })}
-            >
+            <label className="block text-sm" data-sp-018bbc28="">
               {"Phường/xã theo tin "}
-              <span
-                {...mergeProps({
-                  className: "text-brand-navy/70",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <span className="text-brand-navy/70" data-sp-018bbc28="">
                 {"· tùy chọn"}
               </span>
-              <input
-                {...mergeProps(
-                  {
-                    maxLength: "100",
-                    className: "valuation-input mt-2",
-                    placeholder: "Để trống nếu chưa rõ",
-                    "data-sp-018bbc28": "",
-                  },
-                  modelProps(
-                    ctx.form.ward,
-                    ($value) => {
-                      ctx.form.ward = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              />
-              <span
-                {...mergeProps({
-                  className: "block mt-1 text-xs text-brand-navy/60",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              <input maxLength="100" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" value={view.form.ward ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.ward = $value);
+            })(event.target.value)} />
+              <span className="block mt-1 text-xs text-brand-navy/60" data-sp-018bbc28="">
                 {"Bổ sung nếu địa chỉ tin nêu rõ; có thể để trống."}
               </span>
             </label>
-            {ctx.hasRooms ? (
-              <label
-                {...mergeProps({
-                  className: "block text-sm",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+            {view.hasRooms ? <label className="block text-sm" data-sp-018bbc28="">
                 {"Phòng ngủ "}
-                <span
-                  {...mergeProps({
-                    className: "text-brand-navy/70",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <input
-                  {...mergeProps(
-                    {
-                      type: "number",
-                      min: "1",
-                      max: "30",
-                      step: "1",
-                      inputMode: "numeric",
-                      className: "valuation-input mt-2",
-                      placeholder: "Chưa rõ",
-                      "data-sp-018bbc28": "",
-                    },
-                    modelProps(
-                      ctx.form.rooms,
-                      ($value) => {
-                        ctx.form.rooms = $value;
-                      },
-                      {
-                        kind: "number",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                />
-              </label>
-            ) : null}
-            {ctx.isHouse ? (
-              <label
-                {...mergeProps({
-                  className: "block text-sm",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.rooms = $value);
+            })(event.target.value)} />
+              </label> : null}
+            {view.isHouse ? <label className="block text-sm" data-sp-018bbc28="">
                 {"Số tầng nhà "}
-                <span
-                  {...mergeProps({
-                    className: "text-brand-navy/70",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <input
-                  {...mergeProps(
-                    {
-                      type: "number",
-                      min: "1",
-                      max: "20",
-                      step: "any",
-                      inputMode: "decimal",
-                      className: "valuation-input mt-2",
-                      placeholder: "Chưa rõ",
-                      "data-sp-018bbc28": "",
-                    },
-                    modelProps(
-                      ctx.form.floors,
-                      ($value) => {
-                        ctx.form.floors = $value;
-                      },
-                      {
-                        kind: "number",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                />
-              </label>
-            ) : null}
-            {!ctx.isApartment ? (
-              <label
-                {...mergeProps({
-                  className: "block text-sm",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+                <input type="number" min="1" max="20" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.floors ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.floors = $value);
+            })(event.target.value)} />
+              </label> : null}
+            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
                 {"Lối vào "}
-                <span
-                  {...mergeProps({
-                    className: "text-brand-navy/70",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <select
-                  {...mergeProps(
-                    {
-                      className: "valuation-input mt-2",
-                      "data-sp-018bbc28": "",
-                    },
-                    modelProps(
-                      ctx.form.access_type,
-                      ($value) => {
-                        ctx.form.access_type = $value;
-                      },
-                      {
-                        kind: "text",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                >
-                  <option
-                    {...mergeProps({
-                      value: "",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
+                <select className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.access_type ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.access_type = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
                     {"Chưa rõ"}
                   </option>
-                  {renderList(ctx.options.access_types, (label, value) => (
-                    <option
-                      key={value}
-                      {...mergeProps({
-                        value: value,
-                        "data-sp-018bbc28": "",
-                      })}
-                    >
-                      {display(label)}
-                    </option>
-                  ))}
+                  {((items, render) => typeof items === "number" ? Array.from({
+                length: Math.max(0, items)
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.access_types, (label, value) => <option key={value} value={value} data-sp-018bbc28="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
+                    </option>)}
                 </select>
-              </label>
-            ) : null}
-            {ctx.isHouse ? (
-              <label
-                {...mergeProps({
-                  className: "block text-sm",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+              </label> : null}
+            {view.isHouse ? <label className="block text-sm" data-sp-018bbc28="">
                 {"Loại nhà chi tiết "}
-                <span
-                  {...mergeProps({
-                    className: "text-brand-navy/70",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <select
-                  {...mergeProps(
-                    {
-                      className: "valuation-input mt-2",
-                      "data-sp-018bbc28": "",
-                    },
-                    modelProps(
-                      ctx.form.house_subtype,
-                      ($value) => {
-                        ctx.form.house_subtype = $value;
-                      },
-                      {
-                        kind: "text",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                >
-                  <option
-                    {...mergeProps({
-                      value: "",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
+                <select className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.house_subtype ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.house_subtype = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
                     {"Chưa rõ"}
                   </option>
-                  {renderList(ctx.options.house_subtypes, (label, value) => (
-                    <option
-                      key={value}
-                      {...mergeProps({
-                        value: value,
-                        "data-sp-018bbc28": "",
-                      })}
-                    >
-                      {display(label)}
-                    </option>
-                  ))}
+                  {((items, render) => typeof items === "number" ? Array.from({
+                length: Math.max(0, items)
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.house_subtypes, (label, value) => <option key={value} value={value} data-sp-018bbc28="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
+                    </option>)}
                 </select>
-              </label>
-            ) : null}
+              </label> : null}
           </div>
-          <button
-            {...mergeProps({
-              type: "submit",
-              disabled: ctx.predicting,
-              className:
-                "mt-6 rounded-full bg-brand-card px-6 py-3 text-sm font-semibold text-[var(--ui-accent)] hover:bg-[var(--ui-surface)] disabled:opacity-60 disabled:cursor-wait transition",
-              "data-sp-018bbc28": "",
-            })}
-          >
-            {display(ctx.predicting ? "Đang ước tính…" : "Ước tính giá rao")}
+          <button type="submit" disabled={view.predicting} className="mt-6 rounded-full bg-brand-card px-6 py-3 text-sm font-semibold text-[var(--ui-accent)] hover:bg-[var(--ui-surface)] disabled:opacity-60 disabled:cursor-wait transition" data-sp-018bbc28="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.predicting ? "Đang ước tính…" : "Ước tính giá rao")}
           </button>
-        </form>
-      ) : null}
-      <div
-        {...mergeProps({
-          "aria-live": "polite",
-          "aria-atomic": "true",
-          className: "mt-5",
-          "data-sp-018bbc28": "",
-        })}
-      >
-        {ctx.predicting ? (
-          <p
-            {...mergeProps({
-              role: "status",
-              className: "text-sm text-brand-navy/80",
-              "data-sp-018bbc28": "",
-            })}
-          >
+        </form> : null}
+      <div aria-live="polite" aria-atomic="true" className="mt-5" data-sp-018bbc28="">
+        {view.predicting ? <p role="status" className="text-sm text-brand-navy/80" data-sp-018bbc28="">
             {"Mô hình đang tính giá từ thông tin đã nhập…"}
-          </p>
-        ) : null}
-        {ctx.predictionError ? (
-          <p
-            {...mergeProps({
-              role: "alert",
-              className: "rounded-xl bg-[var(--ui-surface)] p-4 text-sm text-[var(--ui-ink)]",
-              "data-sp-018bbc28": "",
-            })}
-          >
-            {display(ctx.predictionError)}
-          </p>
-        ) : null}
-        {ctx.result ? (
-          <div
-            {...mergeProps({
-              className: "border-t border-brand-line/20 pt-6",
-              "data-testid": "valuation-result",
-              "data-sp-018bbc28": "",
-            })}
-          >
-            <p
-              {...mergeProps({
-                className: "text-sm text-brand-navy/70",
-                "data-sp-018bbc28": "",
-              })}
-            >
+          </p> : null}
+        {view.predictionError ? <p role="alert" className="rounded-xl bg-[var(--ui-surface)] p-4 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.predictionError)}
+          </p> : null}
+        {view.result ? <div className="border-t border-brand-line/20 pt-6" data-testid="valuation-result" data-sp-018bbc28="">
+            <p className="text-sm text-brand-navy/70" data-sp-018bbc28="">
               {"Giá rao ước tính"}
             </p>
-            <p
-              {...mergeProps({
-                className: "text-3xl sm:text-4xl font-semibold mt-2",
-                "data-testid": "estimated-price",
-                "data-sp-018bbc28": "",
-              })}
-            >
-              {display(ctx.formatPrice(ctx.result.predicted_asking_price_vnd))}
+            <p className="text-3xl sm:text-4xl font-semibold mt-2" data-testid="estimated-price" data-sp-018bbc28="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.formatPrice(view.result.predicted_asking_price_vnd))}
             </p>
-            <p
-              {...mergeProps({
-                className: "text-sm text-brand-navy/70 mt-2",
-                "data-sp-018bbc28": "",
-              })}
-            >
-              {display(
-                new Intl.NumberFormat("vi-VN").format(
-                  ctx.result.predicted_asking_price_vnd,
-                ),
-              )}
+            <p className="text-sm text-brand-navy/70 mt-2" data-sp-018bbc28="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(new Intl.NumberFormat("vi-VN").format(view.result.predicted_asking_price_vnd))}
               {" đồng · Tổng giá bất động sản"}
             </p>
-            {ctx.historyEnabled && !ctx.demo ? (
-              <div
-                {...mergeProps({
-                  className: "mt-4",
-                  "data-sp-018bbc28": "",
-                })}
-              >
-                {ctx.session.token ? (
-                  <button
-                    {...mergeProps({
-                      type: "button",
-                      disabled: ctx.saving || ctx.saved,
-                      className:
-                        "rounded-full border border-brand-line/40 px-4 py-2 text-sm disabled:opacity-60",
-                      onClick: ($event) => {
-                        return ctx.saveResult?.($event);
-                      },
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(
-                      ctx.saved
-                        ? "Đã lưu kết quả"
-                        : ctx.saving
-                          ? "Đang lưu…"
-                          : "Lưu kết quả",
-                    )}
-                  </button>
-                ) : (
-                  <RouterLink
-                    {...mergeProps({
-                      to: "/login?next=/valuation",
-                      className: "text-sm underline",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
+            {view.historyEnabled && !view.demo ? <div className="mt-4" data-sp-018bbc28="">
+                {view.session.token ? <button type="button" disabled={view.saving || view.saved} className="rounded-full border border-brand-line/40 px-4 py-2 text-sm disabled:opacity-60" onClick={$event => {
+              return view.saveResult?.($event);
+            }} data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.saved ? "Đã lưu kết quả" : view.saving ? "Đang lưu…" : "Lưu kết quả")}
+                  </button> : <SiteLink to="/login?next=/valuation" className="text-sm underline" data-sp-018bbc28="">
                     {"Đăng nhập để lưu kết quả"}
-                  </RouterLink>
-                )}
-                {ctx.saveError ? (
-                  <p
-                    {...mergeProps({
-                      role: "alert",
-                      className: "mt-3 text-sm text-[var(--ui-ink)]",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(ctx.saveError)}
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
-            <h3
-              {...mergeProps({
-                className: "font-medium text-sm mt-6",
-                "data-sp-018bbc28": "",
-              })}
-            >
+                  </SiteLink>}
+                {view.saveError ? <p role="alert" className="mt-3 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.saveError)}
+                  </p> : null}
+              </div> : null}
+            <h3 className="font-medium text-sm mt-6" data-sp-018bbc28="">
               {"Thông tin đã dùng"}
             </h3>
-            <dl
-              {...mergeProps({
-                className: "grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3",
-                "data-sp-018bbc28": "",
-              })}
-            >
-              {renderList(ctx.usedFeatures, (feature) => (
-                <div
-                  key={feature.label}
-                  {...mergeProps({
-                    className: "rounded-xl bg-brand-card/10 p-3",
-                    "data-sp-018bbc28": "",
-                  })}
-                >
-                  <dt
-                    {...mergeProps({
-                      className: "text-xs text-brand-navy/60",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(feature.label)}
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3" data-sp-018bbc28="">
+              {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.usedFeatures, feature => <div key={feature.label} className="rounded-xl bg-brand-card/10 p-3" data-sp-018bbc28="">
+                  <dt className="text-xs text-brand-navy/60" data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(feature.label)}
                   </dt>
-                  <dd
-                    {...mergeProps({
-                      className: "text-sm mt-1",
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(feature.value)}
+                  <dd className="text-sm mt-1" data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(feature.value)}
                   </dd>
-                </div>
-              ))}
+                </div>)}
             </dl>
-            {ctx.missingLabels.length ? (
-              <p
-                {...mergeProps({
-                  className: "text-sm text-brand-navy/80 mt-4",
-                  "data-sp-018bbc28": "",
-                })}
-              >
+            {view.missingLabels.length ? <p className="text-sm text-brand-navy/80 mt-4" data-sp-018bbc28="">
                 {"Thông tin còn thiếu: "}
-                {display(ctx.missingLabels.join(", "))}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.missingLabels.join(", "))}
                 {"."}
-              </p>
-            ) : null}
-            {ctx.result.warnings.length ? (
-              <ul
-                {...mergeProps({
-                  className:
-                    "list-disc pl-5 mt-3 space-y-2 text-sm text-[var(--ui-ink)]",
-                  "data-sp-018bbc28": "",
-                })}
-              >
-                {renderList(ctx.result.warnings, (warning) => (
-                  <li
-                    key={warning}
-                    {...mergeProps({
-                      "data-sp-018bbc28": "",
-                    })}
-                  >
-                    {display(ctx.warningLabel(warning))}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : null}
+              </p> : null}
+            {view.result.warnings.length ? <ul className="list-disc pl-5 mt-3 space-y-2 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
+                {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.result.warnings, warning => <li key={warning} data-sp-018bbc28="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.warningLabel(warning))}
+                  </li>)}
+              </ul> : null}
+          </div> : null}
       </div>
-      <p
-        {...mergeProps({
-          className: "mt-6 text-xs text-brand-navy/60 leading-5",
-          "data-sp-018bbc28": "",
-        })}
-      >
-        {
-          "Giá rao ước tính để tham khảo. Mô hình chưa sử dụng tọa độ tài sản và khoảng cách tới tiện ích; kết quả chưa được xác minh bằng giá giao dịch."
-        }
+      <p className="mt-6 text-xs text-brand-navy/60 leading-5" data-sp-018bbc28="">
+        {"Giá rao ước tính để tham khảo. Mô hình chưa sử dụng tọa độ tài sản và khoảng cách tới tiện ích; kết quả chưa được xác minh bằng giá giao dịch."}
       </p>
-    </section>,
-  ]);
+    </section></>;
 });

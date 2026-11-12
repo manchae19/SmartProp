@@ -30,12 +30,23 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Thanh khoản phân khúc đất nền diện tích 80 - 150m² đạt mức cao nhất toàn thành phố. Giao dịch diễn ra sôi động từ các nhà đầu tư Hà Nội, TP.HCM tìm kiếm tài sản tích lũy dòng tiền.',
       recommendation: 'Phù hợp đầu tư trung và dài hạn từ 2 - 5 năm kết hợp mô hình kinh doanh lưu trú, căn hộ biển cao cấp hoặc giữ tài sản chống trượt giá.'
     },
-    infrastructure: [
-      { name: 'Nâng cấp vệt cảnh quan biển Võ Nguyên Giáp & Bán đảo Sơn Trà', status: 'Đang triển khai', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Cụm cầu vượt sông Hàn kết nối trực tiếp quận Hải Châu', status: 'Hoàn thành', badge: 'bg-blue-50 text-blue-700' },
-      { name: 'Quy hoạch khu phố đêm du lịch An Thượng & Chợ đêm Sơn Trà', status: 'Đã vận hành', badge: 'bg-purple-50 text-purple-700' },
-      { name: 'Tuyến du lịch ven biển kết nối Hội An', status: 'Trục huyết mạch', badge: 'bg-amber-50 text-amber-700' },
-    ],
+    infrastructure: [{
+      name: 'Nâng cấp vệt cảnh quan biển Võ Nguyên Giáp & Bán đảo Sơn Trà',
+      status: 'Đang triển khai',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Cụm cầu vượt sông Hàn kết nối trực tiếp quận Hải Châu',
+      status: 'Hoàn thành',
+      badge: 'bg-blue-50 text-blue-700'
+    }, {
+      name: 'Quy hoạch khu phố đêm du lịch An Thượng & Chợ đêm Sơn Trà',
+      status: 'Đã vận hành',
+      badge: 'bg-purple-50 text-purple-700'
+    }, {
+      name: 'Tuyến du lịch ven biển kết nối Hội An',
+      status: 'Trục huyết mạch',
+      badge: 'bg-amber-50 text-amber-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [118, 122, 125, 129, 133, 136, 140, 143, 145, 147, 152, 156],
@@ -43,7 +54,6 @@ export const DISTRICT_PROFILES = {
       apartment: [48, 50, 52, 53, 55, 57, 59, 62, 64, 66, 68, 71]
     }
   },
-
   'Hải Châu': {
     id: 'hai-chau',
     name: 'Quận Hải Châu',
@@ -72,11 +82,19 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Thanh khoản ổn định, tỷ lệ trả giá thấp do các chủ sở hữu lâu năm ít có áp lực tài chính buộc phải bán gấp.',
       recommendation: 'Ưu tiên dòng vốn an toàn muốn bảo toàn vốn, khai thác dòng tiền cho thuê văn phòng, cửa hàng thời trang hoặc nhà ở trung tâm.'
     },
-    infrastructure: [
-      { name: 'Tuyến phố đi bộ Bạch Đằng & Công viên APEC mở rộng', status: 'Đã hoàn thành', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Cải tạo chỉnh trang đô thị các tuyến phố chuyên doanh', status: 'Đang triển khai', badge: 'bg-blue-50 text-blue-700' },
-      { name: 'Khu công viên phần mềm số 1 & mở rộng Trung tâm Tài chính', status: 'Trọng điểm 2026', badge: 'bg-purple-50 text-purple-700' }
-    ],
+    infrastructure: [{
+      name: 'Tuyến phố đi bộ Bạch Đằng & Công viên APEC mở rộng',
+      status: 'Đã hoàn thành',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Cải tạo chỉnh trang đô thị các tuyến phố chuyên doanh',
+      status: 'Đang triển khai',
+      badge: 'bg-blue-50 text-blue-700'
+    }, {
+      name: 'Khu công viên phần mềm số 1 & mở rộng Trung tâm Tài chính',
+      status: 'Trọng điểm 2026',
+      badge: 'bg-purple-50 text-purple-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [88, 90, 92, 94, 96, 98, 100, 102, 103, 104, 106, 108],
@@ -84,7 +102,6 @@ export const DISTRICT_PROFILES = {
       apartment: [52, 54, 56, 58, 60, 63, 65, 68, 70, 72, 75, 78]
     }
   },
-
   'Liên Chiểu': {
     id: 'lien-chieu',
     name: 'Quận Liên Chiểu',
@@ -113,11 +130,19 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Lượng giao dịch đất nền phân lô tái định cư và đất dự án quanh trục hành chính tăng mạnh trong 4 quý gần nhất.',
       recommendation: 'Lý tưởng cho nhà đầu tư săn đón làn sóng tăng trưởng theo chu kỳ hoàn thiện hạ tầng cảng biển và khu công nghệ cao.'
     },
-    infrastructure: [
-      { name: 'Đại dự án Cảng biển nước sâu Liên Chiểu (Giai đoạn 1)', status: 'Đang tăng tốc', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Khu công nghệ cao Đà Nẵng & Trung tâm nghiên cứu Vi mạch', status: 'Mở rộng 2026', badge: 'bg-purple-50 text-purple-700' },
-      { name: 'Tuyến đường ven biển Nguyễn Tất Thành kết nối Nam Ô', status: 'Hoàn thành', badge: 'bg-blue-50 text-blue-700' }
-    ],
+    infrastructure: [{
+      name: 'Đại dự án Cảng biển nước sâu Liên Chiểu (Giai đoạn 1)',
+      status: 'Đang tăng tốc',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Khu công nghệ cao Đà Nẵng & Trung tâm nghiên cứu Vi mạch',
+      status: 'Mở rộng 2026',
+      badge: 'bg-purple-50 text-purple-700'
+    }, {
+      name: 'Tuyến đường ven biển Nguyễn Tất Thành kết nối Nam Ô',
+      status: 'Hoàn thành',
+      badge: 'bg-blue-50 text-blue-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [62, 65, 68, 72, 76, 80, 85, 89, 92, 96, 102, 112],
@@ -125,7 +150,6 @@ export const DISTRICT_PROFILES = {
       apartment: [28, 29, 31, 33, 35, 37, 39, 41, 43, 45, 47, 50]
     }
   },
-
   'Ngũ Hành Sơn': {
     id: 'ngu-hanh-son',
     name: 'Quận Ngũ Hành Sơn',
@@ -154,11 +178,19 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Phân khúc đất nền đô thị sinh thái Hòa Quý, Hòa Hải và biệt thự ven sông có giao dịch chuyển nhượng ổn định.',
       recommendation: 'Thích hợp cho cả mục đích an cư sinh thái yên bình lẫn đầu tư trung hạn theo tiến độ thông luồng du lịch sông Cổ Cò.'
     },
-    infrastructure: [
-      { name: 'Dự án nạo vét khơi thông sông Cổ Cò kết nối Đà Nẵng - Hội An', status: 'Giai đoạn cuối', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Khu đô thị công nghệ cao FPT City & Đại học FPT', status: 'Đang mở rộng', badge: 'bg-purple-50 text-purple-700' },
-      { name: 'Làng Đại học Đà Nẵng tại Hòa Quý', status: 'Tập trung nguồn vốn', badge: 'bg-blue-50 text-blue-700' }
-    ],
+    infrastructure: [{
+      name: 'Dự án nạo vét khơi thông sông Cổ Cò kết nối Đà Nẵng - Hội An',
+      status: 'Giai đoạn cuối',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Khu đô thị công nghệ cao FPT City & Đại học FPT',
+      status: 'Đang mở rộng',
+      badge: 'bg-purple-50 text-purple-700'
+    }, {
+      name: 'Làng Đại học Đà Nẵng tại Hòa Quý',
+      status: 'Tập trung nguồn vốn',
+      badge: 'bg-blue-50 text-blue-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [70, 72, 75, 78, 81, 84, 87, 90, 92, 94, 98, 102],
@@ -166,7 +198,6 @@ export const DISTRICT_PROFILES = {
       apartment: [35, 37, 39, 41, 43, 45, 47, 50, 52, 54, 57, 60]
     }
   },
-
   'Cẩm Lệ': {
     id: 'cam-le',
     name: 'Quận Cẩm Lệ',
@@ -195,11 +226,19 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Thanh khoản phân khúc nhà phố hoàn thiện và đất nền các block ven sông đạt chỉ số hấp thụ rất nhanh.',
       recommendation: 'Lựa chọn số 1 cho người mua ở thực và nhà đầu tư chuộng sự bền vững, ít biến động sốc theo thị trường đầu cơ.'
     },
-    infrastructure: [
-      { name: 'Khu đô thị sinh thái Hòa Xuân & Nam Hòa Xuân', status: 'Hoàn thiện 95%', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Cụm cầu Hòa Xuân và mở rộng trục Nguyễn Tri Phương', status: 'Vận hành tốt', badge: 'bg-blue-50 text-blue-700' },
-      { name: 'Cụm công nghiệp Cẩm Lệ phục vụ doanh nghiệp vừa và nhỏ', status: 'Đang thu hút', badge: 'bg-purple-50 text-purple-700' }
-    ],
+    infrastructure: [{
+      name: 'Khu đô thị sinh thái Hòa Xuân & Nam Hòa Xuân',
+      status: 'Hoàn thiện 95%',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Cụm cầu Hòa Xuân và mở rộng trục Nguyễn Tri Phương',
+      status: 'Vận hành tốt',
+      badge: 'bg-blue-50 text-blue-700'
+    }, {
+      name: 'Cụm công nghiệp Cẩm Lệ phục vụ doanh nghiệp vừa và nhỏ',
+      status: 'Đang thu hút',
+      badge: 'bg-purple-50 text-purple-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [90, 93, 96, 100, 104, 108, 112, 116, 119, 122, 125, 128],
@@ -207,7 +246,6 @@ export const DISTRICT_PROFILES = {
       apartment: [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 55]
     }
   },
-
   'Thanh Khê': {
     id: 'thanh-khe',
     name: 'Quận Thanh Khê',
@@ -236,11 +274,19 @@ export const DISTRICT_PROFILES = {
       liquidity: 'Nhà trong ngõ kiệt có mức giá vừa túi tiền cho người lao động, thời gian thanh khoản trung bình 30 - 45 ngày.',
       recommendation: 'Phù hợp mua để ở, kinh doanh buôn bán hộ gia đình hoặc giữ tiền qua tài sản nhà liền thổ.'
     },
-    infrastructure: [
-      { name: 'Kế hoạch di dời Ga đường sắt Đà Nẵng & Tái thiết đô thị', status: 'Quy hoạch tầm nhìn', badge: 'bg-amber-50 text-amber-700' },
-      { name: 'Chỉnh trang bãi biển vịnh Thanh Khê & tuyến Nguyễn Tất Thành', status: 'Đang triển khai', badge: 'bg-emerald-50 text-emerald-700' },
-      { name: 'Nút giao thông khác mức Ngã ba Huế kết nối liên vùng', status: 'Hoàn thành', badge: 'bg-blue-50 text-blue-700' }
-    ],
+    infrastructure: [{
+      name: 'Kế hoạch di dời Ga đường sắt Đà Nẵng & Tái thiết đô thị',
+      status: 'Quy hoạch tầm nhìn',
+      badge: 'bg-amber-50 text-amber-700'
+    }, {
+      name: 'Chỉnh trang bãi biển vịnh Thanh Khê & tuyến Nguyễn Tất Thành',
+      status: 'Đang triển khai',
+      badge: 'bg-emerald-50 text-emerald-700'
+    }, {
+      name: 'Nút giao thông khác mức Ngã ba Huế kết nối liên vùng',
+      status: 'Hoàn thành',
+      badge: 'bg-blue-50 text-blue-700'
+    }],
     priceHistory: {
       labels: ['Q1/24', 'Q2/24', 'Q3/24', 'Q4/24', 'Q1/25', 'Q2/25', 'Q3/25', 'Q4/25', 'Q1/26', 'Q2/26', 'Q3/26', 'Q4/26'],
       land: [72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94],
@@ -249,17 +295,12 @@ export const DISTRICT_PROFILES = {
     }
   }
 };
-
 export const DISTRICT_LIST = Object.keys(DISTRICT_PROFILES);
-
 export function getDistrictProfile(districtName) {
   if (!districtName) return DISTRICT_PROFILES['Sơn Trà'];
   const norm = districtName.trim();
   for (const [key, value] of Object.entries(DISTRICT_PROFILES)) {
-    if (key.toLowerCase() === norm.toLowerCase() ||
-        value.shortName.toLowerCase() === norm.toLowerCase() ||
-        value.slug === norm.toLowerCase() ||
-        norm.toLowerCase().includes(value.shortName.toLowerCase())) {
+    if (key.toLowerCase() === norm.toLowerCase() || value.shortName.toLowerCase() === norm.toLowerCase() || value.slug === norm.toLowerCase() || norm.toLowerCase().includes(value.shortName.toLowerCase())) {
       return value;
     }
   }

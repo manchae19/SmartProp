@@ -44,6 +44,24 @@ class UsedFeatures(BaseModel):
     house_subtype: str | None
 
 
+class ShapFactor(BaseModel):
+    feature_name: str
+    label: str
+    shap_value: float
+    impact_pct: float
+    direction: Literal["increase", "decrease"]
+    context_note: str = ""
+
+
+class ShapExplanation(BaseModel):
+    base_value_log: float
+    base_price_vnd: int
+    scale: str = "log_asking_price"
+    top_factors: list[ShapFactor]
+    method: str = "TreeSHAP (Native Additive Contribution)"
+    summary_vi: str
+
+
 class PredictionResponse(BaseModel):
     model_version: Literal["v6"]
     model_run: str
@@ -56,3 +74,22 @@ class PredictionResponse(BaseModel):
     features_used: UsedFeatures
     missing_features: list[str]
     warnings: list[str]
+    shap_explanation: ShapExplanation | None = None
+    valuation_timestamp: str | None = None
+
+
+class V1_3PreviewResponse(BaseModel):
+    is_preview: bool = True
+    model_version: Literal["v1.3"]
+    status: str = "PREVIEW_EXPERIMENTAL"
+    predicted_asking_price_vnd: int
+    predicted_asking_price_billion: float
+    price_band: str
+    calibration_factor: float
+    calibration_policy: str
+    naive_price_vnd: int
+    features_used: dict
+    missing_features: list[str]
+    shap_explanation: ShapExplanation | None = None
+    valuation_timestamp: str
+    disclaimer: str

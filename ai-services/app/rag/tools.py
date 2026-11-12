@@ -132,6 +132,53 @@ class BackendTools:
                 raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
         return body
 
+    def nearby_pois(self, property_id, radius=1000, limit=6):
+        """Existing public property-to-POI endpoint; distance is straight-line (ST_Distance_Sphere)."""
+        if not isinstance(property_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        if not 1 <= radius <= 50000 or not 1 <= limit <= 20:
+            raise GroundingError("INVALID_POI_RANGE")
+        try:
+            response = self.client.get("/api/v1/properties/" + property_id + "/points-of-interest",
+                                       params={"radiusMeters": radius, "limit": limit})
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            items = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if not isinstance(items, list) or len(items) > 20:
+            raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
+        clean = []
+        for item in items:
+            if (not isinstance(item, dict) or not isinstance(item.get("name"), str) or not item["name"].strip()
+                    or not isinstance(item.get("category"), str) or not item["category"].strip()
+                    or not _is_number(item.get("distanceMeters")) or item["distanceMeters"] < 0):
+                raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
+            clean.append({"name": item["name"].strip(), "category": item["category"].strip(),
+                          "distanceMeters": float(item["distanceMeters"])})
+        return clean
+
+    def property_image(self, property_id):
+        """Cover image from the existing public property detail; no generated or external image."""
+        if not isinstance(property_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        try:
+            response = self.client.get("/api/v1/properties/" + property_id)
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        images = body.get("images") if isinstance(body, dict) else None
+        if not isinstance(images, list):
+            return None
+        for image in images:
+            url = image.get("url") if isinstance(image, dict) else None
+            if (isinstance(url, str) and url.startswith("/api/v1/properties/")
+                    and ".." not in url and "//" not in url and len(url) <= 500):
+                return url
+        return None
+
     def amenity_profile(self, area_id):
         if not re.fullmatch(r"[A-Za-z0-9_-]{1,160}", area_id):
             raise GroundingError("INVALID_AREA_ID")

@@ -1,74 +1,51 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import {
-  ref,
-  watch,
-  onMounted,
-  onBeforeUnmount,
-  nextTick,
-} from "../../shared/state/store.js";
+import { afterPaint, classNames } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { POI_GROUPS, validPoint, distanceLabel } from "./nearbyExplorer.js";
 import { publicMapPoint } from "./locationDisplay.js";
 import { compactPrice } from "../property/property.js";
 import "./LeafletNearbyMap.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    items: {
-      type: Array,
-      default: () => [],
-    },
-    selectedId: String,
-    places: {
-      type: Array,
-      default: () => [],
-    },
-    radius: {
-      type: Number,
-      default: 1000,
-    },
-    showProperty: {
-      type: Boolean,
-      default: true,
-    },
-    showRadius: {
-      type: Boolean,
-      default: true,
-    },
-    activePoi: String,
-    simple: Boolean,
-  });
-  const emit = emitForProps(__props, ["select", "select-poi"]);
-  const element = ref(null),
-    ready = ref(false),
-    mapError = ref(""),
-    baseLayer = ref("street");
-  let map,
-    street,
-    properties,
-    pois,
-    circle,
-    observer,
-    tileErrors = 0,
-    lastSelection = "";
-  const pins = new Map(),
-    poiPins = new Map();
+function useLeafletNearbyMapState(inputProps, forwardedRef) {
+  inputProps = {
+    items: (() => [])(),
+    places: (() => [])(),
+    radius: 1000,
+    showProperty: true,
+    showRadius: true,
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    items: (() => [])(),
+    places: (() => [])(),
+    radius: 1000,
+    showProperty: true,
+    showRadius: true,
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [element] = useState(() => createStateStore(null)),
+    [ready] = useState(() => createStateStore(false)),
+    [mapError] = useState(() => createStateStore("")),
+    [baseLayer] = useState(() => createStateStore("street"));
+  useSyncExternalStore(baseLayer.subscribe, baseLayer.getSnapshot);
+  useSyncExternalStore(mapError.subscribe, mapError.getSnapshot);
+  useSyncExternalStore(ready.subscribe, ready.getSnapshot);
+  useSyncExternalStore(element.subscribe, element.getSnapshot);
+  const _mapRef = useRef(undefined),
+    _streetRef = useRef(undefined),
+    _propertiesRef = useRef(undefined),
+    _poisRef = useRef(undefined),
+    _circleRef = useRef(undefined),
+    _observerRef = useRef(undefined),
+    _tileErrorsRef = useRef(0),
+    _lastSelectionRef = useRef("");
+  const pins = useRef(new Map()).current,
+    poiPins = useRef(new Map()).current;
   function icon(label, color, selected = false) {
     const span = document.createElement("span");
     span.className = "explorer-marker" + (selected ? " is-selected" : "");
@@ -79,16 +56,15 @@ function setup(__props) {
       className: "explorer-marker-wrap",
       iconSize: selected ? [42, 48] : [32, 38],
       iconAnchor: selected ? [21, 44] : [16, 35],
-      popupAnchor: [0, -34],
+      popupAnchor: [0, -34]
     });
   }
   function popup(p, property = false) {
     const box = document.createElement("div");
     box.className = "explorer-popup";
     if (property && p.status === "PUBLISHED") {
-      const cover = p.images?.find((i) => i.cover) || p.images?.[0];
-      const prefix =
-        "/api/v1/properties/" + encodeURIComponent(p.id) + "/images/";
+      const cover = p.images?.find(i => i.cover) || p.images?.[0];
+      const prefix = "/api/v1/properties/" + encodeURIComponent(p.id) + "/images/";
       if (cover?.url?.startsWith(prefix) && cover.url.endsWith("/content")) {
         const photo = document.createElement("img");
         photo.src = cover.url;
@@ -97,7 +73,7 @@ function setup(__props) {
         photo.loading = "lazy";
         photo.decoding = "async";
         photo.addEventListener("error", () => photo.remove(), {
-          once: true,
+          once: true
         });
         box.append(photo);
       }
@@ -106,9 +82,7 @@ function setup(__props) {
     title.textContent = p.title || p.name;
     box.append(title);
     const text = document.createElement("p");
-    text.textContent = property
-      ? compactPrice(p) + (p.areaSqm ? " · " + p.areaSqm + " m²" : "")
-      : distanceLabel(p.distanceMeters) + " · đường chim bay";
+    text.textContent = property ? compactPrice(p) + (p.areaSqm ? " · " + p.areaSqm + " m²" : "") : distanceLabel(p.distanceMeters) + " · đường chim bay";
     box.append(text);
     if (property) {
       const link = document.createElement("a");
@@ -123,321 +97,212 @@ function setup(__props) {
     return box;
   }
   function draw() {
-    if (!map) return;
-    const keepPropertyPopup = pins.get(props.selectedId)?.isPopupOpen();
-    map.stop();
-    map.closePopup();
-    properties.clearLayers();
-    pois.clearLayers();
+    if (!_mapRef.current) return;
+    const keepPropertyPopup = pins.get(_props.current.selectedId)?.isPopupOpen();
+    _mapRef.current.stop();
+    _mapRef.current.closePopup();
+    _propertiesRef.current.clearLayers();
+    _poisRef.current.clearLayers();
     pins.clear();
     poiPins.clear();
-    if (circle) {
-      circle.remove();
-      circle = null;
+    if (_circleRef.current) {
+      _circleRef.current.remove();
+      _circleRef.current = null;
     }
-    const selected = props.items.find(
-      (p) => p.id === props.selectedId && publicMapPoint(p),
-    );
-    for (const p of props.items.filter(publicMapPoint)) {
-      const active = p.id === props.selectedId;
+    const selected = _props.current.items.find(p => p.id === _props.current.selectedId && publicMapPoint(p));
+    for (const p of _props.current.items.filter(publicMapPoint)) {
+      const active = p.id === _props.current.selectedId;
       const marker = L.marker([Number(p.latitude), Number(p.longitude)], {
         icon: icon("⌂", active ? "#147d80" : "#234b70", active),
         zIndexOffset: active ? 500 : 0,
         title: p.title || "Bất động sản",
-        keyboard: true,
+        keyboard: true
       });
-      marker
-        .bindPopup(popup(p, true), {
-          maxWidth: 260,
-        })
-        .on("click", () => emit("select", p.id));
-      if (props.showProperty) marker.addTo(properties);
+      marker.bindPopup(popup(p, true), {
+        maxWidth: 260
+      }).on("click", () => _propsLatest.current.onSelect?.(p.id));
+      if (_props.current.showProperty) marker.addTo(_propertiesRef.current);
       pins.set(p.id, marker);
     }
     if (selected) {
-      if (props.showRadius)
-        circle = L.circle(
-          [Number(selected.latitude), Number(selected.longitude)],
-          {
-            radius: props.radius,
-            color: "#4075f5",
-            weight: 2,
-            dashArray: "7 6",
-            fillColor: "#5795f5",
-            fillOpacity: 0.09,
-            interactive: false,
-          },
-        ).addTo(map);
-      for (const p of props.places.filter(validPoint)) {
-        const group =
-          POI_GROUPS.find((g) => g.id === p.category) || POI_GROUPS[0];
+      if (_props.current.showRadius) _circleRef.current = L.circle([Number(selected.latitude), Number(selected.longitude)], {
+        radius: _props.current.radius,
+        color: "#4075f5",
+        weight: 2,
+        dashArray: "7 6",
+        fillColor: "#5795f5",
+        fillOpacity: 0.09,
+        interactive: false
+      }).addTo(_mapRef.current);
+      for (const p of _props.current.places.filter(validPoint)) {
+        const group = POI_GROUPS.find(g => g.id === p.category) || POI_GROUPS[0];
         const marker = L.marker([Number(p.latitude), Number(p.longitude)], {
           icon: icon(group.icon, group.color),
           title: p.name,
-          keyboard: true,
-        }).addTo(pois);
-        marker.bindPopup(popup(p)).on("click", () => emit("select-poi", p.id));
+          keyboard: true
+        }).addTo(_poisRef.current);
+        marker.bindPopup(popup(p)).on("click", () => _propsLatest.current.onSelectPoi?.(p.id));
         poiPins.set(p.id, marker);
       }
-      const key =
-        selected.id +
-        ":" +
-        selected.latitude +
-        ":" +
-        selected.longitude +
-        ":" +
-        props.radius;
-      if (lastSelection !== key) {
-        lastSelection = key;
-        map.fitBounds(
-          L.latLng(
-            Number(selected.latitude),
-            Number(selected.longitude),
-          ).toBounds(props.radius * 2),
-          {
-            padding: [45, 45],
-            maxZoom: 17,
-            animate: false,
-          },
-        );
-        if (props.showProperty) pins.get(selected.id)?.openPopup();
-      }
-      if (keepPropertyPopup && props.showProperty)
-        pins.get(selected.id)?.openPopup();
-    } else if (props.items.some(publicMapPoint)) {
-      lastSelection = "";
-      map.fitBounds(
-        L.latLngBounds(
-          props.items
-            .filter(publicMapPoint)
-            .map((p) => [Number(p.latitude), Number(p.longitude)]),
-        ),
-        {
+      const key = selected.id + ":" + selected.latitude + ":" + selected.longitude + ":" + _props.current.radius;
+      if (_lastSelectionRef.current !== key) {
+        _lastSelectionRef.current = key;
+        _mapRef.current.fitBounds(L.latLng(Number(selected.latitude), Number(selected.longitude)).toBounds(_props.current.radius * 2), {
           padding: [45, 45],
-          maxZoom: 14,
-          animate: false,
-        },
-      );
+          maxZoom: 17,
+          animate: false
+        });
+        if (_props.current.showProperty) pins.get(selected.id)?.openPopup();
+      }
+      if (keepPropertyPopup && _props.current.showProperty) pins.get(selected.id)?.openPopup();
+    } else if (_props.current.items.some(publicMapPoint)) {
+      _lastSelectionRef.current = "";
+      _mapRef.current.fitBounds(L.latLngBounds(_props.current.items.filter(publicMapPoint).map(p => [Number(p.latitude), Number(p.longitude)])), {
+        padding: [45, 45],
+        maxZoom: 14,
+        animate: false
+      });
     }
   }
   function center() {
-    const p = props.items.find((p) => p.id === props.selectedId);
+    const p = _props.current.items.find(p => p.id === _props.current.selectedId);
     if (p && publicMapPoint(p)) {
-      map?.setView([Number(p.latitude), Number(p.longitude)], 16);
+      _mapRef.current?.setView([Number(p.latitude), Number(p.longitude)], 16);
       pins.get(p.id)?.openPopup();
     }
   }
-  watch(
-    () => [
-      props.items,
-      props.selectedId,
-      props.places,
-      props.radius,
-      props.showProperty,
-      props.showRadius,
-    ],
-    draw,
-    {
-      deep: true,
-    },
-  );
-  watch(
-    () => props.activePoi,
-    (id) => {
+  const _watched = (() => [_props.current.items, _props.current.selectedId, _props.current.places, _props.current.radius, _props.current.showProperty, _props.current.showRadius])();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    if (!_initialized.current) {
+      _initialized.current = true;
+      return;
+    }
+    const result = draw(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  const _watched2 = (() => _props.current.activePoi)();
+  const _previous2 = useRef(_watched2),
+    _initialized2 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous2.current;
+    _previous2.current = _watched2;
+    let dispose;
+    if (!_initialized2.current) {
+      _initialized2.current = true;
+      return;
+    }
+    const result = (id => {
       const pin = poiPins.get(id);
       if (pin) {
-        map.panTo(pin.getLatLng());
+        _mapRef.current.panTo(pin.getLatLng());
         pin.openPopup();
       }
-    },
-  );
-  onMounted(async () => {
-    await nextTick();
-    map = L.map(element.value, {
-      zoomControl: false,
-      scrollWheelZoom: true,
-      wheelDebounceTime: 80,
-      wheelPxPerZoomLevel: 100,
-      preferCanvas: true,
-      zoomAnimation: false,
-      fadeAnimation: false,
-      markerZoomAnimation: false,
-    });
-    // Initial viewport only; no synthetic property marker is placed here.
-    map.setView([16.06, 108.21], 12);
-    L.control
-      .zoom({
-        position: "topright",
-      })
-      .addTo(map);
-    L.control
-      .scale({
+    })(_watched2, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched2)]);
+  useEffect(() => {
+    const result = (async () => {
+      await afterPaint();
+      _mapRef.current = L.map(element.getSnapshot(), {
+        zoomControl: false,
+        scrollWheelZoom: true,
+        wheelDebounceTime: 80,
+        wheelPxPerZoomLevel: 100,
+        preferCanvas: true,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false
+      });
+      // Initial viewport only; no synthetic property marker is placed here.
+      _mapRef.current.setView([16.06, 108.21], 12);
+      L.control.zoom({
+        position: "topright"
+      }).addTo(_mapRef.current);
+      L.control.scale({
         imperial: false,
-        position: "bottomleft",
-      })
-      .addTo(map);
-    street = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
-    }).addTo(map);
-    street.on("tileerror", () => {
-      if (++tileErrors >= 4)
-        mapError.value =
-          "Chưa tải được bản đồ nền. Kiểm tra kết nối và thử lại.";
-    });
-    street.on("tileload", () => {
-      mapError.value = "";
-      tileErrors = 0;
-    });
-    properties = L.layerGroup().addTo(map);
-    pois = L.layerGroup().addTo(map);
-    observer = new ResizeObserver(() =>
-      map?.invalidateSize({
-        animate: false,
-      }),
-    );
-    observer.observe(element.value);
-    ready.value = true;
-    draw();
-  });
+        position: "bottomleft"
+      }).addTo(_mapRef.current);
+      _streetRef.current = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+      }).addTo(_mapRef.current);
+      _streetRef.current.on("tileerror", () => {
+        if (++_tileErrorsRef.current >= 4) mapError.set("Chưa tải được bản đồ nền. Kiểm tra kết nối và thử lại.");
+      });
+      _streetRef.current.on("tileload", () => {
+        mapError.set("");
+        _tileErrorsRef.current = 0;
+      });
+      _propertiesRef.current = L.layerGroup().addTo(_mapRef.current);
+      _poisRef.current = L.layerGroup().addTo(_mapRef.current);
+      _observerRef.current = new ResizeObserver(() => _mapRef.current?.invalidateSize({
+        animate: false
+      }));
+      _observerRef.current.observe(element.getSnapshot());
+      ready.set(true);
+      draw();
+    })();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
   function retryTiles() {
-    tileErrors = 0;
-    mapError.value = "";
-    street?.redraw();
+    _tileErrorsRef.current = 0;
+    mapError.set("");
+    _streetRef.current?.redraw();
   }
-  onBeforeUnmount(() => {
-    observer?.disconnect();
-    map?.remove();
-    map = null;
-  });
+  useEffect(() => () => (() => {
+    _observerRef.current?.disconnect();
+    _mapRef.current?.remove();
+    _mapRef.current = null;
+  })(), []);
   return {
-    ref,
-    watch,
-    onMounted,
-    onBeforeUnmount,
-    nextTick,
-    L,
-    POI_GROUPS,
-    validPoint,
-    distanceLabel,
-    publicMapPoint,
-    compactPrice,
-    props,
-    emit,
-    element,
-    ready,
-    mapError,
-    baseLayer,
-    map,
-    street,
-    properties,
-    pois,
-    circle,
-    observer,
-    tileErrors,
-    lastSelection,
-    pins,
-    poiPins,
-    icon,
-    popup,
-    draw,
+    ...inputProps,
+    ready: ready.getSnapshot(),
+    mapError: mapError.getSnapshot(),
+    baseLayer: baseLayer.getSnapshot(),
     center,
     retryTiles,
+    updateElementValue: element.set,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["items", "selectedId", "places", "radius", "showProperty", "showRadius", "activePoi", "simple", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function LeafletNearbyMap(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <div
-      {...mergeProps({
-        className: "leaflet-explorer-shell",
-      })}
-    >
-      <div
-        {...mergeProps({
-          ref: bindRef(ctx, "element"),
-          className: "leaflet-explorer-canvas",
-          "aria-label": "Bản đồ bất động sản và tiện ích xung quanh",
-        })}
-      />
-      {!ctx.simple ? (
-        <div
-          {...mergeProps({
-            className: "map-layer-choice",
-            "aria-label": "Lớp bản đồ",
-          })}
-        >
-          <button
-            {...mergeProps({
-              type: "button",
-              "aria-pressed": ctx.baseLayer === "street",
-            })}
-          >
+  const view = useLeafletNearbyMapState(props, ref);
+  return <><div {...view.rootAttributes} className={classNames(["leaflet-explorer-shell", view.rootAttributes.className])}>
+      <div ref={view.updateElementValue} className="leaflet-explorer-canvas" aria-label="Bản đồ bất động sản và tiện ích xung quanh" />
+      {!view.simple ? <div className="map-layer-choice" aria-label="Lớp bản đồ">
+          <button type="button" aria-pressed={view.baseLayer === "street"}>
             {"Bản đồ"}
           </button>
-          <button
-            {...mergeProps({
-              type: "button",
-              disabled: true,
-              title: "Chưa cấu hình nguồn ảnh vệ tinh có giấy phép",
-            })}
-          >
+          <button type="button" disabled={true} title="Chưa cấu hình nguồn ảnh vệ tinh có giấy phép">
             {"Vệ tinh"}
           </button>
-          <button
-            {...mergeProps({
-              type: "button",
-              disabled: true,
-              title: "Chưa cấu hình lớp vệ tinh và nhãn",
-            })}
-          >
+          <button type="button" disabled={true} title="Chưa cấu hình lớp vệ tinh và nhãn">
             {"Bản đồ lai"}
           </button>
-        </div>
-      ) : null}
-      <button
-        {...mergeProps({
-          className: "map-recenter",
-          type: "button",
-          onClick: ($event) => {
-            return ctx.center?.($event);
-          },
-          "aria-label": "Đưa bản đồ về bất động sản đang chọn",
-          title: "Về vị trí tin đang chọn",
-        })}
-      >
+        </div> : null}
+      <button className="map-recenter" type="button" onClick={$event => {
+        return view.center?.($event);
+      }} aria-label="Đưa bản đồ về bất động sản đang chọn" title="Về vị trí tin đang chọn">
         {"⌖"}
       </button>
-      {ctx.mapError ? (
-        <div
-          {...mergeProps({
-            className: "map-tile-error",
-            role: "alert",
-          })}
-        >
-          {display(ctx.mapError)}{" "}
-          <button
-            {...mergeProps({
-              type: "button",
-              onClick: ($event) => {
-                return ctx.retryTiles?.($event);
-              },
-            })}
-          >
+      {view.mapError ? <div className="map-tile-error" role="alert">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.mapError)}{" "}
+          <button type="button" onClick={$event => {
+          return view.retryTiles?.($event);
+        }}>
             {"Thử lại"}
           </button>
-        </div>
-      ) : null}
-      {!ctx.ready ? (
-        <div
-          {...mergeProps({
-            className: "map-boot",
-          })}
-        >
+        </div> : null}
+      {!view.ready ? <div className="map-boot">
           {"Đang mở bản đồ…"}
-        </div>
-      ) : null}
-    </div>,
-  ]);
+        </div> : null}
+    </div></>;
 });

@@ -1,138 +1,160 @@
-import React from "react";
-import { useSetup, propsForSetup, emitForProps, exposeForSetup } from "../../shared/state/store.js";
-import { mergeProps, bindRef, renderList, display, modelProps, rootProps, Teleport } from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { ref, computed, onMounted, onBeforeUnmount, watch } from "../../shared/state/store.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { validCoordinates } from "../property/postForm.js";
 import { projectPoint, unprojectPoint, visibleTiles } from "./postMap.js";
 import { projectPreviewRegion } from "./locationPreview.js";
 import "./ManualLocationMap.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    latitude: {
-      default: ""
-    },
-    longitude: {
-      default: ""
-    },
-    disabled: Boolean,
-    preview: Boolean,
-    precision: String,
-    previewRegion: Object
-  });
-  const emit = emitForProps(__props, ["select"]);
+function useManualLocationMapState(inputProps, forwardedRef) {
+  inputProps = {
+    latitude: "",
+    longitude: "",
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    latitude: "",
+    longitude: "",
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
   // This initial center is only a viewport. No point is selected until a deliberate action.
-  const center = ref(validCoordinates(props.latitude, props.longitude) ? {
-    latitude: Number(props.latitude),
-    longitude: Number(props.longitude)
+  const [center] = useState(() => createStateStore(validCoordinates(_props.current.latitude, _props.current.longitude) ? {
+    latitude: Number(_props.current.latitude),
+    longitude: Number(_props.current.longitude)
   } : {
     latitude: 16.0544,
     longitude: 108.2022
-  });
-  const previewZoom = () => props.preview ? props.precision === "APPROXIMATE_AREA" ? 13 : props.precision === "APPROXIMATE_STREET" ? 15 : 17 : 17;
-  const zoom = ref(validCoordinates(props.latitude, props.longitude) ? previewZoom() : 13),
-    host = ref(null),
-    width = ref(600),
-    failed = ref(false),
-    attempt = ref(0),
-    hint = ref(""),
-    draggingPin = ref(null);
+  }));
+  useSyncExternalStore(center.subscribe, center.getSnapshot);
+  const previewZoom = () => _props.current.preview ? _props.current.precision === "APPROXIMATE_AREA" ? 13 : _props.current.precision === "APPROXIMATE_STREET" ? 15 : 17 : 17;
+  const [zoom] = useState(() => createStateStore(validCoordinates(_props.current.latitude, _props.current.longitude) ? previewZoom() : 13)),
+    [host] = useState(() => createStateStore(null)),
+    [width] = useState(() => createStateStore(600)),
+    [failed] = useState(() => createStateStore(false)),
+    [attempt] = useState(() => createStateStore(0)),
+    [hint] = useState(() => createStateStore("")),
+    [draggingPin] = useState(() => createStateStore(null));
+  useSyncExternalStore(draggingPin.subscribe, draggingPin.getSnapshot);
+  useSyncExternalStore(hint.subscribe, hint.getSnapshot);
+  useSyncExternalStore(attempt.subscribe, attempt.getSnapshot);
+  useSyncExternalStore(failed.subscribe, failed.getSnapshot);
+  useSyncExternalStore(width.subscribe, width.getSnapshot);
+  useSyncExternalStore(host.subscribe, host.getSnapshot);
+  useSyncExternalStore(zoom.subscribe, zoom.getSnapshot);
   const height = 320,
-    tiles = computed(() => visibleTiles(center.value, zoom.value, width.value, height));
-  const areaOverlay = computed(() => props.preview ? projectPreviewRegion(props.previewRegion, center.value, zoom.value, width.value, height) : null);
+    getTiles = () => visibleTiles(center.getSnapshot(), zoom.getSnapshot(), width.getSnapshot(), height);
+  const getAreaOverlay = () => _props.current.preview ? projectPreviewRegion(_props.current.previewRegion, center.getSnapshot(), zoom.getSnapshot(), width.getSnapshot(), height) : null;
   const template = import.meta.env?.VITE_OSM_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
   const validTemplate = template.startsWith("https://") && ["{z}", "{x}", "{y}"].every(v => template.includes(v));
   function tileUrl(tile) {
     return validTemplate ? template.replace("{z}", tile.z).replace("{x}", tile.x).replace("{y}", tile.y) : "";
   }
-  const marker = computed(() => {
-    const point = draggingPin.value || {
-      latitude: props.latitude,
-      longitude: props.longitude
+  const getMarker = () => {
+    const point = draggingPin.getSnapshot() || {
+      latitude: _props.current.latitude,
+      longitude: _props.current.longitude
     };
     if (!validCoordinates(point.latitude, point.longitude)) return null;
-    const p = projectPoint(Number(point.latitude), Number(point.longitude), zoom.value),
-      c = projectPoint(center.value.latitude, center.value.longitude, zoom.value);
+    const p = projectPoint(Number(point.latitude), Number(point.longitude), zoom.getSnapshot()),
+      c = projectPoint(center.getSnapshot().latitude, center.getSnapshot().longitude, zoom.getSnapshot());
     return {
-      left: p.x - c.x + width.value / 2,
+      left: p.x - c.x + width.getSnapshot() / 2,
       top: p.y - c.y + height / 2
     };
-  });
-  watch(() => [props.latitude, props.longitude, props.preview, props.precision], () => {
-    if (validCoordinates(props.latitude, props.longitude)) {
-      center.value = {
-        latitude: Number(props.latitude),
-        longitude: Number(props.longitude)
-      };
-      zoom.value = previewZoom();
-    }
-  });
-  let observer, drag;
-  function pan(dx, dy) {
-    const c = projectPoint(center.value.latitude, center.value.longitude, zoom.value);
-    center.value = unprojectPoint(c.x + dx, c.y + dy, zoom.value);
-  }
-  function changeZoom(delta) {
-    if (!props.disabled) zoom.value = Math.max(3, Math.min(19, zoom.value + delta));
-  }
-  function selectAt(x, y) {
-    if (props.disabled) return;
-    const c = projectPoint(center.value.latitude, center.value.longitude, zoom.value),
-      wx = c.x + x - width.value / 2,
-      wy = c.y + y - height / 2,
-      n = 2 ** zoom.value,
-      tx = (Math.floor(wx / 256) % n + n) % n,
-      ty = Math.floor(wy / 256),
-      key = zoom.value + "/" + tx + "/" + ty;
-    const tile = [...(host.value?.querySelectorAll("[data-tile-key]") || [])].find(image => image.dataset.tileKey === key);
-    if (!tile?.complete || !tile.naturalWidth) {
-      hint.value = "Phần bản đồ này chưa tải được. Hãy kiểm tra kết nối và thử lại trước khi chọn ghim.";
+  };
+  const _watched = (() => [_props.current.latitude, _props.current.longitude, _props.current.preview, _props.current.precision])();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    if (!_initialized.current) {
+      _initialized.current = true;
       return;
     }
-    const point = unprojectPoint(wx, wy, zoom.value);
+    const result = (() => {
+      if (validCoordinates(_props.current.latitude, _props.current.longitude)) {
+        center.set({
+          latitude: Number(_props.current.latitude),
+          longitude: Number(_props.current.longitude)
+        });
+        zoom.set(previewZoom());
+      }
+    })(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  const _observerRef = useRef(undefined),
+    _dragRef = useRef(undefined);
+  function pan(dx, dy) {
+    const c = projectPoint(center.getSnapshot().latitude, center.getSnapshot().longitude, zoom.getSnapshot());
+    center.set(unprojectPoint(c.x + dx, c.y + dy, zoom.getSnapshot()));
+  }
+  function changeZoom(delta) {
+    if (!_props.current.disabled) zoom.set(Math.max(3, Math.min(19, zoom.getSnapshot() + delta)));
+  }
+  function selectAt(x, y) {
+    if (_props.current.disabled) return;
+    const c = projectPoint(center.getSnapshot().latitude, center.getSnapshot().longitude, zoom.getSnapshot()),
+      wx = c.x + x - width.getSnapshot() / 2,
+      wy = c.y + y - height / 2,
+      n = 2 ** zoom.getSnapshot(),
+      tx = (Math.floor(wx / 256) % n + n) % n,
+      ty = Math.floor(wy / 256),
+      key = zoom.getSnapshot() + "/" + tx + "/" + ty;
+    const tile = [...(host.getSnapshot()?.querySelectorAll("[data-tile-key]") || [])].find(image => image.dataset.tileKey === key);
+    if (!tile?.complete || !tile.naturalWidth) {
+      hint.set("Phần bản đồ này chưa tải được. Hãy kiểm tra kết nối và thử lại trước khi chọn ghim.");
+      return;
+    }
+    const point = unprojectPoint(wx, wy, zoom.getSnapshot());
     if (!validCoordinates(point.latitude, point.longitude)) return;
-    hint.value = "Đã đặt ghim. Kiểm tra địa chỉ rồi bấm Xác nhận vị trí.";
-    emit("select", point);
+    hint.set("Đã đặt ghim. Kiểm tra địa chỉ rồi bấm Xác nhận vị trí.");
+    _propsLatest.current.onSelect?.(point);
   }
   function pointerDown(event) {
-    if (props.disabled || event.button !== 0 || event.target.closest("[data-map-control]")) return;
-    const box = host.value.getBoundingClientRect();
-    drag = {
+    if (_props.current.disabled || event.button !== 0 || event.target.closest("[data-map-control]")) return;
+    const box = host.getSnapshot().getBoundingClientRect();
+    _dragRef.current = {
       x: event.clientX,
       y: event.clientY,
       box,
       center: {
-        ...center.value
+        ...center.getSnapshot()
       },
       pin: !!event.target.closest("[data-location-pin]")
     };
-    host.value.setPointerCapture(event.pointerId);
+    host.getSnapshot().setPointerCapture(event.pointerId);
   }
   function pointerMove(event) {
-    if (!drag) return;
-    const p = projectPoint(drag.center.latitude, drag.center.longitude, zoom.value);
-    if (drag.pin) {
-      draggingPin.value = unprojectPoint(p.x + event.clientX - drag.box.left - width.value / 2, p.y + event.clientY - drag.box.top - height / 2, zoom.value);
+    if (!_dragRef.current) return;
+    const p = projectPoint(_dragRef.current.center.latitude, _dragRef.current.center.longitude, zoom.getSnapshot());
+    if (_dragRef.current.pin) {
+      draggingPin.set(unprojectPoint(p.x + event.clientX - _dragRef.current.box.left - width.getSnapshot() / 2, p.y + event.clientY - _dragRef.current.box.top - height / 2, zoom.getSnapshot()));
       return;
     }
-    center.value = unprojectPoint(p.x - (event.clientX - drag.x), p.y - (event.clientY - drag.y), zoom.value);
+    center.set(unprojectPoint(p.x - (event.clientX - _dragRef.current.x), p.y - (event.clientY - _dragRef.current.y), zoom.getSnapshot()));
   }
   function pointerUp(event) {
-    if (!drag) return;
-    const start = drag;
-    drag = null;
-    draggingPin.value = null;
+    if (!_dragRef.current) return;
+    const start = _dragRef.current;
+    _dragRef.current = null;
+    draggingPin.set(null);
     if (start.pin || Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) selectAt(event.clientX - start.box.left, event.clientY - start.box.top);
     try {
-      host.value.releasePointerCapture(event.pointerId);
+      host.getSnapshot().releasePointerCapture(event.pointerId);
     } catch {}
   }
   function cancelDrag() {
-    drag = null;
-    draggingPin.value = null;
+    _dragRef.current = null;
+    draggingPin.set(null);
   }
   function keyboard(event) {
-    if (props.disabled) return;
+    if (_props.current.disabled) return;
     const moves = {
       ArrowLeft: [-64, 0],
       ArrowRight: [64, 0],
@@ -144,7 +166,7 @@ function setup(__props) {
       pan(...moves[event.key]);
     } else if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      selectAt(width.value / 2, height / 2);
+      selectAt(width.getSnapshot() / 2, height / 2);
     } else if (event.key === "+" || event.key === "=") {
       event.preventDefault();
       changeZoom(1);
@@ -154,47 +176,32 @@ function setup(__props) {
     }
   }
   function retry() {
-    failed.value = false;
-    hint.value = "";
-    attempt.value++;
+    failed.set(false);
+    hint.set("");
+    attempt.edit(draftValue => draftValue++);
   }
-  onMounted(() => {
-    observer = new ResizeObserver(entries => width.value = Math.max(1, entries[0].contentRect.width));
-    observer.observe(host.value);
-  });
-  onBeforeUnmount(() => observer?.disconnect());
+  useEffect(() => {
+    const result = (() => {
+      _observerRef.current = new ResizeObserver(entries => width.set(Math.max(1, entries[0].contentRect.width)));
+      _observerRef.current.observe(host.getSnapshot());
+    })();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => _observerRef.current?.disconnect())(), []);
   return {
-    ref,
-    computed,
-    onMounted,
-    onBeforeUnmount,
-    watch,
-    validCoordinates,
-    projectPoint,
-    unprojectPoint,
-    visibleTiles,
-    projectPreviewRegion,
-    props,
-    emit,
-    center,
-    previewZoom,
-    zoom,
-    host,
-    width,
-    failed,
-    attempt,
-    hint,
-    draggingPin,
+    ...inputProps,
+    zoom: zoom.getSnapshot(),
+    width: width.getSnapshot(),
+    failed: failed.getSnapshot(),
+    attempt: attempt.getSnapshot(),
+    hint: hint.getSnapshot(),
     height,
-    tiles,
-    areaOverlay,
-    template,
+    tiles: getTiles(),
+    areaOverlay: getAreaOverlay(),
     validTemplate,
     tileUrl,
-    marker,
-    observer,
-    drag,
-    pan,
+    marker: getMarker(),
     changeZoom,
     selectAt,
     pointerDown,
@@ -202,220 +209,110 @@ function setup(__props) {
     pointerUp,
     cancelDrag,
     keyboard,
-    retry
+    retry,
+    updateHostValue: host.set,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["latitude", "longitude", "disabled", "preview", "precision", "previewRegion", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    updateFailedValue: failed.set
   };
 }
 export default React.forwardRef(function ManualLocationMap(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [<div {...mergeProps({
-    className: "manual-map-wrap",
-    "data-sp-6f96df0e": ""
-  })}>
-      <p {...mergeProps({
-      id: "manual-map-help",
-      className: "map-help",
-      "data-sp-6f96df0e": ""
-    })}>
+  const view = useManualLocationMapState(props, ref);
+  return <><div data-sp-6f96df0e="" {...view.rootAttributes} className={classNames(["manual-map-wrap", view.rootAttributes.className])}>
+      <p id="manual-map-help" className="map-help" data-sp-6f96df0e="">
         {"Bấm bản đồ để đặt ghim, kéo để di chuyển bản đồ hoặc kéo ghim để chỉnh. Dùng phím mũi tên rồi Enter để chọn điểm giữa bản đồ."}
       </p>
-      <div {...mergeProps({
-      ref: bindRef(ctx, "host"),
-      className: "manual-map",
-      tabIndex: "0",
-      role: "region",
-      "aria-label": "Bản đồ chọn vị trí bất động sản",
-      "aria-describedby": "manual-map-help",
-      "aria-disabled": ctx.disabled || undefined,
-      onPointerDown: $event => {
-        return ctx.pointerDown?.($event);
-      },
-      onPointerMove: $event => {
-        return ctx.pointerMove?.($event);
-      },
-      onPointerUp: $event => {
-        return ctx.pointerUp?.($event);
-      },
-      onPointerCancel: $event => {
-        return ctx.cancelDrag?.($event);
-      },
-      onKeyDown: $event => {
-        return ctx.keyboard?.($event);
-      },
-      "data-sp-6f96df0e": ""
-    })}>
-        {renderList(ctx.tiles, tile => <img key={ctx.attempt + ":" + tile.key} {...mergeProps({
-        src: ctx.tileUrl(tile),
-        alt: "",
-        draggable: "false",
-        referrerPolicy: "strict-origin-when-cross-origin",
-        className: "map-tile",
-        "data-tile-key": tile.key,
-        style: {
+      <div ref={view.updateHostValue} className="manual-map" tabIndex="0" role="region" aria-label="Bản đồ chọn vị trí bất động sản" aria-describedby="manual-map-help" aria-disabled={view.disabled || undefined} onPointerDown={$event => {
+        return view.pointerDown?.($event);
+      }} onPointerMove={$event => {
+        return view.pointerMove?.($event);
+      }} onPointerUp={$event => {
+        return view.pointerUp?.($event);
+      }} onPointerCancel={$event => {
+        return view.cancelDrag?.($event);
+      }} onKeyDown={$event => {
+        return view.keyboard?.($event);
+      }} data-sp-6f96df0e="">
+        {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.tiles, tile => <img key={view.attempt + ":" + tile.key} src={view.tileUrl(tile)} alt="" draggable="false" referrerPolicy="strict-origin-when-cross-origin" className="map-tile" data-tile-key={tile.key} style={{
           left: tile.left + "px",
           top: tile.top + "px"
-        },
-        onError: $event => {
-          ctx.failed = true;
-        },
-        "data-sp-6f96df0e": ""
-      })} />)}
-        {ctx.areaOverlay ? <svg {...mergeProps({
-        className: "location-area",
-        viewBox: "0 0 " + ctx.width + " " + ctx.height,
-        role: "img",
-        "aria-label": "Vùng minh họa quanh ghim đề xuất",
-        "data-location-area": "illustrative",
-        "data-sp-6f96df0e": ""
-      })}>
-            <title {...mergeProps({
-          "data-sp-6f96df0e": ""
-        })}>
+        }} onError={$event => {
+          view.updateFailedValue(true);
+        }} data-sp-6f96df0e="" />)}
+        {view.areaOverlay ? <svg className="location-area" viewBox={"0 0 " + view.width + " " + view.height} role="img" aria-label="Vùng minh họa quanh ghim đề xuất" data-location-area="illustrative" data-sp-6f96df0e="">
+            <title data-sp-6f96df0e="">
               {"Vùng minh họa, không phải bán kính sai số đã xác minh"}
             </title>
-            <circle {...mergeProps({
-          cx: ctx.areaOverlay.cx,
-          cy: ctx.areaOverlay.cy,
-          r: ctx.areaOverlay.radius,
-          "data-sp-6f96df0e": ""
-        })} />
+            <circle cx={view.areaOverlay.cx} cy={view.areaOverlay.cy} r={view.areaOverlay.radius} data-sp-6f96df0e="" />
           </svg> : null}
-        <span {...mergeProps({
-        className: "map-crosshair",
-        "aria-hidden": "true",
-        "data-sp-6f96df0e": ""
-      })}>
+        <span className="map-crosshair" aria-hidden="true" data-sp-6f96df0e="">
           {"+"}
         </span>
-        {ctx.marker ? <span {...mergeProps({
-        "data-location-pin": "",
-        className: ["location-pin", {
-          "preview-pin": ctx.preview
-        }],
-        style: {
-          left: ctx.marker.left + "px",
-          top: ctx.marker.top + "px"
-        },
-        role: "img",
-        "aria-label": ctx.preview ? "Ghim đề xuất chưa xác nhận" : "Ghim vị trí đã chọn",
-        
-        "data-sp-6f96df0e": ""
-      })}>
+        {view.marker ? <span data-location-pin="" className={classNames(["location-pin", {
+          "preview-pin": view.preview
+        }])} style={{
+          left: view.marker.left + "px",
+          top: view.marker.top + "px"
+        }} role="img" aria-label={view.preview ? "Ghim đề xuất chưa xác nhận" : "Ghim vị trí đã chọn"} data-sp-6f96df0e="">
             {"●"}
           </span> : null}
-        <div {...mergeProps({
-        "data-map-control": "",
-        className: "map-controls",
-        onPointerDown: $event => {
+        <div data-map-control="" className="map-controls" onPointerDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        onKeyDown: $event => {
+        }} onKeyDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        "data-sp-6f96df0e": ""
-      })}>
-          <button {...mergeProps({
-          type: "button",
-          disabled: ctx.disabled || ctx.zoom >= 19,
-          "aria-label": "Phóng to bản đồ",
-          onClick: $event => {
-            ctx.changeZoom(1);
-          },
-          "data-sp-6f96df0e": ""
-        })}>
+        }} data-sp-6f96df0e="">
+          <button type="button" disabled={view.disabled || view.zoom >= 19} aria-label="Phóng to bản đồ" onClick={$event => {
+            view.changeZoom(1);
+          }} data-sp-6f96df0e="">
             {"+"}
           </button>
-          <button {...mergeProps({
-          type: "button",
-          disabled: ctx.disabled || ctx.zoom <= 3,
-          "aria-label": "Thu nhỏ bản đồ",
-          onClick: $event => {
-            ctx.changeZoom(-1);
-          },
-          "data-sp-6f96df0e": ""
-        })}>
+          <button type="button" disabled={view.disabled || view.zoom <= 3} aria-label="Thu nhỏ bản đồ" onClick={$event => {
+            view.changeZoom(-1);
+          }} data-sp-6f96df0e="">
             {"−"}
           </button>
         </div>
-        <button {...mergeProps({
-        type: "button",
-        "data-map-control": "",
-        className: "choose-center",
-        disabled: ctx.disabled,
-        onPointerDown: $event => {
+        <button type="button" data-map-control="" className="choose-center" disabled={view.disabled} onPointerDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        onKeyDown: $event => {
+        }} onKeyDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        onClick: $event => {
-          ctx.selectAt(ctx.width / 2, ctx.height / 2);
-        },
-        "data-sp-6f96df0e": ""
-      })}>
+        }} onClick={$event => {
+          view.selectAt(view.width / 2, view.height / 2);
+        }} data-sp-6f96df0e="">
           {"Đặt ghim ở dấu +"}
         </button>
-        <a {...mergeProps({
-        "data-map-control": "",
-        href: "https://www.openstreetmap.org/copyright",
-        target: "_blank",
-        rel: "noopener noreferrer",
-        className: "map-attribution",
-        onPointerDown: $event => {
+        <a data-map-control="" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="map-attribution" onPointerDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        onKeyDown: $event => {
+        }} onKeyDown={$event => {
           $event.stopPropagation();
           undefined;
-        },
-        "data-sp-6f96df0e": ""
-      })}>
+        }} data-sp-6f96df0e="">
           {"© OpenStreetMap contributors"}
         </a>
       </div>
-      {ctx.areaOverlay ? <p {...mergeProps({
-      className: "area-explanation",
-      "data-sp-6f96df0e": ""
-    })}>
-          <span {...mergeProps({
-        "aria-hidden": "true",
-        className: "area-swatch",
-        "data-sp-6f96df0e": ""
-      })} />
-          <span {...mergeProps({
-        "data-sp-6f96df0e": ""
-      })}>
-            {display(ctx.previewRegion.label)}
+      {view.areaOverlay ? <p className="area-explanation" data-sp-6f96df0e="">
+          <span aria-hidden="true" className="area-swatch" data-sp-6f96df0e="" />
+          <span data-sp-6f96df0e="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.previewRegion.label)}
           </span>
         </p> : null}
-      {ctx.failed || !ctx.validTemplate ? <p {...mergeProps({
-      role: "status",
-      className: "map-error",
-      "data-sp-6f96df0e": ""
-    })}>
+      {view.failed || !view.validTemplate ? <p role="status" className="map-error" data-sp-6f96df0e="">
           {"Chưa tải đầy đủ bản đồ. Kiểm tra mạng rồi "}
-          <button {...mergeProps({
-        type: "button",
-        className: "underline",
-        onClick: $event => {
-          return ctx.retry?.($event);
-        },
-        "data-sp-6f96df0e": ""
-      })}>
+          <button type="button" className="underline" onClick={$event => {
+          return view.retry?.($event);
+        }} data-sp-6f96df0e="">
             {"thử lại"}
           </button>
           {". Chỉ chọn được ghim ở phần bản đồ đã tải."}
         </p> : null}
-      {ctx.hint ? <p {...mergeProps({
-      role: "status",
-      className: "map-help",
-      "data-sp-6f96df0e": ""
-    })}>
-          {display(ctx.hint)}
+      {view.hint ? <p role="status" className="map-help" data-sp-6f96df0e="">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.hint)}
         </p> : null}
-    </div>]);
+    </div></>;
 });

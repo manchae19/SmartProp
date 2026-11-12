@@ -1,138 +1,74 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { ref } from "../../shared/state/store.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore } from "../../shared/state/createStateStore.js";
+import React, { useState, useSyncExternalStore, useRef } from "react";
 import { api, errorText } from "../auth/api.js";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    id: {
-      type: String,
-      required: true,
-    },
-  });
-  const items = ref(null),
-    error = ref(""),
-    busy = ref(false),
-    open = ref(false);
+function usePropertyModerationFeedbackState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [items] = useState(() => createStateStore(null)),
+    [error] = useState(() => createStateStore("")),
+    [busy] = useState(() => createStateStore(false)),
+    [open] = useState(() => createStateStore(false));
+  useSyncExternalStore(open.subscribe, open.getSnapshot);
+  useSyncExternalStore(busy.subscribe, busy.getSnapshot);
+  useSyncExternalStore(error.subscribe, error.getSnapshot);
+  useSyncExternalStore(items.subscribe, items.getSnapshot);
   async function toggle() {
-    open.value = !open.value;
-    if (!open.value || busy.value) return;
-    busy.value = true;
-    error.value = "";
+    open.set(!open.getSnapshot());
+    if (!open.getSnapshot() || busy.getSnapshot()) return;
+    busy.set(true);
+    error.set("");
     try {
-      items.value = await api(
-        "/users/me/properties/" + encodeURIComponent(props.id) + "/moderation",
-      );
+      items.set(await api("/users/me/properties/" + encodeURIComponent(_props.current.id) + "/moderation"));
     } catch (e) {
-      error.value = errorText(e);
+      error.set(errorText(e));
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   return {
-    ref,
-    api,
-    errorText,
-    props,
-    items,
-    error,
-    busy,
-    open,
+    ...inputProps,
+    items: items.getSnapshot(),
+    error: error.getSnapshot(),
+    busy: busy.getSnapshot(),
+    open: open.getSnapshot(),
     toggle,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["id", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
-export default React.forwardRef(
-  function PropertyModerationFeedback(props, ref) {
-    const ctx = useSetup(setup, props, ref);
-    return rootProps(ctx, [
-      <div
-        {...mergeProps({
-          className: "mt-4 border-t border-brand-line pt-3 text-sm",
-        })}
-      >
-        <button
-          {...mergeProps({
-            type: "button",
-            className: "font-semibold underline",
-            "aria-expanded": ctx.open,
-            disabled: ctx.busy,
-            onClick: ($event) => {
-              return ctx.toggle?.($event);
-            },
-          })}
-        >
-          {display(ctx.open ? "Thu gọn phản hồi" : "Xem phản hồi kiểm duyệt")}
+export default React.forwardRef(function PropertyModerationFeedback(props, ref) {
+  const view = usePropertyModerationFeedbackState(props, ref);
+  return <><div {...view.rootAttributes} className={classNames(["mt-4 border-t border-brand-line pt-3 text-sm", view.rootAttributes.className])}>
+        <button type="button" className="font-semibold underline" aria-expanded={view.open} disabled={view.busy} onClick={$event => {
+        return view.toggle?.($event);
+      }}>
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.open ? "Thu gọn phản hồi" : "Xem phản hồi kiểm duyệt")}
         </button>
-        {ctx.open ? (
-          <div
-            {...mergeProps({
-              className: "mt-3 grid gap-3",
-            })}
-          >
-            {ctx.busy ? (
-              <p
-                {...mergeProps({
-                  role: "status",
-                })}
-              >
+        {view.open ? <div className="mt-3 grid gap-3">
+            {view.busy ? <p role="status">
                 {"Đang tải…"}
-              </p>
-            ) : null}
-            {ctx.error ? (
-              <p
-                {...mergeProps({
-                  role: "alert",
-                  className: "text-[var(--ui-error-text)]",
-                })}
-              >
-                {display(ctx.error)}
-              </p>
-            ) : null}
-            {ctx.items && !ctx.items.length ? (
-              <p {...mergeProps({})}>{"Chưa có phản hồi kiểm duyệt."}</p>
-            ) : null}
-            {renderList(ctx.items, (item, index) => (
-              <article
-                key={index}
-                {...mergeProps({
-                  className: "rounded-control bg-brand-surface p-3",
-                })}
-              >
-                <p
-                  {...mergeProps({
-                    className: "text-xs text-brand-muted",
-                  })}
-                >
-                  {display(item.newStatus)}
+              </p> : null}
+            {view.error ? <p role="alert" className="text-[var(--ui-error-text)]">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.error)}
+              </p> : null}
+            {view.items && !view.items.length ? <p>{"Chưa có phản hồi kiểm duyệt."}</p> : null}
+            {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.items, (item, index) => <article key={index} className="rounded-control bg-brand-surface p-3">
+                <p className="text-xs text-brand-muted">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.newStatus)}
                   {" · "}
-                  {display(new Date(item.createdAt).toLocaleString("vi-VN"))}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(new Date(item.createdAt).toLocaleString("vi-VN"))}
                 </p>
-                <p
-                  {...mergeProps({
-                    className: "mt-1 whitespace-pre-wrap leading-6",
-                  })}
-                >
-                  {display(item.reason)}
+                <p className="mt-1 whitespace-pre-wrap leading-6">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.reason)}
                 </p>
-              </article>
-            ))}
-          </div>
-        ) : null}
-      </div>,
-    ]);
-  },
-);
+              </article>)}
+          </div> : null}
+      </div></>;
+});

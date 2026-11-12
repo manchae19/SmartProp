@@ -1,272 +1,124 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import {
-  ref,
-  computed,
-  watch,
-  onBeforeUnmount,
-} from "../../shared/state/store.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
 import { api, session } from "../auth/api.js";
 import { canPublish } from "../../shared/lib/siteNavigation.js";
-import {
-  applicationStatuses,
-  canRequestBroker,
-  brokerErrorText,
-} from "./brokerApplication.js";
-function setup(__props) {
-  const state = ref(null),
-    busy = ref(false),
-    error = ref("");
-  const buyer = computed(() => canRequestBroker(session.user)),
-    admin = computed(
-      () => session.user?.role === "ADMIN" && session.user?.status === "ACTIVE",
-    );
-  let sequence = 0;
+import { applicationStatuses, canRequestBroker, brokerErrorText } from "./brokerApplication.js";
+function useBrokerApplicationCardState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const [state] = useState(() => createStateStore(null)),
+    [busy] = useState(() => createStateStore(false)),
+    [error] = useState(() => createStateStore(""));
+  useSyncExternalStore(error.subscribe, error.getSnapshot);
+  useSyncExternalStore(busy.subscribe, busy.getSnapshot);
+  useSyncExternalStore(state.subscribe, state.getSnapshot);
+  const getBuyer = () => canRequestBroker(session.getSnapshot().user),
+    getAdmin = () => session.getSnapshot().user?.role === "ADMIN" && session.getSnapshot().user?.status === "ACTIVE";
+  const _sequenceRef = useRef(0);
   async function load() {
-    const run = ++sequence;
-    state.value = null;
-    error.value = "";
-    busy.value = false;
-    if (!buyer.value) return;
-    busy.value = true;
+    const run = ++_sequenceRef.current;
+    state.set(null);
+    error.set("");
+    busy.set(false);
+    if (!getBuyer()) return;
+    busy.set(true);
     try {
       const result = await api("/users/me/broker-application");
-      if (run === sequence) state.value = result;
+      if (run === _sequenceRef.current) state.set(result);
     } catch (e) {
-      if (run === sequence) error.value = brokerErrorText(e);
+      if (run === _sequenceRef.current) error.set(brokerErrorText(e));
     } finally {
-      if (run === sequence) busy.value = false;
+      if (run === _sequenceRef.current) busy.set(false);
     }
   }
-  watch(
-    () => [session.user?.id, session.user?.role, session.user?.status],
-    load,
-    {
-      immediate: true,
-    },
-  );
-  onBeforeUnmount(() => sequence++);
+  const _watched = (() => [session.getSnapshot().user?.id, session.getSnapshot().user?.role, session.getSnapshot().user?.status])();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    _initialized.current = true;
+    const result = load(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  useEffect(() => () => (() => _sequenceRef.current++)(), []);
   return {
-    ref,
-    computed,
-    watch,
-    onBeforeUnmount,
-    api,
-    session,
+    ...inputProps,
+    session: session.getSnapshot(),
     canPublish,
     applicationStatuses,
-    canRequestBroker,
-    brokerErrorText,
-    state,
-    busy,
-    error,
-    buyer,
-    admin,
-    sequence,
+    state: state.getSnapshot(),
+    busy: busy.getSnapshot(),
+    error: error.getSnapshot(),
+    buyer: getBuyer(),
+    admin: getAdmin(),
     load,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function BrokerApplicationCard(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <section
-      {...mergeProps({
-        "aria-labelledby": "broker-card-title",
-        className: "rounded-panel border border-brand-line bg-brand-card p-5 sm:p-6",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: "flex flex-wrap items-start justify-between gap-4",
-        })}
-      >
-        <div {...mergeProps({})}>
-          <p
-            {...mergeProps({
-              className:
-                "text-xs font-semibold tracking-widest text-brand-accent",
-            })}
-          >
+  const view = useBrokerApplicationCardState(props, ref);
+  return <><section aria-labelledby="broker-card-title" {...view.rootAttributes} className={classNames(["rounded-panel border border-brand-line bg-brand-card p-5 sm:p-6", view.rootAttributes.className])}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold tracking-widest text-brand-accent">
             {"QUYỀN ĐĂNG TIN"}
           </p>
-          <h2
-            {...mergeProps({
-              id: "broker-card-title",
-              className: "mt-2 text-xl font-semibold",
-            })}
-          >
-            {display(
-              ctx.admin
-                ? "Quản trị người đăng"
-                : ctx.canPublish(ctx.session.user)
-                  ? "Quản lý bất động sản của bạn"
-                  : "Đăng ký quyền đăng tin",
-            )}
+          <h2 id="broker-card-title" className="mt-2 text-xl font-semibold">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.admin ? "Quản trị người đăng" : view.canPublish(view.session.user) ? "Quản lý bất động sản của bạn" : "Đăng ký quyền đăng tin")}
           </h2>
-          <p
-            {...mergeProps({
-              className: "mt-2 text-sm leading-6 text-brand-muted",
-            })}
-          >
-            {
-              "Hồ sơ người đăng và từng tin bất động sản được xét duyệt riêng. Chỉ tin đã duyệt mới xuất hiện công khai."
-            }
+          <p className="mt-2 text-sm leading-6 text-brand-muted">
+            {"Hồ sơ người đăng và từng tin bất động sản được xét duyệt riêng. Chỉ tin đã duyệt mới xuất hiện công khai."}
           </p>
         </div>
-        {ctx.buyer && ctx.state ? (
-          <span
-            {...mergeProps({
-              className:
-                "rounded-full bg-brand-surface px-3 py-2 text-sm font-semibold",
-            })}
-          >
-            {display(
-              ctx.applicationStatuses[ctx.state.status] || ctx.state.status,
-            )}
-          </span>
-        ) : null}
+        {view.buyer && view.state ? <span className="rounded-full bg-brand-surface px-3 py-2 text-sm font-semibold">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.applicationStatuses[view.state.status] || view.state.status)}
+          </span> : null}
       </div>
-      {ctx.buyer ? (
-        <React.Fragment {...mergeProps({})}>
-          {ctx.busy ? (
-            <p
-              {...mergeProps({
-                role: "status",
-                className: "mt-3 text-sm",
-              })}
-            >
+      {view.buyer ? <React.Fragment>
+          {view.busy ? <p role="status" className="mt-3 text-sm">
               {"Đang tải trạng thái…"}
-            </p>
-          ) : null}
-          {ctx.error ? (
-            <p
-              {...mergeProps({
-                role: "alert",
-                className: "mt-3 text-sm leading-6 text-[var(--ui-error-text)]",
-              })}
-            >
-              {display(ctx.error)}{" "}
-              <button
-                {...mergeProps({
-                  type: "button",
-                  className: "underline",
-                  disabled: ctx.busy,
-                  onClick: ($event) => {
-                    return ctx.load?.($event);
-                  },
-                })}
-              >
+            </p> : null}
+          {view.error ? <p role="alert" className="mt-3 text-sm leading-6 text-[var(--ui-error-text)]">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.error)}{" "}
+              <button type="button" className="underline" disabled={view.busy} onClick={$event => {
+            return view.load?.($event);
+          }}>
                 {"Thử lại"}
               </button>
-            </p>
-          ) : null}
-          {ctx.state?.application?.reviewReason ? (
-            <p
-              {...mergeProps({
-                className: "mt-3 whitespace-pre-wrap text-sm leading-6",
-              })}
-            >
+            </p> : null}
+          {view.state?.application?.reviewReason ? <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
               {"Phản hồi: "}
-              {display(ctx.state.application.reviewReason)}
-            </p>
-          ) : null}
-          {ctx.state?.status === "PENDING" ? (
-            <p
-              {...mergeProps({
-                className: "mt-3 text-sm leading-6",
-              })}
-            >
-              {
-                "Yêu cầu đang chờ xét duyệt. Bạn chưa có quyền đăng tin và không cần gửi yêu cầu trùng."
-              }
-            </p>
-          ) : null}
-          {ctx.state?.status === "SUSPENDED" ? (
-            <p
-              {...mergeProps({
-                className: "mt-3 text-sm leading-6",
-              })}
-            >
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.application.reviewReason)}
+            </p> : null}
+          {view.state?.status === "PENDING" ? <p className="mt-3 text-sm leading-6">
+              {"Yêu cầu đang chờ xét duyệt. Bạn chưa có quyền đăng tin và không cần gửi yêu cầu trùng."}
+            </p> : null}
+          {view.state?.status === "SUSPENDED" ? <p className="mt-3 text-sm leading-6">
               {"Quyền đăng tin đang tạm ngưng. Vui lòng liên hệ quản trị viên."}
-            </p>
-          ) : null}
-          {ctx.state ? (
-            <RouterLink
-              {...mergeProps({
-                className: "sp-button sp-button-primary mt-4",
-                to: "/account/broker-application",
-              })}
-            >
-              {display(
-                ctx.state.status === "NOT_REQUESTED"
-                  ? "Đăng ký quyền đăng tin"
-                  : ["REJECTED", "NEEDS_INFORMATION"].includes(ctx.state.status)
-                    ? "Bổ sung và gửi lại hồ sơ"
-                    : "Xem trạng thái hồ sơ",
-              )}
-            </RouterLink>
-          ) : null}
-        </React.Fragment>
-      ) : null}
-      {ctx.canPublish(ctx.session.user) ? (
-        <div
-          {...mergeProps({
-            className: "mt-4 flex flex-wrap gap-3",
-          })}
-        >
-          {ctx.admin ? (
-            <RouterLink
-              {...mergeProps({
-                className: "sp-button sp-button-primary",
-                to: "/admin/broker-applications",
-              })}
-            >
+            </p> : null}
+          {view.state ? <SiteLink className="sp-button sp-button-primary mt-4" to="/account/broker-application">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.status === "NOT_REQUESTED" ? "Đăng ký quyền đăng tin" : ["REJECTED", "NEEDS_INFORMATION"].includes(view.state.status) ? "Bổ sung và gửi lại hồ sơ" : "Xem trạng thái hồ sơ")}
+            </SiteLink> : null}
+        </React.Fragment> : null}
+      {view.canPublish(view.session.user) ? <div className="mt-4 flex flex-wrap gap-3">
+          {view.admin ? <SiteLink className="sp-button sp-button-primary" to="/admin/broker-applications">
               {"Duyệt quyền đăng tin"}
-            </RouterLink>
-          ) : null}
-          {ctx.admin ? (
-            <RouterLink
-              {...mergeProps({
-                className: "sp-button sp-button-secondary",
-                to: "/admin/posts",
-              })}
-            >
+            </SiteLink> : null}
+          {view.admin ? <SiteLink className="sp-button sp-button-secondary" to="/admin/posts">
               {"Duyệt tin bất động sản"}
-            </RouterLink>
-          ) : null}
-          <RouterLink
-            {...mergeProps({
-              className: "sp-button sp-button-secondary",
-              to: "/post",
-            })}
-          >
+            </SiteLink> : null}
+          <SiteLink className="sp-button sp-button-secondary" to="/post">
             {"Đăng tin mới"}
-          </RouterLink>
-          <RouterLink
-            {...mergeProps({
-              className: "sp-button sp-button-secondary",
-              to: "/my-listing",
-            })}
-          >
+          </SiteLink>
+          <SiteLink className="sp-button sp-button-secondary" to="/my-listing">
             {"Quản lý tin đăng"}
-          </RouterLink>
-        </div>
-      ) : null}
-    </section>,
-  ]);
+          </SiteLink>
+        </div> : null}
+    </section></>;
 });

@@ -1,140 +1,65 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../rendering.js";
-import { RouterLink, RouterView } from "../../routing/router.jsx";
-import { computed } from "../../state/store.js";
-import { useRoute } from "../../routing/router.jsx";
-import {
-  listingLink,
-  normalizeFilters,
-} from "../../../features/property/listingFilters.js";
+import { classNames } from "../../lib/ui.js";
+import React, { useSyncExternalStore, useRef } from "react";
+import { SiteLink } from "../../../app/navigation.jsx";
+import { useRouteState } from "../../../app/navigation.jsx";
+import { listingLink, normalizeFilters } from "../../../features/property/listingFilters.js";
 import { session } from "../../../features/auth/api.js";
-function setup(__props) {
-  const route = useRoute(),
-    filters = computed(() => normalizeFilters(route.query));
+function useAppFooterState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const route = useRouteState(),
+    getFilters = () => normalizeFilters(_routeLatest.current.query);
+  const _routeLatest = useRef(route);
+  _routeLatest.current = route;
   return {
-    computed,
-    useRoute,
+    ...inputProps,
     listingLink,
-    normalizeFilters,
-    session,
-    route,
-    filters,
+    session: session.getSnapshot(),
+    filters: getFilters(),
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function AppFooter(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <footer
-      {...mergeProps({
-        id: "account",
-        className: "app-footer mt-auto bg-brand-raised py-10 pb-36 text-brand-navy",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: "sp-container grid gap-8 md:grid-cols-[1.4fr_1fr_1fr]",
-        })}
-      >
-        <div {...mergeProps({})}>
-          <RouterLink
-            {...mergeProps({
-              to: ctx.listingLink("/home", ctx.filters),
-              className: "text-2xl font-bold tracking-tight",
-            })}
-          >
+  const view = useAppFooterState(props, ref);
+  return <><footer id="account" {...view.rootAttributes} className={classNames(["app-footer mt-auto bg-brand-raised py-10 pb-36 text-brand-navy", view.rootAttributes.className])}>
+      <div className="sp-container grid gap-8 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div>
+          <SiteLink to={view.listingLink("/home", view.filters)} className="text-2xl font-bold tracking-tight">
             {"SmartProp"}
-            <span
-              {...mergeProps({
-                className: "text-brand-highlight",
-              })}
-            >
+            <span className="text-brand-highlight">
               {"."}
             </span>
-          </RouterLink>
-          <p
-            {...mergeProps({
-              className: "mt-3 max-w-sm text-sm leading-7 text-brand-navy",
-            })}
-          >
+          </SiteLink>
+          <p className="mt-3 max-w-sm text-sm leading-7 text-brand-navy">
             {"Khám phá bất động sản và không gian sống tại Đà Nẵng."}
           </p>
         </div>
-        <nav
-          {...mergeProps({
-            "aria-label": "Khám phá cuối trang",
-            className: "grid content-start gap-3 text-sm text-brand-navy",
-          })}
-        >
-          <RouterLink
-            {...mergeProps({
-              to: ctx.listingLink("/listings", ctx.filters),
-            })}
-          >
+        <nav aria-label="Khám phá cuối trang" className="grid content-start gap-3 text-sm text-brand-navy">
+          <SiteLink to={view.listingLink("/listings", view.filters)}>
             {"Bất động sản"}
-          </RouterLink>
-          <RouterLink
-            {...mergeProps({
-              to: "/projects",
-            })}
-          >
+          </SiteLink>
+          <SiteLink to="/projects">
             {"Dự án"}
-          </RouterLink>
-          <RouterLink
-            {...mergeProps({
-              to: ctx.listingLink("/map", ctx.filters),
-            })}
-          >
+          </SiteLink>
+          <SiteLink to={view.listingLink("/map", view.filters)}>
             {"Bản đồ GIS"}
-          </RouterLink>
+          </SiteLink>
         </nav>
-        <nav
-          {...mergeProps({
-            "aria-label": "Tiện ích cuối trang",
-            className: "grid content-start gap-3 text-sm text-brand-navy",
-          })}
-        >
-          <RouterLink
-            {...mergeProps({
-              to: "/market",
-            })}
-          >
+        <nav aria-label="Tiện ích cuối trang" className="grid content-start gap-3 text-sm text-brand-navy">
+          <SiteLink to="/market">
             {"Dữ liệu thị trường"}
-          </RouterLink>
-          <RouterLink
-            {...mergeProps({
-              to: {
-                ...ctx.listingLink("/home", ctx.filters),
-                hash: "#finance",
-              },
-            })}
-          >
+          </SiteLink>
+          <SiteLink to={{
+            ...view.listingLink("/home", view.filters),
+            hash: "#finance"
+          }}>
             {"Công cụ tài chính"}
-          </RouterLink>
-          <RouterLink
-            {...mergeProps({
-              to: ctx.session.token ? "/account" : "/login",
-            })}
-          >
-            {display(
-              ctx.session.token ? "Hồ sơ cá nhân" : "Đăng nhập / Tạo tài khoản",
-            )}
-          </RouterLink>
+          </SiteLink>
+          <SiteLink to={view.session.token ? "/account" : "/login"}>
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.token ? "Hồ sơ cá nhân" : "Đăng nhập / Tạo tài khoản")}
+          </SiteLink>
         </nav>
       </div>
-    </footer>,
-  ]);
+    </footer></>;
 });

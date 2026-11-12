@@ -1,109 +1,74 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "./rendering.js";
-import { RouterLink, RouterView } from "../routing/router.jsx";
-import { ref, watch, onBeforeUnmount } from "../state/store.js";
+import { createStateStore, stateKey } from "../state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api, session } from "../../features/auth/api.js";
 import "./PrivateImage.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    src: String,
-    alt: {
-      type: String,
-      default: "",
-    },
-  });
-  const url = ref(""),
-    failed = ref(false);
-  let serial = 0;
+function usePrivateImageState(inputProps, forwardedRef) {
+  inputProps = {
+    alt: "",
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const props = {
+    alt: "",
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [url] = useState(() => createStateStore("")),
+    [failed] = useState(() => createStateStore(false));
+  useSyncExternalStore(failed.subscribe, failed.getSnapshot);
+  useSyncExternalStore(url.subscribe, url.getSnapshot);
+  const _serialRef = useRef(0);
   function release() {
-    if (url.value) URL.revokeObjectURL(url.value);
-    url.value = "";
+    if (url.getSnapshot()) URL.revokeObjectURL(url.getSnapshot());
+    url.set("");
   }
-  watch(
-    () => [props.src, session.token],
-    async () => {
-      const run = ++serial;
+  const _watched = (() => [_props.current.src, session.getSnapshot().token])();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    _initialized.current = true;
+    const result = (async () => {
+      const run = ++_serialRef.current;
       release();
-      failed.value = false;
-      if (!props.src) return;
+      failed.set(false);
+      if (!_props.current.src) return;
       try {
-        const blob = await api(props.src.replace(/^\/api\/v1/, ""), {
+        const blob = await api(_props.current.src.replace(/^\/api\/v1/, ""), {
           responseType: "blob",
-          authenticated: !!session.token,
+          authenticated: !!session.getSnapshot().token
         });
-        if (run === serial) url.value = URL.createObjectURL(blob);
+        if (run === _serialRef.current) url.set(URL.createObjectURL(blob));
       } catch {
-        if (run === serial) failed.value = true;
+        if (run === _serialRef.current) failed.set(true);
       }
-    },
-    {
-      immediate: true,
-    },
-  );
-  onBeforeUnmount(() => {
-    serial++;
+    })(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  useEffect(() => () => (() => {
+    _serialRef.current++;
     release();
-  });
+  })(), []);
   return {
-    ref,
-    watch,
-    onBeforeUnmount,
-    api,
-    session,
-    props,
-    url,
-    failed,
-    serial,
+    ...inputProps,
+    url: url.getSnapshot(),
+    failed: failed.getSnapshot(),
     release,
+    updateFailedValue: failed.set
   };
 }
 export default React.forwardRef(function PrivateImage(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    ctx.url ? (
-      <img
-        {...mergeProps({
-          src: ctx.url,
-          alt: ctx.alt,
-          loading: "lazy",
-          onError: ($event) => {
-            ctx.release();
-            ctx.failed = true;
-          },
-          "data-sp-55ccf5d3": "",
-        })}
-      />
-    ) : (
-      <div
-        {...mergeProps({
-          className: "sp-placeholder",
-          role: "img",
-          "aria-label": ctx.alt,
-          "data-sp-55ccf5d3": "",
-        })}
-      >
-        {display(
-          ctx.failed
-            ? "Không tải được ảnh"
-            : ctx.src
-              ? "Đang tải ảnh…"
-              : "Chưa có ảnh",
-        )}
-      </div>
-    ),
-  ]);
+  const view = usePrivateImageState(props, ref);
+  return <>{view.url ? <img src={view.url} alt={view.alt} loading="lazy" onError={$event => {
+      view.release();
+      view.updateFailedValue(true);
+    }} data-sp-55ccf5d3="" /> : <div className="sp-placeholder" role="img" aria-label={view.alt} data-sp-55ccf5d3="">
+        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.failed ? "Không tải được ảnh" : view.src ? "Đang tải ảnh…" : "Chưa có ảnh")}
+      </div>}</>;
 });

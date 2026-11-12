@@ -1,430 +1,149 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { computed } from "../../shared/state/store.js";
+import { classNames } from "../../shared/lib/ui.js";
+import React, { useRef } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
-import {
-  price,
-  compactPrice,
-  displayDecimal,
-  types,
-  states,
-} from "./property.js";
+import { price, compactPrice, displayDecimal, types, states } from "./property.js";
 import "./ListingCard.css";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    property: {
-      type: Object,
-      required: true,
-    },
-    own: Boolean,
-    list: Boolean,
+function useListingCardState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const getDetail = () => ({
+    path: "/listing/" + _props.current.property.id,
+    query: _props.current.own ? {
+      own: "1"
+    } : {}
   });
-  const detail = computed(() => ({
-    path: "/listing/" + props.property.id,
-    query: props.own
-      ? {
-          own: "1",
-        }
-      : {},
-  }));
-  const cover = computed(
-    () =>
-      (
-        props.property.images?.find((image) => image.cover) ||
-        props.property.images?.[0]
-      )?.url,
-  );
-  const imageCount = computed(() => props.property.images?.length || 1);
-  const fullAddress = computed(() => {
-    const parts = [
-      props.property.address,
-      props.property.ward,
-      props.property.district,
-    ].filter(Boolean);
+  const getCover = () => (_props.current.property.images?.find(image => image.cover) || _props.current.property.images?.[0])?.url;
+  const getImageCount = () => _props.current.property.images?.length || 1;
+  const getFullAddress = () => {
+    const parts = [_props.current.property.address, _props.current.property.ward, _props.current.property.district].filter(Boolean);
     if (parts.length) return parts.join(", ");
-    return (
-      [props.property.district, props.property.city]
-        .filter(Boolean)
-        .join(", ") || "Đà Nẵng"
-    );
-  });
-  const area = computed(() =>
-    displayDecimal(props.property.areaSqmExact ?? props.property.areaSqm),
-  );
-  const unitPriceText = computed(() => {
-    const pr = Number(props.property.priceExact ?? props.property.price ?? 0);
-    const ar = Number(
-      props.property.areaSqmExact ?? props.property.areaSqm ?? 0,
-    );
-    if (
-      pr > 0 &&
-      ar > 0 &&
-      props.property.transactionType === "SALE" &&
-      props.property.priceUnit === "TOTAL"
-    ) {
+    return [_props.current.property.district, _props.current.property.city].filter(Boolean).join(", ") || "Đà Nẵng";
+  };
+  const getArea = () => displayDecimal(_props.current.property.areaSqmExact ?? _props.current.property.areaSqm);
+  const getUnitPriceText = () => {
+    const pr = Number(_props.current.property.priceExact ?? _props.current.property.price ?? 0);
+    const ar = Number(_props.current.property.areaSqmExact ?? _props.current.property.areaSqm ?? 0);
+    if (pr > 0 && ar > 0 && _props.current.property.transactionType === "SALE" && _props.current.property.priceUnit === "TOTAL") {
       const perSqm = Math.round(pr / ar);
       if (perSqm >= 1000000) {
         return `~ ${(perSqm / 1000000).toLocaleString("vi-VN", {
-          maximumFractionDigits: 1,
+          maximumFractionDigits: 1
         })} tr/m²`;
       }
       return `~ ${perSqm.toLocaleString("vi-VN")} đ/m²`;
     }
     return null;
-  });
+  };
   return {
-    computed,
-    PrivateImage,
+    ...inputProps,
     price,
     compactPrice,
-    displayDecimal,
     types,
     states,
-    props,
-    detail,
-    cover,
-    imageCount,
-    fullAddress,
-    area,
-    unitPriceText,
+    detail: getDetail(),
+    cover: getCover(),
+    imageCount: getImageCount(),
+    fullAddress: getFullAddress(),
+    area: getArea(),
+    unitPriceText: getUnitPriceText(),
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["property", "own", "list", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function ListingCard(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <article
-      {...mergeProps({
-        className: ["property-card", {
-          "property-card-list": ctx.list,
-        }],
-        
-        "data-sp-d0ec4fcb": "",
-      })}
-    >
-      <RouterLink
-        {...mergeProps({
-          to: ctx.detail,
-          className: "property-main",
-          "aria-label": "Xem chi tiết " + ctx.property.title,
-          "data-sp-d0ec4fcb": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            className: "property-image",
-            "data-sp-d0ec4fcb": "",
-          })}
-        >
-          <PrivateImage
-            {...mergeProps({
-              src: ctx.cover,
-              alt: ctx.property.title,
-              "data-sp-d0ec4fcb": "",
-            })}
-          />
-          <div
-            {...mergeProps({
-              className: "image-top-tags",
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            <span
-              {...mergeProps({
-                className: ["badge-transaction", ctx.property.transactionType === "RENT" ? "rent" : "sale"],
-                
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              {display(
-                ctx.own
-                  ? ctx.states[ctx.property.status]
-                  : ctx.property.transactionType === "SALE"
-                    ? "Bán"
-                    : "Cho thuê",
-              )}
+  const view = useListingCardState(props, ref);
+  return <><article data-sp-d0ec4fcb="" {...view.rootAttributes} className={classNames([classNames(["property-card", {
+      "property-card-list": view.list
+    }]), view.rootAttributes.className])}>
+      <SiteLink to={view.detail} className="property-main" aria-label={"Xem chi tiết " + view.property.title} data-sp-d0ec4fcb="">
+        <div className="property-image" data-sp-d0ec4fcb="">
+          <PrivateImage src={view.cover} alt={view.property.title} data-sp-d0ec4fcb="" />
+          <div className="image-top-tags" data-sp-d0ec4fcb="">
+            <span className={classNames(["badge-transaction", view.property.transactionType === "RENT" ? "rent" : "sale"])} data-sp-d0ec4fcb="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.own ? view.states[view.property.status] : view.property.transactionType === "SALE" ? "Bán" : "Cho thuê")}
             </span>
-            <span
-              {...mergeProps({
-                className: "badge-type",
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              {display(
-                ctx.types[ctx.property.propertyType] ||
-                  ctx.property.propertyType,
-              )}
+            <span className="badge-type" data-sp-d0ec4fcb="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.types[view.property.propertyType] || view.property.propertyType)}
             </span>
           </div>
-          <div
-            {...mergeProps({
-              className: "image-bottom-tags",
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            {ctx.imageCount > 1 ? (
-              <span
-                {...mergeProps({
-                  className: "badge-photo-count",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
-                <svg
-                  {...mergeProps({
-                    width: "12",
-                    height: "12",
-                    viewBox: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "2.2",
-                    "data-sp-d0ec4fcb": "",
-                  })}
-                >
-                  <path
-                    {...mergeProps({
-                      d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z",
-                      "data-sp-d0ec4fcb": "",
-                    })}
-                  />
-                  <circle
-                    {...mergeProps({
-                      cx: "12",
-                      cy: "13",
-                      r: "4",
-                      "data-sp-d0ec4fcb": "",
-                    })}
-                  />
+          <div className="image-bottom-tags" data-sp-d0ec4fcb="">
+            {view.imageCount > 1 ? <span className="badge-photo-count" data-sp-d0ec4fcb="">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" data-sp-d0ec4fcb="">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" data-sp-d0ec4fcb="" />
+                  <circle cx="12" cy="13" r="4" data-sp-d0ec4fcb="" />
                 </svg>{" "}
-                {display(ctx.imageCount)}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.imageCount)}
                 {" ảnh "}
-              </span>
-            ) : null}
+              </span> : null}
           </div>
         </div>
-        <div
-          {...mergeProps({
-            className: "property-body",
-            "data-sp-d0ec4fcb": "",
-          })}
-        >
-          <h3
-            {...mergeProps({
-              className: "property-title",
-              title: ctx.property.title,
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            {display(ctx.property.title)}
+        <div className="property-body" data-sp-d0ec4fcb="">
+          <h3 className="property-title" title={view.property.title} data-sp-d0ec4fcb="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property.title)}
           </h3>
-          <div
-            {...mergeProps({
-              className: "property-metrics",
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            <div
-              {...mergeProps({
-                className: "price-container",
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              <span
-                {...mergeProps({
-                  className: "main-price",
-                  title: ctx.price(ctx.property),
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
-                {display(ctx.compactPrice(ctx.property))}
+          <div className="property-metrics" data-sp-d0ec4fcb="">
+            <div className="price-container" data-sp-d0ec4fcb="">
+              <span className="main-price" title={view.price(view.property)} data-sp-d0ec4fcb="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.compactPrice(view.property))}
               </span>
-              {ctx.unitPriceText ? (
-                <span
-                  {...mergeProps({
-                    className: "unit-price",
-                    "data-sp-d0ec4fcb": "",
-                  })}
-                >
-                  {display(ctx.unitPriceText)}
-                </span>
-              ) : null}
+              {view.unitPriceText ? <span className="unit-price" data-sp-d0ec4fcb="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.unitPriceText)}
+                </span> : null}
             </div>
-            <div
-              {...mergeProps({
-                className: "area-container",
-                "aria-label": "Diện tích " + ctx.area + " m²",
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              <svg
-                {...mergeProps({
-                  width: "13",
-                  height: "13",
-                  viewBox: "0 0 24 24",
-                  fill: "none",
-                  stroke: "currentColor",
-                  strokeWidth: "2",
-                  strokeLinecap: "round",
-                  strokeLinejoin: "round",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
-                <path
-                  {...mergeProps({
-                    d: "M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M3 3l6 6m12-6-6 6M3 21l6-6m12 6-6-6",
-                    "data-sp-d0ec4fcb": "",
-                  })}
-                />
+            <div className="area-container" aria-label={"Diện tích " + view.area + " m²"} data-sp-d0ec4fcb="">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" data-sp-d0ec4fcb="">
+                <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5M3 3l6 6m12-6-6 6M3 21l6-6m12 6-6-6" data-sp-d0ec4fcb="" />
               </svg>
-              <span
-                {...mergeProps({
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
-                {display(ctx.area)}
+              <span data-sp-d0ec4fcb="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.area)}
                 {" m²"}
               </span>
             </div>
           </div>
-          <p
-            {...mergeProps({
-              className: "property-location",
-              title: ctx.fullAddress,
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            <svg
-              {...mergeProps({
-                width: "14",
-                height: "14",
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "2",
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              <path
-                {...mergeProps({
-                  d: "M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              />
-              <circle
-                {...mergeProps({
-                  cx: "12",
-                  cy: "10",
-                  r: "2.5",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              />
+          <p className="property-location" title={view.fullAddress} data-sp-d0ec4fcb="">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" data-sp-d0ec4fcb="">
+              <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" data-sp-d0ec4fcb="" />
+              <circle cx="12" cy="10" r="2.5" data-sp-d0ec4fcb="" />
             </svg>
-            <span
-              {...mergeProps({
-                "data-sp-d0ec4fcb": "",
-              })}
-            >
-              {display(ctx.fullAddress)}
+            <span data-sp-d0ec4fcb="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.fullAddress)}
             </span>
           </p>
-          <div
-            {...mergeProps({
-              className: "property-specs",
-              "data-sp-d0ec4fcb": "",
-            })}
-          >
-            {ctx.property.direction ? (
-              <span
-                {...mergeProps({
-                  className: "spec-pill",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
+          <div className="property-specs" data-sp-d0ec4fcb="">
+            {view.property.direction ? <span className="spec-pill" data-sp-d0ec4fcb="">
                 {" 🧭 Hướng "}
-                {display(ctx.property.direction)}
-              </span>
-            ) : null}
-            {ctx.property.bedrooms > 0 ? (
-              <span
-                {...mergeProps({
-                  className: "spec-pill",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property.direction)}
+              </span> : null}
+            {view.property.bedrooms > 0 ? <span className="spec-pill" data-sp-d0ec4fcb="">
                 {" 🛏️ "}
-                <strong
-                  {...mergeProps({
-                    "data-sp-d0ec4fcb": "",
-                  })}
-                >
-                  {display(ctx.property.bedrooms)}
+                <strong data-sp-d0ec4fcb="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property.bedrooms)}
                 </strong>
                 {" PN "}
-              </span>
-            ) : null}
-            {ctx.property.bathrooms > 0 ? (
-              <span
-                {...mergeProps({
-                  className: "spec-pill",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
+              </span> : null}
+            {view.property.bathrooms > 0 ? <span className="spec-pill" data-sp-d0ec4fcb="">
                 {" 🚿 "}
-                <strong
-                  {...mergeProps({
-                    "data-sp-d0ec4fcb": "",
-                  })}
-                >
-                  {display(ctx.property.bathrooms)}
+                <strong data-sp-d0ec4fcb="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property.bathrooms)}
                 </strong>
                 {" PT "}
-              </span>
-            ) : null}
-            {ctx.property.propertyType === "LAND" ? (
-              <span
-                {...mergeProps({
-                  className: "spec-pill land-tag",
-                  "data-sp-d0ec4fcb": "",
-                })}
-              >
+              </span> : null}
+            {view.property.propertyType === "LAND" ? <span className="spec-pill land-tag" data-sp-d0ec4fcb="">
                 {" 📑 Sổ đỏ sẵn sàng "}
-              </span>
-            ) : null}
+              </span> : null}
           </div>
         </div>
-      </RouterLink>
-      <div
-        {...mergeProps({
-          className: "property-actions",
-          "data-sp-d0ec4fcb": "",
-        })}
-      >
-        <RouterLink
-          {...mergeProps({
-            to: ctx.detail,
-            className: "detail-link",
-            "data-sp-d0ec4fcb": "",
-          })}
-        >
+      </SiteLink>
+      <div className="property-actions" data-sp-d0ec4fcb="">
+        <SiteLink to={view.detail} className="detail-link" data-sp-d0ec4fcb="">
           {"Xem chi tiết ↗"}
-        </RouterLink>
-        {ctx.$children ?? null}
+        </SiteLink>
+        {view.children ?? null}
       </div>
-    </article>,
-  ]);
+    </article></>;
 });

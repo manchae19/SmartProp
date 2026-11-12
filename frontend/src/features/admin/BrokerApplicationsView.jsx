@@ -1,477 +1,254 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { ref, onMounted, onBeforeUnmount } from "../../shared/state/store.js";
+import { classNames, chainHandlers } from "../../shared/lib/ui.js";
+import { createStateStore } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api } from "../auth/api.js";
-import {
-  applicationStatuses,
-  applicationActions,
-  reviewActions,
-  brokerErrorText,
-} from "../broker/brokerApplication.js";
-function setup(__props) {
-  const items = ref([]),
-    status = ref("PENDING"),
-    page = ref(0),
-    totalPages = ref(0),
-    total = ref(0),
-    busy = ref(false),
-    error = ref(""),
-    message = ref(""),
-    selected = ref(null),
-    reason = ref("");
-  let sequence = 0;
+import { applicationStatuses, applicationActions, reviewActions, brokerErrorText } from "../broker/brokerApplication.js";
+function useBrokerApplicationsViewState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const [items] = useState(() => createStateStore([])),
+    [status] = useState(() => createStateStore("PENDING")),
+    [page] = useState(() => createStateStore(0)),
+    [totalPages] = useState(() => createStateStore(0)),
+    [total] = useState(() => createStateStore(0)),
+    [busy] = useState(() => createStateStore(false)),
+    [error] = useState(() => createStateStore("")),
+    [message] = useState(() => createStateStore("")),
+    [selected] = useState(() => createStateStore(null)),
+    [reason] = useState(() => createStateStore(""));
+  useSyncExternalStore(reason.subscribe, reason.getSnapshot);
+  useSyncExternalStore(selected.subscribe, selected.getSnapshot);
+  useSyncExternalStore(message.subscribe, message.getSnapshot);
+  useSyncExternalStore(error.subscribe, error.getSnapshot);
+  useSyncExternalStore(busy.subscribe, busy.getSnapshot);
+  useSyncExternalStore(total.subscribe, total.getSnapshot);
+  useSyncExternalStore(totalPages.subscribe, totalPages.getSnapshot);
+  useSyncExternalStore(page.subscribe, page.getSnapshot);
+  useSyncExternalStore(status.subscribe, status.getSnapshot);
+  useSyncExternalStore(items.subscribe, items.getSnapshot);
+  const _sequenceRef = useRef(0);
   async function load(reset = false) {
-    if (reset) page.value = 0;
-    const run = ++sequence;
-    busy.value = true;
-    error.value = "";
-    selected.value = null;
+    if (reset) page.set(0);
+    const run = ++_sequenceRef.current;
+    busy.set(true);
+    error.set("");
+    selected.set(null);
     try {
       const q = new URLSearchParams({
-        page: String(page.value),
-        size: "10",
+        page: String(page.getSnapshot()),
+        size: "10"
       });
-      if (status.value) q.set("status", status.value);
+      if (status.getSnapshot()) q.set("status", status.getSnapshot());
       const result = await api("/admin/broker-applications?" + q);
-      if (run !== sequence) return;
-      items.value = result.items;
-      total.value = result.totalElements;
-      totalPages.value = result.totalPages;
+      if (run !== _sequenceRef.current) return;
+      items.set(result.items);
+      total.set(result.totalElements);
+      totalPages.set(result.totalPages);
     } catch (e) {
-      if (run === sequence) error.value = brokerErrorText(e);
+      if (run === _sequenceRef.current) error.set(brokerErrorText(e));
     } finally {
-      if (run === sequence) busy.value = false;
+      if (run === _sequenceRef.current) busy.set(false);
     }
   }
   function select(item) {
-    selected.value = item;
-    reason.value = "";
-    message.value = "";
+    selected.set(item);
+    reason.set("");
+    message.set("");
   }
   async function review(action) {
-    if (busy.value || !selected.value || !reason.value.trim()) return;
-    const application = selected.value;
-    busy.value = true;
-    error.value = "";
-    message.value = "";
+    if (busy.getSnapshot() || !selected.getSnapshot() || !reason.getSnapshot().trim()) return;
+    const application = selected.getSnapshot();
+    busy.set(true);
+    error.set("");
+    message.set("");
     try {
-      await api(
-        "/admin/broker-applications/" +
-          encodeURIComponent(application.id) +
-          "/review",
-        {
-          method: "POST",
-          body: {
-            action,
-            expectedVersion: application.contentVersion,
-            reason: reason.value.trim(),
-          },
-        },
-      );
-      message.value =
-        "Đã xử lý hồ sơ. Khi thay đổi quyền, người dùng cần đăng nhập lại.";
-      reason.value = "";
+      await api("/admin/broker-applications/" + encodeURIComponent(application.id) + "/review", {
+        method: "POST",
+        body: {
+          action,
+          expectedVersion: application.contentVersion,
+          reason: reason.getSnapshot().trim()
+        }
+      });
+      message.set("Đã xử lý hồ sơ. Khi thay đổi quyền, người dùng cần đăng nhập lại.");
+      reason.set("");
       await load();
     } catch (e) {
-      error.value = brokerErrorText(e);
+      error.set(brokerErrorText(e));
       if (e.status === 409) {
-        selected.value = null;
-        error.value +=
-          " Tải lại danh sách và kiểm tra hồ sơ trước khi thao tác lại.";
+        selected.set(null);
+        error.edit(draftValue => draftValue += " Tải lại danh sách và kiểm tra hồ sơ trước khi thao tác lại.");
       }
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   async function move(delta) {
-    page.value += delta;
+    page.edit(draftValue => draftValue += delta);
     await load();
   }
-  onMounted(() => load());
-  onBeforeUnmount(() => {
-    sequence++;
-  });
+  useEffect(() => {
+    const result = (() => load())();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => {
+    _sequenceRef.current++;
+  })(), []);
   return {
-    ref,
-    onMounted,
-    onBeforeUnmount,
-    api,
+    ...inputProps,
     applicationStatuses,
     applicationActions,
     reviewActions,
-    brokerErrorText,
-    items,
-    status,
-    page,
-    totalPages,
-    total,
-    busy,
-    error,
-    message,
-    selected,
-    reason,
-    sequence,
+    items: items.getSnapshot(),
+    status: status.getSnapshot(),
+    page: page.getSnapshot(),
+    totalPages: totalPages.getSnapshot(),
+    total: total.getSnapshot(),
+    busy: busy.getSnapshot(),
+    error: error.getSnapshot(),
+    message: message.getSnapshot(),
+    selected: selected.getSnapshot(),
+    reason: reason.getSnapshot(),
     load,
     select,
     review,
     move,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    updateStatusValue: status.set,
+    updateReasonValue: reason.set
   };
 }
 export default React.forwardRef(function BrokerApplicationsView(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <section data-ui-view="BrokerApplicationsView"
-      {...mergeProps({
-        className: "rounded-panel bg-brand-card p-5 text-brand-navy sm:p-7",
-      })}
-    >
-      <h1
-        {...mergeProps({
-          className: "text-2xl font-semibold",
-        })}
-      >
+  const view = useBrokerApplicationsViewState(props, ref);
+  return <><section data-ui-view="BrokerApplicationsView" {...view.rootAttributes} className={classNames(["rounded-panel bg-brand-card p-5 text-brand-navy sm:p-7", view.rootAttributes.className])}>
+      <h1 className="text-2xl font-semibold">
         {"Duyệt quyền đăng tin"}
       </h1>
-      <p
-        {...mergeProps({
-          className: "mt-2 text-sm leading-6 text-brand-muted",
-        })}
-      >
-        {
-          "Xét duyệt người đăng, độc lập với duyệt từng tin. Không cấp quyền ADMIN từ màn hình này."
-        }
+      <p className="mt-2 text-sm leading-6 text-brand-muted">
+        {"Xét duyệt người đăng, độc lập với duyệt từng tin. Không cấp quyền ADMIN từ màn hình này."}
       </p>
-      <div
-        {...mergeProps({
-          className: "my-5 flex flex-wrap items-end gap-3",
-        })}
-      >
-        <label
-          {...mergeProps({
-            className: "sp-field",
-          })}
-        >
+      <div className="my-5 flex flex-wrap items-end gap-3">
+        <label className="sp-field">
           {"Trạng thái"}
-          <select
-            {...mergeProps(
-              {
-                className: "sp-input",
-                disabled: ctx.busy,
-                onChange: ($event) => {
-                  ctx.load(true);
-                },
-              },
-              modelProps(
-                ctx.status,
-                ($value) => {
-                  ctx.status = $value;
-                },
-                {
-                  kind: "text",
-                  value: "on",
-                  number: false,
-                  multiple: false,
-                },
-              ),
-            )}
-          >
-            <option
-              {...mergeProps({
-                value: "",
-              })}
-            >
+          <select className="sp-input" disabled={view.busy} value={view.status ?? ""} onChange={chainHandlers($event => {
+            view.load(true);
+          }, event => ($value => {
+            view.updateStatusValue($value);
+          })(event.target.value))}>
+            <option value="">
               {"Tất cả"}
             </option>
-            {renderList(ctx.applicationStatuses, (label, key) => (
-              <option
-                key={key}
-                {...mergeProps(
-                  {
-                    value: key,
-                  },
-                  {
-                    style: {
-                      display: key !== "NOT_REQUESTED" ? undefined : "none",
-                    },
-                  },
-                )}
-              >
-                {display(label)}
-              </option>
-            ))}
+            {((items, render) => typeof items === "number" ? Array.from({
+              length: Math.max(0, items)
+            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.applicationStatuses, (label, key) => <option key={key} value={key} style={{
+              display: key !== "NOT_REQUESTED" ? undefined : "none"
+            }}>
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
+              </option>)}
           </select>
         </label>
-        <button
-          {...mergeProps({
-            className: "sp-button sp-button-secondary",
-            type: "button",
-            disabled: ctx.busy,
-            onClick: ($event) => {
-              ctx.load();
-            },
-          })}
-        >
+        <button className="sp-button sp-button-secondary" type="button" disabled={view.busy} onClick={$event => {
+          view.load();
+        }}>
           {"Tải lại danh sách"}
         </button>
-        <p
-          {...mergeProps({
-            className: "text-sm",
-          })}
-        >
-          {display(ctx.total)}
+        <p className="text-sm">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.total)}
           {" hồ sơ"}
         </p>
       </div>
-      {ctx.busy ? (
-        <p
-          {...mergeProps({
-            role: "status",
-          })}
-        >
+      {view.busy ? <p role="status">
           {"Đang xử lý…"}
-        </p>
-      ) : null}
-      {ctx.error ? (
-        <p
-          {...mergeProps({
-            role: "alert",
-            className:
-              "my-4 whitespace-pre-wrap rounded-control bg-[var(--ui-error-bg)] p-4 text-sm text-[var(--ui-error-text)]",
-          })}
-        >
-          {display(ctx.error)}
-        </p>
-      ) : null}
-      {ctx.message ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "my-4 text-sm text-[var(--ui-success-text)]",
-          })}
-        >
-          {display(ctx.message)}
-        </p>
-      ) : null}
-      {!ctx.busy && !ctx.error && !ctx.items.length ? (
-        <p
-          {...mergeProps({
-            className: "py-8 text-center text-brand-muted",
-          })}
-        >
+        </p> : null}
+      {view.error ? <p role="alert" className="my-4 whitespace-pre-wrap rounded-control bg-[var(--ui-error-bg)] p-4 text-sm text-[var(--ui-error-text)]">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.error)}
+        </p> : null}
+      {view.message ? <p role="status" className="my-4 text-sm text-[var(--ui-success-text)]">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.message)}
+        </p> : null}
+      {!view.busy && !view.error && !view.items.length ? <p className="py-8 text-center text-brand-muted">
           {"Chưa có hồ sơ ở trạng thái này."}
-        </p>
-      ) : null}
-      <div
-        {...mergeProps({
-          className: "grid gap-4",
-        })}
-      >
-        {renderList(ctx.items, (item) => (
-          <article
-            key={item.id}
-            {...mergeProps({
-              className: ["rounded-panel border p-4", ctx.selected?.id === item.id
-                  ? "border-brand-gold bg-brand-cream"
-                  : "border-brand-line"],
-              
-            })}
-          >
-            <div
-              {...mergeProps({
-                className: "flex flex-wrap items-start justify-between gap-3",
-              })}
-            >
-              <div {...mergeProps({})}>
-                <h2
-                  {...mergeProps({
-                    className: "font-semibold",
-                  })}
-                >
-                  {display(item.displayName)}
+        </p> : null}
+      <div className="grid gap-4">
+        {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.items, item => <article key={item.id} className={classNames(["rounded-panel border p-4", view.selected?.id === item.id ? "border-brand-gold bg-brand-cream" : "border-brand-line"])}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.displayName)}
                 </h2>
-                <p
-                  {...mergeProps({
-                    className: "mt-1 text-sm",
-                  })}
-                >
-                  {display(
-                    item.applicantType === "OWNER" ? "Chủ nhà" : "Môi giới",
-                  )}
+                <p className="mt-1 text-sm">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.applicantType === "OWNER" ? "Chủ nhà" : "Môi giới")}
                   {" · "}
-                  {display(item.operatingArea)}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.operatingArea)}
                 </p>
-                <p
-                  {...mergeProps({
-                    className: "mt-1 text-xs text-brand-muted",
-                  })}
-                >
+                <p className="mt-1 text-xs text-brand-muted">
                   {"Tài khoản #"}
-                  {display(item.userId)}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.userId)}
                   {" · "}
-                  {display(ctx.applicationStatuses[item.status])}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.applicationStatuses[item.status])}
                   {" · phiên bản "}
-                  {display(item.contentVersion)}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.contentVersion)}
                 </p>
               </div>
-              <button
-                {...mergeProps({
-                  className: "sp-button sp-button-secondary",
-                  type: "button",
-                  disabled: ctx.busy,
-                  onClick: ($event) => {
-                    ctx.select(item);
-                  },
-                })}
-              >
+              <button className="sp-button sp-button-secondary" type="button" disabled={view.busy} onClick={$event => {
+              view.select(item);
+            }}>
                 {"Xem hồ sơ"}
               </button>
             </div>
-            {ctx.selected?.id === item.id ? (
-              <div
-                {...mergeProps({
-                  className: "mt-5 grid gap-4 text-sm",
-                })}
-              >
-                <p {...mergeProps({})}>
+            {view.selected?.id === item.id ? <div className="mt-5 grid gap-4 text-sm">
+                <p>
                   {"Điện thoại đã cung cấp: "}
-                  {display(item.contactPhone)}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.contactPhone)}
                 </p>
-                <p
-                  {...mergeProps({
-                    className: "whitespace-pre-wrap leading-6",
-                  })}
-                >
-                  {display(item.requestMessage)}
+                <p className="whitespace-pre-wrap leading-6">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.requestMessage)}
                 </p>
-                <p {...mergeProps({})}>
+                <p>
                   {"Xác nhận trách nhiệm: "}
-                  {display(
-                    item.responsibilityAccepted
-                      ? "Đã xác nhận"
-                      : "Chưa xác nhận",
-                  )}
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.responsibilityAccepted ? "Đã xác nhận" : "Chưa xác nhận")}
                 </p>
-                {item.reviewReason ? (
-                  <p
-                    {...mergeProps({
-                      className: "whitespace-pre-wrap",
-                    })}
-                  >
+                {item.reviewReason ? <p className="whitespace-pre-wrap">
                     {"Phản hồi trước: "}
-                    {display(item.reviewReason)}
-                  </p>
-                ) : null}
-                {ctx.reviewActions(item.status).length ? (
-                  <label
-                    {...mergeProps({
-                      className: "sp-field",
-                    })}
-                  >
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.reviewReason)}
+                  </p> : null}
+                {view.reviewActions(item.status).length ? <label className="sp-field">
                     {"Lý do / phản hồi"}
-                    <textarea
-                      {...mergeProps(
-                        {
-                          className: "sp-input min-h-24",
-                          required: true,
-                          maxLength: "2000",
-                          disabled: ctx.busy,
-                        },
-                        modelProps(
-                          ctx.reason,
-                          ($value) => {
-                            ctx.reason = $value;
-                          },
-                          {
-                            kind: "text",
-                            value: "on",
-                            number: false,
-                            multiple: false,
-                          },
-                        ),
-                      )}
-                    />
-                  </label>
-                ) : null}
-                <div
-                  {...mergeProps({
-                    className: "flex flex-wrap gap-3",
-                  })}
-                >
-                  {renderList(ctx.reviewActions(item.status), (action) => (
-                    <button
-                      key={action}
-                      {...mergeProps({
-                        className: ["sp-button", action === "APPROVE"
-                            ? "sp-button-primary"
-                            : "sp-button-secondary"],
-                        
-                        type: "button",
-                        disabled: ctx.busy || !ctx.reason.trim(),
-                        onClick: ($event) => {
-                          ctx.review(action);
-                        },
-                      })}
-                    >
-                      {display(ctx.applicationActions[action])}
-                    </button>
-                  ))}
+                    <textarea className="sp-input min-h-24" required={true} maxLength="2000" disabled={view.busy} value={view.reason ?? ""} onChange={event => ($value => {
+                view.updateReasonValue($value);
+              })(event.target.value)} />
+                  </label> : null}
+                <div className="flex flex-wrap gap-3">
+                  {((items, render) => typeof items === "number" ? Array.from({
+                length: Math.max(0, items)
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.reviewActions(item.status), action => <button key={action} className={classNames(["sp-button", action === "APPROVE" ? "sp-button-primary" : "sp-button-secondary"])} type="button" disabled={view.busy || !view.reason.trim()} onClick={$event => {
+                view.review(action);
+              }}>
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.applicationActions[action])}
+                    </button>)}
                 </div>
-              </div>
-            ) : null}
-          </article>
-        ))}
+              </div> : null}
+          </article>)}
       </div>
-      {ctx.totalPages > 1 ? (
-        <nav
-          {...mergeProps({
-            "aria-label": "Phân trang hồ sơ",
-            className: "mt-5 flex items-center gap-4",
-          })}
-        >
-          <button
-            {...mergeProps({
-              className: "sp-button sp-button-secondary",
-              disabled: ctx.busy || ctx.page === 0,
-              onClick: ($event) => {
-                ctx.move(-1);
-              },
-            })}
-          >
+      {view.totalPages > 1 ? <nav aria-label="Phân trang hồ sơ" className="mt-5 flex items-center gap-4">
+          <button className="sp-button sp-button-secondary" disabled={view.busy || view.page === 0} onClick={$event => {
+          view.move(-1);
+        }}>
             {"Trước"}
           </button>
-          <span {...mergeProps({})}>
-            {display(ctx.page + 1)}
+          <span>
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.page + 1)}
             {" / "}
-            {display(ctx.totalPages)}
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.totalPages)}
           </span>
-          <button
-            {...mergeProps({
-              className: "sp-button sp-button-secondary",
-              disabled: ctx.busy || ctx.page + 1 >= ctx.totalPages,
-              onClick: ($event) => {
-                ctx.move(1);
-              },
-            })}
-          >
+          <button className="sp-button sp-button-secondary" disabled={view.busy || view.page + 1 >= view.totalPages} onClick={$event => {
+          view.move(1);
+        }}>
             {"Sau"}
           </button>
-        </nav>
-      ) : null}
-    </section>,
-  ]);
+        </nav> : null}
+    </section></>;
 });

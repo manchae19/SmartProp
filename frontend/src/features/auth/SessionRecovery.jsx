@@ -1,114 +1,61 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { ref } from "../../shared/state/store.js";
-import { useRoute, useRouter } from "../../shared/routing/router.jsx";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore } from "../../shared/state/createStateStore.js";
+import React, { useState, useSyncExternalStore, useRef } from "react";
+import { useRouteState, useAppNavigation } from "../../app/navigation.jsx";
 import { initializeAuth, session } from "./api.js";
-function setup(__props) {
-  const router = useRouter(),
-    route = useRoute(),
-    busy = ref(false);
+function useSessionRecoveryState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const router = useAppNavigation(),
+    route = useRouteState(),
+    [busy] = useState(() => createStateStore(false));
+  const _routeLatest = useRef(route);
+  _routeLatest.current = route;
+  const _routerLatest = useRef(router);
+  _routerLatest.current = router;
+  useSyncExternalStore(busy.subscribe, busy.getSnapshot);
   async function retry() {
-    if (busy.value) return;
-    busy.value = true;
+    if (busy.getSnapshot()) return;
+    busy.set(true);
     try {
       await initializeAuth({
-        force: true,
+        force: true
       });
-      if (session.status !== "UNAVAILABLE") {
-        const target =
-          typeof route.query.returnTo === "string" &&
-          route.query.returnTo.startsWith("/") &&
-          !route.query.returnTo.startsWith("//")
-            ? route.query.returnTo
-            : route.path === "/session-recovery"
-              ? "/home"
-              : route.fullPath;
-        await router.replace(target);
+      if (session.getSnapshot().status !== "UNAVAILABLE") {
+        const target = typeof _routeLatest.current.query.returnTo === "string" && _routeLatest.current.query.returnTo.startsWith("/") && !_routeLatest.current.query.returnTo.startsWith("//") ? _routeLatest.current.query.returnTo : _routeLatest.current.path === "/session-recovery" ? "/home" : _routeLatest.current.fullPath;
+        await _routerLatest.current.replace(target);
       }
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   return {
-    ref,
-    useRoute,
-    useRouter,
-    initializeAuth,
-    session,
-    router,
-    route,
-    busy,
+    ...inputProps,
+    session: session.getSnapshot(),
+    busy: busy.getSnapshot(),
     retry,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function SessionRecovery(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <main data-ui-view="SessionRecovery"
-      {...mergeProps({
-        className:
-          "grid min-h-screen place-items-center bg-brand-cream p-6 text-brand-navy",
-      })}
-    >
-      <section
-        {...mergeProps({
-          className:
-            "w-full max-w-lg rounded-panel border border-brand-line bg-brand-card p-7",
-        })}
-      >
-        <h1
-          {...mergeProps({
-            className: "text-2xl font-semibold",
-          })}
-        >
+  const view = useSessionRecoveryState(props, ref);
+  return <><main data-ui-view="SessionRecovery" {...view.rootAttributes} className={classNames(["grid min-h-screen place-items-center bg-brand-cream p-6 text-brand-navy", view.rootAttributes.className])}>
+      <section className="w-full max-w-lg rounded-panel border border-brand-line bg-brand-card p-7">
+        <h1 className="text-2xl font-semibold">
           {"Chưa thể kiểm tra phiên đăng nhập"}
         </h1>
-        <p
-          {...mergeProps({
-            className: "mt-4 text-sm leading-6",
-          })}
-        >
-          {
-            "Kết nối đang gián đoạn. Bạn có thể thử lại khi máy chủ hoặc mạng hoạt động trở lại."
-          }
+        <p className="mt-4 text-sm leading-6">
+          {"Kết nối đang gián đoạn. Bạn có thể thử lại khi máy chủ hoặc mạng hoạt động trở lại."}
         </p>
-        {ctx.session.error ? (
-          <p
-            {...mergeProps({
-              role: "alert",
-              className: "mt-3 text-sm leading-6 text-brand-muted",
-            })}
-          >
-            {display(ctx.session.error)}
-          </p>
-        ) : null}
-        <button
-          {...mergeProps({
-            className: "sp-button sp-button-primary mt-5",
-            disabled: ctx.busy,
-            onClick: ($event) => {
-              return ctx.retry?.($event);
-            },
-          })}
-        >
-          {display(ctx.busy ? "Đang kiểm tra…" : "Thử lại kết nối")}
+        {view.session.error ? <p role="alert" className="mt-3 text-sm leading-6 text-brand-muted">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.error)}
+          </p> : null}
+        <button className="sp-button sp-button-primary mt-5" disabled={view.busy} onClick={$event => {
+          return view.retry?.($event);
+        }}>
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.busy ? "Đang kiểm tra…" : "Thử lại kết nối")}
         </button>
       </section>
-    </main>,
-  ]);
+    </main></>;
 });

@@ -1,30 +1,9 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { ref, onMounted, computed } from "../../shared/state/store.js";
-import { useRouter } from "../../shared/routing/router.jsx";
-import {
-  api,
-  loadProfile,
-  logout as revokeSession,
-  clearSession,
-  session,
-  errorText,
-} from "../auth/api.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore } from "../../shared/state/createStateStore.js";
+import React, { useState, useSyncExternalStore, useEffect, useRef } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
+import { useAppNavigation } from "../../app/navigation.jsx";
+import { api, loadProfile, logout as revokeSession, clearSession, session, errorText } from "../auth/api.js";
 import BrokerApplicationCard from "../broker/BrokerApplicationCard.jsx";
 import ValuationHistory from "../prediction/ValuationHistory.jsx";
 import UserAvatar from "../../shared/components/UserAvatar.jsx";
@@ -32,271 +11,263 @@ import AvatarEditor from "./AvatarEditor.jsx";
 import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./AccountView.css";
 import LifestyleFields, { emptyLifestyle } from "./LifestyleFields.jsx";
-function setup(__props) {
-  const router = useRouter(),
-    form = ref({
+function useAccountViewState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const router = useAppNavigation(),
+    [form] = useState(() => createStateStore({
       fullName: "",
       email: "",
       phone: "",
       district: "",
-      address: "",
-    });
-  const prefs = ref({
+      address: ""
+    }));
+  const _routerLatest = useRef(router);
+  _routerLatest.current = router;
+  useSyncExternalStore(form.subscribe, form.getSnapshot);
+  const [prefs] = useState(() => createStateStore({
       matchingListings: false,
       brokerMessages: false,
-      statusUpdates: false,
-    }),
-    securityTab = ref("password");
-  const currentPassword = ref(""),
-    newPassword = ref(""),
-    confirmPassword = ref(""),
-    showPassword = ref(false);
-  const busy = ref(false),
-    loading = ref(true),
-    loaded = ref(false),
-    preferencesLoaded = ref(false),
-    message = ref(""),
-    error = ref(""),
-    prefsError = ref(""),
-    nameInput = ref(null);
-  const roleLabel = computed(
-    () =>
-      ({
-        BUYER: "Người mua / người thuê",
-        BROKER: "Chủ nhà / môi giới",
-        ADMIN: "Quản trị viên",
-      })[session.user?.role] || "Thành viên",
-  );
-  const statusLabel = computed(
-    () =>
-      ({
-        ACTIVE: "Đang hoạt động",
-        LOCKED: "Đã khóa",
-      })[session.user?.status] || "Đang kiểm tra",
-  );
-  const joined = computed(() =>
-    session.user?.createdAt
-      ? new Date(session.user.createdAt).toLocaleDateString("vi-VN", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "Chưa có thông tin",
-  );
-  const tools = [
-    {
-      to: "/favorites",
-      icon: "heart",
-      title: "Tin đã lưu",
-      text: "Những không gian bạn quan tâm",
-    },
-    {
-      to: "/account/reports",
-      icon: "report",
-      title: "Báo cáo của tôi",
-      text: "Theo dõi phản hồi và xử lý",
-    },
-    {
-      to: "/account/notifications",
-      icon: "bell",
-      title: "Thông báo",
-      text: "Cập nhật hoạt động tài khoản",
-    },
-    {
-      to: "/account/messages",
-      icon: "messages",
-      title: "Tin nhắn",
-      text: "Tiếp tục những cuộc trò chuyện",
-    },
-  ];
-  const preferenceLabels = [
-    {
-      key: "matchingListings",
-      title: "Tin phù hợp với bạn",
-      text: "Lưu tùy chọn nhận thông báo tin đăng phù hợp.",
-    },
-    {
-      key: "brokerMessages",
-      title: "Tin nhắn liên quan",
-      text: "Lưu tùy chọn thông báo khi có trao đổi.",
-    },
-    {
-      key: "statusUpdates",
-      title: "Trạng thái tin và báo cáo",
-      text: "Lưu tùy chọn cập nhật xử lý từ hệ thống.",
-    },
-  ];
+      statusUpdates: false
+    })),
+    [securityTab] = useState(() => createStateStore("password"));
+  useSyncExternalStore(securityTab.subscribe, securityTab.getSnapshot);
+  useSyncExternalStore(prefs.subscribe, prefs.getSnapshot);
+  const [currentPassword] = useState(() => createStateStore("")),
+    [newPassword] = useState(() => createStateStore("")),
+    [confirmPassword] = useState(() => createStateStore("")),
+    [showPassword] = useState(() => createStateStore(false));
+  useSyncExternalStore(showPassword.subscribe, showPassword.getSnapshot);
+  useSyncExternalStore(confirmPassword.subscribe, confirmPassword.getSnapshot);
+  useSyncExternalStore(newPassword.subscribe, newPassword.getSnapshot);
+  useSyncExternalStore(currentPassword.subscribe, currentPassword.getSnapshot);
+  const [busy] = useState(() => createStateStore(false)),
+    [loading] = useState(() => createStateStore(true)),
+    [loaded] = useState(() => createStateStore(false)),
+    [preferencesLoaded] = useState(() => createStateStore(false)),
+    [message] = useState(() => createStateStore("")),
+    [error] = useState(() => createStateStore("")),
+    [prefsError] = useState(() => createStateStore("")),
+    [nameInput] = useState(() => createStateStore(null));
+  useSyncExternalStore(nameInput.subscribe, nameInput.getSnapshot);
+  useSyncExternalStore(prefsError.subscribe, prefsError.getSnapshot);
+  useSyncExternalStore(error.subscribe, error.getSnapshot);
+  useSyncExternalStore(message.subscribe, message.getSnapshot);
+  useSyncExternalStore(preferencesLoaded.subscribe, preferencesLoaded.getSnapshot);
+  useSyncExternalStore(loaded.subscribe, loaded.getSnapshot);
+  useSyncExternalStore(loading.subscribe, loading.getSnapshot);
+  useSyncExternalStore(busy.subscribe, busy.getSnapshot);
+  const getRoleLabel = () => ({
+    BUYER: "Người mua / người thuê",
+    BROKER: "Chủ nhà / môi giới",
+    ADMIN: "Quản trị viên"
+  })[session.getSnapshot().user?.role] || "Thành viên";
+  const getStatusLabel = () => ({
+    ACTIVE: "Đang hoạt động",
+    LOCKED: "Đã khóa"
+  })[session.getSnapshot().user?.status] || "Đang kiểm tra";
+  const getJoined = () => session.getSnapshot().user?.createdAt ? new Date(session.getSnapshot().user.createdAt).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric"
+  }) : "Chưa có thông tin";
+  const tools = [{
+    to: "/favorites",
+    icon: "heart",
+    title: "Tin đã lưu",
+    text: "Những không gian bạn quan tâm"
+  }, {
+    to: "/account/reports",
+    icon: "report",
+    title: "Báo cáo của tôi",
+    text: "Theo dõi phản hồi và xử lý"
+  }, {
+    to: "/account/notifications",
+    icon: "bell",
+    title: "Thông báo",
+    text: "Cập nhật hoạt động tài khoản"
+  }, {
+    to: "/account/messages",
+    icon: "messages",
+    title: "Tin nhắn",
+    text: "Tiếp tục những cuộc trò chuyện"
+  }];
+  const preferenceLabels = [{
+    key: "matchingListings",
+    title: "Tin phù hợp với bạn",
+    text: "Lưu tùy chọn nhận thông báo tin đăng phù hợp."
+  }, {
+    key: "brokerMessages",
+    title: "Tin nhắn liên quan",
+    text: "Lưu tùy chọn thông báo khi có trao đổi."
+  }, {
+    key: "statusUpdates",
+    title: "Trạng thái tin và báo cáo",
+    text: "Lưu tùy chọn cập nhật xử lý từ hệ thống."
+  }];
   function fill(user) {
-    form.value = {
+    form.set({
       fullName: user.fullName,
       email: user.email,
       phone: user.phone || "",
       district: user.district || "",
       address: user.address || "",
-      advisorPreferences: {...emptyLifestyle(), ...user.advisorPreferences},
-    };
+      advisorPreferences: {
+        ...emptyLifestyle(),
+        ...user.advisorPreferences
+      }
+    });
   }
   async function load() {
-    loading.value = true;
-    error.value = "";
+    loading.set(true);
+    error.set("");
     try {
       const user = await loadProfile();
       fill(user);
-      loaded.value = true;
+      loaded.set(true);
       await loadPreferences();
     } catch (e) {
-      error.value = errorText(e);
+      error.set(errorText(e));
     } finally {
-      loading.value = false;
+      loading.set(false);
     }
   }
   async function loadPreferences() {
-    prefsError.value = "";
+    prefsError.set("");
     try {
-      prefs.value = await api("/users/me/notification-preferences");
-      preferencesLoaded.value = true;
+      prefs.set(await api("/users/me/notification-preferences"));
+      preferencesLoaded.set(true);
     } catch (e) {
-      preferencesLoaded.value = false;
-      prefsError.value = errorText(e);
+      preferencesLoaded.set(false);
+      prefsError.set(errorText(e));
     }
   }
   async function saveProfile() {
-    if (busy.value || !loaded.value) return;
-    busy.value = true;
-    message.value = error.value = "";
+    if (busy.getSnapshot() || !loaded.getSnapshot()) return;
+    busy.set(true);
+    message.set(error.set(""));
     try {
-      const { email, ...body } = form.value;
+      const {
+        email,
+        ...body
+      } = form.getSnapshot();
       const user = await api("/users/me", {
         method: "PATCH",
-        body,
+        body
       });
-      session.user = user;
+      session.edit(draftValue => draftValue["user"] = user);
       fill(user);
-      message.value = "Thông tin cá nhân đã được cập nhật.";
+      message.set("Thông tin cá nhân đã được cập nhật.");
     } catch (e) {
-      error.value = errorText(e);
+      error.set(errorText(e));
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   function resetProfile() {
-    if (session.user) fill(session.user);
-    message.value = error.value = "";
+    if (session.getSnapshot().user) fill(session.getSnapshot().user);
+    message.set(error.set(""));
   }
   async function savePreferences() {
-    if (busy.value || !preferencesLoaded.value) return;
-    busy.value = true;
-    prefsError.value = "";
-    message.value = "";
+    if (busy.getSnapshot() || !preferencesLoaded.getSnapshot()) return;
+    busy.set(true);
+    prefsError.set("");
+    message.set("");
     try {
       await api("/users/me/notification-preferences", {
         method: "PATCH",
-        body: prefs.value,
+        body: prefs.getSnapshot()
       });
-      message.value = "Đã lưu tùy chọn thông báo.";
+      message.set("Đã lưu tùy chọn thông báo.");
     } catch (e) {
-      prefsError.value = errorText(e);
+      prefsError.set(errorText(e));
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   async function changePassword() {
-    if (busy.value) return;
-    message.value = error.value = "";
-    if (newPassword.value !== confirmPassword.value) {
-      error.value = "Mật khẩu xác nhận không khớp.";
+    if (busy.getSnapshot()) return;
+    message.set(error.set(""));
+    if (newPassword.getSnapshot() !== confirmPassword.getSnapshot()) {
+      error.set("Mật khẩu xác nhận không khớp.");
       return;
     }
-    if (new TextEncoder().encode(newPassword.value).length > 72) {
-      error.value =
-        "Mật khẩu tối đa 72 byte UTF-8. Vui lòng dùng mật khẩu ngắn hơn.";
+    if (new TextEncoder().encode(newPassword.getSnapshot()).length > 72) {
+      error.set("Mật khẩu tối đa 72 byte UTF-8. Vui lòng dùng mật khẩu ngắn hơn.");
       return;
     }
-    busy.value = true;
+    busy.set(true);
     try {
       await api("/users/me/password", {
         method: "PUT",
         body: {
-          currentPassword: currentPassword.value,
-          newPassword: newPassword.value,
-        },
+          currentPassword: currentPassword.getSnapshot(),
+          newPassword: newPassword.getSnapshot()
+        }
       });
-      currentPassword.value = newPassword.value = confirmPassword.value = "";
+      currentPassword.set(newPassword.set(confirmPassword.set("")));
       clearSession();
-      await router.replace({
+      await _routerLatest.current.replace({
         path: "/login",
         query: {
-          reason: "password-changed",
-        },
+          reason: "password-changed"
+        }
       });
     } catch (e) {
-      error.value = errorText(e);
+      error.set(errorText(e));
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
   function editProfile() {
     document.getElementById("personal-information")?.scrollIntoView({
-      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
-        : "smooth",
-      block: "start",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      block: "start"
     });
-    nameInput.value?.focus({
-      preventScroll: true,
+    nameInput.getSnapshot()?.focus({
+      preventScroll: true
     });
   }
   async function signOut() {
-    if (busy.value) return;
-    busy.value = true;
+    if (busy.getSnapshot()) return;
+    busy.set(true);
     try {
       await revokeSession();
-      await router.replace("/login");
+      await _routerLatest.current.replace("/login");
     } catch (e) {
-      error.value = errorText(e);
+      error.set(errorText(e));
     } finally {
-      busy.value = false;
+      busy.set(false);
     }
   }
-  onMounted(load);
+  useEffect(() => {
+    const result = load();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
   return {
-    ref,
-    onMounted,
-    computed,
-    useRouter,
-    api,
-    loadProfile,
-    revokeSession,
-    clearSession,
-    session,
-    errorText,
-    BrokerApplicationCard,
-    ValuationHistory,
-    UserAvatar,
-    AvatarEditor,
-    AppIcon,
-    router,
-    form,
-    prefs,
-    securityTab,
-    currentPassword,
-    newPassword,
-    confirmPassword,
-    showPassword,
-    busy,
-    loading,
-    loaded,
-    preferencesLoaded,
-    message,
-    error,
-    prefsError,
-    nameInput,
-    roleLabel,
-    statusLabel,
-    joined,
+    ...inputProps,
+    session: session.getSnapshot(),
+    form: form.getSnapshot(),
+    prefs: prefs.getSnapshot(),
+    securityTab: securityTab.getSnapshot(),
+    currentPassword: currentPassword.getSnapshot(),
+    newPassword: newPassword.getSnapshot(),
+    confirmPassword: confirmPassword.getSnapshot(),
+    showPassword: showPassword.getSnapshot(),
+    busy: busy.getSnapshot(),
+    loading: loading.getSnapshot(),
+    loaded: loaded.getSnapshot(),
+    preferencesLoaded: preferencesLoaded.getSnapshot(),
+    message: message.getSnapshot(),
+    error: error.getSnapshot(),
+    prefsError: prefsError.getSnapshot(),
+    roleLabel: getRoleLabel(),
+    statusLabel: getStatusLabel(),
+    joined: getJoined(),
     tools,
     preferenceLabels,
-    fill,
     load,
     loadPreferences,
     saveProfile,
@@ -305,1001 +276,299 @@ function setup(__props) {
     changePassword,
     editProfile,
     signOut,
+    updateNameInputValue: nameInput.set,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    updateForm: form.edit,
+    updateSecurityTabValue: securityTab.set,
+    updateCurrentPasswordValue: currentPassword.set,
+    updateNewPasswordValue: newPassword.set,
+    updateConfirmPasswordValue: confirmPassword.set,
+    updateShowPasswordValue: showPassword.set,
+    updatePrefs: prefs.edit
   };
 }
 export default React.forwardRef(function AccountView(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <div data-ui-view="AccountView"
-      {...mergeProps({
-        className: "account-page sp-container py-8 sm:py-12",
-        "aria-busy": ctx.loading,
-        "data-sp-c8811dc0": "",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: "page-intro-banner mb-7",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <p
-          {...mergeProps({
-            className: "account-eyebrow",
-            "data-sp-c8811dc0": "",
-          })}
-        >
+  const view = useAccountViewState(props, ref);
+  return <><div data-ui-view="AccountView" aria-busy={view.loading} data-sp-c8811dc0="" {...view.rootAttributes} className={classNames(["account-page sp-container py-8 sm:py-12", view.rootAttributes.className])}>
+      <div className="page-intro-banner mb-7" data-sp-c8811dc0="">
+        <p className="account-eyebrow" data-sp-c8811dc0="">
           {"KHÔNG GIAN CỦA BẠN"}
         </p>
-        <h1
-          {...mergeProps({
-            className: "mt-2 text-3xl font-semibold tracking-tight sm:text-4xl",
-            "data-sp-c8811dc0": "",
-          })}
-        >
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl" data-sp-c8811dc0="">
           {"Hồ sơ cá nhân"}
         </h1>
-        <p
-          {...mergeProps({
-            className: "mt-3 text-[15px] leading-7 text-brand-muted",
-            "data-sp-c8811dc0": "",
-          })}
-        >
+        <p className="mt-3 text-[15px] leading-7 text-brand-muted" data-sp-c8811dc0="">
           {"Quản lý thông tin, bảo mật và những điều bạn quan tâm."}
         </p>
       </div>
-      {ctx.loading ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "account-notice mb-5",
-            "data-sp-c8811dc0": "",
-          })}
-        >
+      {view.loading ? <p role="status" className="account-notice mb-5" data-sp-c8811dc0="">
           {"Đang tải thông tin tài khoản…"}
-        </p>
-      ) : null}
-      {ctx.error ? (
-        <div
-          {...mergeProps({
-            role: "alert",
-            className: "account-notice account-error mb-5",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          {display(ctx.error)}{" "}
-          {!ctx.loaded ? (
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "underline",
-                onClick: ($event) => {
-                  return ctx.load?.($event);
-                },
-                "data-sp-c8811dc0": "",
-              })}
-            >
+        </p> : null}
+      {view.error ? <div role="alert" className="account-notice account-error mb-5" data-sp-c8811dc0="">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.error)}{" "}
+          {!view.loaded ? <button type="button" className="underline" onClick={$event => {
+          return view.load?.($event);
+        }} data-sp-c8811dc0="">
               {"Thử lại"}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-      {ctx.message ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "account-notice account-success mb-5",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          {display(ctx.message)}
-        </p>
-      ) : null}
-      <section
-        {...mergeProps({
-          "data-profile-overview": "",
-          className: "profile-overview account-card mb-6",
-          "aria-labelledby": "profile-name",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            className: "flex min-w-0 flex-wrap items-center gap-6",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <div
-            {...mergeProps({
-              className: "relative",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <UserAvatar
-              {...mergeProps({
-                name: ctx.session.user?.fullName,
-                size: 96,
-                "data-sp-c8811dc0": "",
-              })}
-            />
+            </button> : null}
+        </div> : null}
+      {view.message ? <p role="status" className="account-notice account-success mb-5" data-sp-c8811dc0="">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.message)}
+        </p> : null}
+      <section data-profile-overview="" className="profile-overview account-card mb-6" aria-labelledby="profile-name" data-sp-c8811dc0="">
+        <div className="flex min-w-0 flex-wrap items-center gap-6" data-sp-c8811dc0="">
+          <div className="relative" data-sp-c8811dc0="">
+            <UserAvatar name={view.session.user?.fullName} size={96} data-sp-c8811dc0="" />
           </div>
-          <div
-            {...mergeProps({
-              className: "min-w-0 flex-1",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <p
-              {...mergeProps({
-                className: "account-eyebrow",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+          <div className="min-w-0 flex-1" data-sp-c8811dc0="">
+            <p className="account-eyebrow" data-sp-c8811dc0="">
               {"SMARTPROP · TÀI KHOẢN CÁ NHÂN"}
             </p>
-            <h2
-              {...mergeProps({
-                id: "profile-name",
-                className: "mt-2 break-words text-2xl font-semibold",
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              {display(ctx.session.user?.fullName || "Tài khoản SmartProp")}
+            <h2 id="profile-name" className="mt-2 break-words text-2xl font-semibold" data-sp-c8811dc0="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.user?.fullName || "Tài khoản SmartProp")}
             </h2>
-            <p
-              {...mergeProps({
-                className: "mt-2 break-all text-[15px] text-brand-muted",
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              {display(ctx.session.user?.email)}
+            <p className="mt-2 break-all text-[15px] text-brand-muted" data-sp-c8811dc0="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.user?.email)}
             </p>
-            <div
-              {...mergeProps({
-                className: "mt-4 flex flex-wrap gap-2",
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              <span
-                {...mergeProps({
-                  className: "account-chip",
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                {display(ctx.roleLabel)}
+            <div className="mt-4 flex flex-wrap gap-2" data-sp-c8811dc0="">
+              <span className="account-chip" data-sp-c8811dc0="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.roleLabel)}
               </span>
-              <span
-                {...mergeProps({
-                  className: ["account-chip", ctx.session.user?.status === "ACTIVE"
-                      ? "text-[var(--ui-success-text)]"
-                      : "text-[var(--ui-error-text)]"],
-                  
-                  "data-sp-c8811dc0": "",
-                })}
-              >
+              <span className={classNames(["account-chip", view.session.user?.status === "ACTIVE" ? "text-[var(--ui-success-text)]" : "text-[var(--ui-error-text)]"])} data-sp-c8811dc0="">
                 {"● "}
-                {display(ctx.statusLabel)}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.statusLabel)}
               </span>
             </div>
-            <p
-              {...mergeProps({
-                className: "mt-3 text-[13px] text-brand-muted",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <p className="mt-3 text-[13px] text-brand-muted" data-sp-c8811dc0="">
               {"Tham gia từ "}
-              {display(ctx.joined)}
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.joined)}
             </p>
           </div>
         </div>
-        <div
-          {...mergeProps({
-            className: "profile-actions",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <button
-            {...mergeProps({
-              type: "button",
-              className: "sp-button sp-button-primary",
-              disabled: !ctx.loaded || ctx.busy,
-              onClick: ($event) => {
-                return ctx.editProfile?.($event);
-              },
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <AppIcon
-              {...mergeProps({
-                name: "edit",
-                "data-sp-c8811dc0": "",
-              })}
-            />
+        <div className="profile-actions" data-sp-c8811dc0="">
+          <button type="button" className="sp-button sp-button-primary" disabled={!view.loaded || view.busy} onClick={$event => {
+            return view.editProfile?.($event);
+          }} data-sp-c8811dc0="">
+            <AppIcon name="edit" data-sp-c8811dc0="" />
             {"Chỉnh sửa hồ sơ"}
           </button>
-          <AvatarEditor
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          />
+          <AvatarEditor data-sp-c8811dc0="" />
         </div>
       </section>
-      <section
-        {...mergeProps({
-          id: "personal-information",
-          className: "account-card mb-6",
-          "aria-labelledby": "personal-heading",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            className: "account-section-heading",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <span
-            {...mergeProps({
-              className: "account-section-icon",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <AppIcon
-              {...mergeProps({
-                name: "user",
-                "data-sp-c8811dc0": "",
-              })}
-            />
+      <section id="personal-information" className="account-card mb-6" aria-labelledby="personal-heading" data-sp-c8811dc0="">
+        <div className="account-section-heading" data-sp-c8811dc0="">
+          <span className="account-section-icon" data-sp-c8811dc0="">
+            <AppIcon name="user" data-sp-c8811dc0="" />
           </span>
-          <div
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <h2
-              {...mergeProps({
-                id: "personal-heading",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+          <div data-sp-c8811dc0="">
+            <h2 id="personal-heading" data-sp-c8811dc0="">
               {"Thông tin cá nhân"}
             </h2>
-            <p
-              {...mergeProps({
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <p data-sp-c8811dc0="">
               {"Giữ thông tin liên hệ của bạn luôn chính xác."}
             </p>
           </div>
         </div>
-        <form
-          {...mergeProps({
-            className: "grid gap-5 sm:grid-cols-2",
-            onSubmit: ($event) => {
-              $event.preventDefault();
-              return ctx.saveProfile?.($event);
-            },
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <label
-            {...mergeProps({
-              className: "account-field",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+        <form className="grid gap-5 sm:grid-cols-2" onSubmit={$event => {
+          $event.preventDefault();
+          return view.saveProfile?.($event);
+        }} data-sp-c8811dc0="">
+          <label className="account-field" data-sp-c8811dc0="">
             {"Họ và tên"}
-            <input
-              {...mergeProps(
-                {
-                  ref: bindRef(ctx, "nameInput"),
-                  required: true,
-                  maxLength: "100",
-                  autoComplete: "name",
-                  className: "sp-input",
-                  disabled: !ctx.loaded || ctx.busy,
-                  "data-sp-c8811dc0": "",
-                },
-                modelProps(
-                  ctx.form.fullName,
-                  ($value) => {
-                    ctx.form.fullName = $value;
-                  },
-                  {
-                    kind: "text",
-                    value: "on",
-                    number: false,
-                    multiple: false,
-                  },
-                ),
-              )}
-            />
+            <input ref={view.updateNameInputValue} required={true} maxLength="100" autoComplete="name" className="sp-input" disabled={!view.loaded || view.busy} data-sp-c8811dc0="" value={view.form.fullName ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.fullName = $value);
+            })(event.target.value)} />
           </label>
-          <label
-            {...mergeProps({
-              className: "account-field",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+          <label className="account-field" data-sp-c8811dc0="">
             {"Email"}
-            <input
-              {...mergeProps(
-                {
-                  type: "email",
-                  readOnly: true,
-                  autoComplete: "email",
-                  className: "sp-input bg-brand-surface",
-                  "data-sp-c8811dc0": "",
-                },
-                modelProps(
-                  ctx.form.email,
-                  ($value) => {
-                    ctx.form.email = $value;
-                  },
-                  {
-                    kind: "email",
-                    value: "on",
-                    number: false,
-                    multiple: false,
-                  },
-                ),
-              )}
-            />
-            <small
-              {...mergeProps({
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <input type="email" readOnly={true} autoComplete="email" className="sp-input bg-brand-surface" data-sp-c8811dc0="" value={view.form.email ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.email = $value);
+            })(event.target.value)} />
+            <small data-sp-c8811dc0="">
               {"Email dùng để đăng nhập và xác thực tài khoản."}
             </small>
           </label>
-          <label
-            {...mergeProps({
-              className: "account-field",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+          <label className="account-field" data-sp-c8811dc0="">
             {"Số điện thoại"}
-            <input
-              {...mergeProps(
-                {
-                  type: "tel",
-                  maxLength: "30",
-                  autoComplete: "tel",
-                  className: "sp-input",
-                  disabled: !ctx.loaded || ctx.busy,
-                  "data-sp-c8811dc0": "",
-                },
-                modelProps(
-                  ctx.form.phone,
-                  ($value) => {
-                    ctx.form.phone = $value;
-                  },
-                  {
-                    kind: "tel",
-                    value: "on",
-                    number: false,
-                    multiple: false,
-                  },
-                ),
-              )}
-            />
+            <input type="tel" maxLength="30" autoComplete="tel" className="sp-input" disabled={!view.loaded || view.busy} data-sp-c8811dc0="" value={view.form.phone ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.phone = $value);
+            })(event.target.value)} />
           </label>
-          <label
-            {...mergeProps({
-              className: "account-field",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+          <label className="account-field" data-sp-c8811dc0="">
             {"Khu vực quan tâm"}
-            <input
-              {...mergeProps(
-                {
-                  maxLength: "100",
-                  className: "sp-input",
-                  disabled: !ctx.loaded || ctx.busy,
-                  placeholder: "Ví dụ: Hải Châu, Đà Nẵng",
-                  "data-sp-c8811dc0": "",
-                },
-                modelProps(
-                  ctx.form.district,
-                  ($value) => {
-                    ctx.form.district = $value;
-                  },
-                  {
-                    kind: "text",
-                    value: "on",
-                    number: false,
-                    multiple: false,
-                  },
-                ),
-              )}
-            />
+            <input maxLength="100" className="sp-input" disabled={!view.loaded || view.busy} placeholder="Ví dụ: Hải Châu, Đà Nẵng" data-sp-c8811dc0="" value={view.form.district ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.district = $value);
+            })(event.target.value)} />
           </label>
-          <label
-            {...mergeProps({
-              className: "account-field sm:col-span-2",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+          <label className="account-field sm:col-span-2" data-sp-c8811dc0="">
             {"Địa chỉ liên hệ"}
-            <input
-              {...mergeProps(
-                {
-                  maxLength: "255",
-                  autoComplete: "street-address",
-                  className: "sp-input",
-                  disabled: !ctx.loaded || ctx.busy,
-                  "data-sp-c8811dc0": "",
-                },
-                modelProps(
-                  ctx.form.address,
-                  ($value) => {
-                    ctx.form.address = $value;
-                  },
-                  {
-                    kind: "text",
-                    value: "on",
-                    number: false,
-                    multiple: false,
-                  },
-                ),
-              )}
-            />
+            <input maxLength="255" autoComplete="street-address" className="sp-input" disabled={!view.loaded || view.busy} data-sp-c8811dc0="" value={view.form.address ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.address = $value);
+            })(event.target.value)} />
           </label>
-          <LifestyleFields value={ctx.form.advisorPreferences} disabled={!ctx.loaded || ctx.busy} onChange={value => {ctx.form.advisorPreferences=value}} />
-          <div
-            {...mergeProps({
-              className: "flex flex-wrap gap-3 sm:col-span-2",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <button
-              {...mergeProps({
-                className: "sp-button sp-button-primary",
-                disabled: !ctx.loaded || ctx.busy,
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              {display(ctx.busy ? "Đang lưu…" : "Lưu thay đổi")}
+          <LifestyleFields value={view.form.advisorPreferences} disabled={!view.loaded || view.busy} onChange={value => {
+            view.updateForm(draftValue => draftValue.advisorPreferences = value);
+          }} />
+          <div className="flex flex-wrap gap-3 sm:col-span-2" data-sp-c8811dc0="">
+            <button className="sp-button sp-button-primary" disabled={!view.loaded || view.busy} data-sp-c8811dc0="">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.busy ? "Đang lưu…" : "Lưu thay đổi")}
             </button>
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "sp-button sp-button-secondary",
-                disabled: ctx.busy,
-                onClick: ($event) => {
-                  return ctx.resetProfile?.($event);
-                },
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <button type="button" className="sp-button sp-button-secondary" disabled={view.busy} onClick={$event => {
+              return view.resetProfile?.($event);
+            }} data-sp-c8811dc0="">
               {"Hủy thay đổi"}
             </button>
           </div>
         </form>
       </section>
-      <section
-        {...mergeProps({
-          id: "security-settings",
-          className: "account-card mb-6",
-          "aria-labelledby": "security-heading",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            className: "account-section-heading",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <span
-            {...mergeProps({
-              className: "account-section-icon",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <AppIcon
-              {...mergeProps({
-                name: "shield",
-                "data-sp-c8811dc0": "",
-              })}
-            />
+      <section id="security-settings" className="account-card mb-6" aria-labelledby="security-heading" data-sp-c8811dc0="">
+        <div className="account-section-heading" data-sp-c8811dc0="">
+          <span className="account-section-icon" data-sp-c8811dc0="">
+            <AppIcon name="shield" data-sp-c8811dc0="" />
           </span>
-          <div
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <h2
-              {...mergeProps({
-                id: "security-heading",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+          <div data-sp-c8811dc0="">
+            <h2 id="security-heading" data-sp-c8811dc0="">
               {"Bảo mật & cài đặt"}
             </h2>
-            <p
-              {...mergeProps({
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <p data-sp-c8811dc0="">
               {"Chủ động bảo vệ tài khoản và quản lý cách nhận thông tin."}
             </p>
           </div>
         </div>
-        <div
-          {...mergeProps({
-            className: "account-tabs mb-6",
-            role: "group",
-            "aria-label": "Cài đặt tài khoản",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          {renderList(
-            [
-              {
-                id: "password",
-                label: "Mật khẩu",
-              },
-              {
-                id: "notifications",
-                label: "Thông báo",
-              },
-            ],
-            (tab) => (
-              <button
-                key={tab.id}
-                {...mergeProps({
-                  type: "button",
-                  "aria-pressed": ctx.securityTab === tab.id,
-                  onClick: ($event) => {
-                    ctx.securityTab = tab.id;
-                  },
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                {display(tab.label)}
-              </button>
-            ),
-          )}
-          <RouterLink
-            {...mergeProps({
-              to: "/account/sessions",
-              "data-sp-c8811dc0": "",
-            })}
-          >
+        <div className="account-tabs mb-6" role="group" aria-label="Cài đặt tài khoản" data-sp-c8811dc0="">
+          {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))([{
+            id: "password",
+            label: "Mật khẩu"
+          }, {
+            id: "notifications",
+            label: "Thông báo"
+          }], tab => <button key={tab.id} type="button" aria-pressed={view.securityTab === tab.id} onClick={$event => {
+            view.updateSecurityTabValue(tab.id);
+          }} data-sp-c8811dc0="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(tab.label)}
+              </button>)}
+          <SiteLink to="/account/sessions" data-sp-c8811dc0="">
             {"Phiên đăng nhập ↗"}
-          </RouterLink>
+          </SiteLink>
         </div>
-        {ctx.securityTab === "password" ? (
-          <form
-            {...mergeProps({
-              className: "grid gap-5 sm:grid-cols-2",
-              onSubmit: ($event) => {
-                $event.preventDefault();
-                return ctx.changePassword?.($event);
-              },
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <label
-              {...mergeProps({
-                className: "account-field sm:col-span-2",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+        {view.securityTab === "password" ? <form className="grid gap-5 sm:grid-cols-2" onSubmit={$event => {
+          $event.preventDefault();
+          return view.changePassword?.($event);
+        }} data-sp-c8811dc0="">
+            <label className="account-field sm:col-span-2" data-sp-c8811dc0="">
               {"Mật khẩu hiện tại"}
-              <input
-                {...mergeProps(
-                  {
-                    type: ctx.showPassword ? "text" : "password",
-                    required: true,
-                    maxLength: "72",
-                    autoComplete: "current-password",
-                    className: "sp-input",
-                    "data-sp-c8811dc0": "",
-                  },
-                  modelProps(
-                    ctx.currentPassword,
-                    ($value) => {
-                      ctx.currentPassword = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              />
+              <input type={view.showPassword ? "text" : "password"} required={true} maxLength="72" autoComplete="current-password" className="sp-input" data-sp-c8811dc0="" value={view.currentPassword ?? ""} onChange={event => ($value => {
+              view.updateCurrentPasswordValue($value);
+            })(event.target.value)} />
             </label>
-            <label
-              {...mergeProps({
-                className: "account-field",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <label className="account-field" data-sp-c8811dc0="">
               {"Mật khẩu mới"}
-              <input
-                {...mergeProps(
-                  {
-                    type: ctx.showPassword ? "text" : "password",
-                    required: true,
-                    minLength: "8",
-                    maxLength: "72",
-                    autoComplete: "new-password",
-                    className: "sp-input",
-                    "data-sp-c8811dc0": "",
-                  },
-                  modelProps(
-                    ctx.newPassword,
-                    ($value) => {
-                      ctx.newPassword = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              />
-              <small
-                {...mergeProps({
-                  "data-sp-c8811dc0": "",
-                })}
-              >
+              <input type={view.showPassword ? "text" : "password"} required={true} minLength="8" maxLength="72" autoComplete="new-password" className="sp-input" data-sp-c8811dc0="" value={view.newPassword ?? ""} onChange={event => ($value => {
+              view.updateNewPasswordValue($value);
+            })(event.target.value)} />
+              <small data-sp-c8811dc0="">
                 {"Từ 8 ký tự, tối đa 72 byte UTF-8."}
               </small>
             </label>
-            <label
-              {...mergeProps({
-                className: "account-field",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <label className="account-field" data-sp-c8811dc0="">
               {"Xác nhận mật khẩu mới"}
-              <input
-                {...mergeProps(
-                  {
-                    type: ctx.showPassword ? "text" : "password",
-                    required: true,
-                    minLength: "8",
-                    maxLength: "72",
-                    autoComplete: "new-password",
-                    className: "sp-input",
-                    "data-sp-c8811dc0": "",
-                  },
-                  modelProps(
-                    ctx.confirmPassword,
-                    ($value) => {
-                      ctx.confirmPassword = $value;
-                    },
-                    {
-                      kind: "text",
-                      value: "on",
-                      number: false,
-                      multiple: false,
-                    },
-                  ),
-                )}
-              />
+              <input type={view.showPassword ? "text" : "password"} required={true} minLength="8" maxLength="72" autoComplete="new-password" className="sp-input" data-sp-c8811dc0="" value={view.confirmPassword ?? ""} onChange={event => ($value => {
+              view.updateConfirmPasswordValue($value);
+            })(event.target.value)} />
             </label>
-            <div
-              {...mergeProps({
-                className:
-                  "flex flex-wrap items-center justify-between gap-4 sm:col-span-2",
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              <button
-                {...mergeProps({
-                  type: "button",
-                  className: "text-sm font-medium underline",
-                  "aria-pressed": ctx.showPassword,
-                  onClick: ($event) => {
-                    ctx.showPassword = !ctx.showPassword;
-                  },
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                {display(ctx.showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu")}
+            <div className="flex flex-wrap items-center justify-between gap-4 sm:col-span-2" data-sp-c8811dc0="">
+              <button type="button" className="text-sm font-medium underline" aria-pressed={view.showPassword} onClick={$event => {
+              view.updateShowPasswordValue(!view.showPassword);
+            }} data-sp-c8811dc0="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu")}
               </button>
-              <button
-                {...mergeProps({
-                  className: "sp-button sp-button-primary",
-                  disabled: ctx.busy || !ctx.loaded,
-                  "data-sp-c8811dc0": "",
-                })}
-              >
+              <button className="sp-button sp-button-primary" disabled={view.busy || !view.loaded} data-sp-c8811dc0="">
                 {"Đổi mật khẩu"}
               </button>
             </div>
-          </form>
-        ) : (
-          <div
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            {ctx.prefsError ? (
-              <div
-                {...mergeProps({
-                  role: "alert",
-                  className: "account-notice account-error mb-4",
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                {display(ctx.prefsError)}{" "}
-                <button
-                  {...mergeProps({
-                    type: "button",
-                    className: "underline",
-                    onClick: ($event) => {
-                      return ctx.loadPreferences?.($event);
-                    },
-                    "data-sp-c8811dc0": "",
-                  })}
-                >
+          </form> : <div data-sp-c8811dc0="">
+            {view.prefsError ? <div role="alert" className="account-notice account-error mb-4" data-sp-c8811dc0="">
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.prefsError)}{" "}
+                <button type="button" className="underline" onClick={$event => {
+              return view.loadPreferences?.($event);
+            }} data-sp-c8811dc0="">
                   {"Thử lại"}
                 </button>
-              </div>
-            ) : null}
-            {renderList(ctx.preferenceLabels, (item) => (
-              <label
-                key={item.key}
-                {...mergeProps({
-                  className:
-                    "flex cursor-pointer items-center justify-between gap-6 border-b border-brand-line py-4",
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                <span
-                  {...mergeProps({
-                    "data-sp-c8811dc0": "",
-                  })}
-                >
-                  <strong
-                    {...mergeProps({
-                      className: "block text-[15px] font-semibold",
-                      "data-sp-c8811dc0": "",
-                    })}
-                  >
-                    {display(item.title)}
+              </div> : null}
+            {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.preferenceLabels, item => <label key={item.key} className="flex cursor-pointer items-center justify-between gap-6 border-b border-brand-line py-4" data-sp-c8811dc0="">
+                <span data-sp-c8811dc0="">
+                  <strong className="block text-[15px] font-semibold" data-sp-c8811dc0="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.title)}
                   </strong>
-                  <span
-                    {...mergeProps({
-                      className:
-                        "mt-1 block text-sm leading-6 text-brand-muted",
-                      "data-sp-c8811dc0": "",
-                    })}
-                  >
-                    {display(item.text)}
+                  <span className="mt-1 block text-sm leading-6 text-brand-muted" data-sp-c8811dc0="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.text)}
                   </span>
                 </span>
-                <input
-                  {...mergeProps(
-                    {
-                      type: "checkbox",
-                      className: "size-5 shrink-0 accent-brand-navy",
-                      disabled: !ctx.preferencesLoaded || ctx.busy,
-                      "data-sp-c8811dc0": "",
-                    },
-                    modelProps(
-                      ctx.prefs[item.key],
-                      ($value) => {
-                        ctx.prefs[item.key] = $value;
-                      },
-                      {
-                        kind: "checkbox",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                />
-              </label>
-            ))}
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "sp-button sp-button-primary mt-5",
-                disabled: !ctx.preferencesLoaded || ctx.busy,
-                onClick: ($event) => {
-                  return ctx.savePreferences?.($event);
-                },
-                "data-sp-c8811dc0": "",
-              })}
-            >
+                <input type="checkbox" className="size-5 shrink-0 accent-brand-navy" disabled={!view.preferencesLoaded || view.busy} data-sp-c8811dc0="" checked={Array.isArray(view.prefs[item.key]) ? view.prefs[item.key].includes("on") : !!view.prefs[item.key]} onChange={event => ($value => {
+              view.updatePrefs(draftValue => draftValue[item.key] = $value);
+            })(Array.isArray(view.prefs[item.key]) ? event.target.checked ? [...view.prefs[item.key], "on"] : view.prefs[item.key].filter(item => item !== "on") : event.target.checked)} />
+              </label>)}
+            <button type="button" className="sp-button sp-button-primary mt-5" disabled={!view.preferencesLoaded || view.busy} onClick={$event => {
+            return view.savePreferences?.($event);
+          }} data-sp-c8811dc0="">
               {"Lưu tùy chọn"}
             </button>
-          </div>
-        )}
-        <div
-          {...mergeProps({
-            className:
-              "mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-brand-line pt-5 text-sm",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <span
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            {display(
-              ctx.session.user?.emailVerifiedAt
-                ? "Email của bạn đã được xác minh."
-                : "Hoàn tất xác minh để bảo vệ tài khoản.",
-            )}
+          </div>}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-brand-line pt-5 text-sm" data-sp-c8811dc0="">
+          <span data-sp-c8811dc0="">
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.user?.emailVerifiedAt ? "Email của bạn đã được xác minh." : "Hoàn tất xác minh để bảo vệ tài khoản.")}
           </span>
-          {!ctx.session.user?.emailVerifiedAt ? (
-            <RouterLink
-              {...mergeProps({
-                to: "/account/verify-email",
-                className: "font-semibold underline",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+          {!view.session.user?.emailVerifiedAt ? <SiteLink to="/account/verify-email" className="font-semibold underline" data-sp-c8811dc0="">
               {"Xác minh email ↗"}
-            </RouterLink>
-          ) : null}
+            </SiteLink> : null}
         </div>
       </section>
-      <section
-        {...mergeProps({
-          id: "property-management",
-          className: "mb-6",
-          "aria-label": "Quản lý bất động sản",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <BrokerApplicationCard
-          {...mergeProps({
-            "data-sp-c8811dc0": "",
-          })}
-        />
+      <section id="property-management" className="mb-6" aria-label="Quản lý bất động sản" data-sp-c8811dc0="">
+        <BrokerApplicationCard data-sp-c8811dc0="" />
       </section>
-      <section
-        {...mergeProps({
-          id: "valuation-history",
-          className: "mb-6",
-          "aria-label": "Lịch sử định giá",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <ValuationHistory
-          {...mergeProps({
-            "data-sp-c8811dc0": "",
-          })}
-        />
+      <section id="valuation-history" className="mb-6" aria-label="Lịch sử định giá" data-sp-c8811dc0="">
+        <ValuationHistory data-sp-c8811dc0="" />
       </section>
-      <section
-        {...mergeProps({
-          id: "account-tools",
-          className: "account-card",
-          "aria-labelledby": "account-tools-heading",
-          "data-sp-c8811dc0": "",
-        })}
-      >
-        <div
-          {...mergeProps({
-            className: "account-section-heading",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <span
-            {...mergeProps({
-              className: "account-section-icon",
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <AppIcon
-              {...mergeProps({
-                name: "briefcase",
-                "data-sp-c8811dc0": "",
-              })}
-            />
+      <section id="account-tools" className="account-card" aria-labelledby="account-tools-heading" data-sp-c8811dc0="">
+        <div className="account-section-heading" data-sp-c8811dc0="">
+          <span className="account-section-icon" data-sp-c8811dc0="">
+            <AppIcon name="briefcase" data-sp-c8811dc0="" />
           </span>
-          <div
-            {...mergeProps({
-              "data-sp-c8811dc0": "",
-            })}
-          >
-            <h2
-              {...mergeProps({
-                id: "account-tools-heading",
-                "data-sp-c8811dc0": "",
-              })}
-            >
+          <div data-sp-c8811dc0="">
+            <h2 id="account-tools-heading" data-sp-c8811dc0="">
               {"Tiện ích của bạn"}
             </h2>
-            <p
-              {...mergeProps({
-                "data-sp-c8811dc0": "",
-              })}
-            >
+            <p data-sp-c8811dc0="">
               {"Tiếp tục từ những nội dung và trao đổi đã lưu."}
             </p>
           </div>
         </div>
-        <div
-          {...mergeProps({
-            className: "grid gap-3 sm:grid-cols-2",
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          {renderList(ctx.tools, (tool) => (
-            <RouterLink
-              key={tool.to}
-              {...mergeProps({
-                to: tool.to,
-                className: "account-tool",
-                "data-sp-c8811dc0": "",
-              })}
-            >
-              <AppIcon
-                {...mergeProps({
-                  name: tool.icon,
-                  "data-sp-c8811dc0": "",
-                })}
-              />
-              <span
-                {...mergeProps({
-                  className: "min-w-0 flex-1",
-                  "data-sp-c8811dc0": "",
-                })}
-              >
-                <strong
-                  {...mergeProps({
-                    "data-sp-c8811dc0": "",
-                  })}
-                >
-                  {display(tool.title)}
+        <div className="grid gap-3 sm:grid-cols-2" data-sp-c8811dc0="">
+          {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.tools, tool => <SiteLink key={tool.to} to={tool.to} className="account-tool" data-sp-c8811dc0="">
+              <AppIcon name={tool.icon} data-sp-c8811dc0="" />
+              <span className="min-w-0 flex-1" data-sp-c8811dc0="">
+                <strong data-sp-c8811dc0="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(tool.title)}
                 </strong>
-                <small
-                  {...mergeProps({
-                    "data-sp-c8811dc0": "",
-                  })}
-                >
-                  {display(tool.text)}
+                <small data-sp-c8811dc0="">
+                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(tool.text)}
                 </small>
               </span>
-              <AppIcon
-                {...mergeProps({
-                  name: "arrow",
-                  "data-sp-c8811dc0": "",
-                })}
-              />
-            </RouterLink>
-          ))}
+              <AppIcon name="arrow" data-sp-c8811dc0="" />
+            </SiteLink>)}
         </div>
-        <button
-          {...mergeProps({
-            type: "button",
-            className:
-              "mt-6 inline-flex items-center gap-2 text-sm font-medium text-brand-muted underline",
-            disabled: ctx.busy,
-            onClick: ($event) => {
-              return ctx.signOut?.($event);
-            },
-            "data-sp-c8811dc0": "",
-          })}
-        >
-          <AppIcon
-            {...mergeProps({
-              name: "logout",
-              "data-sp-c8811dc0": "",
-            })}
-          />
+        <button type="button" className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-brand-muted underline" disabled={view.busy} onClick={$event => {
+          return view.signOut?.($event);
+        }} data-sp-c8811dc0="">
+          <AppIcon name="logout" data-sp-c8811dc0="" />
           {"Đăng xuất tài khoản"}
         </button>
       </section>
-    </div>,
-  ]);
+    </div></>;
 });
