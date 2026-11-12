@@ -38,6 +38,7 @@ import {
   normalizeShapFactors,
   v13AssumptionNotes,
 } from "./valuationPresentation.js";
+import { normalizeQuickAddress, parseQuickAddress } from "./quickAddress.js";
 import "./ValuationPanel.css";
 function setup(__props) {
   const props = propsForSetup(__props, {
@@ -67,6 +68,8 @@ function setup(__props) {
   const selectedModel = ref("v1_3");
   const modelTouched = ref(false);
   const modelNotice = ref("");
+  const quickAddressInput = ref("");
+  const quickAddressFeedback = ref("");
   const form = reactive({});
   let optionsController;
   let predictionController;
@@ -84,6 +87,31 @@ function setup(__props) {
   );
   const displayLocation = (value) =>
     locationLabel(value, options.value?.location_labels);
+  function applyQuickAddress() {
+    const text = String(quickAddressInput.value ?? "").trim();
+    if (!text) {
+      quickAddressFeedback.value = "Nhập địa chỉ trước khi điền nhanh.";
+      return;
+    }
+    const parsed = parseQuickAddress(text);
+    if (!parsed?.district) {
+      quickAddressFeedback.value =
+        "Chưa nhận diện được quận/huyện. Vui lòng chọn Địa bàn thủ công.";
+      return;
+    }
+    const target = normalizeQuickAddress(parsed.district);
+    const matched = locations.value.find((location) => {
+      const label = normalizeQuickAddress(displayLocation(location));
+      return label === target || label.includes(target) || normalizeQuickAddress(location) === target;
+    });
+    if (!matched) {
+      quickAddressFeedback.value = `Đã nhận diện ${parsed.district} nhưng địa bàn chưa được hỗ trợ cho loại BĐS này. Vui lòng chọn thủ công.`;
+      return;
+    }
+    form.location_feature = matched;
+    if (parsed.ward) form.ward = parsed.ward;
+    quickAddressFeedback.value = `Đã điền: ${displayLocation(matched)}${parsed.ward ? ` · Phường ${parsed.ward}` : ""}. Vui lòng kiểm tra lại trước khi ước tính.`;
+  }
   const isHouse = computed(() => form.category === "Nhà ở");
   const isApartment = computed(() => form.category === "Căn hộ chung cư");
   const hasRooms = computed(() => form.category !== "Đất nền");
@@ -420,6 +448,9 @@ function setup(__props) {
     activeModelLabel,
     selectModel,
     previewV13,
+    quickAddressInput,
+    quickAddressFeedback,
+    applyQuickAddress,
     form,
     optionsController,
     predictionController,
@@ -588,6 +619,50 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                   ? "V1.3 là mặc định cho loại BĐS được hỗ trợ; V6 luôn có thể chọn."
                   : "V1.3 không khả dụng; V6 đang được dùng làm phương án dự phòng.")}
             </p>
+          </div>
+          <div
+            className="mb-5 rounded-2xl border border-brand-line/30 bg-[var(--ui-surface)] p-4"
+            data-testid="valuation-quick-address"
+          >
+            <label className="block text-sm font-medium" htmlFor="valuation-quick-address-input">
+              {"Điền nhanh từ địa chỉ"}
+            </label>
+            <p className="mt-1 text-xs text-brand-navy/60">
+              {"Nhập số nhà, đường, phường/quận để điền Địa bàn và Phường/xã. Không lấy vị trí thiết bị và không tạo tọa độ."}
+            </p>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input
+                {...mergeProps(
+                  {
+                    id: "valuation-quick-address-input",
+                    type: "text",
+                    className: "valuation-input flex-1",
+                    placeholder: "Ví dụ: 120 Bạch Đằng, Phường Hải Châu 1, Quận Hải Châu",
+                    "data-testid": "valuation-quick-address-input",
+                  },
+                  modelProps(
+                    ctx.quickAddressInput,
+                    ($value) => {
+                      ctx.quickAddressInput = $value;
+                    },
+                    { kind: "text", value: "on", number: false, multiple: false },
+                  ),
+                )}
+              />
+              <button
+                type="button"
+                className="rounded-full border border-brand-line/40 px-4 py-2 text-sm"
+                data-testid="valuation-quick-address-apply"
+                onClick={() => ctx.applyQuickAddress()}
+              >
+                {"Điền địa bàn"}
+              </button>
+            </div>
+            {ctx.quickAddressFeedback ? (
+              <p className="mt-2 text-xs text-brand-navy/75" role="status" data-testid="valuation-quick-address-feedback">
+                {display(ctx.quickAddressFeedback)}
+              </p>
+            ) : null}
           </div>
           <div
             {...mergeProps({

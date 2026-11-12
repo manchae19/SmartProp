@@ -51,6 +51,25 @@ async function fillValuation(page) {
   return labels
 }
 
+async function quickAddress(browser) {
+  const page = await browser.newPage({ viewport: { width: 1366, height: 900 } })
+  const errors = []
+  page.on('pageerror', (e) => errors.push('pageerror:' + e.message))
+  await page.goto(BASE + '/valuation', { waitUntil: 'networkidle' })
+  await page.waitForTimeout(1200)
+  const input = page.locator('[data-testid="valuation-quick-address-input"]')
+  pass(await input.count() === 1, 'LIVE valuation quick-address input is present')
+  await input.fill('120 Bạch Đằng, Phường Hải Châu 1, Quận Hải Châu')
+  await page.locator('[data-testid="valuation-quick-address-apply"]').click()
+  await page.waitForTimeout(500)
+  const feedback = await page.locator('[data-testid="valuation-quick-address-feedback"]').innerText()
+  pass(feedback.includes('Hải Châu'), 'LIVE quick-address fills district/ward', feedback)
+  pass((await page.locator('select').nth(1).inputValue()) === 'Hải Châu', 'LIVE quick-address selects Hải Châu')
+  pass((await page.getByLabel(/Phường\/xã/).inputValue()) === 'Hải Châu 1', 'LIVE quick-address fills legacy ward')
+  pass(errors.length === 0, 'LIVE quick-address has no page errors', errors.slice(0, 2).join(' | '))
+  await page.close()
+}
+
 async function desktop(browser) {
   const page = await browser.newPage({ viewport: { width: 1366, height: 900 } })
   const errors = []
@@ -107,6 +126,7 @@ async function mobile(browser) {
 
 const browser = await launch()
 try {
+  await quickAddress(browser)
   await desktop(browser)
   await mobile(browser)
 } finally {

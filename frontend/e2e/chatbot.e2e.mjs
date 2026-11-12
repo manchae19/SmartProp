@@ -120,9 +120,14 @@ async function testGuidedLive() {
   await page.waitForTimeout(12000)
   pass((await page.locator('[data-chat-property]').count()) > 0, 'LIVE multi-turn returns a referenced card')
   pass((await page.locator('[data-chat-pois]').count()) > 0, 'LIVE multi-turn keeps POI evidence')
-  // Edit needs resets and starts guided intake.
+  // Wait until the follow-up response releases the edit-needs action.
+  await page.waitForFunction(() => {
+    const button = document.querySelector('[data-chat-edit-needs]')
+    return Boolean(button && !button.disabled)
+  }, null, { timeout: 30000 }).catch(() => {})
   await page.evaluate(() => document.querySelector('[data-chat-edit-needs]')?.click())
-  await page.waitForTimeout(1800)
+  await page.waitForSelector('.chat-quick-replies button', { timeout: 15000 }).catch(() => {})
+  await page.waitForTimeout(2500)
   const quick = await page.locator('.chat-quick-replies button').allInnerTexts()
   pass(quick.some((value) => value.includes('Mua để ở')), 'LIVE edit-needs resets to guided purpose')
   await page.close()
