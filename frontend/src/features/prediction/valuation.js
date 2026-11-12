@@ -37,7 +37,9 @@ function reviewedLocation(value, labels) {
 export const featureLabels = {
   area_sqm: 'Diện tích', location_feature: 'Địa bàn', ward_source: 'Phường/xã theo tin',
   rooms: 'Phòng ngủ', floors: 'Số tầng nhà', access_type: 'Lối vào',
-  house_subtype: 'Loại nhà chi tiết',
+  house_subtype: 'Loại nhà chi tiết', road_width: 'Độ rộng đường/hẻm',
+  frontage_width: 'Bề ngang mặt tiền', street_name: 'Tên tuyến đường',
+  project_name: 'Dự án bất động sản', bathroom_count: 'Số phòng tắm',
 }
 
 export class ValuationError extends Error {}
@@ -54,7 +56,19 @@ function numeric(value, label, min, max, integer = false) {
   return number
 }
 
-export function buildValuationPayload(form, options) {
+function optionalText(value, label, max) {
+  const text = String(value ?? '').trim()
+  if (!text) return undefined
+  if (text.length > max) throw new ValuationError(`${label} tối đa ${max} ký tự.`)
+  return text
+}
+
+function optionalMeasurement(value, label, min, max) {
+  if (isBlank(value)) return undefined
+  return numeric(value, label, min, max)
+}
+
+export function buildValuationPayload(form, options, allowOptional = true) {
   const category = options.categories.find((item) => item.category === form.category)
   if (!category || !API_CATEGORIES.includes(form.category)) throw new ValuationError('Vui lòng chọn loại bất động sản.')
   if (!category.locations.includes(form.location_feature)) throw new ValuationError('Vui lòng chọn địa bàn được hỗ trợ cho loại bất động sản này.')
@@ -80,6 +94,30 @@ export function buildValuationPayload(form, options) {
   if (form.category !== 'Căn hộ chung cư' && form.access_type) {
     if (!['alley', 'frontage'].includes(form.access_type)) throw new ValuationError('Lối vào không hợp lệ.')
     payload.access_type = form.access_type
+  }
+  if (allowOptional) {
+    const roadWidth = optionalMeasurement(form.road_width_m, 'Chiều rộng đường/hẻm (m)', 0.1, 100)
+    const frontageWidth = optionalMeasurement(form.frontage_width_m, 'Bề ngang mặt tiền (m)', 0.1, 500)
+    if (form.category === 'Căn hộ chung cư' && (roadWidth !== undefined || frontageWidth !== undefined)) {
+      throw new ValuationError('Chiều rộng đường/mặt tiền không áp dụng cho căn hộ.')
+    }
+    if (roadWidth !== undefined) payload.road_width_m = roadWidth
+    if (frontageWidth !== undefined) payload.frontage_width_m = frontageWidth
+    const street = optionalText(form.street_name, 'Tên đường', 200)
+    const project = optionalText(form.project_name, 'Tên dự án', 200)
+    if (street) payload.street_name = street
+    if (project) payload.project_name = project
+    if (form.category !== 'Đất nền') {
+      const bathrooms = optionalMeasurement(form.bathrooms, 'Số phòng tắm', 1, 30)
+      if (bathrooms !== undefined) {
+        if (!Number.isInteger(bathrooms)) throw new ValuationError('Số phòng tắm phải là số nguyên từ 1 đến 30.')
+        payload.bathrooms = bathrooms
+      }
+    }
+    const houseDirection = optionalText(form.house_direction, 'Hướng nhà', 50)
+    const balconyDirection = optionalText(form.balcony_direction, 'Hướng ban công', 50)
+    if (houseDirection) payload.house_direction = houseDirection
+    if (balconyDirection) payload.balcony_direction = balconyDirection
   }
   return payload
 }

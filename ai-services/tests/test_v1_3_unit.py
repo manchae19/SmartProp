@@ -1,5 +1,7 @@
 """Unit tests for XGBoost V1.3 components (Schema, Features, Calibration, Limits)."""
+import os
 import unittest
+from unittest.mock import patch
 
 from app.models.xgboost.features_v1_3 import (
     clean_category,
@@ -93,6 +95,49 @@ class TestV1_3Unit(unittest.TestCase):
             self.predictor.predict({"area": 2.0, "normalized_type": "LAND", "district": "Cẩm Lệ"})
         with self.assertRaises(ValueError):
             self.predictor.predict({"area": 60_000.0, "normalized_type": "LAND", "district": "Cẩm Lệ"})
+
+    def test_real_mode_never_creates_dimensions(self):
+        request = {"category": "Nhà ở", "area_sqm": 80, "location_feature": "Hải Châu", "access_type": "alley"}
+        with patch.dict(os.environ, {"SMARTPROP_V1_3_REAL_FEATURES": "true"}):
+            record = map_v6_to_v1_3(request)
+        self.assertIsNone(record["road_width"])
+        self.assertIsNone(record["frontage_width"])
+        self.assertIsNone(record["road_width_source"])
+
+    def test_real_mode_preserves_explicit_measurements_and_source(self):
+        request = {"category": "Nhà ở", "area_sqm": 80, "location_feature": "Hải Châu",
+                   "access_type": "alley", "road_width_m": 6.5, "frontage_width_m": 4.2,
+                   "street_name": "Nguyễn Văn Linh", "bathrooms": 2,
+                   "road_width_source": "verified"}
+        with patch.dict(os.environ, {"SMARTPROP_V1_3_REAL_FEATURES": "true"}):
+            record = map_v6_to_v1_3(request)
+        self.assertEqual(record["road_width"], 6.5)
+        self.assertEqual(record["frontage_width"], 4.2)
+        self.assertEqual(record["street_name"], "Nguyễn Văn Linh")
+        self.assertEqual(record["bathroom_count"], 2)
+        self.assertEqual(record["road_width_source"], "verified")
+        self.assertEqual(record["frontage_width_source"], "user")
+
+    def test_legacy_mode_keeps_existing_defaults_and_ignores_new_fields(self):
+        request = {"category": "Nhà ở", "area_sqm": 80, "location_feature": "Hải Châu",
+                   "access_type": "frontage", "road_width_m": 6.5, "frontage_width_m": 4.2,
+                   "street_name": "Nguyễn Văn Linh"}
+        with patch.dict(os.environ, {"SMARTPROP_V1_3_REAL_FEATURES": "false"}):
+            record = map_v6_to_v1_3(request)
+        self.assertEqual((record["road_width"], record["frontage_width"]), (10.0, 5.0))
+        self.assertIsNone(record["street_name"])
+        self.assertEqual(record["road_width_source"], "assumed")
+
+    def test_real_mode_prediction_reports_real_feature_used(self):
+        request = {"category": "Nhà ở", "area_sqm": 90, "location_feature": "Hải Châu",
+                   "road_width_m": 7.0, "frontage_width_m": 4.5, "street_name": "Tuyến A"}
+        with patch.dict(os.environ, {"SMARTPROP_V1_3_REAL_FEATURES": "true"}):
+            result = self.predictor.predict_from_v6_payload(request)
+        self.assertEqual(result["features_used"]["road_width"], 7.0)
+        self.assertEqual(result["features_used"]["frontage_width"], 4.5)
+        self.assertEqual(result["features_used"]["street_name"], "Tuyến A")
+        self.assertEqual(result["features_used"]["road_width_source"], "user")
+        self.assertNotIn("road_width", result["missing_features"])
 
 
 if __name__ == "__main__":

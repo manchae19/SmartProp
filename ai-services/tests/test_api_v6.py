@@ -92,6 +92,18 @@ class ApiTests(unittest.TestCase):
             self.assertIsNone(result["features_used"][name])
         self.assertTrue(result["warnings"])
 
+    def test_optional_real_fields_are_accepted_without_changing_v6(self):
+        base = self.payload(rooms=3, floors=2, access_type="frontage")
+        with_extras = {**base, "road_width_m": 7.5, "frontage_width_m": 4.5,
+                       "street_name": "Nguyễn Văn Linh", "bathrooms": 2}
+        normal = self.client.post("/predict", json=base)
+        extended = self.client.post("/predict", json=with_extras)
+        self.assertEqual(normal.status_code, 200, normal.text)
+        self.assertEqual(extended.status_code, 200, extended.text)
+        self.assertEqual(normal.json()["predicted_asking_price_vnd"],
+                         extended.json()["predicted_asking_price_vnd"])
+        self.assertEqual(normal.json()["model_version"], "v6")
+
     def test_street_names_and_future_building_not_inferred(self):
         response = self.client.post("/predict", json=self.payload(
             title="Bán nhà Võ Văn Kiệt", description="Dự kiến nhà 5 tầng. Gần mặt tiền đường lớn."))

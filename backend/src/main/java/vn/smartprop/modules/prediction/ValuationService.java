@@ -37,12 +37,21 @@ public class ValuationService {
         if(category==null)return unsupported("Loại bất động sản này chưa được model hỗ trợ.");
         if(r.areaSqm().compareTo(new BigDecimal("20"))<0||r.areaSqm().compareTo(new BigDecimal("1000"))>0)return unsupported("Model hỗ trợ diện tích từ 20 đến 1000 m².");
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>30)return unsupported("Số phòng ngủ vượt phạm vi model (1–30).");
+        if("Căn hộ chung cư".equals(category)&&(r.roadWidthM()!=null||r.frontageWidthM()!=null))return unsupported("Chiều rộng đường/mặt tiền không áp dụng cho căn hộ.");
         var options=loadOptions();String location=r.locationFeature().strip();
         if(options.categories().stream().noneMatch(c->c.category().equals(category)&&c.locations().contains(location)))return unsupported("Khu vực chưa được hỗ trợ cho loại bất động sản này.");
         Map<String,Object> input=new LinkedHashMap<>();input.put("category",category);input.put("area_sqm",r.areaSqm().doubleValue());input.put("location_feature",location);
         if(r.ward()!=null&&!r.ward().isBlank())input.put("ward",r.ward().strip());
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>0)input.put("rooms",r.bedrooms());
         if(r.propertyType()==Property.Type.VILLA)input.put("house_subtype","villa");
+        // Optional real measurements; omitted fields remain absent, never defaulted.
+        if(r.roadWidthM()!=null)input.put("road_width_m",r.roadWidthM());
+        if(r.frontageWidthM()!=null)input.put("frontage_width_m",r.frontageWidthM());
+        if(r.streetName()!=null&&!r.streetName().isBlank())input.put("street_name",r.streetName().strip());
+        if(r.projectName()!=null&&!r.projectName().isBlank())input.put("project_name",r.projectName().strip());
+        if(r.bathrooms()!=null)input.put("bathrooms",r.bathrooms());
+        if(r.houseDirection()!=null&&!r.houseDirection().isBlank())input.put("house_direction",r.houseDirection().strip());
+        if(r.balconyDirection()!=null&&!r.balconyDirection().isBlank())input.put("balcony_direction",r.balconyDirection().strip());
         input.put("title",r.title()==null?"":r.title());String description=r.description()==null?"":r.description();
         boolean shortened=description.length()>8000;input.put("description",shortened?description.substring(0,8000):description);
         var n=client.exchange("/predict",input);pin(n);

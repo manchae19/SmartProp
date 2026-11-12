@@ -20,7 +20,7 @@ class ValuationHistoryServiceTest {
     final ValuationHistoryRepository repository=mock(ValuationHistoryRepository.class);
     final ValuationHistoryService service=new ValuationHistoryService(access,client,repository,json);
     final String key="10000000-0000-4000-8000-000000000001";
-    HistoryInput input(){return new HistoryInput("Nhà ở",new BigDecimal("80"),"new_unit:hoa xuan",null,3,new BigDecimal("2"),"alley",null);}
+    HistoryInput input(){return new HistoryInput("Nhà ở",new BigDecimal("80"),"new_unit:hoa xuan",null,3,new BigDecimal("2"),"alley",null,null,null,null,null,null,null,null);}
     JsonNode value(String text) throws Exception{return json.readTree(text);}
     JsonNode prediction() throws Exception {
         return value("""
@@ -47,7 +47,7 @@ class ValuationHistoryServiceTest {
         assertEquals(saved,service.save(42L,input(),key));
         verify(client,times(1)).exchange(eq("/predict"),any());
         verify(repository,times(1)).insert(eq(42L),eq(key),anyString(),any(),any());
-        var changed=new HistoryInput("Nhà ở",new BigDecimal("90"),"new_unit:hoa xuan",null,3,new BigDecimal("2"),"alley",null);
+        var changed=new HistoryInput("Nhà ở",new BigDecimal("90"),"new_unit:hoa xuan",null,3,new BigDecimal("2"),"alley",null,null,null,null,null,null,null,null);
         assertEquals(409,assertThrows(ApiException.class,()->service.save(42L,changed,key)).status);
     }
     @Test void crossAccountDetailAndDeleteUseTheAuthenticatedOwner() {
@@ -72,7 +72,7 @@ class ValuationHistoryServiceTest {
         verify(repository,never()).insert(any(),any(),any(),any(),any());
     }
     @Test void categoryMismatchIsRejectedBeforeTheModelIsCalled() {
-        var invalid=new HistoryInput("Đất nền",new BigDecimal("80"),"Hải Châu",null,3,null,null,null);
+        var invalid=new HistoryInput("Đất nền",new BigDecimal("80"),"Hải Châu",null,3,null,null,null,null,null,null,null,null,null,null);
         assertEquals(400,assertThrows(ApiException.class,()->service.save(42L,invalid,key)).status);
         verifyNoInteractions(client);
     }

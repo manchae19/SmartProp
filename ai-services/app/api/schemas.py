@@ -22,6 +22,16 @@ class ValuationRequest(BaseModel):
     house_subtype: Literal["villa", "house_c4"] | None = None
     title: Annotated[str, Field(strict=True, max_length=500)] = ""
     description: Annotated[str, Field(strict=True, max_length=8000)] = ""
+    # Optional real measurements. None means the user does not know; never a default.
+    road_width_m: Annotated[float, Field(gt=0, le=100, allow_inf_nan=False)] | None = None
+    frontage_width_m: Annotated[float, Field(gt=0, le=500, allow_inf_nan=False)] | None = None
+    street_name: Annotated[str, Field(strict=True, max_length=200)] | None = None
+    project_name: Annotated[str, Field(strict=True, max_length=200)] | None = None
+    bathrooms: Annotated[int, Field(strict=True, ge=1, le=30)] | None = None
+    house_direction: Annotated[str, Field(strict=True, max_length=50)] | None = None
+    balcony_direction: Annotated[str, Field(strict=True, max_length=50)] | None = None
+    road_width_source: Literal["user", "verified"] | None = None
+    frontage_width_source: Literal["user", "verified"] | None = None
 
     @model_validator(mode="after")
     def applicable_fields(self):
@@ -31,6 +41,8 @@ class ValuationRequest(BaseModel):
             raise ValueError("Số tầng nhà và subtype chỉ áp dụng Nhà ở; không dùng tầng tòa/căn hộ.")
         if self.category == "Căn hộ chung cư" and self.access_type is not None:
             raise ValueError("Mặt tiền/kiệt không áp dụng cho căn hộ trong model này.")
+        if self.category == "Căn hộ chung cư" and (self.road_width_m is not None or self.frontage_width_m is not None):
+            raise ValueError("Chiều rộng đường/mặt tiền không áp dụng cho căn hộ trong model này.")
         return self
 
 

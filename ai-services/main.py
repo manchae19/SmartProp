@@ -25,18 +25,21 @@ def create_app(model_dir=None, v1_3_model_dir=None):
         app.state.shadow_manager = ShadowTelemetryManager()
 
         # 3. XGBoost V1.3 Warm In-Memory Predictor
+        app.state.v1_3_error = None
         try:
             app.state.predictor_v1_3 = PredictorV1_3(v1_3_model_dir)
             logger.info("XGBoost V1.3 in-memory predictor initialized and verified.")
         except (ModelArtifactError, Exception) as exc:
             logger.warning(f"XGBoost V1.3 initialization deferred or failed: {exc}")
             app.state.predictor_v1_3 = None
+            app.state.v1_3_error = str(exc)[:300]
 
         try:
             yield
         finally:
             app.state.predictor = None
             app.state.predictor_v1_3 = None
+            app.state.v1_3_error = None
             app.state.shadow_manager = None
 
     application = FastAPI(
