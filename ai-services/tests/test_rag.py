@@ -54,7 +54,7 @@ class RagSecurityTest(unittest.TestCase):
                 Settings(backend_url=value)
 
     def test_sql_injection_is_rejected_before_connect(self):
-        repository = PublishedPropertyRepository(Settings(sql_enabled=True))
+        repository = PublishedPropertyRepository(Settings(sql_enabled=True, sql_database="smartprop_staging", db_user="test", db_password="test"))
         with self.assertRaises(GroundingError):
             repository.lookup(["x' OR 1=1 --"])
 

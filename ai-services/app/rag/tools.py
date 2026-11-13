@@ -202,7 +202,10 @@ class PublishedPropertyRepository:
             raise GroundingError("INVALID_PROPERTY_IDS")
         try:
             import pymysql
-            with pymysql.connect(host="127.0.0.1", port=3306, database="smartprop",
+            # Only the approved publication projection may be read. The database,
+            # host and port are explicit settings; there is no 3306 fallback.
+            with pymysql.connect(host=self.settings.sql_host, port=self.settings.sql_port,
+                    database=self.settings.sql_database,
                     user=self.settings.db_user, password=self.settings.db_password, charset="utf8mb4",
                     autocommit=False, init_command="SET SESSION TRANSACTION READ ONLY",
                     connect_timeout=3, read_timeout=5, cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -210,7 +213,7 @@ class PublishedPropertyRepository:
                 with conn.cursor() as cur:
                     cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
                     identity = cur.fetchone()
-                    if identity != {"db": "smartprop", "port": 3306, "read_only": 1}:
+                    if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
                     cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"
