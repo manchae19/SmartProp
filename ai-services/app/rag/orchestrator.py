@@ -11,6 +11,8 @@ from .diagnostics import traced, event, reason
 from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
+from .money import parse_budget, format_vnd
+from .locality import amenity_locality
 from .personalization import intake, projection
 
 
@@ -31,15 +33,8 @@ def number(value):
 
 
 def budget_from_question(question):
-    # Exact single amount only. Multiple amounts / shorthand are not guessed.
-    if len(re.findall(r"tỷ|\bty\b|triệu|\btrieu\b", question.lower())) != 1:
-        return None
-    values = re.findall(r"(?<![\w.,])([0-9]+(?:[.,][0-9]+)?)\s*(tỷ|ty|triệu|trieu)\b(?!\s*\d)", question.lower())
-    if len(values) != 1:
-        return None
-    value, unit = values[0]
-    amount = Decimal(value.replace(",", ".")) * (10**9 if unit in ("tỷ", "ty") else 10**6)
-    return amount if 1 <= amount <= 999999999999999 else None
+    parsed = parse_budget(question)
+    return parsed.maximum if parsed.status == "VALID" else None
 
 
 from .account_preferences import fingerprint, seed
@@ -80,20 +75,6 @@ class ChatOrchestrator:
                         p["imageUrl"] = image
                 except Exception:
                     p["imageUrl"] = None
-            poi_fn = getattr(self.backend, "nearby_pois", None)
-            if not callable(poi_fn):
-                continue
-            try:
-                items = poi_fn(property_id)
-                if isinstance(items, list):
-                    p["nearbyPois"] = items
-                    p["nearbyPoisStatus"] = "AVAILABLE" if items else "NO_POIS_IN_RADIUS"
-                else:
-                    p["nearbyPoisStatus"] = "UNAVAILABLE"
-            except UpstreamError as error:
-                p["nearbyPoisStatus"] = "PROPERTY_NOT_PUBLIC" if error.status == 404 else "UNAVAILABLE"
-            except Exception:
-                p["nearbyPoisStatus"] = "UNAVAILABLE"
 
     # ------------------------------------------------------------------
     def _reply(self, request, session_id, context, criteria, *, properties, citations, research,
@@ -107,17 +88,22 @@ class ChatOrchestrator:
         """
         if properties:
             self._enrich(properties)
+        # Only a completed search replaces result references; POI/clarification replies preserve them.
+        if result_properties is None and not properties and (response or {}).get("topProperties") is not None:
+            result_properties = response["topProperties"]
+        preserve_references = response is None and not properties
         full = list(result_properties if result_properties is not None else properties)
         property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
         self.sessions.record(context,
             criteria={**{k: v for k, v in (criteria or {}).items() if k not in ("sessionTurn", "_propertyIds")},
-                      "_propertyIds": property_ids} if criteria else None,
-            property_ids=property_ids,
-            area_ids=[a.get("amenityAreaId") for a in (response or {}).get("topAreas", []) if a.get("amenityAreaId")],
+                      "_propertyIds": list(context.last_property_ids) if preserve_references else property_ids} if criteria else None,
+            property_ids=None if preserve_references else property_ids,
+            area_ids=None if preserve_references else [a.get("amenityAreaId") for a in (response or {}).get("topAreas", []) if a.get("amenityAreaId")],
             evidence_ids=[c.sourceId for c in citations],
             referenced_property_id=reference_id,
             question=request.question)
         payload = dict(evidence or {})
+        payload["intent"] = context.needs.get("turnIntent")
         if responseKind:
             payload["responseKind"] = responseKind
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
@@ -150,8 +136,21 @@ class ChatOrchestrator:
                 context,session_id,resumed=self.sessions.begin(None,scope=scope)
             context.needs["accountFingerprint"]=current_fingerprint
         turn = classification(request.question, context if resumed else None)
+        context.needs["turnIntent"]=turn["intent"]
+        event("intent_decision", intent=turn["intent"], budgetMentioned=turn["budgetMentioned"],
+              tool="PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
+        if turn["intent"] in ("KNOWLEDGE","CLARIFY"):
+            if turn["intent"]=="KNOWLEDGE":
+                answer="Tôi nhận đây là câu hỏi kiến thức/tư vấn, không phải yêu cầu tìm nhà. Kho bằng chứng hiện tại chủ yếu có tin đăng và tiện ích; chưa có tài liệu nguồn phù hợp để trả lời chắc chắn nội dung này. Bạn nêu rõ vấn đề hoặc cung cấp tài liệu để đối chiếu nhé."
+            else:
+                answer="Bạn muốn tìm bất động sản, xem tiện ích ở khu vực nào, cập nhật tiêu chí hay hỏi về một căn đã xem? Tôi chưa gọi công cụ tìm nhà khi mục đích chưa rõ."
+            return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                answer=answer,responseKind="KNOWLEDGE_SOURCE_UNAVAILABLE" if turn["intent"]=="KNOWLEDGE" else "CLARIFICATION_REQUIRED",
+                extra={"quickReplies":["Tìm bất động sản theo tiêu chí đã lưu","Ở Hải Châu có bệnh viện nào?"]})
         event("session_turn", resumed=resumed, turn=context.turns,
               followup=bool(turn["searchChange"] or turn["ordinal"] or turn["mapRequest"] or turn["analytic"]))
+        if turn["searchChange"]:
+            context.needs.pop("amenityScope",None)
         limitations = list(LIMITATIONS)
         corpus = traced("corpus_load", self.knowledge.load)
         if traced("amenity_summary", self.backend.amenity_summary)["catalogVersion"] != corpus["summary"]["catalogVersion"]:
@@ -166,12 +165,43 @@ class ChatOrchestrator:
         district = explicit_district or prior.get("district")
         # Explicit POI categories are a routing rule, never a similarity guess.
         categories = poi_categories(request.question)
-        asked_budget = budget_from_question(request.question)
-        if asked_budget is None and request.budgetVnd is None:
-            asked_budget = budget_from_followup(request.question)
+        amenity_scope = None
+        if categories and not turn["searchChange"] and turn["ordinal"] is None and not turn["needsPropertyReference"]:
+            amenity_scope = amenity_locality(request.question,documents)
+            if amenity_scope and (amenity_scope.get("unresolved") or (explicit_district and explicit_district != amenity_scope.get("district"))):
+                return self._reply(request,session_id,context,prior,properties=[],citations=[],research=research,
+                    answer="Chưa có hồ sơ nguồn xác định đúng phường/xã hoặc tuyến đường bạn hỏi. Tôi không tự mở rộng kết quả sang cả quận. Bạn nêu rõ địa bàn hoặc chọn một căn có ghim để tìm tiện ích xung quanh nhé.",
+                    responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"AMENITY_LOCALITY_UNRESOLVED","amenityIntent":{"district":explicit_district,"categories":list(categories),"mapAvailable":False}})
+            if amenity_scope:
+                district=amenity_scope["district"]
+                context.needs["amenityScope"]=amenity_scope
+            elif explicit_district:
+                context.needs.pop("amenityScope",None)
+            elif context.needs.get("amenityScope"):
+                amenity_scope=context.needs["amenityScope"]
+                district=amenity_scope["district"]
+        parsed_budget = parse_budget(request.question)
+        if turn["budgetMentioned"] and parsed_budget.status == "AMBIGUOUS":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Tôi chưa xác định rõ giới hạn ngân sách mới nên chưa tìm bằng ngân sách cũ. Bạn nhập mức tối đa, ví dụ 2 tỷ 600 triệu, hoặc khoảng từ 2 đến 3 tỷ nhé.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification":"BUDGET_AMBIGUOUS", "budgetReason":parsed_budget.reason})
+        if parsed_budget.status != "NOT_MENTIONED" and re.search(r"(?:/\s*(?:thang|nam)|moi thang|moi nam)",norm(request.question)):
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Bạn đang nói tới tiền thuê theo tháng/năm. Công cụ tư vấn này hiện lọc theo tổng giá mua, nên tôi chưa dùng số tiền thuê để tìm nhà bán. Bạn có thể tìm tin cho thuê tại trang Bất động sản.",
+                responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"RENTAL_BUDGET_NOT_SUPPORTED"})
+        if (turn["ordinal"] is not None or turn["intent"]=="PROPERTY_FOLLOWUP") and not context.last_property_ids:
+            return self._reply(request,session_id,context,prior,properties=[],citations=[],research=research,
+                answer="Chưa có danh sách căn để đối chiếu trong phiên này. Bạn gửi mã tin hoặc tìm lại bằng ngân sách và khu vực nhé.",
+                responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"MISSING_PROPERTY_REFERENCE"})
+        asked_budget = parsed_budget.maximum if turn["budgetChange"] else None
         budget = request.budgetVnd if request.budgetVnd is not None else (asked_budget if asked_budget is not None else (
             Decimal(str(prior["budgetVnd"])) if prior.get("budgetVnd") is not None else None))
         criteria = request.model_dump(exclude={"question", "requireGeneration", "sessionId"}, exclude_none=True)
+        if asked_budget is not None:
+            if parsed_budget.minimum is not None:
+                criteria["minPriceVnd"] = str(parsed_budget.minimum)
+        elif request.budgetVnd is None and prior.get("minPriceVnd") is not None:
+            criteria["minPriceVnd"] = prior["minPriceVnd"]
         # Defaults are not client intent: carry the stored value unless the caller overrides it.
         if criteria.get("purpose") == "LIVING" and prior.get("purpose"):
             criteria["purpose"] = prior["purpose"]
@@ -185,8 +215,12 @@ class ChatOrchestrator:
             criteria["propertyType"] = turn["propertyType"]
         if not request.ward and prior.get("ward") and not explicit_district:
             criteria["ward"] = prior["ward"]
-        if district is not None:
+        pure_amenity = bool(categories) and not turn["searchChange"] and turn["ordinal"] is None and not turn["needsPropertyReference"]
+        if district is not None and not pure_amenity:
             criteria["district"] = district
+        elif pure_amenity:
+            if prior.get("district"): criteria["district"] = prior["district"]
+            else: criteria.pop("district", None)
         if prior.get("amenityPriorities"):
             criteria["amenityPriorities"] = list(prior["amenityPriorities"])
         response = None
@@ -198,7 +232,20 @@ class ChatOrchestrator:
             criteria["budgetVnd"] = str(budget)
             if "minAreaSqm" in criteria:
                 criteria["minAreaSqm"] = str(criteria["minAreaSqm"])
-        decision = intake(context, request.question, criteria, turn, explicit_district=explicit_district)
+        if turn["intent"]=="UPDATE_CRITERIA":
+            context.needs["active"]=True
+            text="Đã cập nhật tiêu chí cho phiên trò chuyện này."
+            if budget is not None:text+=" Ngân sách tối đa: "+format_vnd(budget)+"."
+            if criteria.get("minPriceVnd"):text+=" Giá tối thiểu: "+format_vnd(criteria["minPriceVnd"])+"."
+            text+=" Tôi chưa tự tìm nhà; bạn có thể yêu cầu tìm theo tiêu chí này. Hồ sơ tài khoản không thay đổi."
+            return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                answer=text,responseKind="CRITERIA_UPDATED",extra={"quickReplies":["Tìm bất động sản theo tiêu chí đã lưu"]})
+        if turn["intent"]=="AREA_AMENITIES":
+            context.needs.pop("pending",None)
+            decision={"search":False,"question":None,"choices":[]}
+        else:
+            decision = intake(context, request.question, criteria, turn, explicit_district=explicit_district)
+        district = (explicit_district or district) if amenity_only and not decision["search"] else criteria.get("district")
         if decision["question"]:
             return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
                 answer=decision["question"], responseKind="CLARIFICATION_REQUIRED", limitations=limitations,
@@ -209,12 +256,18 @@ class ChatOrchestrator:
             amenity_only = False
         # A changed budget/district always re-queries the live API. A stored list is
         # never replayed as a new result set; it only names what to ask about.
-        must_search = (budget is not None and not amenity_only) or (referral and bool(prior))
+        must_search = budget is not None and (decision["search"] or turn["intent"]=="PROPERTY_FOLLOWUP")
         if must_search:
             if budget is None:
                 limitations.append("Chưa có ngân sách trong ngữ cảnh; không thể xác định lại danh sách bất động sản.")
             else:
-                response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
+                try:
+                    response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
+                except UpstreamError:
+                    if request.requireGeneration:raise
+                    return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                        answer="Chưa truy vấn được nguồn bất động sản. Đây là lỗi kết nối/công cụ, không phải kết luận không có tin phù hợp. Bạn thử lại sau nhé.",
+                        responseKind="DATA_SOURCE_ERROR",extra={"queryStatus":"UPSTREAM_ERROR"})
                 properties = response["topProperties"]
         else:
             limitations.append("Chưa có một ngân sách rõ ràng; hệ thống chưa gọi công cụ lọc bất động sản.")
@@ -225,7 +278,21 @@ class ChatOrchestrator:
         result_properties = list(properties)
         asked_index = turn["ordinal"]
         referenced_id = None
-        if asked_index is not None and result_properties:
+        if asked_index is not None and resumed and context.last_property_ids and not turn["searchChange"]:
+            previous_ids=list(context.last_property_ids)
+            if not 1<=asked_index<=len(previous_ids):
+                return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                    answer="Thứ tự căn nhà nằm ngoài danh sách đã hiển thị. Hãy chọn lại căn cần xem.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+            expected_id=previous_ids[asked_index-1]
+            current={p["id"]:p for p in result_properties}
+            if expected_id not in current:
+                return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                    answer="Căn ở thứ tự đó không còn trong kết quả công khai phù hợp. Tôi không thay bằng một căn khác.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+            ordered=[current[i] for i in previous_ids if i in current]
+            result_properties=ordered+[p for p in result_properties if p["id"] not in previous_ids]
+            # Resolve by identity even if an earlier result disappeared.
+            asked_index=next(i+1 for i,p in enumerate(result_properties) if p["id"]==expected_id)
+        if asked_index is not None and result_properties and not turn["searchChange"]:
             if not 1 <= asked_index <= len(result_properties):
                 if request.requireGeneration:
                     raise RagUnavailable("AMBIGUOUS_PROPERTY_REFERENCE")
@@ -236,7 +303,7 @@ class ChatOrchestrator:
                     extra={"clarification": "PROPERTY_INDEX_OUT_OF_RANGE"})
             properties = [result_properties[asked_index - 1]]
             referenced_id = "recommendation:" + properties[0]["id"]
-        elif referral:
+        elif referral and not turn["searchChange"]:
             # An explicit "căn này" must resolve to the property the user just saw, even
             # though the stored list is the full verified result set of the turn.
             explicit = context.referenced_property_id or prior.get("referencedPropertyId")
@@ -260,7 +327,40 @@ class ChatOrchestrator:
                         responseKind="CLARIFICATION_REQUIRED", limitations=limitations, response=response,
                         extra={"clarification": "AMBIGUOUS_PROPERTY_REFERENCE"})
 
-        if not research and budget is not None and not properties and (decision["search"] or not asks_for_amenities(request.question)):
+        distance_question=bool(re.search(r"(?:bao xa|khoang cach|cach .*truong|gan .*nao)",norm(request.question)))
+        if categories and distance_question and len(properties)==1 and (asked_index is not None or referral):
+            property=properties[0]
+            source=property.get("source") or {}
+            groups={"SCHOOL":"education","SUPERMARKET":"shopping","MARKET":"shopping","HOSPITAL":"health","PHARMACY":"health","PARK":"park","PUBLIC_TRANSPORT":"transport"}
+            chosen=list(dict.fromkeys(groups[c] for c in categories if c in groups))
+            nearby=None
+            answer="Chưa có bằng chứng phân biệt trung tâm thương mại trong dữ liệu quanh căn này; tôi không dùng siêu thị hoặc chợ để thay thế." if "MALL" in categories else "Tin này chưa có vị trí căn nhà đủ điều kiện để tính khoảng cách."
+            if source.get("kind")=="PROPERTY" and chosen:
+                try:
+                    nearby=self.backend.property_nearby(source["recordKey"],1000,chosen)
+                    location=nearby.get("location") or {}
+                    if nearby.get("status")=="LOCATION_UNAVAILABLE":
+                        answer="Căn này chưa có tọa độ hợp lệ; chưa thể tính khoảng cách tới tiện ích."
+                    elif location.get("accuracy") not in ("EXACT_PROPERTY","BUILDING_ONLY","USER_PROVIDED"):
+                        answer="Căn này chỉ có ghim do người đăng cung cấp hoặc vị trí chưa được đối chiếu. Chưa đủ dữ liệu để trả khoảng cách từ căn nhà."
+                    else:
+                        items=sorted([p for p in nearby["items"] if any(g in chosen for g in p.get("categoryGroups",[]))],key=lambda p:p["distanceMeters"])[:3]
+                        origin="tòa nhà (không phải căn hộ cụ thể)" if location["accuracy"]=="BUILDING_ONLY" else "ghim người đăng (chưa xác minh vị trí căn nhà; khoảng cách ước tính)" if location["accuracy"]=="USER_PROVIDED" else "căn nhà"
+                        answer=("Khoảng cách đường chim bay từ "+origin+" trong bán kính 1 km: "+"; ".join(p["name"]+": "+(f'{p["distanceMeters"]/1000:.2f} km' if p["distanceMeters"]>=1000 else f'{p["distanceMeters"]:.0f} m') for p in items)+".") if items else "Không tìm thấy tiện ích phù hợp trong bán kính 1 km. Bạn có thể tăng bán kính trên thẻ căn nhà."
+                except (UpstreamError,GroundingError):
+                    answer="Chưa tải được bằng chứng tiện ích của căn này. Hãy mở mục tiện ích trên thẻ và thử lại."
+            if "SCHOOL" in categories:
+                answer+=" Nguồn chỉ xác nhận nhóm trường học chung; chưa xác minh trường tiểu học hay cấp học cụ thể."
+            citation=Citation(sourceId="recommendation:"+property["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(property),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=property["title"])
+            citations=[citation]
+            if nearby:
+                citations.append(Citation(sourceId="property-nearby:"+source["recordKey"],url=self.backend.settings.backend_url+"/api/v1/properties/"+source["recordKey"]+"/nearby",version=str(nearby.get("fetchedAt") or "LIVE"),contentHash=digest(nearby),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="PROPERTY_NEARBY",title="Tiện ích quanh căn nhà"))
+            return self._reply(request,session_id,context,criteria,properties=properties,citations=citations,research=research,
+                answer=answer,responseKind="PROPERTY_NEARBY_EVIDENCE",limitations=["Khoảng cách đường chim bay, không phải quãng đường hoặc thời gian di chuyển."],
+                response=response,result_properties=result_properties,reference_id=referenced_id,
+                extra={"propertyNearby":nearby,"referencedPropertyId":property["id"]})
+
+        if not research and response is not None and budget is not None and not properties and (decision["search"] or turn["intent"]=="PROPERTY_FOLLOWUP"):
             # An empty authorized search is useful evidence. Do not replace it with
             # unrelated semantic POIs or claim that a templated answer came from Qwen.
             event("no_match_response", strict=request.requireGeneration, generationRequired=False)
@@ -268,6 +368,7 @@ class ChatOrchestrator:
                 raise RagUnavailable("FULL_RAG_RUNTIME_UNAVAILABLE")
             return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
                 answer=empty_search_answer(criteria), responseKind="NO_MATCHES", limitations=limitations, response=response,
+                extra={"quickReplies": ["Tìm bất động sản toàn Đà Nẵng, giữ ngân sách"] if criteria.get("district") else ["Tìm mọi loại bất động sản, giữ ngân sách", "Tìm kỹ hơn"]},
                 evidence={"recommendationMethod": response.get("method"),
                     "criteria": criteria, "eligibleCandidateCount": response.get("eligibleCandidateCount"), "topAreas": [],
                     "recommendationSearch": {"performed": True, "resultCount": 0,
@@ -310,10 +411,15 @@ class ChatOrchestrator:
                           and (not district or d["metadata"].get("district") == district)]
                 retrieved = ranked[:3]
 
+        if amenity_scope and amenity_scope.get("areaId"):
+            # Exact catalog scope only, even if the embedding returns a similarly named district.
+            retrieved=[d for d in documents if d["kind"]=="POI_EVIDENCE" and d["scope"]=="PUBLIC"
+                       and d["metadata"].get("areaId")==amenity_scope["areaId"] and d["metadata"].get("category") in categories][:3]
+            limitations.append("Tiện ích thuộc hồ sơ "+amenity_scope["ward"]+"; chưa có điểm xuất phát để tính khoảng cách từ căn nhà.")
         # Hard guarantee: an explicit POI category may never be answered with another category.
         if categories:
             matched = [d for d in retrieved if d["kind"] == "POI_EVIDENCE" and d["metadata"].get("category") in categories]
-            if not matched and not research and district:
+            if not matched and not research and district and not amenity_scope:
                 # FAISS had no in-category evidence: use the same read-only, VALID-only POI
                 # projection that already backs the map card. Never substitute another category.
                 from .knowledge import document
@@ -324,17 +430,18 @@ class ChatOrchestrator:
                 for category in categories:
                     try:
                         mapped = traced("amenity_map_fallback", lambda c=category: self.backend.amenity_map(district, c))
-                    except (RagUnavailable, GroundingError):
+                    except (RagUnavailable, GroundingError, UpstreamError):
                         mapped = None
+                        limitations.append("Dịch vụ địa điểm chưa phản hồi hoặc bằng chứng chưa đạt yêu cầu; chưa thể kết luận khu vực không có tiện ích.")
                     items = (mapped or {}).get("items") if isinstance(mapped, dict) else None
                     for item in (items or [])[:3]:
                         metadata = {"areaId": "map:" + item["id"], "district": item["district"],
-                                    "name": item["name"], "category": item["category"],
-                                    "attributionBasis": "OPENSTREETMAP_VALID"}
+                                    "name": item["name"], "category": item["category"], "sourceUrl":item.get("sourceUrl"),
+                                    "attributionBasis": "GEOAPIFY_PROVIDER_REPORTED" if item.get("sourceName")=="geoapify" else "OPENSTREETMAP_VALID"}
                         retrieved.append(document("poi-map:" + item["id"],
-                            f"Bằng chứng tiện ích {item['name']}, loại {item['category']}, tại {item['district']}; "
-                            "nguồn OpenStreetMap đã kiểm tra nguồn. Không có khoảng cách tới căn nhà.",
-                            area_url, item.get("observedAt", "POI_MAP_V1"), "POI_EVIDENCE", metadata))
+                            f"Bằng chứng tiện ích {item['name']}, loại {item['category']}, tại {item['district']}; "+
+                            ("nguồn Geoapify, chưa xác minh thực địa. " if item.get("sourceName")=="geoapify" else "nguồn OpenStreetMap đã kiểm tra nguồn. ")+"Không có khoảng cách tới căn nhà.",
+                            area_url, str(item.get("observedAt") or "POI_MAP_V1"), "POI_EVIDENCE", metadata))
             # With an explicit category only in-category POI evidence may reach the model.
             retrieved = [d for d in retrieved
                          if d["kind"] == "POI_EVIDENCE" and d["metadata"].get("category") in categories][:3]
@@ -345,10 +452,10 @@ class ChatOrchestrator:
                 limitations.append("Chưa có bằng chứng tiện ích đúng loại yêu cầu trong kho tri thức công khai; "
                                    "hệ thống không thay bằng loại tiện ích khác và không suy đoán vị trí.")
                 return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
-                    answer=insufficient_amenity_answer(district, categories), responseKind="INSUFFICIENT_AMENITY_EVIDENCE",
+                    answer=insufficient_amenity_answer((amenity_scope or {}).get("ward") or district, categories), responseKind="INSUFFICIENT_AMENITY_EVIDENCE",
                     limitations=limitations, response=response, retrieval_mode=retrieval_mode,
                     evidence={"criteria": criteria if budget else None,
-                        "amenityIntent": {"district": district, "categories": list(categories)},
+                        "amenityIntent": {"district": district, "categories": list(categories), "ward":(amenity_scope or {}).get("ward"), "mapAvailable":not bool(amenity_scope)},
                         "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
                         "sql": {"status": sql_status, "matchedRows": sql_count},
                         "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_MISSING_EVIDENCE"},
@@ -443,7 +550,7 @@ class ChatOrchestrator:
                       "corpusVersion": corpus["contentHash"], "catalogSummary": corpus["summary"],
                       "retrievedSourceIds": [d["sourceId"] for d in retrieved], "sql": {"status": sql_status, "matchedRows": sql_count},
                       "generation": generation_evidence, "gis": gis_evidence(rows, properties, retrieved),
-                      "amenityIntent": {"district": district, "categories": list(categories)},
+                      "amenityIntent": {"district": district, "categories": list(categories), "ward":(amenity_scope or {}).get("ward"), "mapAvailable":not bool(amenity_scope)},
                       "semanticRetrieval": {"indexVersion": getattr(self.retriever, "manifest", None).get("version") if isinstance(getattr(self.retriever, "manifest", None), dict) else None,
                                             "hits": [{"sourceId": d["sourceId"], "similarity": d.get("similarity")} for d in retrieved]},
                       "warnings": (response or {}).get("warnings", [])})

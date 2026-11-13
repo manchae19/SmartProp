@@ -49,7 +49,9 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
   const [automaticSearch] = useState(() => createStateStore(null)),
     [automaticCandidate] = useState(() => createStateStore(null)),
     [verifiedExact] = useState(() => createStateStore(false)),
-    [publicExact] = useState(() => createStateStore(false));
+    [publicExact] = useState(() => createStateStore(false)),
+    [manualPoint] = useState(() => createStateStore(null));
+  useSyncExternalStore(manualPoint.subscribe, manualPoint.getSnapshot);
   useSyncExternalStore(publicExact.subscribe, publicExact.getSnapshot);
   useSyncExternalStore(verifiedExact.subscribe, verifiedExact.getSnapshot);
   useSyncExternalStore(automaticCandidate.subscribe, automaticCandidate.getSnapshot);
@@ -65,6 +67,7 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
     _revisionRef.current++;
     selecting.set(false);
     suggestion.set("");
+    manualPoint.set(null);
     automaticCandidate.set(candidate);
     verifiedExact.set(false);
     publicExact.set(false);
@@ -87,8 +90,8 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
   const getCanConfirm = () => !_props.current.disabled && !!String(_props.current.address).trim() && publicExact.getSnapshot() && (automaticCandidate.getSnapshot() ? candidateCanBeConfirmed(automaticCandidate.getSnapshot()) && verifiedExact.getSnapshot() : getSelected());
   async function confirmPoint() {
     if (!getCanConfirm()) return;
-    if (automaticCandidate.getSnapshot()) {
-      const point = automaticCandidate.getSnapshot();
+    const point = automaticCandidate.getSnapshot() || getPoint();
+    if (point) {
       automaticCandidate.set(null);
       _propsLatest.current.onSelect?.({
         latitude: point.latitude,
@@ -98,7 +101,8 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
     }
     _propsLatest.current.onConfirm?.();
   }
-  const getSelected = () => validCoordinates(_props.current.latitude, _props.current.longitude);
+  const getPoint = () => manualPoint.getSnapshot() || (validCoordinates(_props.current.latitude, _props.current.longitude) ? { latitude: Number(_props.current.latitude), longitude: Number(_props.current.longitude) } : null);
+  const getSelected = () => !!getPoint();
   const _mapRef = useRef(undefined),
     _markerRef = useRef(undefined),
     _autocompleteRef = useRef(undefined),
@@ -112,8 +116,8 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
       return;
     }
     const p = {
-      lat: Number(_props.current.latitude),
-      lng: Number(_props.current.longitude)
+      lat: Number(getPoint().latitude),
+      lng: Number(getPoint().longitude)
     };
     _markerRef.current.position = p;
     _markerRef.current.map = _mapRef.current;
@@ -124,6 +128,8 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
     selecting.set(false);
     suggestion.set("");
     clearAutomatic();
+    if (!validCoordinates(latitude, longitude)) return;
+    manualPoint.set({ latitude: Number(latitude), longitude: Number(longitude) });
     automaticSearch.getSnapshot()?.clearSelection();
     _propsLatest.current.onSelect?.({
       latitude,
@@ -297,6 +303,7 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
     const result = (() => {
       _revisionRef.current++;
       clearAutomatic();
+      manualPoint.set(null);
       suggestion.set("");
       message.set("Địa chỉ đã thay đổi. Hãy chọn và xác nhận lại ghim.");
       if (_markerRef.current && !getSelected()) _markerRef.current.map = null;
@@ -339,6 +346,7 @@ function useGooglePropertyLocationState(inputProps, forwardedRef) {
     canConfirm: getCanConfirm(),
     confirmPoint,
     selected: getSelected(),
+    chosenPoint: getPoint(),
     movePin,
     updateSearchHostValue: searchHost.set,
     updateMapHostValue: mapHost.set,
@@ -377,7 +385,7 @@ export default React.forwardRef(function GooglePropertyLocation(props, ref) {
           <p className="location-guide" data-sp-71e0825b="">
             {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.osmCandidate ? "Ghim đề xuất chưa được xác nhận. " + view.accuracyLabel(view.osmCandidate) : "Đặt ghim thủ công trên bản đồ dưới đây khi bạn biết vị trí thực tế.")}
           </p>
-          <ManualLocationMap latitude={view.osmCandidate?.latitude ?? view.latitude} longitude={view.osmCandidate?.longitude ?? view.longitude} precision={view.osmCandidate?.context?.precision || ""} preview={!!view.osmCandidate} previewRegion={view.previewRegion} disabled={view.disabled} onSelect={$event => {
+          <ManualLocationMap latitude={view.osmCandidate?.latitude ?? view.chosenPoint?.latitude ?? ""} longitude={view.osmCandidate?.longitude ?? view.chosenPoint?.longitude ?? ""} precision={view.osmCandidate?.context?.precision || ""} preview={!!view.osmCandidate} previewRegion={view.previewRegion} disabled={view.disabled} onSelect={$event => {
           view.movePin($event.latitude, $event.longitude);
         }} data-sp-71e0825b="" />
         </React.Fragment> : null}
@@ -387,7 +395,7 @@ export default React.forwardRef(function GooglePropertyLocation(props, ref) {
       {view.selected && !view.automaticCandidate ? <p className="location-guide" data-sp-71e0825b="">
           {"Ghim do người đăng chọn; chưa được xác minh độc lập. Xác nhận vị trí không phải chứng nhận độ chính xác."}
         </p> : null}
-      {!view.selected && !view.suggestion ? <p className="location-guide" data-sp-71e0825b="">
+      {!view.selected && !view.suggestion && !view.automaticCandidate ? <p className="location-guide" data-sp-71e0825b="">
           {"Chưa chọn vị trí. Tâm bản đồ đang xem không được lưu thành vị trí của tin."}
         </p> : null}
       {view.automaticCandidate && view.candidateCanBeConfirmed(view.automaticCandidate) ? <label className="location-consent" data-sp-71e0825b="">
@@ -402,6 +410,9 @@ export default React.forwardRef(function GooglePropertyLocation(props, ref) {
         })(Array.isArray(view.publicExact) ? event.target.checked ? [...view.publicExact, "on"] : view.publicExact.filter(item => item !== "on") : event.target.checked)} />
         {"Tôi đồng ý công khai ghim và địa chỉ này. Nếu chỉ muốn hiển thị vị trí tương đối, chưa lưu tin bằng chế độ hiện tại."}
       </label>
+      <p role="status" className="location-confirm-help">
+        {view.confirmed ? "Vị trí đã được xác nhận cho địa chỉ hiện tại." : !view.selected && !view.automaticCandidate ? "Bấm lên bản đồ hoặc chọn Đặt ghim ở dấu + để chọn vị trí." : view.automaticCandidate && !view.candidateCanBeConfirmed(view.automaticCandidate) ? "Gợi ý chỉ tới đường/khu vực. Hãy bấm hoặc kéo ghim đến đúng bất động sản trước khi xác nhận." : !view.publicExact ? "Đã chọn ghim. Tích đồng ý công khai ghim và địa chỉ để tiếp tục." : view.automaticCandidate && !view.verifiedExact ? "Hãy xác nhận đã kiểm tra gợi ý đúng bất động sản." : "Đã sẵn sàng. Bấm Xác nhận vị trí để lưu ghim đã chọn."}
+      </p>
       <div className={classNames(["confirm-location", {
         confirmed: view.confirmed
       }])} data-sp-71e0825b="">

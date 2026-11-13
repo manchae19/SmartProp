@@ -20,6 +20,14 @@ export function addressComponents(value) {
     districts: [...districts.values()]
   };
 }
+export function addressScopeConflict(value) {
+  const explicit=addressComponents(value);
+  if(explicit.districts.length>1||explicit.wards.length>1)return 'Địa chỉ có nhiều phường/quận. Hãy giữ một địa bàn trước khi tìm.';
+  const conflicts=[];
+  if(value.district&&explicit.districts.length===1&&administrativeKey(value.district)!==administrativeKey(explicit.districts[0]))conflicts.push('quận trong địa chỉ: '+explicit.districts[0]+'; quận đang chọn: '+value.district);
+  if(value.ward&&explicit.wards.length===1&&administrativeKey(value.ward)!==administrativeKey(explicit.wards[0]))conflicts.push('phường trong địa chỉ: '+explicit.wards[0]+'; phường đang chọn: '+value.ward);
+  return conflicts.length?'Địa chỉ và bộ lọc không khớp ('+conflicts.join(' · ')+'). Bấm “Dùng phường/quận từ địa chỉ” phía trên hoặc sửa lại các trường địa bàn.':'';
+}
 export function effectiveGeocodingInput(value) {
   const fields = geocodingInput(value),
     explicit = addressComponents(value);
@@ -53,7 +61,8 @@ export async function searchLocations(value, request = api) {
     method: 'POST',
     body: {
       ...geocodingInput(value),
-      shareAddress: true
+      shareAddress: true,
+      districtOnly: value.districtOnly === true
     }
   });
   return {
@@ -94,6 +103,8 @@ export function normalizeAddressQuery(value) {
   return [...parts.values()].join(', ');
 }
 export function administrativeHints(value, knownDistricts = []) {
+  const explicit = addressComponents(value);
+  if (explicit.districts.length > 1 || explicit.wards.length > 1) return { district: '', ward: '' };
   const districtNames = [],
     wardNames = [];
   for (const raw of String(value.address || '').split(',')) {
@@ -108,7 +119,7 @@ export function administrativeHints(value, knownDistricts = []) {
   }
   const unique = a => [...new Set(a)];
   return {
-    district: !value.district && unique(districtNames).length === 1 ? districtNames[0] : '',
-    ward: !value.ward && unique(wardNames).length === 1 ? wardNames[0] : ''
+    district: unique(districtNames).length === 1 && administrativeKey(value.district)!==administrativeKey(districtNames[0]) ? districtNames[0] : '',
+    ward: unique(wardNames).length === 1 && administrativeKey(value.ward)!==administrativeKey(wardNames[0]) ? wardNames[0] : ''
   };
 }

@@ -126,10 +126,10 @@ export default React.forwardRef(function ChatAmenityMap(props, ref) {
                 </button>
                 <div className="amenity-source" data-sp-6a8bc544="">
                   <span data-sp-6a8bc544="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(p.coordinateBasis === "OSM_NODE" ? "Điểm ghi trong OSM" : "Điểm đại diện đối tượng OSM")}
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(p.coordinateBasis === "GEOAPIFY_POINT" ? "Tọa độ từ Geoapify · chưa xác minh thực địa" : p.coordinateBasis === "OSM_NODE" ? "Điểm ghi trong OSM" : "Điểm đại diện đối tượng OSM")}
                   </span>
                   <a href={p.sourceUrl} target="_blank" rel="noopener noreferrer" data-sp-6a8bc544="">
-                    {"Nguồn OSM ↗"}
+                    {p.sourceName === "geoapify" ? "Nguồn Geoapify ↗" : "Nguồn OSM ↗"}
                   </a>
                 </div>
               </article>)}

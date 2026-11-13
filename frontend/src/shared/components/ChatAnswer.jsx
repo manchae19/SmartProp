@@ -4,6 +4,7 @@ import React, { useRef, useState, useSyncExternalStore, useEffect } from "react"
 import { SiteLink } from "../../app/navigation.jsx";
 import { chatPresentation } from "../../features/prediction/chatPresentation.js";
 import { amenityIntent, loadAmenityMap, amenitySummary } from "../../features/prediction/chatAmenities.js";
+import PropertyNearbyPanel from "../../features/prediction/PropertyNearbyPanel.jsx";
 import ChatAmenityMap from "./ChatAmenityMap.jsx";
 import AppIcon from "./AppIcon.jsx";
 import "./ChatAnswer.css";
@@ -28,7 +29,7 @@ function useChatAnswerState(inputProps, forwardedRef) {
     [mapStatus] = useState(() => createStateStore("idle"));
   useSyncExternalStore(mapStatus.subscribe, mapStatus.getSnapshot);
   useSyncExternalStore(mapData.subscribe, mapData.getSnapshot);
-  const getSummary = () => getIntent().requested && mapData.getSnapshot() ? amenitySummary(mapData.getSnapshot()) : getView().summary;
+  const getSummary = () => getIntent().requested && mapData.getSnapshot()?.items?.length ? amenitySummary(mapData.getSnapshot()) : getView().summary;
   const _disposedRef = useRef(false);
   async function loadMap() {
     if (!getIntent().enabled || mapStatus.getSnapshot() === "loading") return;
@@ -157,6 +158,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                     {"Chưa có đường dẫn nguồn"}
                   </span>}
               </div>
+              <PropertyNearbyPanel property={view.result.recommendedProperties.find(p=>p.id===card.id)} needs={view.result.evidence?.needs} />
               {card.warnings.length ? <p className="quality-note" data-sp-73584f77="">
                   {"Thông tin nguồn cần được đối chiếu trước khi quyết định."}
                 </p> : null}

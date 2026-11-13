@@ -9,7 +9,7 @@ export function createHttpClient({
   lock = null,
   onState = () => {},
   activity = () => false,
-  timeoutForPath = path => path === "/recommendations/research" ? 180000 : 15000
+  timeoutForPath = path => path === "/recommendations/research" ? 180000 : path === "/geocoding/search" ? 20000 : 15000
 }) {
   let refreshFlight = null,
     initialization = null,

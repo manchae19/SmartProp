@@ -70,6 +70,7 @@ export function citationHref(citation, properties) {
       if (!property) return null;
       return advisorListingUrl(property);
     }
+    if (citation.kind === 'PROPERTY_NEARBY' && properties.some(p => p.source.kind === 'PROPERTY' && url.pathname === '/api/v1/properties/' + p.source.recordKey + '/nearby')) return url.pathname;
     if (['AREA_AMENITY', 'POI_EVIDENCE'].includes(citation.kind) && /^\/api\/v1\/amenities\/[A-Za-z0-9_-]{1,160}$/.test(url.pathname)) {
       // Canonical SAME-ORIGIN public API path: never send the browser to an internal origin.
       return url.pathname;
@@ -91,6 +92,7 @@ export function publicChatResponse(data) {
     const external = p?.source?.kind === 'EXTERNAL' && p.qualityStatus === 'VALID' && p.verificationStatus === 'VERIFIED';
     if (!platform && !external || !text(p.id) || ids.has(p.id) || !text(p.title) || !text(p.source.name) || !text(p.source.recordKey) || !strings(p.explanations) || !strings(p.warnings) || decimal(p.score) > 10000000000n || p.isProtectedHoldout || p.protectedHoldout || p.is_protected_holdout || p.holdout || p.groupHasHoldout || decimal(p.priceVnd) <= 0n || decimal(p.areaSqm) <= 0n) throw invalid();
     if (data.evidence.criteria?.budgetVnd != null && decimal(p.priceVnd) > decimal(data.evidence.criteria.budgetVnd)) throw invalid();
+    if (data.evidence.criteria?.minPriceVnd != null && decimal(p.priceVnd) < decimal(data.evidence.criteria.minPriceVnd)) throw invalid();
     if (p.duplicateGroup) {
       if (groups.has(p.duplicateGroup)) throw invalid();
       groups.add(p.duplicateGroup);
@@ -111,7 +113,7 @@ export function publicChatResponse(data) {
   const intent = data.evidence.amenityIntent;
   if (intent !== undefined) {
     const categories = intent?.categories;
-    if (!Array.isArray(categories) || categories.length > 8 || !categories.every(c => typeof c === 'string' && /^[A-Z_]{3,24}$/.test(c)) || intent.district !== null && (typeof intent.district !== 'string' || !intent.district.trim())) throw invalid();
+    if (!Array.isArray(categories) || categories.length > 9 || !categories.every(c => typeof c === 'string' && /^[A-Z_]{3,24}$/.test(c)) || intent.district !== null && (typeof intent.district !== 'string' || !intent.district.trim())) throw invalid();
     if (categories.length) {
       // Only POI evidence (or a recommended property) may back an explicit category answer.
       if (data.citations.some(c => !['POI_EVIDENCE', 'RECOMMENDATION'].includes(c.kind))) throw invalid();

@@ -81,7 +81,7 @@ class BackendTools:
         seen, groups = set(), set()
         for p in properties:
             price, area = Decimal(str(p["priceVnd"])), Decimal(str(p["areaSqm"]))
-            if not price.is_finite() or not area.is_finite() or not 0 < price <= Decimal(str(criteria["budgetVnd"])) or area <= 0:
+            if not price.is_finite() or not area.is_finite() or not 0 < price <= Decimal(str(criteria["budgetVnd"])) or area <= 0 or price < Decimal(str(criteria.get("minPriceVnd") or 0)):
                 raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
             if p["id"] in seen or p.get("qualityStatus") in ("REJECTED", "EXCLUDED") or p.get("isProtectedHoldout") or p.get("holdout") or p.get("groupHasHoldout"):
                 raise GroundingError("INELIGIBLE_RECOMMENDATION")
@@ -105,7 +105,7 @@ class BackendTools:
     def amenity_areas(self):
         return self._call("GET", "/api/v1/amenities/areas")
 
-    AMENITY_CATEGORIES = ("SCHOOL", "HOSPITAL", "PHARMACY", "MARKET", "SUPERMARKET", "PARK", "BEACH", "PUBLIC_TRANSPORT")
+    AMENITY_CATEGORIES = ("SCHOOL", "HOSPITAL", "PHARMACY", "MARKET", "SUPERMARKET", "PARK", "BEACH", "PUBLIC_TRANSPORT", "MALL")
 
     def amenity_map(self, district, category):
         """Read-only POI evidence lookup already proven public. Never invents or geocodes."""
@@ -126,10 +126,33 @@ class BackendTools:
         if not isinstance(items, list) or len(items) > 80:
             raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
         for i in items:
-            if (i.get("category") != category or i.get("district") != district or i.get("reviewStatus") != "VALID"
-                    or i.get("sourceName") != "openstreetmap_overpass" or not i.get("sourceUrl", "").startswith("https://www.openstreetmap.org/")
+            osm=i.get("reviewStatus")=="VALID" and i.get("sourceName")=="openstreetmap_overpass" and i.get("sourceUrl","").startswith("https://www.openstreetmap.org/")
+            provider=i.get("reviewStatus")=="PROVIDER_REPORTED" and i.get("sourceName")=="geoapify" and i.get("coordinateBasis")=="GEOAPIFY_POINT" and i.get("sourceUrl")=="https://www.geoapify.com/"
+            if (i.get("category") != category or i.get("district") != district or not (osm or provider)
                     or not _is_number(i.get("latitude")) or not _is_number(i.get("longitude"))):
                 raise GroundingError("INVALID_AMENITY_MAP_EVIDENCE")
+        return body
+
+    def property_nearby(self, property_id, radius=1000, categories=("education",)):
+        if not isinstance(property_id,str) or not re.fullmatch(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}",property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        allowed={"education","health","shopping","park","bank","dining","tourism","entertainment","transport"}
+        if radius not in (500,1000,2000,5000) or not categories or any(c not in allowed for c in categories):
+            raise GroundingError("INVALID_POI_RANGE")
+        try:
+            response=self.client.get("/api/v1/properties/"+property_id+"/nearby",params={"radius":radius,"categories":",".join(categories),"verifiedOrigin":"true","allowEstimatedOrigin":"true"})
+            if response.status_code!=200:raise UpstreamError(response.status_code)
+            body=response.json()
+        except (httpx.HTTPError,ValueError) as e:raise UpstreamError() from e
+        if not isinstance(body,dict) or body.get("propertyId")!=property_id or body.get("radiusMeters")!=radius or body.get("distanceType")!="STRAIGHT_LINE":
+            raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
+        items=body.get("items")
+        if not isinstance(items,list) or len(items)>100:raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
+        for item in items:
+            if not isinstance(item,dict) or not isinstance(item.get("name"),str) or not item["name"].strip() or not _is_number(item.get("distanceMeters")) or not 0<=item["distanceMeters"]<=radius:
+                raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
+            if not _is_number(item.get("latitude")) or not _is_number(item.get("longitude")) or not -90<=item["latitude"]<=90 or not -180<item["longitude"]<=180:
+                raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
         return body
 
     def nearby_pois(self, property_id, radius=1000, limit=6):

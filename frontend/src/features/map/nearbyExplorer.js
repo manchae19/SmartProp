@@ -1,4 +1,4 @@
-export const POI_GROUPS = [{
+export const POI_GROUPS = [{id:'transport',label:'Giao thông công cộng',icon:'↔',color:'#7c3aed'},{
   id: 'education',
   label: 'Trường học',
   icon: '🎓',

@@ -188,6 +188,24 @@ function useManualLocationMapState(inputProps, forwardedRef) {
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
   }, []);
+  useEffect(() => {
+    const element=host.getSnapshot();
+    if(!element)return;
+    let lastWheel=0;
+    const wheel=event=>{
+      if(_props.current.disabled||!event.deltaY)return;
+      event.preventDefault();event.stopPropagation();
+      const now=performance.now();if(now-lastWheel<120)return;
+      const previous=zoom.getSnapshot(),next=Math.max(3,Math.min(19,previous+(event.deltaY<0?1:-1)));
+      if(previous===next)return;lastWheel=now;
+      const box=element.getBoundingClientRect(),dx=event.clientX-box.left-width.getSnapshot()/2,dy=event.clientY-box.top-height/2;
+      const current=center.getSnapshot(),projected=projectPoint(current.latitude,current.longitude,previous);
+      const anchor=unprojectPoint(projected.x+dx,projected.y+dy,previous),target=projectPoint(anchor.latitude,anchor.longitude,next);
+      center.set(unprojectPoint(target.x-dx,target.y-dy,next));zoom.set(next);
+    };
+    element.addEventListener('wheel',wheel,{passive:false});
+    return()=>element.removeEventListener('wheel',wheel);
+  },[host.getSnapshot()]);
   useEffect(() => () => (() => _observerRef.current?.disconnect())(), []);
   return {
     ...inputProps,

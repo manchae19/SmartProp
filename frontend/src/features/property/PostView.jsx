@@ -1,12 +1,12 @@
 import { classNames, chainHandlers } from "../../shared/lib/ui.js";
 import { createStateStore } from "../../shared/state/createStateStore.js";
-import React, { useState, useSyncExternalStore, useRef } from "react";
+import React, { useState, useSyncExternalStore, useRef, useEffect } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { useRouteState } from "../../app/navigation.jsx";
 import { usePostEditor } from "./usePostEditor.js";
 import { postSteps, propertyOptions, priceInput, areaInput, formatDecimal, hasRooms, locationConfirmed } from "./postForm.js";
 import { districts } from "../map/districts.js";
-import { administrativeHints } from "../map/geocoding.js";
+import { administrativeHints, addressComponents } from "../map/geocoding.js";
 import PostStepNav from "./PostStepNav.jsx";
 import PostValidationSummary from "./PostValidationSummary.jsx";
 import GooglePropertyLocation from "../map/GooglePropertyLocation.jsx";
@@ -64,18 +64,27 @@ function usePostViewState(inputProps, forwardedRef) {
   const [addressSyncNotice] = useState(() => createStateStore(""));
   useSyncExternalStore(addressSyncNotice.subscribe, addressSyncNotice.getSnapshot);
   function synchronizeAddressFields() {
-    if (getLocked()) return;
-    const hints = administrativeHints(draft, districts.filter(d => d !== "Tất cả"));
-    if (!draft.ward && hints.ward) _editorLatest.current.updateDraft(draftValue => draftValue["ward"] = hints.ward);
-    if (!draft.district && hints.district) _editorLatest.current.updateDraft(draftValue => draftValue["district"] = hints.district);
-    addressSyncNotice.set("Giữ phạm vi địa bàn bạn đã chọn khi sửa địa chỉ. Nếu tên phường/quận trong địa chỉ khác bộ lọc, hãy điều chỉnh một trong hai trước khi tìm; hệ thống không tự mở rộng phạm vi.");
+    const current = _editorLatest.current;
+    if (current.state.busy || !current.state.loaded || current.state.loadError) return;
+    const hints = administrativeHints(current.draft, districts.slice(1));
+    if (!hints.district && !hints.ward) return;
+    current.updateDraft(value => {
+      if (hints.district) {
+        value.district = hints.district;
+        if (!hints.ward) value.ward = addressComponents(current.draft).wards[0] || '';
+      }
+      if (hints.ward) value.ward = hints.ward;
+      value.latitude = '';
+      value.longitude = '';
+      value.confirmedLocation = '';
+    });
+    addressSyncNotice.set('Đã tự cập nhật phường/quận theo địa chỉ bạn nhập. Hãy tìm và xác nhận lại vị trí.');
   }
-  function applyAddressHints() {
-    if (getLocked()) return;
-    const hints = getAddressHints();
-    if (!draft.district && hints.district) _editorLatest.current.updateDraft(draftValue => draftValue["district"] = hints.district);
-    if (!draft.ward && hints.ward) _editorLatest.current.updateDraft(draftValue => draftValue["ward"] = hints.ward);
-  }
+  useEffect(() => {
+    addressSyncNotice.set('');
+    const timer = setTimeout(synchronizeAddressFields, 500);
+    return () => clearTimeout(timer);
+  }, [draft.address, state.loaded]);
   const getCover = () => images.find(e => e.key === coverKey) || images[0];
   const amenityOptions = ["Máy lạnh", "Tủ lạnh", "Máy giặt", "Giường", "Sofa", "Tivi", "Bàn ăn", "Ban công", "Chỗ để xe"];
   function pickFiles(event) {
@@ -129,7 +138,6 @@ function usePostViewState(inputProps, forwardedRef) {
     addressHints: getAddressHints(),
     addressSyncNotice: addressSyncNotice.getSnapshot(),
     synchronizeAddressFields,
-    applyAddressHints,
     cover: getCover(),
     amenityOptions,
     pickFiles,
@@ -501,11 +509,9 @@ export default React.forwardRef(function PostView(props, ref) {
                             {"*"}
                           </span>
                         </span>
-                        <input id="post-address" autoComplete="street-address" maxLength="4000" placeholder="Số nhà, đường, phường và thành phố" data-sp-b5d4ccf8="" value={view.draft.address ?? ""} onChange={chainHandlers($event => {
-                      return view.synchronizeAddressFields?.($event);
-                    }, event => ($value => {
-                      view.updateDraft(draftValue => draftValue.address = $value);
-                    })(event.target.value))} />
+                        <input id="post-address" autoComplete="street-address" maxLength="4000" placeholder="Số nhà, đường, phường và thành phố" data-sp-b5d4ccf8="" value={view.draft.address ?? ""} onBlur={view.synchronizeAddressFields} onChange={event => {
+                      view.updateDraft(value => { value.address = event.target.value; });
+                    }} />
                         <small data-sp-b5d4ccf8="">
                           {"Nhập số nhà, tên đường, phường và thành phố."}
                         </small>
@@ -572,11 +578,7 @@ export default React.forwardRef(function PostView(props, ref) {
                             </strong>
                             {". Đây là tên trong nội dung bạn nhập, chưa xác minh địa giới cũ/mới."}
                           </p>
-                          <button type="button" className="secondary-button mt-3" disabled={view.locked} onClick={$event => {
-                      return view.applyAddressHints?.($event);
-                    }} data-sp-b5d4ccf8="">
-                            {"Điền các trường còn trống"}
-                          </button>
+
                         </div> : null}
                       <GooglePropertyLocation address={view.draft.address} city={view.draft.city} district={view.draft.district} ward={view.draft.ward} latitude={view.draft.latitude} longitude={view.draft.longitude} confirmed={view.locationConfirmed(view.draft)} disabled={view.locked} onSelect={$event => {
                     return view.selectLocation?.($event);

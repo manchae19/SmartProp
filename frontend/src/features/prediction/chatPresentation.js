@@ -47,7 +47,8 @@ export function chatPresentation(packet) {
   });
   const areaSources = data.citations.filter(c => ['AREA_AMENITY', 'POI_EVIDENCE'].includes(c.kind));
   let summary;
-  if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');else if (noMatches || data.evidence.criteria?.budgetVnd) summary = 'Hiện chưa tìm thấy bất động sản công khai phù hợp trong dữ liệu hiện có. Bạn muốn thử khu vực khác hoặc điều chỉnh ngân sách?';else if (areaSources.length) summary = `Mình tìm được ${areaSources.length} nguồn dẫn chứng tiện ích trong hồ sơ khu vực. Bạn có thể mở nguồn bên dưới để đối chiếu; đây không phải khoảng cách từ một căn nhà.`;else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
+  if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');else if (noMatches) summary = 'Không có tin công khai phù hợp tại ' + (data.evidence.criteria?.district || 'Đà Nẵng') + ' trong ngân sách tối đa ' + compactChatPrice(data.evidence.criteria.budgetVnd).text + '. Bộ lọc khu vực đang được giữ từ hồ sơ hoặc cuộc chat; hệ thống không tự mở rộng.';else if (areaSources.length) summary = data.answer;else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
+  if (data.evidence.responseKind === 'PROPERTY_NEARBY_EVIDENCE') summary = data.answer;
   return {
     summary,
     clarification,
@@ -62,7 +63,7 @@ export function chatPresentation(packet) {
         number: index + 1,
         href: citationHref(c, data.recommendedProperties),
         label: property ? property.title : c.kind === 'AREA_AMENITY' ? 'Hồ sơ tiện ích khu vực' : 'Bằng chứng địa điểm tiện ích',
-        basis: property ? 'Thông tin bất động sản' : 'Bằng chứng cấp khu vực; không xác định khoảng cách tới căn nhà'
+        basis: property ? 'Thông tin bất động sản' : c.kind === 'PROPERTY_NEARBY' ? 'Tiện ích theo tọa độ tin; khoảng cách đường chim bay và bán kính nằm trong phản hồi Backend' : 'Bằng chứng cấp khu vực; không xác định khoảng cách tới căn nhà'
       };
     }),
     originalAnswer: data.answer,

@@ -1,5 +1,6 @@
 import { validCoordinates } from '../property/postForm.js';
 const categories = {
+  MALL: {label:'Trung tâm thương mại',symbol:'▤'},
   SCHOOL: {
     label: 'Trường học',
     symbol: '▣'
@@ -41,6 +42,7 @@ export const poiLabel = category => categories[String(category || '').toUpperCas
 export const poiSymbol = category => categories[String(category || '').toUpperCase()]?.symbol || '●';
 export function poiColor(category) {
   const cat = String(category || '').toUpperCase();
+  if (cat === 'MALL') return '#b45309';
   if (cat === 'SCHOOL') return '#2563eb'; // Blue
   if (cat === 'HOSPITAL') return '#e11d48'; // Rose / Red
   if (cat === 'PARK') return '#059669'; // Emerald Green

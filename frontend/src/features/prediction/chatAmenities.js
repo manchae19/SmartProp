@@ -2,6 +2,7 @@ import { createStateStore } from "../../shared/state/createStateStore.js";
 import { createHttpClient } from '../../shared/lib/httpClient.js';
 import { publicChatResponse } from './chat.js';
 export const amenityCategories = Object.freeze({
+  MALL: 'Trung tâm thương mại',
   SCHOOL: 'Trường học',
   HOSPITAL: 'Bệnh viện / cơ sở y tế',
   PHARMACY: 'Nhà thuốc',
@@ -25,13 +26,14 @@ export function amenityIntent(question, packet) {
   if (/truong hoc|truong |giao duc|mam non|tieu hoc|trung hoc|dai hoc/.test(q)) categories.push('SCHOOL');
   if (/cong vien/.test(q)) categories.push('PARK');
   if (/bai bien|bien nao/.test(q)) categories.push('BEACH');
-  if (/sieu thi/.test(q)) categories.push('SUPERMARKET');
+  if (/trung tam thuong mai|tttm|shopping mall|shopping center|\bmall\b/.test(q)) categories.push('MALL');
+  if (/sieu thi|supermarket/.test(q)) categories.push('SUPERMARKET');
   if (/chợ/iu.test(question) || /khu cho|cho nao|cac cho/.test(q)) categories.push('MARKET');
   if (/nha thuoc|hieu thuoc/.test(q)) categories.push('PHARMACY');
   if (/xe buyt|giao thong|ben xe/.test(q)) categories.push('PUBLIC_TRANSPORT');
   const housingResult = data.recommendedProperties.length > 0 && data.evidence?.needs && !data.evidence?.amenityIntent?.categories?.length;
   const requested = !housingResult && (categories.length > 0 || /tien ich/.test(q));
-  const narrow = /\b(phuong|xa|duong|kiet|hem)\b/.test(q);
+  const narrow = /\b(phuong|xa|duong|kiet|hem)\b/.test(q) || Boolean(data.evidence?.amenityIntent?.ward) || data.evidence?.amenityIntent?.mapAvailable === false;
   // A district the user typed always wins. A follow-up such as "co benh vien nao trong
   // khu vuc do?" names none, but the server resolved it from this conversation and the
   // citations come from that same resolution, so reuse it instead of dropping the map.
@@ -70,7 +72,9 @@ export function validateAmenityMap(data, intent) {
       OSM_WAY_CENTER: 'way',
       OSM_RELATION_CENTER: 'relation'
     }[p?.coordinateBasis];
-    if (!p || typeof p.id !== 'string' || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || !amenityCategories[p.category] || p.district !== intent.district || p.reviewStatus !== 'VALID' || p.sourceName !== 'openstreetmap_overpass' || !kind || !new RegExp('^https://www\\.openstreetmap\\.org/' + kind + '/[1-9][0-9]*$').test(p.sourceUrl) || typeof p.latitude !== 'number' || typeof p.longitude !== 'number' || !Number.isFinite(p.latitude) || !Number.isFinite(p.longitude) || p.latitude < 15 || p.latitude > 17 || p.longitude < 107 || p.longitude > 109 || typeof p.attribution !== 'string' || !p.attribution || typeof p.sourceLicense !== 'string' || !p.sourceLicense || ['distanceMeters', 'rawPayload', 'research', 'sampleListingCount', 'protectedHoldout'].some(k => k in p)) throw Error('INVALID_AMENITY_MAP');
+    const trustedOsm = p?.reviewStatus === 'VALID' && p.sourceName === 'openstreetmap_overpass' && kind && new RegExp('^https://www\\.openstreetmap\\.org/' + kind + '/[1-9][0-9]*$').test(p.sourceUrl);
+    const providerPoint = p?.reviewStatus === 'PROVIDER_REPORTED' && p.sourceName === 'geoapify' && p.coordinateBasis === 'GEOAPIFY_POINT' && p.sourceUrl === 'https://www.geoapify.com/' && p.id?.startsWith('geoapify:');
+    if (!p || typeof p.id !== 'string' || ids.has(p.id) || typeof p.name !== 'string' || !p.name.trim() || !amenityCategories[p.category] || p.district !== intent.district || !(trustedOsm || providerPoint) || typeof p.latitude !== 'number' || typeof p.longitude !== 'number' || !Number.isFinite(p.latitude) || !Number.isFinite(p.longitude) || p.latitude < 15 || p.latitude > 17 || p.longitude < 107 || p.longitude > 109 || typeof p.attribution !== 'string' || !p.attribution || typeof p.sourceLicense !== 'string' || !p.sourceLicense || ['distanceMeters', 'rawPayload', 'research', 'sampleListingCount', 'protectedHoldout'].some(k => k in p)) throw Error('INVALID_AMENITY_MAP');
     ids.add(p.id);
   }
   if (data.boundary != null) {

@@ -1,12 +1,13 @@
 from decimal import Decimal
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     question: str = Field(min_length=1, max_length=2000)
     budgetVnd: Decimal | None = Field(default=None, ge=1, le=999999999999999, allow_inf_nan=False)
+    minPriceVnd: Decimal | None = Field(default=None, ge=1, le=999999999999999, allow_inf_nan=False)
     purpose: Literal["LIVING", "INVESTMENT", "RENTAL"] = "LIVING"
     propertyType: Literal["ALL", "HOUSE", "APARTMENT", "LAND", "VILLA", "ROOM", "COMMERCIAL"] = "ALL"
     minAreaSqm: Decimal | None = Field(default=None, gt=0, le=1000000, allow_inf_nan=False)
@@ -18,6 +19,12 @@ class ChatRequest(BaseModel):
     # it only names an in-memory context entry. A public caller can never read a
     # research session because the store is namespaced by authenticated scope.
     sessionId: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+
+    @model_validator(mode="after")
+    def price_range_valid(self):
+        if self.minPriceVnd is not None and self.budgetVnd is not None and self.minPriceVnd > self.budgetVnd:
+            raise ValueError("Minimum price must not exceed budget")
+        return self
 
 
 class Citation(BaseModel):

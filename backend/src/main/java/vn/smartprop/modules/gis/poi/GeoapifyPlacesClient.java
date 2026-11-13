@@ -32,13 +32,28 @@ public class GeoapifyPlacesClient {
         this.json=json;this.limits=limits;this.key=key;this.enabled=enabled;this.client=client;
     }
     public JsonNode search(double latitude,double longitude,int radius,List<String> categories){
-        if(!enabled||key==null||key.isBlank())throw new ApiException(503,"NEARBY_NOT_CONFIGURED","Nguồn tiện ích chưa được cấu hình.");
-        // Share the existing application's outbound request budget with geocoding.
-        limits.check("geo:egress",1,1);limits.check("geo:daily",250,86400);
         String filter="circle:"+longitude+","+latitude+","+radius;
         String url="https://api.geoapify.com/v2/places?categories="+encode(String.join(",",categories))
             +"&filter="+encode(filter)+"&bias="+encode("proximity:"+longitude+","+latitude)
             +"&limit="+LIMIT+"&lang=vi&apiKey="+encode(key);
+        return request(url);
+    }
+    public JsonNode searchBounds(double west,double south,double east,double north,List<String> categories){
+        if(!Double.isFinite(west)||!Double.isFinite(south)||!Double.isFinite(east)||!Double.isFinite(north)||west>=east||south>=north||east-west>3||north-south>3)
+            throw new ApiException(400,"VALIDATION_ERROR","Phạm vi tiện ích không hợp lệ.");
+        String filter="rect:"+west+","+south+","+east+","+north;
+        return request("https://api.geoapify.com/v2/places?categories="+encode(String.join(",",categories))+"&filter="+encode(filter)+"&limit="+LIMIT+"&lang=vi&apiKey="+encode(key));
+    }
+    public JsonNode route(double fromLat,double fromLon,double toLat,double toLon,String mode){
+        if(!NearbyService.valid(fromLat,fromLon)||!NearbyService.valid(toLat,toLon)||!java.util.Set.of("walk","drive").contains(mode))
+            throw new ApiException(400,"VALIDATION_ERROR","Điểm hoặc phương tiện không hợp lệ.");
+        String waypoints=fromLat+","+fromLon+"|"+toLat+","+toLon;
+        return request("https://api.geoapify.com/v1/routing?waypoints="+encode(waypoints)+"&mode="+encode(mode)+"&units=metric&format=geojson&apiKey="+encode(key));
+    }
+    private JsonNode request(String url){
+        if(!enabled||key==null||key.isBlank())throw new ApiException(503,"NEARBY_NOT_CONFIGURED","Nguồn tiện ích chưa được cấu hình.");
+        // Share the existing application's outbound request budget with geocoding.
+        limits.check("geo:egress",1,1);limits.check("geo:daily",250,86400);
         CompletableFuture<HttpResponse<InputStream>> pending=null;
         try{
             var request=HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8))

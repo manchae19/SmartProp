@@ -2,6 +2,7 @@
 import re
 from decimal import Decimal
 from .intent import fold, poi_categories, CATEGORY_LABELS
+from .money import format_vnd
 
 PRIORITY_CHOICES = ["Trường học", "Chợ / siêu thị", "Y tế", "Công viên", "Giao thông công cộng", "Xem gợi ý ngay"]
 PURPOSE_CHOICES = ["Mua để ở", "Mua đầu tư", "Thuê để ở", "Bỏ qua"]
@@ -70,7 +71,7 @@ def preferences(question):
     value = fold(question)
     # Generic health choice has no more specific provider category than HOSPITAL.
     expanded = question + (" bệnh viện" if re.search(r"\by te\b", value) else "")
-    cats = list(poi_categories(expanded))
+    cats = [c for c in poi_categories(expanded) if c != "MALL"]
     positions = {}
     terms = {"SCHOOL": ["truong", "tieu hoc", "giao duc"], "SUPERMARKET": ["sieu thi"],
              "MARKET": ["cho"], "HOSPITAL": ["benh vien", "y te", "phong kham"],
@@ -102,7 +103,7 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
         state["householdMode"] = True
         guided = True
     cats = preferences(question)
-    search = housing_search(question) or bool(turn.get("budgetChange") and not cats) or refine or skip
+    search = bool(turn.get("searchChange")) or (housing_search(question) and not turn.get("ordinal") and not turn.get("needsPropertyReference")) or refine or skip
     update = bool(cats and (explicit_priority or pending == "priorities" or (search and not turn.get("analytic"))))
     removal = bool(re.search(r"\b(?:bo uu tien|khong uu tien|xoa uu tien)\b", value))
     active = search or update or removal or bool(pending) or guided
@@ -315,8 +316,9 @@ def projection(context, criteria):
     types = {"APARTMENT": "Căn hộ", "HOUSE": "Nhà ở", "LAND": "Đất nền", "VILLA": "Biệt thự", "ALL": "Mọi loại nhà"}
     summary = []
     if criteria.get("budgetVnd"):
-        budget = str(criteria["budgetVnd"])
-        summary.append("Giá mua tối đa: " + budget + " VND (không tự nâng)")
+        summary.append("Giá mua tối đa: " + format_vnd(criteria["budgetVnd"]) + " (không tự nâng)")
+        if criteria.get("minPriceVnd"):
+            summary.append("Giá mua tối thiểu: " + format_vnd(criteria["minPriceVnd"]))
     summary.append(types.get(criteria.get("propertyType", "ALL"), criteria.get("propertyType", "ALL")))
     summary.append("Khu vực: " + (criteria.get("district") or "Đà Nẵng") + (", " + criteria["ward"] if criteria.get("ward") else ""))
     if state.get("profileUsed"):
@@ -343,5 +345,5 @@ def projection(context, criteria):
         limits.append("Nguồn SCHOOL chỉ xác nhận trường học nói chung; chưa xác nhận trường tiểu học hoặc trường phù hợp cụ thể.")
     if any(c in ordered for c in ("SUPERMARKET", "MARKET")):
         limits.append("Điểm chợ/siêu thị dựa trên nhóm nhu yếu phẩm ở khu vực khi có bằng chứng tương ứng, không phải điểm hay khoảng cách đến siêu thị riêng.")
-    return {"summary": summary, "priorities": ordered, "pending": state.get("pending"), "limitations": limits,
+    return {"fromProfile": bool(state.get("profileUsed")), "summary": summary, "priorities": ordered, "pending": state.get("pending"), "limitations": limits,
             "schoolLevelRequested": state.get("schoolLevel")}

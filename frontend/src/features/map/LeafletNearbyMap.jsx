@@ -37,6 +37,7 @@ function useLeafletNearbyMapState(inputProps, forwardedRef) {
   useSyncExternalStore(ready.subscribe, ready.getSnapshot);
   useSyncExternalStore(element.subscribe, element.getSnapshot);
   const _mapRef = useRef(undefined),
+    _routeRef = useRef(null),
     _streetRef = useRef(undefined),
     _propertiesRef = useRef(undefined),
     _poisRef = useRef(undefined),
@@ -137,12 +138,13 @@ function useLeafletNearbyMapState(inputProps, forwardedRef) {
       for (const p of _props.current.places.filter(validPoint)) {
         const group = POI_GROUPS.find(g => g.id === p.category) || POI_GROUPS[0];
         const marker = L.marker([Number(p.latitude), Number(p.longitude)], {
-          icon: icon(group.icon, group.color),
+          icon: icon(group.icon, group.color, p.id === _props.current.activePoi),
           title: p.name,
           keyboard: true
         }).addTo(_poisRef.current);
         marker.bindPopup(popup(p)).on("click", () => _propsLatest.current.onSelectPoi?.(p.id));
         poiPins.set(p.id, marker);
+        if (p.id === _props.current.activePoi) marker.openPopup();
       }
       const key = selected.id + ":" + selected.latitude + ":" + selected.longitude + ":" + _props.current.radius;
       if (_lastSelectionRef.current !== key) {
@@ -155,6 +157,7 @@ function useLeafletNearbyMapState(inputProps, forwardedRef) {
         if (_props.current.showProperty) pins.get(selected.id)?.openPopup();
       }
       if (keepPropertyPopup && _props.current.showProperty) pins.get(selected.id)?.openPopup();
+      poiPins.get(_props.current.activePoi)?.openPopup();
     } else if (_props.current.items.some(publicMapPoint)) {
       _lastSelectionRef.current = "";
       _mapRef.current.fitBounds(L.latLngBounds(_props.current.items.filter(publicMapPoint).map(p => [Number(p.latitude), Number(p.longitude)])), {
@@ -252,6 +255,16 @@ function useLeafletNearbyMapState(inputProps, forwardedRef) {
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
   }, []);
+  useEffect(()=>{
+    _routeRef.current?.remove();_routeRef.current=null;
+    const route=_props.current.route;
+    if(!ready.getSnapshot()||!_mapRef.current||!route?.geometry)return;
+    const layer=L.geoJSON({type:'Feature',properties:{},geometry:route.geometry},{renderer:L.svg(),style:{className:'property-road-route',color:'#1769e0',weight:6,opacity:0.9,lineCap:'round'}}).addTo(_mapRef.current);
+    layer.bindTooltip('Tuyến đường '+distanceLabel(route.distanceMeters));_routeRef.current=layer;
+    const bounds=layer.getBounds();
+    if(bounds.isValid())_mapRef.current.fitBounds(bounds,{padding:[35,35],maxZoom:17,animate:false});
+    return()=>{layer.remove();if(_routeRef.current===layer)_routeRef.current=null};
+  },[ready.getSnapshot(),inputProps.route]);
   function retryTiles() {
     _tileErrorsRef.current = 0;
     mapError.set("");
@@ -270,7 +283,7 @@ function useLeafletNearbyMapState(inputProps, forwardedRef) {
     center,
     retryTiles,
     updateElementValue: element.set,
-    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["items", "selectedId", "places", "radius", "showProperty", "showRadius", "activePoi", "simple", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["items", "selectedId", "places", "radius", "showProperty", "showRadius", "activePoi", "simple", "route", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function LeafletNearbyMap(props, ref) {

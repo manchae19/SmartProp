@@ -268,6 +268,33 @@ function useBrowseTileMapState(inputProps, forwardedRef) {
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
   }, []);
+  useEffect(() => {
+    const element = host.getSnapshot();
+    if (!element) return;
+    let lastWheel = 0;
+    const wheel = event => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const now = performance.now();
+      if (now - lastWheel < 120) return;
+      const previous = zoom.getSnapshot();
+      const next = Math.max(3, Math.min(19, previous + (event.deltaY < 0 ? 1 : -1)));
+      if (previous === next) return;
+      lastWheel = now;
+      const bounds = element.getBoundingClientRect();
+      const dx = event.clientX - bounds.left - width.getSnapshot() / 2;
+      const dy = event.clientY - bounds.top - height.getSnapshot() / 2;
+      const current = center.getSnapshot();
+      const projected = projectPoint(current.latitude, current.longitude, previous);
+      const anchor = unprojectPoint(projected.x + dx, projected.y + dy, previous);
+      const target = projectPoint(anchor.latitude, anchor.longitude, next);
+      center.set(unprojectPoint(target.x - dx, target.y - dy, next));
+      zoom.set(next);
+    };
+    element.addEventListener('wheel', wheel, {passive: false});
+    return () => element.removeEventListener('wheel', wheel);
+  }, [host.getSnapshot()]);
   useEffect(() => () => (() => _observerRef.current?.disconnect())(), []);
   return {
     ...inputProps,

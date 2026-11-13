@@ -4,7 +4,9 @@ import java.util.List;
 
 public final class NearbyDtos {
     private NearbyDtos() {}
-    public record Location(Double latitude,Double longitude,String accuracy) {}
+    public record Location(Double latitude,Double longitude,String accuracy,String source,String reference,Instant verifiedAt) {
+        public Location(Double latitude,Double longitude,String accuracy){this(latitude,longitude,accuracy,"PROPERTY_LISTING",null,null);}
+    }
     public record Place(String id,String name,List<String> categoryGroups,String category,
                         double latitude,double longitude,double distanceMeters,String address,
                         String provider,String sourcePlaceId,Instant sourceUpdatedAt) {}

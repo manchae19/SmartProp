@@ -1,7 +1,7 @@
 import { classNames } from "../../shared/lib/ui.js";
 import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
 import React, { useRef, useState, useSyncExternalStore, useImperativeHandle, useEffect } from "react";
-import { accuracyLabel, geocodingSignature, geocodingConfiguration, normalizeAddressQuery, searchLocations, geocodingErrorMessage } from "./geocoding.js";
+import { addressScopeConflict, accuracyLabel, geocodingSignature, geocodingConfiguration, normalizeAddressQuery, searchLocations, geocodingErrorMessage } from "./geocoding.js";
 import "./AutomaticLocationSearch.css";
 function useAutomaticLocationSearchState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
@@ -48,6 +48,9 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
   useSyncExternalStore(configurationError.subscribe, configurationError.getSnapshot);
   useSyncExternalStore(checking.subscribe, checking.getSnapshot);
   useSyncExternalStore(configuration.subscribe, configuration.getSnapshot);
+  const [scopeUnavailable] = useState(() => createStateStore(false)), [districtScope] = useState(() => createStateStore(false));
+  useSyncExternalStore(scopeUnavailable.subscribe,scopeUnavailable.getSnapshot);
+  useSyncExternalStore(districtScope.subscribe,districtScope.getSnapshot);
   const getQuery = () => normalizeAddressQuery(_props.current);
   const getSearchScope = () => [_props.current.city === "Da Nang" ? "Đà Nẵng" : _props.current.city, _props.current.district, _props.current.ward].filter(Boolean).join(" · ");
   const getProviderName = () => configuration.getSnapshot()?.provider === "GOOGLE" ? "Google Maps" : "Geoapify";
@@ -68,11 +71,14 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
     }
   }
   const getSignature = () => geocodingSignature(_props.current);
-  const getCanSearch = () => !_props.current.disabled && !checking.getSnapshot() && configuration.getSnapshot()?.available === true && !busy.getSnapshot() && retryRemaining.getSnapshot() === 0 && consent.getSnapshot() && !!_props.current.address?.trim() && !!_props.current.city?.trim();
-  async function search() {
+  const getCanSearch = () => !addressScopeConflict(_props.current) && !_props.current.disabled && !checking.getSnapshot() && configuration.getSnapshot()?.available === true && !busy.getSnapshot() && retryRemaining.getSnapshot() === 0 && consent.getSnapshot() && !!_props.current.address?.trim() && !!_props.current.city?.trim();
+  async function search(option) {
+    const districtOnly = option === true;
     if (!getCanSearch()) return;
     const current = ++_revisionRef.current;
     busy.set(true);
+    districtScope.set(districtOnly);
+    scopeUnavailable.set(false);
     error.set("");
     status.set("");
     candidates.set([]);
@@ -81,14 +87,16 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
     try {
       const result = await searchLocations({
         ..._props.current,
-        shareAddress: consent.getSnapshot()
+        shareAddress: consent.getSnapshot(),
+        districtOnly
       });
       if (current !== _revisionRef.current) return;
       candidates.set(result.candidates);
-      status.set(result.candidates.length ? "Chọn một kết quả trong khu vực đã chọn để xem ghim đề xuất; chưa lưu hoặc xác nhận vị trí." : "Không tìm thấy địa điểm phù hợp trong khu vực đã chọn. Bạn có thể điều chỉnh địa chỉ hoặc chọn ghim thủ công." + (result.status === "SCOPE_UNAVAILABLE" ? " Chưa có ranh giới đã kiểm chứng cho lựa chọn này; hệ thống không tự mở rộng phạm vi." : ""));
+      scopeUnavailable.set(result.status === "SCOPE_UNAVAILABLE");
+      status.set(result.candidates.length ? "Chọn một kết quả trong khu vực đã chọn để xem ghim đề xuất; chưa lưu hoặc xác nhận vị trí." : (result.status === "SCOPE_UNAVAILABLE" ? "Chưa có ranh giới phường đủ điều kiện để tìm theo lựa chọn hiện tại. Bạn có thể chủ động tìm trong quận bên dưới hoặc đặt ghim thủ công." : "Không tìm thấy địa điểm phù hợp trong phạm vi đang tìm. Thử địa chỉ số nhà/tên đường hoặc đặt ghim thủ công nếu đây là tên thương mại của dự án."));
       if (result.candidates.length === 1) {
         preview(result.candidates[0]);
-        status.set("Đã đưa bản đồ đến gợi ý duy nhất. Kiểm tra vị trí và độ chính xác trước khi xác nhận.");
+        status.set(result.candidates[0].context?.precision === "APPROXIMATE_STREET" ? "Đã tìm thấy đường. Ghim đang là vị trí tham khảo trên đường, chưa phải căn nhà. Hãy chỉnh ghim tới vị trí thực tế rồi xác nhận." : "Đã đưa bản đồ đến gợi ý. Kiểm tra số nhà, vị trí và độ chính xác trước khi xác nhận.");
       }
     } catch (e) {
       if (current === _revisionRef.current) {
@@ -125,6 +133,7 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
       clearRetry();
       busy.set(false);
       consent.set(false);
+      scopeUnavailable.set(false);districtScope.set(false);
       candidates.set([]);
       selected.set("");
       error.set("");
@@ -162,6 +171,10 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
     providerName: getProviderName(),
     checkConfiguration,
     canSearch: getCanSearch(),
+    scopeConflict: addressScopeConflict(_props.current),
+    scopeUnavailable: scopeUnavailable.getSnapshot(),
+    districtScope: districtScope.getSnapshot(),
+    searchDistrict: () => search(true),
     search,
     preview,
     rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["address", "city", "district", "ward", "disabled", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
@@ -210,8 +223,14 @@ export default React.forwardRef(function AutomaticLocationSearch(props, ref) {
       {view.configuration?.available ? <p className="search-scope" data-sp-b9243b48="">
           {"Giới hạn tìm kiếm: "}
           {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.searchScope)}
-          {". Kết quả ngoài phạm vi sẽ không được hiển thị."}
+          {". Ưu tiên khớp tên đường; phường dùng để hỗ trợ tìm. Kết quả phải nằm trong quận đã chọn; ranh giới phường có thể chưa được xác minh."}
         </p> : null}
+      {view.scopeUnavailable && view.district ? <div className="search-scope-choice">
+        <button type="button" disabled={!view.canSearch} onClick={()=>view.searchDistrict()}>Tìm trong quận {view.district} (không giới hạn phường)</button>
+        <p>Chỉ mở rộng khi bạn bấm nút này. Địa chỉ gốc được giữ nguyên; kết quả vẫn cần kiểm tra ghim.</p>
+      </div> : null}
+      {view.districtScope ? <p role="status">Đang dùng phạm vi quận {view.district}; chưa đối chiếu ranh giới phường {view.ward || "đã nhập"}.</p> : null}
+      {view.scopeConflict ? <p role="alert" className="search-error">{view.scopeConflict}</p> : null}
       {view.busy ? <p role="status" data-sp-b9243b48="">
           {"Đang tìm các vị trí phù hợp…"}
         </p> : null}

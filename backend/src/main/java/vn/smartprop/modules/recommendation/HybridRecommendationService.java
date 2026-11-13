@@ -149,6 +149,7 @@ public class HybridRecommendationService {
     }
     private boolean eligible(Candidate c,Request r,boolean research) {
         if(c.holdout()||c.groupHasHoldout()||c.type()==null||c.price()==null||c.area()==null||c.price().signum()<=0||c.area().signum()<=0)return false;
+        if(r.minPriceVnd()!=null&&c.price().compareTo(r.minPriceVnd())<0)return false;
         if(c.price().compareTo(r.budgetVnd())>0 || (r.minAreaSqm()!=null&&c.area().compareTo(r.minAreaSqm())<0))return false;
         if(r.propertyType()!=PropertyType.ALL&&r.propertyType()!=c.type())return false;
         if(!matches(r.district(),c.district())||!matches(r.ward(),c.ward()))return false;
