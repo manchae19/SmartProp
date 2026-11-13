@@ -6,7 +6,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Recovers image scans left in SCANNING after a process restart.
@@ -21,6 +24,7 @@ public class ImageScanRecovery {
     private final JdbcTemplate jdbc;
     private final PropertyImageScanService scanner;
     private final int staleAfterSeconds;
+    private final AtomicBoolean recoveryRunning = new AtomicBoolean();
 
     public ImageScanRecovery(JdbcTemplate jdbc, PropertyImageScanService scanner,
             @Value("${app.image-scan.stale-after-seconds:180}") int staleAfterSeconds) {
@@ -30,7 +34,22 @@ public class ImageScanRecovery {
     }
 
     @EventListener(ApplicationReadyEvent.class)
+    public void recoverOnStartup() {
+        recoverInterruptedScans();
+    }
+
+    @Scheduled(fixedDelayString = "${app.image-scan.recovery-interval-ms:60000}",
+        initialDelayString = "${app.image-scan.recovery-interval-ms:60000}")
     public void recoverInterruptedScans() {
+        if (!recoveryRunning.compareAndSet(false, true)) return;
+        try {
+            recoverStaleScans();
+        } finally {
+            recoveryRunning.set(false);
+        }
+    }
+
+    private void recoverStaleScans() {
         if (staleAfterSeconds < 1 || staleAfterSeconds > 3600) {
             log.warn("Image scan recovery skipped: stale-after-seconds out of range ({})", staleAfterSeconds);
             return;
