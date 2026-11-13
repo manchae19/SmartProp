@@ -3,7 +3,7 @@ spring:
   flyway:
     enabled: false
     locations: classpath:database/migrations,classpath:database/research-migrations
-    target: '19'
+    target: '21'
     clean-disabled: true
     baseline-on-migrate: false
     create-schemas: false
