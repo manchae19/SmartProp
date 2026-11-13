@@ -3,10 +3,16 @@ param(
     [string]$EnvFile = 'F:\SmartProp\.env',
     [string]$RagSecretPath = 'F:\SmartPropSecrets\rag_reader.cred',
     [string]$PythonExe = $(if ($env:SMARTPROP_PYTHON) { $env:SMARTPROP_PYTHON } else { 'F:\SmartProp\ai-services\.venv\Scripts\python.exe' }),
+    [string]$ImagecheckPythonExe = '',
     [string]$RunDirectory = $(Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path '.local-run')
 )
 $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path $Root).Path
+if (-not $ImagecheckPythonExe) {
+    $candidate = Join-Path (Split-Path $PythonExe) 'pythonw.exe'
+    if (Test-Path -LiteralPath $candidate) { $ImagecheckPythonExe = $candidate }
+    else { $ImagecheckPythonExe = $PythonExe }
+}
 New-Item -ItemType Directory -Force -Path $RunDirectory | Out-Null
 
 function Test-Port([int]$Port) {
@@ -49,7 +55,7 @@ if (Test-Url 'http://127.0.0.1:18001/image-duplicates/health') {
 } elseif (Test-Port 18001) {
     throw 'Port 18001 is occupied but imagecheck health is not configured; refusing to start a duplicate.'
 } else {
-    if (-not (Test-Path -LiteralPath $PythonExe)) { throw "Python executable not found: $PythonExe" }
+    if (-not (Test-Path -LiteralPath $ImagecheckPythonExe)) { throw "Python executable not found: $ImagecheckPythonExe" }
     if (-not (Test-Path -LiteralPath $RagSecretPath)) { throw "Missing DPAPI RAG credential: $RagSecretPath" }
     $secure = Get-Content -LiteralPath $RagSecretPath | ConvertTo-SecureString
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
@@ -65,7 +71,7 @@ if (Test-Url 'http://127.0.0.1:18001/image-duplicates/health') {
     $env:RAG_IMAGE_BACKEND_URL = 'http://127.0.0.1:8080'
     $imageLog = Join-Path $RunDirectory 'imagecheck-18001.log'
     $imageErr = Join-Path $RunDirectory 'imagecheck-18001.err.log'
-    $process = Start-Process -FilePath $PythonExe -ArgumentList @('-m','uvicorn','imagecheck_main:app','--host','127.0.0.1','--port','18001','--no-proxy-headers') -WorkingDirectory (Join-Path $Root 'ai-services') -RedirectStandardOutput $imageLog -RedirectStandardError $imageErr -PassThru -WindowStyle Hidden
+    $process = Start-Process -FilePath $ImagecheckPythonExe -ArgumentList @('-m','uvicorn','imagecheck_main:app','--host','127.0.0.1','--port','18001','--no-proxy-headers') -WorkingDirectory (Join-Path $Root 'ai-services') -RedirectStandardOutput $imageLog -RedirectStandardError $imageErr -PassThru -WindowStyle Hidden
     $process.Id | Set-Content (Join-Path $RunDirectory 'imagecheck.pid')
     Remove-Item Env:RAG_DB_PASSWORD -ErrorAction SilentlyContinue
     if (-not (Wait-Url 'http://127.0.0.1:18001/image-duplicates/health' 25)) {
