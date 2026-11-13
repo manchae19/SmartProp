@@ -12,6 +12,8 @@ export default defineConfig(({mode}) => {
   for(const target of [apiTarget,aiTarget])if(!new RegExp('^http://127[.]0[.]0[.]1:[0-9]{4,5}$').test(target))throw Error('Dev API proxy must target a loopback HTTP port')
   const proxy={
     '^/api/chat(?:\\?|$)':publicChatProxy(chatTarget),
+    '/api/image-duplicates':{target:chatTarget,changeOrigin:false,proxyTimeout:60000,
+      rewrite:value=>value.replace(/^\/api\/image-duplicates(?=\/|$)/,'/image-duplicates')},
     // Private local server-to-server header. Never VITE_* or exposed via define.
     '/api/v1/recommendations/research':{target:apiTarget,changeOrigin:false,proxyTimeout:180000,configure:proxy=>{
       proxy.on('proxyReq',request=>{

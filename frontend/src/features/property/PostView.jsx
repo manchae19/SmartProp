@@ -34,6 +34,7 @@ import PostValidationSummary from "./PostValidationSummary.jsx";
 import GooglePropertyLocation from "../map/GooglePropertyLocation.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import PostValuationPanel from "../prediction/PostValuationPanel.jsx";
+import ImageScanSection from "./ImageScanSection.jsx";
 import "./PostView.css";
 function setup(__props) {
   const route = useRoute(),
@@ -149,6 +150,7 @@ function setup(__props) {
     GooglePropertyLocation,
     PrivateImage,
     PostValuationPanel,
+    ImageScanSection,
     route,
     editor,
     draft,
@@ -1300,6 +1302,13 @@ export default React.forwardRef(function PostView(props, ref) {
                             </article>
                           ))}
                         </div>
+                      ) : null}
+                      {ctx.managed?.property.id ? (
+                        <ImageScanSection propertyId={ctx.managed.property.id} compact />
+                      ) : ctx.images.length ? (
+                        <p className="field-help">
+                          {"Ảnh sẽ được kiểm tra trùng tự động sau khi bạn lưu nháp. Không cần mở trang kiểm tra riêng."}
+                        </p>
                       ) : null}
                     </section>
                     <section

@@ -22,7 +22,8 @@ MAX_AREA_IDS = 6
 MAX_EVIDENCE_IDS = 24
 SESSION_ID = re.compile(r"^[a-f0-9]{32}$")
 
-CRITERIA_KEYS = ("budgetVnd", "purpose", "propertyType", "minAreaSqm", "district", "ward")
+CRITERIA_KEYS = ("budgetVnd", "purpose", "propertyType", "minAreaSqm", "maxAreaSqm",
+                 "minAreaExclusive", "maxAreaExclusive", "district", "ward")
 
 
 @dataclass

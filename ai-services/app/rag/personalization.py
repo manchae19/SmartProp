@@ -25,6 +25,62 @@ def area_sqm(question):
     area = Decimal(match.group(1))
     return area if 0 < area <= 1000000 else None
 
+
+def area_spec(question):
+    """Return explicit area constraints without changing the legacy default.
+
+    `minAreaSqm` remains inclusive when no operator is present (old API behavior).
+    """
+    value = fold(question).replace(",", ".")
+    match = re.search(r"(?<![\w.])(\d{1,5}(?:\.\d{1,2})?)\s*(?:m2|m²|met vuong|m\b)", value)
+    if not match:
+        match = re.fullmatch(r"\s*(\d{1,5}(?:\.\d{1,2})?)\s*", value)
+    if not match:
+        return None
+    area = Decimal(match.group(1))
+    if not 0 < area <= 1000000:
+        return None
+    before = value[max(0, match.start() - 32):match.start()].strip()
+    after = value[match.end():match.end() + 32].strip()
+    if re.search(r"\b(?:tren|hon|lon hon|cao hon|nhieu hon)\s*$", before):
+        return {"maxAreaSqm": None, "minAreaSqm": str(area), "minAreaExclusive": True,
+                "maxAreaExclusive": False}
+    if re.search(r"\b(?:duoi|nho hon|thap hon|it hon)\s*$", before):
+        return {"maxAreaSqm": str(area), "minAreaSqm": None, "minAreaExclusive": False,
+                "maxAreaExclusive": True}
+    if re.search(r"\b(?:toi da|khong qua|khong vuot)\s*$", before) or after.startswith("tro xuong"):
+        return {"maxAreaSqm": str(area), "minAreaSqm": None, "minAreaExclusive": False,
+                "maxAreaExclusive": False}
+    if re.search(r"\b(?:tu|toi thieu|it nhat|khong duoi)\s*$", before) or after.startswith("tro len"):
+        return {"maxAreaSqm": None, "minAreaSqm": str(area), "minAreaExclusive": False,
+                "maxAreaExclusive": False}
+    return {"maxAreaSqm": None, "minAreaSqm": str(area), "minAreaExclusive": False,
+            "maxAreaExclusive": False}
+
+
+def apply_area(criteria, question):
+    spec = area_spec(question)
+    if spec is None:
+        return False
+    criteria.pop("minAreaSqm", None)
+    criteria.pop("maxAreaSqm", None)
+    criteria.pop("minAreaExclusive", None)
+    criteria.pop("maxAreaExclusive", None)
+    for key, value in spec.items():
+        if value is not None:
+            criteria[key] = value
+    return True
+
+def format_vnd(value):
+    amount = Decimal(str(value))
+    if not amount.is_finite() or amount <= 0:
+        return "không hợp lệ"
+    whole, _, fraction = format(amount, "f").partition(".")
+    grouped = f"{int(whole):,}".replace(",", ".")
+    fraction = fraction.rstrip("0")
+    return f"{grouped},{fraction} VND" if fraction else f"{grouped} VND"
+
+
 def family_status(value):
     if "da lap gia dinh" in value or "da ket hon" in value or "married" in value:
         return "MARRIED"
@@ -177,9 +233,7 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
             else:
                 return {"search": True, "question": "Bạn muốn tìm loại bất động sản nào?", "choices": PROPERTY_TYPE_CHOICES}
         elif pending == "min_area":
-            area = area_sqm(question)
-            if area is not None:
-                criteria["minAreaSqm"] = str(area)
+            if apply_area(criteria, question):
                 state["areaAsked"] = True
                 state["pending"] = None
             elif skip:
@@ -266,10 +320,8 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
             else:
                 state["typeAsked"] = True
         if not state.get("areaAsked"):
-            area = area_sqm(question)
-            if area is not None:
-                criteria["minAreaSqm"] = str(area)
-            if "minAreaSqm" not in criteria and not skip:
+            apply_area(criteria, question)
+            if not any(key in criteria for key in ("minAreaSqm", "maxAreaSqm")) and not skip:
                 state["areaAsked"] = True
                 state["pending"] = "min_area"
                 return {"search": True, "question": "Diện tích tối thiểu bạn cần là bao nhiêu m²? Nhập số hoặc chọn bên dưới.", "choices": AREA_CHOICES}
@@ -301,6 +353,7 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
     if not state.get("locationKnown") and not criteria.get("district") and criteria.get("propertyType", "ALL") != "ALL" and not skip:
         state["pending"] = "location"
         return {"search": True, "question": "Bạn muốn tìm ở khu vực nào tại Đà Nẵng, hoặc thường xuyên cần đến đâu?", "choices": ["Toàn Đà Nẵng", "Hải Châu", "Sơn Trà", "Cẩm Lệ", "Xem gợi ý ngay"]}
+    apply_area(criteria, question)
     family = "gia dinh" in value
     if refine or ((family or pending == "location") and not state.get("askedPriorities") and not update and not skip):
         state["askedPriorities"] = True
@@ -315,8 +368,7 @@ def projection(context, criteria):
     types = {"APARTMENT": "Căn hộ", "HOUSE": "Nhà ở", "LAND": "Đất nền", "VILLA": "Biệt thự", "ALL": "Mọi loại nhà"}
     summary = []
     if criteria.get("budgetVnd"):
-        budget = str(criteria["budgetVnd"])
-        summary.append("Giá mua tối đa: " + budget + " VND (không tự nâng)")
+        summary.append("Giá mua tối đa: " + format_vnd(criteria["budgetVnd"]))
     summary.append(types.get(criteria.get("propertyType", "ALL"), criteria.get("propertyType", "ALL")))
     summary.append("Khu vực: " + (criteria.get("district") or "Đà Nẵng") + (", " + criteria["ward"] if criteria.get("ward") else ""))
     if state.get("profileUsed"):

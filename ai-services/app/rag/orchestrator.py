@@ -8,10 +8,11 @@ from .validator import render_answer, validate_plan, validate_generated_answer, 
 from urllib.parse import quote
 from .gis import gis_evidence
 from .diagnostics import traced, event, reason
-from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
+from .intent import (asks_for_amenities, asks_market_trend, empty_search_answer, poi_categories,
+                     CATEGORY_LABELS, insufficient_amenity_answer)
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
-from .personalization import intake, projection
+from .personalization import intake, projection, format_vnd
 
 
 LIMITATIONS = [
@@ -133,6 +134,54 @@ class ChatOrchestrator:
             generationMode=generation_mode, retrievalMode=retrieval_mode, citations=list(citations),
             recommendedProperties=list(properties), evidence=payload, dataLimitations=list(limitations or []))
 
+    def _market_answer(self, request, session_id, context, research, district):
+        """Answer market-trend questions from aggregate MySQL statistics, not property intake."""
+        try:
+            data = self.backend.market_analytics(district)
+        except (RagUnavailable, GroundingError, UpstreamError):
+            return self._reply(request, session_id, context, {}, properties=[], citations=[], research=research,
+                answer="Chưa tải được dữ liệu thống kê thị trường từ SmartProp. Không có số liệu thay thế được tạo.",
+                responseKind="MARKET_ANALYTICS_UNAVAILABLE",
+                limitations=["Không dùng dữ liệu giả hoặc số liệu ngoài database khi nguồn thống kê chưa sẵn sàng."],
+                evidence={"market": {"status": "UNAVAILABLE", "district": district},
+                          "generation": {"accepted": False, "reason": "MARKET_DATA_UNAVAILABLE"},
+                          "retrievedSourceIds": [], "semanticRetrieval": {"hits": []}})
+        stat = data.get("overall") or {}
+        if district:
+            stat = next((item for item in data.get("byDistrict") or [] if item.get("key") == district), stat)
+        meta = data.get("meta") or {}
+        count = int(stat.get("count") or 0)
+        minimum = int(meta.get("minSample") or 30)
+        place = district or "Đà Nẵng"
+        if stat.get("dataStatus") != "OK" or count < minimum or stat.get("medianAskingPriceVnd") is None:
+            answer = (f"Chưa đủ mẫu giá rao để kết luận xu hướng tại {place}: "
+                      f"{count} tin, dưới ngưỡng tối thiểu {minimum} tin. Không tạo xu hướng từ mẫu nhỏ.")
+        else:
+            total = format_vnd(stat["medianAskingPriceVnd"])
+            per_sqm = Decimal(str(stat.get("medianPricePerSqm"))) / Decimal("1000000") if stat.get("medianPricePerSqm") is not None else None
+            per_sqm_text = (str(per_sqm.quantize(Decimal("0.1"))).replace(".", ",") + " triệu/m²"
+                            if per_sqm is not None else "chưa đủ dữ liệu giá/m²")
+            answer = (f"Ảnh chụp giá rao tại {place}: trung vị {total}/căn, "
+                      f"trung vị {per_sqm_text}, "
+                      f"trên {count} tin đủ điều kiện. Đây là giá rao, không phải giá giao dịch; "
+                      "hệ thống không dự báo tăng/giảm.")
+            if meta.get("temporalStatus") != "AVAILABLE":
+                answer += " Dữ liệu hiện tại chưa có chuỗi thời gian đủ để kết luận xu hướng."
+        limitations = [
+            "Số liệu là giá rao từ các nguồn công khai trong SmartProp, không phải giá giao dịch đã công chứng.",
+            "Không dự báo giá, tỷ lệ tăng giá hoặc xu hướng tương lai.",
+            f"Ngưỡng mẫu tối thiểu cho thống kê: {minimum} tin.",
+        ]
+        answer += " Xem thêm trang Phân tích thị trường để đối chiếu bảng và khoảng giá."
+        return self._reply(request, session_id, context, {}, properties=[], citations=[], research=research,
+            answer=answer, responseKind="MARKET_ANALYTICS", limitations=limitations,
+            evidence={"market": {"status": "OK", "district": district, "overall": stat,
+                                  "generatedAt": meta.get("generatedAt"),
+                                  "temporalStatus": meta.get("temporalStatus"),
+                                  "sourceCounts": data.get("bySource", [])},
+                      "generation": {"accepted": False, "reason": "DETERMINISTIC_MARKET_AGGREGATE"},
+                      "retrievedSourceIds": [], "semanticRetrieval": {"hits": []}})
+
     def chat(self, request, *, research=False, token=None, account=None):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
         if research:
@@ -161,6 +210,8 @@ class ChatOrchestrator:
         if account and not resumed:
             seed(context,account,names)
         explicit_district = request.district or detect_district(request.question, names)
+        if asks_market_trend(request.question):
+            return self._market_answer(request, session_id, context, research, explicit_district)
         # A follow-up that only refines one criterion keeps every other stored criterion.
         prior = context.criteria()
         district = explicit_district or prior.get("district")
@@ -177,8 +228,9 @@ class ChatOrchestrator:
             criteria["purpose"] = prior["purpose"]
         if criteria.get("propertyType") == "ALL" and prior.get("propertyType"):
             criteria["propertyType"] = prior["propertyType"]
-        if "minAreaSqm" not in criteria and prior.get("minAreaSqm") is not None:
-            criteria["minAreaSqm"] = prior["minAreaSqm"]
+        for area_key in ("minAreaSqm", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive"):
+            if area_key not in criteria and prior.get(area_key) is not None:
+                criteria[area_key] = prior[area_key]
         if turn["purpose"]:
             criteria["purpose"] = turn["purpose"]
         if turn["propertyType"]:
@@ -217,7 +269,8 @@ class ChatOrchestrator:
                 response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
                 properties = response["topProperties"]
         else:
-            limitations.append("Chưa có một ngân sách rõ ràng; hệ thống chưa gọi công cụ lọc bất động sản.")
+            if not categories:
+                limitations.append("Chưa có một ngân sách rõ ràng; hệ thống chưa gọi công cụ lọc bất động sản.")
 
         # ---- property reference resolution (deterministic, never guessed) ----
         # `result_properties` is the full verified result set of THIS turn and stays the
@@ -386,8 +439,8 @@ class ChatOrchestrator:
             text = (f"Mã {p['id']}: giá rao {number(p['priceVnd'])} đồng; diện tích {number(p['areaSqm'])} m²; "
                     f"điểm phù hợp {number(p['score'])}/100; khu vực {p.get('district') or 'chưa rõ'}" +
                     (f", {p['ward']}" if p.get("ward") else "") + ".")
-            if p.get("listingCode"):
-                text += f" Mã tin: {p['listingCode']}."
+            # Listing code is intentionally omitted from the conversational answer;
+            # the validated property ID/link remains available in the card/citation.
             legal = p.get("legal") or {}
             text += (f" Hồ sơ pháp lý công khai: {int(legal.get('verified') or 0)} đã duyệt, "
                      f"{int(legal.get('pending') or 0)} chờ duyệt; không công khai tệp pháp lý riêng tư.")
@@ -447,10 +500,12 @@ class ChatOrchestrator:
         if research:
             limitations.append("Dữ liệu nghiên cứu chưa xác minh, không được dùng như tin công khai đang bán; không có xác nhận pháp lý hoặc giá giao dịch.")
         used = {facts[k]["sourceId"] for k in selected}
-        answer = render_answer(facts, selected, research=research, has_budget=budget is not None, has_properties=bool(properties))
+        answer = render_answer(facts, selected, research=research, has_budget=budget is not None,
+                               has_properties=bool(properties), requires_budget=not bool(categories))
         if generated_sentences is not None:
             # Actual Qwen-generated text survives verbatim validation; only scope labels/citations are appended by server.
-            intro = render_answer({}, [], research=research, has_budget=budget is not None, has_properties=bool(properties))
+            intro = render_answer({}, [], research=research, has_budget=budget is not None,
+                                  has_properties=bool(properties), requires_budget=not bool(categories))
             answer = intro + "\n" + "\n".join(s["text"] + " [" + s["sourceId"] + "]" for s in generated_sentences)
         # Every recommended property retains a citation even when no auxiliary fact is selected.
         return self._reply(request, session_id, context, criteria,

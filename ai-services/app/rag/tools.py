@@ -99,6 +99,24 @@ class BackendTools:
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
         return body
 
+    def market_analytics(self, district=None):
+        """Read-only aggregate market statistics; no property ids or contact data."""
+        params = {"includeResearch": "false"}
+        if district:
+            params["district"] = district
+        try:
+            response = self.client.get("/api/v1/properties/market-analytics", params=params)
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if (not isinstance(body, dict) or not isinstance(body.get("meta"), dict)
+                or not isinstance(body.get("overall"), dict)
+                or body["meta"].get("priceBasis") != "ASKING_SALE_VND_TOTAL"):
+            raise GroundingError("INVALID_MARKET_ANALYTICS")
+        return body
+
     def amenity_summary(self):
         return self._call("GET", "/api/v1/amenities/summary")
 
@@ -317,6 +335,63 @@ class PublishedPropertyRepository:
                             }
                 conn.rollback()
             return [self._public_row(row, image_map.get(row["id"], []), legal_map.get(row["id"])) for row in rows]
+        except GroundingError:
+            raise
+        except Exception as e:
+            raise RagUnavailable("READ_ONLY_SQL_UNAVAILABLE") from e
+
+    def list_public_images(self, limit=250):
+        """Return only public listing images for the duplicate-image index."""
+        if not self.settings.sql_enabled:
+            raise RagUnavailable("READ_ONLY_SQL_NOT_CONFIGURED")
+        if not isinstance(limit, int) or not 1 <= limit <= 500:
+            raise GroundingError("INVALID_IMAGE_LIMIT")
+        try:
+            import pymysql
+            with pymysql.connect(host=self.settings.sql_host, port=self.settings.sql_port,
+                    database=self.settings.sql_database, user=self.settings.db_user,
+                    password=self.settings.db_password, charset="utf8mb4", autocommit=False,
+                    init_command="SET SESSION TRANSACTION READ ONLY", connect_timeout=3,
+                    read_timeout=8, cursorclass=pymysql.cursors.DictCursor) as conn:
+                conn.begin()
+                with conn.cursor() as cur:
+                    cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
+                    identity = cur.fetchone()
+                    if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
+                        raise GroundingError("WRONG_SQL_TARGET")
+                    if self.settings.sql_use_views:
+                        query = ("SELECT i.property_id,i.id image_id,i.sort_order,i.is_cover,i.mime_type,"
+                                 "i.storage_provider,i.cloudinary_secure_url,p.listing_code,p.title,p.district,p.ward "
+                                 "FROM rag_public_property_images i JOIN rag_public_properties p ON p.id=i.property_id "
+                                 "WHERE i.deleted_at IS NULL ORDER BY i.property_id,i.sort_order,i.id LIMIT %s")
+                    else:
+                        query = ("SELECT i.property_id,i.id image_id,i.sort_order,i.is_cover,i.mime_type,"
+                                 "i.storage_provider,i.cloudinary_secure_url,p.listing_code,p.title,p.district,p.ward "
+                                 "FROM property_images i JOIN properties p ON p.id=i.property_id "
+                                 "WHERE i.deleted_at IS NULL AND p.status='PUBLISHED' AND p.deleted_at IS NULL "
+                                 "AND (p.expires_at IS NULL OR p.expires_at>UTC_TIMESTAMP(6)) "
+                                 "AND p.transaction_type='SALE' AND p.currency='VND' AND p.price_unit='TOTAL' "
+                                 "AND p.price>0 AND p.area_sqm>0 ORDER BY i.property_id,i.sort_order,i.id LIMIT %s")
+                    cur.execute(query, (limit,))
+                    rows = cur.fetchall()
+                conn.rollback()
+            result = []
+            for row in rows:
+                if row.get("storage_provider") == "CLOUDINARY" and str(row.get("cloudinary_secure_url") or "").startswith("https://res.cloudinary.com/"):
+                    url = row["cloudinary_secure_url"]
+                    public_url = url
+                else:
+                    public_url = f"/api/v1/properties/{row['property_id']}/images/{row['image_id']}/content"
+                    base_url = self.settings.image_backend_url or self.settings.backend_url
+                    url = f"{base_url}{public_url}"
+                result.append({
+                    "propertyId": row["property_id"], "imageId": row["image_id"], "url": url,
+                    "publicUrl": public_url, "listingCode": row.get("listing_code"),
+                    "title": _public_text(row.get("title"), 255),
+                    "district": row.get("district"), "ward": row.get("ward"), "cover": bool(row.get("is_cover")),
+                    "mimeType": row.get("mime_type"),
+                })
+            return result
         except GroundingError:
             raise
         except Exception as e:

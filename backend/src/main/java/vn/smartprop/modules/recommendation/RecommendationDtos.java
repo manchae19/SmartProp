@@ -13,6 +13,8 @@ public final class RecommendationDtos {
         @NotNull @DecimalMin("1") @DecimalMax("999999999999999") BigDecimal budgetVnd,
         @NotNull Purpose purpose, @NotNull PropertyType propertyType,
         @DecimalMin(value="0",inclusive=false) @DecimalMax("1000000") BigDecimal minAreaSqm,
+        @DecimalMin(value="0",inclusive=false) @DecimalMax("1000000") BigDecimal maxAreaSqm,
+        boolean minAreaExclusive, boolean maxAreaExclusive,
         @Size(max=100) String district, @Size(max=100) String ward,
         @Min(1) @Max(10) Integer limit,
         @Size(max=4) List<@NotNull AmenityPriority> amenityPriorities) {
@@ -20,8 +22,12 @@ public final class RecommendationDtos {
             amenityPriorities = amenityPriorities == null ? List.of() : Collections.unmodifiableList(new ArrayList<>(amenityPriorities));
         }
         public Request(BigDecimal budgetVnd, Purpose purpose, PropertyType propertyType, BigDecimal minAreaSqm,
+                String district, String ward, Integer limit, List<AmenityPriority> amenityPriorities) {
+            this(budgetVnd,purpose,propertyType,minAreaSqm,null,false,false,district,ward,limit,amenityPriorities);
+        }
+        public Request(BigDecimal budgetVnd, Purpose purpose, PropertyType propertyType, BigDecimal minAreaSqm,
                 String district, String ward, Integer limit) {
-            this(budgetVnd,purpose,propertyType,minAreaSqm,district,ward,limit,List.of());
+            this(budgetVnd,purpose,propertyType,minAreaSqm,null,false,false,district,ward,limit,List.of());
         }
     }
     public record Source(String kind,String name,String recordKey,String detailUrl) {}

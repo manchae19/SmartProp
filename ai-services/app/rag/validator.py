@@ -44,13 +44,13 @@ def validate_generated_answer(raw, facts, property_facts):
     return sentences
 
 
-def render_answer(facts, selected, *, research, has_budget, has_properties):
+def render_answer(facts, selected, *, research, has_budget, has_properties, requires_budget=True):
     intro = "Kết quả tham khảo từ dữ liệu SmartProp hiện có."
     if research:
         intro = "CHỈ NGHIÊN CỨU NỘI BỘ — dữ liệu chưa xác minh, không phải tin đang bán đã được công nhận công khai."
-    if not has_budget:
+    if requires_budget and not has_budget:
         intro += " Bạn cần cung cấp ngân sách để hệ thống lọc bất động sản."
-    elif not has_properties:
+    elif requires_budget and has_budget and not has_properties:
         intro += " Không có bất động sản đủ điều kiện trong phạm vi tìm kiếm; không mở dữ liệu nghiên cứu để thay thế kết quả rỗng."
     return "\n".join([intro] + [facts[i]["text"] + f" [{facts[i]['sourceId']}]" for i in selected])
 

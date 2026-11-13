@@ -37,9 +37,12 @@ import {
   date,
   mapUrl,
 } from "../../shared/lib/legacy.js";
+import ImageScanSection from "../property/ImageScanSection.jsx";
 import "./PostsView.css";
 function setup(__props) {
   const statusFilter = ref("PENDING");
+  const scanItems = ref([]);
+  const scanError = ref("");
   const router = useRouter(),
     state = useList("/admin/properties", () => ({
       status: statusFilter.value,
@@ -83,6 +86,15 @@ function setup(__props) {
   }
   const handleApprove = (id) => moderate(id, "APPROVE"),
     handleReject = (id) => moderate(id, "REJECT");
+  async function loadScanItems() {
+    try {
+      scanItems.value = await api("/admin/image-scans");
+      scanError.value = "";
+    } catch (e) {
+      scanError.value = errorText(e);
+    }
+  }
+  onMounted(loadScanItems);
   return {
     ref,
     computed,
@@ -105,7 +117,11 @@ function setup(__props) {
     reasonLabels,
     date,
     mapUrl,
+    ImageScanSection,
     statusFilter,
+    scanItems,
+    scanError,
+    loadScanItems,
     router,
     state,
     selected,
@@ -195,6 +211,37 @@ export default React.forwardRef(function PostsView(props, ref) {
           ),
         )}
       </select>
+      {ctx.scanItems.length ? (
+        <section className="bg-brand-card rounded-2xl p-4 mt-4">
+          <p className="text-xs font-bold text-brand-navy">
+            {"Ảnh nghi trùng cần xem xét"}
+          </p>
+          <div className="grid gap-2 mt-2">
+            {renderList(ctx.scanItems.slice(0, 10), (item) => (
+              <div
+                key={item.propertyImageId}
+                className="flex items-center justify-between gap-3 text-xs border-t border-brand-line pt-2"
+              >
+                <span className="truncate">
+                  {display(item.listingCode || item.propertyId)}
+                  {" · "}
+                  {display(item.classification)}
+                </span>
+                <span className="text-brand-muted shrink-0">
+                  {display(
+                    item.similarity != null
+                      ? Math.round(Number(item.similarity) * 100) + "%"
+                      : "",
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-brand-muted mt-2">
+            {"Chỉ là tín hiệu kỹ thuật; quản trị viên quyết định theo nghiệp vụ, không tự động từ chối tin."}
+          </p>
+        </section>
+      ) : null}
       <div
         {...mergeProps({
           className: "posts-list",
@@ -449,6 +496,7 @@ export default React.forwardRef(function PostsView(props, ref) {
             />
           ))}
         </div>
+        <ImageScanSection propertyId={ctx.selected.property.id} />
         <label
           {...mergeProps({
             className: "block text-xs mt-4",

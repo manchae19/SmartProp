@@ -15,6 +15,7 @@ class GroundingError(RuntimeError):
 @dataclass(frozen=True)
 class Settings:
     backend_url: str = "http://127.0.0.1:8080"
+    image_backend_url: str = ""
     corpus_path: Path = Path("var/rag/public-corpus.json")
     qwen_path: str = ""
     e5_path: str = ""
@@ -41,6 +42,11 @@ class Settings:
         u = urlsplit(self.backend_url)
         if u.scheme != "http" or u.hostname != "127.0.0.1" or u.port != 8080 or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment:
             raise ValueError("RAG backend must be http://127.0.0.1:8080")
+        if self.image_backend_url:
+            i = urlsplit(self.image_backend_url)
+            if (i.scheme != "http" or i.hostname != "127.0.0.1" or not i.port
+                    or i.path not in ("", "/") or i.username or i.password or i.query or i.fragment):
+                raise ValueError("Image backend must be a loopback HTTP origin")
         o = urlsplit(self.ollama_url)
         if o.scheme != "http" or o.hostname != "127.0.0.1" or o.port != 11434 or o.path not in ("", "/") or o.username or o.password or o.query or o.fragment:
             raise ValueError("Ollama must be http://127.0.0.1:11434")
@@ -64,6 +70,7 @@ class Settings:
     @classmethod
     def from_env(cls):
         return cls(backend_url=os.getenv("RAG_BACKEND_URL", "http://127.0.0.1:8080"),
+                   image_backend_url=os.getenv("RAG_IMAGE_BACKEND_URL", ""),
                    corpus_path=Path(os.getenv("RAG_CORPUS_PATH", "var/rag/public-corpus.json")),
                    qwen_path=os.getenv("RAG_QWEN_PATH", ""), e5_path=os.getenv("RAG_E5_PATH", ""),
                    e5_revision=os.getenv("RAG_E5_REVISION", "614241f622f53c4eeff9890bdc4f31cfecc418b3"),

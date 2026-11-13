@@ -64,6 +64,15 @@ def poi_categories(question):
     return tuple(c for c in CATEGORY_ORDER if c in found)
 
 
+def asks_market_trend(question):
+    """Market questions are answered from aggregates, never from the property intake."""
+    value = fold(question)
+    return any(_has(value, term) for term in (
+        "xu huong", "thi truong", "dien bien gia", "gia thi truong",
+        "bao cao thi truong", "tong quan thi truong", "thi truong bat dong san",
+    ))
+
+
 def asks_for_amenities(question):
     if re.search(r"(?<!\w)chợ(?!\w)", question.lower()):
         return True

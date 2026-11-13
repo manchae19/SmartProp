@@ -10,6 +10,9 @@ class ChatRequest(BaseModel):
     purpose: Literal["LIVING", "INVESTMENT", "RENTAL"] = "LIVING"
     propertyType: Literal["ALL", "HOUSE", "APARTMENT", "LAND", "VILLA", "ROOM", "COMMERCIAL"] = "ALL"
     minAreaSqm: Decimal | None = Field(default=None, gt=0, le=1000000, allow_inf_nan=False)
+    maxAreaSqm: Decimal | None = Field(default=None, gt=0, le=1000000, allow_inf_nan=False)
+    minAreaExclusive: bool | None = None
+    maxAreaExclusive: bool | None = None
     district: str | None = Field(default=None, min_length=1, max_length=100)
     ward: str | None = Field(default=None, min_length=1, max_length=100)
     limit: int = Field(default=10, ge=1, le=10, strict=True)
