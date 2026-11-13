@@ -288,6 +288,22 @@ class ChatOrchestrator:
                     row = by_id.get(p["source"]["recordKey"])
                     if row is None or Decimal(str(row["price"])) != Decimal(str(p["priceVnd"])) or Decimal(str(row["area_sqm"])) != Decimal(str(p["areaSqm"])):
                         raise GroundingError("SQL_API_FACT_MISMATCH")
+                    # Enrich only after the ID/price/area cross-check passes. These are
+                    # fixed public projections, never fields chosen or written by the LLM.
+                    p["listingCode"] = row.get("listing_code")
+                    p["description"] = row.get("description")
+                    p["address"] = row.get("address")
+                    p["propertyType"] = row.get("property_type")
+                    p["bedrooms"] = row.get("bedrooms")
+                    p["bathrooms"] = row.get("bathrooms")
+                    p["floor"] = row.get("floor")
+                    p["direction"] = row.get("direction")
+                    p["amenities"] = row.get("declared_amenities") or []
+                    p["project"] = row.get("project")
+                    p["images"] = row.get("images") or []
+                    p["legal"] = row.get("legal")
+                    if row.get("imageUrl"):
+                        p["imageUrl"] = row["imageUrl"]
                 sql_status, sql_count = "READ_ONLY_MATCHED", len(rows)
             except RagUnavailable as e:
                 sql_status = str(e)
@@ -370,6 +386,11 @@ class ChatOrchestrator:
             text = (f"Mã {p['id']}: giá rao {number(p['priceVnd'])} đồng; diện tích {number(p['areaSqm'])} m²; "
                     f"điểm phù hợp {number(p['score'])}/100; khu vực {p.get('district') or 'chưa rõ'}" +
                     (f", {p['ward']}" if p.get("ward") else "") + ".")
+            if p.get("listingCode"):
+                text += f" Mã tin: {p['listingCode']}."
+            legal = p.get("legal") or {}
+            text += (f" Hồ sơ pháp lý công khai: {int(legal.get('verified') or 0)} đã duyệt, "
+                     f"{int(legal.get('pending') or 0)} chờ duyệt; không công khai tệp pháp lý riêng tư.")
             # Full preference explanations remain in the API cards/limitations, not repeated in each generated fact.
             parts = p.get("scoreBreakdown") or {}
             labels = {"budgetFit": "ngân sách", "areaFit": "diện tích", "propertyTypeFit": "loại bất động sản", "amenityFit": "tiện ích"}

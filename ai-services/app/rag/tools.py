@@ -188,10 +188,60 @@ class BackendTools:
         return profile
 
 
+def _public_text(value, max_length=1000):
+    text = re.sub(r"<[^>]*>", " ", str(value or ""))
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
+    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.-]?\d){8,10}(?!\d)", "[redacted-phone]", text)
+    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|sampleListingCount|raw_payload)\b",
+                  "[redacted]", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:max_length]
+
+
 class PublishedPropertyRepository:
-    """Only the publication projection already used by Hybrid V1.1; no crawler table access."""
+    """Read-only public projection; private columns never leave SQL."""
     def __init__(self, settings):
         self.settings = settings
+
+    def _public_row(self, row, images, legal):
+        project = None
+        if row.get("project_name"):
+            project = {
+                "name": _public_text(row["project_name"], 255),
+                "developer": _public_text(row.get("project_developer"), 255),
+                "address": _public_text(row.get("project_address"), 500),
+                "handoverYear": row.get("project_handover_year"),
+                "scale": _public_text(row.get("project_scale"), 500),
+                "amenities": [_public_text(item, 80) for item in
+                              (json.loads(row["project_amenities"]) if row.get("project_amenities") else [])],
+            }
+        return {
+            "id": row["id"],
+            "listing_code": row["listing_code"],
+            "title": _public_text(row["title"], 255),
+            "description": _public_text(row.get("description"), 1000),
+            "price": row["price"],
+            "area_sqm": row["area_sqm"],
+            "property_type": row["property_type"],
+            "transaction_type": row["transaction_type"],
+            "district": row.get("district"),
+            "ward": row.get("ward"),
+            "address": _public_text(row.get("address"), 500),
+            "city": row.get("city"),
+            "bedrooms": row.get("bedrooms"),
+            "bathrooms": row.get("bathrooms"),
+            "floor": row.get("floor"),
+            "direction": row.get("direction"),
+            "declared_amenities": json.loads(row["declared_amenities"]) if row.get("declared_amenities") else [],
+            "project": project,
+            "images": images,
+            "imageUrl": images[0]["url"] if images else None,
+            "legal": legal or {"verified": 0, "pending": 0,
+                               "note": "Không công khai tệp pháp lý riêng tư; chỉ số lượng hồ sơ đã duyệt."},
+            "coordinate_srid": row.get("coordinate_srid"),
+            "latitude": row.get("latitude"),
+            "longitude": row.get("longitude"),
+        }
 
     def lookup(self, ids):
         if not self.settings.sql_enabled:
@@ -216,15 +266,57 @@ class PublishedPropertyRepository:
                     if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
-                    cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"
-                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Latitude(location) END latitude,"
-                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM properties "
-                        "WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6)) "
-                        "AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL' AND price>0 AND area_sqm>0 "
-                        f"AND id IN ({placeholders}) ORDER BY id LIMIT 10", tuple(ids))
+                    if self.settings.sql_use_views:
+                        # The approved public views expose no private columns; the RAG
+                        # account needs SELECT on these views only, not on base tables.
+                        property_source = "rag_public_properties p"
+                        project_join = ",p.project_name,p.project_developer,p.project_address,"
+                        project_join += "p.project_handover_year,p.project_scale,p.project_amenities "
+                        image_source = "rag_public_property_images"
+                        legal_source = "rag_public_legal_status"
+                    else:
+                        property_source = "properties p LEFT JOIN projects pr ON pr.id=p.project_id AND pr.deleted_at IS NULL"
+                        project_join = ",pr.name project_name,pr.developer project_developer,pr.address project_address,"
+                        project_join += "pr.handover_year project_handover_year,pr.scale project_scale,pr.amenities project_amenities "
+                        image_source = "property_images"
+                        legal_source = "property_legal_documents"
+                    cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ p.id,p.listing_code,p.title,p.description,p.price,p.area_sqm,"
+                        "p.property_type,p.transaction_type,p.district,p.ward,p.address,p.city,p.bedrooms,p.bathrooms,p.floor,p.direction,"
+                        "p.declared_amenities,p.project_id,ST_SRID(p.location) coordinate_srid,"
+                        "CASE WHEN ST_SRID(p.location)=4326 THEN ST_Latitude(p.location) END latitude,"
+                        "CASE WHEN ST_SRID(p.location)=4326 THEN ST_Longitude(p.location) END longitude"
+                        + project_join +
+                        " FROM " + property_source + " "
+                        "WHERE p.status='PUBLISHED' AND p.deleted_at IS NULL AND (p.expires_at IS NULL OR p.expires_at>UTC_TIMESTAMP(6)) "
+                        "AND p.transaction_type='SALE' AND p.currency='VND' AND p.price_unit='TOTAL' AND p.price>0 AND p.area_sqm>0 "
+                        f"AND p.id IN ({placeholders}) ORDER BY p.id LIMIT 10", tuple(ids))
                     rows = cur.fetchall()
+                    image_map, legal_map = {}, {}
+                    if rows:
+                        cur.execute("SELECT property_id,id,sort_order,is_cover,mime_type,storage_provider,cloudinary_secure_url "
+                            "FROM " + image_source + " WHERE property_id IN (" + placeholders + ") AND deleted_at IS NULL "
+                            "ORDER BY property_id,sort_order,id", tuple(ids))
+                        for image in cur.fetchall():
+                            url = None
+                            if image.get("storage_provider") == "CLOUDINARY" and str(image.get("cloudinary_secure_url") or "").startswith("https://res.cloudinary.com/"):
+                                url = image["cloudinary_secure_url"]
+                            else:
+                                url = f"/api/v1/properties/{image['property_id']}/images/{image['id']}/content"
+                            image_map.setdefault(image["property_id"], []).append({
+                                "id": image["id"], "url": url, "sortOrder": image.get("sort_order"),
+                                "cover": bool(image.get("is_cover")), "mimeType": image.get("mime_type"),
+                            })
+                        cur.execute("SELECT property_id,SUM(status='VERIFIED') verified,SUM(status='PENDING') pending "
+                            "FROM " + legal_source + " WHERE property_id IN (" + placeholders + ") AND deleted_at IS NULL "
+                            "GROUP BY property_id", tuple(ids))
+                        for item in cur.fetchall():
+                            legal_map[item["property_id"]] = {
+                                "verified": int(item.get("verified") or 0),
+                                "pending": int(item.get("pending") or 0),
+                                "note": "Không công khai tệp pháp lý riêng tư; chỉ số lượng hồ sơ đã duyệt.",
+                            }
                 conn.rollback()
-            return list(rows)
+            return [self._public_row(row, image_map.get(row["id"], []), legal_map.get(row["id"])) for row in rows]
         except GroundingError:
             raise
         except Exception as e:

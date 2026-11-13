@@ -53,10 +53,26 @@ export function chatPresentation(packet) {
         : nearbyPoisStatus === 'UNAVAILABLE'
           ? 'Chưa tải được dữ liệu POI cho tin này.'
           : 'Khoảng cách là đường chim bay; chưa tính thời gian di chuyển thực tế.'
+    const images = Array.isArray(p.images) ? p.images.filter(image =>
+      image && typeof image.url === 'string' &&
+      ((image.url.startsWith('/api/v1/properties/') && !image.url.includes('..') && !image.url.includes('//')) ||
+       image.url.startsWith('https://res.cloudinary.com/'))).slice(0, 8).map(image => ({
+         id: image.id, url: image.url, cover: Boolean(image.cover), sortOrder: image.sortOrder,
+       })) : []
+    const project = p.project && typeof p.project.name === 'string' && p.project.name.trim()
+      ? { name: p.project.name.trim(), developer: p.project.developer || null, address: p.project.address || null,
+          handoverYear: p.project.handoverYear ?? null, scale: p.project.scale || null }
+      : null
+    const legal = p.legal && Number.isFinite(Number(p.legal.verified)) && Number.isFinite(Number(p.legal.pending))
+      ? { verified: Number(p.legal.verified), pending: Number(p.legal.pending) }
+      : null
     return { id: p.id, title: p.title, location: [p.ward, p.district].filter(Boolean).join(', ') || 'Nguồn chưa có địa bàn',
       price: compactChatPrice(p.priceVnd), area: formatChatNumber(p.areaSqm), score: formatChatNumber(p.score),
       reason: displayEvidenceText(reason), reasons: reasons.slice(0, 5), href: advisorListingUrl(p), platform: p.source.kind === 'PROPERTY',
-      imageUrl: typeof p.imageUrl === 'string' && p.imageUrl.startsWith('/api/v1/properties/') && !p.imageUrl.includes('..') && !p.imageUrl.includes('//') ? p.imageUrl : null,
+      listingCode: typeof p.listingCode === 'string' ? p.listingCode : '',
+      description: typeof p.description === 'string' ? p.description.slice(0, 500) : '',
+      project, legal, images,
+      imageUrl: images[0]?.url || (typeof p.imageUrl === 'string' && p.imageUrl.startsWith('/api/v1/properties/') && !p.imageUrl.includes('..') && !p.imageUrl.includes('//') ? p.imageUrl : null),
       nearbyPois, nearbyPoisStatus, nearbyPoisNote,
       warnings: p.warnings.map(advisorWarning), sourceName: p.source.name }
   })

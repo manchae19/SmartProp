@@ -33,6 +33,7 @@ class Settings:
     sql_port: int = 13306
     sql_database: str = ""
     sql_allow_production: bool = False
+    sql_use_views: bool = False
     db_user: str = field(default="", repr=False)
     db_password: str = field(default="", repr=False)
 
@@ -79,4 +80,5 @@ class Settings:
                    sql_port=int(os.getenv("RAG_SQL_PORT", "13306")),
                    sql_database=os.getenv("RAG_SQL_DATABASE", ""),
                    sql_allow_production=os.getenv("RAG_SQL_ALLOW_PRODUCTION", "false").lower() == "true",
+                   sql_use_views=os.getenv("RAG_SQL_USE_VIEWS", "false").lower() == "true",
                    db_user=os.getenv("RAG_DB_USER", ""), db_password=os.getenv("RAG_DB_PASSWORD", ""))

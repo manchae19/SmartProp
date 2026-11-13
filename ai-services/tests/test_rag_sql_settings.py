@@ -11,6 +11,7 @@ class RagSqlSettingsTests(unittest.TestCase):
         self.assertEqual(settings.sql_port, 13306)
         self.assertEqual(settings.sql_database, "")
         self.assertFalse(settings.sql_enabled)
+        self.assertFalse(settings.sql_use_views)
 
     def test_production_port_requires_explicit_flag(self):
         with self.assertRaisesRegex(ValueError, "3306"):
@@ -21,6 +22,7 @@ class RagSqlSettingsTests(unittest.TestCase):
             "RAG_SQL_ENABLED": "true",
             "RAG_SQL_PORT": "13306",
             "RAG_SQL_DATABASE": "smartprop_staging",
+            "RAG_SQL_USE_VIEWS": "true",
             "RAG_DB_USER": "rag_reader",
             "RAG_DB_PASSWORD": "test-only",
         }, clear=False):
@@ -28,6 +30,7 @@ class RagSqlSettingsTests(unittest.TestCase):
         self.assertTrue(settings.sql_enabled)
         self.assertEqual(settings.sql_port, 13306)
         self.assertEqual(settings.sql_database, "smartprop_staging")
+        self.assertTrue(settings.sql_use_views)
         self.assertEqual(settings.db_user, "rag_reader")
 
     def test_invalid_database_name_is_rejected(self):

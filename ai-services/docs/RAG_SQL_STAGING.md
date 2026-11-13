@@ -27,8 +27,27 @@ Run on the staging instance only:
 ```sql
 CREATE USER 'rag_reader'@'127.0.0.1' IDENTIFIED BY '<local-password>';
 GRANT SELECT ON smartprop_staging.properties TO 'rag_reader'@'127.0.0.1';
+GRANT SELECT ON smartprop_staging.property_images TO 'rag_reader'@'127.0.0.1';
+GRANT SELECT ON smartprop_staging.projects TO 'rag_reader'@'127.0.0.1';
+GRANT SELECT ON smartprop_staging.property_legal_documents TO 'rag_reader'@'127.0.0.1';
 FLUSH PRIVILEGES;
 ```
+
+The repository only reads the public projection: property rows, public images, project metadata,
+and aggregate legal counts. It never reads `users`, contact fields, private legal files, or
+authentication tables.
+
+### Optional public-view mode
+
+For production, create the views in `RAG_PUBLIC_VIEWS.sql` with an administrative account,
+then grant the RAG reader `SELECT` on the three views only and set:
+
+```text
+RAG_SQL_USE_VIEWS=true
+```
+
+In this mode the reader does **not** need `SELECT` on the base tables. The views are
+`SQL SECURITY DEFINER` and expose only the approved columns. Keep `false` for table mode.
 
 Do not grant `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, or `EXECUTE`.
 

@@ -292,6 +292,31 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
               >
                 {display(card.title)}
               </h3>
+              {card.listingCode ? (
+                <p className="card-listing-code" data-chat-listing-code="">
+                  {"Mã tin: "}{display(card.listingCode)}
+                </p>
+              ) : null}
+              {card.description ? (
+                <p className="card-description" data-chat-description="">
+                  {display(card.description)}
+                </p>
+              ) : null}
+              {card.project ? (
+                <p className="card-project" data-chat-project="">
+                  {"Dự án: "}{display(card.project.name)}
+                  {card.project.developer ? " · " + display(card.project.developer) : ""}
+                </p>
+              ) : null}
+              {card.legal ? (
+                <p className="card-legal" data-chat-legal="">
+                  {card.legal.verified > 0
+                    ? "Hồ sơ pháp lý đã duyệt: " + display(String(card.legal.verified)) + ". Chỉ là trạng thái duyệt hồ sơ, không thay thế kiểm tra pháp lý."
+                    : card.legal.pending > 0
+                      ? "Hồ sơ pháp lý đang chờ duyệt: " + display(String(card.legal.pending)) + "; chưa được coi là đã xác minh."
+                      : "Chưa có hồ sơ pháp lý công khai; thông tin người dùng khai báo không được coi là đã xác minh."}
+                </p>
+              ) : null}
               <div
                 {...mergeProps({
                   className: "card-facts",
