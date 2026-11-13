@@ -45,10 +45,27 @@ function setup(__props) {
       for (const match of [...(result.matches || []), ...(result.intraMatches || [])]) {
         const intra = match.classification?.startsWith("INTRA_");
         const key = intra ? "intra:" + match.propertyId : "listing:" + match.propertyId;
-        const previous = grouped.get(key);
-        if (!previous || Number(match.similarity) > Number(previous.similarity)) {
-          grouped.set(key, {
+        let group = grouped.get(key);
+        if (!group) {
+          group = {
+            propertyId: match.propertyId,
+            listingCode: match.listingCode,
+            listingUrl: match.listingUrl,
+            intra: !!intra,
+            items: [],
+          };
+          grouped.set(key, group);
+        }
+        const itemKey = [
+          intra ? "intra" : "cross",
+          match.classification,
+          match.imageId,
+          result.imageId,
+        ].join("|");
+        if (!group.items.some((item) => item.key === itemKey)) {
+          group.items.push({
             ...match,
+            key: itemKey,
             sourceImageId: result.imageId,
             intra: !!intra,
           });
@@ -137,48 +154,58 @@ export default React.forwardRef(function ImageScanSection(props, ref) {
       ) : null}
       {ctx.hasMatches ? (
         <div className="mt-4 grid gap-2">
-          {renderList(ctx.groups, (match) => (
+          {renderList(ctx.groups, (group) => (
             <div
-              key={[match.classification, match.propertyId, match.imageId].join("|")}
-              className="flex gap-3 rounded-2xl border border-brand-line p-2.5"
+              key={group.intra ? "intra:" + group.propertyId : "listing:" + group.propertyId}
+              className="rounded-2xl border border-brand-line p-2.5"
             >
-              <PrivateImage
-                src={match.imageUrl}
-                alt="Ảnh đối chiếu"
-                className="w-16 h-16 rounded-xl object-cover shrink-0"
-              />
-              <div className="min-w-0 text-xs">
+              <div className="flex items-center justify-between gap-2">
                 <p className="font-bold text-brand-navy truncate">
-                  {match.intra
+                  {group.intra
                     ? "Ảnh trùng trong cùng tin"
                     : "Ảnh tương đồng với tin khác"}
                 </p>
-                <p className="text-brand-muted mt-0.5">
-                  {match.classification === "EXACT_DUPLICATE" ||
-                  match.classification === "INTRA_EXACT_DUPLICATE"
-                    ? "Trùng khớp chính xác"
-                    : match.classification === "NEAR_DUPLICATE" ||
-                        match.classification === "INTRA_NEAR_DUPLICATE"
-                      ? "Rất giống"
-                      : "Tương đồng"}
-                  {match.similarity != null
-                    ? " · " + Math.round(Number(match.similarity) * 100) + "%"
-                    : ""}
-                </p>
-                {match.listingCode && !match.intra ? (
-                  <p className="text-brand-muted mt-0.5 truncate">
-                    {"Mã tin: " + match.listingCode}
+                {group.listingCode && !group.intra ? (
+                  <p className="text-brand-muted text-[11px] truncate">
+                    {"Mã tin: " + group.listingCode}
                   </p>
                 ) : null}
-                {match.listingUrl && !match.intra ? (
-                  <RouterLink
-                    to={match.listingUrl}
-                    className="font-bold text-[var(--ui-accent)] mt-1 inline-block"
-                  >
-                    {"Xem tin liên quan"}
-                  </RouterLink>
-                ) : null}
               </div>
+              <div className="mt-2 grid gap-2">
+                {renderList(group.items, (item) => (
+                  <div key={item.key} className="flex items-center gap-3">
+                    <PrivateImage
+                      src={item.imageUrl}
+                      alt="Ảnh đối chiếu"
+                      className="w-14 h-14 rounded-xl object-cover shrink-0"
+                    />
+                    <div className="min-w-0 text-xs">
+                      <p className="font-semibold text-brand-navy">
+                        {item.classification === "EXACT_DUPLICATE" ||
+                        item.classification === "INTRA_EXACT_DUPLICATE"
+                          ? "Trùng khớp chính xác"
+                          : item.classification === "NEAR_DUPLICATE" ||
+                              item.classification === "INTRA_NEAR_DUPLICATE"
+                            ? "Rất giống"
+                            : "Tương đồng"}
+                      </p>
+                      <p className="text-brand-muted mt-0.5">
+                        {item.similarity != null
+                          ? Math.round(Number(item.similarity) * 100) + "%"
+                          : "Chưa có điểm"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {group.listingUrl && !group.intra ? (
+                <RouterLink
+                  to={group.listingUrl}
+                  className="font-bold text-[var(--ui-accent)] mt-2 inline-block text-xs"
+                >
+                  {"Xem tin liên quan"}
+                </RouterLink>
+              ) : null}
             </div>
           ))}
         </div>
