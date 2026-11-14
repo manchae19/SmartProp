@@ -49,6 +49,11 @@ test-results/
 !/docs/handoff/
 !/docs/handoff/**
 
+# Historical documentation preserved from the Vue-era main branch for the
+# graduation report. Archive only — not current deployment guidance.
+!/docs/legacy/
+!/docs/legacy/**
+
 # Additional AI environments and dataset exclusions from the team branches.
 # Local environments and generated files
 **/.venv/
