@@ -8,6 +8,30 @@ import PropertyNearbyPanel from "../../features/prediction/PropertyNearbyPanel.j
 import ChatAmenityMap from "./ChatAmenityMap.jsx";
 import AppIcon from "./AppIcon.jsx";
 import "./ChatAnswer.css";
+function ListingAnalysisBasis({ analysis }) {
+  if (!analysis || analysis.basis !== 'PUBLIC_LISTING_CLAIMS') return null;
+  const money = value => {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? new Intl.NumberFormat('vi-VN', {maximumFractionDigits: 2}).format(number) + ' đồng' : null;
+  };
+  const monthly = money(analysis.monthlyRentalClaimVnd);
+  return <div className="listing-analysis-basis">
+    <strong>Số liệu lấy từ tin đăng</strong>
+    <ul>
+      {money(analysis.askingPriceVnd) && <li>Giá chào: {money(analysis.askingPriceVnd)}.</li>}
+      {Number(analysis.areaSqm) > 0 && <li>Diện tích kê khai: {new Intl.NumberFormat('vi-VN').format(Number(analysis.areaSqm))} m².</li>}
+      {monthly && <li>Thu nhập được nêu trong {analysis.claimField === 'title' ? 'tiêu đề' : 'mô tả'}: {monthly}/tháng, chưa xác minh.</li>}
+    </ul>
+    <strong>Phép tính của SmartProp</strong>
+    <ul>
+      {money(analysis.askingPricePerDeclaredSqmVnd) && <li>Giá chào ÷ diện tích = khoảng {money(analysis.askingPricePerDeclaredSqmVnd)}/m².</li>}
+      {monthly && analysis.grossRevenueToAskingPricePercent && <li>Thu nhập tháng × 12 ÷ giá chào × 100 = khoảng {new Intl.NumberFormat('vi-VN',{maximumFractionDigits:2}).format(Number(analysis.grossRevenueToAskingPricePercent))}%/năm, giả định thu đủ 12 tháng và chưa trừ chi phí.</li>}
+      {!monthly && <li>Chưa đủ số liệu thu nhập thuê để tính tỷ lệ doanh thu.</li>}
+    </ul>
+    <p>Đây là nội dung người đăng kê khai và phép tính từ nội dung đó. Chưa có nguồn bên ngoài xác nhận giá, doanh thu hoặc pháp lý.</p>
+  </div>;
+}
+
 function useChatAnswerState(inputProps, forwardedRef) {
   inputProps = {
     question: "",
@@ -99,7 +123,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             </SiteLink>
           </p> : null}
         <p className="answer-basis" data-sp-73584f77="">
-          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.clarification ? "Cần bạn xác nhận trước khi tra cứu" : view.view.noMatches ? "Kết quả tra cứu dữ liệu công khai" : "Tổng hợp từ nguồn công khai · mở Nguồn để đối chiếu")}
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.isListingSource ? "Phân tích từ tin đăng của người dùng · chưa có nguồn xác minh bên ngoài" : view.view.clarification ? "Cần bạn xác nhận trước khi tra cứu" : view.view.noMatches ? "Kết quả tra cứu dữ liệu công khai" : "Tổng hợp từ nguồn công khai · mở Nguồn để đối chiếu")}
         </p>
       </div>
       {view.intent.enabled || view.intent.requested ? <ChatAmenityMap data={view.mapData} status={view.mapStatus} message={view.intent.message} onRetry={$event => {
@@ -180,7 +204,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
           <summary data-sp-73584f77="">
             <AppIcon name="report" data-sp-73584f77="" />
             <span data-sp-73584f77="">
-              {"Nguồn ("}
+              {view.view.isListingSource ? "Dữ liệu dùng để phân tích (" : "Nguồn tham khảo ("}
               {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.citations.length)}
               {")"}
             </span>
@@ -196,43 +220,18 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.number)}
                 </span>
                 <div className="source-body" data-sp-73584f77="">
+                  {source.kind === 'PROPERTY_DETAIL' && <ListingAnalysisBasis analysis={view.result.evidence.listingAnalysis} />}
                   <a href={source.href} target="_blank" rel="noopener noreferrer" data-chat-citation="" data-sp-73584f77="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.label)}
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.kind === 'PROPERTY_DETAIL' ? 'Xem tin đăng gốc ↗' : source.label)}
                   </a>
                   <p data-sp-73584f77="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.basis)}
                   </p>
-                  <details className="technical-source" onToggle={$event => {
-                return view.reading?.($event);
-              }} data-sp-73584f77="">
-                    <summary data-sp-73584f77="">
-                      {"Thông tin đối chiếu"}
-                    </summary>
-                    <dl data-sp-73584f77="">
-                      <dt data-sp-73584f77="">
-                        {"Nguồn"}
-                      </dt>
-                      <dd data-sp-73584f77="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.sourceId)}
-                      </dd>
-                      <dt data-sp-73584f77="">
-                        {"Phiên bản"}
-                      </dt>
-                      <dd data-sp-73584f77="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.version)}
-                      </dd>
-                      <dt data-sp-73584f77="">
-                        {"SHA-256"}
-                      </dt>
-                      <dd data-sp-73584f77="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.contentHash)}
-                      </dd>
-                    </dl>
-                  </details>
+
                 </div>
               </li>)}
           </ol>
-          <details className="original-evidence" onToggle={$event => {
+          {view.view.showOriginalAnswer && <details className="original-evidence" onToggle={$event => {
           return view.reading?.($event);
         }} data-sp-73584f77="">
             <summary data-sp-73584f77="">
@@ -241,7 +240,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             <p className="original-answer" data-chat-original="" data-sp-73584f77="">
               {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.originalAnswer)}
             </p>
-          </details>
+          </details>}
           {view.result.recommendedProperties.length ? <details className="original-evidence" onToggle={$event => {
           return view.reading?.($event);
         }} data-sp-73584f77="">
@@ -290,7 +289,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
           </details>
         </details> : null}
       {view.view.citations.length ? <p className="answer-caution" data-sp-73584f77="">
-          {"Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."}
+          {view.view.isListingSource ? "Các phép tính dựa trên số liệu người đăng kê khai; không phải kết quả thẩm định hoặc xác minh doanh thu." : "Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."}
         </p> : null}
     </div></>;
 });

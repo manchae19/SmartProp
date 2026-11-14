@@ -13,6 +13,10 @@ from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
 from .money import parse_budget, format_vnd
 from .locality import amenity_locality
+from .tool_registry import ToolRegistry
+from .market import market_query, market_response
+from .property_context import focused_reply
+from .scope import domain_reply
 from .personalization import intake, projection
 
 
@@ -41,11 +45,13 @@ from .account_preferences import fingerprint, seed
 from .tools import UpstreamError
 
 class ChatOrchestrator:
-    def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None):
+    def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None, document_advisor=None):
         self.backend, self.repository, self.knowledge = backend, repository, knowledge
         self.retriever, self.llm = retriever, llm
         # Bounded in-memory conversation memory. Never persisted, never authoritative.
         self.sessions = sessions or SessionStore()
+        self.tools = ToolRegistry(backend)
+        self.document_advisor=document_advisor
 
     def _enrich(self, properties):
         """Attach real image + straight-line POI evidence to visible platform properties.
@@ -104,12 +110,15 @@ class ChatOrchestrator:
             question=request.question)
         payload = dict(evidence or {})
         payload["intent"] = context.needs.get("turnIntent")
+        payload["intentFamily"]=context.needs.get("turnIntentFamily")
+        if context.needs.get("unsupportedPopularityFilter"):
+            limitations=list(limitations or [])+["Chưa có bằng chứng để xác nhận tin nào đang thịnh hành; kết quả chỉ theo bộ lọc tin đăng có thể kiểm chứng."]
         if responseKind:
             payload["responseKind"] = responseKind
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
         if extra:
             payload.update(extra)
-        if context.needs.get("active"):
+        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE"):
             needs = projection(context, criteria or {})
             payload["needs"] = needs
             if not payload.get("quickReplies"):
@@ -137,8 +146,67 @@ class ChatOrchestrator:
             context.needs["accountFingerprint"]=current_fingerprint
         turn = classification(request.question, context if resumed else None)
         context.needs["turnIntent"]=turn["intent"]
+        context.needs["turnIntentFamily"]=turn["intentFamily"]
+        context.needs["unsupportedPopularityFilter"]=turn["unsupportedPopularityFilter"]
         event("intent_decision", intent=turn["intent"], budgetMentioned=turn["budgetMentioned"],
-              tool="PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
+              tool="KNOWLEDGE_MARKET" if turn["intent"]=="MARKET_ANALYSIS" else "MARKET_SUMMARY" if turn["intent"] in ("MARKET_PRICE","MARKET_TREND") else "PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
+        outside=domain_reply(request.question,turn)
+        if outside:
+            return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
+                answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
+        focus=request.propertyId or context.needs.get("focusedPropertyId")
+        if focus and not turn["searchChange"] and turn["intent"] not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","AREA_AMENITIES","UPDATE_CRITERIA","PLANNING_QA","KNOWLEDGE"):
+            context.needs["focusedPropertyId"]=focus
+            result=focused_reply(self.backend,focus,request.question)
+            if result.get("extra",{}).get("clearPropertyContext"): context.needs.pop("focusedPropertyId",None)
+            return self._reply(request,session_id,context,{},research=research,**result)
+        if focus and turn["searchChange"]:
+            context.needs.pop("focusedPropertyId",None)
+        if turn["intent"]=="MARKET_ANALYSIS":
+            # Popularity/demand research is not a listing query or a price snapshot.
+            # Reuse district parsing, without asking for a rental pricing unit.
+            query,question=market_query(request.question,context.needs.get("marketScope"),turn["propertyType"],price_statistics=False)
+            if question:
+                return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                    answer=question,responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"MARKET_SCOPE"})
+            context.needs["marketScope"]=query
+            scope=query.get("district") or "Đà Nẵng"
+            missing="Cần báo cáo theo phân khúc tại "+scope+", kỳ thống kê/so sánh, số liệu lượt tìm kiếm hoặc quan tâm, lượng giao dịch/hấp thụ và nguồn cùng thời điểm cập nhật. Giá chào và số tin hiện có không chứng minh mức độ thịnh hành."
+            if self.document_advisor:
+                reply=self.document_advisor.reply(request.question,"MARKET",district=query.get("district"))
+                reply.setdefault("extra",{})["marketAnalysis"]={"district":query.get("district"),"topic":"DEMAND_AND_TRENDS"}
+                if reply["responseKind"] in ("KNOWLEDGE_EVIDENCE","KNOWLEDGE_SOURCE_CONFLICT","STALE_KNOWLEDGE_DATA","CLARIFICATION_REQUIRED") or reply["extra"].get("toolResult",{}).get("status") in ("SOURCE_UNAVAILABLE","INVALID_EVIDENCE"):
+                    reply["limitations"].append(missing)
+                    return self._reply(request,session_id,context,context.criteria(),research=research,**reply)
+            return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                answer="Đây là câu hỏi phân tích thị trường, không cần ngân sách mua nhà. Hiện chưa đủ bằng chứng để kết luận loại bất động sản nào đang thịnh hành tại "+scope+". "+missing,
+                responseKind="INSUFFICIENT_MARKET_ANALYSIS_DATA",limitations=[missing],
+                extra={"marketAnalysis":{"district":query.get("district"),"topic":"DEMAND_AND_TRENDS"},"toolResult":{"name":"knowledge","status":"INSUFFICIENT_DATA"}})
+        if turn["intent"] in ("MARKET_PRICE","MARKET_TREND"):
+            query,question=market_query(request.question,context.needs.get("marketScope"),turn["propertyType"])
+            if question:
+                if query is not None:context.needs["marketScope"]=query
+                return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                    answer=question,responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"MARKET_SCOPE"})
+            context.needs["marketScope"]=query
+            result=self.tools.execute("market_summary",query)
+            reply=market_response(result,query,trend=turn["intent"]=="MARKET_TREND")
+            if turn["intent"]=="MARKET_TREND" and self.document_advisor:
+                document_reply=self.document_advisor.reply(request.question,"MARKET",district=query.get("district"))
+                if document_reply["responseKind"] in ("KNOWLEDGE_EVIDENCE","KNOWLEDGE_SOURCE_CONFLICT"):
+                    return self._reply(request,session_id,context,context.criteria(),research=research,**document_reply)
+            return self._reply(request,session_id,context,context.criteria(),properties=[],citations=reply["citations"],research=research,
+                answer=reply["answer"],responseKind=reply["kind"],limitations=reply["limitations"],extra=reply["extra"])
+        if turn["intent"] in ("LEGAL_QA","PLANNING_QA","KNOWLEDGE") and self.document_advisor:
+            topic={"LEGAL_QA":"LEGAL","PLANNING_QA":"PLANNING"}.get(turn["intent"],"INFRASTRUCTURE" if re.search(r"ha tang|tien do|cau duong",norm(request.question)) else "GENERAL")
+            reply=self.document_advisor.reply(request.question,topic)
+            return self._reply(request,session_id,context,context.criteria(),research=research,**reply)
+        if turn["intent"] in ("LEGAL_QA","PLANNING_QA"):
+            context.needs["knowledgeTopic"]=turn["intent"]
+            topic="quy hoạch" if turn["intent"]=="PLANNING_QA" else "pháp lý"
+            return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                answer="Tôi nhận đây là câu hỏi "+topic+". Kho tri thức hiện chưa có tài liệu chính thức phù hợp để kết luận. Bạn cung cấp văn bản hoặc nêu rõ địa bàn/vấn đề cần đối chiếu; tôi không dùng giá rao hay hồ sơ tiện ích để xác nhận nội dung này.",
+                responseKind="KNOWLEDGE_SOURCE_UNAVAILABLE",extra={"knowledgeTopic":turn["intent"],"toolResult":{"name":"knowledge","status":"INSUFFICIENT_DATA","reason":"NO_APPROVED_DOCUMENTS"}})
         if turn["intent"] in ("KNOWLEDGE","CLARIFY"):
             if turn["intent"]=="KNOWLEDGE":
                 answer="Tôi nhận đây là câu hỏi kiến thức/tư vấn, không phải yêu cầu tìm nhà. Kho bằng chứng hiện tại chủ yếu có tin đăng và tiện ích; chưa có tài liệu nguồn phù hợp để trả lời chắc chắn nội dung này. Bạn nêu rõ vấn đề hoặc cung cấp tài liệu để đối chiếu nhé."
@@ -196,7 +264,7 @@ class ChatOrchestrator:
         asked_budget = parsed_budget.maximum if turn["budgetChange"] else None
         budget = request.budgetVnd if request.budgetVnd is not None else (asked_budget if asked_budget is not None else (
             Decimal(str(prior["budgetVnd"])) if prior.get("budgetVnd") is not None else None))
-        criteria = request.model_dump(exclude={"question", "requireGeneration", "sessionId"}, exclude_none=True)
+        criteria = request.model_dump(exclude={"question", "requireGeneration", "sessionId", "propertyId"}, exclude_none=True)
         if asked_budget is not None:
             if parsed_budget.minimum is not None:
                 criteria["minPriceVnd"] = str(parsed_budget.minimum)
@@ -262,7 +330,7 @@ class ChatOrchestrator:
                 limitations.append("Chưa có ngân sách trong ngữ cảnh; không thể xác định lại danh sách bất động sản.")
             else:
                 try:
-                    response = traced("recommendation", lambda: self.backend.recommend(criteria, research=research, token=token))
+                    response = traced("recommendation", lambda: self.tools.data("recommendation",criteria, research=research, token=token))
                 except UpstreamError:
                     if request.requireGeneration:raise
                     return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
@@ -327,6 +395,12 @@ class ChatOrchestrator:
                         responseKind="CLARIFICATION_REQUIRED", limitations=limitations, response=response,
                         extra={"clarification": "AMBIGUOUS_PROPERTY_REFERENCE"})
 
+        if turn.get("domain") and turn["intent"]=="PROPERTY_FOLLOWUP":
+            topic="quy hoạch" if turn["domain"]=="PLANNING" else "pháp lý"
+            citations=[Citation(sourceId="recommendation:"+p["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(p),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=p["title"]) for p in properties]
+            return self._reply(request,session_id,context,criteria,properties=properties,citations=citations,research=research,
+                answer="Đã đối chiếu căn đang tham chiếu, nhưng API công khai chưa cung cấp bằng chứng "+topic+" đủ điều kiện. Tôi không coi tin đăng hoặc giá rao là xác nhận pháp lý/quy hoạch và không truy cập giấy tờ riêng tư của chủ tin.",
+                responseKind="KNOWLEDGE_SOURCE_UNAVAILABLE",response=response,result_properties=result_properties,reference_id=referenced_id)
         distance_question=bool(re.search(r"(?:bao xa|khoang cach|cach .*truong|gan .*nao)",norm(request.question)))
         if categories and distance_question and len(properties)==1 and (asked_index is not None or referral):
             property=properties[0]
@@ -411,6 +485,9 @@ class ChatOrchestrator:
                           and (not district or d["metadata"].get("district") == district)]
                 retrieved = ranked[:3]
 
+        if retrieved and any(d.get("retrievalMethod")=="BM25_ONLY_DENSE_UNAVAILABLE" for d in retrieved):
+            retrieval_mode="TOOL_EVIDENCE_ONLY"
+            limitations.append("Đang tìm bằng từ khóa BM25; E5/FAISS chưa sẵn sàng, không giả lập kết quả vector.")
         if amenity_scope and amenity_scope.get("areaId"):
             # Exact catalog scope only, even if the embedding returns a similarly named district.
             retrieved=[d for d in documents if d["kind"]=="POI_EVIDENCE" and d["scope"]=="PUBLIC"
@@ -429,7 +506,7 @@ class ChatOrchestrator:
                           and d["metadata"].get("district") == district), "district"))
                 for category in categories:
                     try:
-                        mapped = traced("amenity_map_fallback", lambda c=category: self.backend.amenity_map(district, c))
+                        mapped = traced("amenity_map_fallback", lambda c=category: self.tools.data("places",district,c))
                     except (RagUnavailable, GroundingError, UpstreamError):
                         mapped = None
                         limitations.append("Dịch vụ địa điểm chưa phản hồi hoặc bằng chứng chưa đạt yêu cầu; chưa thể kết luận khu vực không có tiện ích.")

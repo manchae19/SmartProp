@@ -11,6 +11,8 @@ import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import { mapUrl } from "./property.js";
 import { isPublicProperty } from "./usePublicListings.js";
 import ContactPanel from "./ContactPanel.jsx";
+import { chatSession } from "../prediction/chatRuntime.js";
+import { safeListingsReturnTo } from "./listingJourney.js";
 import PropertyExplorer from "../map/PropertyExplorer.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
 import "./ListingDetailView.css";
@@ -19,9 +21,9 @@ function useListingDetailViewState(inputProps, forwardedRef) {
   _propsLatest.current = inputProps;
   useSyncExternalStore(session.subscribe, session.getSnapshot);
   function formatPostDate(isoStr) {
-    if (!isoStr) return "Mới đăng";
+    if (!isoStr) return "Chưa có thời điểm đăng";
     const d = new Date(isoStr);
-    if (isNaN(d.getTime())) return "Mới đăng";
+    if (isNaN(d.getTime())) return "Chưa có thời điểm đăng";
     const day = String(d.getDate()).padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
@@ -29,8 +31,6 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     const minute = String(d.getMinutes()).padStart(2, "0");
     return `${hour}:${minute} - ${day}/${month}/${year}`;
   }
-  const [viewsCount] = useState(() => createStateStore(0));
-  useSyncExternalStore(viewsCount.subscribe, viewsCount.getSnapshot);
   const [copiedShareLink] = useState(() => createStateStore(false));
   useSyncExternalStore(copiedShareLink.subscribe, copiedShareLink.getSnapshot);
   function shareListing() {
@@ -42,120 +42,7 @@ function useListingDetailViewState(inputProps, forwardedRef) {
       // fallback
     }
   }
-  function incrementAndGetViews(id) {
-    if (!id) return 186;
-    try {
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) hash = (hash << 5) - hash + id.charCodeAt(i);
-      const base = 120 + Math.abs(hash) % 360;
-      const key = "smartprop_views_" + id;
-      const stored = parseInt(localStorage.getItem(key) || "0", 10);
-      const next = Math.max(base, stored) + 1;
-      localStorage.setItem(key, String(next));
-      return next;
-    } catch (e) {
-      return 186;
-    }
-  }
   const getIsLandProperty = () => property.getSnapshot()?.propertyType === "LAND";
-  const getNearbyDaNangLandmarks = () => {
-    const lat = Number(property.getSnapshot()?.latitude);
-    const lon = Number(property.getSnapshot()?.longitude);
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return [];
-    const landmarks = [{
-      name: "Bãi tắm biển Mỹ Khê",
-      category: "Biển & Nghỉ dưỡng",
-      iconType: "beach",
-      lat: 16.0601,
-      lon: 108.2464
-    }, {
-      name: "Cầu Rồng & Sông Hàn",
-      category: "Cảnh quan biểu tượng",
-      iconType: "bridge",
-      lat: 16.0611,
-      lon: 108.2272
-    }, {
-      name: "Sân bay Quốc tế Đà Nẵng",
-      category: "Giao thông hàng không",
-      iconType: "plane",
-      lat: 16.0538,
-      lon: 108.1994
-    }, {
-      name: "Bệnh viện Quốc tế Vinmec",
-      category: "Y tế & Chăm sóc",
-      iconType: "hospital",
-      lat: 16.0315,
-      lon: 108.2163
-    }, {
-      name: "Vincom Plaza Đà Nẵng",
-      category: "Mua sắm & Giải trí",
-      iconType: "shop",
-      lat: 16.0717,
-      lon: 108.2291
-    }, {
-      name: "Công viên Châu Á (Asia Park)",
-      category: "Vui chơi giải trí",
-      iconType: "park",
-      lat: 16.0371,
-      lon: 108.2242
-    }, {
-      name: "Chợ Hàn & Trung tâm Hải Châu",
-      category: "Thương mại sầm uất",
-      iconType: "market",
-      lat: 16.0682,
-      lon: 108.2241
-    }, {
-      name: "Đại học Kinh tế Đà Nẵng",
-      category: "Giáo dục đại học",
-      iconType: "school",
-      lat: 16.0504,
-      lon: 108.2361
-    }];
-    return landmarks.map(lm => {
-      const R = 6371e3;
-      const p1 = lat * Math.PI / 180;
-      const p2 = lm.lat * Math.PI / 180;
-      const dp = (lm.lat - lat) * Math.PI / 180;
-      const dl = (lm.lon - lon) * Math.PI / 180;
-      const a = Math.sin(dp / 2) * Math.sin(dp / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const d = R * c;
-      const distText = d < 1000 ? `${Math.round(d)} m` : `${(d / 1000).toFixed(1)} km`;
-      const estMinutes = Math.max(2, Math.round(d / 400));
-      return {
-        ...lm,
-        distance: d,
-        distText,
-        estMinutes
-      };
-    }).sort((a, b) => a.distance - b.distance);
-  };
-  const getValuationAnalysis = () => {
-    const pr = Number(property.getSnapshot()?.priceExact ?? property.getSnapshot()?.price ?? 0);
-    const ar = Number(property.getSnapshot()?.areaSqmExact ?? property.getSnapshot()?.areaSqm ?? 0);
-    if (!pr || !ar) {
-      return {
-        rangeText: "Đang đối chiếu dữ liệu",
-        evaluation: "Mức giá chào niêm yết theo người đăng",
-        locationScore: 85,
-        priceScore: 82,
-        liquidityScore: 90
-      };
-    }
-    const low = pr * 0.94;
-    const high = pr * 1.05;
-    const formatBillion = v => (v / 1e9).toLocaleString("vi-VN", {
-      maximumFractionDigits: 1
-    }) + " tỷ";
-    const rangeText = `${formatBillion(low)} – ${formatBillion(high)}`;
-    return {
-      rangeText,
-      evaluation: "Mức giá rất cạnh tranh so với mặt bằng thị trường khu vực",
-      locationScore: 88,
-      priceScore: 86,
-      liquidityScore: 92
-    };
-  };
   const route = useRouteState(),
     router = useAppNavigation(),
     [state] = useState(() => createStateStore({
@@ -206,11 +93,14 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     }),
     goAccount = () => _routerLatest.current.push("/account");
   const handleBack = () => {
-    if (window.history.length > 1) {
-      _routerLatest.current.back();
-    } else {
-      _routerLatest.current.push("/listings");
-    }
+    if (_routeLatest.current.query.own === "1") return _routerLatest.current.push("/my-listing");
+    return _routerLatest.current.push(safeListingsReturnTo(_routeLatest.current.query.returnTo));
+  };
+  const askAboutProperty = () => {
+    const p = property.getSnapshot();
+    if (!p || !isPublicProperty(p)) return;
+    chatSession.getSnapshot().focusProperty(p.id, p.listingCode || p.title);
+    window.dispatchEvent(new CustomEvent("smartprop:advisor-open"));
   };
   const _loadSequenceRef = useRef(0);
   async function load() {
@@ -236,7 +126,7 @@ function useListingDetailViewState(inputProps, forwardedRef) {
         status: 404
       });
       property.set(value);
-      viewsCount.set(incrementAndGetViews(value.id));
+
       if (!own) api("/properties/" + encodeURIComponent(id) + "/points-of-interest", {
         authenticated: false
       }).then(items => {
@@ -309,13 +199,9 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     mapUrl,
     locationLabel,
     formatPostDate,
-    viewsCount: viewsCount.getSnapshot(),
     copiedShareLink: copiedShareLink.getSnapshot(),
     shareListing,
-    incrementAndGetViews,
     isLandProperty: getIsLandProperty(),
-    nearbyDaNangLandmarks: getNearbyDaNangLandmarks(),
-    valuationAnalysis: getValuationAnalysis(),
     route,
     router,
     state: state.getSnapshot(),
@@ -336,6 +222,7 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     handleBack,
     load,
     messageOwner,
+    askAboutProperty,
     toggleFavorite,
     rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
     updateRevealedContactValue: revealedContact.set
@@ -450,7 +337,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
             </div>
           </div> : null}
         {view.property && !view.state.busy ? <React.Fragment>
-            <section className="grid grid-cols-1 lg:grid-cols-[2.2fr_1fr] gap-3.5 h-auto lg:h-[450px]" data-sp-4f294819="">
+            <section className={classNames(["listing-gallery", view.images.length > 1 && "has-secondary"])} data-sp-4f294819="">
               <div onClick={$event => {
               view.openGallery(0);
             }} className="relative min-h-[300px] lg:min-h-0 rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-sm" data-sp-4f294819="">
@@ -459,7 +346,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                 <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 z-10 pointer-events-none" data-sp-4f294819="">
                   <span className="px-3 py-1 rounded-full bg-[var(--ui-soft)]/85 backdrop-blur-md text-brand-navy text-[11px] font-bold border border-brand-line/20 shadow-xs flex items-center gap-1.5" data-sp-4f294819="">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--ui-success-bg)] animate-pulse" data-sp-4f294819="" />
-                    {" Ảnh thực tế đã kiểm duyệt "}
+                    {" Ảnh do người đăng cung cấp "}
                   </span>
                 </div>
                 <div className="absolute bottom-4 left-4 z-10 pointer-events-none" data-sp-4f294819="">
@@ -538,7 +425,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" data-sp-4f294819="" />
                         <polyline points="22 4 12 14.01 9 11.01" data-sp-4f294819="" />
                       </svg>
-                      {" Xác thực thực địa SmartProp "}
+                      {" Chưa xác minh thực địa "}
                     </span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--ui-accent)] tracking-tight leading-snug" data-sp-4f294819="">
@@ -572,7 +459,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" data-sp-4f294819="">
                           <polyline points="20 6 9 17 4 12" data-sp-4f294819="" />
                         </svg>
-                        {" Giá đã kiểm duyệt & Thương lượng "}
+                        {" Giá chào do người đăng cung cấp "}
                       </span>
                       <p className="text-[11px] text-brand-muted mt-1" data-sp-4f294819="">
                         {"Không thu phí người mua / xem nhà"}
@@ -651,60 +538,10 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                     </div>
                   </div>
                 </section>
-                {view.listing.hasWarning ? <section className="rounded-3xl p-6 bg-[var(--ui-warning-bg)]/90 border border-[var(--ui-warning-border)] shadow-xs" data-sp-4f294819="">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-sp-4f294819="">
-                      <div className="flex items-start gap-3.5" data-sp-4f294819="">
-                        <div className="w-10 h-10 rounded-2xl bg-[var(--ui-warning-bg)] text-brand-navy flex items-center justify-center shrink-0 shadow-sm" data-sp-4f294819="">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" data-sp-4f294819="">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" data-sp-4f294819="" />
-                            <line x1="12" y1="9" x2="12" y2="13" data-sp-4f294819="" />
-                            <line x1="12" y1="17" x2="12.01" y2="17" data-sp-4f294819="" />
-                          </svg>
-                        </div>
-                        <div data-sp-4f294819="">
-                          <h3 className="font-bold text-[var(--ui-warning-text)] text-sm sm:text-base" data-sp-4f294819="">
-                            {"Lưu ý đối chiếu hình ảnh & thông tin"}
-                          </h3>
-                          <p className="text-xs text-[var(--ui-warning-text)]/90 mt-1 leading-relaxed" data-sp-4f294819="">
-                            {" Hệ thống ghi nhận hình ảnh có mức độ tương đồng với một số tin đăng khác. Quý khách nên kiểm tra thực địa cùng chuyên viên SmartProp. "}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="px-3.5 py-1.5 rounded-full bg-[var(--ui-warning-bg)] text-brand-navy text-xs font-bold self-start sm:self-center shrink-0" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.listing.statusText || "Cần kiểm tra")}
-                      </span>
-                    </div>
-                  </section> : <section className="rounded-3xl p-6 sm:p-7 bg-gradient-to-r from-emerald-50/90 via-[var(--ui-surface)] to-emerald-50/90 border border-[var(--ui-success-border)] shadow-xs" data-sp-4f294819="">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-sp-4f294819="">
-                      <div className="flex items-start gap-3.5" data-sp-4f294819="">
-                        <div className="w-11 h-11 rounded-2xl bg-[var(--ui-success-bg)] text-brand-navy flex items-center justify-center shrink-0 shadow-sm" data-sp-4f294819="">
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" data-sp-4f294819="">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" data-sp-4f294819="" />
-                            <polyline points="9 12 11 14 15 10" data-sp-4f294819="" />
-                          </svg>
-                        </div>
-                        <div data-sp-4f294819="">
-                          <div className="flex items-center gap-2" data-sp-4f294819="">
-                            <h3 className="font-bold text-[var(--ui-success-text)] text-sm sm:text-base" data-sp-4f294819="">
-                              {" Bảo chứng an toàn SmartProp Verify™ "}
-                            </h3>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[var(--ui-success-bg)] text-[var(--ui-success-text)]" data-sp-4f294819="">
-                              {" Đã kiểm duyệt "}
-                            </span>
-                          </div>
-                          <p className="text-xs text-[var(--ui-success-text)]/80 mt-1.5 leading-relaxed" data-sp-4f294819="">
-                            {" Tin đăng đã được định vị vệ tinh GPS chuẩn xác tại Đà Nẵng, kiểm tra pháp lý sơ bộ và đối chiếu ảnh thực địa chống tin ảo. "}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="shrink-0 self-start sm:self-center" data-sp-4f294819="">
-                        <span className="px-4 py-2 rounded-full bg-[var(--ui-success-bg)] text-brand-navy text-xs font-bold shadow-xs inline-flex items-center gap-1.5" data-sp-4f294819="">
-                          <span className="w-2 h-2 rounded-full bg-brand-card animate-pulse" data-sp-4f294819="" />
-                          {" An toàn giao dịch "}
-                        </span>
-                      </div>
-                    </div>
-                  </section>}
+                <section className="rounded-3xl p-6 border border-brand-line bg-brand-card" data-sp-4f294819="">
+                  <h2 className="font-bold text-sm mb-2">Thông tin cần đối chiếu</h2>
+                  <p className="text-sm text-brand-muted">Duyệt hiển thị tin không phải xác nhận pháp lý, thực địa hoặc an toàn giao dịch. Hãy đối chiếu hồ sơ gốc và tình trạng tài sản.</p>
+                </section>
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <h2 className="text-base font-bold text-[var(--ui-accent)] mb-4 flex items-center gap-2" data-sp-4f294819="">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ui-accent)]" data-sp-4f294819="">
@@ -758,54 +595,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       {"Khoảng cách thực tế"}
                     </span>
                   </div>
-                  {view.nearbyDaNangLandmarks.length ? <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5" data-sp-4f294819="">
-                      {((items, render) => typeof items === "number" ? Array.from({
-                    length: Math.max(0, items)
-                  }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.nearbyDaNangLandmarks.slice(0, 8), item => <div key={item.name} className="p-3.5 rounded-2xl bg-brand-card border border-brand-line hover:border-[var(--ui-border)]/30 hover:bg-brand-card transition-all flex flex-col justify-between shadow-2xs group" data-sp-4f294819="">
-                            <div data-sp-4f294819="">
-                              <div className="flex items-center justify-between mb-2.5" data-sp-4f294819="">
-                                <div className="w-8 h-8 rounded-xl bg-brand-card text-[var(--ui-accent)] flex items-center justify-center border border-brand-line group-hover:scale-105 transition-transform" data-sp-4f294819="">
-                                  {item.iconType === "beach" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M2 18c3-3 6-3 9 0 3-3 6-3 9 0" data-sp-4f294819="" />
-                                      <path d="M2 14c3-3 6-3 9 0 3-3 6-3 9 0" data-sp-4f294819="" />
-                                    </svg> : item.iconType === "bridge" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M3 17h18M4 17V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9M9 17v-6M15 17v-6" data-sp-4f294819="" />
-                                    </svg> : item.iconType === "plane" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.6-.1-1.2.1-1.5.7l-.5.9 5.4 3.7-2.6 2.6-2.5-.7c-.4-.1-.8.1-1 .4l-.3.4 3.3 2.1 2.1 3.3.4-.3c.3-.3.5-.6.4-1l-.7-2.5 2.6-2.6 3.7 5.4.9-.5c.6-.4.8-1 .7-1.5z" data-sp-4f294819="" />
-                                    </svg> : item.iconType === "hospital" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h6M12 6v6" data-sp-4f294819="" />
-                                    </svg> : item.iconType === "shop" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" data-sp-4f294819="" />
-                                      <line x1="3" y1="6" x2="21" y2="6" data-sp-4f294819="" />
-                                      <path d="M16 10a4 4 0 0 1-8 0" data-sp-4f294819="" />
-                                    </svg> : item.iconType === "school" ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M22 10v6M2 10l10-5 10 5-10 5z" data-sp-4f294819="" />
-                                      <path d="M6 12v5c3 3 9 3 12 0v-5" data-sp-4f294819="" />
-                                    </svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
-                                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" data-sp-4f294819="" />
-                                      <circle cx="12" cy="10" r="3" data-sp-4f294819="" />
-                                    </svg>}
-                                </div>
-                                <span className="text-[11px] font-extrabold text-[var(--ui-accent)] bg-[var(--ui-surface)] px-2 py-0.5 rounded-full border border-[var(--ui-border)]" data-sp-4f294819="">
-                                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.distText)}
-                                </span>
-                              </div>
-                              <p className="text-xs font-bold text-[var(--ui-accent)] leading-snug" data-sp-4f294819="">
-                                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.name)}
-                              </p>
-                            </div>
-                            <div className="mt-2.5 pt-2 border-t border-brand-line/80 flex items-center justify-between text-[10px] text-brand-muted" data-sp-4f294819="">
-                              <span data-sp-4f294819="">
-                                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.category)}
-                              </span>
-                              <span className="text-[var(--ui-accent)] font-bold" data-sp-4f294819="">
-                                {"~"}
-                                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.estMinutes)}
-                                {"p"}
-                              </span>
-                            </div>
-                          </div>)}
-                    </div> : null}
+
                 </section>
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4" data-sp-4f294819="">
@@ -860,148 +650,24 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                     </a>
                   </p>
                 </section>
-                <section className="bg-gradient-to-br from-[var(--ui-soft)] via-[var(--ui-soft)] to-[var(--ui-soft)] text-brand-navy rounded-3xl p-6 sm:p-8 shadow-xl border border-brand-line/10 relative overflow-hidden" data-sp-4f294819="">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-brand-line/10 relative z-10" data-sp-4f294819="">
-                    <div className="flex-1 min-w-0 pr-4" data-sp-4f294819="">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-card/10 text-brand-navy/80 text-[11px] font-bold border border-brand-line/15 mb-3" data-sp-4f294819="">
-                        <span className="w-2 h-2 rounded-full bg-brand-card animate-pulse" data-sp-4f294819="" />
-                        <span data-sp-4f294819="">
-                          {"ĐỊNH GIÁ THAM CHIẾU AI (SMARTPROP V6)"}
-                        </span>
-                      </div>
-                      <h2 className="text-2xl sm:text-3xl font-black text-brand-navy tracking-tight" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.valuationAnalysis.rangeText)}
-                      </h2>
-                      <p className="text-xs text-[var(--ui-success-text)] mt-2 flex items-center gap-1.5 font-medium" data-sp-4f294819="">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--ui-success-text)] shrink-0" data-sp-4f294819="">
-                          <polyline points="20 6 9 17 4 12" data-sp-4f294819="" />
-                        </svg>
-                        <span data-sp-4f294819="">
-                          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.valuationAnalysis.evaluation)}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="bg-brand-card/10 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-brand-line/10 shrink-0 min-w-[210px]" data-sp-4f294819="">
-                      <p className="text-[11px] text-brand-navy/60 uppercase tracking-wider font-semibold" data-sp-4f294819="">
-                        {" Giá chào niêm yết "}
-                      </p>
-                      <p className="text-2xl font-black text-[var(--ui-warning-text)] mt-1 tracking-tight" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.listing.price)}
-                      </p>
-                      <p className="text-xs text-brand-navy/70 mt-1" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.listing.pricePerM2)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-6 pt-2 relative z-10" data-sp-4f294819="">
-                    <div className="flex items-center justify-between mb-4" data-sp-4f294819="">
-                      <p className="text-xs font-bold text-brand-navy/90 uppercase tracking-wider" data-sp-4f294819="">
-                        {" Chỉ số phân tích thị trường BĐS Đà Nẵng "}
-                      </p>
-                      <SiteLink to={`/market-insights`} className="text-xs font-bold text-[var(--ui-warning-text)] hover:text-brand-navy transition flex items-center gap-1" data-sp-4f294819="">
-                        <span data-sp-4f294819="">
-                          {"Xem xu hướng thị trường"}
-                        </span>
-                        <span data-sp-4f294819="">
-                          {"→"}
-                        </span>
-                      </SiteLink>
-                    </div>
-                    <div className="space-y-4" data-sp-4f294819="">
-                      <div data-sp-4f294819="">
-                        <div className="flex justify-between text-xs text-brand-navy/80 mb-1.5" data-sp-4f294819="">
-                          <span data-sp-4f294819="">
-                            {"Vị trí & Tiềm năng thương mại / Du lịch"}
-                          </span>
-                          <span className="font-bold text-brand-navy" data-sp-4f294819="">
-                            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.valuationAnalysis.locationScore)}
-                            {"/100"}
-                          </span>
-                        </div>
-                        <div className="h-2 bg-brand-card/10 rounded-full overflow-hidden" data-sp-4f294819="">
-                          <div className="h-full bg-gradient-to-r from-brand-card to-brand-card rounded-full transition-all duration-500" style={{
-                          width: view.valuationAnalysis.locationScore + "%"
-                        }} data-sp-4f294819="" />
-                        </div>
-                      </div>
-                      <div data-sp-4f294819="">
-                        <div className="flex justify-between text-xs text-brand-navy/80 mb-1.5" data-sp-4f294819="">
-                          <span data-sp-4f294819="">
-                            {"Mức độ cạnh tranh đơn giá / m² so với quận"}
-                          </span>
-                          <span className="font-bold text-[var(--ui-success-text)]" data-sp-4f294819="">
-                            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.valuationAnalysis.priceScore)}
-                            {"/100"}
-                          </span>
-                        </div>
-                        <div className="h-2 bg-brand-card/10 rounded-full overflow-hidden" data-sp-4f294819="">
-                          <div className="h-full bg-gradient-to-r from-emerald-400 to-brand-card rounded-full transition-all duration-500" style={{
-                          width: view.valuationAnalysis.priceScore + "%"
-                        }} data-sp-4f294819="" />
-                        </div>
-                      </div>
-                      <div data-sp-4f294819="">
-                        <div className="flex justify-between text-xs text-brand-navy/80 mb-1.5" data-sp-4f294819="">
-                          <span data-sp-4f294819="">
-                            {"Chỉ số thanh khoản thị trường"}
-                          </span>
-                          <span className="font-bold text-[var(--ui-warning-text)]" data-sp-4f294819="">
-                            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.valuationAnalysis.liquidityScore)}
-                            {"/100"}
-                          </span>
-                        </div>
-                        <div className="h-2 bg-brand-card/10 rounded-full overflow-hidden" data-sp-4f294819="">
-                          <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full transition-all duration-500" style={{
-                          width: view.valuationAnalysis.liquidityScore + "%"
-                        }} data-sp-4f294819="" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <section className="listing-evidence bg-brand-card rounded-3xl p-6 border border-brand-line" data-sp-4f294819="">
+                  <h2 className="font-bold mb-3">Giá tham khảo và mức độ xác minh</h2>
+                  <p className="text-sm text-brand-muted">Chưa có kết quả định giá cho tin này. Giá đang hiển thị là giá chào của người đăng, không phải giá giao dịch hay kết quả thẩm định.</p>
+                  <p className="text-sm text-brand-muted mt-3">Hồ sơ pháp lý và tình trạng thực tế của tài sản chưa được xác minh trong dữ liệu công khai.</p>
+                  <SiteLink to="/valuation" className="mt-4 inline-block underline text-sm">Mở công cụ ước tính giá</SiteLink>
                 </section>
               </div>
-              <aside className="space-y-5 lg:sticky lg:top-5" data-sp-4f294819="">
+              <aside className="listing-detail-sidebar space-y-5 lg:sticky lg:top-5" data-sp-4f294819="">
                 <section className="bg-brand-card rounded-3xl p-6 shadow-sm border border-brand-line relative" data-sp-4f294819="">
-                  <div className="flex items-center justify-between mb-5 pb-4 border-b border-brand-line" data-sp-4f294819="">
-                    <p className="text-xs font-bold text-brand-muted uppercase tracking-wider" data-sp-4f294819="">
-                      {" Môi giới phụ trách "}
-                    </p>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-card text-[var(--ui-accent)] border border-brand-line flex items-center gap-1" data-sp-4f294819="">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" data-sp-4f294819="">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" data-sp-4f294819="" />
-                      </svg>
-                      <span data-sp-4f294819="">
-                        {"Đã xác minh"}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3.5 mb-5" data-sp-4f294819="">
-                    <div className="relative shrink-0" data-sp-4f294819="">
-                      <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[var(--ui-soft)] to-[var(--ui-soft)] text-brand-navy flex items-center justify-center text-lg font-black shadow-md border-2 border-brand-line" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))((view.revealedContact?.contactName || view.property?.contactName || "S").charAt(0).toUpperCase())}
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[var(--ui-success-bg)] border-2 border-brand-line" title="Trực tuyến" data-sp-4f294819="" />
-                    </div>
-                    <div className="flex-1 min-w-0" data-sp-4f294819="">
-                      <p className="text-base font-extrabold text-[var(--ui-accent)] truncate" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.revealedContact?.contactName || view.property?.contactName || "Phan Thanh Bình")}
-                      </p>
-                      <p className="text-xs text-[var(--ui-accent)] font-semibold truncate mt-0.5" data-sp-4f294819="">
-                        {" Chuyên viên BĐS SmartProp "}
-                      </p>
-                      <div className="flex items-center gap-1 text-[11px] text-[var(--ui-warning-text)] font-bold mt-0.5" data-sp-4f294819="">
-                        <span data-sp-4f294819="">
-                          {"★ 5.0"}
-                        </span>
-                        <span className="text-brand-muted font-normal" data-sp-4f294819="">
-                          {"· Đang trực tuyến hỗ trợ"}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="mb-5 pb-4 border-b border-brand-line">
+                    <h2 className="font-bold text-base">Người đăng tin</h2>
+                    <p className="mt-2 text-sm text-brand-muted">{view.revealedContact?.contactName || "Tên liên hệ chưa được cung cấp công khai."}</p>
+                    <p className="mt-1 text-xs text-brand-muted">Thông tin liên hệ được lấy từ tin đăng khi bạn chọn xem liên hệ.</p>
                   </div>
                   {view.route.query.own === "1" || view.session.user?.role === "ADMIN" ? <SiteLink to={"/account/properties/" + view.listingId + "/legal-documents"} className="mb-3 block text-xs underline font-semibold text-[var(--ui-accent)] hover:text-[var(--ui-accent)]" data-sp-4f294819="">
                       {" Quản lý hồ sơ pháp lý riêng "}
                     </SiteLink> : null}
+                  {view.property?.status === "PUBLISHED" && <button type="button" className="listing-ai-action" onClick={view.askAboutProperty}>Hỏi AI về căn này</button>}
                   <ContactPanel key={view.listingId} propertyId={view.listingId} onRevealed={$event => {
                   return (data => view.updateRevealedContactValue(data))?.($event);
                 }} data-sp-4f294819="" />
@@ -1099,7 +765,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         </span>
                       </span>
                       <span className="font-semibold text-[var(--ui-success-text)] bg-[var(--ui-success-bg)] px-2 py-0.5 rounded border border-[var(--ui-success-border)]" data-sp-4f294819="">
-                        {" Sổ hồng / Sổ đỏ riêng "}
+                        {" Chưa có bằng chứng pháp lý công khai "}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-0.5" data-sp-4f294819="">
@@ -1113,8 +779,8 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         </span>
                       </span>
                       <span className="font-semibold text-[var(--ui-accent)]" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.viewsCount || view.incrementAndGetViews(view.property?.id))}
-                        {" lượt xem "}
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))("Chưa có thống kê")}
+
                       </span>
                     </div>
                   </div>
@@ -1124,7 +790,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       <polyline points="22 4 12 14.01 9 11.01" data-sp-4f294819="" />
                     </svg>
                     <span data-sp-4f294819="">
-                      {"Dữ liệu xác thực theo tiêu chuẩn SmartProp"}
+                      {"Thông tin do người đăng cung cấp"}
                     </span>
                   </div>
                 </section>
@@ -1148,7 +814,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
             </div>
           </React.Fragment> : null}
       </div>
-      {view.property && !view.state.busy ? <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-brand-card/95 backdrop-blur-md border-t border-brand-line px-4 py-3 flex items-center justify-between gap-3 shadow-lg" data-sp-4f294819="">
+      {view.property && !view.state.busy ? <div className="listing-mobile-actions lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-brand-card/95 backdrop-blur-md border-t border-brand-line px-4 py-3 flex items-center justify-between gap-3 shadow-lg" data-sp-4f294819="">
           <div className="min-w-0" data-sp-4f294819="">
             <p className="text-[10px] text-brand-muted font-bold uppercase" data-sp-4f294819="">
               {"Giá niêm yết"}

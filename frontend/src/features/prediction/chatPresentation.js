@@ -48,7 +48,7 @@ export function chatPresentation(packet) {
   const areaSources = data.citations.filter(c => ['AREA_AMENITY', 'POI_EVIDENCE'].includes(c.kind));
   let summary;
   if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');else if (noMatches) summary = 'Không có tin công khai phù hợp tại ' + (data.evidence.criteria?.district || 'Đà Nẵng') + ' trong ngân sách tối đa ' + compactChatPrice(data.evidence.criteria.budgetVnd).text + '. Bộ lọc khu vực đang được giữ từ hồ sơ hoặc cuộc chat; hệ thống không tự mở rộng.';else if (areaSources.length) summary = data.answer;else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
-  if (data.evidence.responseKind === 'PROPERTY_NEARBY_EVIDENCE') summary = data.answer;
+  if (['OUT_OF_SCOPE','FOCUSED_PROPERTY_EVIDENCE','PROPERTY_UNAVAILABLE','PROPERTY_NEARBY_EVIDENCE','MARKET_PRICE_EVIDENCE','INSUFFICIENT_MARKET_DATA','INSUFFICIENT_TREND_DATA','INSUFFICIENT_MARKET_ANALYSIS_DATA','DATA_SOURCE_ERROR','KNOWLEDGE_SOURCE_UNAVAILABLE','KNOWLEDGE_EVIDENCE','INSUFFICIENT_KNOWLEDGE_EVIDENCE','STALE_KNOWLEDGE_DATA','KNOWLEDGE_SOURCE_CONFLICT'].includes(data.evidence.responseKind)) summary = data.answer;
   return {
     summary,
     clarification,
@@ -62,10 +62,12 @@ export function chatPresentation(packet) {
         ...c,
         number: index + 1,
         href: citationHref(c, data.recommendedProperties),
-        label: property ? property.title : c.kind === 'AREA_AMENITY' ? 'Hồ sơ tiện ích khu vực' : 'Bằng chứng địa điểm tiện ích',
-        basis: property ? 'Thông tin bất động sản' : c.kind === 'PROPERTY_NEARBY' ? 'Tiện ích theo tọa độ tin; khoảng cách đường chim bay và bán kính nằm trong phản hồi Backend' : 'Bằng chứng cấp khu vực; không xác định khoảng cách tới căn nhà'
+        label: c.kind === 'PROPERTY_DETAIL' ? 'Tin đăng đang phân tích · ' + c.title : property ? property.title : c.kind === 'SOURCE_DOCUMENT' ? c.title : c.kind === 'MARKET_SUMMARY' ? 'Thống kê giá chào SmartProp' : c.kind === 'AREA_AMENITY' ? 'Hồ sơ tiện ích khu vực' : 'Bằng chứng địa điểm tiện ích',
+        basis: c.kind === 'PROPERTY_DETAIL' ? 'Thông tin do người đăng cung cấp trên SmartProp, chưa được xác minh độc lập. Liên kết mở lại tin gốc để đối chiếu.' : property ? 'Thông tin bất động sản' : c.kind === 'SOURCE_DOCUMENT' ? (() => { const doc = data.evidence.documents.find(d => d.sourceId === c.sourceId); return doc.publisher + ' · Ban hành: ' + new Date(doc.publishedAt).toLocaleDateString('vi-VN'); })() : c.kind === 'MARKET_SUMMARY' ? 'Giá chào hiện tại; không phải giá giao dịch hoặc chuỗi lịch sử' : c.kind === 'PROPERTY_NEARBY' ? 'Tiện ích theo tọa độ tin; khoảng cách đường chim bay và bán kính nằm trong phản hồi Backend' : 'Bằng chứng cấp khu vực; không xác định khoảng cách tới căn nhà'
       };
     }),
+    isListingSource: data.citations.some(c => c.kind === 'PROPERTY_DETAIL'),
+    showOriginalAnswer: data.answer.trim() !== summary.trim(),
     originalAnswer: data.answer,
     limitations: data.dataLimitations
   };

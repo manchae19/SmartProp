@@ -1,0 +1,52 @@
+.floating-advisor { position: fixed; z-index: 80; right: max(20px,env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom) + var(--chat-keyboard-offset,0px)); font-family: inherit; color: #203c5b; }
+.floating-advisor-launcher { width: 78px; height: 82px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; border: 2px solid rgba(255,255,255,.85); border-radius: 27px 27px 25px 25px; background: linear-gradient(155deg,#469bff,#2964ea 65%,#304ac6); color: #fff; box-shadow: 0 7px 22px rgba(34,92,201,.24); cursor: pointer; transition: transform .2s; }
+.floating-advisor-launcher:hover { transform: translateY(-3px); }
+.floating-advisor-launcher>svg { width: 35px; height: 35px; filter: drop-shadow(0 1px 2px #fff5); }
+.floating-advisor-launcher>span { font-size: 10px; line-height: 1.25; text-align: center; }
+.floating-advisor-launcher strong { display: block; color: #fff; font-size: 10px; }
+.floating-advisor button:focus-visible,.floating-advisor a:focus-visible,.floating-advisor textarea:focus-visible { outline: 3px solid #90b6eb; outline-offset: 3px; }
+.floating-advisor-panel { position: absolute; bottom: 96px; right: 0; width: 440px; max-width: calc(100vw - 28px); height: min(650px,calc(100dvh - 135px)); display: flex; flex-direction: column; overflow: hidden; background: #fafbfc; border: 1px solid #d2dfec; border-radius: 22px; box-shadow: 0 16px 54px rgba(32,60,91,.19); }
+.floating-advisor-panel>header { display: flex; align-items: center; gap: 9px; padding: 14px 15px; flex-shrink: 0; border-bottom: 1px solid #dbe5ef; background: #edf2f7; }
+.floating-advisor-panel>header>svg { width: 38px; height: 38px; flex-shrink: 0; }
+.floating-advisor-panel>header>div { flex: 1; min-width: 0; }
+.floating-advisor-panel h2 { font-size: 16px; font-weight: 700; margin: 0; color: #203c5b; }
+.floating-advisor-panel>header p { margin: 2px 0 0; font-size: 11px; color: #60758a; }
+.floating-advisor-tool { width: 31px; height: 31px; display: grid; place-items: center; flex-shrink: 0; border: 1px solid #cddbe8; border-radius: 9px; background: #fafbfc; color: #203c5b; font-size: 23px; text-decoration: none; cursor: pointer; }
+.floating-advisor-tool svg { width: 16px; height: 16px; }
+.floating-advisor-thread { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 13px; scrollbar-width: thin; }
+.floating-advisor-welcome { text-align: center; padding: 20px 8px; }
+.floating-advisor-welcome>svg { width: 60px; height: 60px; margin: auto; }
+.floating-advisor-welcome h3 { font-size: 17px; line-height: 1.4; margin: 14px 0 8px; color: #203c5b; font-weight: 650; }
+.floating-advisor-welcome p { font-size: 12px; color: #60758a; line-height: 1.7; margin: 0 0 20px; }
+.floating-advisor-welcome button { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; padding: 12px; margin: 8px 0; border: 1px solid #d2dfec; border-radius: 12px; background: #fff; color: #203c5b; font-size: 12px; cursor: pointer; }
+.floating-advisor-user { width: fit-content; max-width: 90%; margin: 0 0 14px auto; padding: 11px 13px; border-radius: 16px 16px 4px 16px; background: #203c5b; color: #fafbfc; font-size: 12px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+.floating-advisor-answer { margin-bottom: 16px; min-width: 0; }
+.floating-advisor .chat-answer { width: 100%; max-width: none; min-width: 0; }
+.floating-advisor .ai-bubble { max-width: 100%; }
+.floating-advisor .chat-properties { width: 100%; min-width: 0; }
+.floating-advisor .chat-property { width: 100%; min-width: 0; }
+.floating-advisor .ai-summary { font-size: 12px; line-height: 1.75; }
+.floating-advisor :is(.citation-panel,.needs-panel) { max-width: 100%; overflow-wrap: anywhere; }
+.floating-advisor-loading { font-size: 12px; line-height: 1.6; color: #60758a; padding: 10px 3px; }
+.floating-advisor-error { background: #fff1f2; color: #a9253c; padding: 12px; border: 1px solid #fecdd3; border-radius: 12px; font-size: 12px; line-height: 1.6; }
+.floating-advisor-error button { text-decoration: underline; margin-top: 8px; cursor: pointer; }
+.floating-advisor-panel>footer { padding: 11px; border-top: 1px solid #dbe5ef; background: #fff; flex-shrink: 0; }
+.floating-advisor-panel form { display: flex; align-items: flex-end; gap: 8px; border: 1px solid #cddbe8; background: #fafbfc; padding: 6px; border-radius: 13px; }
+.floating-advisor-panel textarea { flex: 1; min-width: 0; min-height: 36px; max-height: 95px; resize: vertical; padding: 8px; background: transparent; color: #203c5b; font: inherit; font-size: 12px; line-height: 1.6; }
+.floating-advisor-panel form button { display: grid; place-items: center; border-radius: 9px; width: 36px; height: 36px; flex-shrink: 0; color: #fff; background: #203c5b; cursor: pointer; }
+.floating-advisor-panel button:disabled { opacity: .45; cursor: default; }
+.floating-advisor-panel>footer>div { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.floating-advisor-panel small { font-size: 9px; line-height: 1.4; color: #60758a; }
+.floating-advisor-panel>footer>div button { flex-shrink: 0; font-size: 10px; color: #203c5b; cursor: pointer; }
+body:has(.comparison-tray) .floating-advisor { bottom: calc(112px + env(safe-area-inset-bottom) + var(--chat-keyboard-offset,0px)); }
+@media(max-width: 600px) {
+ .floating-advisor { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom) + var(--chat-keyboard-offset,0px)); }
+ .floating-advisor-launcher { width: 68px; height: 72px; border-radius: 24px; }
+ .floating-advisor-panel { width: calc(100vw - 24px); max-width: none; bottom: 84px; height: min(620px,calc(100dvh - 113px)); border-radius: 18px; }
+}
+@media(prefers-reduced-motion:reduce) { .floating-advisor-launcher { transition: none; } }
+
+@media(max-width:1023px) {
+ body:has(.listing-mobile-actions) .floating-advisor { bottom: calc(96px + env(safe-area-inset-bottom) + var(--chat-keyboard-offset,0px)); }
+ body:has(.listing-mobile-actions) .floating-advisor-panel { max-height: calc(100dvh - 200px); }
+}

@@ -1,0 +1,23 @@
+{
+  "format": "SMARTPROP_DOCUMENT_INTAKE_V1",
+  "allowedHosts": [],
+  "sources": [
+    {
+      "sourceId": "replace-with-stable-id",
+      "path": "documents/source.txt",
+      "url": "",
+      "title": "",
+      "publisher": "",
+      "topic": "LEGAL",
+      "version": "",
+      "jurisdiction": "Đà Nẵng",
+      "districts": [],
+      "publishedAt": "",
+      "retrievedAt": "",
+      "validUntil": "",
+      "approval": "PENDING",
+      "permission": "UNKNOWN",
+      "permissionBasis": ""
+    }
+  ]
+}

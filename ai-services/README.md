@@ -126,3 +126,38 @@ Khi clone repo sang máy khác, các artifact trên và hai tệp `app/data/trai
 Đây là **giá rao ước tính** từ dữ liệu tin đăng, phục vụ thử nghiệm/demo. [Pilot 132 tin](app/data/V6_HOLDOUT_PILOT.md) có MAPE 35,86% và tỷ lệ sai số ≤20% là 59,09%; sai số này không phải mức bảo đảm cho từng dự đoán. Căn hộ chỉ có 8 mẫu trong pilot. API không xuất khoảng tin cậy khi chưa có hiệu chỉnh được kiểm chứng.
 
 Model có đặc trưng mặt tiền/kiệt theo lời mô tả; chưa có độ rộng hẻm, tọa độ tài sản được xác minh hoặc khoảng cách tới tiện ích. [Frontend Vue](../frontend/vue.ui/README.md) đã nối form định giá với API qua Vite proxy trên nhánh tích hợp. Backend nghiệp vụ và dữ liệu tin đăng thật chưa được nối vào; chưa triển khai công khai. [Kết quả huấn luyện v6](app/data/TRAINING_V6.md).
+
+
+## G2: bổ sung tài liệu RAG (không huấn luyện lại Qwen)
+
+Kho POI từ API giữ nguyên. Kho tài liệu riêng mặc định là `.scratch/rag-data/documents-corpus.json`;
+launcher chat đọc kho này nếu có. Khi chưa có tài liệu đã duyệt, bot báo thiếu nguồn.
+Không nhập báo cáo nội bộ, thông tin cá nhân hoặc fixture vào kho thật.
+
+1. Cài extension vào venv RAG: `.\.scratch\rag-venv\Scripts\python.exe -m pip install -r ai-services/requirements-rag-documents.txt`.
+2. Sao chép `ai-services/rag-sources.example.json` vào thư mục intake riêng, đặt tài liệu bên trong cùng thư mục đó.
+   Điền URL HTTPS gốc, đơn vị phát hành, ngày ban hành/lấy nguồn, hạn rà soát, phiên bản, địa bàn;
+   chỉ đặt `approval=APPROVED`, `permission=PERMITTED` khi đã kiểm tra và ghi căn cứ `permissionBasis`.
+   `validUntil` là hạn cần rà soát dữ liệu, không tự chứng minh văn bản còn hiệu lực pháp lý.
+3. Từ gốc repo chạy dry-run:
+
+```powershell
+.\.scratch\rag-venv\Scripts\python.exe ai-services/scripts/ingest_rag_documents.py --manifest <thu-muc-intake>/sources.json --output .scratch/rag-data/documents-corpus.json --report <thu-muc-intake>/validation.json
+```
+
+4. Kiểm tra báo cáo rồi thêm `--write` để thay snapshot nguyên tử. Nguồn có `status=REMOVED`
+   hoặc bỏ khỏi manifest sẽ bị loại khỏi snapshot mới. Muốn xóa toàn bộ kho phải thêm `--allow-empty`.
+   Lô có bản ghi BLOCKED không ghi đè kho cũ. Đừng đặt output/report trùng đường dẫn tài liệu gốc.
+5. URL trực tiếp: bỏ `path`, khai báo hostname chính xác trong `allowedHosts`, thêm `--fetch-urls`.
+   Chỉ dùng khi được phép trích xuất/tái sử dụng; công cụ kiểm tra robots, chặn IP/private DNS, redirect,
+   URL chứa token/query, giới hạn 5 MB/request và timeout. Không tự crawl liên kết hoặc vượt chặn truy cập.
+   Chưa có nguồn ngoài nào được tự động thêm/duyệt chỉ vì công khai trên Internet.
+
+Hỗ trợ PDF văn bản, TXT UTF-8, Markdown; PDF scan/khóa/hỏng cần xử lý thủ công, chưa có OCR.
+PDF trích xuất trong worker tối đa 30 giây, tối đa 200 trang. Dữ liệu chỉ được trích dẫn lại;
+không phải chứng nhận pháp lý/quy hoạch. Mâu thuẫn tự động hiện dựa trên `claimKey`/`claimValue`
+được người rà soát gắn, chưa phải mô hình tự phát hiện mọi mâu thuẫn ngữ nghĩa.
+
+Chat dùng BM25 + E5/FAISS + RRF và giới hạn trích đoạn mỗi nguồn. Embedding tài liệu được cache có giới hạn
+và tự đổi theo phiên bản nguồn; chưa phải ingestion chạy lịch nền. Không có thêm database hoặc dịch vụ vector mới.
+Sau khi đổi kho, có thể hỏi lại ngay; khởi động lại chat sẽ xóa cache RAM cũ.

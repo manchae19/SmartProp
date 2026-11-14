@@ -12,6 +12,9 @@ from .llm import QwenLLM
 from .ollama_llm import OllamaQwen
 from .orchestrator import ChatOrchestrator
 from .retriever import FaissRetriever
+from .hybrid import HybridRetriever
+from .document_store import DocumentStore
+from .document_advisor import DocumentAdvisor
 from .schemas import ChatRequest, ChatResponse
 from .tools import BackendTools, PublishedPropertyRepository, UpstreamError
 from .diagnostics import event, reason, request_trace
@@ -23,8 +26,11 @@ def create_chat_app(settings=None, orchestrator=None):
     if orchestrator is None:
         backend = BackendTools(settings)
         llm = OllamaQwen(settings) if settings.llm_provider == "ollama" else QwenLLM(settings.qwen_path)
+        embedding=E5Embedding(settings.e5_path,settings.e5_revision)
+        dense=HybridRetriever(FaissRetriever(embedding,settings.index_dir))
+        document_advisor=DocumentAdvisor(DocumentStore(settings.document_corpus_path),HybridRetriever(FaissRetriever(embedding)),llm)
         orchestrator = ChatOrchestrator(backend, PublishedPropertyRepository(settings), KnowledgeStore(settings.corpus_path),
-                                        FaissRetriever(E5Embedding(settings.e5_path, settings.e5_revision), settings.index_dir), llm)
+                                        dense,llm,document_advisor=document_advisor)
     slots = BoundedSemaphore(4)
 
     @asynccontextmanager

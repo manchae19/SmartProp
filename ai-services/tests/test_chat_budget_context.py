@@ -217,7 +217,7 @@ class ConversationTests(unittest.TestCase):
     def test_knowledge_and_unknown_never_replay_houses(self):
         self.chat('Tìm bất động sản toàn Đà Nẵng 10 tỷ')
         count=len(self.backend.calls)
-        for q,intent in [('Sổ hồng là gì?','KNOWLEDGE'),('Lãi suất vay ngân hàng hiện bao nhiêu?','KNOWLEDGE'),('Nói chuyện khác nhé','CLARIFY')]:
+        for q,intent in [('Sổ hồng là gì?','LEGAL_QA'),('Lãi suất vay ngân hàng hiện bao nhiêu?','KNOWLEDGE'),('Nói chuyện khác nhé','CLARIFY')]:
             r=self.chat(q)
             self.assertEqual(r.evidence['intent'],intent)
             self.assertEqual(len(self.backend.calls),count)

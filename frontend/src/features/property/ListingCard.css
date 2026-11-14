@@ -344,3 +344,8 @@
 }
 }
 
+
+.property-card[data-sp-d0ec4fcb] .main-price {color:#203c5b;font-weight:800;letter-spacing:-.025em}
+.property-card[data-sp-d0ec4fcb]:hover {border-color:#90aac4;box-shadow:0 6px 18px #203c5b12}
+.property-card[data-sp-d0ec4fcb]:focus-within {outline:2px solid #587ea5;outline-offset:3px}
+.property-card[data-sp-d0ec4fcb] .badge-type {background:#f9f5ea;color:#705a2e;border:1px solid #e9ddbf}

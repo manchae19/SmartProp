@@ -99,6 +99,40 @@ class BackendTools:
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
         return body
 
+    def market_summary(self, query):
+        from datetime import datetime, timezone
+        allowed={"district","propertyType","transactionType","priceUnit"}
+        if not isinstance(query,dict) or set(query)-allowed:raise GroundingError("INVALID_MARKET_QUERY")
+        if query.get("transactionType") not in ("SALE","RENT") or query.get("priceUnit") not in ("TOTAL","PER_MONTH","PER_YEAR","PER_DAY"):raise GroundingError("INVALID_MARKET_QUERY")
+        if query.get("transactionType")=="SALE" and query.get("priceUnit")!="TOTAL":raise GroundingError("INVALID_MARKET_QUERY")
+        if "propertyType" in query and query["propertyType"] not in ("HOUSE","APARTMENT","LAND","VILLA","ROOM","COMMERCIAL"):raise GroundingError("INVALID_MARKET_QUERY")
+        if "district" in query and (not isinstance(query["district"],str) or not query["district"].strip() or len(query["district"])>100):raise GroundingError("INVALID_MARKET_QUERY")
+        try:
+            response=self.client.get("/api/v1/properties/market-summary",params=query)
+            if response.status_code!=200:raise UpstreamError(response.status_code)
+            body=json.loads(response.content,parse_float=Decimal)
+            if not isinstance(body,dict):raise GroundingError("INVALID_MARKET_EVIDENCE")
+            if body.get("source")!="CURRENT_PUBLISHED_ASKING_PRICES" or body.get("historyAvailable") is not False or body.get("currency")!="VND" or any(body.get(k)!=query[k] for k in ("transactionType","priceUnit")):raise GroundingError("INVALID_MARKET_EVIDENCE")
+            moment=datetime.fromisoformat(body["asOf"].replace("Z","+00:00"))
+            age=(datetime.now(timezone.utc)-moment).total_seconds()
+            if not -5<=age<=600:raise GroundingError("STALE_MARKET_EVIDENCE")
+            amounts=body["overall"]
+            if not isinstance(amounts,dict):raise GroundingError("INVALID_MARKET_EVIDENCE")
+            count=amounts["count"]
+            if type(count) is not int or count<0:raise GroundingError("INVALID_MARKET_EVIDENCE")
+            for key in ("totalAskingPrice","averageAskingPrice","minimumAskingPrice","maximumAskingPrice","weightedAskingPricePerSqm"):
+                value=amounts.get(key)
+                if value is not None and (not _is_number(value) or Decimal(str(value))<0):raise GroundingError("INVALID_MARKET_EVIDENCE")
+            if count:
+                if any(amounts.get(k) is None for k in ("minimumAskingPrice","averageAskingPrice","maximumAskingPrice")):raise GroundingError("INVALID_MARKET_EVIDENCE")
+                low,avg,high=(Decimal(str(amounts[k])) for k in ("minimumAskingPrice","averageAskingPrice","maximumAskingPrice"))
+                if not 0<=low<=avg<=high:raise GroundingError("INVALID_MARKET_EVIDENCE")
+            elif any(amounts.get(k) is not None for k in ("averageAskingPrice","minimumAskingPrice","maximumAskingPrice")):raise GroundingError("INVALID_MARKET_EVIDENCE")
+            return body
+        except (httpx.HTTPError,ValueError,KeyError,TypeError) as e:
+            if isinstance(e,GroundingError):raise
+            raise UpstreamError() from e
+
     def amenity_summary(self):
         return self._call("GET", "/api/v1/amenities/summary")
 
@@ -180,6 +214,14 @@ class BackendTools:
             clean.append({"name": item["name"].strip(), "category": item["category"].strip(),
                           "distanceMeters": float(item["distanceMeters"])})
         return clean
+
+    def public_property(self, property_id):
+        if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        body = self._call("GET", "/api/v1/properties/" + property_id)
+        if not isinstance(body, dict) or body.get("id") != property_id or body.get("status") != "PUBLISHED":
+            raise GroundingError("INVALID_PUBLIC_PROPERTY")
+        return body
 
     def property_image(self, property_id):
         """Cover image from the existing public property detail; no generated or external image."""

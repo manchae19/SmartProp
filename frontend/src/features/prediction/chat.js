@@ -41,7 +41,7 @@ export function displayEvidenceText(value) {
   };
   return value.replace(/\b(?:PUBLIC_TRANSPORT|HOSPITAL|SCHOOL|MARKET|SUPERMARKET|PARK|BEACH|SHARED|CORRIDOR_DIRECT|DIRECT_WARD_EVIDENCE|DISTRICT_FACILITY|AREA_GENERAL|CORRIDOR|DISTRICT|WARD|POI)\b/g, code => labels[code]);
 }
-export function chatRequest(question, sessionId = null) {
+export function chatRequest(question, sessionId = null, propertyId = null) {
   const value = String(question ?? '').trim();
   if (!value || value.length > 2000) throw Object.assign(Error('Nhập câu hỏi từ 1 đến 2.000 ký tự.'), {
     code: 'INVALID_CHAT_QUESTION'
@@ -58,13 +58,35 @@ export function chatRequest(question, sessionId = null) {
     });
     body.sessionId = String(sessionId);
   }
+  if (propertyId != null) {
+    if (!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(propertyId)) throw Error('Invalid property reference');
+    body.propertyId = propertyId;
+  }
   return body;
 }
 export function citationHref(citation, properties) {
   try {
     if (typeof citation.url !== 'string' || citation.url.startsWith('//')) return null;
     const url = new URL(citation.url, 'https://source.invalid');
-    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) return null;
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash) return null;
+    if (citation.kind === 'SOURCE_DOCUMENT') {
+      if (!citation.url.startsWith('https://') || url.hostname === 'source.invalid' || url.protocol !== 'https:' || url.search || url.port || !url.hostname.includes('.') || /^[0-9.]+$/.test(url.hostname) || url.hostname.includes(':') || /(?:^|\.)(?:localhost|local|internal)$/.test(url.hostname)) return null;
+      return url.href;
+    }
+    if (citation.kind === 'MARKET_SUMMARY' && url.pathname === '/api/v1/properties/market-summary') {
+      const seen = new Set();
+      for (const [key, value] of url.searchParams) {
+        if (seen.has(key) || !['district', 'propertyType', 'transactionType', 'priceUnit'].includes(key)) return null;
+        seen.add(key);
+        if (key === 'district' && (!value.trim() || value.length > 100)) return null;
+        if (key === 'propertyType' && !['HOUSE','APARTMENT','LAND','VILLA','ROOM','COMMERCIAL'].includes(value)) return null;
+      }
+      if (!['SALE','RENT'].includes(url.searchParams.get('transactionType')) || !['TOTAL','PER_MONTH','PER_YEAR','PER_DAY'].includes(url.searchParams.get('priceUnit'))) return null;
+      if (url.searchParams.get('transactionType') === 'SALE' && url.searchParams.get('priceUnit') !== 'TOTAL') return null;
+      return url.pathname + url.search;
+    }
+    if (url.search) return null;
+    if (citation.kind === 'PROPERTY_DETAIL' && /^property:[a-f0-9-]{36}$/.test(citation.sourceId) && url.pathname === '/api/v1/properties/' + citation.sourceId.slice(9)) return '/listing/' + citation.sourceId.slice(9);
     if (citation.kind === 'RECOMMENDATION' && url.pathname === '/api/v1/recommendations') {
       const property = properties.find(p => citation.sourceId === 'recommendation:' + p.id);
       if (!property) return null;
@@ -104,6 +126,32 @@ export function publicChatResponse(data) {
     sourceIds.add(c.sourceId);
   }
   if (data.recommendedProperties.some(p => !sourceIds.has('recommendation:' + p.id))) throw invalid();
+  const market = data.evidence.marketSummary;
+  const marketCitations = data.citations.filter(c => c.kind === 'MARKET_SUMMARY');
+  if (market !== undefined || marketCitations.length) {
+    const citation = marketCitations[0];
+    if (!market || marketCitations.length !== 1 || data.recommendedProperties.length || market.sourceId !== citation.sourceId || market.asOf !== citation.version || !Number.isFinite(Date.parse(market.asOf)) || market.source !== 'CURRENT_PUBLISHED_ASKING_PRICES' || market.historyAvailable !== false || !market.query || typeof market.query !== 'object' || Array.isArray(market.query)) throw invalid();
+    const params = new URL(citationHref(citation, []), 'https://source.invalid').searchParams;
+    if (Object.keys(market.query).length !== [...params].length || Object.entries(market.query).some(([k,v]) => params.get(k) !== v)) throw invalid();
+    const a = market.amounts;
+    if (!a || !Number.isSafeInteger(a.count) || a.count < 0) throw invalid();
+    for (const key of ['totalAskingPrice','averageAskingPrice','minimumAskingPrice','maximumAskingPrice','weightedAskingPricePerSqm']) if (a[key] != null) decimal(a[key]);
+    if (a.count && (a.minimumAskingPrice == null || a.averageAskingPrice == null || a.maximumAskingPrice == null || decimal(a.minimumAskingPrice) > decimal(a.averageAskingPrice) || decimal(a.averageAskingPrice) > decimal(a.maximumAskingPrice))) throw invalid();
+    if (!a.count && ['averageAskingPrice','minimumAskingPrice','maximumAskingPrice'].some(k => a[k] != null)) throw invalid();
+  }
+  const documentCitations = data.citations.filter(c => c.kind === 'SOURCE_DOCUMENT');
+  const documents = data.evidence.documents;
+  if (documentCitations.length || documents !== undefined) {
+    if (!Array.isArray(documents) || documents.length > 4 || documents.length !== documentCitations.length) throw invalid();
+    const seenDocuments = new Set();
+    for (const doc of documents) {
+      const source = documentCitations.find(c => c.sourceId === doc.sourceId);
+      if (!source || seenDocuments.has(doc.sourceId) || source.url !== doc.url || source.version !== doc.version || source.title !== doc.title || !text(doc.publisher) || !text(doc.jurisdiction)) throw invalid();
+      const dates = ['publishedAt','retrievedAt','validUntil'].map(k => Date.parse(doc[k]));
+      if (dates.some(v => !Number.isFinite(v)) || dates[0] > dates[1] || dates[1] > Date.now()+5000 || dates[2] <= Date.now()) throw invalid();
+      seenDocuments.add(doc.sourceId);
+    }
+  }
   const generation = data.evidence.generation;
   if (data.evidence.responseKind === 'NO_MATCHES' && (data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY' || data.recommendedProperties.length || data.citations.length || !data.evidence.criteria?.budgetVnd || data.evidence.recommendationSearch?.performed !== true || data.evidence.recommendationSearch.resultCount !== 0 || data.evidence.recommendationSearch.sourcePath !== '/api/v1/recommendations' || !/^[a-f0-9]{64}$/.test(data.evidence.recommendationSearch.criteriaHash) || generation?.accepted !== false || generation.reason !== 'NOT_NEEDED_FOR_EMPTY_SEARCH')) throw invalid();
   if (!data.citations.length && (data.recommendedProperties.length || data.generationMode !== 'EVIDENCE_ONLY')) throw invalid();
@@ -176,14 +224,17 @@ export function createChatSession(send, {
     failedQuestion: '',
     error: null,
     trimmed: false,
+    propertyContext: null,
     sessionId: null
   });
   let id = 0;
+  let generation = 0;
   async function submit(question, retry = false) {
     if (state.getSnapshot().busy || now() < state.getSnapshot().retryAt) return false;
+    const run = generation;
     let request;
     try {
-      request = chatRequest(question, state.getSnapshot().sessionId);
+      request = chatRequest(question, state.getSnapshot().sessionId, state.getSnapshot().propertyContext?.id);
     } catch (error) {
       state.edit(draftValue => draftValue["error"] = chatError(error));
       return false;
@@ -200,8 +251,10 @@ export function createChatSession(send, {
     }));
     try {
       const response = await send(request);
+      if (run !== generation) return false;
       // The server owns the identifier; a fresh conversation never inherits an old one.
       // It may also retire a capped/expired thread and issue a replacement id.
+      if (response?.evidence?.clearPropertyContext || (state.getSnapshot().propertyContext && response?.evidence?.intentFamily === 'PROPERTY_SEARCH')) state.edit(d => d.propertyContext = null);
       const issued = response?.evidence?.session?.id;
       if (typeof issued === 'string' && /^[a-f0-9]{32}$/.test(issued)) state.edit(draftValue => draftValue["sessionId"] = issued);
       state.edit(draftValue => draftValue["messages"].push({
@@ -216,16 +269,22 @@ export function createChatSession(send, {
       state.edit(draftValue => draftValue["retryAt"] = 0);
       return true;
     } catch (error) {
+      if (run !== generation) return false;
       state.edit(draftValue => draftValue["error"] = chatError(error));
       state.edit(draftValue => draftValue["failedQuestion"] = request.question);
       state.edit(draftValue => draftValue["retryAt"] = now() + state.getSnapshot().error.delayMs);
       return false;
     } finally {
-      state.edit(draftValue => draftValue["busy"] = false);
+      if (run === generation) state.edit(draftValue => draftValue["busy"] = false);
     }
   }
   return combineStateStores([state], () => ({
     state: state.getSnapshot(),
+    focusProperty: (id, label) => {
+      chatRequest('context', null, id);
+      generation++;
+      state.edit(d => Object.assign(d, {messages: [], busy:false, error:null, retryAt:0, sessionId:null, propertyContext:{id,label}}));
+    },
     submit: question => submit(question),
     retry: () => state.getSnapshot().error?.retry && submit(state.getSnapshot().failedQuestion, true),
     clear: () => {
@@ -235,6 +294,11 @@ export function createChatSession(send, {
       state.edit(draftValue => draftValue["failedQuestion"] = '');
       state.edit(draftValue => draftValue["trimmed"] = false);
       state.edit(draftValue => draftValue["sessionId"] = null);
+      state.edit(d => d.propertyContext = null);
+    },
+    reset: () => {
+      generation++;
+      state.edit(draftValue => Object.assign(draftValue, {messages: [], busy: false, startedAt: 0, retryAt: 0, failedQuestion: '', error: null, trimmed: false, sessionId: null, propertyContext:null}));
     },
     updateState: state.edit,
     updateStateValue: state.set

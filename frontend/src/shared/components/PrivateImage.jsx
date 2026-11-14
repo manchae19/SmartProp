@@ -65,10 +65,10 @@ function usePrivateImageState(inputProps, forwardedRef) {
 }
 export default React.forwardRef(function PrivateImage(props, ref) {
   const view = usePrivateImageState(props, ref);
-  return <>{view.url ? <img src={view.url} alt={view.alt} loading="lazy" onError={$event => {
+  return <>{view.url ? <img className={props.className} style={props.style} src={view.url} alt={view.alt} loading="lazy" onError={$event => {
       view.release();
       view.updateFailedValue(true);
-    }} data-sp-55ccf5d3="" /> : <div className="sp-placeholder" role="img" aria-label={view.alt} data-sp-55ccf5d3="">
+    }} data-sp-55ccf5d3="" /> : <div className={["sp-placeholder", props.className].filter(Boolean).join(" ")} style={props.style} role="img" aria-label={view.alt} data-sp-55ccf5d3="">
         {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.failed ? "Không tải được ảnh" : view.src ? "Đang tải ảnh…" : "Chưa có ảnh")}
       </div>}</>;
 });

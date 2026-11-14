@@ -1,13 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
-import { useAppNavigation, SiteLink } from "../../app/navigation.jsx";
+import { useState, useRef } from 'react';
+import { SiteLink } from "../../app/navigation.jsx";
 import { usePublicListings } from '../property/usePublicListings.js';
 import { usePublicProjects } from '../project/usePublicProjects.js';
 import { useListingFilters } from '../property/useListingFilters.js';
 import { listingLink, lifestylePresets } from '../property/listingFilters.js';
-import { districts } from '../map/districts.js';
-import { types } from '../property/property.js';
 import { publicMapPoint } from '../map/locationDisplay.js';
-import ListingFilters from '../property/ListingFilters.jsx';
 import HomeGIS from '../map/HomeGIS.jsx';
 import ProjectDirectory from '../project/ProjectDirectory.jsx';
 import MarketSummary from '../market/MarketSummary.jsx';
@@ -16,6 +13,8 @@ import TopSearchedAreas from '../market/TopSearchedAreas.jsx';
 import HomeSectionNav from './HomeSectionNav.jsx';
 import PropertyCarousel from './PropertyCarousel.jsx';
 import ResourceState from "../../shared/components/ResourceState.jsx";
+import AppIcon from '../../shared/components/AppIcon.jsx';
+import DiscoveryIcon from '../../shared/components/DiscoveryIcon.jsx';
 import './HomeView.css';
 function useHomeViewState(inputProps = {}, forwardedRef) {
   const _propsLatest = useRef(inputProps);
@@ -45,51 +44,40 @@ function SectionHeading({
   return <div className="light-heading"><div><p className="light-eyebrow">{eyebrow}</p><h2>{title}</h2>{description && <p>{description}</p>}</div>{to && <SiteLink className="light-text-link" to={to}>{link}</SiteLink>}</div>;
 }
 export default function HomeView() {
-  const view = useHomeViewState({}, undefined),
-    router = useAppNavigation();
-  const [filters, setFilters] = useState(() => ({
-    ...view.search.filters
-  }));
-  const [advanced, setAdvanced] = useState(false),
-    [demo, setDemo] = useState(false);
+  const view = useHomeViewState({}, undefined);
+  const [demo, setDemo] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-  const filterKey = JSON.stringify(view.search.filters);
-  useEffect(() => setFilters(JSON.parse(filterKey)), [filterKey]);
   const items = view.state.items;
   const selected = items.find(p => p.id === selectedId) || items.find(publicMapPoint);
   const mapLink = listingLink('/map', view.search.filters, selected ? {
     propertyId: selected.id
   } : {});
-  const goSearch = values => router.push(listingLink('/listings', values));
-  const patch = (key, value) => setFilters(previous => ({
-    ...previous,
-    [key]: value
-  }));
   return <div className="home-light">
     <section id="home" className="light-hero" aria-labelledby="hero-title">
       <img className="light-banner" src={banner} alt="Minh họa Cầu Rồng Đà Nẵng và pháo hoa" fetchPriority="high" onError={e => {
         e.currentTarget.hidden = true;
       }} />
       <div className="light-hero-wash" />
-      <div className="light-container light-hero-intro"><div><p className="light-eyebrow">ĐÀ NẴNG · KHÔNG GIAN SỐNG CỦA BẠN</p><h1 id="hero-title">Hiểu vị trí.<br /><span>Chọn không gian.</span></h1><p>Khám phá bất động sản tại Đà Nẵng.<br />Tìm đúng vị trí, đúng ngân sách, đúng kỳ vọng.</p><div className="light-actions"><a className="light-button" href="#search">⌕ &nbsp; Tìm kiếm ngay</a><SiteLink className="light-button secondary" to="/advisor">✧ &nbsp; Khám phá tư vấn AI</SiteLink></div></div><div className="light-hero-note"><strong>GIS</strong><span>Khám phá vị trí trực quan</span><strong>AI</strong><span>Gợi ý theo nhu cầu</span></div></div>
-      <div className="light-container"><PropertyCarousel items={items} busy={view.state.busy} error={view.state.error} onRetry={() => view.state.load()} /></div>
+      <div className="light-container light-hero-intro"><div><p className="light-eyebrow">ĐÀ NẴNG · KHÔNG GIAN SỐNG CỦA BẠN</p><h1 id="hero-title">Hiểu vị trí.<br /><span>Chọn không gian.</span></h1><p>Khám phá bất động sản tại Đà Nẵng.<br />Tìm đúng vị trí, đúng ngân sách, đúng kỳ vọng.</p></div><nav className="light-hero-shortcuts" aria-label="Khám phá SmartProp">
+        <p className="light-shortcuts-heading">BẮT ĐẦU KHÁM PHÁ</p>
+        <SiteLink className="light-shortcut is-primary" to={listingLink('/listings', view.search.filters)}>
+          <span className="light-shortcut-icon discovery"><DiscoveryIcon kind="search-home" /></span>
+          <span className="light-shortcut-copy"><strong>Tìm kiếm ngay</strong><small>Khám phá tin đăng phù hợp</small></span>
+          <AppIcon name="arrow" className="light-shortcut-arrow" />
+        </SiteLink>
+        <SiteLink className="light-shortcut" to="/advisor">
+          <span className="light-shortcut-icon discovery"><DiscoveryIcon /></span>
+          <span className="light-shortcut-copy"><strong><span>AI tư vấn</span>{' '}<span>bất động sản</span></strong><small>Gợi ý theo nhu cầu của bạn</small></span>
+          <AppIcon name="arrow" className="light-shortcut-arrow" />
+        </SiteLink>
+        <SiteLink className="light-shortcut" to={mapLink}>
+          <span className="light-shortcut-icon discovery"><DiscoveryIcon kind="location" /></span>
+          <span className="light-shortcut-copy"><strong><span>Bản đồ GIS</span>{' '}<span>và tiện ích</span></strong><small>Xem bất động sản trên bản đồ</small></span>
+          <AppIcon name="arrow" className="light-shortcut-arrow" />
+        </SiteLink>
+      </nav></div>
+      <div id="search" className="light-container"><PropertyCarousel items={items} busy={view.state.busy} error={view.state.error} onRetry={() => view.state.load()} /></div>
     </section>
-    <div id="search" className="light-container light-search-wrap">
-      <div className="light-search"><div className="light-search-tabs"><strong>Tìm bất động sản</strong><SiteLink to={mapLink}>Khám phá bản đồ ↗</SiteLink><button onClick={() => setAdvanced(!advanced)} aria-expanded={advanced}>Tìm kiếm nâng cao {advanced ? '−' : '+'}</button></div>
-        <form aria-label="Tìm kiếm nhanh" onSubmit={e => {
-          e.preventDefault();
-          goSearch(filters);
-        }}>
-          <label>TỪ KHÓA<input value={filters.keyword || ''} onChange={e => patch('keyword', e.target.value)} placeholder="Tên tin, địa chỉ…" maxLength={200} /></label>
-          <label>KHU VỰC<select value={filters.district || ''} onChange={e => patch('district', e.target.value)}><option value="">Đà Nẵng – Tất cả khu vực</option>{districts.filter(name => name !== 'Tất cả').map(name => <option key={name}>{name}</option>)}</select></label>
-          <label>LOẠI BẤT ĐỘNG SẢN<select value={filters.propertyType || ''} onChange={e => patch('propertyType', e.target.value)}><option value="">Tất cả loại hình</option>{Object.entries(types).map(([key, name]) => <option value={key} key={key}>{name}</option>)}</select></label>
-          <label>NGÂN SÁCH<select value={filters.maxPrice || ''} onChange={e => patch('maxPrice', e.target.value)}><option value="">Tất cả mức giá</option><option value="2000000000">Đến 2 tỷ</option><option value="5000000000">Đến 5 tỷ</option><option value="10000000000">Đến 10 tỷ</option></select></label>
-          <button className="light-button" type="submit"><span aria-hidden="true">⌕</span> Tìm kiếm</button>
-        </form>
-        {advanced && <div className="light-advanced"><ListingFilters value={filters} onChange={goSearch} /></div>}
-      </div>
-      <aside className="light-advisor"><span aria-hidden="true">✧</span><div><h2>Bạn có nhu cầu, SmartProp có gợi ý.</h2><p>Chọn ngân sách và khu vực – khám phá vị trí phù hợp cùng AI.</p></div><SiteLink className="light-button" to="/advisor">Khám phá tư vấn AI ↗</SiteLink></aside>
-    </div>
     <HomeSectionNav filters={view.search.filters} district={view.search.filters.district} />
     <section id="gis" className="light-section light-tinted"><div className="light-container"><SectionHeading eyebrow="MỘT GÓC NHÌN, NHIỀU LỰA CHỌN" title="Hiểu vị trí. Chọn không gian." description="Khám phá vị trí thực của tin đăng và các tiện ích xung quanh." to={mapLink} link="Khám phá GIS đầy đủ ↗" /><div className="light-map-preview"><HomeGIS items={items} total={view.state.totalElements} selectedId={selected?.id} onUpdateSelectedId={setSelectedId} busy={view.state.busy} error={view.state.error} mapLink={mapLink} onRetry={() => view.state.load()} /></div></div></section>
     <section id="projects" className="light-section light-container"><SectionHeading eyebrow="DẤU ẤN THÀNH PHỐ" title="Dự án nổi bật tại Đà Nẵng." description="Tìm hiểu không gian sống từ các chủ đầu tư và đơn vị phát triển." to="/projects" link="Xem tất cả dự án ↗" /><ProjectDirectory limit={3} />

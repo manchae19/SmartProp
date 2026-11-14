@@ -7,7 +7,7 @@ async function send(request) {
   // Refresh through the existing auth client; no profile or user id is accepted from the browser.
   if (session.getSnapshot().user && !session.getSnapshot().token) await restoreSession();
   const current = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
-  const body = chatRequest(request.question, current === owner ? request.sessionId : null);
+  const body = chatRequest(request.question, current === owner ? request.sessionId : null, request.propertyId);
   owner = current;
   const headers = {
     'Content-Type': 'application/json',
@@ -58,3 +58,14 @@ async function send(request) {
   }
 }
 export const chatSession = createChatSession(send, {});
+
+// The shared floating/full-page chat is tab-memory only and belongs to one identity.
+let visibleOwner = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
+session.subscribe(() => {
+  const nextOwner = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
+  if (nextOwner !== visibleOwner) {
+    visibleOwner = nextOwner;
+    owner = null;
+    chatSession.getSnapshot().reset();
+  }
+});

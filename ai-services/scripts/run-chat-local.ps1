@@ -16,6 +16,7 @@ $env:RAG_LLM_PROVIDER='ollama';$env:RAG_OLLAMA_URL='http://127.0.0.1:11434'
 $env:RAG_OLLAMA_MODEL='qwen3:4b-instruct';$env:RAG_OLLAMA_DIGEST=$model.digest
 $env:RAG_OLLAMA_KEEP_ALIVE_SECONDS='300';$env:RAG_E5_PATH=$e5
 $env:RAG_INDEX_DIR=$index;$env:RAG_CORPUS_PATH=$corpus
+$env:RAG_DOCUMENT_CORPUS_PATH=Join-Path $root '.scratch/rag-data/documents-corpus.json'
 $env:RAG_BACKEND_URL='http://127.0.0.1:8080';$env:RAG_BACKEND_TIMEOUT_SECONDS='30'
 $env:RAG_RESEARCH_ENABLED='false';$env:RAG_SQL_ENABLED='false'
 $env:HF_HUB_OFFLINE='1';$env:TRANSFORMERS_OFFLINE='1';$env:TOKENIZERS_PARALLELISM='false'

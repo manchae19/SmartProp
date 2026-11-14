@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    propertyId: str | None = Field(default=None, pattern=r"^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$")
     question: str = Field(min_length=1, max_length=2000)
     budgetVnd: Decimal | None = Field(default=None, ge=1, le=999999999999999, allow_inf_nan=False)
     minPriceVnd: Decimal | None = Field(default=None, ge=1, le=999999999999999, allow_inf_nan=False)

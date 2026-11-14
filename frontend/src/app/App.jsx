@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { lazy, Suspense, useSyncExternalStore } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { session } from "../features/auth/api.js";
 import SessionRecovery from "../features/auth/SessionRecovery.jsx";
@@ -7,6 +7,7 @@ import { RouteScroll } from "./navigation.jsx";
 import WelcomeNotice from "../shared/components/WelcomeNotice.jsx";
 import ComparisonTray from "../features/property/ComparisonTray.jsx";
 import { usesPageLayout } from "../shared/lib/siteNavigation.js";
+const FloatingAdvisor = lazy(() => import('../features/prediction/FloatingAdvisor.jsx'));
 export default function App() {
   useSyncExternalStore(session.subscribe, session.getSnapshot);
   const route = useLocation();
@@ -20,5 +21,6 @@ export default function App() {
         </PageLayout> : <Outlet />}
       <RouteScroll /><ComparisonTray />
       <WelcomeNotice />
+      <Suspense fallback={null}><FloatingAdvisor /></Suspense>
     </>;
 }

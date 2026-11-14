@@ -1,5 +1,7 @@
 import { classNames } from "../../shared/lib/ui.js";
 import React, { useRef } from "react";
+import { useRouteState } from "../../app/navigation.jsx";
+import { listingsReturnFor } from "./listingJourney.js";
 import { SiteLink } from "../../app/navigation.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import { price, compactPrice, displayDecimal, types, states } from "./property.js";
@@ -12,14 +14,15 @@ function useListingCardState(inputProps, forwardedRef) {
   };
   const _props = useRef(props);
   _props.current = props;
+  const route = useRouteState();
   const getDetail = () => ({
     path: "/listing/" + _props.current.property.id,
     query: _props.current.own ? {
       own: "1"
-    } : {}
+    } : {returnTo: listingsReturnFor(route)}
   });
   const getCover = () => (_props.current.property.images?.find(image => image.cover) || _props.current.property.images?.[0])?.url;
-  const getImageCount = () => _props.current.property.images?.length || 1;
+  const getImageCount = () => _props.current.property.images?.length || 0;
   const getFullAddress = () => {
     const parts = [_props.current.property.address, _props.current.property.ward, _props.current.property.district].filter(Boolean);
     if (parts.length) return parts.join(", ");

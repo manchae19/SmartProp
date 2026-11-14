@@ -16,6 +16,7 @@ class GroundingError(RuntimeError):
 class Settings:
     backend_url: str = "http://127.0.0.1:8080"
     corpus_path: Path = Path("var/rag/public-corpus.json")
+    document_corpus_path: Path | None = None
     qwen_path: str = ""
     e5_path: str = ""
     e5_revision: str = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
@@ -50,6 +51,7 @@ class Settings:
     def from_env(cls):
         return cls(backend_url=os.getenv("RAG_BACKEND_URL", "http://127.0.0.1:8080"),
                    corpus_path=Path(os.getenv("RAG_CORPUS_PATH", "var/rag/public-corpus.json")),
+                   document_corpus_path=Path(os.environ["RAG_DOCUMENT_CORPUS_PATH"]) if os.getenv("RAG_DOCUMENT_CORPUS_PATH") else None,
                    qwen_path=os.getenv("RAG_QWEN_PATH", ""), e5_path=os.getenv("RAG_E5_PATH", ""),
                    e5_revision=os.getenv("RAG_E5_REVISION", "614241f622f53c4eeff9890bdc4f31cfecc418b3"),
                    index_dir=Path(os.environ["RAG_INDEX_DIR"]) if os.getenv("RAG_INDEX_DIR") else None,

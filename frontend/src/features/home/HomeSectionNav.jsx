@@ -1,7 +1,7 @@
 import { afterPaint, classNames } from "../../shared/lib/ui.js";
 import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
-import { scrollHomeSection } from "../../shared/lib/siteNavigation.js";
+import { scrollHomeSection, navigationOffset } from "../../shared/lib/siteNavigation.js";
 import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./HomeSectionNav.css";
 function useHomeSectionNavState(inputProps, forwardedRef) {
@@ -38,6 +38,7 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
   useSyncExternalStore(active.subscribe, active.getSnapshot);
   const _frameRef = useRef(0);
   const _observerRef = useRef(undefined);
+  const _pendingNavigationRef = useRef(null);
   function reducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
@@ -47,17 +48,32 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
     const headerHeight = document.querySelector(".app-header")?.offsetHeight || 0;
     pinned.set(bar.getSnapshot().getBoundingClientRect().top <= headerHeight + 1);
     const boundary = headerHeight + bar.getSnapshot().offsetHeight + 64;
-    let current = "";
-    for (const section of sections) {
+    // Menu order can differ from page order. Pick the closest section above
+    // the reading line, rather than the last matching menu item.
+    const visibleSections = sections.map(section => {
       const target = document.getElementById(section.id);
-      if (target && target.getBoundingClientRect().top <= boundary) current = section.id;
-    }
-    active.set(current);
+      return target ? { id: section.id, top: target.getBoundingClientRect().top } : null;
+    }).filter(section => section && section.top <= boundary)
+      .sort((a, b) => b.top - a.top);
+    active.set(visibleSections[0]?.id || "");
   }
   function schedule() {
     if (!_frameRef.current) _frameRef.current = requestAnimationFrame(update);
   }
+  function clearPendingNavigation() { _pendingNavigationRef.current = null; }
+  function layoutChanged() {
+    const pending = _pendingNavigationRef.current;
+    if (pending && performance.now() < pending.until) {
+      const target = document.getElementById(pending.id);
+      if (target) {
+        const delta = target.getBoundingClientRect().top - navigationOffset();
+        if (Math.abs(delta) > 3) window.scrollBy({ top: delta, behavior: "instant" });
+      }
+    }
+    schedule();
+  }
   function navigate(id) {
+    _pendingNavigationRef.current = { id, until: performance.now() + 1500 };
     scrollHomeSection(id);
   }
   const _watched = active.getSnapshot();
@@ -93,7 +109,10 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
         passive: true
       });
       window.addEventListener("resize", schedule);
-      _observerRef.current = new ResizeObserver(schedule);
+      window.addEventListener("wheel", clearPendingNavigation, { passive: true });
+      window.addEventListener("touchstart", clearPendingNavigation, { passive: true });
+      window.addEventListener("keydown", clearPendingNavigation);
+      _observerRef.current = new ResizeObserver(layoutChanged);
       _observerRef.current.observe(bar.getSnapshot());
       for (const section of sections) {
         const target = document.getElementById(section.id);
@@ -109,6 +128,9 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
   useEffect(() => () => (() => {
     window.removeEventListener("scroll", schedule);
     window.removeEventListener("resize", schedule);
+    window.removeEventListener("wheel", clearPendingNavigation);
+    window.removeEventListener("touchstart", clearPendingNavigation);
+    window.removeEventListener("keydown", clearPendingNavigation);
     _observerRef.current?.disconnect();
     if (_frameRef.current) cancelAnimationFrame(_frameRef.current);
   })(), []);
