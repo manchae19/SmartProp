@@ -87,7 +87,9 @@ export default React.forwardRef(function AppNavigation(props, ref) {
                     ? "tools"
                     : item.key === "image-check"
                       ? "camera"
-                      : item.key,
+                      : item.key === "image-analysis"
+                        ? "camera"
+                        : item.key,
             })}
           />
           <span {...mergeProps({})}>{display(item.label)}</span>

@@ -104,6 +104,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties/valuation-options").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/image-scan").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/image-scan/retry").hasAnyRole("BROKER","ADMIN")
+                // YOLOv8 object analysis mirrors the duplicate scanner: public read
+                // for a public listing (the controller still checks visibility),
+                // retry restricted to publishers.
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/image-analysis").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/image-analysis/retry").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview","/api/v1/properties/comparables").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/amenities/research/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/nearby","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*","/api/v1/amenities/**").permitAll()

@@ -19,4 +19,23 @@ public class ImageScanAsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    /**
+     * Separate pool for YOLOv8 analysis.
+     *
+     * <p>Deliberately its own executor: a slow inference must never occupy the
+     * thread that duplicate scanning needs, and a vision outage must not fill
+     * the scan queue. One worker keeps CPU contention with Ollama predictable.
+     */
+    @Bean(name = "imageAnalysisExecutor")
+    public ThreadPoolTaskExecutor imageAnalysisExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("image-analysis-");
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.initialize();
+        return executor;
+    }
 }

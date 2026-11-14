@@ -40,6 +40,7 @@ import {
 import { isPublicProperty } from "./usePublicListings.js";
 import ContactPanel from "./ContactPanel.jsx";
 import ImageScanSection from "./ImageScanSection.jsx";
+import ImageAnalysisSection from "./ImageAnalysisSection.jsx";
 import PropertyExplorer from "../map/PropertyExplorer.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
 import "./ListingDetailView.css";
@@ -369,6 +370,7 @@ function setup(__props) {
     isPublicProperty,
     ContactPanel,
     ImageScanSection,
+    ImageAnalysisSection,
     PropertyExplorer,
     locationLabel,
     formatPostDate,
@@ -3762,6 +3764,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   </div>
                 </section>
                 <ImageScanSection propertyId={ctx.property.id} />
+                <ImageAnalysisSection propertyId={ctx.property.id} />
                 <section
                   {...mergeProps({
                     className:

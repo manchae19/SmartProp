@@ -54,7 +54,15 @@ public class ImageScanController {
     public ImageScanDtos.ScanView retry(@AuthenticationPrincipal Jwt jwt, @PathVariable String id) {
         Property property = property(id);
         authorize(property, jwt, true);
-        service.schedule(property.id);
+        // Same guard as the analysis retry: a full queue is a busy signal, not a
+        // server error, and it must never look like the scan itself failed.
+        try {
+            service.schedule(property.id);
+        } catch (RuntimeException rejected) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+                "Hàng đợi kiểm tra ảnh đang đầy; vui lòng thử lại sau.");
+        }
         return service.view(property.id);
     }
 

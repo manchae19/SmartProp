@@ -38,6 +38,7 @@ import {
   mapUrl,
 } from "../../shared/lib/legacy.js";
 import ImageScanSection from "../property/ImageScanSection.jsx";
+import ImageAnalysisSection from "../property/ImageAnalysisSection.jsx";
 import "./PostsView.css";
 function setup(__props) {
   const statusFilter = ref("PENDING");
@@ -118,6 +119,7 @@ function setup(__props) {
     date,
     mapUrl,
     ImageScanSection,
+    ImageAnalysisSection,
     statusFilter,
     scanItems,
     scanError,
@@ -497,6 +499,7 @@ export default React.forwardRef(function PostsView(props, ref) {
           ))}
         </div>
         <ImageScanSection propertyId={ctx.selected.property.id} />
+        <ImageAnalysisSection propertyId={ctx.selected.property.id} />
         <label
           {...mergeProps({
             className: "block text-xs mt-4",

@@ -7,10 +7,12 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import vn.smartprop.common.PageResponse;
 import vn.smartprop.modules.media.PropertyImageScanService;
+import vn.smartprop.modules.media.PropertyImageAnalysisService;
 @RestController @RequestMapping("/api/v1")
 public class PropertyController {
     private final PropertyService service;
     @Autowired(required=false) private PropertyImageScanService scanService;
+    @Autowired(required=false) private PropertyImageAnalysisService analysisService;
     public PropertyController(PropertyService service) {this.service=service;}
     private Long actor(Jwt jwt) {return Long.valueOf(jwt.getSubject());}
     @PostMapping("/properties") @ResponseStatus(HttpStatus.CREATED)
@@ -19,6 +21,7 @@ public class PropertyController {
     @PostMapping("/properties/{id}/submit") public PropertyDtos.Managed submit(@AuthenticationPrincipal Jwt jwt,@PathVariable String id,@Valid @RequestBody PropertyDtos.Version r) {
         PropertyDtos.Managed result=service.transition(actor(jwt),id,r.expectedVersion(),"submit");
         if(scanService!=null)try{scanService.schedule(result.property().id());}catch(RuntimeException ignored){}
+        if(analysisService!=null)try{analysisService.schedule(result.property().id());}catch(RuntimeException ignored){}
         return result;
     }
     @PostMapping("/properties/{id}/close") public PropertyDtos.Managed close(@AuthenticationPrincipal Jwt jwt,@PathVariable String id,@Valid @RequestBody PropertyDtos.Version r) {return service.transition(actor(jwt),id,r.expectedVersion(),"close");}

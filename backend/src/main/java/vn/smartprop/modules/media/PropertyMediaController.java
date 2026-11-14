@@ -11,12 +11,16 @@ import vn.smartprop.modules.property.PropertyDtos;
 public class PropertyMediaController {
     private final PropertyMediaService service;
     @Autowired(required=false) private PropertyImageScanService scanService;
+    @Autowired(required=false) private PropertyImageAnalysisService analysisService;
     public PropertyMediaController(PropertyMediaService service) {this.service=service;}
     private Long actor(Jwt jwt) {return Long.valueOf(jwt.getSubject());}
     @PostMapping(consumes=MediaType.MULTIPART_FORM_DATA_VALUE) @ResponseStatus(HttpStatus.CREATED)
     public PropertyDtos.Managed upload(@AuthenticationPrincipal Jwt jwt,@PathVariable String propertyId,@RequestParam int expectedVersion,@RequestPart("file") MultipartFile file) {
         PropertyDtos.Managed result=service.upload(actor(jwt),propertyId,expectedVersion,file);
+        // Two independent, best-effort side effects. Neither may fail the upload:
+        // the image is already committed, and a vision outage must not block posting.
         if(scanService!=null)try{scanService.schedule(propertyId);}catch(RuntimeException ignored){}
+        if(analysisService!=null)try{analysisService.schedule(propertyId);}catch(RuntimeException ignored){}
         return result;
     }
     @PatchMapping("/{imageId}") public PropertyDtos.Managed patch(@AuthenticationPrincipal Jwt jwt,@PathVariable String propertyId,@PathVariable String imageId,@Valid @RequestBody PropertyMediaService.Patch patch) {return service.patch(actor(jwt),propertyId,imageId,patch);}

@@ -127,3 +127,7 @@ Thumbs.db
 !/frontend/tests/
 !/frontend/build/
 !/frontend/build/*.mjs
+
+# Ad-hoc demo/seed scripts for the local staging stack; not part of the test suite.
+ai-services/tests/demo_*.py
+ai-services/tests/seed_*.py

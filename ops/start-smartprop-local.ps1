@@ -80,6 +80,36 @@ if (Test-Url 'http://127.0.0.1:18001/image-duplicates/health') {
     Write-Output 'Imagecheck 18001: started'
 }
 
+# Vision (YOLOv8 object analysis): optional, never blocks the stack.
+# It runs in its own virtualenv because ultralytics pulls torchvision/opencv and
+# monkeypatches PIL.Image.open; sharing the RAG venv would put duplicate scanning
+# at risk. A missing venv or weights is reported, not fatal.
+if (Test-Url 'http://127.0.0.1:18002/image-analysis/health') {
+    Write-Output 'Vision 18002: already healthy'
+} elseif (Test-Port 18002) {
+    Write-Output 'Vision 18002: port occupied but health is not ready; leaving it alone'
+} else {
+    $visionPython = if ($env:SMARTPROP_VISION_PYTHON) { $env:SMARTPROP_VISION_PYTHON } else { Join-Path $Root '.scratch\yolov8-venv\Scripts\python.exe' }
+    $visionWeights = Join-Path $Root 'ai-services\var\vision\yolov8n.pt'
+    if (-not (Test-Path -LiteralPath $visionPython)) {
+        Write-Output "Vision 18002: skipped (no virtualenv at $visionPython)"
+    } elseif (-not (Test-Path -LiteralPath $visionWeights)) {
+        Write-Output "Vision 18002: skipped (no weights at $visionWeights)"
+    } else {
+        $env:VISION_MODEL_DIR = Join-Path $Root 'ai-services\var\vision'
+        $env:YOLO_CONFIG_DIR = Join-Path $Root '.scratch\yolov8-config'
+        $visionLog = Join-Path $RunDirectory 'vision-18002.log'
+        $visionErr = Join-Path $RunDirectory 'vision-18002.err.log'
+        $process = Start-Process -FilePath $visionPython -ArgumentList @('-m','uvicorn','vision_main:app','--host','127.0.0.1','--port','18002','--no-proxy-headers') -WorkingDirectory (Join-Path $Root 'ai-services') -RedirectStandardOutput $visionLog -RedirectStandardError $visionErr -PassThru -WindowStyle Hidden
+        $process.Id | Set-Content (Join-Path $RunDirectory 'vision.pid')
+        if (-not (Wait-Url 'http://127.0.0.1:18002/image-analysis/health' 40)) {
+            Write-Output "Vision 18002: started but health check failed; see $visionErr"
+        } else {
+            Write-Output 'Vision 18002: started'
+        }
+    }
+}
+
 if (Test-Url 'http://127.0.0.1:8080/actuator/health') {
     Write-Output 'Backend 8080: already healthy'
 } elseif (Test-Port 8080) {
@@ -118,3 +148,4 @@ if (Test-Url 'http://127.0.0.1:5173/') {
 }
 
 Write-Output 'SmartProp local services: MySQL 3306, RAG 8001, Imagecheck 18001, Backend 8080, Frontend 5173 are healthy.'
+Write-Output 'Vision 18002 is optional; object analysis stays disabled unless APP_IMAGE_ANALYSIS_ENABLED=true.'

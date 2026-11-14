@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path $Root).Path
 
 # Only stop processes recorded by start-smartprop-local.ps1. MySQL/RAG Chat are not managed here.
-foreach ($name in @('frontend', 'backend', 'imagecheck')) {
+foreach ($name in @('frontend', 'backend', 'imagecheck', 'vision')) {
     $pidFile = Join-Path $RunDirectory ($name + '.pid')
     if (-not (Test-Path -LiteralPath $pidFile)) {
         Write-Output ($name + ': no PID file (not started by this script)')

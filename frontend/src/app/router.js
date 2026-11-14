@@ -37,6 +37,7 @@ const routes=[
  // Unified AI Advisor (ADVISOR_ORCHESTRATOR_V1) — distinct from the RAG chat above.
  {path:'/advisor/analysis',component:()=>import('../features/prediction/UnifiedAdvisorView.jsx')},
  {path:'/image-check',component:()=>import('../features/imagecheck/ImageCheckView.jsx')},
+ {path:'/image-analysis',component:()=>import('../features/imageanalysis/ImageAnalysisView.jsx')},
  {path:'/projects',component:()=>import('../features/project/ProjectsView.jsx')},
  {path:'/projects/:id',component:()=>import('../features/project/ProjectDetailView.jsx')},
  {path:'/listing/:id',component:()=>import('../features/property/ListingDetailView.jsx')},

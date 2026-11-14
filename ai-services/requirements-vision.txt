@@ -1,0 +1,37 @@
+# YOLOv8 property-image analysis runtime.
+#
+# Install into a DEDICATED virtualenv, never into the RAG or valuation venv:
+#   python -m venv .scratch/yolov8-venv
+#   .scratch/yolov8-venv/Scripts/python.exe -m pip install torch torchvision \
+#       --index-url https://download.pytorch.org/whl/cpu
+#   .scratch/yolov8-venv/Scripts/python.exe -m pip install -r ai-services/requirements-vision.txt
+#
+# CPU-only on purpose: the same 16 GB machine already hosts XGBoost, RAG and
+# MySQL, and Ollama needs the GPU. A CUDA build would compete for VRAM.
+#
+# LICENSE — read before deploying
+# ---------------------------------
+# ultralytics, ultralytics-thop and ultralytics-platform are AGPL-3.0.
+# The stock yolov8n.pt checkpoint is also AGPL-3.0 (Ultralytics).
+#
+# SmartProp uses them for a graduation project: study, research, and demo to an
+# academic panel, on a local machine, not offered as a public service. That scope
+# does not waive the AGPL obligations; it only means they are not triggered yet.
+# Distributing the system, or exposing image analysis to users outside the team
+# over a network, would require offering the Corresponding Source under AGPL-3.0
+# or obtaining a commercial license from Ultralytics.
+#
+# Full record: ai-services/docs/YOLOV8_LICENSE_NOTICE.md
+# Upstream:    https://github.com/ultralytics/ultralytics
+
+# Installed separately from the CPU wheel index (see the commands above).
+# torch==2.15.0+cpu
+# torchvision==0.29.2+cpu
+
+ultralytics==8.4.212
+fastapi==0.143.3
+pydantic==2.14.1
+uvicorn==0.54.0
+httpx==0.28.1
+numpy==2.5.4
+Pillow==13.0.0
