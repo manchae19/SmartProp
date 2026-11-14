@@ -111,7 +111,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/image-analysis/retry").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview","/api/v1/properties/comparables").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/amenities/research/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/nearby","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*","/api/v1/amenities/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/nearby","/api/v1/properties/*/route","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*","/api/v1/amenities/**").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/v1/geocoding/search").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/recommendations/research").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/recommendations/research/config").hasRole("ADMIN")
