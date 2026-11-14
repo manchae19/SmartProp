@@ -54,6 +54,10 @@ test-results/
 !/docs/legacy/
 !/docs/legacy/**
 
+# Setup guide for team members cloning the project. No secrets, no local paths
+# beyond the documented defaults.
+!/docs/TEAM_SETUP.md
+
 # Additional AI environments and dataset exclusions from the team branches.
 # Local environments and generated files
 **/.venv/
