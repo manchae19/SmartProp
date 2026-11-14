@@ -32,6 +32,7 @@ public class NearbyService {
     private final PropertyService properties;
     private final PointOfInterestRepository pois;
     private final GeoapifyPlacesClient provider;
+    @org.springframework.beans.factory.annotation.Autowired
     public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider,PropertyLocationEvidence locationEvidence){
         this.locationEvidence=locationEvidence;this.properties=properties;this.pois=pois;this.provider=provider;
     }
