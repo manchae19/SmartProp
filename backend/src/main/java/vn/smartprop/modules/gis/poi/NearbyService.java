@@ -19,7 +19,8 @@ public class NearbyService {
         "bank",List.of("service.financial.bank"),
         "dining",List.of("catering.restaurant","catering.cafe"),
         "tourism",List.of("tourism","accommodation.hotel"),
-        "entertainment",List.of("entertainment"));
+        "entertainment",List.of("entertainment"),
+        "transport",List.of("public_transport"));
     static final List<Attribution> CREDITS=List.of(
         new Attribution("© OpenStreetMap contributors","https://www.openstreetmap.org/copyright"),
         new Attribution("Powered by Geoapify","https://www.geoapify.com/"));
@@ -27,11 +28,16 @@ public class NearbyService {
     private final Map<String,Entry> cache=new LinkedHashMap<>();
     private final ConcurrentHashMap<String,CompletableFuture<Result>> flights=new ConcurrentHashMap<>();
     private final Semaphore slots=new Semaphore(8);
+    private final PropertyLocationEvidence locationEvidence;
     private final PropertyService properties;
     private final PointOfInterestRepository pois;
     private final GeoapifyPlacesClient provider;
+    public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider,PropertyLocationEvidence locationEvidence){
+        this.locationEvidence=locationEvidence;this.properties=properties;this.pois=pois;this.provider=provider;
+    }
+    /** Kept for tests and callers that do not need advisor-grade location evidence. */
     public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider){
-        this.properties=properties;this.pois=pois;this.provider=provider;
+        this(properties,pois,provider,new PropertyLocationEvidence(new com.fasterxml.jackson.databind.ObjectMapper(),""));
     }
     public static List<String> categories(String raw){
         if(raw==null||raw.isBlank())throw bad("Chọn ít nhất một nhóm tiện ích.");
@@ -39,6 +45,24 @@ public class NearbyService {
         for(String value:raw.split(",",-1)){String key=value.strip().toLowerCase(Locale.ROOT);if(!GROUPS.containsKey(key))throw bad("Nhóm tiện ích không hợp lệ.");selected.add(key);}
         if(selected.size()>GROUPS.size())throw bad("Quá nhiều nhóm tiện ích.");
         return List.copyOf(selected);
+    }
+    /** Advisor lookup: same POI search, but the origin carries verified location evidence. */
+    public Result forAdvisor(String id,int radius,String input){return forAdvisor(id,radius,input,false);}
+    public Result forAdvisor(String id,int radius,String input,boolean allowEstimatedOrigin){
+        if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính không hợp lệ.");
+        var selected=categories(input);
+        var property=properties.publicProperty(id);
+        if(property.location==null||!valid(property.location.getY(),property.location.getX()))
+            return new Result(id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNAVAILABLE",CREDITS);
+        var evidence=locationEvidence.resolve(property);
+        String accuracy=allowEstimatedOrigin&&"UNKNOWN".equals(evidence.accuracy())?"USER_PROVIDED":evidence.accuracy();
+        var location=new Location(property.location.getY(),property.location.getX(),accuracy,evidence.source(),evidence.reference(),evidence.verifiedAt());
+        if(!Set.of("EXACT_PROPERTY","BUILDING_ONLY","USER_PROVIDED").contains(accuracy))
+            return new Result(id,location,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
+        var result=nearby(id,radius,input);
+        return new Result(id,location,radius,selected,result.distanceType(),
+            result.items().stream().filter(p->"GEOAPIFY".equals(p.provider())).toList(),
+            result.fetchedAt(),result.cacheHit(),result.truncated(),result.coverage(),result.status(),result.attribution());
     }
     public Result nearby(String id,int radius,String input){
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính hỗ trợ: 500, 1000, 2000 hoặc 5000 mét.");
