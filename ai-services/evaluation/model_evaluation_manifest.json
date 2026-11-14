@@ -1,0 +1,125 @@
+{
+  "schema_version": "model-evaluation-manifest.v1",
+  "generated_at_utc": "2026-11-10",
+  "phase": "9F",
+  "distribution_policy": {
+    "git": "Aggregate metrics, hashes, split counts and caveats only.",
+    "row_level_evidence": "Local/controlled only; not committed and not included in public/share packages.",
+    "raw_training_data": "Never commit or redistribute without dataset-owner approval.",
+    "blind_test": "Sealed; not included and not read by the verifier."
+  },
+  "models": {
+    "v1_3": {
+      "model_version": "v1.3",
+      "name": "XGBoost V1.3 Multi-Source",
+      "status": "PREVIEW_EXPERIMENTAL",
+      "evaluation_type": "development_test",
+      "evaluation_artifact": {
+        "local_path": "ai-services/artifacts/v1_3/evidence/evaluation.json",
+        "bytes": 27128,
+        "sha256": "0c4bc5bf15732e4479508bfc7ae9179cd5489120a768806b29876ac3507bf303",
+        "git_tracked": false
+      },
+      "test_predictions": {
+        "local_path": "ai-services/artifacts/v1_3/evidence/test_predictions_dev.csv",
+        "bytes": 1127094,
+        "sha256": "8e29fc0471635ff9e6326f23f68059790ccc965b8886f3e9fd3ab9fa21fb9c43",
+        "git_tracked": false,
+        "contains": "row-level entity IDs, dates, district, type, area, actual price, predictions"
+      },
+      "training_data": {
+        "local_path": "ai-services/artifacts/v1_3/evidence/train_v1_3_integrated.csv",
+        "bytes": 7423218,
+        "sha256": "56e68164a1753816fa4a3834aa87229088b2c814ef4aaa625c9de3590601091d",
+        "git_tracked": false,
+        "note": "Not needed for inference; do not distribute raw rows without approval."
+      },
+      "cohort": {
+        "train_rows": 36617,
+        "train_entities": 33729,
+        "validation_rows": 6894,
+        "dev_test_rows": 4403,
+        "dev_test_entities": 4163,
+        "dev_test_duplicate_entities": 240,
+        "reserved_blind_rows": 3102,
+        "train_dates": "2025-04-16..2025-12-11",
+        "dev_test_dates": "2026-02-25..2026-03-16",
+        "train_test_entity_overlap": 0,
+        "train_test_id_overlap": 0
+      },
+      "metrics": {
+        "scope": "dev_test_4403; row-weighted; VND",
+        "mae_vnd": 3765301650.6103134,
+        "rmse_vnd": 11636512511.625805,
+        "mape_percent": 19.815490258772623,
+        "median_ape_percent": 15.023037099207773,
+        "p90_ape_percent": 41.17279001969946,
+        "within_10_percent": 34.22666363842835,
+        "within_20_percent": 62.3665682489212,
+        "within_30_percent": 80.58142175789234,
+        "r2": 0.7326720223520335,
+        "mean_signed_bias_vnd": -2102000485.8614354,
+        "under_predicted_percent": 68.68044515103338
+      },
+      "other_evaluations": {
+        "validation_6894": {"mae_vnd": 3277464784.501487, "mape_percent": 19.77676025214017, "median_ape_percent": 13.970137467165546, "role": "early stopping / model selection; not independent test"},
+        "cafeland_2026_oot_72": {"mae_vnd": 1901603468.0190516, "mape_percent": 23.40725109917809, "role": "small out-of-time cohort"}
+      },
+      "blind_test": {
+        "rows": 3102,
+        "opened": false,
+        "metric_available": false,
+        "policy": "One-time opening only after model/process freeze and separate approval."
+      },
+      "caveats": [
+        "Dev-test is not a sealed blind test.",
+        "Low-price bands and villas have high error; see Phase 9E/9F reports.",
+        "Row-level evidence includes dataset derivatives; do not publish without approval."
+      ]
+    },
+    "v6": {
+      "model_version": "v6",
+      "name": "XGBoost V6",
+      "status": "ACTIVE_PRIMARY",
+      "evaluation_type": "development_validation",
+      "source_artifact": "ai-services/artifacts/v6/metrics.json",
+      "cohort": {
+        "train_rows": 2214,
+        "validation_rows": 299,
+        "reserved_holdout_ids": 684,
+        "reserved_holdout_predictions": false
+      },
+      "metrics": {
+        "scope": "development_validation_299; row-weighted; million VND",
+        "mae_million_vnd": 2457.3333879859947,
+        "rmse_million_vnd": 4391.764602546095,
+        "mape_percent": 36.13417105755985,
+        "median_ape_percent": 20.320167824074073,
+        "within_20_percent": 49.163879598662206,
+        "r2": 0.5570429191528914
+      },
+      "test_evaluated": false,
+      "independent_benchmark": false,
+      "caveats": [
+        "Not a holdout or test metric; validation was used for development/model selection.",
+        "684 reserved IDs exist but have no evaluation predictions/metrics in the integrated artifact."
+      ]
+    }
+  },
+  "verification": {
+    "script": "ai-services/scripts/verify_v1_3_evidence.py",
+    "last_result": "PASS",
+    "checks": [
+      "SHA-256 and byte sizes for evaluation.json, test_predictions_dev.csv, train_v1_3_integrated.csv",
+      "row count 4403 and metric reproduction",
+      "train/test entity and ID overlap zero",
+      "blind test not read"
+    ]
+  },
+  "licensing_and_distribution": {
+    "v1_3_model_card": "CC BY-NC 4.0",
+    "zenodo_source": "CC BY 4.0 (1,072 clean net-new entities; 19 quarantined per dataset integration report)",
+    "tinix": "Academic research dataset; redistribution terms require owner approval",
+    "recommendation": "Commit this manifest and aggregate metrics only. Keep evaluation.json/test_predictions/train CSV local or in a controlled academic artifact store; never publish raw training rows."
+  }
+}

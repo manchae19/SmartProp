@@ -34,6 +34,64 @@ management:
     probes.enabled: true
     group.readiness.include: readinessState,db
 app:
+  cloudinary:
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+  recommendation:
+    tinix-enabled: ${APP_RECOMMENDATION_TINIX_ENABLED:false}
+    tinix-revision: ca3fedcbb089bf65f7e4cfb03316cce4bd0d779f
+    allow-unverified-external: ${APP_RECOMMENDATION_ALLOW_UNVERIFIED_EXTERNAL:false}
+    demo-key: ${APP_RECOMMENDATION_DEMO_KEY:}
+    # Step 19.4.3A: on-disk snapshot cache for the TiniX research candidate set.
+    # Disable (APP_RECOMMENDATION_TINIX_DISK_CACHE_ENABLED=false) to fall back to the
+    # original behaviour: rebuild the snapshot from MySQL on every JVM start.
+    tinix-disk-cache-enabled: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_ENABLED:true}
+    tinix-disk-cache-dir: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_DIR:var/recommendation}
+    tinix-disk-cache-max-payload-mb: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_PAYLOAD_MB:128}
+    tinix-disk-cache-max-candidates: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_CANDIDATES:120000}
+    tinix-disk-cache-max-age-hours: ${APP_RECOMMENDATION_TINIX_DISK_CACHE_MAX_AGE_HOURS:720}
+    # Hybrid V1.1 amenity-aware scoring. Off keeps the V1 heuristic byte-identical.
+    v11-enabled: ${APP_RECOMMENDATION_V11_ENABLED:false}
+    v11:
+      living:
+        budget: ${APP_RECOMMENDATION_V11_LIVING_BUDGET:0.38}
+        area: ${APP_RECOMMENDATION_V11_LIVING_AREA:0.17}
+        type: ${APP_RECOMMENDATION_V11_LIVING_TYPE:0.20}
+        amenity: ${APP_RECOMMENDATION_V11_LIVING_AMENITY:0.25}
+      investment:
+        budget: ${APP_RECOMMENDATION_V11_INVESTMENT_BUDGET:0.45}
+        area: ${APP_RECOMMENDATION_V11_INVESTMENT_AREA:0.25}
+        type: ${APP_RECOMMENDATION_V11_INVESTMENT_TYPE:0.20}
+        amenity: ${APP_RECOMMENDATION_V11_INVESTMENT_AMENITY:0.10}
+      rental:
+        budget: ${APP_RECOMMENDATION_V11_RENTAL_BUDGET:0.40}
+        area: ${APP_RECOMMENDATION_V11_RENTAL_AREA:0.20}
+        type: ${APP_RECOMMENDATION_V11_RENTAL_TYPE:0.25}
+        amenity: ${APP_RECOMMENDATION_V11_RENTAL_AMENITY:0.15}
+  advisor:
+    valuation-enabled: ${APP_ADVISOR_VALUATION_ENABLED:true}
+    valuation-base-url: ${APP_ADVISOR_VALUATION_BASE_URL:http://127.0.0.1:8000}
+    allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:true}
+  image-scan:
+    base-url: ${APP_IMAGE_SCAN_BASE_URL:http://127.0.0.1:18001}
+    stale-after-seconds: ${APP_IMAGE_SCAN_STALE_AFTER_SECONDS:180}
+    recovery-interval-ms: ${APP_IMAGE_SCAN_RECOVERY_INTERVAL_MS:60000}
+  image-analysis:
+    # YOLOv8 object analysis. Off by default: enabling it requires the V22
+    # migration to be applied and the vision service to be running.
+    enabled: ${APP_IMAGE_ANALYSIS_ENABLED:false}
+    base-url: ${APP_IMAGE_ANALYSIS_BASE_URL:http://127.0.0.1:18002}
+  google:
+    enabled: ${GOOGLE_LOGIN_ENABLED:false}
+    client-id: ${GOOGLE_CLIENT_ID:}
+    client-secret: ${GOOGLE_CLIENT_SECRET:}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://127.0.0.1:5173/api/v1/auth/oauth2/callback/google}
+    frontend-origin: ${GOOGLE_FRONTEND_ORIGIN:http://127.0.0.1:5173}
+  profile:
+    avatar-enabled: ${PROFILE_AVATAR_ENABLED:false}
+  broker-applications:
+    enabled: ${BROKER_APPLICATIONS_ENABLED:false}
   geocoding:
     enabled: ${GEOCODING_ENABLED:false}
     provider: ${GEOCODING_PROVIDER:GEOAPIFY}
@@ -43,8 +101,8 @@ app:
     enabled: false
     base-url: http://127.0.0.1:8000
   refresh:
-    enabled: false
-    secure-cookie: true
+    enabled: ${REFRESH_ENABLED:false}
+    secure-cookie: ${REFRESH_SECURE_COOKIE:true}
   email:
     enabled: false
     worker-enabled: false
@@ -62,10 +120,8 @@ app:
     enabled: false
   seed:
     enabled: false
-  database-seed:
-    enabled: false
   jwt-secret: ${JWT_SECRET}
-  token-minutes: 30
+  token-minutes: ${ACCESS_TOKEN_MINUTES:15}
   storage-root: ${STORAGE_ROOT:./var/uploads}
   cors-origins: ${CORS_ORIGINS:http://localhost:5173}
 

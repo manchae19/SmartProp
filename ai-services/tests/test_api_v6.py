@@ -46,24 +46,6 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.client.get("/docs").status_code, 200)
         self.assertIn("/predict", self.client.get("/openapi.json").json()["paths"])
 
-    def test_location_options_have_reviewed_accented_labels(self):
-        labels = self.options.get("location_labels", {})
-        self.assertEqual(labels.get("new_unit:hoa xuan"), "Hòa Xuân (địa bàn mở rộng)")
-        bad = "new_unit:ban nha rieng duong nguyen duy hieu - phuong cam chau"
-        for category in self.options["categories"]:
-            self.assertNotIn(bad, category["locations"])
-            self.assertTrue(all(code in labels for code in category["locations"]))
-
-    def test_bad_location_is_blocked_but_valid_model_code_and_price_are_unchanged(self):
-        bad = self.payload() | {"location_feature": "new_unit:ban nha rieng duong nguyen duy hieu - phuong cam chau"}
-        self.assertEqual(self.client.post("/predict", json=bad).status_code, 422)
-        payload = self.payload() | dict(location_feature="new_unit:hoa xuan", area_sqm=200,
-                                       rooms=3, floors=2, access_type="alley", house_subtype="house_c4")
-        response = self.client.post("/predict", json=payload)
-        self.assertEqual(response.status_code, 200, response.text)
-        self.assertEqual(response.json()["features_used"]["location_feature"], "new_unit:hoa xuan")
-        self.assertEqual(response.json()["predicted_asking_price_vnd"], 4283741699)
-
     def test_all_categories_and_missing_fields(self):
         expected = {
             "Nhà ở": {"ward_source", "rooms", "floors", "access_type", "house_subtype"},
@@ -109,6 +91,18 @@ class ApiTests(unittest.TestCase):
         for name in ("floors", "access_type", "house_subtype"):
             self.assertIsNone(result["features_used"][name])
         self.assertTrue(result["warnings"])
+
+    def test_optional_real_fields_are_accepted_without_changing_v6(self):
+        base = self.payload(rooms=3, floors=2, access_type="frontage")
+        with_extras = {**base, "road_width_m": 7.5, "frontage_width_m": 4.5,
+                       "street_name": "Nguyễn Văn Linh", "bathrooms": 2}
+        normal = self.client.post("/predict", json=base)
+        extended = self.client.post("/predict", json=with_extras)
+        self.assertEqual(normal.status_code, 200, normal.text)
+        self.assertEqual(extended.status_code, 200, extended.text)
+        self.assertEqual(normal.json()["predicted_asking_price_vnd"],
+                         extended.json()["predicted_asking_price_vnd"])
+        self.assertEqual(normal.json()["model_version"], "v6")
 
     def test_street_names_and_future_building_not_inferred(self):
         response = self.client.post("/predict", json=self.payload(

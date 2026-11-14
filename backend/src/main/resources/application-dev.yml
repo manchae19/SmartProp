@@ -4,5 +4,3 @@ app:
     enabled: false
     email: ${DEV_ADMIN_EMAIL:}
     password: ${DEV_ADMIN_PASSWORD:}
-  database-seed:
-    enabled: false

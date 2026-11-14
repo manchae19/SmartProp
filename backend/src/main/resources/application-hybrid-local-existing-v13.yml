@@ -1,0 +1,20 @@
+# Explicit runtime validation only. DDL is executed by the separately approved CLI.
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/smartprop?connectionTimeZone=UTC
+  flyway:
+    enabled: false
+    locations: classpath:database/legacy-hybrid-local,classpath:database/research-migrations
+    target: '22'
+    clean-disabled: true
+    baseline-on-migrate: false
+    create-schemas: false
+app:
+  local-lineage:
+    require-complete: true
+  broker-applications:
+    enabled: true
+  profile:
+    avatar-enabled: true
+  recommendation:
+    allow-unverified-external: false

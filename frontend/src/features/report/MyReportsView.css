@@ -1,0 +1,31 @@
+
+.sp-my-reports[data-sp-ef737f62] {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+.sp-my-reports h1[data-sp-ef737f62],
+.sp-my-reports h2[data-sp-ef737f62],
+.sp-my-reports h3[data-sp-ef737f62] {
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-variant-ligatures: none;
+  word-spacing: normal;
+}
+.sp-my-reports button[data-sp-ef737f62],
+.sp-my-reports input[data-sp-ef737f62] {
+  font-family: inherit;
+}
+.sp-my-reports img[data-sp-ef737f62] {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+.sp-my-reports[data-sp-ef737f62] *,
+  .sp-my-reports[data-sp-ef737f62] *::before,
+  .sp-my-reports[data-sp-ef737f62] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+}
+}
+

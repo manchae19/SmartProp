@@ -1,12 +1,7 @@
 """Synthetic regression checks; never open a DB connection or signal real processes."""
-import importlib.util
-import os
-from pathlib import Path
 import subprocess
-import tempfile
-from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import local_runtime as runtime
 
@@ -60,33 +55,6 @@ class LocalRuntimeTest(unittest.TestCase):
         process.wait.side_effect=[subprocess.TimeoutExpired('synthetic',1),0]
         runtime.stop_owned(process,graceful=Mock(side_effect=OSError('synthetic')),timeout=1)
         process.kill.assert_called_once()
-
-    def test_demo_call_site_pins_db_and_reaches_mysql_after_interrupt(self):
-        spec=importlib.util.spec_from_file_location('run_demo_test',Path(__file__).with_name('run-demo.py'))
-        demo=importlib.util.module_from_spec(spec);spec.loader.exec_module(demo)
-        with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp)
-            for executable in ['jdk/bin/java.exe','mysql/bin/mysqld.exe','mysql/bin/mysql.exe']:
-                path=root/executable;path.parent.mkdir(parents=True,exist_ok=True);path.touch()
-            (root/'backend/target').mkdir(parents=True)
-            (root/'backend/pom.xml').touch()
-            (root/'backend/target/smartprop-backend-0.1.0.jar').touch()
-            mysql=Mock();mysql.poll.return_value=None;mysql.wait.return_value=0
-            backend=Mock();backend.poll.return_value=None;backend.wait.side_effect=[KeyboardInterrupt(),subprocess.TimeoutExpired('synthetic',10),0]
-            env={'JAVA_HOME':str(root/'jdk'),'SMARTPROP_MYSQL_HOME':str(root/'mysql'),
-                 'SPRING_DATASOURCE_URL':'jdbc:mysql://127.0.0.1:3306/source_fixture',
-                 'SPRING_APPLICATION_JSON':'{}'}
-            with patch.object(demo,'ROOT',root),patch.object(demo,'BACKEND',root/'backend'),patch.object(demo,'STATE',root/'state'),\
-                 patch.object(demo,'ensure_free'),patch.dict(os.environ,env,clear=True),\
-                 patch('sys.argv',['run-demo.py']),patch.object(demo.subprocess,'Popen',side_effect=[mysql,backend]) as launch,\
-                 patch.object(demo.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
-                self.assertEqual(demo.main(),130)
-            args,kwargs=launch.call_args
-            self.assertIn('--spring.datasource.url='+kwargs['env']['DB_URL'],args[0])
-            self.assertEqual(kwargs['env']['SPRING_DATASOURCE_URL'],kwargs['env']['DB_URL'])
-            self.assertNotIn('SPRING_APPLICATION_JSON',kwargs['env'])
-            self.assertTrue(any('mysqladmin.exe' in call.args[0][0] for call in run.call_args_list))
-            backend.kill.assert_called_once()
 
 
 if __name__=='__main__':unittest.main()

@@ -6,7 +6,7 @@ import subprocess
 
 
 def datasource_arguments(url, user):
-    if not re.fullmatch(r'jdbc:mysql://127\.0\.0\.1:\d+/(?:smartprop_local_demo|smartprop_history_[a-z0-9]+)\?[^\s]+',url):
+    if not re.fullmatch(r'jdbc:mysql://127\.0\.0\.1:\d+/smartprop_history_[a-z0-9]+\?[^\s]+',url):
         raise ValueError('Only an explicitly named private loopback schema is allowed')
     return ['--spring.datasource.url='+url,'--spring.datasource.username='+user]
 

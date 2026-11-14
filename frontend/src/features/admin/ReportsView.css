@@ -1,0 +1,109 @@
+
+.main[data-sp-fd30d3f5] {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+.section-title[data-sp-fd30d3f5] {
+  font-size: var(--text-base);
+  font-weight: bold;
+  color: var(--ui-accent);
+  margin-bottom: 4px;
+}
+.reports-list[data-sp-fd30d3f5] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Thẻ báo cáo */
+.report-card[data-sp-fd30d3f5] {
+  background: var(--ui-surface);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px #00000014;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--ui-border);
+  gap: 20px;
+}
+.report-info[data-sp-fd30d3f5] {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.report-title[data-sp-fd30d3f5] {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--ui-accent);
+}
+
+/* Nhãn lý do vi phạm */
+.report-reason-badge[data-sp-fd30d3f5] {
+  display: inline-flex;
+  align-self: flex-start;
+  background: var(--ui-surface);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.reason-text[data-sp-fd30d3f5] {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--ui-muted);
+}
+.report-meta[data-sp-fd30d3f5] {
+  font-size: 14px;
+  color: var(--ui-muted);
+}
+
+/* Khu vực nút bấm thao tác */
+.report-actions[data-sp-fd30d3f5] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.btn-view[data-sp-fd30d3f5] {
+  background: transparent;
+  color: var(--ui-accent);
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+}
+.btn-view[data-sp-fd30d3f5]:hover {
+  text-decoration: underline;
+}
+.btn-remove[data-sp-fd30d3f5] {
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-remove[data-sp-fd30d3f5]:hover {
+  opacity: 0.9;
+}
+.btn-skip[data-sp-fd30d3f5] {
+  background: var(--ui-surface);
+  color: var(--ui-muted);
+  border: 1px solid var(--ui-border);
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-skip[data-sp-fd30d3f5]:hover {
+  background: var(--ui-surface);
+}
+

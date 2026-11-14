@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 @Component @Order(-100)
 public class ExtensionReadiness implements ApplicationRunner {
-    @org.springframework.beans.factory.annotation.Autowired(required=false) private vn.smartprop.email.MailOutbox mail;
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private vn.smartprop.modules.email.MailOutbox mail;
     private final JdbcTemplate jdbc;private final boolean projects,legal,refresh,email,chat;
     public ExtensionReadiness(JdbcTemplate jdbc,@Value("${app.projects-management.enabled:false}") boolean projects,@Value("${app.legal-documents.enabled:false}") boolean legal,@Value("${app.refresh.enabled:false}") boolean refresh,@Value("${app.email.enabled:false}") boolean email,@Value("${app.messaging.enabled:false}") boolean chat){this.jdbc=jdbc;this.projects=projects;this.legal=legal;this.refresh=refresh;this.email=email;this.chat=chat;}
     private void table(String name){if(!Integer.valueOf(1).equals(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?",Integer.class,name)))throw new IllegalStateException("Enabled backend extension requires schema table: "+name);}

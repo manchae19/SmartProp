@@ -1,3 +1,60 @@
+.env
+.env.*
+!.env.example
+**/target/
+**/node_modules/
+**/dist/
+
+# Private uploads and report evidence
+backend/var/
+
+frontend/test-results/
+
+# Generated browser evidence / unexpected executables are never added by completion work.
+test-results/
+**/*.exe
+
+# Local caches, generated test output and logs
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/coverage/
+**/test-results/
+**/*.log
+
+# Local verification sources/evidence are intentionally not published
+/backend/src/test/
+/frontend/tests/
+/docs/evidence/
+
+# Local reports, test runners and the older nested working copy.
+/docs/
+/backend/scripts/test-*.ps1
+/SmartProp/
+/FRONTEND_CHANGES.md
+
+# Versionable Hybrid Recommendation integration tests and handoff documentation.
+!/backend/src/test/
+!/frontend/vue.ui/tests/
+!/docs/
+/docs/*
+!/docs/HYBRID_RECOMMENDATION_V1.md
+!/docs/BACKEND_HUY_INTEGRATION.md
+!/docs/FLYWAY_LOCAL_FORWARD_ONLY.md
+!/docs/FLYWAY_LOCAL_V18_RESULT.md
+!/docs/ADVISOR_FRONTEND.md
+!/docs/STEP17_RECOMMENDATION_LIVE.md
+
+# Team handoff reports only: versionable, no secrets, no local evidence.
+!/docs/handoff/
+!/docs/handoff/**
+
+# Historical documentation preserved from the Vue-era main branch for the
+# graduation report. Archive only — not current deployment guidance.
+!/docs/legacy/
+!/docs/legacy/**
+
+# Additional AI environments and dataset exclusions from the team branches.
 # Local environments and generated files
 **/.venv/
 **/venv/
@@ -11,6 +68,8 @@
 **/.next/
 **/dist/
 **/build/
+# Vite build helpers are source, not output (chatProxy.mjs is imported by vite.config.js).
+!/frontend/vue.ui/build/
 **/target/
 /backend/var/
 coverage/
@@ -53,3 +112,27 @@ Thumbs.db
 *.hdf5
 *.pkl
 *.joblib
+
+# Local handover note contains real DB/API credentials - never publish.
+/SMARTPROP_HANDOVER.md
+# Local-only AI tooling and throwaway debug scripts (never project content).
+/.continue/
+/.agents/skills/banner-design/
+/.agents/skills/brand/
+/.agents/skills/design/
+/.agents/skills/design-system/
+/.agents/skills/slides/
+/.agents/skills/ui-styling/
+/.agents/skills/ui-ux-pro-max/
+/ai-services/app/data/*.png
+/tests/
+
+# Paths after the feature-based layout sync
+.vite/
+!/frontend/tests/
+!/frontend/build/
+!/frontend/build/*.mjs
+
+# Ad-hoc demo/seed scripts for the local staging stack; not part of the test suite.
+ai-services/tests/demo_*.py
+ai-services/tests/seed_*.py

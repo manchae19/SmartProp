@@ -1,0 +1,32 @@
+
+.sp-favorites[data-sp-928bf8cf] {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+.sp-favorites h1[data-sp-928bf8cf],
+.sp-favorites h2[data-sp-928bf8cf],
+.sp-favorites h3[data-sp-928bf8cf] {
+  font-family: Arial, "Segoe UI", sans-serif;
+  font-variant-ligatures: none;
+  word-spacing: normal;
+}
+.sp-favorites button[data-sp-928bf8cf],
+.sp-favorites input[data-sp-928bf8cf],
+.sp-favorites select[data-sp-928bf8cf] {
+  font-family: inherit;
+}
+.sp-favorites img[data-sp-928bf8cf] {
+  display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+.sp-favorites[data-sp-928bf8cf] *,
+  .sp-favorites[data-sp-928bf8cf] *::before,
+  .sp-favorites[data-sp-928bf8cf] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+}
+}
+

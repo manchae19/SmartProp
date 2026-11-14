@@ -27,5 +27,3 @@ Có 16/132 tin sai hơn 50%. Căn hộ chỉ có 8 mẫu kiểm chứng. Pilot l
 132 tin đã được đánh giá, không coi là test mới để chấm/tuning lại. Kho chi tiết, registry exposure và báo cáo nguồn vẫn ở `ai-services/app/data/processed/` cục bộ, không đưa vào bản GitHub gọn. [Báo cáo pilot lịch sử](../ai-services/app/data/V6_HOLDOUT_PILOT.md).
 
 Kết quả phục vụ demo **giá rao ước tính**. Cần kiểm chứng trên dữ liệu mới trước khi kết luận rộng hơn về chất lượng định giá.
-
-[Phân tích sai số ngày 27/10](MODEL_V6_DIAGNOSTICS.md) đối chiếu đúng 299 dự đoán đã lưu theo loại, địa bàn, khoảng giá và thiếu đặc trưng; kèm kế hoạch bổ sung dựa trên độ phủ train. Không huấn luyện hoặc chấm lại pilot trong bước này.

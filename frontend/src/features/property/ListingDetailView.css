@@ -1,0 +1,16 @@
+
+.gallery-scroll[data-sp-4f294819] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ui-accent) 25%, transparent) transparent;
+}
+.gallery-scroll[data-sp-4f294819]::-webkit-scrollbar {
+  height: 5px;
+}
+.gallery-scroll[data-sp-4f294819]::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gallery-scroll[data-sp-4f294819]::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ui-surface) 25%, transparent);
+  border-radius: 999px;
+}
+

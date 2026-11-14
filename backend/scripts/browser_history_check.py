@@ -16,11 +16,11 @@ def run_browser_check(root, runtime, environment, work, ai_port):
     db_url = environment.get('SMARTPROP_HISTORY_TEST_URL', '')
     if not re.fullmatch(r'jdbc:mysql://127\.0\.0\.1:13317/smartprop_history_[a-z0-9]+\?[^\s]+', db_url):
         raise RuntimeError('Browser check requires the isolated history schema created by its parent.')
-    frontend = root / 'frontend/vue.ui'
+    frontend = root / 'frontend'
     cli = frontend / 'node_modules/@playwright/test/cli.js'
     node = shutil.which('node.exe' if os.name == 'nt' else 'node')
     if not node or not cli.is_file():
-        raise RuntimeError('Install Node and run npm ci in frontend/vue.ui before the browser check.')
+        raise RuntimeError('Install Node and run npm ci in frontend before the browser check.')
     backend_port = 18082
     env = spring_environment(environment,url=db_url,user='root',password='',jwt=secrets.token_urlsafe(48))
     env.update(

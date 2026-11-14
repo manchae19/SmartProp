@@ -1,0 +1,11 @@
+{
+  "model_version": "v1.3",
+  "description": "Pinned XGBoost V1.3 inference artifacts. Never commit the model weights; fetch and verify them locally.",
+  "verified_against": "ai-services/app/models/xgboost/predictor_v1_3.py (V1_3_MODEL_HASH / V1_3_SCHEMA_HASH / V1_3_CALIBRATION_HASH)",
+  "files": [
+    { "name": "model.json", "bytes": 28512676, "sha256": "3c56b6937902d9f736f9eb0278683f0c5ab8af027f5ea12b1a4072abff840a03" },
+    { "name": "feature_schema.json", "bytes": 24257, "sha256": "84be275b12b3c426497c00be80eed621d7323ac2a2abcb282752c7a89361e7ea" },
+    { "name": "calibration.json", "bytes": 547, "sha256": "17632bdf4d578723a5c336b7c7e3aed6021dbb68f38985b763839a763fbfe645" },
+    { "name": "artifact_manifest.json", "bytes": 1078, "sha256": "419599ecbefbe24bbbc1754a0224a7c25747ac3a08827d4e14ea62a5e41f2dce" }
+  ]
+}

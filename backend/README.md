@@ -1,57 +1,37 @@
 # SmartProp Backend
 
-Java 21, Spring Boot 3.5.16, Maven Wrapper và MySQL 8. Backend chạy tại `http://localhost:8080`, API có prefix `/api/v1`.
-
-Nguồn nhập từ nhánh `Backend-Huy` tại `ac13ec3`. Nhánh tích hợp bổ sung API lịch sử định giá theo tài khoản, SQL V13 và các kiểm thử có thể chạy lại. [Hướng dẫn định giá/lịch sử và demo riêng](../docs/VALUATION_HISTORY.md). Chạy nhanh từ gốc repo trên máy hiện tại:
-
-```powershell
-.\ai-services\.venv\Scripts\python.exe -X utf8 backend/scripts/run-demo.py
-```
-
-Launcher này dùng MySQL demo mới riêng, không đọc `.env`; phần chạy local phía dưới dành cho database nguồn đã được người phụ trách chuẩn bị.
+Java21, Spring Boot3.5.x, Maven và MySQL8. API prefix `/api/v1`.
 
 ## Chạy local
 
-MySQL80 phải đang chạy, schema `smartprop` đã chuẩn bị. Giữ `.env` hiện có ở root; không ghi đè hoặc đưa secret vào FE. Spring không tự đọc `.env`; scripts/load-env.ps1 nạp cấu hình vào process.
+Chuẩn bị schema và root `.env` theo `.env.example`. `scripts/load-env.ps1` nạp cấu hình vào process; Spring không tự đọc `.env`.
 
-Tại `backend/`, khi cần build:
-
-```powershell
-.\scripts\run-maven.ps1 '-B' '-DforkCount=0' 'test'
-.\scripts\run-maven.ps1 '-B' '-DskipTests' 'package'
-```
-
-Khởi động:
+Tại `backend/`:
 
 ```powershell
+.\mvnw.cmd -B -Dmaven.test.skip=true package
 .\scripts\run-local.ps1 -Transport NIO2
 ```
 
-Java 21 phải trên PATH hoặc JAVA_HOME. Launcher PowerShell dùng Maven đã được Wrapper tải vào cache; máy hiện tại có vấn đề khi gọi subprocess qua cmd.exe. Máy khác có thể dùng Maven Wrapper trực tiếp. Dừng BE trước khi package nếu Windows khóa JAR. Có thể chọn `-Port 8081` khi cổng 8080 đang dùng; `NIO2` là tùy chọn transport cho máy Windows hiện tại.
-
-Workflow local cưỡng chế Flyway=false, SQL init=never, seed=false và Hibernate `ddl-auto=validate`; không tự sửa schema. Không chạy Docker MySQL ở cổng 3306 hoặc migration/reset DB trong workflow này. SQL nguồn V1–V7 phải giữ nguyên.
+Có thể dùng `scripts/run-maven.ps1` khi Maven đã cache. Dừng Backend trước package nếu Windows khóa JAR. Launcher giữ Flyway=false, SQL init=never, seed=false và Hibernate validate. Migration V1–V13 nằm ở `database/migrations/`, chỉ rollout theo kế hoạch được duyệt.
 
 ## API và quyền
 
-- [Hợp đồng API lịch sử định giá](../docs/VALUATION_HISTORY.md).
-- Controller/service của các tính năng nghiệp vụ được giữ từ nhánh BE; các màn hình FE ngoài định giá cần nối riêng.
-- JWT Bearer; role lấy từ DB, không tự đăng ký ADMIN. Đổi mật khẩu hoặc khóa tài khoản thu hồi phiên.
-- BROKER/ADMIN đăng tin, mỗi người sửa tin của mình; ADMIN kiểm duyệt qua API riêng. Public chỉ thấy tin PUBLISHED chưa xóa/chưa hết hạn; public DTO không chứa contact.
-- Mutation tin/ảnh cần expectedVersion; stale trả 409. JSON lỗi có code/message/fields/timestamp; không log mật khẩu, token hoặc .env.
-- CORS cần đúng origin FE: localhost:5173 hoặc 127.0.0.1:5173 theo CORS_ORIGINS. Không bật DEBUG/TRACE MVC với dữ liệu tài khoản thật.
+- Controller/DTO ở `src/main/java/vn/smartprop/`; cấu hình ở `src/main/resources/application.yml`.
+- Đăng ký tạo BUYER; BROKER cần ADMIN xét duyệt. Không tự đăng ký ADMIN hoặc cấp quyền từ Frontend.
+- BROKER/ADMIN tạo tin của mình; tin qua DRAFT/PENDING/PUBLISHED. Public chỉ thấy tin hợp lệ, không nhận contact trong listing/detail DTO.
+- Mutation tin/ảnh cần `expectedVersion`; stale trả409. Lỗi API dùng code/message/fields/timestamp.
+- JWT kiểm tra session, status, role và tokenVersion hiện tại. Đổi mật khẩu/khóa/thu hồi quyền vô hiệu hóa các phiên theo chính sách.
+- CORS phải khớp origin FE; không log token, mật khẩu, payload tài khoản hoặc `.env`.
 
-## Dữ liệu và tệp
+## Refresh session
 
-MySQL lưu bản ghi nghiệp vụ; thư mục database/ chỉ chứa SQL. `STORAGE_ROOT` mặc định `./var/uploads` tính từ backend working directory. DB lưu metadata, bytes ảnh/bằng chứng lưu riêng và tải qua API kiểm tra quyền.
+Sau kiểm tra V10, bật `REFRESH_ENABLED=true`. Access token mặc định15phút; BUYER/BROKER7ngày hoặc30ngày khi ghi nhớ; ADMIN8giờ/idle30phút. Rotation giữ hạn tuyệt đối; replay thu hồi session.
 
-JPEG/PNG; bằng chứng nhận thêm PDF. Tối đa 10 MiB/tệp, 12 MiB/request, một file/request; 30 ảnh/tin và 10 bằng chứng/báo cáo. PDF mới kiểm tra định dạng cơ bản, chưa quét mã độc đầy đủ. Xóa mềm giữ bytes; chưa có purge tự động. Backup phải gồm cả DB và storage.
+Cookie HttpOnly/SameSite=Lax/Secure mặc địnhtrue. Chỉ local HTTP loopback dùng `REFRESH_SECURE_COOKIE=false`. FE dùng API cùng origin, bật `VITE_ENABLE_REFRESH=true`, lấy CSRF qua `/auth/csrf`; refresh/logout giữ kiểm tra CSRF/Origin. Client access-only vẫn dùng login không opt-in cookie.
 
-## Kiểm tra
+## Lưu trữ và vận hành
 
-- GET `/actuator/health` và `/actuator/health/readiness` (gồm DB).
-- Suite mặc định là unit/MockMvc/config; thành công không thay thế persistence.
-- Từ gốc repo, chạy `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-history-mysql.py` để tạo MySQL/schema mới cổng 13317, AI riêng 18081 và kiểm tra JWT → model → lịch sử. Không ghi fixture vào database `smartprop` nguồn.
-- Thêm `--browser` để kiểm tra cả Vue trên trình duyệt với BE/MySQL/model thật. Cần thêm Node, dependencies frontend và hai cổng trống 18082/15174. [Luồng kiểm tra](../docs/VALUATION_HISTORY.md).
-- `ai-services/.venv/Scripts/python.exe -X utf8 backend/scripts/check-demo.py` kiểm tra kết nối stack demo mặc định và proxy FE, không sửa database hoặc dừng dịch vụ; dùng khi gặp lỗi 502/cổng bận.
+MySQL lưu metadata; bytes tệp ở `STORAGE_ROOT`, mặc định `./var/uploads` tính từ backend. Tệp riêng tải qua API kiểm tra quyền. Ảnh JPEG/PNG tối đa10MiB/tệp,12MiB/request; bằng chứng nhận thêm PDF. Không tự purge khi chưa chốt retention.
 
-Đây là bản tích hợp local, chưa triển khai server/domain thật. Database nguồn dùng quy trình migration/backup của nhóm; lịch sử yêu cầu áp dụng V13. Demo riêng đã có launcher giữ dữ liệu và dừng đúng tiến trình do nó tạo.
+Health: `/actuator/health`, `/actuator/health/readiness`. Backup cần cả DB/storage; xem [ops](../ops/OPERATIONS.md). `.env`, `var/`, target, test source và test runner local không thuộc snapshot Git này.

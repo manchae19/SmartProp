@@ -39,38 +39,6 @@ Các lần sàng lọc và chấm pilot đã khóa không được chạy lại 
 
 ## Các phần còn lại
 
-Nhánh `feature/fe-ai-v6` đã ghép lịch sử `main`, dùng FE từ `7368bc1`, nhập mã BE/database từ `Backend-Huy` tại `ac13ec3` và mở rộng lịch sử định giá. Model v6 vẫn giữ nguyên. `docker-compose.yml` trên nhánh này còn là khung; demo dùng launcher MySQL riêng.
-
-| Phần BE/dữ liệu mới | Vai trò |
-|---|---|
-| [VALUATION_HISTORY.md](VALUATION_HISTORY.md) | Cách chạy 3 thành phần, quyền truy cập và kết quả kiểm thử |
-| [backend/scripts/run-demo.py](../backend/scripts/run-demo.py) | Chạy Spring Boot/MySQL demo riêng, giữ dữ liệu và không đọc database nguồn |
-| [backend/scripts/check-demo.py](../backend/scripts/check-demo.py) | Kiểm tra kết nối AI, BE/MySQL và proxy FE mà không gửi thông tin đăng nhập |
-| [backend/scripts/check-history-mysql.py](../backend/scripts/check-history-mysql.py) | Kiểm thử schema riêng; thêm `--browser` để chạy cả Vue và BE thật |
-| [backend/src/main/java/vn/smartprop/valuation](../backend/src/main/java/vn/smartprop/valuation/) | Cổng v6 và API lưu/xem/xóa snapshot theo tài khoản |
-| [database/migrations/V13__valuation_history.sql](../database/migrations/V13__valuation_history.sql) | Bảng lịch sử, khóa chống trùng và chỉ mục owner/thời gian |
-| [prepare_training_next.py](../ai-services/app/data/prepare_training_next.py) | Bản chuẩn bị cohort mới, cách ly mã địa bàn sai và xuất readiness |
-| [GEOSPATIAL_NEXT.md](GEOSPATIAL_NEXT.md) | Số liệu v6 hiện tại, dữ liệu vị trí còn thiếu và nguồn được phép |
-| [MODEL_V6_DIAGNOSTICS.md](MODEL_V6_DIAGNOSTICS.md) | Sai số validation theo loại/địa bàn và kế hoạch bổ sung độ phủ |
-| [PR4_REVIEW.md](PR4_REVIEW.md) | Review Standards/Spec và bản vá cách ly database/cleanup |
-
-| File FE | Vai trò |
-|---|---|
-| [frontend/vue.ui/README.md](../frontend/vue.ui/README.md) | Chạy FE/API, proxy, dữ liệu minh họa và kiểm thử |
-| [src/services/valuation.js](../frontend/vue.ui/src/services/valuation.js) | Kiểm tra đầu vào, gọi API, timeout/hủy yêu cầu và định dạng giá |
-| [app/core/location_catalog_v6.json](../ai-services/app/core/location_catalog_v6.json) | Mã địa bàn v6 được phép công khai, nhãn có dấu và mã bị chặn do sai nguồn |
-| [src/components/ValuationPanel.vue](../frontend/vue.ui/src/components/ValuationPanel.vue) | Form theo loại tài sản, tải lựa chọn từ model, hiển thị giá/feature/missing/cảnh báo |
-| [src/components/ValuationHistory.vue](../frontend/vue.ui/src/components/ValuationHistory.vue) | Lịch sử của tài khoản, phân trang, xóa và trạng thái lỗi |
-| [user/views/ValuationView.vue](../frontend/vue.ui/user/views/ValuationView.vue) | Trang `/valuation` để nhập thông tin riêng |
-| [user/views/HomeView.vue](../frontend/vue.ui/user/views/HomeView.vue) | Dùng form v6 tại mục Định giá của trang chủ |
-| [user/views/ListingDetailView.vue](../frontend/vue.ui/user/views/ListingDetailView.vue) | Dùng thông tin có cấu trúc của tin minh họa để gọi v6; đã bỏ giá và tỷ lệ ảnh hưởng mẫu |
-| [vite.config.js](../frontend/vue.ui/vite.config.js) | Proxy `/api/ai/*` tới FastAPI, `/api/v1/*` tới BE khi dev/preview |
-| [tests/valuation.test.js](../frontend/vue.ui/tests/valuation.test.js) | Kiểm thử payload, HTTP, hủy/timeout và đơn vị giá |
-| [e2e/valuation.spec.js](../frontend/vue.ui/e2e/valuation.spec.js) | Kiểm thử trình duyệt, trong đó có cả 3 loại gọi v6 thật |
-| [e2e-live/history.spec.js](../frontend/vue.ui/e2e-live/history.spec.js) | Kiểm thử toàn luồng đăng ký/đăng nhập, giá và lịch sử bằng BE/MySQL/model thật |
-
-[Giải thích lỗi tên địa bàn và cách sửa](LOCATION_LABELS.md). Catalog chỉ phục vụ API/hiển thị, không thay vocabulary hoặc model đã khóa.
-
-`AGENTS.md`, `docs/agents/`, `.agents/skills/`, `skills-lock.json` chứa hướng dẫn làm việc cho agent.
+`frontend/`, `backend/`, `docker-compose.yml` hiện là khung chưa có ứng dụng chạy hoàn chỉnh. `AGENTS.md`, `docs/agents/`, `.agents/skills/`, `skills-lock.json` chứa hướng dẫn làm việc cho agent.
 
 `data_raw/`, `processed/`, CSV thô, checkpoint, cache HTML, `.venv/`, `__pycache__/` và `.scratch/` ở trên máy; được bỏ qua khỏi các commit mới. Việc bỏ theo dõi Git không xóa file cục bộ và không thay lịch sử commit cũ.

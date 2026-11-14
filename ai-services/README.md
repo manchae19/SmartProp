@@ -2,7 +2,7 @@
 
 API FastAPI phục vụ demo đồ án, sử dụng ba model XGBoost v6 cho **nhà ở, đất nền và căn hộ**. Model được nạp một lần khi khởi động. Phiên bản cố định: `b4b1339d3f35857e`, cấu hình `all`; các lần train mới không tự thay model của API.
 
-## Chạy tại gốc `F:\SmartProp`
+## Chạy tại thư mục gốc repository SmartProp
 
 Môi trường hiện tại đã cài thư viện. Khi cần cài lại:
 

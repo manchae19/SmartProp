@@ -6,6 +6,7 @@ import math
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -130,11 +131,87 @@ class PredictorV6:
         matrix = self.extractor.encode([row], {row["record_key"]: feature}, spec)
         if np.isinf(matrix).any():
             raise ValueError("Đầu vào chứa giá trị không hợp lệ.")
-        predicted_log = self.models[category].predict(xgb.DMatrix(
-            matrix, feature_names=spec["feature_names"], nthread=4))
+        dmat = xgb.DMatrix(matrix, feature_names=spec["feature_names"], nthread=4)
+        predicted_log = self.models[category].predict(dmat)
         million = float(np.exp(np.clip(predicted_log, -20, 30))[0])
         if not math.isfinite(million) or million <= 0:
             raise RuntimeError("Model trả kết quả không hợp lệ.")
+
+        # Compute TreeSHAP explainability
+        contribs = self.models[category].predict(dmat, pred_contribs=True)[0]
+        base_log = float(contribs[-1])
+        base_price_vnd = int(np.exp(base_log) * 1_000_000)
+
+        shap_factors = []
+        for name, val in zip(spec["feature_names"], contribs[:-1]):
+            val_float = float(val)
+            if abs(val_float) < 1e-4:
+                continue
+            impact_pct = round((math.exp(val_float) - 1.0) * 100, 2)
+            direction = "increase" if val_float > 0 else "decrease"
+
+            label = name
+            note = ""
+            if name.startswith("location:"):
+                dist_name = name.split(":", 1)[1]
+                label = f"Địa bàn: {dist_name}"
+                note = f"Mặt bằng giá bất động sản tại {dist_name}"
+            elif name == "floors_claim":
+                fl = feature.get("floors_claim") or values.get("floors") or "chưa rõ"
+                label = f"Số tầng nhà ({fl} tầng)"
+                note = "Quy mô số tầng xây dựng"
+            elif name == "access_frontage":
+                label = "Lối vào mặt tiền đường"
+                note = "Vị trí mặt tiền đường chính có giá trị thương mại cao"
+            elif name == "access_alley":
+                if feature.get("access_claim") == "frontage":
+                    label = "Lối vào kiệt/hẻm (không áp dụng cho input)"
+                    note = "One-hot không áp dụng cho lối vào mặt tiền; đóng góp SHAP không phải đặc điểm thực tế của tin."
+                else:
+                    label = "Lối vào kiệt/hẻm"
+                    note = "Bất động sản trong kiệt/hẻm thường có giá thấp hơn mặt tiền"
+            elif name.startswith("ward:"):
+                w_name = name.split(":", 1)[1]
+                label = f"Phường: {w_name}"
+                note = f"Vị trí cụ thể tại phường {w_name}"
+            elif name == "ward_missing":
+                label = "Thiếu thông tin phường/xã"
+                note = "Không có tên phường cụ thể trong tin rao"
+            elif name in ("rooms", "rooms_completed"):
+                rm = feature.get("rooms_completed") or values.get("rooms") or "chưa rõ"
+                label = f"Số phòng ngủ ({rm} PN)"
+                note = "Quy mô công năng phòng ngủ"
+            elif name in ("house_subtype_villa", "subtype_villa"):
+                label = "Loại nhà: Biệt thự"
+                note = "Phân khúc biệt thự cao cấp"
+            elif name in ("house_subtype_house_c4", "subtype_house_c4"):
+                label = "Loại nhà: Nhà cấp 4"
+                note = "Phân khúc nhà cấp 4"
+            elif "area" in name:
+                label = f"Diện tích ({area} m²)"
+                note = "Quy mô diện tích sử dụng"
+
+            shap_factors.append({
+                "feature_name": name,
+                "label": label,
+                "shap_value": round(val_float, 4),
+                "impact_pct": impact_pct,
+                "direction": direction,
+                "context_note": note,
+            })
+
+        shap_factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
+        top_factors = shap_factors[:6]
+
+        shap_explanation = {
+            "base_value_log": round(base_log, 4),
+            "base_price_vnd": base_price_vnd,
+            "scale": "log_asking_price",
+            "top_factors": top_factors,
+            "method": "TreeSHAP (Native Additive Contribution)",
+            "summary_vi": f"Mức giá cơ sở cho phân khúc {category} là {round(base_price_vnd / 1e9, 2)} tỷ đồng. Dự đoán cuối cùng phản ánh tổng các tác động logarit từ địa bàn, diện tích và thuộc tính tài sản."
+        }
+
         used = dict(area_sqm=float(area), location_feature=location, ward_source=ward or None,
                     rooms=int(feature["rooms_completed"]) if str(feature["rooms_completed"]) else None,
                     floors=float(feature["floors_claim"]) if str(feature["floors_claim"]) else None,
@@ -146,4 +223,5 @@ class PredictorV6:
         return dict(model_version="v6", model_run=V6_RUN, configuration="all", category=category,
                     predicted_asking_price_vnd=round(million * 1_000_000), predicted_asking_price_million=million,
                     currency="VND", price_basis="Giá rao ước tính từ dữ liệu tin đăng.", features_used=used,
-                    missing_features=[field for field in applicable if used[field] is None], warnings=warnings)
+                    missing_features=[field for field in applicable if used[field] is None], warnings=warnings,
+                    shap_explanation=shap_explanation, valuation_timestamp=datetime.now(timezone.utc).isoformat())

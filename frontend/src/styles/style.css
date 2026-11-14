@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-card: #FFFFFF;
+  --color-brand-raised: #EDF2F7;
+  --color-brand-navy: #203C5B;
+  --color-brand-cream: #FAFBFC;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-gold: #203C5B;
+  --color-brand-highlight: #EDF2F7;
+  --color-brand-accent: #203C5B;
+  --color-brand-muted: #60758A;
+  --color-brand-line: #D5DFE8;
+  --text-xs: .8125rem;
+  --text-xs--line-height: 1.6;
+  --text-sm: .9375rem;
+  --text-sm--line-height: 1.65;
+  --text-base: 1rem;
+  --text-base--line-height: 1.65;
+  --radius-panel: 1.5rem;
+  --radius-control: .75rem;
+}
+:root{--sp-header-height:72px;--sp-section-nav-height:52px}
+@media(max-width:639px){:root{--sp-header-height:64px;--sp-section-nav-height:48px}}
+@layer components {
+  .sp-container { @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-10; }
+  .sp-button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-transparent px-5 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold disabled:cursor-not-allowed disabled:opacity-50; }
+  .sp-button-primary { @apply border-brand-navy bg-brand-raised text-white hover:bg-[#24456d]; }
+  .sp-button-secondary { @apply border-brand-line bg-brand-card text-brand-navy hover:border-brand-gold hover:bg-brand-surface; }
+  .sp-icon-button { @apply grid size-11 shrink-0 place-items-center rounded-control border border-brand-line bg-brand-card text-brand-navy hover:bg-brand-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold; }
+  .sp-field { @apply flex min-w-0 flex-col gap-2 text-[14px] font-medium text-brand-muted; }
+  .sp-input { @apply min-h-11 w-full min-w-0 rounded-control border border-slate-300 bg-brand-card px-3 py-2.5 text-sm text-brand-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold; }
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  font-size:16px;
+  line-height:1.65;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+button:not(:disabled),summary{cursor:pointer}
+#page-content{scroll-margin-top:var(--sp-header-height)}
+.app-footer a:focus-visible{outline:3px solid var(--ui-border);outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.page-layout .sp-button{transition:none}}
+
+
+/* UI V4: legible secondary text and keyboard focus without changing the layout. */
+.text-gray-400,.text-slate-400{color:var(--ui-muted)}
+:is(.bg-brand-raised,[class*="bg-[#183e54]"],[class*="bg-[#183e54]"]) :is(.text-gray-400,.text-slate-400){color:var(--ui-ink)}
+.sp-button:focus-visible,.sp-input:focus-visible,.mobile-drawer :focus-visible{outline-color:var(--ui-border)}
+@media(max-width:639px){input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{font-size:16px}}
