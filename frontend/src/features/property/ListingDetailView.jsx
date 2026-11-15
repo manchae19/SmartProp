@@ -41,6 +41,7 @@ import { isPublicProperty } from "./usePublicListings.js";
 import ContactPanel from "./ContactPanel.jsx";
 import ImageScanSection from "./ImageScanSection.jsx";
 import ImageAnalysisSection from "./ImageAnalysisSection.jsx";
+import PropertyNearbyPanel from "../prediction/PropertyNearbyPanel.jsx";
 import PropertyExplorer from "../map/PropertyExplorer.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
 import "./ListingDetailView.css";
@@ -3765,6 +3766,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                 </section>
                 <ImageScanSection propertyId={ctx.property.id} />
                 <ImageAnalysisSection propertyId={ctx.property.id} />
+                <PropertyNearbyPanel property={ctx.property} />
                 <section
                   {...mergeProps({
                     className:

@@ -66,6 +66,8 @@ public final class GeocodingScopes {
         var coords=new Coordinate[value.size()];for(int i=0;i<value.size();i++){double x=value.get(i).path(0).asDouble(Double.NaN),y=value.get(i).path(1).asDouble(Double.NaN);if(!Double.isFinite(x)||!Double.isFinite(y)||x<=-180||x>180||y<-90||y>90)throw new IllegalArgumentException("Invalid boundary coordinate");coords[i]=new Coordinate(x,y);}return factory.createLinearRing(coords);
     }
     private Optional<Region> district(String name){String key=GeocodingAddress.key(name);return regions.stream().filter(r->GeocodingAddress.key(r.name()).equals(key)).findFirst();}
+    /** Verified historical polygon for a district, or empty when none is bundled. Never a centroid or display circle. */
+    public Optional<org.locationtech.jts.geom.Geometry> districtGeometry(String name){return district(name).map(r->r.geometry().copy());}
     private Scope empty(String status){return new Scope(version+":"+status,status,List.of(),"");}
     private boolean adminPart(String value){
         String key=GeocodingAddress.key(value);
