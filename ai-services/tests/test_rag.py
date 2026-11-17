@@ -49,9 +49,24 @@ class RagSecurityTest(unittest.TestCase):
                 operation()
 
     def test_backend_target_cannot_be_client_or_remote_controlled(self):
-        for value in ["http://example.com:8080", "http://127.0.0.1:13306", "http://localhost:8080", "http://127.0.0.1:8080/evil", "http://a:b@127.0.0.1:8080"]:
+        # Anything that is not a plain loopback HTTP origin stays rejected. The port is
+        # free so a test build can run beside the one already serving 8080.
+        for value in ["http://example.com:8080", "http://localhost:8080",
+                      "http://127.0.0.1:8080/evil", "http://a:b@127.0.0.1:8080",
+                      "https://127.0.0.1:8080", "http://127.0.0.1:8080?x=1",
+                      "http://127.0.0.1", "http://10.0.0.5:8080"]:
             with self.assertRaises(ValueError):
                 Settings(backend_url=value)
+
+    def test_backend_port_is_configurable_but_stays_loopback(self):
+        # 8080 is the running service; 18080 is the test build started beside it.
+        self.assertEqual(Settings(backend_url="http://127.0.0.1:18080").backend_url,
+                         "http://127.0.0.1:18080")
+        self.assertEqual(Settings().backend_url, "http://127.0.0.1:8080")
+        for other in ("http://127.0.0.1:9090", "http://127.0.0.1:18081",
+                      "http://127.0.0.1:80", "http://127.0.0.1:13306"):
+            with self.assertRaises(ValueError):
+                Settings(backend_url=other)
 
     def test_sql_injection_is_rejected_before_connect(self):
         repository = PublishedPropertyRepository(Settings(sql_enabled=True, sql_database="smartprop_staging", db_user="test", db_password="test"))

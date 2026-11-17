@@ -475,8 +475,21 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                   "data-sp-b5f8ab84": "",
                 })}
               >
-                {"Trợ lý tư vấn bất động sản"}
+                {ctx.chatSession?.state?.propertyId
+                  ? "Đang hỏi về: " + (ctx.chatSession.state.propertyTitle || "tin đang mở")
+                  : "Trợ lý tư vấn bất động sản"}
               </p>
+              {ctx.chatSession?.state?.propertyId ? (
+                <button
+                  {...mergeProps({
+                    type: "button",
+                    className: "chat-icon-button",
+                    onClick: () => ctx.chatSession.reset(),
+                  })}
+                >
+                  {"Bỏ chọn tin"}
+                </button>
+              ) : null}
             </div>
             <button
               {...mergeProps({

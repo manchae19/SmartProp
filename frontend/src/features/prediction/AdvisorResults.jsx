@@ -85,6 +85,15 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
 
                   <p className="ar-price">{money(property.priceVnd)}</p>
 
+                  {Number.isFinite(Number(property.distanceMeters)) ? (
+                    // Nearby results carry a straight-line distance; say so rather than
+                    // letting the number read as a travel distance.
+                    <p className="ar-distance" data-nearby-distance>
+                      Cách vị trí đã xác nhận {Math.round(Number(property.distanceMeters))} m
+                      (đường chim bay)
+                    </p>
+                  ) : null}
+
                   {property.scoreBreakdown ? (
                     <dl className="ar-breakdown" data-score-breakdown>
                       {Object.entries(property.scoreBreakdown).map(([key, value]) => (

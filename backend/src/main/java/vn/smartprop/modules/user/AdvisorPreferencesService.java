@@ -70,4 +70,20 @@ public class AdvisorPreferencesService {
             p.enabled()?p.familyStatus():null,p.enabled()?p.hasChildren():null,
             p.enabled()?p.childrenCount():null,p.enabled()?p.ageGroup():null);
     }
+    /**
+     * Server-side only: the saved workplace, for resolving to coordinates.
+     *
+     * <p>Deliberately not part of {@link Context}: that record is serialized to the
+     * browser, so it must never carry the raw workplace string. Nothing here is
+     * returned to a client — {@code AdvisorWorkplaceController} consumes it and
+     * answers with coordinates alone.
+     */
+    public record Saved(boolean enabled, String workArea) {}
+    @Transactional(readOnly=true)
+    public Saved saved(Long id) {
+        var u=users.findById(id).orElseThrow(()->new ApiException(401,"UNAUTHENTICATED","Vui lòng đăng nhập."));
+        if(u.deletedAt!=null || u.status!=User.Status.ACTIVE) throw new ApiException(401,"UNAUTHENTICATED","Phiên không hợp lệ.");
+        var p=get(id);
+        return new Saved(p.enabled(), p.enabled()?p.workArea():null);
+    }
 }

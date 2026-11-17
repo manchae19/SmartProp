@@ -60,6 +60,7 @@ class Context:
                 "propertyType": self.property_type, "minAreaSqm": self.min_area_sqm,
                 "district": self.district, "ward": self.ward}.items() if v is not None},
             "lastPropertyIds": list(self.last_property_ids),
+            "lastSearchEmpty": bool((self.last_criteria or {}).get("lastSearchEmpty")),
             "referencedPropertyId": self.referenced_property_id,
             "areaIds": list(self.area_ids),
         }

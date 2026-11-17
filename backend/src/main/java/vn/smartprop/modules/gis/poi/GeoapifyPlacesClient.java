@@ -31,6 +31,8 @@ public class GeoapifyPlacesClient {
     GeoapifyPlacesClient(ObjectMapper json,RequestLimits limits,String key,boolean enabled,HttpClient client){
         this.json=json;this.limits=limits;this.key=key;this.enabled=enabled;this.client=client;
     }
+    /** True when a provider key and the places flag are both present. */
+    public boolean configured(){return enabled&&key!=null&&!key.isBlank();}
     public JsonNode search(double latitude,double longitude,int radius,List<String> categories){
         String filter="circle:"+longitude+","+latitude+","+radius;
         String url="https://api.geoapify.com/v2/places?categories="+encode(String.join(",",categories))

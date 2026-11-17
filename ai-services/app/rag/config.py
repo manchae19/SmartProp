@@ -40,8 +40,13 @@ class Settings:
 
     def __post_init__(self):
         u = urlsplit(self.backend_url)
-        if u.scheme != "http" or u.hostname != "127.0.0.1" or u.port != 8080 or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment:
-            raise ValueError("RAG backend must be http://127.0.0.1:8080")
+        # The backend must stay a loopback HTTP origin with no credentials or query, so a
+        # public caller can never point the advisor at a remote host. Only the two ports
+        # this project uses are accepted: 8080 for the running service, 18080 for a test
+        # build started beside it.
+        if (u.scheme != "http" or u.hostname != "127.0.0.1" or u.port not in (8080, 18080)
+                or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment):
+            raise ValueError("RAG backend must be http://127.0.0.1:8080 or http://127.0.0.1:18080")
         if self.image_backend_url:
             i = urlsplit(self.image_backend_url)
             if (i.scheme != "http" or i.hostname != "127.0.0.1" or not i.port

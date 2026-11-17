@@ -26,7 +26,18 @@ export default function FloatingAdvisor() {
   const wait = Math.max(0, Math.ceil((state.retryAt - clock) / 1000));
   const locked = state.busy || wait > 0;
   useEffect(() => { setDraft(''); }, [identity]);
-  useEffect(() => {const openChat = () => {follow.current=true;setOpen(true);};window.addEventListener('smartprop:advisor-open',openChat);return () => window.removeEventListener('smartprop:advisor-open',openChat);}, []);
+  useEffect(() => {
+    // A listing page can hand over the property it is showing. The id is opaque and the
+    // server re-reads it, so a draft id is rejected there rather than trusted here.
+    const openChat = event => {
+      const detail = event?.detail || {};
+      if (detail.propertyId) chatSession.focusProperty(detail.propertyId, detail.propertyTitle || '');
+      follow.current = true;
+      setOpen(true);
+    };
+    window.addEventListener('smartprop:advisor-open', openChat);
+    return () => window.removeEventListener('smartprop:advisor-open', openChat);
+  }, []);
   useEffect(() => {
     if (!open || fullChat) return;
     input.current?.focus();
@@ -63,10 +74,12 @@ export default function FloatingAdvisor() {
         <button className="floating-advisor-tool" onClick={close} aria-label="Đóng chat">×</button>
       </header>
       <div className="floating-advisor-thread" ref={thread} onScroll={() => {follow.current = isNearChatBottom(thread.current);}}>
-        {state.propertyContext && <p className="floating-advisor-context">Đang hỏi về: {state.propertyContext.label}<button onClick={() => model.reset()}>Bỏ chọn</button></p>}
-        {!state.messages.length && state.propertyContext && <button onClick={() => model.submit('Tóm tắt thông tin căn này')}>Tóm tắt căn này</button>}
-        {!state.messages.length && <div className="floating-advisor-welcome"><DiscoveryIcon /><h3>Bạn đang tìm không gian sống nào?</h3><p>Hỏi về nhà, giá thị trường hoặc tiện ích tại Đà Nẵng.</p><div>{['Giá căn hộ ở Sơn Trà?', 'Ở Hải Châu có bệnh viện nào?'].map(question => <button key={question} disabled={locked} onClick={() => {follow.current = true; model.submit(question);}}>{question}<span aria-hidden="true">↗</span></button>)}</div></div>}
-        {state.messages.map((message, index) => message.role === 'user' ? <p key={message.id} className="floating-advisor-user">{message.text}</p> : <div key={message.id} className="floating-advisor-answer"><Suspense fallback={<p role="status">Đang hiển thị câu trả lời…</p>}><ChatAnswer result={message.response} messageId={message.id} question={state.messages.slice(0,index).findLast(m => m.role === 'user')?.text || ''} onReading={() => {follow.current = false;}} /></Suspense></div>)}
+        {state.propertyId && <p className="floating-advisor-context">Đang hỏi về: {state.propertyTitle || 'tin đang mở'}<button onClick={() => model.reset()}>Bỏ chọn</button></p>}
+        {!state.messages.length && state.propertyId && <button onClick={() => model.submit('Căn này giá bao nhiêu?')}>Hỏi giá căn này</button>}
+        {!state.messages.length && <div className="floating-advisor-welcome"><DiscoveryIcon /><h3>Bạn đang tìm không gian sống nào?</h3><p>Cho tôi biết ngân sách, hoặc chọn nhanh một ưu tiên. Tôi sẽ gợi ý tối đa 3 tin phù hợp.</p><div>{['Tôi có 3 tỷ, tìm giúp tôi vài căn', 'Gần bệnh viện', 'Gần trường', 'Gần chỗ làm', 'Bỏ qua, xem nhà trong ngân sách'].map(question => <button key={question} disabled={locked} onClick={() => {follow.current = true; model.submit(question);}}>{question}<span aria-hidden="true">↗</span></button>)}</div></div>}
+        {state.messages.map((message, index) => message.role === 'user' ? <p key={message.id} className="floating-advisor-user">{message.text}</p> : <div key={message.id} className="floating-advisor-answer"><Suspense fallback={<p role="status">Đang hiển thị câu trả lời…</p>}><ChatAnswer result={message.response} messageId={message.id} question={state.messages.slice(0,index).findLast(m => m.role === 'user')?.text || ''} onReading={() => {follow.current = false;}} /></Suspense>
+          {message.id === state.messages.at(-1)?.id && message.response?.evidence?.quickReplies?.length ? <div className="floating-advisor-quick">{message.response.evidence.quickReplies.map(choice => <button key={choice} disabled={locked} onClick={() => {follow.current = true; model.submit(choice);}}>{choice}</button>)}</div> : null}
+        </div>)}
         {state.busy && <p className="floating-advisor-loading" role="status">SmartProp đang kiểm tra dữ liệu<span aria-hidden="true">…</span></p>}
         {state.error && <div className="floating-advisor-error" role="alert"><p>{state.error.message || state.error.text || 'Chưa nhận được phản hồi. Vui lòng thử lại.'}</p>{state.error.retry && <button disabled={locked} onClick={() => {follow.current = true; model.retry();}}>{wait ? `Thử lại sau ${wait}s` : 'Thử lại'}</button>}</div>}
       </div>

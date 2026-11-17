@@ -12,7 +12,7 @@ async function send(request) {
   // Refresh through the existing auth client; no profile or user id is accepted from the browser.
   if (profileMode && session.user && !session.token) await restoreSession()
   const current = profileMode ? (session.user?.id == null ? 'guest' : String(session.user.id)) : 'guest'
-  const body = chatRequest(request.question, current === owner ? request.sessionId : null)
+  const body = chatRequest(request.question, current === owner ? request.sessionId : null, request.propertyId ?? null)
   owner = current
   const headers = {'Content-Type':'application/json',Accept:'application/json'}
   if (profileMode && session.token) headers.Authorization = 'Bearer ' + session.token

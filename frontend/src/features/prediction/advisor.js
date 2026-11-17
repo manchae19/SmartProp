@@ -136,7 +136,7 @@ export function advisorListingUrl(property) {
 }
 
 export async function advisorMapData(properties, request) {
-  const results = await Promise.allSettled(properties.filter(p => p.source?.kind === 'PROPERTY').map(async p => {
+  const results = await Promise.allSettled(properties.filter(p => p.source?.kind === 'PROPERTY' && p.source.recordKey).map(async p => {
     const detail = await request('/properties/' + encodeURIComponent(p.source.recordKey))
     if (detail.id !== p.source.recordKey || detail.status !== 'PUBLISHED' || !publicMapPoint(detail)
         || !Number.isFinite(detail.latitude) || !Number.isFinite(detail.longitude)

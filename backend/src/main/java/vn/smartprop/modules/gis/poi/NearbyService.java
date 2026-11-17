@@ -49,6 +49,23 @@ public class NearbyService {
     }
     /** Advisor lookup: same POI search, but the origin carries verified location evidence. */
     public Result forAdvisor(String id,int radius,String input){return forAdvisor(id,radius,input,false);}
+    /**
+     * Just the verified origin of a public listing, with no POI provider call.
+     *
+     * <p>Routing only needs the starting point. Resolving it through {@code forAdvisor}
+     * would spend the places quota and fail when that vendor is off, which is unrelated
+     * to whether a route can be computed.
+     */
+    public Location advisorOrigin(String id){
+        var property=properties.publicProperty(id);
+        if(property==null||property.location==null
+            ||!valid(property.location.getY(),property.location.getX())) return null;
+        var evidence=locationEvidence.resolve(property);
+        String accuracy="UNKNOWN".equals(evidence.accuracy())?"USER_PROVIDED":evidence.accuracy();
+        if(!Set.of("EXACT_PROPERTY","BUILDING_ONLY","USER_PROVIDED").contains(accuracy)) return null;
+        return new Location(property.location.getY(),property.location.getX(),accuracy,
+            evidence.source(),evidence.reference(),evidence.verifiedAt());
+    }
     public Result forAdvisor(String id,int radius,String input,boolean allowEstimatedOrigin){
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính không hợp lệ.");
         var selected=categories(input);

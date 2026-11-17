@@ -258,6 +258,13 @@ function setup(__props) {
     const run = ++loadSequence,
       id = route.params.id,
       own = route.query.own === "1";
+    // The router can mount this view before params are populated; without this guard
+    // encodeURIComponent(undefined) becomes the literal "undefined" and is requested.
+    if (!id) {
+      Object.assign(state.value, { busy: false, error: "", notice: "", notFound: true });
+      property.value = null;
+      return;
+    }
     closeGallery();
     property.value = null;
     isFavorite.value = false;
@@ -3212,6 +3219,19 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       {" Quản lý hồ sơ pháp lý riêng "}
                     </RouterLink>
                   ) : null}
+                  {ctx.listingId ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('smartprop:advisor-open', {
+                        detail: { propertyId: ctx.listingId, propertyTitle: ctx.property?.title || '' },
+                      }))
+                    }}
+                    className="mb-3 w-full rounded-xl border border-[var(--ui-border)] bg-[var(--ui-soft)] px-4 py-3 text-sm font-semibold text-[var(--ui-ink)] hover:border-[var(--ui-accent)]"
+                  >
+                    Hỏi về căn này
+                  </button>
+                  ) : null}
                   <ContactPanel
                     key={ctx.listingId}
                     {...mergeProps({
@@ -3766,7 +3786,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                 </section>
                 <ImageScanSection propertyId={ctx.property.id} />
                 <ImageAnalysisSection propertyId={ctx.property.id} />
-                <PropertyNearbyPanel property={ctx.property} />
+                {ctx.property?.id ? <PropertyNearbyPanel property={ctx.property} /> : null}
                 <section
                   {...mergeProps({
                     className:

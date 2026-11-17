@@ -321,7 +321,7 @@ export async function advisorMapData(properties, request) {
   // Legacy fallback when locationIntelligence is omitted in Step 21.3 mock fixtures
   const results = await Promise.allSettled(
     properties
-      .filter(p => p.source?.kind === 'PROPERTY' && !p.researchReference)
+      .filter(p => p.source?.kind === 'PROPERTY' && p.source.recordKey && !p.researchReference)
       .map(async p => {
         const detail = await request('/properties/' + encodeURIComponent(p.source.recordKey))
         if (detail.id !== p.source.recordKey

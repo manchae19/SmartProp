@@ -26,7 +26,7 @@ export function displayEvidenceText(value) {
     CORRIDOR: 'tuyến đường', DISTRICT: 'quận/huyện', WARD: 'phường/xã', POI: 'địa điểm tiện ích' }
   return value.replace(/\b(?:PUBLIC_TRANSPORT|HOSPITAL|SCHOOL|MARKET|SUPERMARKET|PARK|BEACH|SHARED|CORRIDOR_DIRECT|DIRECT_WARD_EVIDENCE|DISTRICT_FACILITY|AREA_GENERAL|CORRIDOR|DISTRICT|WARD|POI)\b/g, code => labels[code])
 }
-export function chatRequest(question, sessionId = null) {
+export function chatRequest(question, sessionId = null, propertyId = null) {
   const value = String(question ?? '').trim()
   if (!value || value.length > 2000) throw Object.assign(Error('Nhập câu hỏi từ 1 đến 2.000 ký tự.'), { code: 'INVALID_CHAT_QUESTION' })
   // Only the opaque server-issued id travels. No transcript, criteria, mode or research flags:
@@ -35,6 +35,12 @@ export function chatRequest(question, sessionId = null) {
   if (sessionId != null) {
     if (!/^[a-f0-9]{32}$/.test(String(sessionId))) throw Object.assign(Error('Phiên hội thoại chưa hợp lệ.'), { code: 'INVALID_CHAT_SESSION' })
     body.sessionId = String(sessionId)
+  }
+  // The listing the user opened. The server re-reads it through the public API, so a
+  // draft or private id is rejected there rather than trusted here.
+  if (propertyId != null) {
+    if (!/^[0-9a-fA-F-]{36}$/.test(String(propertyId))) throw Object.assign(Error('Tin đang xem chưa hợp lệ.'), { code: 'INVALID_PROPERTY_ID' })
+    body.propertyId = String(propertyId)
   }
   return body
 }
@@ -51,6 +57,10 @@ export function citationHref(citation, properties) {
     }
     if (['AREA_AMENITY', 'POI_EVIDENCE'].includes(citation.kind) && /^\/api\/v1\/amenities\/[A-Za-z0-9_-]{1,160}$/.test(url.pathname)) {
       // Canonical SAME-ORIGIN public API path: never send the browser to an internal origin.
+      return url.pathname
+    }
+    if (citation.kind === 'PROPERTY_DETAIL' && /^\/api\/v1\/properties\/[0-9a-fA-F-]{36}$/.test(url.pathname)) {
+      // The listing the user is already looking at; same-origin public path only.
       return url.pathname
     }
   } catch { /* Reject malformed/unexpected sources instead of rendering a raw href. */ }
@@ -90,8 +100,12 @@ export function publicChatResponse(data) {
   }
   if (data.recommendedProperties.some(p => !sourceIds.has('recommendation:' + p.id))) throw invalid()
   const generation = data.evidence.generation
+  // An address lookup is a search too, but it is not a budget search: it carries the
+  // address it queried instead of a budgetVnd.
+  const addressSearch = data.evidence.clarification === 'ADDRESS_NO_MATCH'
   if (data.evidence.responseKind === 'NO_MATCHES' && (data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY'
-      || data.recommendedProperties.length || data.citations.length || !data.evidence.criteria?.budgetVnd
+      || data.recommendedProperties.length || data.citations.length
+      || !(data.evidence.criteria?.budgetVnd || (addressSearch && text(data.evidence.addressQuery)))
       || data.evidence.recommendationSearch?.performed !== true || data.evidence.recommendationSearch.resultCount !== 0
       || data.evidence.recommendationSearch.sourcePath !== '/api/v1/recommendations'
       || !/^[a-f0-9]{64}$/.test(data.evidence.recommendationSearch.criteriaHash) || generation?.accepted !== false
@@ -132,12 +146,12 @@ export function chatError(error) {
 }
 
 export function createChatSession(send, { reactive = value => value, now = Date.now } = {}) {
-  const state = reactive({ messages: [], busy: false, startedAt: 0, retryAt: 0, failedQuestion: '', error: null, trimmed: false, sessionId: null })
+  const state = reactive({ messages: [], busy: false, startedAt: 0, retryAt: 0, failedQuestion: '', error: null, trimmed: false, sessionId: null, propertyId: null, propertyTitle: '' })
   let id = 0
   async function submit(question, retry = false) {
     if (state.busy || now() < state.retryAt) return false
     let request
-    try { request = chatRequest(question, state.sessionId) } catch (error) { state.error = chatError(error); return false }
+    try { request = chatRequest(question, state.sessionId, state.propertyId) } catch (error) { state.error = chatError(error); return false }
     state.busy = true; state.startedAt = now(); state.error = null; state.failedQuestion = ''
     if (!retry) state.messages.push({ id: ++id, role: 'user', text: request.question, sessionTurn: request.sessionId ? 'followup' : 'start' })
     try {
@@ -156,5 +170,13 @@ export function createChatSession(send, { reactive = value => value, now = Date.
     } finally { state.busy = false }
   }
   return { state, submit: question => submit(question), retry: () => state.error?.retry && submit(state.failedQuestion, true),
-    clear: () => { if (state.busy || now() < state.retryAt) return; state.messages.splice(0); state.error = null; state.failedQuestion = ''; state.trimmed = false; state.sessionId = null } }
+    // Switching listings keeps the session, budget and confirmed workplace; only the
+    // property the questions are about changes. Passing null drops the property context.
+    focusProperty: (propertyId, title = '') => {
+      state.propertyId = propertyId == null ? null : String(propertyId)
+      state.propertyTitle = propertyId == null ? '' : String(title || '')
+    },
+    /** Drop the listing context but keep the conversation, budget and workplace. */
+    reset: () => { state.propertyId = null; state.propertyTitle = '' },
+    clear: () => { if (state.busy || now() < state.retryAt) return; state.messages.splice(0); state.error = null; state.failedQuestion = ''; state.trimmed = false; state.sessionId = null; state.propertyId = null; state.propertyTitle = '' } }
 }

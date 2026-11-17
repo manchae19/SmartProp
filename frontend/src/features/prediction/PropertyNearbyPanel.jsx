@@ -15,7 +15,7 @@ export default function PropertyNearbyPanel({property,needs}){
  const [routeBusy,setRouteBusy]=useState(false),[routeError,setRouteError]=useState(''),[routeRetry,setRouteRetry]=useState(0);
  const routeSequence=useRef(0),mapHost=useRef(null);
  const sequence=useRef(0);
- const id=property?.id;
+ const id=property?.id && /^[0-9a-fA-F-]{36}$/.test(String(property.id)) ? String(property.id) : null;
  const scope=auth.user?.id+':'+auth.status;
  useEffect(()=>{
   let active=true;setProfile(null);setProfileReady(false);setGroups([]);setData(null);

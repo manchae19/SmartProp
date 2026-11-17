@@ -97,6 +97,12 @@ app:
     provider: ${GEOCODING_PROVIDER:GEOAPIFY}
     geoapify-key: ${GEOAPIFY_API_KEY:}
     google-key: ${GEOCODING_GOOGLE_API_KEY:}
+  # Vendor used for the trip to work. "OPENROUTESERVICE" uses HeiGIT's Matrix to rank a
+  # shortlist in one call; "GEOAPIFY" keeps the previous per-pair behaviour.
+  routing:
+    provider: ${APP_ROUTING_PROVIDER:GEOAPIFY}
+    openrouteservice-key: ${OPENROUTESERVICE_API_KEY:}
+    openrouteservice-url: ${OPENROUTESERVICE_URL:https://api.heigit.org/openrouteservice}
   valuation:
     enabled: false
     base-url: http://127.0.0.1:8000

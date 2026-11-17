@@ -53,7 +53,7 @@ public class AdminService {
     private Specification<User> userStatus(User.Status status) {return (r,q,cb)->status==null?cb.isNull(r.get("deletedAt")):cb.and(cb.isNull(r.get("deletedAt")),cb.equal(r.get("status"),status));}
     private Specification<Property> propertyStatus(Property.Status status) {return (r,q,cb)->status==null?cb.isNull(r.get("deletedAt")):cb.and(cb.isNull(r.get("deletedAt")),cb.equal(r.get("status"),status));}
     @Transactional(readOnly=true) public Map<String,Long> dashboard(Long actor) {
-        access.admin(actor);var none=new PropertySearch.Filters(null,null,null,null,null,null,null,null,null,null,null,null);
+        access.admin(actor);var none=new PropertySearch.Filters(null,null,null,null,null,null,null,null,null,null,null,null,null);
         return Map.of("users",users.count(userStatus(null)),"activeUsers",users.count(userStatus(User.Status.ACTIVE)),"lockedUsers",users.count(userStatus(User.Status.LOCKED)),
             "properties",properties.count(propertyStatus(null)),"pendingProperties",properties.count(propertyStatus(Property.Status.PENDING)),"publishedProperties",properties.count(PropertySearch.specification(none,Instant.now())),
             "openReports",reports.countByStatus(Report.Status.OPEN),"processingReports",reports.countByStatus(Report.Status.PROCESSING),"resolvedReports",reports.countByStatus(Report.Status.RESOLVED),"rejectedReports",reports.countByStatus(Report.Status.REJECTED));

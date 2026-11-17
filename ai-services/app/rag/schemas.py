@@ -21,6 +21,9 @@ class ChatRequest(BaseModel):
     # it only names an in-memory context entry. A public caller can never read a
     # research session because the store is namespaced by authenticated scope.
     sessionId: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
+    # Public listing the user is currently asking about. The server re-reads it through
+    # the public API on every turn, so a draft or private listing can never be addressed.
+    propertyId: str | None = Field(default=None, pattern=r"^[0-9a-fA-F-]{36}$")
 
 
 class Citation(BaseModel):

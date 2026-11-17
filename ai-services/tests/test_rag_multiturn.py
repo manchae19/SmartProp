@@ -47,6 +47,8 @@ class MultiTurnTests(unittest.TestCase):
         backend.amenity_summary.return_value = {"catalogVersion": "UNIT"}
         backend.settings.backend_url = "http://127.0.0.1:8080"
         backend.amenity_map.return_value = {"items": []}
+        # Address lookups are opt-in per test; the default is "nothing found".
+        backend.search_by_address.return_value = {"address": "", "total": 0, "items": []}
         backend.recommend.return_value = {"mode": "SAFE", "method": "HEURISTIC_V1_1",
             "topProperties": props if props is not None else [prop("property:a", 2000000000, 90),
                                                              prop("property:b", 2500000000, 85)],

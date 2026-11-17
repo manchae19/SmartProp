@@ -349,6 +349,19 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   {" m²"}
                 </p>
               </div>
+              {card.distanceMeters !== null && card.distanceMeters !== undefined ? (
+                <p
+                  {...mergeProps({
+                    className: "card-distance",
+                    "data-chat-distance": "",
+                    "data-sp-73584f77": "",
+                  })}
+                >
+                  {"Cách vị trí đã xác nhận "}
+                  {Math.round(card.distanceMeters)}
+                  {" m (đường chim bay)"}
+                </p>
+              ) : null}
               {card.reasons?.length ? (
                 <ul
                   {...mergeProps({
