@@ -26,3 +26,11 @@ test('Unicode source path is preserved through relay and second validation',()=>
  const p=packet();p.citations[0].url='https://example.org/tài-liệu';p.evidence.documents[0].url=p.citations[0].url;
  publicChatResponse(publicChatBody(p));
 });
+
+test('historical document snapshots remain readable without accepting stale live answers',()=>{
+ const p=packet();p.evidence.documents[0].validUntil='2000-01-01T00:00:00Z';
+ assert.throws(()=>publicChatResponse(p));
+ assert.equal(chatPresentation(p,{historical:true}).summary,p.answer);
+ p.citations[0].url='javascript:alert(1)';
+ assert.throws(()=>chatPresentation(p,{historical:true}));
+});

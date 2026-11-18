@@ -93,7 +93,7 @@ export default React.forwardRef(function ChatAmenityMap(props, ref) {
                 </span>)}
             </div>
             <p className="map-note" data-sp-6a8bc544="">
-              {"Điểm theo dữ liệu OpenStreetMap, chưa xác minh thực địa. Ghim vùng đại diện cho đối tượng bản đồ, không phải cổng vào. Không xác định khoảng cách tới căn nhà."}
+              {"Địa điểm theo nguồn bản đồ, chưa xác minh thực địa. Chọn ghim để xem tên và nguồn địa điểm."}
             </p>
             {view.data.truncated ? <p className="map-note" data-sp-6a8bc544="">
                 {"Đang hiển thị một phần địa điểm, tối đa 8 mỗi loại khi xem nhiều loại tiện ích."}

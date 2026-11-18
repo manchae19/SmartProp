@@ -29,14 +29,15 @@ class Settings:
     backend_timeout_seconds: float = 10.0
     research_enabled: bool = False
     demo_key: str = field(default="", repr=False)
+    checkpoint_key: str = field(default="", repr=False)
     sql_enabled: bool = False
     db_user: str = field(default="", repr=False)
     db_password: str = field(default="", repr=False)
 
     def __post_init__(self):
         u = urlsplit(self.backend_url)
-        if u.scheme != "http" or u.hostname != "127.0.0.1" or u.port != 8080 or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment:
-            raise ValueError("RAG backend must be http://127.0.0.1:8080")
+        if u.scheme != "http" or u.hostname != "127.0.0.1" or not (u.port and 1024 <= u.port <= 65535) or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment:
+            raise ValueError("RAG backend must use a loopback HTTP port")
         o = urlsplit(self.ollama_url)
         if o.scheme != "http" or o.hostname != "127.0.0.1" or o.port != 11434 or o.path not in ("", "/") or o.username or o.password or o.query or o.fragment:
             raise ValueError("Ollama must be http://127.0.0.1:11434")
@@ -62,5 +63,5 @@ class Settings:
                    ollama_keep_alive_seconds=int(os.getenv("RAG_OLLAMA_KEEP_ALIVE_SECONDS", "300")),
                    backend_timeout_seconds=float(os.getenv("RAG_BACKEND_TIMEOUT_SECONDS", "10")),
                    research_enabled=os.getenv("RAG_RESEARCH_ENABLED", "false").lower() == "true",
-                   demo_key=os.getenv("RAG_DEMO_KEY", ""), sql_enabled=os.getenv("RAG_SQL_ENABLED", "false").lower() == "true",
+                   checkpoint_key=os.getenv("CHAT_CHECKPOINT_KEY", ""), demo_key=os.getenv("RAG_DEMO_KEY", ""), sql_enabled=os.getenv("RAG_SQL_ENABLED", "false").lower() == "true",
                    db_user=os.getenv("RAG_DB_USER", ""), db_password=os.getenv("RAG_DB_PASSWORD", ""))

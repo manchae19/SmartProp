@@ -1,14 +1,15 @@
-import { session, restoreSession } from '../auth/api.js';
+import { createChatHistory } from './chatHistory.js';
+import { session, restoreSession, api } from '../auth/api.js';
 import { CHAT_TIMEOUT_MS, createChatSession, chatRequest, publicChatResponse } from './chat.js';
 const baseUrl = (import.meta.env?.VITE_CHAT_API_BASE_URL || '/api').replace(/\/$/, '');
 if (!/^\/[A-Za-z0-9/_-]*$/.test(baseUrl) || baseUrl.startsWith('//')) throw Error('Chat requires a same-origin API base path');
-let owner = null;
+
 async function send(request) {
   // Refresh through the existing auth client; no profile or user id is accepted from the browser.
   if (session.getSnapshot().user && !session.getSnapshot().token) await restoreSession();
   const current = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
-  const body = chatRequest(request.question, current === owner ? request.sessionId : null, request.propertyId);
-  owner = current;
+  const body = chatRequest(request.question, request.sessionId, request.propertyId);
+
   const headers = {
     'Content-Type': 'application/json',
     Accept: 'application/json'
@@ -47,7 +48,9 @@ async function send(request) {
     if ((session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id)) !== current) throw Object.assign(Error('Phiên đã thay đổi.'), {
       code: 'SESSION_CHANGED'
     });
-    return publicChatResponse(data);
+    const result = publicChatResponse(data);
+    if (current !== "guest") chatHistory.refresh(true);
+    return result;
   } catch (error) {
     if (error.name === 'AbortError') throw Object.assign(Error('Chat timeout'), {
       code: 'REQUEST_TIMEOUT'
@@ -59,13 +62,15 @@ async function send(request) {
 }
 export const chatSession = createChatSession(send, {});
 
-// The shared floating/full-page chat is tab-memory only and belongs to one identity.
+export const chatHistory = createChatHistory(chatSession, api, () => session.getSnapshot().user?.id == null ? null : String(session.getSnapshot().user.id));
+// Shared floating/full-page chat and history always belong to one identity.
 let visibleOwner = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
 session.subscribe(() => {
   const nextOwner = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
   if (nextOwner !== visibleOwner) {
     visibleOwner = nextOwner;
-    owner = null;
+    chatHistory.reset();
     chatSession.getSnapshot().reset();
+    if (nextOwner !== "guest") chatHistory.refresh();
   }
 });

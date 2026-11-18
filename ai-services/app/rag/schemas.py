@@ -17,7 +17,8 @@ class ChatRequest(BaseModel):
     limit: int = Field(default=10, ge=1, le=10, strict=True)
     requireGeneration: bool = False
     # Opaque server-issued conversation handle. It carries NO authority and NO facts;
-    # it only names an in-memory context entry. A public caller can never read a
+    # it names temporary public context or a durable account-owned conversation.
+    # The authenticated API enforces ownership. A public caller can never read a
     # research session because the store is namespaced by authenticated scope.
     sessionId: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
 

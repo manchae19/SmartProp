@@ -261,6 +261,16 @@ class ConversationTests(unittest.TestCase):
             self.assertEqual(second.headers['cache-control'],'no-store')
             invalid=client.post('/chat',json={'question':'test','budgetVnd':2,'minPriceVnd':3})
             self.assertEqual(invalid.status_code,422)
+    def test_area_places_are_current_deduplicated_and_not_budget_intake(self):
+        self.backend.amenity_map=lambda district,category: {'items':[{'name':'Bệnh viện A'},{'name':'Bệnh viện A'},{'name':'Bệnh viện B'}]}
+        result=self.chat('Ở Hải Châu có những bệnh viện nào?')
+        self.assertEqual(result.evidence['responseKind'],'AREA_AMENITIES')
+        self.assertEqual(result.answer.count('Bệnh viện A'),1)
+        self.assertNotIn('DISTRICT_FACILITY',result.answer)
+        self.assertNotIn('poi-evidence',result.answer)
+        self.assertNotIn('ngân sách',result.answer)
+        self.assertEqual(result.evidence['amenityIntent']['district'],'Hải Châu')
+
     def test_places_failure_is_not_a_chat_502(self):
         from app.rag.tools import UpstreamError
         def fail(*args):raise UpstreamError()

@@ -74,6 +74,7 @@ export function poiColorBorder(category) {
 }
 export function poiSvgPath(category) {
   const cat = String(category || '').toUpperCase();
+  if (cat === 'MALL') return 'M4 21V7h16v14M2 21h20M8 7V3h8v4M8 11h2m4 0h2m-8 4h2m4 0h2M10 21v-3h4v3';
   if (cat === 'BEACH') return 'M3 17q3-4 6 0t6 0t6 0M3 21q3-4 6 0t6 0t6 0M5 9a7 7 0 0 1 14 0H5zm7-7v11';
   if (cat === 'MARKET') return 'M3 10h18l-2-6H5l-2 6zm2 0v11h14V10M9 21v-7h6v7';
   if (cat === 'PHARMACY') return 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z';

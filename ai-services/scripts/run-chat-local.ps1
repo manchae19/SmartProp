@@ -2,6 +2,7 @@ param([ValidateRange(1024,65535)][int]$Port=8001)
 $ErrorActionPreference='Stop'
 $ai=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=[IO.Path]::GetFullPath((Join-Path $ai '..'))
+. (Join-Path $root 'backend/scripts/load-env.ps1')
 $python=Join-Path $root '.scratch/rag-venv/Scripts/python.exe'
 $e5=Join-Path $root '.scratch/rag-models/multilingual-e5-small'
 $corpus=Join-Path $root '.scratch/rag-data/public-corpus.json'

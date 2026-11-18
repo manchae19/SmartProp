@@ -118,7 +118,7 @@ class ChatOrchestrator:
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
         if extra:
             payload.update(extra)
-        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE"):
+        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE","AREA_AMENITIES"):
             needs = projection(context, criteria or {})
             payload["needs"] = needs
             if not payload.get("quickReplies"):
@@ -224,7 +224,7 @@ class ChatOrchestrator:
         if traced("amenity_summary", self.backend.amenity_summary)["catalogVersion"] != corpus["summary"]["catalogVersion"]:
             raise GroundingError("PUBLIC_CORPUS_VERSION_DRIFT")
         documents = corpus["documents"]
-        names = sorted({d["metadata"].get("district", "") for d in documents}, key=len, reverse=True)
+        names = sorted({d["metadata"].get("district", "") for d in documents} | ({"Hải Châu","Sơn Trà","Thanh Khê","Cẩm Lệ","Ngũ Hành Sơn","Liên Chiểu","Hòa Vang"} if turn["intent"]=="AREA_AMENITIES" else set()), key=len, reverse=True)
         if account and not resumed:
             seed(context,account,names)
         explicit_district = request.district or detect_district(request.question, names)
@@ -236,6 +236,9 @@ class ChatOrchestrator:
         amenity_scope = None
         if categories and not turn["searchChange"] and turn["ordinal"] is None and not turn["needsPropertyReference"]:
             amenity_scope = amenity_locality(request.question,documents)
+            # An explicit district-only question must not be misread as an unresolved ward.
+            if explicit_district and not re.search(r"\b(phuong|xa|duong|street)\b",unicodedata.normalize("NFD",request.question.lower().replace("đ","d")).encode("ascii","ignore").decode()):
+                amenity_scope = None
             if amenity_scope and (amenity_scope.get("unresolved") or (explicit_district and explicit_district != amenity_scope.get("district"))):
                 return self._reply(request,session_id,context,prior,properties=[],citations=[],research=research,
                     answer="Chưa có hồ sơ nguồn xác định đúng phường/xã hoặc tuyến đường bạn hỏi. Tôi không tự mở rộng kết quả sang cả quận. Bạn nêu rõ địa bàn hoặc chọn một căn có ghim để tìm tiện ích xung quanh nhé.",
@@ -308,6 +311,20 @@ class ChatOrchestrator:
             text+=" Tôi chưa tự tìm nhà; bạn có thể yêu cầu tìm theo tiêu chí này. Hồ sơ tài khoản không thay đổi."
             return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
                 answer=text,responseKind="CRITERIA_UPDATED",extra={"quickReplies":["Tìm bất động sản theo tiêu chí đã lưu"]})
+        if turn["intent"]=="AREA_AMENITIES" and district and categories and not amenity_scope:
+            # Area questions use current Places evidence, never recommendation intake or raw corpus prose.
+            found=[]; provider_errors=0
+            for category in categories:
+                try:
+                    mapped=self.tools.data("places",district,category)
+                    found.extend(mapped.get("items",[]))
+                except (UpstreamError,GroundingError):
+                    provider_errors+=1
+            names=list(dict.fromkeys(i["name"].strip() for i in found if i.get("name")))
+            label=", ".join(CATEGORY_LABELS.get(c,c) for c in categories)
+            answer=(f"Tại {district}, dữ liệu địa điểm có: "+"; ".join(names[:12])+". Chọn ghim trên bản đồ để xem địa điểm và nguồn.") if names else f"Chưa lấy được địa điểm {label} có tọa độ phù hợp tại {district}. Bạn có thể thử lại sau."
+            citations=[Citation(sourceId="poi-evidence:"+digest({"district":district,"categories":list(categories)})[:16],url="/api/v1/amenities/"+next((d["metadata"]["areaId"] for d in documents if d["kind"]=="AREA_AMENITY" and d["metadata"].get("areaLevel")=="DISTRICT" and d["metadata"].get("district")==district),"district"),version="POI_MAP_V1",contentHash=digest(found),kind="POI_EVIDENCE",scope="PUBLIC",title="Địa điểm tại "+district)] if names else []
+            return self._reply(request,session_id,context,criteria,properties=[],citations=citations,research=research,answer=answer,responseKind="AREA_AMENITIES" if names else "INSUFFICIENT_AMENITY_EVIDENCE",extra={"amenityIntent":{"district":district,"categories":list(categories),"mapAvailable":True}},limitations=["Địa điểm theo nguồn bản đồ, chưa xác minh thực địa hoặc giờ hoạt động."]+(["Dịch vụ địa điểm chưa sẵn sàng; vui lòng thử lại."] if provider_errors else []))
         if turn["intent"]=="AREA_AMENITIES":
             context.needs.pop("pending",None)
             decision={"search":False,"question":None,"choices":[]}

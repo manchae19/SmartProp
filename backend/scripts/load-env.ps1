@@ -37,3 +37,13 @@ if (Test-Path -LiteralPath $cloudinaryLocal -PathType Leaf) {
     }
     Write-Host 'Loaded backend Cloudinary local settings. Secret values are hidden.'
 }
+
+# Shared local-only key for durable advisor checkpoints. Never print the value.
+$checkpointLocal = Join-Path $PSScriptRoot '../../.env.chat-checkpoint.local'
+if (Test-Path -LiteralPath $checkpointLocal -PathType Leaf) {
+    $checkpointLines = @([IO.File]::ReadAllLines((Resolve-Path -LiteralPath $checkpointLocal).Path) | Where-Object { $_.Trim() -and -not $_.Trim().StartsWith('#') })
+    if ($checkpointLines.Count -ne 1 -or $checkpointLines[0] -notmatch '^CHAT_CHECKPOINT_KEY=([A-Za-z0-9_+/-]{43,128}={0,2})$') { throw 'Invalid local checkpoint key file; expected one CHAT_CHECKPOINT_KEY entry.' }
+    [Environment]::SetEnvironmentVariable('CHAT_CHECKPOINT_KEY', $Matches[1], 'Process')
+    $checkpointLines = $null
+    Write-Host 'Loaded shared chat checkpoint key. Secret value is hidden.'
+}

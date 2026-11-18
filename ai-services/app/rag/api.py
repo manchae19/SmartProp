@@ -17,6 +17,7 @@ from .document_store import DocumentStore
 from .document_advisor import DocumentAdvisor
 from .schemas import ChatRequest, ChatResponse
 from .tools import BackendTools, PublishedPropertyRepository, UpstreamError
+from .checkpoints import durable_chat
 from .diagnostics import event, reason, request_trace
 
 
@@ -79,7 +80,9 @@ def create_chat_app(settings=None, orchestrator=None):
             event("response", status=429, reason="CHAT_BUSY")
             raise HTTPException(429, "Chat đang bận; vui lòng thử lại.")
         try:
-            return orchestrator.chat(payload, research=research, token=token, **({"account": account} if account else {}))
+            if account:
+                return durable_chat(orchestrator, payload, token, account)
+            return orchestrator.chat(payload, research=research, token=token)
         except UpstreamError as e:
             event("response", status=e.status, reason="BACKEND_UPSTREAM_ERROR")
             raise HTTPException(e.status, "Công cụ Backend chưa sẵn sàng hoặc không đủ quyền truy cập.") from None
@@ -105,7 +108,7 @@ def create_chat_app(settings=None, orchestrator=None):
             account=orchestrator.backend.account_context(authorization)
         except UpstreamError as e:
             raise HTTPException(e.status,"Account context unavailable") from None
-        return run(payload,account=account)
+        return run(payload,token=authorization,account=account)
 
     @app.delete("/chat/session/{session_id}")
     def end_session(session_id: str):

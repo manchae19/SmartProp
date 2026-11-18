@@ -89,6 +89,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/register","/api/v1/auth/login","/actuator/health","/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/auth/logout").access((authentication,context)->new org.springframework.security.authorization.AuthorizationDecision(refreshEnabled || authentication.get()!=null && authentication.get().isAuthenticated() && !(authentication.get() instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)))
                 .requestMatchers("/api/v1/users/me/sessions","/api/v1/users/me/sessions/*","/api/v1/auth/email-verification/request").authenticated()
+                .requestMatchers("/api/v1/users/me/advisor-chats", "/api/v1/users/me/advisor-chats/**").authenticated()
                 .requestMatchers("/api/v1/users/me/valuation-history","/api/v1/users/me/valuation-history/*").authenticated()
                 .requestMatchers("/api/v1/users/me/avatar","/api/v1/users/me/avatar/content").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

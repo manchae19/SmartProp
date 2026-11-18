@@ -100,7 +100,7 @@ export function citationHref(citation, properties) {
   } catch {/* Reject malformed/unexpected sources instead of rendering a raw href. */}
   return null;
 }
-export function publicChatResponse(data) {
+export function publicChatResponse(data, { historical = false } = {}) {
   if (!data || data.mode !== 'SAFE' || blocked.test(JSON.stringify(data)) || secretKeys.test(JSON.stringify(data)) || !text(data.answer) || data.answer.length > 40000 || !['EVIDENCE_ONLY', 'QWEN_GROUNDED_ANSWER', 'QWEN_GROUNDED_PLAN'].includes(data.generationMode) || !['E5_FAISS', 'TOOL_EVIDENCE_ONLY'].includes(data.retrievalMode) || !Array.isArray(data.recommendedProperties) || data.recommendedProperties.length > 10 || !Array.isArray(data.citations) || data.citations.length > 100 || !strings(data.dataLimitations) || !data.evidence || typeof data.evidence !== 'object') throw invalid();
   const needs = data.evidence.needs;
   if (needs !== undefined && (!needs || !strings(needs.summary) || needs.summary.length > 12 || !strings(needs.priorities) || needs.priorities.length > 4 || !strings(needs.limitations) || needs.summary.some(v => v.length > 300))) throw invalid();
@@ -148,7 +148,7 @@ export function publicChatResponse(data) {
       const source = documentCitations.find(c => c.sourceId === doc.sourceId);
       if (!source || seenDocuments.has(doc.sourceId) || source.url !== doc.url || source.version !== doc.version || source.title !== doc.title || !text(doc.publisher) || !text(doc.jurisdiction)) throw invalid();
       const dates = ['publishedAt','retrievedAt','validUntil'].map(k => Date.parse(doc[k]));
-      if (dates.some(v => !Number.isFinite(v)) || dates[0] > dates[1] || dates[1] > Date.now()+5000 || dates[2] <= Date.now()) throw invalid();
+      if (dates.some(v => !Number.isFinite(v)) || dates[0] > dates[1] || dates[1] > Date.now()+5000 || (!historical && dates[2] <= Date.now())) throw invalid();
       seenDocuments.add(doc.sourceId);
     }
   }
@@ -193,10 +193,12 @@ export function chatError(error) {
     delayMs: 5000
   };
   if ([401, 403].includes(error?.status)) return {
-    text: 'Dịch vụ chat công khai chưa sẵn sàng. Bạn không cần đổi tài khoản hoặc bật chế độ nghiên cứu.',
+    text: 'Phiên đăng nhập đã hết hạn hoặc bạn không có quyền truy cập hội thoại. Hãy đăng nhập lại hoặc tạo hội thoại mới.',
     retry: false,
     delayMs: 0
   };
+  if (error?.status === 409) return { text: "Hội thoại đã được cập nhật ở nơi khác. Chọn lại hội thoại trong lịch sử trước khi gửi tiếp.", retry: false, delayMs: 0 };
+  if (error?.status === 404) return { text: "Không tìm thấy hội thoại hoặc bạn không có quyền truy cập. Hãy chọn lại hoặc tạo hội thoại mới.", retry: false, delayMs: 0 };
   if (error?.status === 422 || error?.code === 'INVALID_CHAT_QUESTION') return {
     text: 'Câu hỏi chưa hợp lệ. Nhập từ 1 đến 2.000 ký tự rồi gửi lại.',
     retry: false,
@@ -280,6 +282,15 @@ export function createChatSession(send, {
   }
   return combineStateStores([state], () => ({
     state: state.getSnapshot(),
+    restore: saved => {
+      if (!/^[a-f0-9]{32}$/.test(saved.id) || !Array.isArray(saved.turns) || saved.turns.length > 12) throw invalid();
+      const messages = saved.turns.flatMap(turn => {
+        if (!text(turn.question) || turn.question.length > 2000) throw invalid();
+        return [{id: ++id, role: "user", text: turn.question}, {id: ++id, role: "assistant", response: publicChatResponse(turn.response, {historical:true}), historical:true}];
+      });
+      generation++;
+      state.edit(d => Object.assign(d, {messages, sessionId:saved.id, busy:false, error:null, retryAt:0, failedQuestion:"", propertyContext:null, trimmed:!!saved.trimmed}));
+    },
     focusProperty: (id, label) => {
       chatRequest('context', null, id);
       generation++;

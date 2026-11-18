@@ -110,7 +110,8 @@ function useChatAdvisorViewState(inputProps, forwardedRef) {
   }
   function newConversation() {
     if (getLocked()) return;
-    chatSession.getSnapshot().clear();
+    chatSession.getSnapshot().reset();
+    drawer.set(false);
     draft.set("");
     scrollLatest();
     afterPaint(() => {
@@ -158,7 +159,7 @@ function useChatAdvisorViewState(inputProps, forwardedRef) {
     result?.catch?.(console.error);
     return () => dispose?.();
   }, [stateKey(_watched)]);
-  const _watched2 = (() => [chatSession.getSnapshot().state.messages.length, chatSession.getSnapshot().state.busy, chatSession.getSnapshot().state.error])();
+  const _watched2 = (() => [chatSession.getSnapshot().state.sessionId, chatSession.getSnapshot().state.messages.length, chatSession.getSnapshot().state.busy, chatSession.getSnapshot().state.error])();
   const _previous2 = useRef(_watched2),
     _initialized2 = useRef(false);
   useEffect(() => {
@@ -246,7 +247,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
       <div className={classNames(["messenger-shell", {
         "sidebar-collapsed": !view.sidebar
       }])} data-sp-b5f8ab84="">
-        {view.sidebar ? <aside className="desktop-chat-panel" aria-label="Hội thoại trong tab" data-sp-b5f8ab84="">
+        {view.sidebar ? <aside className="desktop-chat-panel" aria-label="Lịch sử hội thoại" data-sp-b5f8ab84="">
             <div className="panel-title" data-sp-b5f8ab84="">
               <h2 data-sp-b5f8ab84="">
                 {"Tin nhắn"}
@@ -255,7 +256,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                 {"SmartProp"}
               </span>
             </div>
-            <ChatSessionPanel preview={view.preview} locked={view.locked} onChoose={$event => {
+            <ChatSessionPanel onNew={view.newConversation} preview={view.preview} locked={view.locked} onChoose={$event => {
             return view.choose?.($event);
           }} onCurrent={$event => {
             return view.currentConversation?.($event);
@@ -285,7 +286,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                 {"Trợ lý tư vấn bất động sản"}
               </p>
             </div>
-            <button type="button" className="chat-icon-button new-chat" disabled={view.locked || !view.state.messages.length} aria-label="Tạo hội thoại mới" title="Bắt đầu lại sẽ xóa hội thoại hiện tại trong tab" onClick={$event => {
+            <button type="button" className="chat-icon-button new-chat" disabled={view.locked || !view.state.messages.length} aria-label="Tạo hội thoại mới" title="Bắt đầu hội thoại mới; hội thoại đã lưu vẫn nằm trong lịch sử" onClick={$event => {
               return view.newConversation?.($event);
             }} data-sp-b5f8ab84="">
               <AppIcon name="edit" data-sp-b5f8ab84="" />
@@ -300,7 +301,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
             }} data-sp-b5f8ab84="">
               <div className="thread-date" data-sp-b5f8ab84="">
                 <span data-sp-b5f8ab84="">
-                  {"Hội thoại trong tab này"}
+                  {"Lịch sử hội thoại này"}
                 </span>
               </div>
               {!view.state.messages.length ? <div className="chat-welcome" data-sp-b5f8ab84="">
@@ -331,8 +332,9 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                     {"Nhập nhu cầu tìm nhà của bạn để bắt đầu."}
                   </p>
                 </div> : null}
+              {view.state.messages.some(m => m.historical) && <p className="trimmed-note" data-sp-b5f8ab84="">Nội dung lịch sử là thông tin tại thời điểm trả lời. Gửi câu hỏi mới để kiểm tra dữ liệu hiện tại.</p>}
               {view.state.trimmed ? <p className="trimmed-note" data-sp-b5f8ab84="">
-                  {"Đang hiển thị 24 tin nhắn gần nhất trong tab."}
+                  {"Đang hiển thị 24 tin nhắn gần nhất. Nội dung cũ là thông tin tại thời điểm trả lời."}
                 </p> : null}
               {((items, render) => typeof items === "number" ? Array.from({
                 length: Math.max(0, items)
@@ -354,7 +356,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                             <ul>{message.response.evidence.needs.summary.map((item, index) => <li key={index}>{item}</li>)}</ul>
                             <small>Bạn có thể gõ để sửa ngân sách, khu vực hoặc thứ tự ưu tiên.</small>
                           </aside> : null}
-                      <ChatAnswer result={message.response} messageId={message.id} question={view.questionFor(message.id)} onReading={$event => {
+                      <ChatAnswer historical={message.historical} result={message.response} messageId={message.id} question={view.questionFor(message.id)} onReading={$event => {
                       return view.reading?.($event);
                     }} onResized={$event => {
                       return view.answerResized?.($event);
@@ -452,7 +454,7 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
       }} data-sp-b5f8ab84="" open={view.drawer} onUpdateOpen={$value => {
         view.updateDrawerValue($value);
       }}>
-        <ChatSessionPanel preview={view.preview} locked={view.locked} onChoose={$event => {
+        <ChatSessionPanel onNew={view.newConversation} preview={view.preview} locked={view.locked} onChoose={$event => {
           return view.choose?.($event);
         }} onCurrent={$event => {
           return view.currentConversation?.($event);

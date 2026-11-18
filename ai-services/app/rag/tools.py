@@ -13,7 +13,7 @@ def _is_number(value):
 
 class UpstreamError(RuntimeError):
     def __init__(self, status=502):
-        self.status = status if status in (401, 403, 404) else 502
+        self.status = status if status in (401, 403, 404, 409, 503) else 502
         super().__init__("BACKEND_TOOL_UNAVAILABLE")
 
 

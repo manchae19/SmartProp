@@ -380,7 +380,7 @@ export default React.forwardRef(function BrowseTileMap(props, ref) {
       }} aria-label={point.name + " · " + (point.categoryLabel || view.poiLabel(point.category))} title={point.name + " (" + (point.categoryLabel || view.poiLabel(point.category)) + ")"} aria-pressed={view.selectedPoiId === point.id} data-poi-id={point.id} onClick={$event => {
         view.onSelectPoi?.(view.selectedPoiId === point.id ? null : point.id);
       }} data-sp-434e5650="">
-          <PoiIcon category={point.category} className="size-3.5 text-brand-navy" data-sp-434e5650="" />
+          <PoiIcon category={point.category} className="poi-pin-icon" data-sp-434e5650="" />
         </button>)}
       {view.selectedPoiMarker ? <div data-map-control="" className={classNames(["poi-map-popup", {
         flipped: view.isPopupFlipped

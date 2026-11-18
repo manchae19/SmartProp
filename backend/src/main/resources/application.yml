@@ -107,6 +107,7 @@ app:
     enabled: false
   seed:
     enabled: false
+  chat-checkpoint-key: ${CHAT_CHECKPOINT_KEY:}
   jwt-secret: ${JWT_SECRET}
   token-minutes: ${ACCESS_TOKEN_MINUTES:15}
   storage-root: ${STORAGE_ROOT:./var/uploads}

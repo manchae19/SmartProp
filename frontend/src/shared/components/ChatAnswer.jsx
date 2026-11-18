@@ -47,7 +47,7 @@ function useChatAnswerState(inputProps, forwardedRef) {
   _props.current = props;
   const [expanded] = useState(() => createStateStore(false));
   useSyncExternalStore(expanded.subscribe, expanded.getSnapshot);
-  const getView = () => chatPresentation(_props.current.result);
+  const getView = () => chatPresentation(_props.current.result, {historical:!!_props.current.historical});
   const getIntent = () => amenityIntent(_props.current.question, _props.current.result);
   const [mapData] = useState(() => createStateStore(null)),
     [mapStatus] = useState(() => createStateStore("idle"));
@@ -73,6 +73,7 @@ function useChatAnswerState(inputProps, forwardedRef) {
     }
   }
   useEffect(() => {
+    _disposedRef.current = false;
     const result = loadMap();
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
@@ -100,7 +101,7 @@ function useChatAnswerState(inputProps, forwardedRef) {
     visibleCards: getVisibleCards(),
     expand,
     reading,
-    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["result", "messageId", "question", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["historical", "result", "messageId", "question", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function ChatAnswer(props, ref) {
@@ -163,7 +164,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.reason)}
                 </p> : null}
               <div className="card-footer" data-sp-73584f77="">
-                <span className="card-score" data-sp-73584f77="">
+                <span className="card-score" hidden={card.score == null} data-sp-73584f77="">
                   <strong data-sp-73584f77="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(card.score)}
                   </strong>
@@ -220,7 +221,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.number)}
                 </span>
                 <div className="source-body" data-sp-73584f77="">
-                  {source.kind === 'PROPERTY_DETAIL' && <ListingAnalysisBasis analysis={view.result.evidence.listingAnalysis} />}
+                  {source.kind === 'PROPERTY_DETAIL' && view.result.evidence.listingAnalysis && <ListingAnalysisBasis analysis={view.result.evidence.listingAnalysis} />}
                   <a href={source.href} target="_blank" rel="noopener noreferrer" data-chat-citation="" data-sp-73584f77="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.kind === 'PROPERTY_DETAIL' ? 'Xem tin đăng gốc ↗' : source.label)}
                   </a>
@@ -288,7 +289,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             </ul>
           </details>
         </details> : null}
-      {view.view.citations.length ? <p className="answer-caution" data-sp-73584f77="">
+      {view.view.citations.length && !view.result?.evidence?.amenityIntent ? <p className="answer-caution" data-sp-73584f77="">
           {view.view.isListingSource ? "Các phép tính dựa trên số liệu người đăng kê khai; không phải kết quả thẩm định hoặc xác minh doanh thu." : "Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."}
         </p> : null}
     </div></>;
