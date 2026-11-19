@@ -1,5 +1,5 @@
 import unittest
-from decimal import Decimal
+from unittest.mock import patch, Mock
 
 from app.rag.tools import PublishedPropertyRepository, _public_text
 from app.rag.config import Settings
@@ -15,21 +15,32 @@ class PublicPropertyProjectionTests(unittest.TestCase):
 
     def test_public_row_never_exposes_private_columns(self):
         repository = PublishedPropertyRepository(Settings())
-        row = {
-            "id": "property-1", "listing_code": "SP001", "title": "Nhà thử",
-            "description": "Mô tả", "price": Decimal("2000000000"), "area_sqm": Decimal("80"),
-            "property_type": "HOUSE", "transaction_type": "SALE", "district": "Hải Châu",
-            "ward": "Hải Châu 1", "address": "Địa chỉ", "city": "Đà Nẵng",
-            "bedrooms": 3, "bathrooms": 2, "floor": "2", "direction": "Đông",
-            "declared_amenities": "[]", "coordinate_srid": 4326,
-            "latitude": 16.0, "longitude": 108.0, "project_name": None,
-        }
-        public = repository._public_row(row, [], None)
+        uid='00000000-0000-4000-8000-000000000001'
+        row={'id':uid,'status':'PUBLISHED','listingCode':'SP001','title':'Nhà thử 0905 123 456',
+             'owner_id':42,'contact_phone':'0905 123 456','storage_key':'private',
+             'images':[{'id':'image-1','url':f'/api/v1/properties/{uid}/images/image-1/content'}]}
+        client=Mock();client.get.return_value.status_code=200
+        client.get.return_value.json.return_value={'items':[row],'totalPages':1}
+        with patch('app.rag.tools.httpx.Client') as factory:
+            factory.return_value.__enter__.return_value=client
+            public=repository.list_public_images()[0]
         for forbidden in ("owner_id", "contact_phone", "contact_email", "uploaded_by",
                           "storage_key", "review_reason", "sha256"):
             self.assertNotIn(forbidden, public)
-        self.assertEqual(public["listing_code"], "SP001")
-        self.assertEqual(public["bedrooms"], 3)
+        self.assertEqual(public["listingCode"], "SP001")
+        self.assertNotIn('0905',public['title'])
+
+    def test_image_catalog_keeps_cloudinary_and_rejects_other_origins(self):
+        uid='00000000-0000-4000-8000-000000000001'
+        client=Mock();client.get.return_value.status_code=200
+        client.get.return_value.json.return_value={'items':[{'id':uid,'status':'PUBLISHED','images':[
+            {'id':'approved','url':'https://res.cloudinary.com/demo/image/upload/sample.jpg'},
+            {'id':'blocked','url':'https://res.cloudinary.com.evil.example/sample.jpg'},
+            {'id':'private','url':'http://127.0.0.1:9999/private'}]}],'totalPages':1}
+        with patch('app.rag.tools.httpx.Client') as factory:
+            factory.return_value.__enter__.return_value=client
+            result=PublishedPropertyRepository(Settings()).list_public_images()
+        self.assertEqual([item['imageId'] for item in result],['approved'])
 
 
 if __name__ == "__main__":

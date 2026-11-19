@@ -586,6 +586,15 @@ class BackendTools:
                 "items": results, "complete": complete, "pagesRead": page}
 
 
+def _public_text(value, max_length=1000):
+    text = re.sub(r"<[^>]*>", " ", str(value or ""))
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
+    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.-]?\d){8,10}(?!\d)", "[redacted-phone]", text)
+    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|sampleListingCount|raw_payload)\b",
+                  "[redacted]", text, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", text).strip()[:max_length]
+
+
 class PublishedPropertyRepository:
     """Only the publication projection already used by Hybrid V1.1; no crawler table access."""
     def __init__(self, settings):
@@ -608,8 +617,12 @@ class PublishedPropertyRepository:
                     if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}",uid):continue
                     for image in item.get("images") or []:
                         url=image.get("url","")
-                        if not url.startswith("/api/v1/properties/"+uid+"/images/") or ".." in url or "//" in url:continue
-                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":str(item.get("title") or "")[:255],"district":item.get("district"),"ward":item.get("ward")})
+                        if not isinstance(url,str):continue
+                        local=url.startswith("/api/v1/properties/"+uid+"/images/") and ".." not in url and "//" not in url
+                        cloud=url.startswith("https://res.cloudinary.com/") and ".." not in url
+                        if not (local or cloud):continue
+                        fetch_url=(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url if local else url
+                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":fetch_url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":_public_text(item.get("title"),255),"district":item.get("district"),"ward":item.get("ward")})
                         if len(result)>=limit:return result
                 if not items or page+1>=body.get("totalPages",1):break
         return result
@@ -623,7 +636,7 @@ class PublishedPropertyRepository:
             raise GroundingError("INVALID_PROPERTY_IDS")
         try:
             import pymysql
-            with pymysql.connect(host="127.0.0.1", port=3306, database="smartprop",
+            with pymysql.connect(host=self.settings.sql_host, port=self.settings.sql_port, database=self.settings.sql_database,
                     user=self.settings.db_user, password=self.settings.db_password, charset="utf8mb4",
                     autocommit=False, init_command="SET SESSION TRANSACTION READ ONLY",
                     connect_timeout=3, read_timeout=5, cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -631,12 +644,13 @@ class PublishedPropertyRepository:
                 with conn.cursor() as cur:
                     cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
                     identity = cur.fetchone()
-                    if identity != {"db": "smartprop", "port": 3306, "read_only": 1}:
+                    if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
+                    table = "rag_public_properties" if self.settings.sql_use_views else "properties"
                     cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"
                         "CASE WHEN ST_SRID(location)=4326 THEN ST_Latitude(location) END latitude,"
-                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM properties "
+                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM " + table + " "
                         "WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6)) "
                         "AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL' AND price>0 AND area_sqm>0 "
                         f"AND id IN ({placeholders}) ORDER BY id LIMIT 10", tuple(ids))

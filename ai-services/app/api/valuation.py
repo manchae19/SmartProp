@@ -26,6 +26,10 @@ def real_features_enabled() -> bool:
     return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def preview_enabled() -> bool:
+    return os.environ.get("SMARTPROP_V1_3_PREVIEW_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 OPTIONAL_INPUTS = [
     "road_width_m", "frontage_width_m", "street_name", "project_name",
     "bathrooms", "house_direction", "balcony_direction",
@@ -45,14 +49,15 @@ def model_options(request: Request):
         supported_types = [str(item).lower() for item in predictor_v1_3.info().get("supported_types", [])]
     supported_categories = sorted({TYPE_TO_CATEGORY[item] for item in supported_types if item in TYPE_TO_CATEGORY})
     enabled = real_features_enabled()
+    available = predictor_v1_3 is not None and preview_enabled()
     data["v1_3"] = {
-        "available": predictor_v1_3 is not None,
-        "status": "PREVIEW_EXPERIMENTAL" if predictor_v1_3 is not None else "UNAVAILABLE",
+        "available": available,
+        "status": "PREVIEW_EXPERIMENTAL" if available else "UNAVAILABLE",
         "real_features_enabled": enabled,
-        "optional_inputs": list(OPTIONAL_INPUTS) if enabled and predictor_v1_3 is not None else [],
+        "optional_inputs": list(OPTIONAL_INPUTS) if enabled and predictor_v1_3 is not None and preview_enabled() else [],
         "supported_types": supported_types,
         "supported_categories": supported_categories,
-        "unavailable_reason": None if predictor_v1_3 is not None else "V1.3 artifacts unavailable",
+        "unavailable_reason": None if available else "V1.3 preview disabled" if not preview_enabled() else "V1.3 artifacts unavailable",
     }
     return data
 
@@ -84,12 +89,14 @@ def predict(payload: ValuationRequest, request: Request, background_tasks: Backg
 
 @router.post("/predict/v1_3_preview", response_model=V1_3PreviewResponse)
 def predict_v1_3_preview(payload: ValuationRequest, request: Request):
-    """Safe authenticated developer preview endpoint for V1.3 Multi-Source XGBoost.
+    """Explicitly enabled public experimental V1.3 preview, without admin credentials.
 
     Does NOT replace public V6. Exposes V1.3 prediction and TreeSHAP explainability
     for research, staging preview, and side-by-side model auditing without requiring
     administrative master credentials in client code.
     """
+    if not preview_enabled():
+        raise HTTPException(503, "V1.3 preview is disabled")
     predictor_v1_3 = getattr(request.app.state, "predictor_v1_3", None)
     if predictor_v1_3 is None:
         raise HTTPException(
@@ -102,7 +109,7 @@ def predict_v1_3_preview(payload: ValuationRequest, request: Request):
     except (ValueError, KeyError) as err:
         raise HTTPException(status_code=422, detail=str(err)) from err
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Lỗi suy luận mô hình V1.3: {exc}") from exc
+        raise HTTPException(status_code=500, detail="Mô hình V1.3 chưa xử lý được yêu cầu.") from exc
 
     return {
         "is_preview": True,

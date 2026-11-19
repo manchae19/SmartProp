@@ -1,496 +1,136 @@
-import { classNames } from "../../shared/lib/ui.js";
-import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
-import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
-import { SiteLink } from "../../app/navigation.jsx";
-import { buildValuationPayload, createValuationClient, featureLabels, formatPrice, locationLabel, warningLabel } from "./valuation.js";
-import { session, errorText } from "../auth/api.js";
-import { createHistoryClient } from "./history.js";
-import "./ValuationPanel.css";
-function useValuationPanelState(inputProps, forwardedRef) {
-  inputProps = {
-    initialInput: (() => ({}))(),
-    ...inputProps
-  };
-  const _propsLatest = useRef(inputProps);
-  _propsLatest.current = inputProps;
-  useSyncExternalStore(session.subscribe, session.getSnapshot);
-  const props = {
-    initialInput: (() => ({}))(),
-    ...inputProps
-  };
-  const _props = useRef(props);
-  _props.current = props;
-  const [history] = useState(() => createHistoryClient());
-  const [saving] = useState(() => createStateStore(false)),
-    [saved] = useState(() => createStateStore(false)),
-    [saveError] = useState(() => createStateStore(""));
-  useSyncExternalStore(saveError.subscribe, saveError.getSnapshot);
-  useSyncExternalStore(saved.subscribe, saved.getSnapshot);
-  useSyncExternalStore(saving.subscribe, saving.getSnapshot);
-  const _resultInputRef = useRef(undefined),
-    _saveKeyRef = useRef(undefined);
-  const [client] = useState(() => createValuationClient());
-  const [options] = useState(() => createStateStore(null));
-  useSyncExternalStore(options.subscribe, options.getSnapshot);
-  const [optionsLoading] = useState(() => createStateStore(false));
-  useSyncExternalStore(optionsLoading.subscribe, optionsLoading.getSnapshot);
-  const [optionsError] = useState(() => createStateStore(""));
-  useSyncExternalStore(optionsError.subscribe, optionsError.getSnapshot);
-  const [predicting] = useState(() => createStateStore(false));
-  useSyncExternalStore(predicting.subscribe, predicting.getSnapshot);
-  const [predictionError] = useState(() => createStateStore(""));
-  useSyncExternalStore(predictionError.subscribe, predictionError.getSnapshot);
-  const [result] = useState(() => createStateStore(null));
-  useSyncExternalStore(result.subscribe, result.getSnapshot);
-  const [form] = useState(() => createStateStore({}));
-  useSyncExternalStore(form.subscribe, form.getSnapshot);
-  const _optionsControllerRef = useRef(undefined);
-  const _predictionControllerRef = useRef(undefined);
-  const _generationRef = useRef(0);
-  const getLocations = () => options.getSnapshot()?.categories.find(item => item.category === form.getSnapshot().category)?.locations ?? [];
-  const getLegacyLocations = () => getLocations().filter(value => !value.startsWith("new_unit:"));
-  const getExpandedLocations = () => getLocations().filter(value => value.startsWith("new_unit:"));
-  const displayLocation = value => locationLabel(value, options.getSnapshot()?.location_labels);
-  const getIsHouse = () => form.getSnapshot().category === "Nhà ở";
-  const getIsApartment = () => form.getSnapshot().category === "Căn hộ chung cư";
-  const getHasRooms = () => form.getSnapshot().category !== "Đất nền";
-  const getMissingLabels = () => result.getSnapshot()?.missing_features.map(key => featureLabels[key] ?? "Thông tin bổ sung") ?? [];
-  const getUsedFeatures = () => {
-    if (!result.getSnapshot()) return [];
-    return Object.entries(result.getSnapshot().features_used).filter(([, value]) => value !== null).map(([key, value]) => {
-      if (key === "area_sqm") value = `${value} m²`;
-      if (key === "location_feature") value = displayLocation(value);
-      if (key === "ward_source") value = String(form.getSnapshot().ward ?? "").trim() || value;
-      if (key === "access_type") value = options.getSnapshot().access_types[value];
-      if (key === "house_subtype") value = options.getSnapshot().house_subtypes[value];
-      return {
-        label: featureLabels[key],
-        value
-      };
-    });
-  };
+import {useEffect, useRef, useState, useSyncExternalStore} from 'react';
+import {SiteLink} from '../../app/navigation.jsx';
+import {buildValuationPayload, createValuationClient, featureLabels, formatPrice, locationLabel, warningLabel} from './valuation.js';
+import {normalizeShapFactors, missingFeatureLabels, v13AssumptionNotes} from './valuationPresentation.js';
+import {parseQuickAddress, normalizeQuickAddress} from './quickAddress.js';
+import {session, errorText} from '../auth/api.js';
+import {createHistoryClient} from './history.js';
+import './ValuationPanel.css';
+
+const defaults={category:'Nhà ở', area_sqm:'', location_feature:'', ward:'', rooms:'', floors:'', access_type:'', house_subtype:''};
+export default function ValuationPanel({initialInput={}, historyEnabled=false, demo=false, onSaved, onOptionsLoaded, ...attributes}) {
+  const auth=useSyncExternalStore(session.subscribe,session.getSnapshot);
+  const [client]=useState(()=>createValuationClient()), [history]=useState(()=>createHistoryClient());
+  const [form,setForm]=useState(()=>({...defaults,...initialInput})), [options,setOptions]=useState(null);
+  const [loading,setLoading]=useState(true), [optionsError,setOptionsError]=useState(''), [error,setError]=useState('');
+  const [busy,setBusy]=useState(false), [result,setResult]=useState(null), [model,setModel]=useState('v6');
+  const [saving,setSaving]=useState(false), [saved,setSaved]=useState(false), [saveError,setSaveError]=useState('');
+  const [address,setAddress]=useState(''), [addressNote,setAddressNote]=useState(''), [reload,setReload]=useState(0);
+  const request=useRef(null), revision=useRef(0), inputSnapshot=useRef(null), saveKey=useRef(null), callbacks=useRef({});
+  callbacks.current={onSaved,onOptionsLoaded};
+  const initialKey=JSON.stringify(initialInput);
   function invalidate() {
-    _generationRef.current++;
-    _predictionControllerRef.current?.abort();
-    result.set(null);
-    predictionError.set("");
-    predicting.set(false);
-    saved.set(false);
-    saving.set(false);
-    saveError.set("");
-    _resultInputRef.current = null;
-    _saveKeyRef.current = null;
+    revision.current++; request.current?.abort(); setBusy(false); setResult(null); setError('');
+    setSaved(false); setSaving(false); setSaveError(''); inputSnapshot.current=null; saveKey.current=null;
   }
-  const _watched = form.getSnapshot();
-  const _previous = useRef(_watched),
-    _initialized = useRef(false);
-  useEffect(() => {
-    const previousValue = _previous.current;
-    _previous.current = _watched;
-    let dispose;
-    if (!_initialized.current) {
-      _initialized.current = true;
-      return;
-    }
-    const result = invalidate(_watched, previousValue, fn => dispose = fn);
-    result?.catch?.(console.error);
-    return () => dispose?.();
-  }, [stateKey(_watched)]);
-  const _watched2 = (() => _props.current.initialInput)();
-  const _previous2 = useRef(_watched2),
-    _initialized2 = useRef(false);
-  useEffect(() => {
-    const previousValue = _previous2.current;
-    _previous2.current = _watched2;
-    let dispose;
-    _initialized2.current = true;
-    const result = (input => {
-      invalidate();
-      form.edit(draftValue => Object.assign(draftValue, {
-        category: "Nhà ở",
-        area_sqm: "",
-        location_feature: "",
-        ward: "",
-        rooms: "",
-        floors: "",
-        access_type: "",
-        house_subtype: ""
-      }, input));
-    })(_watched2, previousValue, fn => dispose = fn);
-    result?.catch?.(console.error);
-    return () => dispose?.();
-  }, [stateKey(_watched2)]);
-  const _watched3 = (() => form.getSnapshot().category)();
-  const _previous3 = useRef(_watched3),
-    _initialized3 = useRef(false);
-  useEffect(() => {
-    const previousValue = _previous3.current;
-    _previous3.current = _watched3;
-    let dispose;
-    if (!_initialized3.current) {
-      _initialized3.current = true;
-      return;
-    }
-    const result = (() => {
-      if (!getHasRooms()) form.edit(draftValue => draftValue["rooms"] = "");
-      if (!getIsHouse()) {
-        form.edit(draftValue => draftValue["floors"] = "");
-        form.edit(draftValue => draftValue["house_subtype"] = "");
+  useEffect(()=>{invalidate();setForm({...defaults,...JSON.parse(initialKey)});},[initialKey]);
+  useEffect(()=>{
+    const controller=new AbortController(); setLoading(true); setOptionsError('');
+    client.getOptions({signal:controller.signal}).then(data=>{
+      if(controller.signal.aborted)return;
+      setOptions(data); callbacks.current.onOptionsLoaded?.(data.location_labels??{});
+      setModel(data.v1_3?.available && data.v1_3.supported_categories?.includes(JSON.parse(initialKey).category || defaults.category) ? 'v1_3' : 'v6');
+    }).catch(e=>{if(!controller.signal.aborted)setOptionsError(e.message);})
+      .finally(()=>{if(!controller.signal.aborted)setLoading(false);});
+    return()=>controller.abort();
+  },[client,reload]);
+  useEffect(()=>{setSaved(false);setSaving(false);setSaveError('');},[auth.token]);
+  useEffect(()=>()=>{revision.current++;request.current?.abort();},[]);
+  const locations=options?.categories.find(item=>item.category===form.category)?.locations??[];
+  const v13Available=options?.v1_3?.available && (options.v1_3.supported_categories??[]).includes(form.category);
+  const optionalInputs=model==='v1_3' && options?.v1_3?.real_features_enabled;
+  function change(key,value) {
+    invalidate();
+    if(key==='category' && !(options?.v1_3?.supported_categories??[]).includes(value))setModel('v6');
+    setForm(previous=>{
+      const next={...previous,[key]:value};
+      if(key==='category') {
+        if(value==='Đất nền'){next.rooms='';next.bathrooms='';}
+        if(value!=='Nhà ở'){next.floors='';next.house_subtype='';}
+        if(value==='Căn hộ chung cư'){next.access_type='';next.road_width_m='';next.frontage_width_m='';}
+        if(!options?.categories.find(item=>item.category===value)?.locations.includes(next.location_feature))next.location_feature='';
       }
-      if (getIsApartment()) form.edit(draftValue => draftValue["access_type"] = "");
-      if (options.getSnapshot() && !getLocations().includes(form.getSnapshot().location_feature)) form.edit(draftValue => draftValue["location_feature"] = "");
-    })(_watched3, previousValue, fn => dispose = fn);
-    result?.catch?.(console.error);
-    return () => dispose?.();
-  }, [stateKey(_watched3)]);
-  async function loadOptions() {
-    invalidate();
-    _optionsControllerRef.current?.abort();
-    const controller = new AbortController();
-    _optionsControllerRef.current = controller;
-    optionsLoading.set(true);
-    optionsError.set("");
-    try {
-      const data = await client.getOptions({
-        signal: controller.signal
-      });
-      if (controller.signal.aborted) return;
-      options.set(data);
-      _propsLatest.current.onOptionsLoaded?.(data.location_labels ?? {});
-      if (!getLocations().includes(form.getSnapshot().location_feature)) form.edit(draftValue => draftValue["location_feature"] = "");
-    } catch (error) {
-      if (!controller.signal.aborted) optionsError.set(error.message);
-    } finally {
-      if (_optionsControllerRef.current === controller) optionsLoading.set(false);
-    }
+      return next;
+    });
   }
-  async function estimate() {
-    invalidate();
-    if (!options.getSnapshot()) return;
+  function quickFill() {
+    const parsed=parseQuickAddress(address);
+    const location=parsed?.district && locations.find(code=>normalizeQuickAddress(locationLabel(code,options?.location_labels))===normalizeQuickAddress(parsed.district));
+    if(!location){setAddressNote('Chưa nhận diện được địa bàn được hỗ trợ. Bạn chọn thủ công bên dưới.');return;}
+    invalidate();setForm(previous=>({...previous,location_feature:location,ward:parsed.ward||''}));
+    setAddressNote('Đã điền địa bàn từ địa chỉ. Bạn kiểm tra lại trước khi ước tính.');
+  }
+  async function estimate(event) {
+    event.preventDefault();invalidate();
+    if(!options)return;
+    if(model==='v1_3'&&!v13Available){setError('Mô hình thử nghiệm chưa sẵn sàng cho loại tài sản này. Bạn có thể chọn V6.');return;}
     let payload;
-    try {
-      payload = buildValuationPayload(form.getSnapshot(), options.getSnapshot());
-    } catch (error) {
-      predictionError.set(error.message);
-      return;
-    }
-    const current = _generationRef.current;
-    const controller = new AbortController();
-    _predictionControllerRef.current = controller;
-    predicting.set(true);
-    try {
-      const prediction = await client.predict(payload, {
-        signal: controller.signal
-      });
-      if (current === _generationRef.current && !controller.signal.aborted) {
-        result.set(prediction);
-        _resultInputRef.current = payload;
-        _saveKeyRef.current = globalThis.crypto.randomUUID();
-      }
-    } catch (error) {
-      if (current === _generationRef.current && !controller.signal.aborted) predictionError.set(error.message);
-    } finally {
-      if (current === _generationRef.current) predicting.set(false);
-    }
+    try{payload=buildValuationPayload(form,options,!!optionalInputs);}catch(e){setError(e.message);return;}
+    const current=revision.current, controller=new AbortController();request.current=controller;setBusy(true);
+    try{
+      const data=await (model==='v1_3'?client.predictV13(payload,{signal:controller.signal}):client.predict(payload,{signal:controller.signal}));
+      if(current!==revision.current||controller.signal.aborted)return;
+      setResult(data);inputSnapshot.current=payload;saveKey.current=crypto.randomUUID();
+    }catch(e){if(current===revision.current&&!controller.signal.aborted)setError(e.message);}
+    finally{if(current===revision.current)setBusy(false);}
   }
-  async function saveResult() {
-    if (!_resultInputRef.current || !session.getSnapshot().token || saving.getSnapshot() || saved.getSnapshot()) return;
-    const current = _generationRef.current,
-      token = session.getSnapshot().token;
-    saving.set(true);
-    saveError.set("");
-    try {
-      await history.save(_resultInputRef.current, _saveKeyRef.current);
-      if (current === _generationRef.current && token === session.getSnapshot().token) {
-        saved.set(true);
-        _propsLatest.current.onSaved?.();
-      }
-    } catch (error) {
-      if (current === _generationRef.current && token === session.getSnapshot().token) saveError.set(errorText(error));
-    } finally {
-      if (current === _generationRef.current && token === session.getSnapshot().token) saving.set(false);
-    }
+  async function save() {
+    if(!auth.token||!inputSnapshot.current||saving||saved||result?.model_version!=='v6')return;
+    const current=revision.current, token=auth.token;setSaving(true);setSaveError('');
+    try{await history.save(inputSnapshot.current,saveKey.current);if(current===revision.current&&session.getSnapshot().token===token){setSaved(true);callbacks.current.onSaved?.();}}
+    catch(e){if(current===revision.current&&session.getSnapshot().token===token)setSaveError(errorText(e));}
+    finally{if(current===revision.current&&session.getSnapshot().token===token)setSaving(false);}
   }
-  const _watched4 = (() => session.getSnapshot().token)();
-  const _previous4 = useRef(_watched4),
-    _initialized4 = useRef(false);
-  useEffect(() => {
-    const previousValue = _previous4.current;
-    _previous4.current = _watched4;
-    let dispose;
-    if (!_initialized4.current) {
-      _initialized4.current = true;
-      return;
-    }
-    const result = (() => {
-      saved.set(false);
-      saveError.set("");
-      saving.set(false);
-    })(_watched4, previousValue, fn => dispose = fn);
-    result?.catch?.(console.error);
-    return () => dispose?.();
-  }, [stateKey(_watched4)]);
-  useEffect(() => {
-    const result = loadOptions();
-    if (result && typeof result.then === "function") result.catch(console.error);
-    return typeof result === "function" ? result : undefined;
-  }, []);
-  useEffect(() => () => (() => {
-    _generationRef.current++;
-    _optionsControllerRef.current?.abort();
-    _predictionControllerRef.current?.abort();
-  })(), []);
-  return {
-    ...inputProps,
-    formatPrice,
-    warningLabel,
-    session: session.getSnapshot(),
-    saving: saving.getSnapshot(),
-    saved: saved.getSnapshot(),
-    saveError: saveError.getSnapshot(),
-    options: options.getSnapshot(),
-    optionsLoading: optionsLoading.getSnapshot(),
-    optionsError: optionsError.getSnapshot(),
-    predicting: predicting.getSnapshot(),
-    predictionError: predictionError.getSnapshot(),
-    result: result.getSnapshot(),
-    form: form.getSnapshot(),
-    legacyLocations: getLegacyLocations(),
-    expandedLocations: getExpandedLocations(),
-    displayLocation,
-    isHouse: getIsHouse(),
-    isApartment: getIsApartment(),
-    hasRooms: getHasRooms(),
-    missingLabels: getMissingLabels(),
-    usedFeatures: getUsedFeatures(),
-    loadOptions,
-    estimate,
-    saveResult,
-    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["initialInput", "demo", "historyEnabled", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
-    updateForm: form.edit
-  };
+  function field(key,label,{type='text',min,max,step,choices}={}) {
+    return <label className="block text-sm" key={key}>{label}
+      {choices ? <select className="valuation-input mt-2" value={form[key]??''} onChange={e=>change(key,e.target.value)}><option value="">Chưa rõ</option>{choices.map(([value,text])=><option key={value} value={value}>{text}</option>)}</select>
+        : <input className="valuation-input mt-2" type={type} min={min} max={max} step={step} value={form[key]??''} placeholder="Chưa rõ" onChange={e=>change(key,e.target.value)}/>}
+    </label>;
+  }
+  const factors=normalizeShapFactors(result?.shap_explanation,result?.features_used);
+  const assumptions=result?.model_version==='v1.3'?v13AssumptionNotes(result.features_used):[];
+  return <section {...attributes} className={'rounded-3xl border border-brand-line p-5 sm:p-8 '+(attributes.className||'')} data-sp-018bbc28="">
+    {loading&&<p role="status">Đang tải lựa chọn định giá…</p>}
+    {optionsError&&<p role="alert">{optionsError} <button type="button" onClick={()=>{invalidate();setReload(value=>value+1);}}>Thử lại</button></p>}
+    {options&&<form onSubmit={estimate}>
+      <label className="block text-sm">Mô hình tham khảo
+        <select className="valuation-input mt-2" value={model} onChange={e=>{invalidate();setModel(e.target.value);}}>
+          <option value="v6">V6</option><option value="v1_3" disabled={!v13Available}>V1.3 · thử nghiệm{!v13Available?' · chưa sẵn sàng':''}</option>
+        </select>
+      </label>
+      {!options.v1_3?.available&&<p className="text-sm mt-2">V1.3 chưa sẵn sàng trên môi trường này; bạn có thể dùng V6.</p>}
+      <div className="mt-4"><label className="block text-sm">Điền nhanh địa bàn từ địa chỉ<input className="valuation-input mt-2" value={address} maxLength={500} onChange={e=>{setAddress(e.target.value);setAddressNote('');}}/></label>
+        <button type="button" className="mt-2 underline" onClick={quickFill}>Điền địa bàn</button><p role="status" className="text-sm">{addressNote}</p></div>
+      <div className="grid sm:grid-cols-2 gap-4 mt-5">
+        {field('category','Loại tài sản',{choices:options.categories.map(item=>[item.category,item.category])})}
+        {field('area_sqm','Diện tích (m²)',{type:'number',min:20,max:1000,step:'any'})}
+        {field('location_feature','Địa bàn',{choices:locations.map(code=>[code,locationLabel(code,options.location_labels)])})}
+        {field('ward','Phường/xã · tùy chọn')}
+        {form.category!=='Đất nền'&&field('rooms','Phòng ngủ · tùy chọn',{type:'number',min:1,max:30,step:1})}
+        {form.category==='Nhà ở'&&field('floors','Số tầng nhà · tùy chọn',{type:'number',min:1,max:20,step:'any'})}
+        {form.category!=='Căn hộ chung cư'&&field('access_type','Lối vào · tùy chọn',{choices:Object.entries(options.access_types)})}
+        {form.category==='Nhà ở'&&field('house_subtype','Loại nhà chi tiết · tùy chọn',{choices:Object.entries(options.house_subtypes)})}
+        {optionalInputs&&<>
+          {form.category!=='Căn hộ chung cư'&&field('road_width_m','Chiều rộng đường/hẻm (m)',{type:'number',min:0.1,max:100,step:'any'})}
+          {form.category!=='Căn hộ chung cư'&&field('frontage_width_m','Bề ngang mặt tiền (m)',{type:'number',min:0.1,max:500,step:'any'})}
+          {field('street_name','Tên đường · tùy chọn')}{field('project_name','Dự án · tùy chọn')}
+          {form.category!=='Đất nền'&&field('bathrooms','Phòng tắm · tùy chọn',{type:'number',min:1,max:30,step:1})}
+          {field('house_direction','Hướng nhà · tùy chọn')}{field('balcony_direction','Hướng ban công · tùy chọn')}
+        </>}
+      </div>
+      <button className="rounded-full border px-5 py-3 mt-5" type="submit" disabled={busy}>{busy?'Đang ước tính…':'Ước tính giá rao'}</button>
+    </form>}
+    <div aria-live="polite" className="mt-5">
+      {error&&<p role="alert">{error}</p>}
+      {result&&<div data-testid="valuation-result"><p>Giá rao ước tính · {result.model_version}</p><p className="text-3xl font-semibold mt-2" data-testid="estimated-price">{formatPrice(result.predicted_asking_price_vnd)}</p>
+        <h3 className="font-semibold mt-5">Thông tin đã dùng</h3><dl className="grid sm:grid-cols-2 gap-3 mt-3">{Object.entries(result.features_used??{}).filter(([,value])=>value!=null).map(([key,value])=><div key={key}><dt className="text-sm">{featureLabels[key]||key}</dt><dd>{String(key==='location_feature'?locationLabel(value,options?.location_labels):value)}</dd></div>)}</dl>
+        {!!result.missing_features?.length&&<p className="text-sm mt-3">Thông tin còn thiếu: {missingFeatureLabels(result.missing_features).join(', ')}.</p>}
+        {factors.length>0&&<div className="mt-5"><h3 className="font-semibold">Yếu tố tác động đến giá (SHAP)</h3><ul className="space-y-2 mt-3">{factors.map((factor,index)=><li key={factor.feature_name+index}>{factor.displayLabel}: {factor.displayImpact}</li>)}</ul><p className="text-xs mt-2">SHAP giải thích mô hình, không chứng minh quan hệ nhân quả hoặc độ chính xác của giá.</p></div>}
+        {[...(result.warnings??[]),...assumptions].map((note,index)=><p key={index} className="text-sm mt-2">{warningLabel(note)}</p>)}
+        {historyEnabled&&!demo&&(result.model_version==='v6' ? auth.token ? <button type="button" className="underline mt-4" disabled={saving||saved} onClick={save}>{saved?'Đã lưu kết quả':saving?'Đang lưu…':'Lưu kết quả'}</button> : <SiteLink to="/login?next=/valuation">Đăng nhập để lưu kết quả</SiteLink> : <p className="text-sm mt-4">Kết quả V1.3 đang ở chế độ thử nghiệm; lịch sử hiện hỗ trợ kết quả V6.</p>)}
+        {saveError&&<p role="alert">{saveError}</p>}
+      </div>}
+    </div>
+    <p className="text-xs mt-6">Giá rao ước tính để tham khảo, không phải giá giao dịch thực tế hoặc kết luận thẩm định.</p>
+  </section>;
 }
-export default React.forwardRef(function ValuationPanel(props, ref) {
-  const view = useValuationPanelState(props, ref);
-  return <><section data-ui-view="ValuationPanel" aria-labelledby="valuation-heading" data-sp-018bbc28="" {...view.rootAttributes} className={classNames(["valuation-panel bg-[var(--ui-soft)] text-brand-navy rounded-[24px] p-6 md:p-8 shadow-sm", view.rootAttributes.className])}>
-      <div className="flex flex-wrap items-start justify-between gap-3" data-sp-018bbc28="">
-        <div data-sp-018bbc28="">
-          <p className="text-xs text-brand-navy/60 uppercase tracking-widest" data-sp-018bbc28="">
-            {"Định giá tham chiếu · XGBoost v6"}
-          </p>
-          <h2 id="valuation-heading" className="text-2xl font-semibold mt-2" data-sp-018bbc28="">
-            {"Ước tính giá rao"}
-          </h2>
-        </div>
-        {view.demo ? <span className="rounded-full bg-brand-card/10 px-3 py-1 text-xs text-brand-navy/80" data-sp-018bbc28="">
-            {"Tin minh họa"}
-          </span> : null}
-      </div>
-      <p className="text-sm text-brand-navy/70 mt-3 leading-6" data-sp-018bbc28="">
-        {"Nhập thông tin hiện có. Các trường chưa rõ có thể để trống; kết quả được tính từ thông tin trong form này."}
-      </p>
-      {view.optionsLoading ? <p role="status" className="mt-5 text-sm text-brand-navy/80" data-sp-018bbc28="">
-          {"Đang tải địa bàn được hỗ trợ…"}
-        </p> : view.optionsError ? <div role="alert" className="mt-5 rounded-xl bg-brand-card/10 p-4" data-sp-018bbc28="">
-          <p data-sp-018bbc28="">
-            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.optionsError)}
-          </p>
-          <button type="button" className="mt-3 underline underline-offset-4" onClick={$event => {
-          return view.loadOptions?.($event);
-        }} data-sp-018bbc28="">
-            {"Thử kết nối lại"}
-          </button>
-        </div> : view.options ? <form className="mt-6" noValidate={true} onSubmit={$event => {
-        $event.preventDefault();
-        return view.estimate?.($event);
-      }} data-sp-018bbc28="">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" data-sp-018bbc28="">
-            <label className="block text-sm" data-sp-018bbc28="">
-              {"Loại bất động sản "}
-              <span aria-hidden="true" data-sp-018bbc28="">
-                {"*"}
-              </span>
-              <select required={true} className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.category ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.category = $value);
-            })(event.target.value)}>
-                {((items, render) => typeof items === "number" ? Array.from({
-                length: Math.max(0, items)
-              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.categories, item => <option key={item.category} value={item.category} data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.category)}
-                  </option>)}
-              </select>
-            </label>
-            <label className="block text-sm" data-sp-018bbc28="">
-              {"Địa bàn "}
-              <span aria-hidden="true" data-sp-018bbc28="">
-                {"*"}
-              </span>
-              <select required={true} className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.location_feature ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.location_feature = $value);
-            })(event.target.value)}>
-                <option disabled={true} value="" data-sp-018bbc28="">
-                  {"Chọn địa bàn"}
-                </option>
-                {view.legacyLocations.length ? <optgroup label="Quận/huyện cũ" data-sp-018bbc28="">
-                    {((items, render) => typeof items === "number" ? Array.from({
-                  length: Math.max(0, items)
-                }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.legacyLocations, location => <option key={location} value={location} data-sp-018bbc28="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.displayLocation(location))}
-                      </option>)}
-                  </optgroup> : null}
-                {view.expandedLocations.length ? <optgroup label="Địa bàn mở rộng trong dữ liệu" data-sp-018bbc28="">
-                    {((items, render) => typeof items === "number" ? Array.from({
-                  length: Math.max(0, items)
-                }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.expandedLocations, location => <option key={location} value={location} data-sp-018bbc28="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.displayLocation(location))}
-                      </option>)}
-                  </optgroup> : null}
-              </select>
-            </label>
-            <label className="block text-sm" data-sp-018bbc28="">
-              {"Diện tích (m²) "}
-              <span aria-hidden="true" data-sp-018bbc28="">
-                {"*"}
-              </span>
-              <input type="number" min="20" max="1000" step="any" inputMode="decimal" required={true} className="valuation-input mt-2" placeholder="Ví dụ: 80" data-sp-018bbc28="" value={view.form.area_sqm ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.area_sqm = $value);
-            })(event.target.value)} />
-              <span className="block mt-1 text-xs text-brand-navy/60" data-sp-018bbc28="">
-                {"Từ 20 đến 1.000 m²"}
-              </span>
-            </label>
-            <label className="block text-sm" data-sp-018bbc28="">
-              {"Phường/xã theo tin "}
-              <span className="text-brand-navy/70" data-sp-018bbc28="">
-                {"· tùy chọn"}
-              </span>
-              <input maxLength="100" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" value={view.form.ward ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.ward = $value);
-            })(event.target.value)} />
-              <span className="block mt-1 text-xs text-brand-navy/60" data-sp-018bbc28="">
-                {"Bổ sung nếu địa chỉ tin nêu rõ; có thể để trống."}
-              </span>
-            </label>
-            {view.hasRooms ? <label className="block text-sm" data-sp-018bbc28="">
-                {"Phòng ngủ "}
-                <span className="text-brand-navy/70" data-sp-018bbc28="">
-                  {"· tùy chọn"}
-                </span>
-                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.rooms = $value);
-            })(event.target.value)} />
-              </label> : null}
-            {view.isHouse ? <label className="block text-sm" data-sp-018bbc28="">
-                {"Số tầng nhà "}
-                <span className="text-brand-navy/70" data-sp-018bbc28="">
-                  {"· tùy chọn"}
-                </span>
-                <input type="number" min="1" max="20" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.floors ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.floors = $value);
-            })(event.target.value)} />
-              </label> : null}
-            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
-                {"Lối vào "}
-                <span className="text-brand-navy/70" data-sp-018bbc28="">
-                  {"· tùy chọn"}
-                </span>
-                <select className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.access_type ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.access_type = $value);
-            })(event.target.value)}>
-                  <option value="" data-sp-018bbc28="">
-                    {"Chưa rõ"}
-                  </option>
-                  {((items, render) => typeof items === "number" ? Array.from({
-                length: Math.max(0, items)
-              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.access_types, (label, value) => <option key={value} value={value} data-sp-018bbc28="">
-                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
-                    </option>)}
-                </select>
-              </label> : null}
-            {view.isHouse ? <label className="block text-sm" data-sp-018bbc28="">
-                {"Loại nhà chi tiết "}
-                <span className="text-brand-navy/70" data-sp-018bbc28="">
-                  {"· tùy chọn"}
-                </span>
-                <select className="valuation-input mt-2" data-sp-018bbc28="" value={view.form.house_subtype ?? ""} onChange={event => ($value => {
-              view.updateForm(draftValue => draftValue.house_subtype = $value);
-            })(event.target.value)}>
-                  <option value="" data-sp-018bbc28="">
-                    {"Chưa rõ"}
-                  </option>
-                  {((items, render) => typeof items === "number" ? Array.from({
-                length: Math.max(0, items)
-              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.options.house_subtypes, (label, value) => <option key={value} value={value} data-sp-018bbc28="">
-                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
-                    </option>)}
-                </select>
-              </label> : null}
-          </div>
-          <button type="submit" disabled={view.predicting} className="mt-6 rounded-full bg-brand-card px-6 py-3 text-sm font-semibold text-[var(--ui-accent)] hover:bg-[var(--ui-surface)] disabled:opacity-60 disabled:cursor-wait transition" data-sp-018bbc28="">
-            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.predicting ? "Đang ước tính…" : "Ước tính giá rao")}
-          </button>
-        </form> : null}
-      <div aria-live="polite" aria-atomic="true" className="mt-5" data-sp-018bbc28="">
-        {view.predicting ? <p role="status" className="text-sm text-brand-navy/80" data-sp-018bbc28="">
-            {"Mô hình đang tính giá từ thông tin đã nhập…"}
-          </p> : null}
-        {view.predictionError ? <p role="alert" className="rounded-xl bg-[var(--ui-surface)] p-4 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
-            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.predictionError)}
-          </p> : null}
-        {view.result ? <div className="border-t border-brand-line/20 pt-6" data-testid="valuation-result" data-sp-018bbc28="">
-            <p className="text-sm text-brand-navy/70" data-sp-018bbc28="">
-              {"Giá rao ước tính"}
-            </p>
-            <p className="text-3xl sm:text-4xl font-semibold mt-2" data-testid="estimated-price" data-sp-018bbc28="">
-              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.formatPrice(view.result.predicted_asking_price_vnd))}
-            </p>
-            <p className="text-sm text-brand-navy/70 mt-2" data-sp-018bbc28="">
-              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(new Intl.NumberFormat("vi-VN").format(view.result.predicted_asking_price_vnd))}
-              {" đồng · Tổng giá bất động sản"}
-            </p>
-            {view.historyEnabled && !view.demo ? <div className="mt-4" data-sp-018bbc28="">
-                {view.session.token ? <button type="button" disabled={view.saving || view.saved} className="rounded-full border border-brand-line/40 px-4 py-2 text-sm disabled:opacity-60" onClick={$event => {
-              return view.saveResult?.($event);
-            }} data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.saved ? "Đã lưu kết quả" : view.saving ? "Đang lưu…" : "Lưu kết quả")}
-                  </button> : <SiteLink to="/login?next=/valuation" className="text-sm underline" data-sp-018bbc28="">
-                    {"Đăng nhập để lưu kết quả"}
-                  </SiteLink>}
-                {view.saveError ? <p role="alert" className="mt-3 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.saveError)}
-                  </p> : null}
-              </div> : null}
-            <h3 className="font-medium text-sm mt-6" data-sp-018bbc28="">
-              {"Thông tin đã dùng"}
-            </h3>
-            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3" data-sp-018bbc28="">
-              {((items, render) => typeof items === "number" ? Array.from({
-              length: Math.max(0, items)
-            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.usedFeatures, feature => <div key={feature.label} className="rounded-xl bg-brand-card/10 p-3" data-sp-018bbc28="">
-                  <dt className="text-xs text-brand-navy/60" data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(feature.label)}
-                  </dt>
-                  <dd className="text-sm mt-1" data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(feature.value)}
-                  </dd>
-                </div>)}
-            </dl>
-            {view.missingLabels.length ? <p className="text-sm text-brand-navy/80 mt-4" data-sp-018bbc28="">
-                {"Thông tin còn thiếu: "}
-                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.missingLabels.join(", "))}
-                {"."}
-              </p> : null}
-            {view.result.warnings.length ? <ul className="list-disc pl-5 mt-3 space-y-2 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
-                {((items, render) => typeof items === "number" ? Array.from({
-              length: Math.max(0, items)
-            }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.result.warnings, warning => <li key={warning} data-sp-018bbc28="">
-                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.warningLabel(warning))}
-                  </li>)}
-              </ul> : null}
-          </div> : null}
-      </div>
-      <p className="mt-6 text-xs text-brand-navy/60 leading-5" data-sp-018bbc28="">
-        {"Giá rao ước tính để tham khảo. Mô hình chưa sử dụng tọa độ tài sản và khoảng cách tới tiện ích; kết quả chưa được xác minh bằng giá giao dịch."}
-      </p>
-    </section></>;
-});

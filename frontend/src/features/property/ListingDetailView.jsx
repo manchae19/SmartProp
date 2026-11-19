@@ -7,6 +7,8 @@ import { useAppNavigation, useRouteState } from "../../app/navigation.jsx";
 import { api, session, errorText } from "../auth/api.js";
 import { adapt } from "./listingPresentation.js";
 import ResourceState from "../../shared/components/ResourceState.jsx";
+import ImageScanSection from "./ImageScanSection.jsx";
+import PropertyNearbyPanel from "../prediction/PropertyNearbyPanel.jsx";
 import ImageAnalysisSection from "./ImageAnalysisSection.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import { mapUrl } from "./property.js";
@@ -598,7 +600,9 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   </div>
 
                 </section>
+                <ImageScanSection propertyId={view.property?.id} />
                 <ImageAnalysisSection propertyId={view.property?.id} />
+                <PropertyNearbyPanel property={view.property} />
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4" data-sp-4f294819="">
                     <div data-sp-4f294819="">

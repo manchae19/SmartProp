@@ -7,12 +7,16 @@ from fastapi.testclient import TestClient
 
 from main import app
 
-AUTH_HEADER = {"X-Internal-Token": "smartprop-internal-shadow-key"}
+AUTH_HEADER = {"X-Internal-Token": "fixture-only-internal-token-000000000000000000"}
 
 
 class TestShadowMode(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        from unittest.mock import patch
+        cls.credentials = patch.dict("os.environ", {"SMARTPROP_INTERNAL_KEY":"fixture-only-internal-token-000000000000000000","SMARTPROP_INTERNAL_ADMIN_KEY":"fixture-only-internal-token-000000000000000000"})
+        cls.credentials.start()
+        cls.addClassCleanup(cls.credentials.stop)
         cls.client_cm = TestClient(app)
         cls.client = cls.client_cm.__enter__()
 

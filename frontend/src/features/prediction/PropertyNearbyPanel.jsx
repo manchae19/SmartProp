@@ -14,7 +14,8 @@ export default function PropertyNearbyPanel({property,needs}){
  const [routeBusy,setRouteBusy]=useState(false),[routeError,setRouteError]=useState(''),[routeRetry,setRouteRetry]=useState(0);
  const routeSequence=useRef(0),mapHost=useRef(null);
  const sequence=useRef(0);
- const id=property?.source?.recordKey;
+ const candidate=property?.source?.kind==='PROPERTY'?property.source.recordKey:property?.source?null:property?.id;
+ const id=typeof candidate==='string'&&/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(candidate)?candidate:null;
  const scope=auth.user?.id+':'+auth.status;
  useEffect(()=>{
   let active=true;setProfile(null);setProfileReady(false);setGroups([]);setData(null);
@@ -57,7 +58,7 @@ export default function PropertyNearbyPanel({property,needs}){
   return()=>{routeSequence.current++};
  },[open,mapOpen,routeTarget,mode,id,radius,groups.join(','),data,routeRetry]);
  function openMap(p){setSelected(p.id);setRouteTarget(p.id);setMapOpen(true);setTimeout(()=>mapHost.current?.scrollIntoView({behavior:'smooth',block:'nearest'}),0);}
- if(property?.source?.kind!=='PROPERTY')return <p className="chat-nearby-note">Tin nguồn ngoài chưa có vị trí căn nhà đủ điều kiện để tìm tiện ích.</p>;
+ if(!id)return <p className="chat-nearby-note">Tin nguồn ngoài chưa có vị trí căn nhà đủ điều kiện để tìm tiện ích.</p>;
  const places=nearestInGroups(data,groups),validOrigin=data?.location&&['EXACT_PROPERTY','BUILDING_ONLY','USER_PROVIDED'].includes(data.location.accuracy);
  const mapProperty={...property,id,title:property.title,price:property.priceVnd,latitude:data?.location?.latitude,longitude:data?.location?.longitude};
  function toggle(group){setGroups(previous=>previous.includes(group)?previous.filter(g=>g!==group):[...previous,group]);}

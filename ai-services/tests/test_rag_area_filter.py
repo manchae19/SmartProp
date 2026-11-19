@@ -42,9 +42,9 @@ class AreaSemanticsTests(unittest.TestCase):
         self.assertTrue(criteria["maxAreaExclusive"])
 
     def test_vnd_budget_is_grouped_without_rounding(self):
-        self.assertEqual(format_vnd("50000000000"), "50.000.000.000 VND")
-        self.assertEqual(format_vnd("5500000000"), "5.500.000.000 VND")
-        self.assertEqual(format_vnd("5500000000.50"), "5.500.000.000,5 VND")
+        self.assertEqual(format_vnd("50000000000"), "50.000.000.000 đồng")
+        self.assertEqual(format_vnd("5500000000"), "5.500.000.000 đồng")
+        self.assertEqual(format_vnd("5500000000.50"), "5.500.000.000,5 đồng")
 
 
 if __name__ == "__main__":

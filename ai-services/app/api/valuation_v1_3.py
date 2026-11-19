@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/internal/v1_3", tags=["Valuation V1.3 Internal"]
 
 security_bearer = HTTPBearer(auto_error=False)
 
-DEFAULT_DEV_KEY = "smartprop-internal-shadow-key"
+# No default credentials: missing keys disable internal operations.
 
 
 def _extract_provided_token(
@@ -34,7 +34,9 @@ def verify_internal_read(
     token: Optional[str] = Depends(_extract_provided_token),
 ) -> bool:
     """Authorize read-only internal access (stats, model info, test predictions)."""
-    expected = os.environ.get("SMARTPROP_INTERNAL_KEY") or DEFAULT_DEV_KEY
+    expected = os.environ.get("SMARTPROP_INTERNAL_KEY", "")
+    if len(expected) < 32:
+        raise HTTPException(503, "Internal API key is not configured")
 
     # Check if credentials provided
     if not token:
@@ -57,8 +59,10 @@ def verify_internal_admin(
     token: Optional[str] = Depends(_extract_provided_token),
 ) -> bool:
     """Authorize administrative state-changing access (toggle shadow, reset telemetry)."""
-    # Requires admin key or falls back to master internal key
-    expected_admin = os.environ.get("SMARTPROP_INTERNAL_ADMIN_KEY") or os.environ.get("SMARTPROP_INTERNAL_KEY") or DEFAULT_DEV_KEY
+    # Administrative access uses a separate required key.
+    expected_admin = os.environ.get("SMARTPROP_INTERNAL_ADMIN_KEY", "")
+    if len(expected_admin) < 32:
+        raise HTTPException(503, "Internal admin key is not configured")
 
     if not token:
         raise HTTPException(

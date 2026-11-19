@@ -89,4 +89,10 @@ def parse_budget(question):
 
 
 def format_vnd(value):
-    return f"{int(Decimal(str(value))):,}".replace(",", ".")+" đồng"
+    amount = Decimal(str(value))
+    if not amount.is_finite() or amount <= 0:
+        return "không hợp lệ"
+    whole, _, fraction = format(amount, "f").partition(".")
+    grouped = f"{int(whole):,}".replace(",", ".")
+    fraction = fraction.rstrip("0")
+    return grouped + ("," + fraction if fraction else "") + " đồng"

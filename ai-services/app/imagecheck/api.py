@@ -51,7 +51,7 @@ def create_image_router(settings: Settings | None = None) -> APIRouter:
 
     @router.get("/image-duplicates/health")
     def health():
-        return {"status": "configured" if settings.sql_enabled else "sql_disabled",
+        return {"status": "configured", "catalogSource": "BACKEND_PUBLIC_API",
                 "index": index.status(), "maxUploadBytes": MAX_UPLOAD_BYTES}
 
     @router.post("/image-duplicates/check")

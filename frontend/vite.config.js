@@ -12,10 +12,11 @@ export default defineConfig(({mode}) => {
   // YOLOv8 object detection runs as its own service so it can be restarted
   // without touching duplicate scanning (18001) or RAG chat (8001).
   const visionTarget=process.env.SMARTPROP_DEV_VISION_TARGET||env.VISION_API_TARGET||'http://127.0.0.1:18002'
-  for(const target of [apiTarget,aiTarget,visionTarget])if(!new RegExp('^http://127[.]0[.]0[.]1:[0-9]{4,5}$').test(target))throw Error('Dev API proxy must target a loopback HTTP port')
+  const imagecheckTarget=env.IMAGECHECK_API_TARGET||'http://127.0.0.1:18001'
+  for(const target of [apiTarget,aiTarget,visionTarget,imagecheckTarget])if(!new RegExp('^http://127[.]0[.]0[.]1:[0-9]{4,5}$').test(target))throw Error('Dev API proxy must target a loopback HTTP port')
   const proxy={
     '^/api/chat(?:\\?|$)':publicChatProxy(chatTarget),
-    '/api/image-duplicates':{target:chatTarget,changeOrigin:false,proxyTimeout:60000,
+    '/api/image-duplicates':{target:imagecheckTarget,changeOrigin:false,proxyTimeout:60000,
       rewrite:value=>value.replace(/^\/api\/image-duplicates(?=\/|$)/,'/image-duplicates')},
     '/api/image-analysis':{target:visionTarget,changeOrigin:false,proxyTimeout:60000,
       rewrite:value=>value.replace(/^\/api\/image-analysis(?=\/|$)/,'/image-analysis')},

@@ -5,8 +5,34 @@
         Referrer-Policy strict-origin-when-cross-origin
         -Server
     }
-    handle /api/* {
+    handle /api/chat {
+        reverse_proxy 127.0.0.1:8082
+    }
+    handle /api/chat/* {
+        respond 404
+    }
+    handle_path /api/ai/* {
+        @publicValuation path /health /model/options /predict /predict/v1_3_preview
+        handle @publicValuation {
+            reverse_proxy 127.0.0.1:8000
+        }
+        handle {
+            respond 404
+        }
+    }
+    handle /api/image-duplicates/check {
+        uri strip_prefix /api
+        reverse_proxy 127.0.0.1:18001
+    }
+    handle /api/image-analysis/analyze {
+        uri strip_prefix /api
+        reverse_proxy 127.0.0.1:18002
+    }
+    handle /api/v1/* {
         reverse_proxy 127.0.0.1:8080
+    }
+    handle /api/* {
+        respond 404
     }
     handle {
         root * /srv/smartprop/frontend

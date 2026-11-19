@@ -1,6 +1,7 @@
 param([ValidateRange(1024,65535)][int]$Port=8000)
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+if(Test-Path -LiteralPath (Join-Path $root '.env')){. (Join-Path $PSScriptRoot 'load-env.ps1')}
 $bundle=Join-Path $root 'frontend/integrations/valuation-v6'
 $python=Join-Path $root 'backend/var/valuation-v6-runtime/python/python.exe'
 if(-not(Test-Path -LiteralPath $python)){throw 'Run backend/scripts/setup-valuation-runtime.ps1 first.'}
@@ -12,5 +13,5 @@ foreach($file in $manifest.files){
  if(-not $path.StartsWith($bundle+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Invalid bundle path'}
  if((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ne $file.sha256){throw ('Changed model bundle file: '+$file.path)}
 }
-& $python -X utf8 (Join-Path $bundle 'run_api.py') --port $Port
+& $python -X utf8 (Join-Path $root 'ai-services/run_api.py') --port $Port
 if($LASTEXITCODE -ne 0){throw 'Valuation runtime stopped with an error'}

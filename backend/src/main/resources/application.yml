@@ -16,7 +16,7 @@ spring:
       hibernate.jdbc.time_zone: UTC
   flyway:
     enabled: false
-    locations: classpath:database/migrations
+    locations: classpath:database/migrations,classpath:database/research-migrations/poi
   sql:
     init:
       mode: never

@@ -9,8 +9,8 @@ from typing import Iterable
 
 import httpx
 
-from app.rag.config import RagUnavailable, Settings
-from app.rag.tools import PublishedPropertyRepository
+from app.rag.config import RagUnavailable, GroundingError, Settings
+from app.rag.tools import PublishedPropertyRepository, UpstreamError
 from .hashing import Fingerprint, InvalidImage, fingerprint
 
 
@@ -70,7 +70,7 @@ class PublicImageIndex:
     def _build(self) -> None:
         try:
             metadata = self.repository.list_public_images(MAX_IMAGES)
-        except RagUnavailable as exc:
+        except (RagUnavailable, GroundingError, UpstreamError, httpx.HTTPError) as exc:
             self._last_error = str(exc)
             raise ImageIndexUnavailable("IMAGE_INDEX_UNAVAILABLE") from exc
         if not metadata:

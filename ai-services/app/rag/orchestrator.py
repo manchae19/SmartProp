@@ -303,8 +303,13 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             criteria["purpose"] = prior["purpose"]
         if criteria.get("propertyType") == "ALL" and prior.get("propertyType"):
             criteria["propertyType"] = prior["propertyType"]
-        if "minAreaSqm" not in criteria and prior.get("minAreaSqm") is not None:
-            criteria["minAreaSqm"] = prior["minAreaSqm"]
+        from .personalization import apply_area
+        area_keys = ("minAreaSqm", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive")
+        if not any(key in request.model_fields_set for key in area_keys):
+            for key in area_keys:
+                if prior.get(key) is not None:
+                    criteria[key] = prior[key]
+        apply_area(criteria, request.question)
         if turn["purpose"]:
             criteria["purpose"] = turn["purpose"]
         if turn["propertyType"]:

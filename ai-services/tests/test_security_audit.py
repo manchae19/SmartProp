@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from main import app
 from app.core.shadow_manager import ShadowTelemetryManager
 
-VALID_KEY = "smartprop-internal-shadow-key"
+VALID_KEY = "fixture-only-internal-token-000000000000000000"
 VALID_HEADER = {"X-Internal-Token": VALID_KEY}
 VALID_BEARER = {"Authorization": f"Bearer {VALID_KEY}"}
 INVALID_HEADER = {"X-Internal-Token": "hacker-attempting-unauthorized-access"}
@@ -20,6 +20,10 @@ INVALID_HEADER = {"X-Internal-Token": "hacker-attempting-unauthorized-access"}
 class TestSecurityAudit(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        from unittest.mock import patch
+        cls.credentials = patch.dict("os.environ", {"SMARTPROP_INTERNAL_KEY":"fixture-only-internal-token-000000000000000000","SMARTPROP_INTERNAL_ADMIN_KEY":"fixture-only-internal-token-000000000000000000"})
+        cls.credentials.start()
+        cls.addClassCleanup(cls.credentials.stop)
         cls.client_cm = TestClient(app)
         cls.client = cls.client_cm.__enter__()
 

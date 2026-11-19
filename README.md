@@ -1,4 +1,4 @@
-﻿# SmartProp — Cài đặt, build và chạy dự án
+# SmartProp — Cài đặt, build và chạy dự án
 
 SmartProp sử dụng **React + Vite**, **Java 21 / Spring Boot**, **MySQL Spatial**, dịch vụ định giá **XGBoost v6** và chatbot **RAG + Ollama/Qwen**.
 
@@ -19,7 +19,7 @@ SmartProp/
 ├── backend/                   # Spring Boot REST API
 │   ├── src/main/java/vn/smartprop/modules/
 │   └── scripts/               # Launcher, cấu hình và backup
-├── database/migrations/       # Migration chuẩn V1–V19
+├── database/migrations/       # Migration chuẩn V1–V23; V20 ở research-migrations/poi
 ├── ai-services/               # API định giá và chatbot/RAG
 ├── ops/                       # Mẫu service, HTTPS và hướng dẫn vận hành
 ├── .env.example               # Mẫu cấu hình Backend/MySQL
@@ -106,7 +106,7 @@ BROKER_APPLICATIONS_ENABLED=true
 PROFILE_AVATAR_ENABLED=true
 ```
 
-Các dòng `<...>` là placeholder, phải thay trước khi chạy. Những cờ trên chỉ bật khi schema tương ứng đã sẵn sàng; bản source hiện tại yêu cầu lineage chuẩn đến V19. `REFRESH_SECURE_COOKIE=false` chỉ dành cho HTTP loopback local; HTTPS phải dùng `true`.
+Các dòng `<...>` là placeholder, phải thay trước khi chạy. Những cờ trên chỉ bật khi schema tương ứng đã sẵn sàng; bản source hiện tại yêu cầu lineage chuẩn đến V23, gồm V20 tại `database/research-migrations/poi`. `REFRESH_SECURE_COOKIE=false` chỉ dành cho HTTP loopback local; HTTPS phải dùng `true`.
 
 Tạo JWT secret bằng bộ sinh ngẫu nhiên rồi lưu riêng; không dùng mật khẩu demo làm JWT secret. Có thể tạo bằng PowerShell:
 
@@ -288,9 +288,9 @@ Nếu Ollama chưa chạy, mở terminal riêng với `ollama serve`. Không m�
 powershell -NoProfile -ExecutionPolicy Bypass -File .\backend\scripts\setup-valuation-runtime.ps1
 ```
 
-Script tạo runtime riêng tại `backend/var/valuation-v6-runtime`, xác minh checksum Python/pip và cài wheel theo `frontend/integrations/valuation-v6/requirements-windows.lock`. Cần mạng lần đầu; không cài vào Python toàn máy.
+Script tạo runtime riêng tại `backend/var/valuation-v6-runtime`, xác minh checksum Python/pip và cài wheel theo `ai-services/requirements-windows.lock`. Cần mạng lần đầu; không cài vào Python toàn máy.
 
-Bundle model v6, manifest và source đóng băng phải đầy đủ. Không xóa/gộp `frontend/integrations/valuation-v6` chỉ vì tên thư mục; launcher hiện vẫn sử dụng bundle này. Không cần crawler/training để chạy web.
+Bundle model v6, manifest và source đóng băng phải đầy đủ. Không xóa/gộp `frontend/integrations/valuation-v6` chỉ vì tên thư mục; launcher kiểm tra manifest bundle này rồi chạy source chuẩn tại `ai-services/run_api.py`. Không cần crawler/training để chạy web.
 
 ## 9. Chạy local hằng ngày
 
@@ -483,7 +483,7 @@ Không dùng lock wheel Windows cho Linux. Các dependency/model đã được x
 
 ### 12.3. Reverse proxy đầy đủ
 
-**`ops/Caddyfile` hiện chỉ proxy `/api/*` về Backend. Không dùng nguyên mẫu đó để kết luận chat/định giá đã được nối.** Máy chủ cần các tuyến riêng:
+`ops/Caddyfile` đã tách tuyến Backend, định giá, chat relay và kiểm tra ảnh. Mẫu này không công khai API quản trị nội bộ của AI. Máy chủ cần chạy đủ các upstream sau:
 
 | Tuyến công khai | Upstream |
 |---|---|
@@ -574,3 +574,36 @@ Không cần bàn giao `node_modules`, venv, cache/build cũ. Cần bàn giao an
 | Giao diện cũ sau pull | Cài lại dependency khi cần, build lại FE, cập nhật đúng `dist`; dev có thể khởi động bằng `npm --prefix frontend run dev -- --force` |
 
 Các thông tin nhạy cảm chỉ giữ trong cấu hình riêng hoặc secret manager. Không gửi `.env`, token, password, Client Secret hoặc backup dữ liệu cá nhân lên repository.
+
+
+## Kiểm tra nhánh tích hợp Backend-Huy/main
+
+Runtime định giá chuẩn trên Windows và Linux là `ai-services/run_api.py`; bundle trong
+`frontend/integrations/valuation-v6` giữ vai trò nguồn model v6 đã pin và tham chiếu manifest.
+Không chạy hai bản API định giá khác nhau trên cùng cổng.
+
+V1.3 là chức năng tùy chọn. Chuẩn bị weights theo `ai-services/V1_3_ARTIFACTS.md`, sau đó
+đặt `SMARTPROP_V1_3_PREVIEW_ENABLED=true`. Chỉ bật `SMARTPROP_V1_3_REAL_FEATURES=true`
+khi muốn nhận các số đo người dùng cung cấp. Launcher định giá nạp root `.env` nếu có.
+Nếu model chưa được chuẩn bị, FE dùng V6 và không hiển thị kết quả V1.3 giả.
+Lịch sử định giá hiện chỉ lưu V6; kết quả thử nghiệm V1.3 không được ghi thành V6.
+
+API quản trị AI yêu cầu hai khóa riêng `SMARTPROP_INTERNAL_KEY` và
+`SMARTPROP_INTERNAL_ADMIN_KEY`, tối thiểu 32 ký tự; thiếu khóa sẽ từ chối phục vụ.
+Không đặt khóa nội bộ trong `VITE_*`. Public preview V1.3 là endpoint được bật riêng,
+không phải endpoint quản trị hoặc endpoint có xác thực tài khoản.
+
+RAG mặc định dùng Backend API và tắt SQL trực tiếp. Nếu bật SQL, cấu hình đầy đủ
+`RAG_SQL_HOST`, `RAG_SQL_PORT`, `RAG_SQL_DATABASE`, `RAG_DB_USER`, `RAG_DB_PASSWORD`.
+`RAG_SQL_USE_VIEWS=true` yêu cầu views đã được DBA tạo theo tài liệu SQL; cổng 3306
+cần `RAG_SQL_ALLOW_PRODUCTION=true`. Thử trên database cô lập trước.
+
+Database mới cần đủ V1–V23, bao gồm V20 POI. Default Maven và profile
+`standard-migrations` đều đọc hai vị trí chuẩn. Tài khoản migration phải đủ quyền tạo
+trigger khi MySQL bật binary log. Với database đã có history, kiểm tra migration pending,
+checksum và kế hoạch triển khai trước; không dùng repair/clean hoặc tự bật out-of-order.
+
+Kiểm tra giao diện định giá độc lập với model: chạy FE tại cổng 15173, chuẩn bị Playwright
+trong môi trường test rồi chạy `node frontend/e2e/valuation-reconciliation.e2e.mjs`.
+Có thể đặt `PLAYWRIGHT_MODULE` thành module URL tuyệt đối và `SMARTPROP_TEST_ORIGIN`
+thành origin của FE test. Bài kiểm tra dùng API fixture, không chứng minh độ chính xác model.

@@ -1,13 +1,15 @@
 param(
     [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
-    [string]$EnvFile = 'F:\SmartProp\.env',
-    [string]$RagSecretPath = 'F:\SmartPropSecrets\rag_reader.cred',
-    [string]$PythonExe = $(if ($env:SMARTPROP_PYTHON) { $env:SMARTPROP_PYTHON } else { 'F:\SmartProp\ai-services\.venv\Scripts\python.exe' }),
+    [string]$EnvFile = '',
+    [string]$PythonExe = '',
+    [ValidateSet('dev','standard-migrations','hybrid-local-existing-v13')][string]$BackendProfile = 'standard-migrations',
     [string]$ImagecheckPythonExe = '',
     [string]$RunDirectory = $(Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path '.local-run')
 )
 $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path $Root).Path
+if (-not $EnvFile) { $EnvFile = Join-Path $Root '.env' }
+if (-not $PythonExe) { $PythonExe = if($env:SMARTPROP_PYTHON){$env:SMARTPROP_PYTHON}else{Join-Path $Root '.scratch/rag-venv/Scripts/python.exe'} }
 if (-not $ImagecheckPythonExe) {
     $candidate = Join-Path (Split-Path $PythonExe) 'pythonw.exe'
     if (Test-Path -LiteralPath $candidate) { $ImagecheckPythonExe = $candidate }
@@ -56,24 +58,14 @@ if (Test-Url 'http://127.0.0.1:18001/image-duplicates/health') {
     throw 'Port 18001 is occupied but imagecheck health is not configured; refusing to start a duplicate.'
 } else {
     if (-not (Test-Path -LiteralPath $ImagecheckPythonExe)) { throw "Python executable not found: $ImagecheckPythonExe" }
-    if (-not (Test-Path -LiteralPath $RagSecretPath)) { throw "Missing DPAPI RAG credential: $RagSecretPath" }
-    $secure = Get-Content -LiteralPath $RagSecretPath | ConvertTo-SecureString
-    $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-    try { $env:RAG_DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr) }
-    finally { [Runtime.InteropServices.Marshal]::FreeBSTR($bstr) }
-    $env:RAG_SQL_ENABLED = 'true'
-    $env:RAG_SQL_HOST = '127.0.0.1'
-    $env:RAG_SQL_PORT = '3306'
-    $env:RAG_SQL_DATABASE = 'smartprop'
-    $env:RAG_SQL_ALLOW_PRODUCTION = 'true'
-    $env:RAG_SQL_USE_VIEWS = 'true'
-    $env:RAG_DB_USER = 'rag_reader'
+    # Image metadata comes from the public Backend API, not a database credential.
+    $env:RAG_SQL_ENABLED = 'false'
+    $env:RAG_BACKEND_URL = 'http://127.0.0.1:8080'
     $env:RAG_IMAGE_BACKEND_URL = 'http://127.0.0.1:8080'
     $imageLog = Join-Path $RunDirectory 'imagecheck-18001.log'
     $imageErr = Join-Path $RunDirectory 'imagecheck-18001.err.log'
     $process = Start-Process -FilePath $ImagecheckPythonExe -ArgumentList @('-m','uvicorn','imagecheck_main:app','--host','127.0.0.1','--port','18001','--no-proxy-headers') -WorkingDirectory (Join-Path $Root 'ai-services') -RedirectStandardOutput $imageLog -RedirectStandardError $imageErr -PassThru -WindowStyle Hidden
     $process.Id | Set-Content (Join-Path $RunDirectory 'imagecheck.pid')
-    Remove-Item Env:RAG_DB_PASSWORD -ErrorAction SilentlyContinue
     if (-not (Wait-Url 'http://127.0.0.1:18001/image-duplicates/health' 25)) {
         throw "Imagecheck 18001 failed health check. See $imageErr"
     }
@@ -118,8 +110,8 @@ if (Test-Url 'http://127.0.0.1:8080/actuator/health') {
     $jar = Join-Path $Root 'backend\target\smartprop-backend-0.1.0.jar'
     if (-not (Test-Path -LiteralPath $jar)) { throw "Backend jar not found: $jar (run mvnw -DskipTests package first)" }
     Set-EnvFile $EnvFile
-    $env:SPRING_PROFILES_ACTIVE = 'hybrid-local-existing-v13'
-    $env:SMARTPROP_V1_3_MODEL_DIR = 'F:\SmartProp\ai-services\artifacts\v1_3'
+    $env:SPRING_PROFILES_ACTIVE = $BackendProfile
+    $env:SMARTPROP_V1_3_MODEL_DIR = Join-Path $Root 'ai-services/artifacts/v1_3'
     $env:APP_IMAGE_SCAN_BASE_URL = 'http://127.0.0.1:18001'
     $env:PORT = '8080'
     $backendLog = Join-Path $RunDirectory 'backend-8080.log'
