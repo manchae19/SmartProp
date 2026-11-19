@@ -15,30 +15,32 @@ public class RecommendationCandidateRepository {
     public RecommendationCandidateRepository(JdbcTemplate jdbc,ObjectMapper mapper) { this.jdbc=jdbc;this.mapper=mapper; }
     public List<Candidate> find(Request request,boolean demo) {
         var result=new ArrayList<Candidate>();
-        var minPrice=request.minPriceVnd()==null?java.math.BigDecimal.ZERO:request.minPriceVnd();
         var minimum=request.minAreaSqm()==null?java.math.BigDecimal.ZERO:request.minAreaSqm();
-        result.addAll(jdbc.query("""
-            SELECT id,title,property_type,price,area_sqm,district,ward FROM properties
-            WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6))
-              AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL'
-              AND price>0 AND price>=? AND price<=? AND area_sqm>0 AND area_sqm>=? ORDER BY id LIMIT 10001
-            """,(rs,n)->new Candidate("property:"+rs.getString("id"),rs.getString("title"),
+        var maximum=request.maxAreaSqm()==null?new java.math.BigDecimal("1000000"):request.maxAreaSqm();
+        String minOperator=request.minAreaExclusive()?">":">=";
+        String maxOperator=request.maxAreaExclusive()?"<":"<=";
+        String propertyQuery = "SELECT id,title,property_type,price,area_sqm,district,ward FROM properties "
+            + "WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6)) "
+            + "AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL' "
+            + "AND price>0 AND price<=? AND area_sqm>0 AND area_sqm" + minOperator + "? "
+            + "AND area_sqm" + maxOperator + "? ORDER BY id LIMIT 10001";
+        result.addAll(jdbc.query(propertyQuery,(rs,n)->new Candidate("property:"+rs.getString("id"),rs.getString("title"),
                 PropertyType.valueOf(rs.getString("property_type")),rs.getBigDecimal("price"),rs.getBigDecimal("area_sqm"),
                 rs.getString("district"),rs.getString("ward"),new Source("PROPERTY","SmartProp",rs.getString("id"),"/api/v1/properties/"+rs.getString("id")),
-                "PLATFORM_PUBLISHED","PLATFORM_PUBLISHED",null,false,false,List.of(),false),minPrice,request.budgetVnd(),minimum));
+                "PLATFORM_PUBLISHED","PLATFORM_PUBLISHED",null,false,false,List.of(),false),request.budgetVnd(),minimum,maximum));
         String policy=demo?"l.quality_status IN ('VALID','NEEDS_REVIEW') AND l.verification_status IN ('VERIFIED','UNVERIFIED')"
             :"l.quality_status='VALID' AND l.verification_status='VERIFIED'";
-        result.addAll(jdbc.query("""
-            SELECT l.* FROM external_listings l WHERE l.is_protected_holdout=0
-              AND l.transaction_type='SALE' AND l.price>0 AND l.price>=? AND l.price<=? AND l.area_sqm>0 AND l.area_sqm>=?
-              AND (l.duplicate_group IS NULL OR NOT EXISTS
-                (SELECT 1 FROM external_listings h WHERE h.duplicate_group=l.duplicate_group AND h.is_protected_holdout=1))
-              AND
-            """+policy+" ORDER BY l.record_key LIMIT 10001",(rs,n)->new Candidate("external:"+rs.getLong("id"),rs.getString("title"),
+        String externalQuery = "SELECT l.* FROM external_listings l WHERE l.is_protected_holdout=0 "
+            + "AND l.transaction_type='SALE' AND l.price>0 AND l.price<=? AND l.area_sqm>0 "
+            + "AND l.area_sqm" + minOperator + "? AND l.area_sqm" + maxOperator + "? "
+            + "AND (l.duplicate_group IS NULL OR NOT EXISTS "
+            + "(SELECT 1 FROM external_listings h WHERE h.duplicate_group=l.duplicate_group AND h.is_protected_holdout=1)) "
+            + "AND " + policy + " ORDER BY l.record_key LIMIT 10001";
+        result.addAll(jdbc.query(externalQuery,(rs,n)->new Candidate("external:"+rs.getLong("id"),rs.getString("title"),
                 category(rs.getString("category")),rs.getBigDecimal("price"),rs.getBigDecimal("area_sqm"),rs.getString("district"),null,
                 new Source("EXTERNAL",rs.getString("source"),rs.getString("record_key"),rs.getString("detail_url")),
                 rs.getString("quality_status"),rs.getString("verification_status"),rs.getString("duplicate_group"),
-                rs.getBoolean("is_duplicate"),rs.getBoolean("is_protected_holdout"),issues(rs.getString("quality_issues")),false),minPrice,request.budgetVnd(),minimum));
+                rs.getBoolean("is_duplicate"),rs.getBoolean("is_protected_holdout"),issues(rs.getString("quality_issues")),false),request.budgetVnd(),minimum,maximum));
         return result;
     }
     private List<String> issues(String json) {

@@ -14,6 +14,9 @@ class GroundingError(RuntimeError):
 
 @dataclass(frozen=True)
 class Settings:
+    planning_enabled: bool = False
+    planning_snapshot_path: Path | None = None
+    image_backend_url: str = ""
     backend_url: str = "http://127.0.0.1:8080"
     corpus_path: Path = Path("var/rag/public-corpus.json")
     document_corpus_path: Path | None = None
@@ -38,6 +41,10 @@ class Settings:
         u = urlsplit(self.backend_url)
         if u.scheme != "http" or u.hostname != "127.0.0.1" or not (u.port and 1024 <= u.port <= 65535) or u.path not in ("", "/") or u.username or u.password or u.query or u.fragment:
             raise ValueError("RAG backend must use a loopback HTTP port")
+        if self.image_backend_url:
+            i=urlsplit(self.image_backend_url)
+            if i.scheme!="http" or i.hostname!="127.0.0.1" or not i.port or not 1024<=i.port<=65535 or i.path not in ("","/") or i.username or i.password or i.query or i.fragment:
+                raise ValueError("Image backend must use a loopback HTTP port")
         o = urlsplit(self.ollama_url)
         if o.scheme != "http" or o.hostname != "127.0.0.1" or o.port != 11434 or o.path not in ("", "/") or o.username or o.password or o.query or o.fragment:
             raise ValueError("Ollama must be http://127.0.0.1:11434")
@@ -50,7 +57,7 @@ class Settings:
 
     @classmethod
     def from_env(cls):
-        return cls(backend_url=os.getenv("RAG_BACKEND_URL", "http://127.0.0.1:8080"),
+        return cls(planning_enabled=os.getenv("RAG_PLANNING_ENABLED", "false").lower()=="true", planning_snapshot_path=Path(os.environ["RAG_PLANNING_SNAPSHOT_PATH"]) if os.getenv("RAG_PLANNING_SNAPSHOT_PATH") else None, image_backend_url=os.getenv("RAG_IMAGE_BACKEND_URL",""),backend_url=os.getenv("RAG_BACKEND_URL", "http://127.0.0.1:8080"),
                    corpus_path=Path(os.getenv("RAG_CORPUS_PATH", "var/rag/public-corpus.json")),
                    document_corpus_path=Path(os.environ["RAG_DOCUMENT_CORPUS_PATH"]) if os.getenv("RAG_DOCUMENT_CORPUS_PATH") else None,
                    qwen_path=os.getenv("RAG_QWEN_PATH", ""), e5_path=os.getenv("RAG_E5_PATH", ""),

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import xgboost as xgb
 
-from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3
+from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3, real_feature_input_enabled
 from app.models.xgboost.features_v1_3 import (
     ALL_FEATURES,
     LIMITS,
@@ -113,6 +113,7 @@ class PredictorV1_3:
             "supported_districts": self.schema.get("vocabularies", {}).get("district", []),
             "supported_types": self.schema.get("vocabularies", {}).get("normalized_type", []),
             "target_bounds": LIMITS["area"],
+            "real_feature_input_enabled": real_feature_input_enabled(),
         }
 
     def predict(self, record: Dict[str, Any]) -> Dict[str, Any]:
@@ -194,13 +195,20 @@ class PredictorV1_3:
             impact_pct = round((math.exp(val_float) - 1.0) * 100, 2)
             direction = "increase" if val_float > 0 else "decrease"
             label = name_map.get(name, name)
+            note = f"Đóng góp {impact_pct:+.1f}% vào log-price"
+            if name == "ward" and not record.get("ward"):
+                label = "Phường/Xã (đang thiếu)"
+                note = "Giá trị phường/xã không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
+            elif name == "raw_street_name" and not record.get("street_name"):
+                label = "Tên tuyến đường (không có trong input)"
+                note = "Tên đường không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
             v1_3_factors.append({
                 "feature_name": name,
                 "label": label,
                 "shap_value": round(val_float, 4),
                 "impact_pct": impact_pct,
                 "direction": direction,
-                "context_note": f"Đóng góp {impact_pct:+.1f}% vào log-price",
+                "context_note": note,
             })
         v1_3_factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
         top_factors = v1_3_factors[:6]
@@ -225,7 +233,8 @@ class PredictorV1_3:
         # 6. Audit missing optional features and unknown categories
         optional_fields = [
             "floor_count", "frontage_width", "road_width",
-            "bedroom_count", "bathroom_count", "street_name", "project_name"
+            "bedroom_count", "bathroom_count", "street_name", "project_name",
+            "house_direction", "balcony_direction",
         ]
         missing = [f for f in optional_fields if record.get(f) in (None, "")]
 
@@ -263,6 +272,13 @@ class PredictorV1_3:
                 "floor_count": record.get("floor_count"),
                 "road_width": record.get("road_width"),
                 "frontage_width": record.get("frontage_width"),
+                "street_name": record.get("street_name"),
+                "project_name": record.get("project_name"),
+                "bathroom_count": record.get("bathroom_count"),
+                "house_direction": record.get("house_direction"),
+                "balcony_direction": record.get("balcony_direction"),
+                "road_width_source": record.get("road_width_source"),
+                "frontage_width_source": record.get("frontage_width_source"),
             },
             "missing_features": missing,
             "warnings": warnings,

@@ -17,6 +17,7 @@ public class PropertyService {
     private final PropertyImageRepository images;
     private final ProjectRepository projects;
     private final AccountAccess access;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private vn.smartprop.modules.project.ProjectManagementRepository projectLifecycle;
     public PropertyService(PropertyRepository properties,PropertyImageRepository images,ProjectRepository projects,AccountAccess access) {
         this.properties=properties;this.images=images;this.projects=projects;this.access=access;
@@ -62,7 +63,7 @@ public class PropertyService {
     @Transactional public PropertyDtos.Managed create(Long actor,PropertyDtos.Write r) {
         access.publisherForUpdate(actor);Property p=new Property();p.id=UUID.randomUUID().toString();p.ownerId=actor;
         p.status=Property.Status.DRAFT;p.contentVersion=1;p.currency="VND";p.city="Da Nang";p.declaredAmenities=JsonNodeFactory.instance.arrayNode();
-        fill(p,r);properties.saveAndFlush(p);return managed(p,List.of());
+        fill(p,r);properties.saveAndFlush(p);entityManager.clear();Property created=properties.findById(p.id).orElseThrow();return managed(created,List.of());
     }
     @Transactional public PropertyDtos.Managed patch(Long actor,String id,int version,PropertyDtos.Write r) {
         access.publisherForUpdate(actor);Property p=owned(actor,id);if(p.status==Property.Status.HIDDEN) throw ApiInputs.conflict("Tin bị ẩn cần quản trị viên xử lý");

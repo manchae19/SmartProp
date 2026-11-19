@@ -69,6 +69,10 @@ export function citationHref(citation, properties) {
     if (typeof citation.url !== 'string' || citation.url.startsWith('//')) return null;
     const url = new URL(citation.url, 'https://source.invalid');
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash) return null;
+    if (citation.kind === 'PLANNING_SOURCE') {
+      if (!/^planning:[a-f0-9]{24}$/.test(citation.sourceId) || url.search || url.hash || url.port || url.username || url.password || url.protocol !== 'https:' || !(url.hostname.endsWith('.danang.gov.vn') || ['danang.gov.vn','cttdt.danangportal.gov.vn'].includes(url.hostname) || (url.hostname === 'drive.google.com' && /^\/file\/d\/[A-Za-z0-9_-]+\/view$/.test(url.pathname)))) return null;
+      return url.href;
+    }
     if (citation.kind === 'SOURCE_DOCUMENT') {
       if (!citation.url.startsWith('https://') || url.hostname === 'source.invalid' || url.protocol !== 'https:' || url.search || url.port || !url.hostname.includes('.') || /^[0-9.]+$/.test(url.hostname) || url.hostname.includes(':') || /(?:^|\.)(?:localhost|local|internal)$/.test(url.hostname)) return null;
       return url.href;
@@ -125,7 +129,7 @@ export function publicChatResponse(data, { historical = false } = {}) {
     if (!c || c.scope !== 'PUBLIC' || !text(c.sourceId) || sourceIds.has(c.sourceId) || !text(c.version) || !/^[a-f0-9]{64}$/.test(c.contentHash) || !citationHref(c, data.recommendedProperties)) throw invalid();
     sourceIds.add(c.sourceId);
   }
-  if (data.recommendedProperties.some(p => !sourceIds.has('recommendation:' + p.id))) throw invalid();
+  if (data.recommendedProperties.some(p => !sourceIds.has('recommendation:' + p.id) && !(p.matchBasis === 'ADDRESS' && p.source.kind === 'PROPERTY' && sourceIds.has('property:' + p.source.recordKey)))) throw invalid();
   const market = data.evidence.marketSummary;
   const marketCitations = data.citations.filter(c => c.kind === 'MARKET_SUMMARY');
   if (market !== undefined || marketCitations.length) {
@@ -153,11 +157,25 @@ export function publicChatResponse(data, { historical = false } = {}) {
     }
   }
   const generation = data.evidence.generation;
-  if (data.evidence.responseKind === 'NO_MATCHES' && (data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY' || data.recommendedProperties.length || data.citations.length || !data.evidence.criteria?.budgetVnd || data.evidence.recommendationSearch?.performed !== true || data.evidence.recommendationSearch.resultCount !== 0 || data.evidence.recommendationSearch.sourcePath !== '/api/v1/recommendations' || !/^[a-f0-9]{64}$/.test(data.evidence.recommendationSearch.criteriaHash) || generation?.accepted !== false || generation.reason !== 'NOT_NEEDED_FOR_EMPTY_SEARCH')) throw invalid();
+  if (data.evidence.responseKind === 'NO_MATCHES' && (data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY' || data.recommendedProperties.length || data.citations.length || !(data.evidence.criteria?.budgetVnd || (['ADDRESS_NO_MATCH','ADDRESS_NEARBY_EMPTY'].includes(data.evidence.clarification) && text(data.evidence.addressQuery))) || data.evidence.recommendationSearch?.performed !== true || data.evidence.recommendationSearch.resultCount !== 0 || data.evidence.recommendationSearch.sourcePath !== '/api/v1/recommendations' || !/^[a-f0-9]{64}$/.test(data.evidence.recommendationSearch.criteriaHash) || generation?.accepted !== false || generation.reason !== 'NOT_NEEDED_FOR_EMPTY_SEARCH')) throw invalid();
   if (!data.citations.length && (data.recommendedProperties.length || data.generationMode !== 'EVIDENCE_ONLY')) throw invalid();
   if (data.generationMode === 'QWEN_GROUNDED_ANSWER' && (!generation?.accepted || !(generation.eval_count > 0) || !Array.isArray(generation.sentences) || !generation.sentences.length || generation.sentences.some(s => !text(s.text) || !sourceIds.has(s.sourceId) || !data.answer.includes(s.text)))) throw invalid();
   // Explicit POI category questions may only be answered from POI evidence of that category.
   // The server enforces this; the client refuses a packet that still cites area/other evidence.
+  const planning = data.evidence.planningLookup;
+  if (planning !== undefined) {
+    const statuses=['OK','DISABLED','SOURCE_UNAVAILABLE','OUTSIDE_COVERAGE','NEEDS_CLARIFICATION','NO_MATCHES'];
+    const operations=['PROJECT_LIST','AUCTION_CATALOG','PLANNING_STATUS','LOT_LOOKUP'];
+    if (planning?.version !== 'V1' || !statuses.includes(planning.status) || !operations.includes(planning.operation) || data.evidence.responseKind !== 'PLANNING_LOOKUP' || data.recommendedProperties.length || data.generationMode !== 'EVIDENCE_ONLY' || !Array.isArray(planning.sources) || planning.sources.length>100 || !Array.isArray(planning.items) || planning.items.length>100 || !Number.isInteger(planning.total) || planning.total<planning.items.length || typeof planning.truncated!=='boolean') throw invalid();
+    const seen=new Set();
+    for (const source of planning.sources) {
+      const c=data.citations.find(c=>c.sourceId===source.sourceId && c.kind==='PLANNING_SOURCE');
+      if (!c || seen.has(source.sourceId) || source.url!==c.url || source.title!==c.title || source.verification!=='SOURCE_CHECKED' || !text(source.legalStatus) || !Number.isFinite(Date.parse(source.checkedAt)) || Date.parse(source.checkedAt)>Date.now()+5000) throw invalid();
+      for (const date of [source.documentDate,source.publicationDate]) if (date!==null && (typeof date!=='string' || !/^\d{4}-\d{2}-\d{2}/.test(date) || !Number.isFinite(Date.parse(date)) || Date.parse(date.slice(0,10))>Date.parse(source.checkedAt))) throw invalid();
+      seen.add(source.sourceId);
+    }
+    if (data.citations.length!==seen.size || data.citations.some(c=>c.kind!=='PLANNING_SOURCE') || planning.items.some(i=>!/^HX-(RE|LAND)-[0-9]{3,}$/.test(i.id) || !text(i.name) || !text(i.legalStatus) || !Array.isArray(i.sourceIds) || !i.sourceIds.length || i.sourceIds.some(id=>!seen.has(id)))) throw invalid();
+  } else if (data.citations.some(c=>c.kind==='PLANNING_SOURCE')) throw invalid();
   const intent = data.evidence.amenityIntent;
   if (intent !== undefined) {
     const categories = intent?.categories;

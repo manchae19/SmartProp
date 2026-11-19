@@ -225,6 +225,13 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
                   <a href={source.href} target="_blank" rel="noopener noreferrer" data-chat-citation="" data-sp-73584f77="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.kind === 'PROPERTY_DETAIL' ? 'Xem tin đăng gốc ↗' : source.label)}
                   </a>
+                  {source.planningSource && <dl className="mt-2 text-sm leading-6">
+                    <dt>Trạng thái hồ sơ</dt><dd>{source.planningSource.legalStatus}</dd>
+                    <dt>Ngày văn bản</dt><dd>{source.planningSource.documentDate || 'Chưa xác định'}</dd>
+                    <dt>Ngày công bố</dt><dd>{source.planningSource.publicationDate || 'Chưa xác định'}</dd>
+                    <dt>Kiểm tra nguồn</dt><dd>{new Date(source.planningSource.checkedAt).toLocaleString('vi-VN')}</dd>
+                    <dt>Mức xác minh</dt><dd>Đã đối chiếu nguồn; chưa xác nhận hiệu lực hiện hành</dd>
+                  </dl>}
                   <p data-sp-73584f77="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(source.basis)}
                   </p>
@@ -289,7 +296,7 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
             </ul>
           </details>
         </details> : null}
-      {view.view.citations.length && !view.result?.evidence?.amenityIntent ? <p className="answer-caution" data-sp-73584f77="">
+      {view.view.citations.length && !view.result?.evidence?.amenityIntent && !view.result?.evidence?.planningLookup ? <p className="answer-caution" data-sp-73584f77="">
           {view.view.isListingSource ? "Các phép tính dựa trên số liệu người đăng kê khai; không phải kết quả thẩm định hoặc xác minh doanh thu." : "Giá rao và điểm phù hợp để tham khảo. Bằng chứng khu vực không chứng minh khoảng cách từ căn nhà."}
         </p> : null}
     </div></>;

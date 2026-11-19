@@ -69,6 +69,19 @@ app:
         area: ${APP_RECOMMENDATION_V11_RENTAL_AREA:0.20}
         type: ${APP_RECOMMENDATION_V11_RENTAL_TYPE:0.25}
         amenity: ${APP_RECOMMENDATION_V11_RENTAL_AMENITY:0.15}
+  advisor:
+    valuation-enabled: ${APP_ADVISOR_VALUATION_ENABLED:true}
+    valuation-base-url: ${APP_ADVISOR_VALUATION_BASE_URL:http://127.0.0.1:8000}
+    allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:true}
+  image-scan:
+    base-url: ${APP_IMAGE_SCAN_BASE_URL:http://127.0.0.1:18001}
+    stale-after-seconds: ${APP_IMAGE_SCAN_STALE_AFTER_SECONDS:180}
+    recovery-interval-ms: ${APP_IMAGE_SCAN_RECOVERY_INTERVAL_MS:60000}
+  image-analysis:
+    # YOLOv8 object analysis. Off by default: enabling it requires the V22
+    # migration to be applied and the vision service to be running.
+    enabled: ${APP_IMAGE_ANALYSIS_ENABLED:false}
+    base-url: ${APP_IMAGE_ANALYSIS_BASE_URL:http://127.0.0.1:18002}
   google:
     enabled: ${GOOGLE_LOGIN_ENABLED:false}
     client-id: ${GOOGLE_CLIENT_ID:}
@@ -84,6 +97,12 @@ app:
     provider: ${GEOCODING_PROVIDER:GEOAPIFY}
     geoapify-key: ${GEOAPIFY_API_KEY:}
     google-key: ${GEOCODING_GOOGLE_API_KEY:}
+  # Vendor used for the trip to work. "OPENROUTESERVICE" uses HeiGIT's Matrix to rank a
+  # shortlist in one call; "GEOAPIFY" keeps the previous per-pair behaviour.
+  routing:
+    provider: ${APP_ROUTING_PROVIDER:GEOAPIFY}
+    openrouteservice-key: ${OPENROUTESERVICE_API_KEY:}
+    openrouteservice-url: ${OPENROUTESERVICE_URL:https://api.heigit.org/openrouteservice}
   valuation:
     enabled: false
     base-url: http://127.0.0.1:8000

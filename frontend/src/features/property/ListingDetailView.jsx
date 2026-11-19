@@ -7,6 +7,7 @@ import { useAppNavigation, useRouteState } from "../../app/navigation.jsx";
 import { api, session, errorText } from "../auth/api.js";
 import { adapt } from "./listingPresentation.js";
 import ResourceState from "../../shared/components/ResourceState.jsx";
+import ImageAnalysisSection from "./ImageAnalysisSection.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import { mapUrl } from "./property.js";
 import { isPublicProperty } from "./usePublicListings.js";
@@ -357,7 +358,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                     </svg>
                     <span data-sp-4f294819="">
                       {"Xem "}
-                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.images.length || 1)}
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.images.length)}
                       {" ảnh chụp"}
                     </span>
                   </div>
@@ -493,7 +494,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         {"Hướng nhà"}
                       </p>
                       <p className="text-sm font-extrabold text-[var(--ui-accent)] truncate mt-0.5" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property?.direction || "Đông Nam")}
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property?.direction || "Chưa cung cấp")}
                       </p>
                     </div>
                     <div className="bg-brand-card hover:bg-brand-card hover:border-[var(--ui-border)]/30 border border-brand-line rounded-2xl p-4 transition-all duration-150" data-sp-4f294819="">
@@ -514,7 +515,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Pháp lý" : "Phòng ngủ")}
                       </p>
                       <p className="text-sm font-extrabold text-[var(--ui-accent)] truncate mt-0.5" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Sổ hồng / Sổ đỏ" : view.property?.bedrooms ? view.property.bedrooms + " phòng ngủ" : "1 phòng ngủ")}
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Chưa xác minh pháp lý" : view.property?.bedrooms != null ? view.property.bedrooms + " phòng ngủ" : "Chưa cung cấp")}
                       </p>
                     </div>
                     <div className="bg-brand-card hover:bg-brand-card hover:border-[var(--ui-border)]/30 border border-brand-line rounded-2xl p-4 transition-all duration-150" data-sp-4f294819="">
@@ -533,7 +534,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Lộ giới" : "Phòng tắm")}
                       </p>
                       <p className="text-sm font-extrabold text-[var(--ui-accent)] truncate mt-0.5" data-sp-4f294819="">
-                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Đường 7.5m - 15m" : view.property?.bathrooms ? view.property.bathrooms + " phòng tắm" : "1 phòng tắm")}
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.isLandProperty ? "Chưa có dữ liệu đường" : view.property?.bathrooms != null ? view.property.bathrooms + " phòng tắm" : "Chưa cung cấp")}
                       </p>
                     </div>
                   </div>
@@ -592,11 +593,12 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       </span>
                     </h2>
                     <span className="text-xs font-semibold text-brand-muted" data-sp-4f294819="">
-                      {"Khoảng cách thực tế"}
+                      {"Khoảng cách đường chim bay"}
                     </span>
                   </div>
 
                 </section>
+                <ImageAnalysisSection propertyId={view.property?.id} />
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4" data-sp-4f294819="">
                     <div data-sp-4f294819="">

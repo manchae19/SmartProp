@@ -2,8 +2,8 @@
 spring:
   flyway:
     enabled: false
-    locations: classpath:database/migrations,classpath:database/research-migrations
-    target: '19'
+    locations: classpath:database/migrations,classpath:database/research-migrations/poi
+    target: '23'
     clean-disabled: true
     baseline-on-migrate: false
     create-schemas: false

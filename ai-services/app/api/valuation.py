@@ -1,9 +1,9 @@
 """Valuation endpoints; models live in application state, not request state."""
+import os
 import time
 from datetime import datetime, timezone
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
-from app.api.valuation_v1_3 import verify_internal_read
 from app.api.schemas import PredictionResponse, ValuationRequest, V1_3PreviewResponse
 
 router = APIRouter()
@@ -22,9 +22,39 @@ def health(request: Request):
     return {"status": "ok", "model_version": "v6", "model_ready": True}
 
 
+def real_features_enabled() -> bool:
+    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+OPTIONAL_INPUTS = [
+    "road_width_m", "frontage_width_m", "street_name", "project_name",
+    "bathrooms", "house_direction", "balcony_direction",
+]
+TYPE_TO_CATEGORY = {
+    "house": "Nhà ở", "villa": "Nhà ở",
+    "land": "Đất nền", "apartment": "Căn hộ chung cư",
+}
+
+
 @router.get("/model/options")
 def model_options(request: Request):
-    return predictor_for(request).options()
+    data = predictor_for(request).options()
+    predictor_v1_3 = getattr(request.app.state, "predictor_v1_3", None)
+    supported_types = []
+    if predictor_v1_3 is not None:
+        supported_types = [str(item).lower() for item in predictor_v1_3.info().get("supported_types", [])]
+    supported_categories = sorted({TYPE_TO_CATEGORY[item] for item in supported_types if item in TYPE_TO_CATEGORY})
+    enabled = real_features_enabled()
+    data["v1_3"] = {
+        "available": predictor_v1_3 is not None,
+        "status": "PREVIEW_EXPERIMENTAL" if predictor_v1_3 is not None else "UNAVAILABLE",
+        "real_features_enabled": enabled,
+        "optional_inputs": list(OPTIONAL_INPUTS) if enabled and predictor_v1_3 is not None else [],
+        "supported_types": supported_types,
+        "supported_categories": supported_categories,
+        "unavailable_reason": None if predictor_v1_3 is not None else "V1.3 artifacts unavailable",
+    }
+    return data
 
 
 @router.post("/predict", response_model=PredictionResponse)
@@ -53,7 +83,7 @@ def predict(payload: ValuationRequest, request: Request, background_tasks: Backg
 
 
 @router.post("/predict/v1_3_preview", response_model=V1_3PreviewResponse)
-def predict_v1_3_preview(payload: ValuationRequest, request: Request, _auth: bool = Depends(verify_internal_read)):
+def predict_v1_3_preview(payload: ValuationRequest, request: Request):
     """Safe authenticated developer preview endpoint for V1.3 Multi-Source XGBoost.
 
     Does NOT replace public V6. Exposes V1.3 prediction and TreeSHAP explainability

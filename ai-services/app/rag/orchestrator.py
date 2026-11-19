@@ -17,6 +17,8 @@ from .tool_registry import ToolRegistry
 from .market import market_query, market_response
 from .property_context import focused_reply
 from .scope import domain_reply
+from .discovery import AdvisorDiscoveryMixin
+from . import commute_destination, commute_ranking
 from .personalization import intake, projection
 
 
@@ -44,7 +46,7 @@ def budget_from_question(question):
 from .account_preferences import fingerprint, seed
 from .tools import UpstreamError
 
-class ChatOrchestrator:
+class ChatOrchestrator(AdvisorDiscoveryMixin):
     def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None, document_advisor=None):
         self.backend, self.repository, self.knowledge = backend, repository, knowledge
         self.retriever, self.llm = retriever, llm
@@ -52,6 +54,9 @@ class ChatOrchestrator:
         self.sessions = sessions or SessionStore()
         self.tools = ToolRegistry(backend)
         self.document_advisor=document_advisor
+        from .planning_chat import PlanningAdvisor
+        settings=getattr(backend,"settings",None)
+        self.planning_advisor=PlanningAdvisor(getattr(settings,"planning_snapshot_path",None),enabled=getattr(settings,"planning_enabled",False))
 
     def _enrich(self, properties):
         """Attach real image + straight-line POI evidence to visible platform properties.
@@ -92,6 +97,18 @@ class ChatOrchestrator:
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
+        if properties and extra and extra.get("addressQuery"):
+            for p in properties:
+                uid=p["id"].split(":")[-1]
+                p.setdefault("source",{"kind":"PROPERTY","recordKey":uid,"name":"SmartProp"})
+                p.setdefault("qualityStatus","PLATFORM_PUBLISHED");p.setdefault("verificationStatus","PLATFORM_PUBLISHED")
+                p.setdefault("score",0);p.setdefault("explanations",[]);p.setdefault("warnings",[])
+                p["matchBasis"]="ADDRESS"
+        if properties and extra and extra.get("addressQuery"):
+            properties=[p for p in properties if (not criteria.get("budgetVnd") or Decimal(str(p["priceVnd"]))<=Decimal(str(criteria["budgetVnd"]))) and (not criteria.get("minPriceVnd") or Decimal(str(p["priceVnd"]))>=Decimal(str(criteria["minPriceVnd"]))) and (criteria.get("propertyType","ALL")=="ALL" or p.get("propertyType")==criteria["propertyType"]) and (not criteria.get("district") or p.get("district")==criteria["district"]) and (not criteria.get("minAreaSqm") or Decimal(str(p["areaSqm"]))>=Decimal(str(criteria["minAreaSqm"])))]
+            if not properties:
+                answer="Không có tin phù hợp với địa chỉ và các bộ lọc bắt buộc hiện tại. Tôi không tự tăng ngân sách.";responseKind="ADDRESS_NO_RESULTS"
+            citations=[Citation(sourceId="property:"+p["source"]["recordKey"],url="/api/v1/properties/"+p["source"]["recordKey"],version=str(p.get("contentVersion") or "1"),contentHash=digest(p),scope="PUBLIC",kind="PROPERTY_DETAIL",title=p["title"]) for p in properties]
         if properties:
             self._enrich(properties)
         # Only a completed search replaces result references; POI/clarification replies preserve them.
@@ -118,7 +135,7 @@ class ChatOrchestrator:
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
         if extra:
             payload.update(extra)
-        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE","AREA_AMENITIES"):
+        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE","AREA_AMENITIES","PLANNING_LOOKUP"):
             needs = projection(context, criteria or {})
             payload["needs"] = needs
             if not payload.get("quickReplies"):
@@ -150,10 +167,18 @@ class ChatOrchestrator:
         context.needs["unsupportedPopularityFilter"]=turn["unsupportedPopularityFilter"]
         event("intent_decision", intent=turn["intent"], budgetMentioned=turn["budgetMentioned"],
               tool="KNOWLEDGE_MARKET" if turn["intent"]=="MARKET_ANALYSIS" else "MARKET_SUMMARY" if turn["intent"] in ("MARKET_PRICE","MARKET_TREND") else "PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
+        planning=self.planning_advisor.reply(request.question,context)
+        if planning is not None:
+            context.needs["turnIntent"]="PLANNING_LOOKUP"
+            return self._reply(request,session_id,context,context.criteria(),research=research,**planning)
         outside=domain_reply(request.question,turn)
         if outside:
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
+        discovery_reply=self.dispatch_discovery(request,session_id,context,turn,research=research,token=token,account=account)
+        if discovery_reply is not None:return discovery_reply
+        if context.needs.pop("commuteResumeSearch",False):
+            turn["intent"]="REFINE_SEARCH";turn["searchChange"]=True
         focus=request.propertyId or context.needs.get("focusedPropertyId")
         if focus and not turn["searchChange"] and turn["intent"] not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","AREA_AMENITIES","UPDATE_CRITERIA","PLANNING_QA","KNOWLEDGE"):
             context.needs["focusedPropertyId"]=focus
@@ -346,6 +371,8 @@ class ChatOrchestrator:
             if budget is None:
                 limitations.append("Chưa có ngân sách trong ngữ cảnh; không thể xác định lại danh sách bất động sản.")
             else:
+                if context.needs.get("commutePendingLimit") and commute_destination.destination_of(context.needs) and not research:
+                    criteria["limit"]=6
                 try:
                     response = traced("recommendation", lambda: self.tools.data("recommendation",criteria, research=research, token=token))
                 except UpstreamError:
@@ -354,6 +381,16 @@ class ChatOrchestrator:
                         answer="Chưa truy vấn được nguồn bất động sản. Đây là lỗi kết nối/công cụ, không phải kết luận không có tin phù hợp. Bạn thử lại sau nhé.",
                         responseKind="DATA_SOURCE_ERROR",extra={"queryStatus":"UPSTREAM_ERROR"})
                 properties = response["topProperties"]
+                pending=context.needs.get("commutePendingLimit")
+                destination=commute_destination.destination_of(context.needs)
+                if pending and destination and not research:
+                    pool=list(properties)
+                    properties=self._rank_by_commute(properties,destination,pending.get("minutes"),pending.get("kind") or "SOFT",limitations)
+                    if pool and not properties and pending.get("kind")=="HARD" and not any(p.get("commute") for p in pool):
+                        return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                            answer="Chưa có đủ dữ liệu tuyến đường để xác nhận giới hạn đi làm. Không thể kết luận là không có nhà phù hợp; bạn có thể bỏ điều kiện thời gian hoặc thử lại.",
+                            responseKind="COMMUTE_DATA_UNAVAILABLE",limitations=limitations,extra={"quickReplies":["Bỏ qua","Tìm theo ngân sách"]})
+                    response={**response,"topProperties":properties}
         else:
             limitations.append("Chưa có một ngân sách rõ ràng; hệ thống chưa gọi công cụ lọc bất động sản.")
 

@@ -11,7 +11,7 @@ import vn.smartprop.config.*;
 import vn.smartprop.modules.media.PropertyImageRepository;
 @Service
 public class PropertySearch {
-    public record Filters(String keyword,Property.Type propertyType,Property.Transaction transactionType,String city,String district,String ward,
+    public record Filters(String keyword,String address,Property.Type propertyType,Property.Transaction transactionType,String city,String district,String ward,
         BigDecimal minPrice,BigDecimal maxPrice,BigDecimal minArea,BigDecimal maxArea,Short bedrooms,String bbox) {}
     public record Bounds(double west,double south,double east,double north) {}
     private final PropertyRepository properties;private final PropertyService service;private final PropertyImageRepository images;
@@ -39,6 +39,8 @@ public class PropertySearch {
             predicates.add(cb.equal(root.get("status"),Property.Status.PUBLISHED));predicates.add(cb.isNull(root.get("deletedAt")));
             predicates.add(cb.or(cb.isNull(root.get("expiresAt")),cb.greaterThan(root.get("expiresAt"),now)));
             if(f.keyword()!=null&&!f.keyword().isBlank()) {String term=ApiInputs.like(f.keyword().strip().toLowerCase(Locale.ROOT));predicates.add(cb.or(cb.like(cb.lower(root.get("title")),term,'\\'),cb.like(cb.lower(root.get("description")),term,'\\')));}
+            // An address lookup must match the address column itself, not prose that happens to mention the street.
+            if(f.address()!=null&&!f.address().isBlank()) {String term=ApiInputs.like(f.address().strip().toLowerCase(Locale.ROOT));predicates.add(cb.like(cb.lower(root.get("address")),term,'\\'));}
             if(f.propertyType()!=null)predicates.add(cb.equal(root.get("propertyType"),f.propertyType()));if(f.transactionType()!=null)predicates.add(cb.equal(root.get("transactionType"),f.transactionType()));
             if(f.city()!=null&&!f.city().isBlank())predicates.add(cb.equal(root.get("city"),f.city()));if(f.district()!=null&&!f.district().isBlank())predicates.add(cb.equal(root.get("district"),f.district()));if(f.ward()!=null&&!f.ward().isBlank())predicates.add(cb.equal(root.get("ward"),f.ward()));
             if(f.minPrice()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("price"),f.minPrice()));if(f.maxPrice()!=null)predicates.add(cb.lessThanOrEqualTo(root.get("price"),f.maxPrice()));

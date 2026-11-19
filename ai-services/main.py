@@ -10,6 +10,7 @@ from app.api.valuation import router as v6_router
 from app.api.valuation_v1_3 import router as v1_3_router
 from app.core.shadow_manager import ShadowTelemetryManager
 from app.models.xgboost.predictor_v6 import PredictorV6
+from app.models.xgboost.predictor_v1_3 import PredictorV1_3, ModelArtifactError
 
 logger = logging.getLogger("smartprop.ai")
 
@@ -24,20 +25,21 @@ def create_app(model_dir=None, v1_3_model_dir=None):
         app.state.shadow_manager = ShadowTelemetryManager()
 
         # 3. XGBoost V1.3 Warm In-Memory Predictor
+        app.state.v1_3_error = None
         try:
-            from app.models.xgboost.predictor_v1_3 import PredictorV1_3
             app.state.predictor_v1_3 = PredictorV1_3(v1_3_model_dir)
             logger.info("XGBoost V1.3 in-memory predictor initialized and verified.")
-        except Exception as exc:
+        except (ModelArtifactError, Exception) as exc:
             logger.warning(f"XGBoost V1.3 initialization deferred or failed: {exc}")
             app.state.predictor_v1_3 = None
+            app.state.v1_3_error = str(exc)[:300]
 
         try:
             yield
         finally:
             app.state.predictor = None
             app.state.predictor_v1_3 = None
-            app.state.shadow_manager._executor.shutdown(wait=False, cancel_futures=True)
+            app.state.v1_3_error = None
             app.state.shadow_manager = None
 
     application = FastAPI(

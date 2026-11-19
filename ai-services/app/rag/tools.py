@@ -1,5 +1,8 @@
 """Fixed backend routes and parameterized SQL projections. There is no text-to-SQL API."""
 import json
+import time
+import math
+NEARBY_MAX_PAGES=20
 import re
 from decimal import Decimal
 import httpx
@@ -16,6 +19,11 @@ class UpstreamError(RuntimeError):
         self.status = status if status in (401, 403, 404, 409, 503) else 502
         super().__init__("BACKEND_TOOL_UNAVAILABLE")
 
+
+class OutboundRateLimited(UpstreamError):
+    def __init__(self, retry_after=60):
+        super().__init__(429)
+        self.retry_after=retry_after
 
 class BackendTools:
     def __init__(self, settings):
@@ -251,12 +259,360 @@ class BackendTools:
         if "sampleListingCount" in json.dumps(profile, default=str):
             raise GroundingError("RESTRICTED_AMENITY_METADATA")
         return profile
+    def market_analytics(self, district=None):
+        """Read-only aggregate market statistics; no property ids or contact data."""
+        params = {"includeResearch": "false"}
+        if district:
+            params["district"] = district
+        try:
+            response = self.client.get("/api/v1/properties/market-analytics", params=params)
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if (not isinstance(body, dict) or not isinstance(body.get("meta"), dict)
+                or not isinstance(body.get("overall"), dict)
+                or body["meta"].get("priceBasis") != "ASKING_SALE_VND_TOTAL"):
+            raise GroundingError("INVALID_MARKET_ANALYTICS")
+        return body
+    def property_detail(self, property_id):
+        """Public listing detail. Drafts and private listings are not served by this route."""
+        if not isinstance(property_id, str) or not re.fullmatch(r"[0-9a-fA-F-]{36}", property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        try:
+            response = self.client.get("/api/v1/properties/" + property_id)
+            if response.status_code == 404:
+                raise GroundingError("PROPERTY_NOT_PUBLIC")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if not isinstance(body, dict) or str(body.get("id", "")).lower() != property_id.lower():
+            raise GroundingError("INVALID_PROPERTY_DETAIL")
+        if body.get("status") != "PUBLISHED":
+            raise GroundingError("PROPERTY_NOT_PUBLIC")
+        price = body.get("price")
+        if not _is_number(price) or price <= 0:
+            raise GroundingError("INVALID_PROPERTY_DETAIL")
+        return {
+            "id": body["id"],
+            "title": str(body.get("title") or "").strip(),
+            "priceVnd": float(price),
+            "areaSqm": float(body["areaSqm"]) if _is_number(body.get("areaSqm")) else None,
+            "district": str(body.get("district") or "").strip(),
+            "ward": str(body.get("ward") or "").strip(),
+            "propertyType": str(body.get("propertyType") or "").strip(),
+            "transactionType": str(body.get("transactionType") or "").strip(),
+            "listingCode": str(body.get("listingCode") or "").strip(),
+            "contentVersion": body.get("contentVersion"),
+        }
+    def _commute_request(self, property_id, latitude, longitude, label, mode):
+        """One route call, retried once when the shared provider budget is momentarily full.
+
+        The backend answers 429 when the outbound egress bucket is exhausted. That is a
+        transient throttle, not a missing route, so a single short retry is honest.
+        """
+        params = {"latitude": float(latitude), "longitude": float(longitude),
+                  "label": str(label or "")[:200], "mode": mode}
+        response = self.client.get("/api/v1/properties/" + property_id + "/commute", params=params)
+        if response.status_code == 429:
+            time.sleep(1.2)
+            response = self.client.get("/api/v1/properties/" + property_id + "/commute", params=params)
+        return response
+    def commute(self, property_id, latitude, longitude, label="", mode="drive"):
+        """Driving/walking time from a public listing to a user-confirmed point."""
+        if not isinstance(property_id, str) or not re.fullmatch(r"[0-9a-fA-F-]{36}", property_id):
+            raise GroundingError("INVALID_PROPERTY_ID")
+        if not _is_number(latitude) or not _is_number(longitude):
+            raise GroundingError("INVALID_COMMUTE_DESTINATION")
+        if mode not in ("walk", "drive"):
+            raise GroundingError("INVALID_COMMUTE_MODE")
+        try:
+            response = self._commute_request(property_id, latitude, longitude, label, mode)
+            if response.status_code == 404:
+                raise GroundingError("PROPERTY_NOT_PUBLIC")
+            if response.status_code == 429:
+                raise OutboundRateLimited()
+            if response.status_code in (422, 400):
+                raise GroundingError("COMMUTE_UNAVAILABLE")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if (not isinstance(body, dict) or not _is_number(body.get("distanceMeters"))
+                or not _is_number(body.get("durationSeconds"))):
+            raise GroundingError("INVALID_COMMUTE_RESULT")
+        return {"distanceMeters": float(body["distanceMeters"]),
+                "durationSeconds": float(body["durationSeconds"]),
+                "mode": body.get("mode") or mode,
+                "provider": body.get("provider") or "GEOAPIFY"}
+    def geocode_workplace(self, address):
+        """Resolve a user-supplied workplace address to candidate points.
+
+        The caller must have obtained consent first: this sends the address to the map
+        provider. Only coordinates and a display label come back; nothing is stored.
+        """
+        text = (address or "").strip()
+        if len(text) < 3 or len(text) > 300:
+            raise GroundingError("INVALID_ADDRESS")
+        try:
+            response = self.client.post("/api/v1/advisor/geocoding",
+                                        json={"address": text, "shareAddress": True})
+            if response.status_code == 429:
+                raise GroundingError("GEOCODING_RATE_LIMITED")
+            if response.status_code in (422, 400):
+                raise GroundingError("INVALID_ADDRESS")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if not isinstance(body, dict) or body.get("status") not in ("OK", "NO_MATCH", "NO_MATCHING_LOCALITY", "ZERO_RESULTS", "NO_RESULTS"):
+            raise GroundingError("INVALID_GEOCODING_RESULT")
+        points = []
+        for item in body.get("candidates") or []:
+            if (not isinstance(item, dict) or not isinstance(item.get("label"), str)
+                    or not item["label"].strip() or not isinstance(item.get("id"), str)):
+                raise GroundingError("INVALID_GEOCODING_RESULT")
+            if not _is_number(item.get("latitude")) or not _is_number(item.get("longitude")):
+                raise GroundingError("INVALID_GEOCODING_RESULT")
+            points.append({"id": item["id"], "label": item["label"].strip()[:300],
+                           "latitude": float(item["latitude"]), "longitude": float(item["longitude"]),
+                           "approximate": bool(item.get("approximate"))})
+            if len(points) >= 5:
+                break
+        return points
+    def saved_workplace(self, token):
+        """Candidate points for the saved workplace, resolved server-side.
+
+        The account's raw workplace string is never sent here: the backend geocodes it
+        internally and answers with coordinates only.
+        """
+        if not isinstance(token, str) or not token.startswith("Bearer ") or len(token) > 8192:
+            raise GroundingError("WORKPLACE_REQUIRES_ACCOUNT")
+        try:
+            response = self.client.get("/api/v1/users/me/advisor-context/workplace",
+                                       headers={"Authorization": token})
+            if response.status_code in (401, 403):
+                raise GroundingError("WORKPLACE_REQUIRES_ACCOUNT")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if not isinstance(body, dict) or type(body.get("available")) is not bool:
+            raise GroundingError("INVALID_WORKPLACE_RESULT")
+        if not body["available"]:
+            return {"available": False, "reason": str(body.get("reason") or "NOT_RESOLVED"), "points": []}
+        points = []
+        for item in body.get("candidates") or []:
+            if not isinstance(item, dict) or not _is_number(item.get("latitude")) or not _is_number(item.get("longitude")):
+                raise GroundingError("INVALID_WORKPLACE_RESULT")
+            points.append({"latitude": float(item["latitude"]), "longitude": float(item["longitude"]),
+                           "label": str(item.get("label") or "").strip()[:300],
+                           "approximate": bool(item.get("approximate"))})
+            if len(points) >= 3:
+                break
+        return {"available": bool(points), "reason": "OK" if points else "NOT_RESOLVED", "points": points}
+    def commute_matrix(self, property_ids, latitude, longitude, label="", mode="drive"):
+        """Duration from several listings to one confirmed destination in a single call.
+
+        Returns one entry per requested id, in the same order. A null duration means the
+        vendor had no route; it is never treated as zero.
+        """
+        if not isinstance(property_ids, list) or not property_ids or len(property_ids) > 6:
+            raise GroundingError("INVALID_COMMUTE_MATRIX")
+        for property_id in property_ids:
+            if not isinstance(property_id, str) or not re.fullmatch(r"[0-9a-fA-F-]{36}", property_id):
+                raise GroundingError("INVALID_PROPERTY_ID")
+        if not _is_number(latitude) or not _is_number(longitude):
+            raise GroundingError("INVALID_COMMUTE_DESTINATION")
+        if mode not in ("walk", "drive"):
+            raise GroundingError("INVALID_COMMUTE_MODE")
+        payload = {"propertyIds": property_ids, "latitude": float(latitude), "longitude": float(longitude),
+                   "label": str(label or "")[:200], "mode": mode}
+        try:
+            response = self.client.post("/api/v1/advisor/commute-matrix", json=payload)
+            if response.status_code == 429:
+                raise OutboundRateLimited()
+            if response.status_code in (422, 400):
+                raise GroundingError("COMMUTE_UNAVAILABLE")
+            if response.status_code == 503:
+                raise GroundingError("ROUTE_NOT_CONFIGURED")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        if not isinstance(body, dict) or not isinstance(body.get("cells"), list):
+            raise GroundingError("INVALID_COMMUTE_MATRIX")
+        cells = []
+        for item in body["cells"]:
+            if not isinstance(item, dict) or not isinstance(item.get("propertyId"), str):
+                raise GroundingError("INVALID_COMMUTE_MATRIX")
+            seconds = item.get("durationSeconds")
+            meters = item.get("distanceMeters")
+            cells.append({
+                "propertyId": item["propertyId"],
+                "status": str(item.get("status") or "NO_ROUTE"),
+                "distanceMeters": float(meters) if _is_number(meters) else None,
+                "durationSeconds": float(seconds) if _is_number(seconds) else None,
+            })
+        return {"provider": body.get("provider") or "", "mode": body.get("mode") or mode, "cells": cells}
+    def search_by_address(self, address, limit=5):
+        """Public listings whose address column matches the given street address.
+
+        The backend filters the address column itself, so prose that merely mentions
+        the street in a title or description is not returned as a match.
+        """
+        text = str(address or "").strip()
+        if len(text) < 3 or len(text) > 200:
+            raise GroundingError("INVALID_ADDRESS")
+        try:
+            response = self.client.get("/api/v1/properties",
+                                       params={"address": text, "size": max(1, min(int(limit), 10)),
+                                               "sort": "newest"})
+            if response.status_code == 429:
+                raise OutboundRateLimited()
+            if response.status_code in (400, 422):
+                raise GroundingError("INVALID_ADDRESS")
+            if response.status_code != 200:
+                raise UpstreamError(response.status_code)
+            body = json.loads(response.content, parse_float=Decimal)
+        except (httpx.HTTPError, ValueError) as e:
+            raise UpstreamError() from e
+        items = body.get("items") if isinstance(body, dict) else None
+        if not isinstance(items, list):
+            raise GroundingError("INVALID_PROPERTY_SEARCH")
+        results = []
+        for item in items:
+            if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
+                continue
+            price = item.get("price")
+            if not _is_number(price) or price <= 0:
+                continue
+            results.append({
+                "id": str(item.get("id") or ""),
+                "title": str(item.get("title") or "").strip(),
+                "priceVnd": float(price),
+                "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
+                "address": str(item.get("address") or "").strip(),
+                "district": str(item.get("district") or "").strip(),
+                "ward": str(item.get("ward") or "").strip(),
+                "propertyType": str(item.get("propertyType") or ""),
+                "transactionType": str(item.get("transactionType") or ""),
+                "listingCode": str(item.get("listingCode") or ""),
+                "contentVersion": int(item.get("contentVersion") or 1),
+            })
+        return {"address": text, "total": int(body.get("totalElements") or 0), "items": results}
+    def search_nearby(self, latitude, longitude, radius_meters=1000, limit=10, max_price=None):
+        """Every public listing inside a bounding box around a point, with coordinates.
+
+        The list endpoint sorts by creation time, not by distance, so one page is not
+        enough: the nearest listing can sit on any page. All pages are read (bounded) and
+        the caller still computes the real distance before filtering.
+        """
+        if not _is_number(latitude) or not _is_number(longitude):
+            raise GroundingError("INVALID_COORDINATES")
+        if not _is_number(radius_meters) or not 50 <= float(radius_meters) <= 50000:
+            raise GroundingError("INVALID_RADIUS")
+        lat = float(latitude)
+        lon = float(longitude)
+        # A degree of latitude is ~111 km; longitude shrinks with latitude.
+        dlat = float(radius_meters) / 111_000.0
+        dlon = float(radius_meters) / (111_000.0 * max(0.2, math.cos(math.radians(lat))))
+        bbox = f"{lon - dlon:.6f},{lat - dlat:.6f},{lon + dlon:.6f},{lat + dlat:.6f}"
+        page_size = 50
+        results = []
+        seen = set()
+        page = 0
+        complete = False
+        while page < NEARBY_MAX_PAGES:
+            params = {"bbox": bbox, "size": page_size, "page": page, "sort": "newest"}
+            if max_price is not None:
+                params["maxPrice"] = str(max_price)
+            try:
+                response = self.client.get("/api/v1/properties", params=params)
+                if response.status_code == 429:
+                    raise OutboundRateLimited()
+                if response.status_code in (400, 422):
+                    raise GroundingError("INVALID_BBOX")
+                if response.status_code != 200:
+                    raise UpstreamError(response.status_code)
+                body = json.loads(response.content, parse_float=Decimal)
+            except (httpx.HTTPError, ValueError) as e:
+                raise UpstreamError() from e
+            items = body.get("items") if isinstance(body, dict) else None
+            if not isinstance(items, list):
+                raise GroundingError("INVALID_PROPERTY_SEARCH")
+            for item in items:
+                if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
+                    continue
+                price = item.get("price")
+                if not _is_number(price) or price <= 0:
+                    continue
+                item_lat, item_lon = item.get("latitude"), item.get("longitude")
+                if not _is_number(item_lat) or not _is_number(item_lon):
+                    continue
+                listing_id = str(item.get("id") or "")
+                # The API can repeat a row across pages if the data shifts mid-read.
+                if not listing_id or listing_id in seen:
+                    continue
+                seen.add(listing_id)
+                results.append({
+                    "id": listing_id,
+                    "title": str(item.get("title") or "").strip(),
+                    "priceVnd": float(price),
+                    "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
+                    "address": str(item.get("address") or "").strip(),
+                    "district": str(item.get("district") or "").strip(),
+                    "ward": str(item.get("ward") or "").strip(),
+                    "latitude": float(item_lat),
+                    "longitude": float(item_lon),
+                    "propertyType": str(item.get("propertyType") or ""),
+                    "transactionType": str(item.get("transactionType") or ""),
+                    "listingCode": str(item.get("listingCode") or ""),
+                    "contentVersion": int(item.get("contentVersion") or 1),
+                })
+            total_pages = body.get("totalPages")
+            page += 1
+            if not items or (isinstance(total_pages, int) and page >= total_pages):
+                complete = True
+                break
+        return {"bbox": bbox, "radiusMeters": float(radius_meters),
+                "items": results, "complete": complete, "pagesRead": page}
 
 
 class PublishedPropertyRepository:
     """Only the publication projection already used by Hybrid V1.1; no crawler table access."""
     def __init__(self, settings):
         self.settings = settings
+
+    def list_public_images(self, limit=250):
+        """Image metadata via existing public REST API; no second database connection."""
+        if type(limit) is not int or not 1<=limit<=500:raise GroundingError("INVALID_IMAGE_LIMIT")
+        result=[]
+        with httpx.Client(base_url=self.settings.backend_url,trust_env=False,follow_redirects=False,timeout=10) as client:
+            for page in range(10):
+                response=client.get("/api/v1/properties",params={"size":50,"page":page,"sort":"newest"})
+                if response.status_code!=200:raise UpstreamError(response.status_code)
+                body=response.json()
+                items=body.get("items")
+                if not isinstance(items,list):raise GroundingError("INVALID_PUBLIC_IMAGE_CATALOG")
+                for item in items:
+                    if item.get("status")!="PUBLISHED":continue
+                    uid=item.get("id","")
+                    if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}",uid):continue
+                    for image in item.get("images") or []:
+                        url=image.get("url","")
+                        if not url.startswith("/api/v1/properties/"+uid+"/images/") or ".." in url or "//" in url:continue
+                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":str(item.get("title") or "")[:255],"district":item.get("district"),"ward":item.get("ward")})
+                        if len(result)>=limit:return result
+                if not items or page+1>=body.get("totalPages",1):break
+        return result
 
     def lookup(self, ids):
         if not self.settings.sql_enabled:

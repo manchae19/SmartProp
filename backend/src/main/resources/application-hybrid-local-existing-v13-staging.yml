@@ -1,0 +1,21 @@
+# Staging twin of hybrid-local-existing-v13: identical lineage guard, isolated 3307 instance.
+# The URL is a literal so no variable can redirect it to another host or schema.
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC
+  flyway:
+    enabled: false
+    locations: classpath:database/legacy-hybrid-local,classpath:database/research-migrations
+    target: '23'
+    clean-disabled: true
+    baseline-on-migrate: false
+    create-schemas: false
+app:
+  local-lineage:
+    require-complete: true
+  broker-applications:
+    enabled: true
+  profile:
+    avatar-enabled: true
+  recommendation:
+    allow-unverified-external: false

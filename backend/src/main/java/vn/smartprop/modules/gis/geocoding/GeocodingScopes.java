@@ -33,9 +33,7 @@ public final class GeocodingScopes {
             if(!available()||candidate.context()==null||!"vn".equalsIgnoreCase(candidate.context().countryCode())||!contains(candidate.latitude(),candidate.longitude()))return false;
             if(street.isBlank())return true;
             if(!Set.of("street","building","amenity").contains(candidate.context().resultType()))return false;
-            String providerStreet=streetKey(candidate.context().street());
-            if(!providerStreet.isBlank())return providerStreet.equals(street);
-            return streetKey(candidate.formattedAddress().split(",",2)[0]).equals(street);
+            return streetKey(candidate.context().street()).equals(street);
         }
     }
     public GeocodingScopes(ObjectMapper mapper){
@@ -68,6 +66,8 @@ public final class GeocodingScopes {
         var coords=new Coordinate[value.size()];for(int i=0;i<value.size();i++){double x=value.get(i).path(0).asDouble(Double.NaN),y=value.get(i).path(1).asDouble(Double.NaN);if(!Double.isFinite(x)||!Double.isFinite(y)||x<=-180||x>180||y<-90||y>90)throw new IllegalArgumentException("Invalid boundary coordinate");coords[i]=new Coordinate(x,y);}return factory.createLinearRing(coords);
     }
     private Optional<Region> district(String name){String key=GeocodingAddress.key(name);return regions.stream().filter(r->GeocodingAddress.key(r.name()).equals(key)).findFirst();}
+    /** Verified historical polygon for a district, or empty when none is bundled. Never a centroid or display circle. */
+    public Optional<org.locationtech.jts.geom.Geometry> districtGeometry(String name){return district(name).map(r->r.geometry().copy());}
     private Scope empty(String status){return new Scope(version+":"+status,status,List.of(),"");}
     private boolean adminPart(String value){
         String key=GeocodingAddress.key(value);
@@ -92,10 +92,6 @@ public final class GeocodingScopes {
             else if(district(part).isPresent())explicitDistricts.add(key);
             else if(!adminPart(part)&&street.isBlank())street=streetKey(part);
         }
-        if(request.districtOnly()){
-            if(selectedDistrict.isBlank()||district(selectedDistrict).isEmpty())return empty("NO_MATCHING_LOCALITY");
-            selectedWard="";explicitWards.clear();
-        }
         if(explicitDistricts.size()>1||explicitWards.size()>1)return empty("NO_MATCHING_LOCALITY");
         // User-selected filters cannot be replaced or widened by free text.
         if(!selectedDistrict.isBlank()&&!explicitDistricts.isEmpty()&&!explicitDistricts.contains(selectedDistrict))return empty("NO_MATCHING_LOCALITY");
@@ -104,31 +100,22 @@ public final class GeocodingScopes {
         if(selectedWard.isBlank()&&!explicitWards.isEmpty())selectedWard=explicitWards.iterator().next();
         if(!selectedWard.isBlank()){
             String equivalent=newWardDistricts.get(selectedWard);
-            if(equivalent!=null){
-                if(!selectedDistrict.isBlank()&&!selectedDistrict.equals(equivalent))return empty("NO_MATCHING_LOCALITY");
-                selectedDistrict=equivalent;
-            }else if(street.isBlank())return empty("SCOPE_UNAVAILABLE");
+            // No historical ward polygon exists in the bundled source. Do not use a new larger ward instead.
+            if(equivalent==null)return empty("SCOPE_UNAVAILABLE");
+            if(!selectedDistrict.isBlank()&&!selectedDistrict.equals(equivalent))return empty("NO_MATCHING_LOCALITY");
+            selectedDistrict=equivalent;
         }
         if(!selectedDistrict.isBlank()){
             var region=district(selectedDistrict);if(region.isEmpty())return empty("SCOPE_UNAVAILABLE");
-            return new Scope(version+":"+region.get().id()+":"+selectedWard+(!selectedWard.isBlank()&&!newWardDistricts.containsKey(selectedWard)?":street-first":"")+(request.districtOnly()?":DISTRICT_ONLY":""),"READY",List.of(region.get()),street);
+            return new Scope(version+":"+region.get().id()+":"+selectedWard,"READY",List.of(region.get()),street);
         }
         return new Scope(version+":supported-danang","READY",List.copyOf(regions),street);
     }
-    String reducedQuery(Search request){
-        for(String raw:request.address().split(",")){
-            String part=raw.strip();
-            if(!part.isBlank()&&!adminPart(part)&&!streetKey(part).isBlank())
-                return part+", Đà Nẵng, Việt Nam";
-        }
-        return "";
-    }
-    public Optional<Geometry> districtGeometry(String name){return district(name).map(r->r.geometry().copy());}
     List<Candidate> filter(List<Candidate> candidates,Scope scope){
         var seen=new HashSet<String>();
         return candidates.stream().filter(scope::accepts)
             .sorted(Comparator.comparingDouble((Candidate c)->c.confidence()==null?0:c.confidence()).reversed())
             .filter(c->seen.add(c.formattedAddress().toLowerCase(Locale.ROOT)+":"+c.latitude()+":"+c.longitude()))
-            .limit(5).map(c->{var x=c.context();return c.reviewed(new Context(x.countryCode(),x.localities(),x.districts(),x.wards(),x.resultType(),x.precision(),true,(scope.id().contains(":street-first")?"Đã kiểm tra đường và phạm vi quận; chưa xác minh ranh giới phường. ":"")+x.warning(),x.street()));}).toList();
+            .limit(5).map(c->{var x=c.context();return c.reviewed(new Context(x.countryCode(),x.localities(),x.districts(),x.wards(),x.resultType(),x.precision(),true,x.warning(),x.street()));}).toList();
     }
 }

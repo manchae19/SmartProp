@@ -61,17 +61,6 @@ public class GeocodingService {
         limits.check("geo:daily",250,86400);
         var received=client.search(provider,key,query,scope);
         var candidates=scopes.filter(received,scope);
-        // One bounded alternate query, only after a successful provider response with no accepted candidates.
-        String reduced=scopes.reducedQuery(request);
-        if(candidates.isEmpty()&&!reduced.isBlank()&&!reduced.equalsIgnoreCase(query)){
-            try{Thread.sleep(1050);}catch(InterruptedException e){Thread.currentThread().interrupt();throw new ApiException(503,"GEOCODING_INTERRUPTED","Tìm vị trí đã bị gián đoạn.");}
-            limits.check("geo:egress",1,1);
-            limits.check("geo:daily",250,86400);
-            var retry=client.search(provider,key,reduced,scope); // Same polygon and street validation; never broaden geography.
-            candidates=scopes.filter(retry,scope).stream().map(c->{var x=c.context();return c.reviewed(new Context(x.countryCode(),x.localities(),x.districts(),x.wards(),x.resultType(),x.precision(),x.localityMatched(),
-                "Tìm bằng số nhà/tên đường rút gọn; giữ nguyên phạm vi quận. "+x.warning(),x.street()));}).toList();
-            if(!retry.isEmpty())received=retry;
-        }
         var result=new Result(candidates.isEmpty()?(received.isEmpty()?"ZERO_RESULTS":"NO_MATCHING_LOCALITY"):"OK",provider,candidates);
         if(provider==Provider.GEOAPIFY) synchronized(cache) {
             if(cache.size()>=256) cache.remove(cache.keySet().iterator().next());

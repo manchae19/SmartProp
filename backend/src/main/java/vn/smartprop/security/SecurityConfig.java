@@ -103,13 +103,22 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/api/v1/users/me/notifications/read-all").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/contact").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/v1/properties/valuation-options").hasAnyRole("BROKER","ADMIN")
-                .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview").hasAnyRole("BROKER","ADMIN")
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/image-scan").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/image-scan/retry").hasAnyRole("BROKER","ADMIN")
+                // YOLOv8 object analysis mirrors the duplicate scanner: public read
+                // for a public listing (the controller still checks visibility),
+                // retry restricted to publishers.
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/image-analysis").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/image-analysis/retry").hasAnyRole("BROKER","ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/v1/properties/valuation-preview","/api/v1/properties/comparables").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/amenities/research/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/nearby","/api/v1/properties/*/route","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*","/api/v1/amenities/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties","/api/v1/properties/map","/api/v1/properties/*","/api/v1/properties/*/points-of-interest","/api/v1/properties/*/nearby","/api/v1/properties/*/route","/api/v1/properties/*/commute","/api/v1/properties/*/images/*/content","/api/v1/projects","/api/v1/projects/*","/api/v1/amenities/**").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/v1/geocoding/search").hasAnyRole("BROKER","ADMIN")
+                // Advisor chat is anonymous; this route requires per-call consent and is IP-capped.
+                .requestMatchers(HttpMethod.POST,"/api/v1/advisor/geocoding","/api/v1/advisor/commute-matrix").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/v1/recommendations/research").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/recommendations/research/config").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST,"/api/v1/recommendations").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/v1/recommendations","/api/v1/advisor/consult").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/v1/geocoding/config").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties","/api/v1/properties/*/submit","/api/v1/properties/*/images").hasAnyRole("BROKER","ADMIN")
                 .requestMatchers(HttpMethod.PATCH,"/api/v1/properties/*","/api/v1/properties/*/images/*").hasAnyRole("BROKER","ADMIN")
