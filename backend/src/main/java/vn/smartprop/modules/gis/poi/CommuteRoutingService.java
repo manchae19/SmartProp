@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vn.smartprop.common.ApiException;
+import vn.smartprop.common.RequestLimits;
 
 /**
  * Computes the trip to work, with the routing vendor chosen by configuration.
@@ -237,16 +238,57 @@ public class CommuteRoutingService {
     private List<Cell> geoapifyMatrix(List<Origin> origins, double destLat, double destLon, String mode) {
         List<Cell> cells = new ArrayList<>();
         for (Origin origin : origins) {
-            try {
-                Measured measured = geoapifyDirections(origin.latitude(), origin.longitude(), destLat, destLon, mode);
-                cells.add(new Cell(origin.propertyId(), measured.distanceMeters(), measured.durationSeconds()));
-            } catch (ApiException error) {
-                // Our own budget tripping stops the batch; a single missing route only empties that cell.
-                if ("RATE_LIMITED".equals(error.code) || 429 == error.status) throw error;
-                cells.add(new Cell(origin.propertyId(), null, null));
+            Measured measured = null;
+            // The shared egress bucket allows one provider call per second, so a batch of
+            // pairs must be paced. Without this the second listing always trips our own
+            // limiter and the whole matrix is reported as rate limited.
+            for (int attempt = 0; attempt < 3 && measured == null; attempt++) {
+                try {
+                    measured = geoapifyDirections(origin.latitude(), origin.longitude(), destLat, destLon, mode);
+                } catch (ApiException error) {
+                    if (isEgressThrottle(error)) {
+                        // Only the one-second egress window clears by itself. The daily quota
+                        // and the per-IP endpoint cap cannot, so the batch stops and the caller
+                        // reports the limit instead of sleeping through it.
+                        if (attempt == 2) throw error;
+                        try {
+                            Thread.sleep(1100L);
+                        } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            throw new ApiException(503, "ROUTE_INTERRUPTED", "Yêu cầu tính tuyến đã bị gián đoạn.");
+                        }
+                    } else if (isRateLimited(error)) {
+                        // A limit we cannot wait out, or one we cannot attribute.
+                        throw error;
+                    } else {
+                        // A single missing route only empties that cell.
+                        break;
+                    }
+                }
             }
+            cells.add(measured == null
+                ? new Cell(origin.propertyId(), null, null)
+                : new Cell(origin.propertyId(), measured.distanceMeters(), measured.durationSeconds()));
         }
         return cells;
+    }
+
+    /** True when the failure is our own budget or the provider throttling us. */
+    private static boolean isRateLimited(ApiException error) {
+        return "RATE_LIMITED".equals(error.code) || 429 == error.status;
+    }
+
+    /**
+     * True only for the one-second egress bucket, which clears on its own.
+     *
+     * The decision uses the counter that refused, not Retry-After: that header is the time
+     * left in the current window, so the daily quota also reports 1 second just before its
+     * window rolls over. An unattributed 429 is never retried.
+     */
+    static boolean isEgressThrottle(ApiException error) {
+        return isRateLimited(error)
+            && error instanceof RequestLimits.Exceeded limited
+            && "geo:egress".equals(limited.bucket);
     }
 
     /**

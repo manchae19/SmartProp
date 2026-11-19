@@ -61,7 +61,7 @@ public class GeoapifyPlacesClient {
     private JsonNode request(String url){
         if(!enabled||key==null||key.isBlank())throw new ApiException(503,"NEARBY_NOT_CONFIGURED","Nguồn tiện ích chưa được cấu hình.");
         // Share the existing application's outbound request budget with geocoding.
-        limits.check("geo:egress",1,1);limits.check("geo:daily",250,86400);
+        limits.check("geo:egress",1,1,"geo:egress");limits.check("geo:daily",250,86400,"geo:daily");
         CompletableFuture<HttpResponse<InputStream>> pending=null;
         try{
             var request=HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8))

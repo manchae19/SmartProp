@@ -39,7 +39,7 @@ class SearchRankingTests(unittest.TestCase):
         second = self.ask(s, "Toàn Đà Nẵng", sid)
         if second.evidence.get("clarification") == "COMMUTE_DESTINATION_REQUIRED":
             third = self.ask(s, "Nhập địa điểm khác", sid)
-            return sid, self.ask(s, "123 Nguyễn Văn Linh", sid)
+            return sid, self.ask(s, "123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", sid)
         return sid, second
 
     def test_search_asks_for_the_workplace_before_ranking(self):
@@ -90,7 +90,7 @@ class SearchRankingTests(unittest.TestCase):
             s, "Tôi có 3 tỷ, tìm nhà gần chỗ làm").evidence["session"]["id"]
         self.ask(s, "Toàn Đà Nẵng", sid)
         third = self.ask(s, "Nhập địa điểm khác", sid)
-        final = self.ask(s, "123 Nguyễn Văn Linh", sid if third else sid)
+        final = self.ask(s, "123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", sid if third else sid)
         props = [p["id"] for p in final.recommendedProperties]
         self.assertEqual(len(props), 3)
         self.assertEqual(props[0], "property:b")  # fastest first

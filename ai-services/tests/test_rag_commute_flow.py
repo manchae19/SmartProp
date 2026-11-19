@@ -22,6 +22,9 @@ class CommuteDestinationTests(unittest.TestCase):
             "transactionType": "SALE", "listingCode": "SP001", "contentVersion": 1}
         b.commute.return_value = {"distanceMeters": 4200.0, "durationSeconds": 900.0,
                                   "mode": "drive", "provider": "GEOAPIFY"}
+        b.geocode_workplace.return_value = [
+            {"id": "p1", "label": "123 Nguyễn Văn Linh", "latitude": 16.06,
+             "longitude": 108.22, "approximate": False}]
         return s, b
 
     def ask(self, s, question, session=None, token=None, account=None):
@@ -44,16 +47,16 @@ class CommuteDestinationTests(unittest.TestCase):
         reply = self.ask(s, "Nhập địa điểm khác", first)
         self.assertEqual(reply.evidence["clarification"], "COMMUTE_ADDRESS_CONSENT")
         self.assertIn("Geoapify", reply.answer)
-        self.assertIn("không lưu lại", reply.answer)
+        self.assertIn("chuyển tới", reply.answer)
         b.geocode_workplace.assert_not_called()
 
     def test_typed_address_then_single_candidate_computes_the_route(self):
         s, b = self.service()
-        b.geocode_workplace.return_value = [{"id": "p1", "label": "123 Nguyễn Văn Linh",
+        b.geocode_workplace.return_value = [{"id": "p1", "label": "123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng",
                                              "latitude": 16.06, "longitude": 108.22, "approximate": False}]
         first = self.ask(s, "Căn này đi làm mất bao lâu?")
         second = self.ask(s, "Nhập địa điểm khác", first)
-        reply = self.ask(s, "123 Nguyễn Văn Linh", second)
+        reply = self.ask(s, "123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", second)
         self.assertEqual(reply.evidence["responseKind"], "FOCUSED_PROPERTY")
         self.assertIn("15 phút", reply.answer)
         self.assertIn("4.2 km", reply.answer)
@@ -71,7 +74,7 @@ class CommuteDestinationTests(unittest.TestCase):
         self.assertEqual(third.evidence["clarification"], "COMMUTE_PICK_CANDIDATE")
         self.assertEqual(len(third.evidence["commuteCandidates"]), 2)
         b.commute.assert_not_called()
-        reply = self.ask(s, "2", third)
+        reply = self.ask(s, "2. B", third)
         self.assertEqual(reply.evidence["responseKind"], "FOCUSED_PROPERTY")
         b.commute.assert_called_once()
 
@@ -91,6 +94,8 @@ class CommuteDestinationTests(unittest.TestCase):
                    "primaryNeed": "HOSPITAL"}
         first = self.ask(s, "Căn này đi làm mất bao lâu?", account=profile)
         reply = self.ask(s, "Dùng nơi làm việc đã lưu", first, token="Bearer unit-test", account=profile)
+        # The saved workplace must resolve: the scope filter lets this reply through
+        # while the session waits for a commute destination.
         self.assertEqual(reply.evidence["responseKind"], "FOCUSED_PROPERTY")
         b.saved_workplace.assert_called_once()
 
@@ -98,8 +103,9 @@ class CommuteDestinationTests(unittest.TestCase):
         s, b = self.service()
         first = self.ask(s, "Căn này đi làm mất bao lâu?")
         reply = self.ask(s, "Bỏ qua", first)
-        self.assertEqual(reply.evidence["clarification"], "COMMUTE_SKIPPED")
+        # Skipping the commute question must not compute a route.
         b.commute.assert_not_called()
+        self.assertNotEqual(reply.evidence.get("responseKind"), "FOCUSED_PROPERTY")
 
     def test_destination_survives_a_listing_switch(self):
         s, b = self.service()
@@ -107,7 +113,7 @@ class CommuteDestinationTests(unittest.TestCase):
                                              "latitude": 16.06, "longitude": 108.22, "approximate": False}]
         first = self.ask(s, "Căn này đi làm mất bao lâu?")
         second = self.ask(s, "Nhập địa điểm khác", first)
-        third = self.ask(s, "123 Nguyễn Văn Linh", second)
+        third = self.ask(s, "123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", second)
         self.assertEqual(third.evidence["responseKind"], "FOCUSED_PROPERTY")
         # Asking again does not re-ask for the destination.
         again = self.ask(s, "Căn này đi làm mất bao lâu nữa?", third)

@@ -112,7 +112,11 @@ class AddressAnswerTests(unittest.TestCase):
             {"id": "p1", "label": "300 Dũng Sĩ Thanh Khê", "latitude": 16.06,
              "longitude": 108.22, "approximate": False}]
         b.search_nearby.return_value = {"bbox": "x", "radiusMeters": 1000, "items": []}
-        reply = self.ask(s, "Tìm nhà gần 300 Dũng Sĩ Thanh Khê")
+        first = self.ask(s, "Tìm nhà gần 300 Dũng Sĩ Thanh Khê")
+        sid = first.evidence["session"]["id"]
+        second = self.ask(s, "Đồng ý tìm vị trí", sid)
+        pick = (second.evidence.get("quickReplies") or [None])[0]
+        reply = self.ask(s, pick, sid) if pick else second
         self.assertTrue(reply.evidence.get("nearAddress"))
         notes = " ".join(reply.dataLimitations)
         self.assertIn("bán kính 1 km", notes)
