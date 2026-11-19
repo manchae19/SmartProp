@@ -1,0 +1,2 @@
+# Optional document intake extension for an existing RAG environment.
+pypdf==7.1.0

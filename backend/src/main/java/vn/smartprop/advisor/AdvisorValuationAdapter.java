@@ -380,4 +380,3 @@ public class AdvisorValuationAdapter {
         public void onComplete() { body.complete(out.toByteArray()); }
     }
 }
-

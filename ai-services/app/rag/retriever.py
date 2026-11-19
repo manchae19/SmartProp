@@ -44,7 +44,8 @@ class FaissRetriever:
                 vectors = self._vectors[all_key][[lookup[d["sourceId"]] for d in valid]]
             else:
                 if key not in self._vectors:
-                    self._vectors = {key: self.embedding.encode([d["text"] for d in valid])}
+                    if len(self._vectors)>=4:self._vectors.pop(next(iter(self._vectors)))
+                    self._vectors[key]=self.embedding.encode([d["text"] for d in valid])
                 vectors = self._vectors[key]
         index = faiss.IndexFlatIP(vectors.shape[1])
         index.add(np.ascontiguousarray(vectors))

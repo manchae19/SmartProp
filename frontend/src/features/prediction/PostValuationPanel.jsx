@@ -1,362 +1,206 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import {
-  computed,
-  reactive,
-  ref,
-  watch,
-  onMounted,
-  onBeforeUnmount,
-} from "../../shared/state/store.js";
+import { classNames } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api } from "../auth/api.js";
-import {
-  categoryFor,
-  valuationInput,
-  createPreviewState,
-  exactVnd,
-} from "./valuation.js";
-function setup(__props) {
-  const props = propsForSetup(__props, {
-    draft: {
-      type: Object,
-      required: true,
-    },
-  });
-  const options = ref(null),
-    optionsError = ref(""),
-    loading = ref(false);
-  const state = reactive({
+import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
+function usePostValuationPanelState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  const props = {
+    ...inputProps
+  };
+  const _props = useRef(props);
+  _props.current = props;
+  const [options] = useState(() => createStateStore(null)),
+    [optionsError] = useState(() => createStateStore("")),
+    [loading] = useState(() => createStateStore(false));
+  useSyncExternalStore(loading.subscribe, loading.getSnapshot);
+  useSyncExternalStore(optionsError.subscribe, optionsError.getSnapshot);
+  useSyncExternalStore(options.subscribe, options.getSnapshot);
+  const [state] = useState(() => createStateStore({
     busy: false,
     result: null,
-    error: "",
-  });
-  const preview = createPreviewState(
-    (body) =>
-      api("/properties/valuation-preview", {
-        method: "POST",
-        body,
-      }),
-    state,
-  );
-  let disposed = false;
-  const locations = computed(
-    () =>
-      options.value?.categories?.find(
-        (c) => c.category === categoryFor(props.draft.propertyType),
-      )?.locations || [],
-  );
-  const location = computed(() =>
-    locations.value.includes(props.draft.valuationLocation)
-      ? props.draft.valuationLocation
-      : "",
-  );
-  const input = computed(() => valuationInput(props.draft, location.value));
+    error: ""
+  }));
+  useSyncExternalStore(state.subscribe, state.getSnapshot);
+  const [preview] = useState(() => createPreviewState(body => api("/properties/valuation-preview", {
+    method: "POST",
+    body
+  }), state));
+  const _disposedRef = useRef(false);
+  const getLocations = () => options.getSnapshot()?.categories?.find(c => c.category === categoryFor(_props.current.draft.propertyType))?.locations || [];
+  const getLocation = () => getLocations().includes(_props.current.draft.valuationLocation) ? _props.current.draft.valuationLocation : "";
+  const getInput = () => valuationInput(_props.current.draft, getLocation());
   function pickDistrict() {
-    const district =
-      props.draft.district === "Hoà Vang" ? "Hòa Vang" : props.draft.district;
-    if (!locations.value.includes(props.draft.valuationLocation))
-      props.draft.valuationLocation = locations.value.includes(district)
-        ? district
-        : "";
+    const district = _props.current.draft.district === "Hoà Vang" ? "Hòa Vang" : _props.current.draft.district;
+    if (!getLocations().includes(_props.current.draft.valuationLocation)) _props.current.onDraftChange?.({
+      ..._props.current.draft,
+      valuationLocation: getLocations().includes(district) ? district : ""
+    });
   }
-  watch([locations, () => props.draft.district], pickDistrict, {
-    immediate: true,
-  });
-  watch(
-    () =>
-      JSON.stringify([
-        input.value,
-        props.draft.propertyType,
-        props.draft.district,
-        props.draft.price,
-        props.draft.address,
-        props.draft.latitude,
-        props.draft.longitude,
-      ]),
-    () => preview.invalidate(),
-    {
-      flush: "sync",
-    },
-  );
+  const _watched = [getLocations(), (() => _props.current.draft.district)()];
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    _initialized.current = true;
+    const result = pickDistrict(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  const _watched2 = (() => JSON.stringify([getInput(), _props.current.draft.propertyType, _props.current.draft.district, _props.current.draft.price, _props.current.draft.address, _props.current.draft.latitude, _props.current.draft.longitude]))();
+  const _previous2 = useRef(_watched2),
+    _initialized2 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous2.current;
+    _previous2.current = _watched2;
+    let dispose;
+    if (!_initialized2.current) {
+      _initialized2.current = true;
+      return;
+    }
+    const result = (() => preview.invalidate())(_watched2, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched2)]);
   async function loadOptions() {
-    loading.value = true;
-    optionsError.value = "";
+    loading.set(true);
+    optionsError.set("");
     try {
       const value = await api("/properties/valuation-options");
-      if (!disposed) options.value = value;
+      if (!_disposedRef.current) options.set(value);
     } catch (e) {
-      if (!disposed) optionsError.value = e.message;
+      if (!_disposedRef.current) optionsError.set(e.message);
     } finally {
-      if (!disposed) loading.value = false;
+      if (!_disposedRef.current) loading.set(false);
     }
   }
-  onMounted(loadOptions);
-  onBeforeUnmount(() => {
-    disposed = true;
+  useEffect(() => {
+    const result = loadOptions();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => {
+    _disposedRef.current = true;
     preview.dispose();
-  });
+  })(), []);
   const featureLabels = {
     areaSqm: "Diện tích (m²)",
     locationFeature: "Khu vực",
     rooms: "Phòng ngủ",
     floors: "Số tầng",
     access_type: "Đường tiếp cận",
-    house_subtype: "Kiểu nhà",
+    house_subtype: "Kiểu nhà"
   };
-  const missingLabel = (value) =>
-    ({
-      ...featureLabels,
-      ward_source: "Phường/xã",
-      access_type: "Đường tiếp cận",
-      house_subtype: "Kiểu nhà",
-    })[value] || value;
-  const featureValue = (value) =>
-    ({
-      alley: "Trong kiệt/hẻm",
-      frontage: "Mặt tiền",
-      villa: "Biệt thự",
-      house_c4: "Nhà cấp 4",
-    })[value] || value;
+  const missingLabel = value => ({
+    ...featureLabels,
+    ward_source: "Phường/xã",
+    access_type: "Đường tiếp cận",
+    house_subtype: "Kiểu nhà"
+  })[value] || value;
+  const featureValue = value => ({
+    alley: "Trong kiệt/hẻm",
+    frontage: "Mặt tiền",
+    villa: "Biệt thự",
+    house_c4: "Nhà cấp 4"
+  })[value] || value;
   return {
-    computed,
-    reactive,
-    ref,
-    watch,
-    onMounted,
-    onBeforeUnmount,
-    api,
-    categoryFor,
-    valuationInput,
-    createPreviewState,
+    ...inputProps,
     exactVnd,
-    props,
-    options,
-    optionsError,
-    loading,
-    state,
+    options: options.getSnapshot(),
+    optionsError: optionsError.getSnapshot(),
+    loading: loading.getSnapshot(),
+    state: state.getSnapshot(),
     preview,
-    disposed,
-    locations,
-    location,
-    input,
-    pickDistrict,
+    locations: getLocations(),
+    location: getLocation(),
+    input: getInput(),
     loadOptions,
     featureLabels,
     missingLabel,
     featureValue,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["draft", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function PostValuationPanel(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <section data-ui-view="PostValuationPanel"
-      {...mergeProps({
-        "data-testid": "valuation-panel",
-        className: "bg-[var(--ui-soft)] text-brand-navy rounded-[22px] p-6",
-      })}
-    >
-      <h2
-        {...mergeProps({
-          className: "text-xs tracking-[0.18em] text-brand-navy/60",
-        })}
-      >
+  const view = usePostValuationPanelState(props, ref);
+  return <><section data-ui-view="PostValuationPanel" data-testid="valuation-panel" {...view.rootAttributes} className={classNames(["bg-[var(--ui-soft)] text-brand-navy rounded-[22px] p-6", view.rootAttributes.className])}>
+      <h2 className="text-xs tracking-[0.18em] text-brand-navy/60">
         {"GIÁ THAM CHIẾU XGBOOST · v6"}
       </h2>
-      <div
-        {...mergeProps({
-          "data-testid": "valuation-price",
-          "aria-live": "polite",
-          className: "text-xl font-light mt-3 break-words",
-        })}
-      >
-        {display(
-          ctx.state.result?.available
-            ? ctx.exactVnd(ctx.state.result.predictedAskingPriceVnd)
-            : "—",
-        )}
+      <div data-testid="valuation-price" aria-live="polite" className="text-xl font-light mt-3 break-words">
+        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.result?.available ? view.exactVnd(view.state.result.predictedAskingPriceVnd) : "—")}
       </div>
-      <p
-        {...mergeProps({
-          className: "text-xs text-brand-navy/70 mt-2",
-        })}
-      >
+      <p className="text-xs text-brand-navy/70 mt-2">
         {"Giá rao ước tính; giá chào của bạn được giữ nguyên."}
       </p>
-      <label
-        {...mergeProps({
-          className: "block mt-5 text-xs",
-        })}
-      >
+      <label className="block mt-5 text-xs">
         {"Khu vực tham khảo "}
-        <select
-          {...mergeProps({
-            "data-testid": "valuation-location",
-            value: ctx.location,
-            onChange: ($event) => {
-              ctx.draft.valuationLocation = $event.target.value;
-            },
-            className: "mt-2 w-full bg-brand-card text-[var(--ui-accent)] rounded-lg p-2",
-            disabled: ctx.loading || !ctx.locations.length,
-          })}
-        >
-          <option
-            {...mergeProps({
-              value: "",
-            })}
-          >
+        <select data-testid="valuation-location" value={view.location} onChange={$event => {
+          view.onDraftChange?.({
+            ...view.draft,
+            valuationLocation: $event.target.value
+          });
+        }} className="mt-2 w-full bg-brand-card text-[var(--ui-accent)] rounded-lg p-2" disabled={view.loading || !view.locations.length}>
+          <option value="">
             {"Chọn đúng khu vực"}
           </option>
-          {renderList(ctx.locations, (item) => (
-            <option
-              key={item}
-              {...mergeProps({
-                value: item,
-              })}
-            >
-              {display(item)}
-            </option>
-          ))}
+          {((items, render) => typeof items === "number" ? Array.from({
+            length: Math.max(0, items)
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.locations, item => <option key={item} value={item}>
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item)}
+            </option>)}
         </select>
       </label>
-      <p
-        {...mergeProps({
-          className: "text-xs text-brand-navy/60 mt-2",
-        })}
-      >
-        {
-          "Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế."
-        }
+      <p className="text-xs text-brand-navy/60 mt-2">
+        {"Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế."}
       </p>
-      {ctx.optionsError ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "mt-3 text-xs text-[var(--ui-warning-text)]",
-          })}
-        >
-          {display(ctx.optionsError)}{" "}
-          <button
-            {...mergeProps({
-              type: "button",
-              className: "underline",
-              onClick: ($event) => {
-                return ctx.loadOptions?.($event);
-              },
-            })}
-          >
+      {view.optionsError ? <p role="status" className="mt-3 text-xs text-[var(--ui-warning-text)]">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.optionsError)}{" "}
+          <button type="button" className="underline" onClick={$event => {
+          return view.loadOptions?.($event);
+        }}>
             {"Thử lại"}
           </button>
-        </p>
-      ) : ctx.input.reason ? (
-        <p
-          {...mergeProps({
-            className: "mt-3 text-xs text-brand-navy/80",
-          })}
-        >
-          {display(ctx.input.reason)}
-        </p>
-      ) : null}
-      <button
-        {...mergeProps({
-          type: "button",
-          "data-testid": "valuation-preview",
-          disabled:
-            ctx.loading || ctx.state.busy || !ctx.options || !!ctx.input.reason,
-          onClick: ($event) => {
-            ctx.preview.preview(ctx.input.body);
-          },
-          className:
-            "mt-4 w-full rounded-full border border-brand-line/40 py-2 text-xs disabled:opacity-50",
-        })}
-      >
-        {display(ctx.state.busy ? "Đang tính…" : "Xem giá tham khảo")}
+        </p> : view.input.reason ? <p className="mt-3 text-xs text-brand-navy/80">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.input.reason)}
+        </p> : null}
+      <button type="button" data-testid="valuation-preview" disabled={view.loading || view.state.busy || !view.options || !!view.input.reason} onClick={$event => {
+        view.preview.preview(view.input.body);
+      }} className="mt-4 w-full rounded-full border border-brand-line/40 py-2 text-xs disabled:opacity-50">
+        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.busy ? "Đang tính…" : "Xem giá tham khảo")}
       </button>
-      {ctx.state.error ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "mt-3 text-xs text-[var(--ui-warning-text)]",
-          })}
-        >
-          {display(ctx.state.error)}
-        </p>
-      ) : null}
-      {ctx.state.result && !ctx.state.result.available ? (
-        <p
-          {...mergeProps({
-            role: "status",
-            className: "mt-3 text-xs",
-          })}
-        >
-          {display(ctx.state.result.reason)}
-        </p>
-      ) : null}
-      {ctx.state.result?.available ? (
-        <div
-          {...mergeProps({
-            className: "mt-5 border-t border-brand-line/10 pt-4 text-xs space-y-2",
-          })}
-        >
-          <h3
-            {...mergeProps({
-              className: "font-semibold",
-            })}
-          >
+      {view.state.error ? <p role="status" className="mt-3 text-xs text-[var(--ui-warning-text)]">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.error)}
+        </p> : null}
+      {view.state.result && !view.state.result.available ? <p role="status" className="mt-3 text-xs">
+          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.result.reason)}
+        </p> : null}
+      {view.state.result?.available ? <div className="mt-5 border-t border-brand-line/10 pt-4 text-xs space-y-2">
+          <h3 className="font-semibold">
             {"Thông tin model đã dùng"}
           </h3>
-          {renderList(ctx.state.result.featuresUsed, (value, key) => (
-            <p key={key} {...mergeProps({})}>
-              {display(ctx.featureLabels[key] || key)}
+          {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.state.result.featuresUsed, (value, key) => <p key={key}>
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.featureLabels[key] || key)}
               {": "}
-              {display(ctx.featureValue(value))}
-            </p>
-          ))}
-          {ctx.state.result.missingFeatures?.length ? (
-            <p {...mergeProps({})}>
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.featureValue(value))}
+            </p>)}
+          {view.state.result.missingFeatures?.length ? <p>
               {"Chưa có: "}
-              {display(
-                ctx.state.result.missingFeatures
-                  .map(ctx.missingLabel)
-                  .join(", "),
-              )}
-            </p>
-          ) : null}
-          {renderList(ctx.state.result.warnings, (warning, index) => (
-            <p
-              key={index}
-              {...mergeProps({
-                className: "text-[var(--ui-warning-text)]",
-              })}
-            >
-              {display(warning)}
-            </p>
-          ))}
-        </div>
-      ) : null}
-      <p
-        {...mergeProps({
-          className: "mt-5 text-xs text-brand-navy/60 leading-relaxed",
-        })}
-      >
-        {
-          "Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin."
-        }
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.result.missingFeatures.map(view.missingLabel).join(", "))}
+            </p> : null}
+          {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.state.result.warnings, (warning, index) => <p key={index} className="text-[var(--ui-warning-text)]">
+              {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(warning)}
+            </p>)}
+        </div> : null}
+      <p className="mt-5 text-xs text-brand-navy/60 leading-relaxed">
+        {"Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin."}
       </p>
-    </section>,
-  ]);
+    </section></>;
 });

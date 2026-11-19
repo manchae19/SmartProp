@@ -1,8 +1,9 @@
-"""Destination state for the commute question, kept in the RAG session only.
+"""Destination state for the commute question, kept in the conversation context.
 
 Nothing here is written to the profile. The workplace string never reaches this module
 for saved accounts (the backend resolves it internally); for typed addresses it lives in
-session memory only and is never echoed into a public field, URL or model prompt.
+temporary guest memory or the account-owned durable checkpoint/history. It is
+never echoed into public shared fields, URLs or model prompts.
 """
 import re
 

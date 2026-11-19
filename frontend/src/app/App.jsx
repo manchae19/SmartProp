@@ -1,38 +1,26 @@
-import React from "react";
+import { lazy, Suspense, useSyncExternalStore } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { useStore } from "../shared/state/store.js";
 import { session } from "../features/auth/api.js";
 import SessionRecovery from "../features/auth/SessionRecovery.jsx";
 import PageLayout from "../shared/components/layout/PageLayout.jsx";
+import { RouteScroll } from "./navigation.jsx";
 import WelcomeNotice from "../shared/components/WelcomeNotice.jsx";
 import ComparisonTray from "../features/property/ComparisonTray.jsx";
-import FloatingAdvisor from "../features/prediction/FloatingAdvisor.jsx";
 import { usesPageLayout } from "../shared/lib/siteNavigation.js";
+const FloatingAdvisor = lazy(() => import('../features/prediction/FloatingAdvisor.jsx'));
 export default function App() {
-  useStore(session);
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
   const route = useLocation();
-  if (session.status === "INITIALIZING")
-    return (
-      <div
-        role="status"
-        className="grid min-h-screen place-items-center bg-brand-cream text-brand-navy"
-      >
+  if (session.getSnapshot().status === "INITIALIZING") return <div role="status" className="grid min-h-screen place-items-center bg-brand-cream text-brand-navy">
         Đang khôi phục phiên đăng nhập…
-      </div>
-    );
-  if (session.status === "UNAVAILABLE") return <SessionRecovery />;
-  return (
-    <>
-      {usesPageLayout(route.pathname) ? (
-        <PageLayout>
+      </div>;
+  if (session.getSnapshot().status === "UNAVAILABLE") return <SessionRecovery />;
+  return <>
+      {usesPageLayout(route.pathname) ? <PageLayout>
           <Outlet />
-        </PageLayout>
-      ) : (
-        <Outlet />
-      )}
-      <ComparisonTray />
-      <FloatingAdvisor />
+        </PageLayout> : <Outlet />}
+      <RouteScroll /><ComparisonTray />
       <WelcomeNotice />
-    </>
-  );
+      <Suspense fallback={null}><FloatingAdvisor /></Suspense>
+    </>;
 }

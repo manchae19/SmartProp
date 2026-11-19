@@ -288,6 +288,8 @@ public class PropertyImageAnalysisService {
     // -- read side ---------------------------------------------------------
 
     public ImageAnalysisDtos.AnalysisView view(String propertyId) {
+        if (!enabled) return new ImageAnalysisDtos.AnalysisView(
+            propertyId, "UNAVAILABLE", null, ALGORITHM_VERSION, null, "FEATURE_DISABLED", List.of(), limitations());
         List<PropertyImage> current = images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(propertyId);
         // V22 not applied: report the feature as unavailable rather than
         // pretending every image is still queued. Nothing is persisted, so

@@ -23,7 +23,7 @@ _ADDRESS = re.compile(
 
 # Words that look like a street but are really a search filter.
 _NOT_STREET = {
-    "ty", "trieu", "phong", "ngu", "pn", "wc", "m2", "met", "vuong", "tang", "lau",
+    "phut", "gio", "km", "ty", "trieu", "phong", "ngu", "pn", "wc", "m2", "met", "vuong", "tang", "lau",
     "can", "nha", "dat", "chung", "cu", "biet", "thu", "mat", "tien", "hem", "kiet",
 }
 

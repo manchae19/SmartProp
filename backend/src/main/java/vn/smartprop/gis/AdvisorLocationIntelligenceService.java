@@ -543,4 +543,3 @@ public class AdvisorLocationIntelligenceService {
         return stripped.isEmpty() ? c : stripped;
     }
 }
-

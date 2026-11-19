@@ -1,12 +1,11 @@
-import React,{lazy,Suspense,useEffect,useRef,useState} from 'react';
+import React,{lazy,Suspense,useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {api,session} from '../auth/api.js';
-import {useStore} from '../../shared/state/store.js';
 import {CHAT_POI_GROUPS,groupsForNeeds,nearestInGroups} from './propertyNearby.js';
 import {distanceLabel} from '../map/nearbyExplorer.js';
 import './PropertyNearbyPanel.css';
 const NearbyMap=lazy(()=>import('../map/LeafletNearbyMap.jsx'));
 export default function PropertyNearbyPanel({property,needs}){
- const auth=useStore(session);
+ const auth=useSyncExternalStore(session.subscribe,session.getSnapshot);
  const [open,setOpen]=useState(false),[radius,setRadius]=useState(1000),[groups,setGroups]=useState([]);
  const [profile,setProfile]=useState(null),[profileReady,setProfileReady]=useState(false);
  const [data,setData]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
@@ -15,7 +14,7 @@ export default function PropertyNearbyPanel({property,needs}){
  const [routeBusy,setRouteBusy]=useState(false),[routeError,setRouteError]=useState(''),[routeRetry,setRouteRetry]=useState(0);
  const routeSequence=useRef(0),mapHost=useRef(null);
  const sequence=useRef(0);
- const id=property?.id && /^[0-9a-fA-F-]{36}$/.test(String(property.id)) ? String(property.id) : null;
+ const id=property?.source?.recordKey;
  const scope=auth.user?.id+':'+auth.status;
  useEffect(()=>{
   let active=true;setProfile(null);setProfileReady(false);setGroups([]);setData(null);
@@ -58,8 +57,7 @@ export default function PropertyNearbyPanel({property,needs}){
   return()=>{routeSequence.current++};
  },[open,mapOpen,routeTarget,mode,id,radius,groups.join(','),data,routeRetry]);
  function openMap(p){setSelected(p.id);setRouteTarget(p.id);setMapOpen(true);setTimeout(()=>mapHost.current?.scrollIntoView({behavior:'smooth',block:'nearest'}),0);}
- if(!id)return null;
- if(property?.source?.kind&&property.source.kind!=='PROPERTY')return <p className="chat-nearby-note">Tin nguồn ngoài chưa có vị trí căn nhà đủ điều kiện để tìm tiện ích.</p>;
+ if(property?.source?.kind!=='PROPERTY')return <p className="chat-nearby-note">Tin nguồn ngoài chưa có vị trí căn nhà đủ điều kiện để tìm tiện ích.</p>;
  const places=nearestInGroups(data,groups),validOrigin=data?.location&&['EXACT_PROPERTY','BUILDING_ONLY','USER_PROVIDED'].includes(data.location.accuracy);
  const mapProperty={...property,id,title:property.title,price:property.priceVnd,latitude:data?.location?.latitude,longitude:data?.location?.longitude};
  function toggle(group){setGroups(previous=>previous.includes(group)?previous.filter(g=>g!==group):[...previous,group]);}

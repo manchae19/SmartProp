@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { RouterLink } from '../../shared/routing/router.jsx'
+import { SiteLink as RouterLink } from '../../app/navigation.jsx'
 
 const MAX_BYTES = 8 * 1024 * 1024
 const TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']

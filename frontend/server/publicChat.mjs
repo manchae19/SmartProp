@@ -3,7 +3,7 @@ import { publicChatResponse } from '../src/features/prediction/chat.js'
 
 export function publicChatBody(data) {
   publicChatResponse(data)
-  const result = { ...data, citations: data.citations.map(c => ({ ...c, url: new URL(c.url, 'https://source.invalid').pathname })) }
+  const result = { ...data, citations: data.citations.map(c => ({ ...c, url: (() => { const url = new URL(c.url, 'https://source.invalid'); return ['SOURCE_DOCUMENT','PLANNING_SOURCE'].includes(c.kind) ? c.url : url.pathname + (c.kind === 'MARKET_SUMMARY' ? url.search : '') })() })) }
   if (/https?:\/\/(?:127[.]|localhost|\[::1\])/i.test(JSON.stringify(result))) throw Error('Internal source origin blocked')
   return result
 }

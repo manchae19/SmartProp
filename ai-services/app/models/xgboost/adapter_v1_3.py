@@ -130,4 +130,3 @@ def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = 
             record["frontage_width_source"] = None
 
     return record
-

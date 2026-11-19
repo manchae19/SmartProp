@@ -53,7 +53,7 @@
         <groupId>org.flywaydb</groupId><artifactId>flyway-maven-plugin</artifactId>
         <configuration>
           <locations><location>filesystem:${project.basedir}/../database/legacy-hybrid-local</location><location>filesystem:${project.basedir}/../database/research-migrations</location></locations>
-          <target>22</target><createSchemas>false</createSchemas><cleanDisabled>true</cleanDisabled><baselineOnMigrate>false</baselineOnMigrate>
+          <target>23</target><createSchemas>false</createSchemas><cleanDisabled>true</cleanDisabled><baselineOnMigrate>false</baselineOnMigrate>
           <outOfOrder>false</outOfOrder><validateMigrationNaming>true</validateMigrationNaming><validateOnMigrate>true</validateOnMigrate>
         </configuration>
       </plugin></plugins></build>
@@ -63,8 +63,8 @@
       <build><plugins><plugin>
         <groupId>org.flywaydb</groupId><artifactId>flyway-maven-plugin</artifactId>
         <configuration>
-          <locations><location>filesystem:${project.basedir}/../database/migrations</location><location>filesystem:${project.basedir}/../database/research-migrations</location></locations>
-          <target>22</target><createSchemas>false</createSchemas><cleanDisabled>true</cleanDisabled><baselineOnMigrate>false</baselineOnMigrate>
+          <locations><location>filesystem:${project.basedir}/../database/migrations</location><location>filesystem:${project.basedir}/../database/research-migrations/poi</location></locations>
+          <target>23</target><createSchemas>false</createSchemas><cleanDisabled>true</cleanDisabled><baselineOnMigrate>false</baselineOnMigrate>
           <outOfOrder>false</outOfOrder><validateMigrationNaming>true</validateMigrationNaming><validateOnMigrate>true</validateOnMigrate>
         </configuration>
       </plugin></plugins></build>

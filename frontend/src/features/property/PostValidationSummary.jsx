@@ -1,84 +1,50 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { useRoute } from "../../shared/routing/router.jsx";
+import React, { useRef } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
+import { useRouteState } from "../../app/navigation.jsx";
 import { postSteps } from "./postForm.js";
-function setup(__props) {
-  propsForSetup(__props, {
-    issues: {
-      type: Array,
-      default: () => [],
-    },
+function usePostValidationSummaryState(inputProps, forwardedRef) {
+  inputProps = {
+    issues: (() => [])(),
+    ...inputProps
+  };
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  ({
+    issues: (() => [])(),
+    ...inputProps
   });
-  const route = useRoute();
+  const route = useRouteState();
+  const _routeLatest = useRef(route);
+  _routeLatest.current = route;
   return {
-    useRoute,
+    ...inputProps,
     postSteps,
-    route,
+    route
   };
 }
 export default React.forwardRef(function PostValidationSummary(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    ctx.issues.length ? (
-      <section
-        {...mergeProps({
-          role: "alert",
-          "aria-label": "Thông tin cần sửa",
-          className: "my-4 rounded-xl bg-[var(--ui-error-bg)] p-4 text-xs text-[var(--ui-error-text)]",
-        })}
-      >
-        <p
-          {...mergeProps({
-            className: "font-semibold",
-          })}
-        >
-          {
-            "Vui lòng kiểm tra thông tin sau. Bấm vào lỗi để đến đúng bước cần sửa:"
-          }
+  const view = usePostValidationSummaryState(props, ref);
+  return <>{view.issues.length ? <section role="alert" aria-label="Thông tin cần sửa" className="my-4 rounded-xl bg-[var(--ui-error-bg)] p-4 text-xs text-[var(--ui-error-text)]">
+        <p className="font-semibold">
+          {"Vui lòng kiểm tra thông tin sau. Bấm vào lỗi để đến đúng bước cần sửa:"}
         </p>
-        <ul
-          {...mergeProps({
-            className: "mt-2 space-y-2",
-          })}
-        >
-          {renderList(ctx.issues, (issue, index) => (
-            <li key={issue.field + index} {...mergeProps({})}>
-              <RouterLink
-                {...mergeProps({
-                  to: {
-                    path: ctx.postSteps[issue.step - 1].path,
-                    query: ctx.route.query,
-                    hash: "#post-" + issue.field,
-                  },
-                  className: "underline underline-offset-2",
-                })}
-              >
+        <ul className="mt-2 space-y-2">
+          {((items, render) => typeof items === "number" ? Array.from({
+          length: Math.max(0, items)
+        }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.issues, (issue, index) => <li key={issue.field + index}>
+              <SiteLink to={{
+            path: view.postSteps[issue.step - 1].path,
+            query: view.route.query,
+            hash: "#post-" + issue.field
+          }} className="underline underline-offset-2">
                 {"Bước "}
-                {display(issue.step)}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(issue.step)}
                 {" · "}
-                {display(issue.label)}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(issue.label)}
                 {": "}
-                {display(issue.message)}
-              </RouterLink>
-            </li>
-          ))}
+                {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(issue.message)}
+              </SiteLink>
+            </li>)}
         </ul>
-      </section>
-    ) : null,
-  ]);
+      </section> : null}</>;
 });

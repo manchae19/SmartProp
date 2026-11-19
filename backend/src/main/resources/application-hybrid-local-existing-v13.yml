@@ -5,7 +5,7 @@ spring:
   flyway:
     enabled: false
     locations: classpath:database/legacy-hybrid-local,classpath:database/research-migrations
-    target: '22'
+    target: '23'
     clean-disabled: true
     baseline-on-migrate: false
     create-schemas: false

@@ -25,7 +25,7 @@ public class MigrationProfileEnvironmentGuard implements EnvironmentPostProcesso
         boolean local=profiles.contains(LOCAL)||profiles.contains(STAGING),standard=profiles.contains(STANDARD);
         if(!local&&!standard)return;
         if(profiles.size()!=1)throw new IllegalStateException("Select exactly one explicit migration profile; do not combine it with dev or another lineage.");
-        String location="classpath:database/"+(local?"legacy-hybrid-local":"migrations")+",classpath:database/research-migrations";
+        String location="classpath:database/"+(local?"legacy-hybrid-local":"migrations")+",classpath:database/research-migrations"+(local?"":"/poi");
         if(!location.equals(env.getProperty("spring.flyway.locations")))throw new IllegalStateException("Unexpected migration location for selected lineage.");
         if(env.getProperty("spring.flyway.enabled",Boolean.class,false))throw new IllegalStateException("Runtime auto-migrate is forbidden. Use the separately reviewed CLI.");
         if(!"validate".equals(env.getProperty("spring.jpa.hibernate.ddl-auto"))||!"never".equals(env.getProperty("spring.sql.init.mode")))throw new IllegalStateException("Runtime DDL/init must remain disabled.");

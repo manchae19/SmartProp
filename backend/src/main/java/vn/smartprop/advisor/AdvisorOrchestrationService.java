@@ -493,4 +493,3 @@ public class AdvisorOrchestrationService {
         return ComparableSourceClassifier.safeUrl(c.listingUrl());
     }
 }
-

@@ -50,9 +50,3 @@ body:has(.comparison-tray) .floating-advisor { bottom: calc(112px + env(safe-are
  body:has(.listing-mobile-actions) .floating-advisor { bottom: calc(96px + env(safe-area-inset-bottom) + var(--chat-keyboard-offset,0px)); }
  body:has(.listing-mobile-actions) .floating-advisor-panel { max-height: calc(100dvh - 200px); }
 }
-
-/* Quick replies offered by the server after a clarification. */
-.floating-advisor-quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.floating-advisor-quick>button { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--ui-border,#d5dfeb); background: var(--ui-soft,#edf2f7); font-size: 12px; line-height: 1.4; text-align: left; }
-.floating-advisor-quick>button:hover { border-color: var(--ui-accent,#2f6f9f); }
-.floating-advisor-quick>button:disabled { opacity: .5; cursor: default; }

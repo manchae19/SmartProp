@@ -1,70 +1,56 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import { watch, onMounted, onBeforeUnmount } from "../../shared/state/store.js";
+import { stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useEffect, useSyncExternalStore } from "react";
+import { SiteLink } from "../../app/navigation.jsx";
 import { session } from "../auth/api.js";
 import { notifications, refreshUnread } from "./notifications.js";
-function setup(__props) {
-  let timer;
+function useNotificationBadgeState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  useSyncExternalStore(notifications.subscribe, notifications.getSnapshot);
+  const _timerRef = useRef(undefined);
   const refresh = () => {
-    if (session.token && !document.hidden) refreshUnread();
+    if (session.getSnapshot().token && !document.hidden) refreshUnread();
   };
-  watch(() => session.user?.id, refresh);
-  onMounted(() => {
-    refresh();
-    timer = setInterval(refresh, 30000);
-  });
-  onBeforeUnmount(() => clearInterval(timer));
+  const _watched = (() => session.getSnapshot().user?.id)();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    if (!_initialized.current) {
+      _initialized.current = true;
+      return;
+    }
+    const result = refresh(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  useEffect(() => {
+    const result = (() => {
+      refresh();
+      _timerRef.current = setInterval(refresh, 30000);
+    })();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => clearInterval(_timerRef.current))(), []);
   return {
-    watch,
-    onMounted,
-    onBeforeUnmount,
-    session,
-    notifications,
-    refreshUnread,
-    timer,
-    refresh,
+    ...inputProps,
+    session: session.getSnapshot(),
+    notifications: notifications.getSnapshot()
   };
 }
 export default React.forwardRef(function NotificationBadge(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    ctx.session.token ? (
-      <RouterLink
-        {...mergeProps({
-          to: "/account/notifications",
-          "aria-label":
-            "Thông báo: " +
-            (ctx.notifications.count ?? "chưa tải") +
-            " chưa đọc",
-        })}
-      >
+  const view = useNotificationBadgeState(props, ref);
+  return <>{view.session.token ? <SiteLink to="/account/notifications" aria-label={"Thông báo: " + (view.notifications.count ?? "chưa tải") + " chưa đọc"}>
         {"Thông báo"}
-        {ctx.notifications.count !== null ? (
-          <span {...mergeProps({})}>
+        {view.notifications.count !== null ? <span>
             {" ("}
-            {display(ctx.notifications.count)}
+            {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.notifications.count)}
             {")"}
-          </span>
-        ) : null}
-        {ctx.notifications.error ? (
-          <span {...mergeProps({})}>{" · chưa tải"}</span>
-        ) : null}
-      </RouterLink>
-    ) : null,
-  ]);
+          </span> : null}
+        {view.notifications.error ? <span>{" · chưa tải"}</span> : null}
+      </SiteLink> : null}</>;
 });

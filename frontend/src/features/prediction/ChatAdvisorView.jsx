@@ -1,200 +1,130 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch,
-} from "../../shared/state/store.js";
-import { chatSession, setProfileMode } from "./chatRuntime.js";
-import { session, loadProfile } from "../auth/api.js";
+import { afterPaint, classNames, inlineStyle } from "../../shared/lib/ui.js";
+import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
+import { chatSession } from "./chatRuntime.js";
 import { isNearChatBottom } from "./chatPresentation.js";
 import ChatAnswer from "../../shared/components/ChatAnswer.jsx";
 import ChatSessionPanel from "../../shared/components/ChatSessionPanel.jsx";
 import MobileDrawer from "../../shared/components/layout/MobileDrawer.jsx";
 import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./ChatAdvisorView.css";
-function setup(__props) {
-  const { state } = chatSession;
-  setProfileMode(false);
-  const profileLoading = ref(false),
-    profileError = ref(""),
-    profileEnabled = ref(false),
-    useProfile = ref(false),
-    profileNeedCount = ref(0);
-  const profileLabel = computed(() => {
-    if (!session.token) return "Đăng nhập để dùng hồ sơ cá nhân";
-    if (profileLoading.value) return "Đang tải hồ sơ cá nhân…";
-    if (profileError.value) return "Không tải được hồ sơ cá nhân";
-    if (!profileEnabled.value) return "Chưa bật tư vấn cá nhân";
-    return useProfile.value
-      ? "Đang dùng hồ sơ đã lưu (" + profileNeedCount.value + " ưu tiên)"
-      : "Không dùng hồ sơ trong phiên này";
-  });
-  async function loadChatProfile() {
-    if (!session.token) {
-      setProfileMode(false);
-      profileEnabled.value = false;
-      useProfile.value = false;
-      return;
-    }
-    profileLoading.value = true;
-    profileError.value = "";
-    try {
-      const user = await loadProfile();
-      const prefs = user?.advisorPreferences || {};
-      profileEnabled.value = !!prefs.enabled;
-      profileNeedCount.value = Array.isArray(prefs.selectedNeeds)
-        ? prefs.selectedNeeds.length
-        : 0;
-      useProfile.value = !!prefs.enabled;
-      setProfileMode(useProfile.value);
-    } catch (error) {
-      profileError.value = error?.message || "Không tải được hồ sơ cá nhân.";
-      profileEnabled.value = false;
-      useProfile.value = false;
-      setProfileMode(false);
-    } finally {
-      profileLoading.value = false;
-    }
-  }
-  function toggleProfile() {
-    if (locked.value || !session.token || !profileEnabled.value) return;
-    useProfile.value = !useProfile.value;
-    setProfileMode(useProfile.value);
-    newConversation();
-  }
-  const draft = ref(""),
-    input = ref(null),
-    thread = ref(null),
-    clock = ref(Date.now()),
-    viewportHeight = ref(null);
-  const sidebar = ref(true),
-    drawer = ref(false),
-    smallScreen = ref(false),
-    menuButton = ref(null);
-  const follow = ref(true),
-    unread = ref(false);
-  let focusAfterDrawer = "menu";
-  let timer, media;
-  const elapsed = computed(() =>
-    Math.max(0, Math.floor((clock.value - state.startedAt) / 1000)),
-  );
-  const waitSeconds = computed(() =>
-    Math.max(0, Math.ceil((state.retryAt - clock.value) / 1000)),
-  );
-  const locked = computed(() => state.busy || waitSeconds.value > 0);
-  const preview = computed(
-    () => state.messages.findLast((m) => m.role === "user")?.text || "",
-  );
+function useChatAdvisorViewState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
+  useSyncExternalStore(chatSession.subscribe, chatSession.getSnapshot);
+  const {
+    state
+  } = chatSession.getSnapshot();
+  const [draft] = useState(() => createStateStore("")),
+    [input] = useState(() => createStateStore(null)),
+    [thread] = useState(() => createStateStore(null)),
+    [clock] = useState(() => createStateStore(Date.now())),
+    [viewportHeight] = useState(() => createStateStore(null));
+  useSyncExternalStore(viewportHeight.subscribe, viewportHeight.getSnapshot);
+  useSyncExternalStore(clock.subscribe, clock.getSnapshot);
+  useSyncExternalStore(thread.subscribe, thread.getSnapshot);
+  useSyncExternalStore(input.subscribe, input.getSnapshot);
+  useSyncExternalStore(draft.subscribe, draft.getSnapshot);
+  const [sidebar] = useState(() => createStateStore(true)),
+    [drawer] = useState(() => createStateStore(false)),
+    [smallScreen] = useState(() => createStateStore(false)),
+    [menuButton] = useState(() => createStateStore(null));
+  useSyncExternalStore(menuButton.subscribe, menuButton.getSnapshot);
+  useSyncExternalStore(smallScreen.subscribe, smallScreen.getSnapshot);
+  useSyncExternalStore(drawer.subscribe, drawer.getSnapshot);
+  useSyncExternalStore(sidebar.subscribe, sidebar.getSnapshot);
+  const [follow] = useState(() => createStateStore(true)),
+    [unread] = useState(() => createStateStore(false));
+  useSyncExternalStore(unread.subscribe, unread.getSnapshot);
+  useSyncExternalStore(follow.subscribe, follow.getSnapshot);
+  const _focusAfterDrawerRef = useRef("menu");
+  const _timerRef = useRef(undefined),
+    _mediaRef = useRef(undefined);
+  const getElapsed = () => Math.max(0, Math.floor((clock.getSnapshot() - chatSession.getSnapshot().state.startedAt) / 1000));
+  const getWaitSeconds = () => Math.max(0, Math.ceil((chatSession.getSnapshot().state.retryAt - clock.getSnapshot()) / 1000));
+  const getLocked = () => chatSession.getSnapshot().state.busy || getWaitSeconds() > 0;
+  const getPreview = () => chatSession.getSnapshot().state.messages.findLast(m => m.role === "user")?.text || "";
   function resizeInput() {
-    if (!input.value) return;
-    input.value.style.height = "auto";
-    input.value.style.height = Math.min(128, input.value.scrollHeight) + "px";
-    input.value.style.overflowY =
-      input.value.scrollHeight > 128 ? "auto" : "hidden";
+    if (!input.getSnapshot()) return;
+    input.edit(draftValue => draftValue["style"]["height"] = "auto");
+    input.edit(draftValue => draftValue["style"]["height"] = Math.min(128, input.getSnapshot().scrollHeight) + "px");
+    input.edit(draftValue => draftValue["style"]["overflowY"] = input.getSnapshot().scrollHeight > 128 ? "auto" : "hidden");
   }
   function scrollLatest() {
-    follow.value = true;
-    unread.value = false;
-    if (thread.value) thread.value.scrollTop = thread.value.scrollHeight;
+    follow.set(true);
+    unread.set(false);
+    if (thread.getSnapshot()) thread.edit(draftValue => draftValue["scrollTop"] = thread.getSnapshot().scrollHeight);
   }
   function onScroll() {
-    follow.value = isNearChatBottom(thread.value);
-    if (follow.value) unread.value = false;
+    follow.set(isNearChatBottom(thread.getSnapshot()));
+    if (follow.getSnapshot()) unread.set(false);
   }
   function reading() {
-    follow.value = false;
+    follow.set(false);
   }
   function answerResized() {
-    if (follow.value) nextTick(scrollLatest);
-    else unread.value = true;
+    if (follow.getSnapshot()) afterPaint(scrollLatest);else unread.set(true);
   }
   function questionFor(messageId) {
-    const index = state.messages.findIndex((m) => m.id === messageId);
-    return (
-      state.messages.slice(0, index).findLast((m) => m.role === "user")?.text ||
-      ""
-    );
+    const index = chatSession.getSnapshot().state.messages.findIndex(m => m.id === messageId);
+    return chatSession.getSnapshot().state.messages.slice(0, index).findLast(m => m.role === "user")?.text || "";
   }
   function syncViewport() {
     if (typeof window === "undefined") return;
     const view = window.visualViewport;
-    const top =
-      document.querySelector(".app-header")?.getBoundingClientRect().bottom ||
-      0;
+    const top = document.querySelector(".app-header")?.getBoundingClientRect().bottom || 0;
     // visualViewport follows the mobile keyboard; composer stays inside the visible frame.
-    viewportHeight.value = Math.max(
-      180,
-      (view?.height || window.innerHeight) -
-        Math.max(0, top - (view?.offsetTop || 0)),
-    );
-    if (follow.value) nextTick(scrollLatest);
+    viewportHeight.set(Math.max(180, (view?.height || window.innerHeight) - Math.max(0, top - (view?.offsetTop || 0))));
+    if (follow.getSnapshot()) afterPaint(scrollLatest);
   }
   function screenChanged() {
-    smallScreen.value = media.matches;
-    if (!media.matches) drawer.value = false;
+    smallScreen.set(_mediaRef.current.matches);
+    if (!_mediaRef.current.matches) drawer.set(false);
     syncViewport();
   }
   function togglePanel() {
-    if (smallScreen.value) {
-      focusAfterDrawer = "menu";
-      drawer.value = true;
-    } else sidebar.value = !sidebar.value;
+    if (smallScreen.getSnapshot()) {
+      _focusAfterDrawerRef.current = "menu";
+      drawer.set(true);
+    } else sidebar.set(!sidebar.getSnapshot());
   }
   async function drawerClosed() {
-    await nextTick();
-    (focusAfterDrawer === "input" ? input.value : menuButton.value)?.focus({
-      preventScroll: true,
+    await afterPaint();
+    (_focusAfterDrawerRef.current === "input" ? input.getSnapshot() : menuButton.getSnapshot())?.focus({
+      preventScroll: true
     });
   }
   async function choose(question) {
-    if (locked.value) return;
-    draft.value = question;
-    focusAfterDrawer = "input";
-    drawer.value = false;
-    await nextTick();
+    if (getLocked()) return;
+    draft.set(question);
+    _focusAfterDrawerRef.current = "input";
+    drawer.set(false);
+    await afterPaint();
     resizeInput();
-    input.value?.focus();
+    input.getSnapshot()?.focus();
   }
   function currentConversation() {
-    focusAfterDrawer = "input";
-    drawer.value = false;
-    nextTick(() => input.value?.focus());
+    _focusAfterDrawerRef.current = "input";
+    drawer.set(false);
+    afterPaint(() => input.getSnapshot()?.focus());
   }
   function newConversation() {
-    if (locked.value) return;
-    chatSession.clear();
-    draft.value = "";
+    if (getLocked()) return;
+    chatSession.getSnapshot().reset();
+    drawer.set(false);
+    draft.set("");
     scrollLatest();
-    nextTick(() => {
+    afterPaint(() => {
       resizeInput();
-      input.value?.focus();
+      input.getSnapshot()?.focus();
     });
   }
   async function submit() {
-    if (locked.value || !draft.value.trim()) return;
-    follow.value = true;
-    const pending = chatSession.submit(draft.value);
-    if (state.busy) draft.value = "";
-    await nextTick();
+    if (getLocked() || !draft.getSnapshot().trim()) return;
+    follow.set(true);
+    const pending = chatSession.getSnapshot().submit(draft.getSnapshot());
+    if (chatSession.getSnapshot().state.busy) draft.set("");
+    await afterPaint();
     resizeInput();
     scrollLatest();
     await pending;
@@ -203,17 +133,10 @@ function setup(__props) {
     await choose(question);
     await submit();
   }
-  async function restartIntake() {
-    if (locked.value) return;
-    chatSession.clear();
-    draft.value = "";
-    await nextTick();
-    await quickReply("Tư vấn từng bước");
-  }
   function retry() {
-    if (locked.value) return;
-    follow.value = true;
-    chatSession.retry();
+    if (getLocked()) return;
+    follow.set(true);
+    chatSession.getSnapshot().retry();
   }
   function keydown(event) {
     if (!event.shiftKey && !event.isComposing) {
@@ -221,88 +144,84 @@ function setup(__props) {
       submit();
     }
   }
-  watch(draft, () => nextTick(resizeInput));
-  watch(
-    () => [state.messages.length, state.busy, state.error],
-    async () => {
-      const shouldFollow = follow.value;
-      await nextTick();
-      if (shouldFollow) scrollLatest();
-      else unread.value = true;
-    },
-  );
-  onMounted(() => {
-    loadChatProfile();
-    timer = setInterval(() => {
-      clock.value = Date.now();
-    }, 1000);
-    media = window.matchMedia("(max-width: 760px)");
-    screenChanged();
-    media.addEventListener("change", screenChanged);
-    window.addEventListener("resize", syncViewport);
-    window.visualViewport?.addEventListener("resize", syncViewport);
-    window.visualViewport?.addEventListener("scroll", syncViewport);
-    nextTick(() => {
-      resizeInput();
-      scrollLatest();
-    });
-  });
-  onBeforeUnmount(() => {
-    clearInterval(timer);
-    media?.removeEventListener("change", screenChanged);
+  const _watched = draft.getSnapshot();
+  const _previous = useRef(_watched),
+    _initialized = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous.current;
+    _previous.current = _watched;
+    let dispose;
+    if (!_initialized.current) {
+      _initialized.current = true;
+      return;
+    }
+    const result = (() => afterPaint(resizeInput))(_watched, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched)]);
+  const _watched2 = (() => [chatSession.getSnapshot().state.sessionId, chatSession.getSnapshot().state.messages.length, chatSession.getSnapshot().state.busy, chatSession.getSnapshot().state.error])();
+  const _previous2 = useRef(_watched2),
+    _initialized2 = useRef(false);
+  useEffect(() => {
+    const previousValue = _previous2.current;
+    _previous2.current = _watched2;
+    let dispose;
+    if (!_initialized2.current) {
+      _initialized2.current = true;
+      return;
+    }
+    const result = (async () => {
+      const shouldFollow = follow.getSnapshot();
+      await afterPaint();
+      if (shouldFollow) scrollLatest();else unread.set(true);
+    })(_watched2, previousValue, fn => dispose = fn);
+    result?.catch?.(console.error);
+    return () => dispose?.();
+  }, [stateKey(_watched2)]);
+  useEffect(() => {
+    const result = (() => {
+      _timerRef.current = setInterval(() => {
+        clock.set(Date.now());
+      }, 1000);
+      _mediaRef.current = window.matchMedia("(max-width: 760px)");
+      screenChanged();
+      _mediaRef.current.addEventListener("change", screenChanged);
+      window.addEventListener("resize", syncViewport);
+      window.visualViewport?.addEventListener("resize", syncViewport);
+      window.visualViewport?.addEventListener("scroll", syncViewport);
+      afterPaint(() => {
+        resizeInput();
+        scrollLatest();
+      });
+    })();
+    if (result && typeof result.then === "function") result.catch(console.error);
+    return typeof result === "function" ? result : undefined;
+  }, []);
+  useEffect(() => () => (() => {
+    clearInterval(_timerRef.current);
+    _mediaRef.current?.removeEventListener("change", screenChanged);
     window.removeEventListener("resize", syncViewport);
     window.visualViewport?.removeEventListener("resize", syncViewport);
     window.visualViewport?.removeEventListener("scroll", syncViewport);
-  });
+  })(), []);
   return {
-    computed,
-    nextTick,
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    watch,
-    chatSession,
-    session,
-    profileLoading,
-    profileError,
-    profileEnabled,
-    useProfile,
-    profileNeedCount,
-    profileLabel,
-    loadChatProfile,
-    toggleProfile,
-    isNearChatBottom,
-    ChatAnswer,
-    ChatSessionPanel,
-    MobileDrawer,
-    AppIcon,
-    state,
-    draft,
-    input,
-    thread,
-    clock,
-    viewportHeight,
-    sidebar,
-    drawer,
-    smallScreen,
-    menuButton,
-    follow,
-    unread,
-    focusAfterDrawer,
-    timer,
-    media,
-    elapsed,
-    waitSeconds,
-    locked,
-    preview,
-    resizeInput,
+    ...inputProps,
+    state: chatSession.getSnapshot().state,
+    draft: draft.getSnapshot(),
+    viewportHeight: viewportHeight.getSnapshot(),
+    sidebar: sidebar.getSnapshot(),
+    drawer: drawer.getSnapshot(),
+    smallScreen: smallScreen.getSnapshot(),
+    unread: unread.getSnapshot(),
+    elapsed: getElapsed(),
+    waitSeconds: getWaitSeconds(),
+    locked: getLocked(),
+    preview: getPreview(),
     scrollLatest,
     onScroll,
     reading,
     answerResized,
     questionFor,
-    syncViewport,
-    screenChanged,
     togglePanel,
     drawerClosed,
     choose,
@@ -310,904 +229,236 @@ function setup(__props) {
     newConversation,
     submit,
     quickReply,
-    restartIntake,
     retry,
     keydown,
+    updateInputValue: input.set,
+    updateThreadValue: thread.set,
+    updateMenuButtonValue: menuButton.set,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    updateDraftValue: draft.set,
+    updateDrawerValue: drawer.set
   };
 }
 export default React.forwardRef(function ChatAdvisorView(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <section data-ui-view="ChatAdvisorView"
-      {...mergeProps({
-        className: "messenger-page",
-        "aria-labelledby": "chat-title",
-        style: ctx.viewportHeight
-          ? {
-              height: ctx.viewportHeight + "px",
-            }
-          : undefined,
-        "data-sp-b5f8ab84": "",
-      })}
-    >
-      <div
-        {...mergeProps({
-          className: ["messenger-shell", {
-            "sidebar-collapsed": !ctx.sidebar,
-          }],
-          
-          "data-sp-b5f8ab84": "",
-        })}
-      >
-        {ctx.sidebar ? (
-          <aside
-            {...mergeProps({
-              className: "desktop-chat-panel",
-              "aria-label": "Hội thoại trong tab",
-              "data-sp-b5f8ab84": "",
-            })}
-          >
-            <div
-              {...mergeProps({
-                className: "panel-title",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <h2
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+  const view = useChatAdvisorViewState(props, ref);
+  return <><section data-ui-view="ChatAdvisorView" aria-labelledby="chat-title" style={inlineStyle(view.viewportHeight ? {
+      height: view.viewportHeight + "px"
+    } : undefined)} data-sp-b5f8ab84="" {...view.rootAttributes} className={classNames(["messenger-page", view.rootAttributes.className])}>
+      <div className={classNames(["messenger-shell", {
+        "sidebar-collapsed": !view.sidebar
+      }])} data-sp-b5f8ab84="">
+        {view.sidebar ? <aside className="desktop-chat-panel" aria-label="Lịch sử hội thoại" data-sp-b5f8ab84="">
+            <div className="panel-title" data-sp-b5f8ab84="">
+              <h2 data-sp-b5f8ab84="">
                 {"Tin nhắn"}
               </h2>
-              <span
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+              <span data-sp-b5f8ab84="">
                 {"SmartProp"}
               </span>
             </div>
-            <ChatSessionPanel
-              {...mergeProps({
-                preview: ctx.preview,
-                locked: ctx.locked,
-                onChoose: ($event) => {
-                  return ctx.choose?.($event);
-                },
-                onCurrent: ($event) => {
-                  return ctx.currentConversation?.($event);
-                },
-                "data-sp-b5f8ab84": "",
-              })}
-            />
-          </aside>
-        ) : null}
-        <div
-          {...mergeProps({
-            className: "conversation",
-            "data-sp-b5f8ab84": "",
-          })}
-        >
-          <header
-            {...mergeProps({
-              className: "conversation-header",
-              "data-sp-b5f8ab84": "",
-            })}
-          >
-            <button
-              {...mergeProps({
-                ref: bindRef(ctx, "menuButton"),
-                type: "button",
-                className: "chat-icon-button panel-toggle",
-                "aria-label": ctx.smallScreen
-                  ? "Mở hội thoại và gợi ý"
-                  : ctx.sidebar
-                    ? "Thu gọn danh sách hội thoại"
-                    : "Mở danh sách hội thoại",
-                "aria-expanded": ctx.smallScreen ? ctx.drawer : ctx.sidebar,
-                onClick: ($event) => {
-                  return ctx.togglePanel?.($event);
-                },
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <svg
-                {...mergeProps({
-                  viewBox: "0 0 24 24",
-                  fill: "none",
-                  stroke: "currentColor",
-                  strokeWidth: "1.7",
-                  "aria-hidden": "true",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                <rect
-                  {...mergeProps({
-                    x: "3",
-                    y: "4",
-                    width: "18",
-                    height: "16",
-                    rx: "3",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                />
-                <path
-                  {...mergeProps({
-                    d: "M9 4v16",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                />
+            <ChatSessionPanel onNew={view.newConversation} preview={view.preview} locked={view.locked} onChoose={$event => {
+            return view.choose?.($event);
+          }} onCurrent={$event => {
+            return view.currentConversation?.($event);
+          }} data-sp-b5f8ab84="" />
+          </aside> : null}
+        <div className="conversation" data-sp-b5f8ab84="">
+          <header className="conversation-header" data-sp-b5f8ab84="">
+            <button ref={view.updateMenuButtonValue} type="button" className="chat-icon-button panel-toggle" aria-label={view.smallScreen ? "Mở hội thoại và gợi ý" : view.sidebar ? "Thu gọn danh sách hội thoại" : "Mở danh sách hội thoại"} aria-expanded={view.smallScreen ? view.drawer : view.sidebar} onClick={$event => {
+              return view.togglePanel?.($event);
+            }} data-sp-b5f8ab84="">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" data-sp-b5f8ab84="">
+                <rect x="3" y="4" width="18" height="16" rx="3" data-sp-b5f8ab84="" />
+                <path d="M9 4v16" data-sp-b5f8ab84="" />
               </svg>
             </button>
-            <span
-              {...mergeProps({
-                className: "conversation-avatar",
-                "aria-hidden": "true",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
+            <span className="conversation-avatar" aria-hidden="true" data-sp-b5f8ab84="">
               {"S"}
-              <span
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+              <span data-sp-b5f8ab84="">
                 {"AI"}
               </span>
             </span>
-            <div
-              {...mergeProps({
-                className: "conversation-name",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <h1
-                {...mergeProps({
-                  id: "chat-title",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+            <div className="conversation-name" data-sp-b5f8ab84="">
+              <h1 id="chat-title" data-sp-b5f8ab84="">
                 {"SmartProp AI Advisor"}
               </h1>
-              <p
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                {ctx.chatSession?.state?.propertyId
-                  ? "Đang hỏi về: " + (ctx.chatSession.state.propertyTitle || "tin đang mở")
-                  : "Trợ lý tư vấn bất động sản"}
+              <p data-sp-b5f8ab84="">
+                {"Trợ lý tư vấn bất động sản"}
               </p>
-              {ctx.chatSession?.state?.propertyId ? (
-                <button
-                  {...mergeProps({
-                    type: "button",
-                    className: "chat-icon-button",
-                    onClick: () => ctx.chatSession.reset(),
-                  })}
-                >
-                  {"Bỏ chọn tin"}
-                </button>
-              ) : null}
             </div>
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "chat-icon-button new-chat",
-                disabled: ctx.locked || !ctx.state.messages.length,
-                "aria-label": "Tạo hội thoại mới",
-                title: "Bắt đầu lại sẽ xóa hội thoại hiện tại trong tab",
-                onClick: ($event) => {
-                  return ctx.newConversation?.($event);
-                },
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <AppIcon
-                {...mergeProps({
-                  name: "edit",
-                  "data-sp-b5f8ab84": "",
-                })}
-              />
-              <span
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+            <button type="button" className="chat-icon-button new-chat" disabled={view.locked || !view.state.messages.length} aria-label="Tạo hội thoại mới" title="Bắt đầu hội thoại mới; hội thoại đã lưu vẫn nằm trong lịch sử" onClick={$event => {
+              return view.newConversation?.($event);
+            }} data-sp-b5f8ab84="">
+              <AppIcon name="edit" data-sp-b5f8ab84="" />
+              <span data-sp-b5f8ab84="">
                 {"Hội thoại mới"}
               </span>
             </button>
           </header>
-          <div
-            {...mergeProps({
-              className: "chat-profile-bar",
-              "data-chat-profile": "",
-              "data-sp-b5f8ab84": "",
-            })}
-          >
-            <span
-              {...mergeProps({
-                className: "chat-profile-label",
-                "data-chat-profile-label": "",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              {display(ctx.profileLabel)}
-            </span>
-            {!ctx.session.token ? (
-              <RouterLink
-                {...mergeProps({
-                  to: "/login",
-                  className: "chat-profile-link",
-                  "data-chat-profile-login": "",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                {"Đăng nhập"}
-              </RouterLink>
-            ) : (
-              <React.Fragment {...mergeProps({})}>
-                {ctx.profileEnabled ? (
-                  <button
-                    {...mergeProps({
-                      type: "button",
-                      className: "chat-profile-link",
-                      disabled: ctx.locked,
-                      onClick: ($event) => {
-                        return ctx.toggleProfile?.($event);
-                      },
-                      "data-chat-profile-toggle": "",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    {display(
-                      ctx.useProfile
-                        ? "Không dùng hồ sơ trong phiên này"
-                        : "Dùng hồ sơ trong phiên này",
-                    )}
-                  </button>
-                ) : (
-                  <RouterLink
-                    {...mergeProps({
-                      to: "/account#personal-information",
-                      className: "chat-profile-link",
-                      "data-chat-profile-setup": "",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    {"Thiết lập hồ sơ"}
-                  </RouterLink>
-                )}
-                <RouterLink
-                  {...mergeProps({
-                    to: "/account#personal-information",
-                    className: "chat-profile-link",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  {"Quản lý hồ sơ"}
-                </RouterLink>
-              </React.Fragment>
-            )}
-            {ctx.profileError ? (
-              <button
-                {...mergeProps({
-                  type: "button",
-                  className: "chat-profile-link",
-                  onClick: ($event) => {
-                    return ctx.loadChatProfile?.($event);
-                  },
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                {"Thử lại hồ sơ"}
-              </button>
-            ) : null}
-            <button
-              {...mergeProps({
-                type: "button",
-                className: "chat-profile-link",
-                disabled: ctx.locked,
-                onClick: ($event) => {
-                  ctx.restartIntake?.($event);
-                },
-                "data-chat-edit-needs": "",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              {"Sửa nhu cầu"}
-            </button>
-            <RouterLink
-              {...mergeProps({
-                to: "/valuation",
-                className: "chat-profile-link chat-profile-valuation",
-                "data-chat-profile-valuation": "",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              {"Định giá tham khảo ↗"}
-            </RouterLink>
-          </div>
-          <div
-            {...mergeProps({
-              className: "thread-host",
-              "data-sp-b5f8ab84": "",
-            })}
-          >
-            <div
-              {...mergeProps({
-                ref: bindRef(ctx, "thread"),
-                className: "chat-thread",
-                role: "log",
-                "aria-labelledby": "chat-title",
-                "aria-live": "polite",
-                "aria-relevant": "additions",
-                "aria-busy": ctx.state.busy,
-                tabIndex: "0",
-                onScroll: ($event) => {
-                  return ctx.onScroll?.($event);
-                },
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <div
-                {...mergeProps({
-                  className: "thread-date",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                <span
-                  {...mergeProps({
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  {"Hội thoại trong tab này"}
+          <div className="thread-host" data-sp-b5f8ab84="">
+            <div ref={view.updateThreadValue} className="chat-thread" role="log" aria-labelledby="chat-title" aria-live="polite" aria-relevant="additions" aria-busy={view.state.busy} tabIndex="0" onScroll={$event => {
+              return view.onScroll?.($event);
+            }} data-sp-b5f8ab84="">
+              <div className="thread-date" data-sp-b5f8ab84="">
+                <span data-sp-b5f8ab84="">
+                  {"Lịch sử hội thoại này"}
                 </span>
               </div>
-              {!ctx.state.messages.length ? (
-                <div
-                  {...mergeProps({
-                    className: "chat-welcome",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  <span
-                    {...mergeProps({
-                      className: "welcome-avatar",
-                      "aria-hidden": "true",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
+              {!view.state.messages.length ? <div className="chat-welcome" data-sp-b5f8ab84="">
+                  <span className="welcome-avatar" aria-hidden="true" data-sp-b5f8ab84="">
                     {"S"}
                   </span>
-                  <h2
-                    {...mergeProps({
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
+                  <h2 data-sp-b5f8ab84="">
                     {"Chào bạn, mình là SmartProp."}
                   </h2>
-                  <p
-                    {...mergeProps({
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    {
-                      "Bạn đang tìm một nơi để ở hay muốn khám phá khu vực? Hãy bắt đầu từ ngân sách và nhu cầu của bạn."
-                    }
+                  <p data-sp-b5f8ab84="">
+                    {"Bạn đang tìm một nơi để ở hay muốn khám phá khu vực? Hãy bắt đầu từ ngân sách và nhu cầu của bạn."}
                   </p>
-                  <div
-                    {...mergeProps({
-                      className: "welcome-prompts",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    <button
-                      {...mergeProps({
-                        type: "button",
-                        disabled: ctx.locked,
-                        onClick: ($event) => {
-                          ctx.choose(
-                            "Tôi có 10 tỷ, gợi ý bất động sản phù hợp.",
-                          );
-                        },
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
+                  <div className="welcome-prompts" data-sp-b5f8ab84="">
+                    <button type="button" disabled={view.locked} onClick={$event => {
+                    view.choose("Tôi có 10 tỷ, gợi ý bất động sản phù hợp.");
+                  }} data-sp-b5f8ab84="">
                       {"Tìm BĐS theo ngân sách"}
-                      <AppIcon
-                        {...mergeProps({
-                          name: "arrow",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
+                      <AppIcon name="arrow" data-sp-b5f8ab84="" />
                     </button>
-                    <button
-                      {...mergeProps({
-                        type: "button",
-                        disabled: ctx.locked,
-                        onClick: ($event) => {
-                          ctx.choose("Ở Hải Châu có những bệnh viện nào?");
-                        },
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
+                    <button type="button" disabled={view.locked} onClick={$event => {
+                    view.choose("Ở Hải Châu có những bệnh viện nào?");
+                  }} data-sp-b5f8ab84="">
                       {"Hỏi tiện ích khu vực"}
-                      <AppIcon
-                        {...mergeProps({
-                          name: "arrow",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
-                    </button>
-                    <button
-                      {...mergeProps({
-                        type: "button",
-                        disabled: ctx.locked,
-                        onClick: ($event) => {
-                          ctx.quickReply("Tư vấn từng bước");
-                        },
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
-                      {"Tư vấn từng bước"}
-                      <AppIcon
-                        {...mergeProps({
-                          name: "arrow",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
-                    </button>
-                    <button
-                      {...mergeProps({
-                        type: "button",
-                        disabled: ctx.locked,
-                        onClick: ($event) => {
-                          ctx.quickReply("Tư vấn theo hộ gia đình");
-                        },
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
-                      {"Tư vấn theo hộ gia đình"}
-                      <AppIcon
-                        {...mergeProps({
-                          name: "arrow",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
+                      <AppIcon name="arrow" data-sp-b5f8ab84="" />
                     </button>
                   </div>
-                  <p
-                    {...mergeProps({
-                      className: "welcome-note",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    {
-                      "Nhập nhu cầu tìm nhà của bạn để bắt đầu."
-                    }
+                  <p className="welcome-note" data-sp-b5f8ab84="">
+                    {"Nhập nhu cầu tìm nhà của bạn để bắt đầu."}
                   </p>
-                </div>
-              ) : null}
-              {ctx.state.trimmed ? (
-                <p
-                  {...mergeProps({
-                    className: "trimmed-note",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  {"Đang hiển thị 24 tin nhắn gần nhất trong tab."}
-                </p>
-              ) : null}
-              {renderList(ctx.state.messages, (message) => (
-                <article
-                  key={message.id}
-                  {...mergeProps({
-                    className:
-                      message.role === "user"
-                        ? "user-message"
-                        : "assistant-message",
-                    "data-chat-message": message.role,
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  {message.role === "user" ? (
-                    <React.Fragment {...mergeProps({})}>
-                      <span
-                        {...mergeProps({
-                          className: "sr-only",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      >
+                </div> : null}
+              {view.state.messages.some(m => m.historical) && <p className="trimmed-note" data-sp-b5f8ab84="">Nội dung lịch sử là thông tin tại thời điểm trả lời. Gửi câu hỏi mới để kiểm tra dữ liệu hiện tại.</p>}
+              {view.state.trimmed ? <p className="trimmed-note" data-sp-b5f8ab84="">
+                  {"Đang hiển thị 24 tin nhắn gần nhất. Nội dung cũ là thông tin tại thời điểm trả lời."}
+                </p> : null}
+              {((items, render) => typeof items === "number" ? Array.from({
+                length: Math.max(0, items)
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.state.messages, message => <article key={message.id} className={classNames(message.role === "user" ? "user-message" : "assistant-message")} data-chat-message={message.role} data-sp-b5f8ab84="">
+                  {message.role === "user" ? <React.Fragment>
+                      <span className="sr-only" data-sp-b5f8ab84="">
                         {"Bạn:"}
                       </span>
-                      <p
-                        {...mergeProps({
-                          className: "user-bubble",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      >
-                        {display(message.text)}
+                      <p className="user-bubble" data-sp-b5f8ab84="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(message.text)}
                       </p>
-                    </React.Fragment>
-                  ) : (
-                    <React.Fragment {...mergeProps({})}>
-                      <span
-                        {...mergeProps({
-                          className: "message-avatar",
-                          "aria-hidden": "true",
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      >
+                    </React.Fragment> : <React.Fragment>
+                      <span className="message-avatar" aria-hidden="true" data-sp-b5f8ab84="">
                         {"S"}
                       </span>
                       <div className="answer-with-actions">
-                        {message.response.evidence?.needs?.summary?.length ? (
-                          <aside className="chat-needs-summary" aria-label="Tiêu chí đang dùng">
+                        {message.response.evidence?.needs?.summary?.length ? <aside className="chat-needs-summary" aria-label="Tiêu chí đang dùng">
                             <strong>Tiêu chí đang dùng</strong>
                             <ul>{message.response.evidence.needs.summary.map((item, index) => <li key={index}>{item}</li>)}</ul>
                             <small>Bạn có thể gõ để sửa ngân sách, khu vực hoặc thứ tự ưu tiên.</small>
-                          </aside>
-                        ) : null}
-                      <ChatAnswer
-                        {...mergeProps({
-                          result: message.response,
-                          messageId: message.id,
-                          question: ctx.questionFor(message.id),
-                          onReading: ($event) => {
-                            return ctx.reading?.($event);
-                          },
-                          onResized: ($event) => {
-                            return ctx.answerResized?.($event);
-                          },
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
-                        {message.id === ctx.state.messages.at(-1)?.id && message.response.evidence?.quickReplies?.length ? (
-                          <div className="chat-quick-replies" role="group" aria-label="Lựa chọn trả lời nhanh">
-                            {message.response.evidence.quickReplies.map(choice => (
-                              <button key={choice} type="button" disabled={ctx.locked} onClick={() => ctx.quickReply(choice)}>{choice}</button>
-                            ))}
-                          </div>
-                        ) : null}
+                          </aside> : null}
+                      <ChatAnswer historical={message.historical} result={message.response} messageId={message.id} question={view.questionFor(message.id)} onReading={$event => {
+                      return view.reading?.($event);
+                    }} onResized={$event => {
+                      return view.answerResized?.($event);
+                    }} data-sp-b5f8ab84="" />
+                        {message.id === view.state.messages.at(-1)?.id && message.response.evidence?.quickReplies?.length ? <div className="chat-quick-replies" role="group" aria-label="Lựa chọn trả lời nhanh">
+                            {message.response.evidence.quickReplies.map(choice => <button key={choice} type="button" disabled={view.locked} onClick={() => view.quickReply(choice)}>{choice}</button>)}
+                          </div> : null}
                       </div>
-                    </React.Fragment>
-                  )}
-                </article>
-              ))}
-              {ctx.state.busy ? (
-                <div
-                  {...mergeProps({
-                    className: "assistant-message typing-message",
-                    role: "status",
-                    "data-chat-loading": "",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  <span
-                    {...mergeProps({
-                      className: "message-avatar",
-                      "aria-hidden": "true",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
+                    </React.Fragment>}
+                </article>)}
+              {view.state.busy ? <div className="assistant-message typing-message" role="status" data-chat-loading="" data-sp-b5f8ab84="">
+                  <span className="message-avatar" aria-hidden="true" data-sp-b5f8ab84="">
                     {"S"}
                   </span>
-                  <div
-                    {...mergeProps({
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    <div
-                      {...mergeProps({
-                        className: "typing-bubble",
-                        "aria-hidden": "true",
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
-                      <i
-                        {...mergeProps({
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
-                      <i
-                        {...mergeProps({
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
-                      <i
-                        {...mergeProps({
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      />
+                  <div data-sp-b5f8ab84="">
+                    <div className="typing-bubble" aria-hidden="true" data-sp-b5f8ab84="">
+                      <i data-sp-b5f8ab84="" />
+                      <i data-sp-b5f8ab84="" />
+                      <i data-sp-b5f8ab84="" />
                     </div>
-                    <p
-                      {...mergeProps({
-                        className: "typing-label",
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
-                      {display(
-                        ctx.elapsed >= 30
-                          ? "SmartProp vẫn đang xử lý. Bạn không cần gửi lại."
-                          : "SmartProp đang tìm kiếm và phân tích…",
-                      )}
+                    <p className="typing-label" data-sp-b5f8ab84="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.elapsed >= 30 ? "SmartProp vẫn đang xử lý. Bạn không cần gửi lại." : "SmartProp đang tìm kiếm và phân tích…")}
                     </p>
-                    <span
-                      {...mergeProps({
-                        className: "sr-only",
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
+                    <span className="sr-only" data-sp-b5f8ab84="">
                       {"Câu trả lời sẽ xuất hiện khi xử lý hoàn tất."}
                     </span>
                   </div>
-                </div>
-              ) : null}
-              {ctx.state.error ? (
-                <div
-                  {...mergeProps({
-                    className: "assistant-message",
-                    role: "alert",
-                    "data-chat-error": "",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  <span
-                    {...mergeProps({
-                      className: "message-avatar",
-                      "aria-hidden": "true",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
+                </div> : null}
+              {view.state.error ? <div className="assistant-message" role="alert" data-chat-error="" data-sp-b5f8ab84="">
+                  <span className="message-avatar" aria-hidden="true" data-sp-b5f8ab84="">
                     {"S"}
                   </span>
-                  <div
-                    {...mergeProps({
-                      className: "error-bubble",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    <p
-                      {...mergeProps({
-                        "data-sp-b5f8ab84": "",
-                      })}
-                    >
-                      {display(ctx.state.error.text)}
+                  <div className="error-bubble" data-sp-b5f8ab84="">
+                    <p data-sp-b5f8ab84="">
+                      {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.error.text)}
                     </p>
-                    {ctx.state.error.retry ? (
-                      <button
-                        {...mergeProps({
-                          type: "button",
-                          disabled: ctx.locked,
-                          onClick: ($event) => {
-                            return ctx.retry?.($event);
-                          },
-                          "data-sp-b5f8ab84": "",
-                        })}
-                      >
-                        {display(
-                          ctx.waitSeconds
-                            ? "Chờ " + ctx.waitSeconds + " giây"
-                            : "Thử lại",
-                        )}
-                        <AppIcon
-                          {...mergeProps({
-                            name: "arrow",
-                            "data-sp-b5f8ab84": "",
-                          })}
-                        />
-                      </button>
-                    ) : null}
+                    {view.state.error.retry ? <button type="button" disabled={view.locked} onClick={$event => {
+                    return view.retry?.($event);
+                  }} data-sp-b5f8ab84="">
+                        {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.waitSeconds ? "Chờ " + view.waitSeconds + " giây" : "Thử lại")}
+                        <AppIcon name="arrow" data-sp-b5f8ab84="" />
+                      </button> : null}
                   </div>
-                </div>
-              ) : null}
-              <div
-                {...mergeProps({
-                  className: "thread-bottom",
-                  "aria-hidden": "true",
-                  "data-sp-b5f8ab84": "",
-                })}
-              />
+                </div> : null}
+              <div className="thread-bottom" aria-hidden="true" data-sp-b5f8ab84="" />
             </div>
-            {ctx.unread ? (
-              <button
-                {...mergeProps({
-                  type: "button",
-                  className: "new-message-button",
-                  onClick: ($event) => {
-                    return ctx.scrollLatest?.($event);
-                  },
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+            {view.unread ? <button type="button" className="new-message-button" onClick={$event => {
+              return view.scrollLatest?.($event);
+            }} data-sp-b5f8ab84="">
                 {"Tin nhắn mới "}
-                <svg
-                  {...mergeProps({
-                    viewBox: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.7",
-                    "aria-hidden": "true",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  <path
-                    {...mergeProps({
-                      d: "M12 4v16m-6-6 6 6 6-6",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true" data-sp-b5f8ab84="">
+                  <path d="M12 4v16m-6-6 6 6 6-6" data-sp-b5f8ab84="" />
                 </svg>
-              </button>
-            ) : null}
+              </button> : null}
           </div>
-          <footer
-            {...mergeProps({
-              className: "composer-dock",
-              "data-sp-b5f8ab84": "",
-            })}
-          >
-            <form
-              {...mergeProps({
-                className: "chat-composer",
-                "aria-busy": ctx.state.busy,
-                onSubmit: ($event) => {
-                  $event.preventDefault();
-                  return ctx.submit?.($event);
-                },
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <label
-                {...mergeProps({
-                  className: "sr-only",
-                  htmlFor: "chat-question",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+          <footer className="composer-dock" data-sp-b5f8ab84="">
+            <form className="chat-composer" aria-busy={view.state.busy} onSubmit={$event => {
+              $event.preventDefault();
+              return view.submit?.($event);
+            }} data-sp-b5f8ab84="">
+              <label className="sr-only" htmlFor="chat-question" data-sp-b5f8ab84="">
                 {"Câu hỏi của bạn"}
               </label>
-              <div
-                {...mergeProps({
-                  className: "composer-field",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                <textarea
-                  {...mergeProps(
-                    {
-                      id: "chat-question",
-                      ref: bindRef(ctx, "input"),
-                      disabled: ctx.locked,
-                      rows: "1",
-                      maxLength: "2000",
-                      required: true,
-                      placeholder: "Nhắn tin cho SmartProp AI...",
-                      "aria-describedby": "chat-input-hint",
-                      onKeyDown: ($event) => {
-                        if ($event.key !== "Enter") return;
-                        return ctx.keydown?.($event);
-                      },
-                      "data-sp-b5f8ab84": "",
-                    },
-                    modelProps(
-                      ctx.draft,
-                      ($value) => {
-                        ctx.draft = $value;
-                      },
-                      {
-                        kind: "text",
-                        value: "on",
-                        number: false,
-                        multiple: false,
-                      },
-                    ),
-                  )}
-                />
-                {ctx.draft.length > 1700 ? (
-                  <span
-                    {...mergeProps({
-                      className: "input-count",
-                      "aria-hidden": "true",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  >
-                    {display(ctx.draft.length)}
+              <div className="composer-field" data-sp-b5f8ab84="">
+                <textarea id="chat-question" ref={view.updateInputValue} disabled={view.locked} rows="1" maxLength="2000" required={true} placeholder="Nhắn tin cho SmartProp AI..." aria-describedby="chat-input-hint" onKeyDown={$event => {
+                  if ($event.key !== "Enter") return;
+                  return view.keydown?.($event);
+                }} data-sp-b5f8ab84="" value={view.draft ?? ""} onChange={event => ($value => {
+                  view.updateDraftValue($value);
+                })(event.target.value)} />
+                {view.draft.length > 1700 ? <span className="input-count" aria-hidden="true" data-sp-b5f8ab84="">
+                    {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.draft.length)}
                     {"/2.000"}
-                  </span>
-                ) : null}
+                  </span> : null}
               </div>
-              <button
-                {...mergeProps({
-                  type: "submit",
-                  className: "send-button",
-                  disabled: ctx.locked || !ctx.draft.trim(),
-                  "aria-label": ctx.state.busy
-                    ? "Đang xử lý câu hỏi"
-                    : "Gửi câu hỏi",
-                  title: ctx.state.busy ? "Đang xử lý câu hỏi" : "Gửi câu hỏi",
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
-                <svg
-                  {...mergeProps({
-                    viewBox: "0 0 24 24",
-                    fill: "none",
-                    stroke: "currentColor",
-                    strokeWidth: "1.9",
-                    strokeLinecap: "round",
-                    strokeLinejoin: "round",
-                    "aria-hidden": "true",
-                    "data-sp-b5f8ab84": "",
-                  })}
-                >
-                  <path
-                    {...mergeProps({
-                      d: "m5 12 14-8-4 16-4-6-6-2Zm6 2 8-10",
-                      "data-sp-b5f8ab84": "",
-                    })}
-                  />
+              <button type="submit" className="send-button" disabled={view.locked || !view.draft.trim()} aria-label={view.state.busy ? "Đang xử lý câu hỏi" : "Gửi câu hỏi"} title={view.state.busy ? "Đang xử lý câu hỏi" : "Gửi câu hỏi"} data-sp-b5f8ab84="">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" data-sp-b5f8ab84="">
+                  <path d="m5 12 14-8-4 16-4-6-6-2Zm6 2 8-10" data-sp-b5f8ab84="" />
                 </svg>
               </button>
             </form>
-            <p
-              {...mergeProps({
-                id: "chat-input-hint",
-                className: "composer-note",
-                "data-sp-b5f8ab84": "",
-              })}
-            >
-              <span
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+            <p id="chat-input-hint" className="composer-note" data-sp-b5f8ab84="">
+              <span data-sp-b5f8ab84="">
                 {"Enter để gửi · Shift + Enter xuống dòng."}
               </span>
-              <span
-                {...mergeProps({
-                  "data-sp-b5f8ab84": "",
-                })}
-              >
+              <span data-sp-b5f8ab84="">
                 {"Thông tin tham khảo · không thay thế kiểm tra thực tế."}
               </span>
             </p>
           </footer>
         </div>
       </div>
-      <MobileDrawer
-        {...mergeProps(
-          {
-            title: "Hội thoại và gợi ý",
-            onClosed: ($event) => {
-              return ctx.drawerClosed?.($event);
-            },
-            "data-sp-b5f8ab84": "",
-          },
-          {
-            open: ctx.drawer,
-            onUpdateOpen: ($value) => {
-              ctx.drawer = $value;
-            },
-          },
-        )}
-      >
-        <ChatSessionPanel
-          {...mergeProps({
-            preview: ctx.preview,
-            locked: ctx.locked,
-            onChoose: ($event) => {
-              return ctx.choose?.($event);
-            },
-            onCurrent: ($event) => {
-              return ctx.currentConversation?.($event);
-            },
-            "data-sp-b5f8ab84": "",
-          })}
-        />
+      <MobileDrawer title="Hội thoại và gợi ý" onClosed={$event => {
+        return view.drawerClosed?.($event);
+      }} data-sp-b5f8ab84="" open={view.drawer} onUpdateOpen={$value => {
+        view.updateDrawerValue($value);
+      }}>
+        <ChatSessionPanel onNew={view.newConversation} preview={view.preview} locked={view.locked} onChoose={$event => {
+          return view.choose?.($event);
+        }} onCurrent={$event => {
+          return view.currentConversation?.($event);
+        }} data-sp-b5f8ab84="" />
       </MobileDrawer>
-    </section>,
-  ]);
+    </section></>;
 });

@@ -12,6 +12,9 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+import importlib.util
+if importlib.util.find_spec("PIL") is None:
+    raise unittest.SkipTest("Optional vision dependencies are not installed; use requirements-vision.txt")
 from PIL import Image
 
 from app.vision.api import create_vision_router

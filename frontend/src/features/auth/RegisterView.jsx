@@ -1,33 +1,14 @@
-import React from "react";
-import {
-  useSetup,
-  propsForSetup,
-  emitForProps,
-  exposeForSetup,
-} from "../../shared/state/store.js";
-import {
-  mergeProps,
-  bindRef,
-  renderList,
-  display,
-  modelProps,
-  rootProps,
-  Teleport,
-} from "../../shared/components/rendering.js";
-import { RouterLink, RouterView } from "../../shared/routing/router.jsx";
+import React, { useRef } from "react";
 import LoginView from "./LoginView.jsx";
-function setup(__props) {
+function useRegisterViewState(inputProps, forwardedRef) {
+  const _propsLatest = useRef(inputProps);
+  _propsLatest.current = inputProps;
   return {
-    LoginView,
+    ...inputProps,
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
 export default React.forwardRef(function RegisterView(props, ref) {
-  const ctx = useSetup(setup, props, ref);
-  return rootProps(ctx, [
-    <LoginView
-      {...mergeProps({
-        initialRegister: true,
-      })}
-    />,
-  ]);
+  const view = useRegisterViewState(props, ref);
+  return <><LoginView initialRegister={true} {...view.rootAttributes} /></>;
 });

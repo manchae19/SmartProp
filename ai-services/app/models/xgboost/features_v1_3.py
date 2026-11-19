@@ -112,4 +112,3 @@ def transform(df: pd.DataFrame, schema: Dict[str, Any]) -> pd.DataFrame:
         out[col] = pd.Categorical(mapped, categories=levels)
 
     return out[ALL_FEATURES]
-

@@ -7,6 +7,9 @@ from __future__ import annotations
 
 import unittest
 
+import importlib.util
+if importlib.util.find_spec("PIL") is None:
+    raise unittest.SkipTest("Optional vision dependencies are not installed; use requirements-vision.txt")
 from PIL import Image, ImageDraw
 
 from app.vision.document import classify_document

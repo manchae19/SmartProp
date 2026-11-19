@@ -11,12 +11,13 @@ import java.util.*;
 @Service
 public class AmenityMapService {
     static final Set<String> CATEGORIES = Set.of("SCHOOL", "HOSPITAL", "PHARMACY", "MARKET",
-        "SUPERMARKET", "PARK", "BEACH", "PUBLIC_TRANSPORT");
+        "SUPERMARKET", "PARK", "BEACH", "PUBLIC_TRANSPORT", "MALL");
+    private final GeoapifyDistrictPlaces live;
     private final JdbcTemplate jdbc;
     private final AmenityCatalogService catalog;
     private final AmenityMapBoundaryCatalog boundaries;
-    public AmenityMapService(JdbcTemplate jdbc, AmenityCatalogService catalog, AmenityMapBoundaryCatalog boundaries) {
-        this.jdbc = jdbc; this.catalog = catalog; this.boundaries = boundaries;
+    public AmenityMapService(JdbcTemplate jdbc, AmenityCatalogService catalog, AmenityMapBoundaryCatalog boundaries, GeoapifyDistrictPlaces live) {
+        this.jdbc = jdbc; this.catalog = catalog; this.boundaries = boundaries; this.live=live;
     }
     public record MapPoi(String id, String name, String category, String district,
         double latitude, double longitude, String coordinateBasis, String reviewStatus,
@@ -33,7 +34,8 @@ public class AmenityMapService {
         String canonicalDistrict = area.areaName();
         // The historical district attribution was checked during POI collection, not
         // inferred from a property, Qwen output, or an area centroid. No distances.
-        List<MapPoi> candidates = jdbc.query("""
+        List<MapPoi> candidates;
+        try { candidates = jdbc.query("""
             SELECT poi_id,name,taxonomy_category,district_historical,latitude,longitude,
                    location_basis,review_status,source_name,external_id,attribution,source_license,observed_at
             FROM poi_effective_v1
@@ -48,7 +50,12 @@ public class AmenityMapService {
                 "https://www.openstreetmap.org/" + rs.getString("external_id"),
                 rs.getString("attribution"), rs.getString("source_license"), rs.getString("observed_at")),
             canonicalDistrict, cat, cat);
+        } catch (org.springframework.jdbc.BadSqlGrammarException ex) {
+            if (ex.getSQLException().getErrorCode()!=1146) throw ex;
+            return live.find(canonicalDistrict,cat);
+        }
         List<MapPoi> eligible = candidates.stream().filter(AmenityMapService::eligible).toList();
+        if(eligible.isEmpty()) return live.find(canonicalDistrict,cat);
         Map<String,Integer> perCategory = new HashMap<>();
         int cap = cat.equals("ALL") ? 8 : 80;
         List<MapPoi> items = eligible.stream()

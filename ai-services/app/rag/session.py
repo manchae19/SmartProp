@@ -58,6 +58,7 @@ class Context:
             "criteria": {k: v for k, v in {
                 "budgetVnd": self.budget_vnd, "purpose": self.purpose,
                 "propertyType": self.property_type, "minAreaSqm": self.min_area_sqm,
+                "minPriceVnd": (self.last_criteria or {}).get("minPriceVnd"),
                 "district": self.district, "ward": self.ward}.items() if v is not None},
             "lastPropertyIds": list(self.last_property_ids),
             "lastSearchEmpty": bool((self.last_criteria or {}).get("lastSearchEmpty")),
@@ -134,12 +135,14 @@ class SessionStore:
         context.min_area_sqm = (str(criteria.get("minAreaSqm")) if criteria and criteria.get("minAreaSqm") is not None else None)
         context.district = criteria.get("district") if criteria else None
         context.ward = criteria.get("ward") if criteria else None
-        context.last_property_ids = list(dict.fromkeys(property_ids or []))[:MAX_PROPERTY_IDS]
-        context.area_ids = list(dict.fromkeys(area_ids or []))[:MAX_AREA_IDS]
+        if property_ids is not None:
+            context.last_property_ids = list(dict.fromkeys(property_ids))[:MAX_PROPERTY_IDS]
+        if area_ids is not None:
+            context.area_ids = list(dict.fromkeys(area_ids))[:MAX_AREA_IDS]
         context.evidence_source_ids = list(dict.fromkeys(evidence_ids or []))[-MAX_EVIDENCE_IDS:]
         if referenced_property_id:
             context.referenced_property_id = referenced_property_id
-        elif property_ids and referenced_property_id is None:
+        elif property_ids is not None and referenced_property_id is None:
             # A new search replaces the reference; never keep a stale one.
             context.referenced_property_id = None
         context.last_question = (question or "")[:2000]

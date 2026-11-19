@@ -321,4 +321,3 @@ public class DanangSpatialValidator {
         return Math.round(v * 1_000_000.0) / 1_000_000.0;
     }
 }
-

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { RouterLink } from '../../shared/routing/router.jsx'
+import { SiteLink as RouterLink } from '../../app/navigation.jsx'
 import { api, session, errorText } from '../auth/api.js'
 import { districts } from '../map/districts.js'
 import {

@@ -34,8 +34,6 @@ test-results/
 /FRONTEND_CHANGES.md
 
 # Versionable Hybrid Recommendation integration tests and handoff documentation.
-!/backend/src/test/
-!/frontend/vue.ui/tests/
 !/docs/
 /docs/*
 !/docs/HYBRID_RECOMMENDATION_V1.md
@@ -73,7 +71,6 @@ test-results/
 **/dist/
 **/build/
 # Vite build helpers are source, not output (chatProxy.mjs is imported by vite.config.js).
-!/frontend/vue.ui/build/
 **/target/
 /backend/var/
 coverage/
@@ -133,7 +130,6 @@ Thumbs.db
 
 # Paths after the feature-based layout sync
 .vite/
-!/frontend/tests/
 !/frontend/build/
 !/frontend/build/*.mjs
 
