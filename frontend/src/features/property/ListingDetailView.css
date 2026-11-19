@@ -47,3 +47,349 @@
 .listing-ai-action:hover {background:linear-gradient(135deg,#326ba5,#203c5b)}
 .listing-ai-action:focus-visible {outline:3px solid #d9b45e;outline-offset:3px}
 [data-ui-view="ListingDetailView"] h1 {color:#203c5b}
+
+
+/* --------------------------------------------------------------------------
+   SmartProp Signature — Property Detail visual system
+   Presentation-only overrides. Keep data, routes, handlers and API untouched.
+   -------------------------------------------------------------------------- */
+[data-ui-view="ListingDetailView"] {
+  --sp-signature-navy: #17324f;
+  --sp-signature-navy-deep: #102840;
+  --sp-signature-gold: #d9aa4f;
+  --sp-signature-gold-soft: #fbf2df;
+  --sp-signature-teal: #159b91;
+  --sp-signature-teal-soft: #e2f3f1;
+  --sp-signature-pearl: #f3f6f8;
+  --sp-signature-line: #d9e3ec;
+  --sp-signature-muted: #637b92;
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(21, 155, 145, .055), transparent 34%),
+    linear-gradient(180deg, #f7f9fb 0%, var(--sp-signature-pearl) 100%);
+  color: var(--sp-signature-navy);
+}
+
+[data-ui-view="ListingDetailView"] > .max-w-\[1400px\] {
+  max-width: 1320px;
+  padding-top: 24px;
+}
+
+[data-ui-view="ListingDetailView"] h1,
+[data-ui-view="ListingDetailView"] h2,
+[data-ui-view="ListingDetailView"] h3 {
+  color: var(--sp-signature-navy);
+}
+
+[data-ui-view="ListingDetailView"] button,
+[data-ui-view="ListingDetailView"] a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-ui-view="ListingDetailView"] button:focus-visible,
+[data-ui-view="ListingDetailView"] a:focus-visible {
+  outline: 3px solid rgba(21, 155, 145, .42);
+  outline-offset: 3px;
+}
+
+/* Breadcrumb and page actions */
+[data-ui-view="ListingDetailView"] nav[aria-label="Breadcrumb"] {
+  background: rgba(255,255,255,.88);
+  border-color: var(--sp-signature-line);
+  box-shadow: 0 3px 12px rgba(23,50,79,.035);
+}
+
+[data-ui-view="ListingDetailView"] nav[aria-label="Breadcrumb"] a:hover {
+  color: var(--sp-signature-teal);
+}
+
+[data-ui-view="ListingDetailView"] nav[aria-label="Breadcrumb"] > span:last-child {
+  color: var(--sp-signature-navy);
+}
+
+/* Photo gallery */
+[data-ui-view="ListingDetailView"] .listing-gallery {
+  gap: 12px;
+  height: clamp(300px, 37vw, 470px);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery > div {
+  border-color: var(--sp-signature-line);
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(16,40,64,.09);
+  background: #e9eff4;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery img {
+  transition: transform .45s cubic-bezier(.2,.7,.2,1), filter .3s ease;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery > div:hover img {
+  filter: saturate(1.04) contrast(1.02);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery > div:first-child > div:first-of-type {
+  background: linear-gradient(180deg, rgba(16,40,64,.16), transparent 36%, rgba(16,40,64,.42));
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery button {
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow: 0 5px 16px rgba(16,40,64,.16);
+}
+
+/* Main content cards */
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid {
+  gap: 24px;
+  margin-top: 24px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child {
+  gap: 18px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section,
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section {
+  border: 1px solid var(--sp-signature-line);
+  border-radius: 22px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 6px 22px rgba(16,40,64,.045);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child {
+  position: relative;
+  overflow: hidden;
+  border-top: 3px solid var(--sp-signature-gold);
+  padding: 28px;
+  box-shadow: 0 12px 30px rgba(16,40,64,.065);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child h1 {
+  font-size: clamp(24px, 2.1vw, 32px);
+  line-height: 1.22;
+  letter-spacing: -.035em;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child h1 + div {
+  color: var(--sp-signature-muted);
+  font-size: 13px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(3) {
+  background: linear-gradient(110deg, var(--sp-signature-gold-soft), #fffaf0 65%, #fff);
+  border: 1px solid rgba(217,170,79,.42);
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: inset 3px 0 0 var(--sp-signature-gold);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(3) > div:first-child > p {
+  color: #80602b;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(3) > div:first-child > div > span:first-child {
+  color: var(--sp-signature-navy);
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 850;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(4) {
+  border-color: var(--sp-signature-line);
+  gap: 12px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(4) > div {
+  background: #f8fafc;
+  border: 1px solid var(--sp-signature-line);
+  border-radius: 16px;
+  padding: 16px;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(4) > div:hover {
+  transform: translateY(-2px);
+  border-color: rgba(21,155,145,.42);
+  box-shadow: 0 8px 18px rgba(21,155,145,.08);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(4) > div > div {
+  color: var(--sp-signature-teal);
+  background: var(--sp-signature-teal-soft);
+  border-color: rgba(21,155,145,.16);
+}
+
+/* Trust note, description, amenities, nearby data, GIS and valuation */
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:not(:first-child) {
+  padding: 24px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section h2 {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.015em;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section p,
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section .text-brand-muted {
+  color: var(--sp-signature-muted);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:nth-child(2) {
+  background: linear-gradient(110deg, #f1f6fa, #fff);
+  border-left: 3px solid var(--sp-signature-teal);
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:nth-child(3) {
+  line-height: 1.8;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:nth-child(3) > div {
+  color: #435d75;
+  font-size: 13px;
+  line-height: 1.85;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:nth-child(4) > div > div {
+  border-radius: 14px;
+  border-color: var(--sp-signature-line);
+  background: #f8fafc;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:has(.leaflet-container) {
+  overflow: hidden;
+}
+
+[data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:has(.leaflet-container) .leaflet-container {
+  border-radius: 16px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-evidence {
+  background: linear-gradient(135deg, #f3f7fa, #fff);
+  border-left: 3px solid var(--sp-signature-gold);
+}
+
+/* Contact and listing information sidebar */
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar {
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  [data-ui-view="ListingDetailView"] .listing-detail-sidebar {
+    top: 104px;
+  }
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section {
+  padding: 22px;
+  border-radius: 20px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:first-child {
+  border-top: 3px solid var(--sp-signature-navy);
+  box-shadow: 0 12px 28px rgba(16,40,64,.075);
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:first-child h2 {
+  font-size: 16px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-ai-action {
+  background: linear-gradient(120deg, var(--sp-signature-navy), #28547b);
+  border: 1px solid var(--sp-signature-navy);
+  border-radius: 13px;
+  box-shadow: 0 7px 16px rgba(23,50,79,.16);
+}
+
+[data-ui-view="ListingDetailView"] .listing-ai-action:hover {
+  background: linear-gradient(120deg, #214766, #326b94);
+  transform: translateY(-1px);
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:first-child button,
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:first-child a {
+  border-radius: 13px;
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:nth-child(2) {
+  background: #f8fafc;
+}
+
+[data-ui-view="ListingDetailView"] .listing-detail-sidebar > section:nth-child(2) h3 {
+  font-size: 14px;
+}
+
+/* Mobile action rail */
+[data-ui-view="ListingDetailView"] .listing-mobile-actions {
+  background: rgba(255,255,255,.96);
+  border-top: 1px solid var(--sp-signature-line);
+  box-shadow: 0 -8px 28px rgba(16,40,64,.09);
+  backdrop-filter: blur(16px);
+}
+
+[data-ui-view="ListingDetailView"] .listing-mobile-actions p:last-child {
+  color: var(--sp-signature-navy);
+}
+
+/* Full-screen gallery */
+[data-ui-view="ListingDetailView"] ~ * .gallery-scroll {
+  scrollbar-color: rgba(217,170,79,.7) transparent;
+}
+
+@media (max-width: 1023px) {
+  [data-ui-view="ListingDetailView"] > .max-w-\[1400px\] {
+    padding-top: 16px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery {
+    height: clamp(270px, 58vw, 390px);
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid {
+    gap: 18px;
+    margin-top: 18px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-detail-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 639px) {
+  [data-ui-view="ListingDetailView"] > .max-w-\[1400px\] {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery {
+    height: 280px;
+    gap: 8px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery > div {
+    border-radius: 16px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child h1 {
+    font-size: 23px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(3) {
+    padding: 16px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:first-child > div:nth-of-type(4) > div {
+    padding: 12px;
+  }
+  [data-ui-view="ListingDetailView"] .listing-gallery + .grid > div:first-child > section:not(:first-child),
+  [data-ui-view="ListingDetailView"] .listing-detail-sidebar > section {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-view="ListingDetailView"] *,
+  [data-ui-view="ListingDetailView"] *::before,
+  [data-ui-view="ListingDetailView"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
