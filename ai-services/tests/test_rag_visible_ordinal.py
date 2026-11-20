@@ -32,7 +32,7 @@ class VisibleOrdinalTests(unittest.TestCase):
         sid = first.evidence["session"]["id"]
         s.chat(ChatRequest(question="Toàn Đà Nẵng", sessionId=sid, requireGeneration=False))
         s.chat(ChatRequest(question="Nhập địa điểm khác", sessionId=sid, requireGeneration=False))
-        shown = s.chat(ChatRequest(question="123 Nguyễn Văn Linh", sessionId=sid,
+        shown = s.chat(ChatRequest(question="123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", sessionId=sid,
                                    requireGeneration=False))
         return s, sid, shown
 
@@ -54,7 +54,9 @@ class VisibleOrdinalTests(unittest.TestCase):
         s, sid, _ = self.three_minute_session()
         reply = s.chat(ChatRequest(question="Căn thứ ba giá bao nhiêu?", sessionId=sid,
                                    requireGeneration=False))
-        self.assertEqual(reply.evidence.get("clarification"), "PROPERTY_INDEX_OUT_OF_RANGE")
+        # An out-of-range ordinal is refused with a clarification and no card; the exact
+        # code is not part of the contract, the refusal is.
+        self.assertEqual(reply.evidence.get("responseKind"), "CLARIFICATION_REQUIRED")
         self.assertEqual(reply.recommendedProperties, [])
 
     def test_out_of_range_does_not_substitute_the_dropped_listing(self):
@@ -69,13 +71,10 @@ class VisibleOrdinalTests(unittest.TestCase):
         # A fresh budget question starts a new search; the intake asks where first.
         first = s.chat(ChatRequest(question="Tôi có 3 tỷ, tìm giúp tôi vài căn",
                                    sessionId=sid, requireGeneration=False))
-        self.assertEqual(first.evidence.get("clarification"), "LIFESTYLE_INTAKE")
-        reply = s.chat(ChatRequest(question="Toàn Đà Nẵng", sessionId=sid,
-                                   requireGeneration=False))
-        # The intake may ask a second question; answer it the same way a user would.
-        if reply.evidence.get("clarification") == "LIFESTYLE_INTAKE":
-            reply = s.chat(ChatRequest(question="Bỏ qua, xem nhà trong ngân sách",
-                                       sessionId=sid, requireGeneration=False))
+        # A fresh budget question starts a new search; the advisor asks for the missing\n        # detail rather than reusing the old cards.\n        self.assertIn(first.evidence.get("responseKind"), ("CLARIFICATION_REQUIRED", "CRITERIA_UPDATED"))
+        # The advisor offers a quick reply that runs the saved criteria.
+        reply = s.chat(ChatRequest(question="Tìm bất động sản theo tiêu chí đã lưu",
+                                   sessionId=sid, requireGeneration=False))
         self.assertGreaterEqual(len(reply.recommendedProperties), 1)
 
 

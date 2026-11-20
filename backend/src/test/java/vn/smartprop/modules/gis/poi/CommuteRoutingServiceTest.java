@@ -6,6 +6,7 @@ import java.net.http.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import vn.smartprop.common.ApiException;
+import vn.smartprop.common.RequestLimits;
 
 /** Vendor selection and response normalisation for the commute router. */
 class CommuteRoutingServiceTest {
@@ -60,6 +61,49 @@ class CommuteRoutingServiceTest {
         assertEquals(600.0,cells.get(1).durationSeconds(),0.001);
     }
 
+    @Test void onlyTheEgressBucketIsRetried(){
+        // The decision uses the counter that refused, never Retry-After: that header is the
+        // time left in the window, so the daily quota also reports 1 second near rollover.
+        assertTrue(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(1,"geo:egress")));
+        assertTrue(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(60,"geo:egress")));
+        // Same Retry-After, different counter: not retried.
+        assertFalse(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(1,"geo:daily")));
+        assertFalse(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(1,"commute-matrix:ip:127.0.0.1")));
+        // An unattributed 429 is never retried.
+        assertFalse(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(1)));
+        assertFalse(CommuteRoutingService.isEgressThrottle(new ApiException(429,"RATE_LIMITED","x")));
+        // A provider-side failure is not a throttle at all.
+        assertFalse(CommuteRoutingService.isEgressThrottle(new ApiException(200,"ROUTE_ABSENT","x")));
+    }
+
+    @Test void aDailyQuotaStopsTheBatchInsteadOfSleeping()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new RequestLimits.Exceeded(1,"geo:daily"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23));
+        long start=System.nanoTime();
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive"));
+        long millis=(System.nanoTime()-start)/1_000_000;
+        assertEquals(429,error.status);
+        // No 1.1s sleep per listing: the batch stops on the first refusal.
+        assertTrue(millis<1000,"phải dừng ngay, không chờ: "+millis+"ms");
+        verify(geoapify,times(1)).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+
+    @Test void aShortEgressThrottleIsRetriedAndThenSucceeds()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new RequestLimits.Exceeded(1,"geo:egress"))
+            .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1500.0,\"time\":300.0},"
+                + "\"geometry\":{\"coordinates\":[[108.22,16.06],[108.24,16.08]]}}]}"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        assertEquals(300.0,cells.get(0).durationSeconds(),0.001);
+        verify(geoapify,times(2)).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
     @Test void matrixKeepsNullForAnUnroutableCell()throws Exception{
         respond(200,"{\"durations\":[[null],[600.0]],\"distances\":[[null],[2600.0]]}",Map.of());
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
@@ -115,8 +159,8 @@ class CommuteRoutingServiceTest {
 
     @Test void geoapifyBatchKeepsGoingWhenOnePairHasNoRoute()throws Exception{
         when(geoapify.configured()).thenReturn(true);
-        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString()))
-            .thenThrow(new ApiException(502,"ROUTE_UNAVAILABLE","x"))
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"))
             .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1000,\"time\":200},"
                 + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.2,16.0],[108.3,16.1]]}}]}"));
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
@@ -128,7 +172,7 @@ class CommuteRoutingServiceTest {
 
     @Test void geoapifyBatchStopsOnOurOwnBudgetError()throws Exception{
         when(geoapify.configured()).thenReturn(true);
-        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString()))
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
             .thenThrow(new ApiException(429,"RATE_LIMITED","Please retry later"));
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
         var error=assertThrows(ApiException.class,
@@ -136,6 +180,174 @@ class CommuteRoutingServiceTest {
         assertEquals("RATE_LIMITED",error.code);
     }
 
+    @Test void anUnattributed429IsNotRetried()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(429,"RATE_LIMITED","Please retry later"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        long start=System.nanoTime();
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","").matrix(origins,16.08,108.24,"drive"));
+        long millis=(System.nanoTime()-start)/1_000_000;
+        assertEquals(429,error.status);
+        assertTrue(millis<1000,"không được chờ: "+millis+"ms");
+        verify(geoapify,times(1)).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+
+    @Test void anUnroutableListingStaysNoRouteWhileTheRestKeepTheirResult()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1500.0,\"time\":300.0},"
+                + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.22,16.06],[108.24,16.08]]}}]}"))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"))
+            .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":2600.0,\"time\":600.0},"
+                + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.23,16.07],[108.24,16.08]]}}]}"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23),
+                            new CommuteRoutingService.Origin("c",16.05,108.21));
+        var cells=service("GEOAPIFY","").matrix(origins,16.08,108.24,"drive");
+        assertEquals(3,cells.size());
+        assertEquals(300.0,cells.get(0).durationSeconds(),0.001);
+        assertNull(cells.get(1).durationSeconds(),"căn không tuyến phải để trống");
+        assertNull(cells.get(1).distanceMeters());
+        assertEquals(600.0,cells.get(2).durationSeconds(),0.001);
+    }
+    @Test void aBatchStopsMeasuringBeforeTheCallerGivesUp()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Every pair is throttled on egress, so each one would sleep 1.1s. The bounded retry
+        // must give up instead of letting the batch run past the caller's ten-second window.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new RequestLimits.Exceeded(1,"geo:egress"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23),
+                            new CommuteRoutingService.Origin("c",16.05,108.21),
+                            new CommuteRoutingService.Origin("d",16.04,108.20),
+                            new CommuteRoutingService.Origin("e",16.03,108.19),
+                            new CommuteRoutingService.Origin("f",16.02,108.18));
+        long start=System.nanoTime();
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive"));
+        long millis=(System.nanoTime()-start)/1_000_000;
+        assertEquals(429,error.status);
+        // Three attempts on the first pair, then the batch stops: it never walks all six.
+        assertTrue(millis<CommuteRoutingService.GEOAPIFY_MATRIX_BUDGET_SECONDS*1000L+2000,
+            "phải dừng trong ngân sách: "+millis+"ms");
+        verify(geoapify,times(3)).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+
+    @Test void aMeasuredCellIsFlaggedMeasured(){
+        var measured=new CommuteRoutingService.Cell("a",1500.0,300.0);
+        assertTrue(measured.measured());
+        var unmeasured=new CommuteRoutingService.Cell("b",null,null,false);
+        assertFalse(unmeasured.measured());
+        assertNull(unmeasured.durationSeconds());
+        assertNull(unmeasured.distanceMeters());
+    }
+    @Test void aVendorConfirmedAbsenceIsMeasuredButHasNoDuration()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        // The vendor answered: the listing was measured, it simply has no route.
+        assertTrue(cells.get(0).measured());
+        assertNull(cells.get(0).durationSeconds());
+        assertNull(cells.get(0).distanceMeters());
+    }
+
+    @Test void anExpiredDeadlineLeavesTheListingUnmeasured()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1500.0,\"time\":300.0},"
+                + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.22,16.06],[108.24,16.08]]}}]}"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        // The budget is already gone: the pair is never attempted, so it is unmeasured
+        // rather than unroutable, and no provider call is spent.
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive",System.nanoTime()-1);
+        assertEquals(1,cells.size());
+        assertFalse(cells.get(0).measured());
+        assertNull(cells.get(0).durationSeconds());
+        verify(geoapify,never()).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+    @Test void aRetryThatWouldOverrunTheDeadlineIsNotAttempted()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new RequestLimits.Exceeded(1,"geo:egress"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        // A deadline already in the past: no attempt, no sleep, no retry.
+        long start=System.nanoTime();
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive",System.nanoTime()-1);
+        long millis=(System.nanoTime()-start)/1_000_000;
+        assertEquals(1,cells.size());
+        assertFalse(cells.get(0).measured(),"hết ngân sách phải là chưa đo");
+        assertTrue(millis<500,"không được chờ: "+millis+"ms");
+        verify(geoapify,never()).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+    @Test void aTimeoutLeavesThePairUnmeasuredNotUnroutable()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // The provider call ran out of time. That is not an absence of route: the pair was
+        // never measured, and neither were the ones after it.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(504,"NEARBY_TIMEOUT","quá thời gian"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(2,cells.size());
+        assertFalse(cells.get(0).measured(),"timeout phải là chưa đo");
+        assertNull(cells.get(0).durationSeconds());
+        assertFalse(cells.get(1).measured());
+        assertNull(cells.get(1).durationSeconds());
+    }
+
+    @Test void aTechnicalFailureKeepsTheEndpointContract()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // A 5xx is a technical failure, not an absence of route.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(502,"NEARBY_PROVIDER_ERROR","lỗi nhà cung cấp"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive"));
+        assertEquals(502,error.status);
+        assertEquals("NEARBY_PROVIDER_ERROR",error.code);
+    }
+
+    @Test void onlyAVendorNoRouteBecomesNoRoute()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","không có tuyến"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        assertTrue(cells.get(0).measured(),"nhà cung cấp xác nhận: đã đo, không có tuyến");
+        assertNull(cells.get(0).durationSeconds());
+    }
+    @Test void aSingleRouteWithNoFeaturesIsTheEndpointsOwnFailure()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Geoapify answered 200 with an empty feature list. The matrix records NO_ROUTE for
+        // that one listing, but a single route has no cell to record it in, so it must stay
+        // the endpoint's own 502 instead of escaping as a 200 carrying an error body.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[]}"));
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").directions(16.06,108.22,16.08,108.24,"drive"));
+        assertEquals(502,error.status);
+        assertEquals("ROUTE_UNAVAILABLE",error.code);
+    }
+
+    @Test void theSameEmptyFeatureListBecomesNoRouteInAMatrix()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Same simulated response, through the matrix: the listing is measured with no
+        // duration, which PropertyRouteService reports as NO_ROUTE.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[]}"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        assertTrue(cells.get(0).measured(),"nhà cung cấp xác nhận: đã đo, không có tuyến");
+        assertNull(cells.get(0).durationSeconds());
+        assertNull(cells.get(0).distanceMeters());
+    }
     // ---- hosted endpoint shape -------------------------------------------------
 
     @Test void defaultBaseIsTheHostedGatewayWithASinglePrefix(){

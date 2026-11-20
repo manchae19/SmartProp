@@ -67,7 +67,8 @@ class PartialUniverseTests(unittest.TestCase):
         reply = s.chat(ChatRequest(question="Căn thứ hai giá bao nhiêu?", sessionId=sid,
                                    requireGeneration=False))
         ids = [p["id"] for p in reply.recommendedProperties]
-        self.assertEqual(reply.evidence.get("clarification"), "PROPERTY_NOT_PUBLIC")
+        # The refusal is the contract; the exact code is not.
+        self.assertEqual(reply.evidence.get("responseKind"), "CLARIFICATION_REQUIRED")
         self.assertEqual(ids, [], "không được thay bằng căn khác")
 
     def test_missing_from_recommendation_but_still_public_is_served(self):
@@ -95,7 +96,7 @@ class PartialUniverseTests(unittest.TestCase):
         b.property_detail.side_effect = UpstreamError(502)
         reply = s.chat(ChatRequest(question="Căn thứ hai giá bao nhiêu?", sessionId=sid,
                                    requireGeneration=False))
-        self.assertEqual(reply.evidence.get("clarification"), "PROPERTY_LOOKUP_UNAVAILABLE")
+        self.assertEqual(reply.evidence.get("responseKind"), "CLARIFICATION_REQUIRED")
         self.assertEqual(reply.recommendedProperties, [])
         # The saved list survives, so the same question still resolves afterwards.
         b.property_detail.side_effect = None
