@@ -30,6 +30,7 @@ public class PropertyRouteService {
     private final Map<String,Entry> cache=new LinkedHashMap<>();
     private final Map<String,CommuteEntry> commuteCache=new LinkedHashMap<>();
     private final Map<String,MatrixEntry> matrixCache=new LinkedHashMap<>();
+    private final java.util.concurrent.locks.ReentrantLock matrixLock=new java.util.concurrent.locks.ReentrantLock();
     public PropertyRouteService(NearbyService nearby,GeoapifyPlacesClient provider,CommuteRoutingService routing){
         this.nearby=nearby;this.provider=provider;this.routing=routing;
     }
@@ -76,7 +77,36 @@ public class PropertyRouteService {
      * One call for every candidate distance to the same destination. This is what a
      * ranked list needs; a per-listing loop would spend the vendor budget N times.
      */
-    public synchronized CommuteMatrix commuteMatrix(List<String> propertyIds,double latitude,double longitude,String label,String mode){
+    public CommuteMatrix commuteMatrix(List<String> propertyIds,double latitude,double longitude,String label,String mode){
+        // The budget starts when the request arrives, before the lock is even attempted:
+        // time spent queueing behind a concurrent batch is time the caller also waits.
+        long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(
+            CommuteRoutingService.GEOAPIFY_MATRIX_BUDGET_SECONDS);
+        // A plain synchronized block cannot be abandoned, so the lock is taken with the
+        // remaining budget as its timeout. If it cannot be acquired in time the caller is
+        // told the batch was not measured instead of waiting past its own window.
+        boolean locked;
+        try{
+            locked=matrixLock.tryLock(Math.max(1,deadline-System.nanoTime()),java.util.concurrent.TimeUnit.NANOSECONDS);
+        }catch(InterruptedException interrupted){
+            Thread.currentThread().interrupt();
+            throw new ApiException(503,"ROUTE_INTERRUPTED","Yêu cầu tính tuyến đã bị gián đoạn.");
+        }
+        if(!locked)return unmeasuredMatrix(propertyIds,label,mode);
+        try{
+            return commuteMatrixLocked(propertyIds,latitude,longitude,label,mode,deadline);
+        }finally{matrixLock.unlock();}
+    }
+
+    /** Every listing reported as not measured, because the batch never got to run. */
+    private CommuteMatrix unmeasuredMatrix(List<String> propertyIds,String label,String mode){
+        List<CommuteCell> cells=new ArrayList<>();
+        for(String propertyId:propertyIds)cells.add(new CommuteCell(propertyId,null,null,"NOT_MEASURED"));
+        return new CommuteMatrix(mode,routing.provider(),label==null?"":label.strip(),List.copyOf(cells),Instant.now());
+    }
+
+    private CommuteMatrix commuteMatrixLocked(List<String> propertyIds,double latitude,double longitude,
+                                              String label,String mode,long deadline){
         if(propertyIds==null||propertyIds.isEmpty())
             throw NearbyService.bad("Cần ít nhất một tin để tính tuyến.");
         if(propertyIds.size()>6)
@@ -107,10 +137,6 @@ public class PropertyRouteService {
             else cells.add(new CommuteCell(origin.propertyId(),null,null,"LOCATION_UNVERIFIED"));
         }
         if(!routable.isEmpty()){
-            // The budget starts when the request arrives, not when the lock is acquired:
-            // time spent waiting for a concurrent batch is time the caller also waits.
-            long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(
-                CommuteRoutingService.GEOAPIFY_MATRIX_BUDGET_SECONDS);
             for(var cell:routing.matrix(routable,latitude,longitude,mode,deadline))
                 cells.add(new CommuteCell(cell.propertyId(),cell.distanceMeters(),cell.durationSeconds(),
                     !cell.measured()?"NOT_MEASURED":cell.durationSeconds()==null?"NO_ROUTE":"OK"));
