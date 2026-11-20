@@ -288,10 +288,18 @@ public class CommuteRoutingService {
                     } else if (isRateLimited(error)) {
                         // A limit we cannot wait out, or one we cannot attribute.
                         throw error;
-                    } else {
+                    } else if (isVendorNoRoute(error)) {
                         // The vendor answered and has no route for this listing.
                         noRoute = true;
                         break;
+                    } else if (isTimeout(error)) {
+                        // The call ran out of time: this listing was not measured, and
+                        // neither were the ones after it. Never reported as unroutable.
+                        break;
+                    } else {
+                        // A 5xx, a connection failure or a malformed body is a technical
+                        // failure, not an absence of route: keep the endpoint contract.
+                        throw error;
                     }
                 }
             }
@@ -310,6 +318,27 @@ public class CommuteRoutingService {
     /** True when the failure is our own budget or the provider throttling us. */
     private static boolean isRateLimited(ApiException error) {
         return "RATE_LIMITED".equals(error.code) || 429 == error.status;
+    }
+
+    /**
+     * True when the vendor answered and has no route for this pair.
+     *
+     * Only a 200 with an empty feature list is an absence of route. A 5xx, a connection
+     * failure or a malformed body is a technical failure and keeps the endpoint contract.
+     */
+    private static boolean isVendorNoRoute(ApiException error) {
+        return "ROUTE_ABSENT".equals(error.code);
+    }
+
+    /**
+     * True when the call ran out of time, so the pair was never measured.
+     *
+     * A timeout is not an absence of route: the vendor never answered. It must leave the
+     * listing unmeasured and must not be cached as a result.
+     */
+    private static boolean isTimeout(ApiException error) {
+        return "NEARBY_TIMEOUT".equals(error.code) || "ROUTE_TIMEOUT".equals(error.code)
+            || 504 == error.status;
     }
 
     /**
@@ -334,7 +363,14 @@ public class CommuteRoutingService {
         if (!geoapifyUsable())
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
         JsonNode body = geoapify.route(fromLat, fromLon, toLat, toLon, mode, deadline);
-        JsonNode feature = body.path("features").path(0);
+        JsonNode features = body.path("features");
+        if (!features.isArray())
+            // A 200 without a feature list is a malformed body, not an absence of route.
+            throw unavailable();
+        if (features.isEmpty())
+            // The vendor answered and has no route for this pair.
+            throw new ApiException(200, "ROUTE_ABSENT", "Nhà cung cấp không có tuyến cho cặp điểm này.");
+        JsonNode feature = features.path(0);
         JsonNode properties = feature.path("properties");
         double meters = properties.path("distance").asDouble(Double.NaN);
         double seconds = properties.path("time").asDouble(Double.NaN);

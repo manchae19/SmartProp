@@ -73,7 +73,7 @@ class CommuteRoutingServiceTest {
         assertFalse(CommuteRoutingService.isEgressThrottle(new RequestLimits.Exceeded(1)));
         assertFalse(CommuteRoutingService.isEgressThrottle(new ApiException(429,"RATE_LIMITED","x")));
         // A provider-side failure is not a throttle at all.
-        assertFalse(CommuteRoutingService.isEgressThrottle(new ApiException(502,"ROUTE_UNAVAILABLE","x")));
+        assertFalse(CommuteRoutingService.isEgressThrottle(new ApiException(200,"ROUTE_ABSENT","x")));
     }
 
     @Test void aDailyQuotaStopsTheBatchInsteadOfSleeping()throws Exception{
@@ -160,7 +160,7 @@ class CommuteRoutingServiceTest {
     @Test void geoapifyBatchKeepsGoingWhenOnePairHasNoRoute()throws Exception{
         when(geoapify.configured()).thenReturn(true);
         when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
-            .thenThrow(new ApiException(502,"ROUTE_UNAVAILABLE","x"))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"))
             .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1000,\"time\":200},"
                 + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.2,16.0],[108.3,16.1]]}}]}"));
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
@@ -199,7 +199,7 @@ class CommuteRoutingServiceTest {
         when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
             .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":1500.0,\"time\":300.0},"
                 + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.22,16.06],[108.24,16.08]]}}]}"))
-            .thenThrow(new ApiException(502,"ROUTE_UNAVAILABLE","x"))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"))
             .thenReturn(json.readTree("{\"features\":[{\"properties\":{\"distance\":2600.0,\"time\":600.0},"
                 + "\"geometry\":{\"type\":\"LineString\",\"coordinates\":[[108.23,16.07],[108.24,16.08]]}}]}"));
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
@@ -246,7 +246,7 @@ class CommuteRoutingServiceTest {
     @Test void aVendorConfirmedAbsenceIsMeasuredButHasNoDuration()throws Exception{
         when(geoapify.configured()).thenReturn(true);
         when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
-            .thenThrow(new ApiException(502,"ROUTE_UNAVAILABLE","x"));
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","x"));
         var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
         var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
         assertEquals(1,cells.size());
@@ -283,6 +283,44 @@ class CommuteRoutingServiceTest {
         assertFalse(cells.get(0).measured(),"hết ngân sách phải là chưa đo");
         assertTrue(millis<500,"không được chờ: "+millis+"ms");
         verify(geoapify,never()).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong());
+    }
+    @Test void aTimeoutLeavesThePairUnmeasuredNotUnroutable()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // The provider call ran out of time. That is not an absence of route: the pair was
+        // never measured, and neither were the ones after it.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(504,"NEARBY_TIMEOUT","quá thời gian"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(2,cells.size());
+        assertFalse(cells.get(0).measured(),"timeout phải là chưa đo");
+        assertNull(cells.get(0).durationSeconds());
+        assertFalse(cells.get(1).measured());
+        assertNull(cells.get(1).durationSeconds());
+    }
+
+    @Test void aTechnicalFailureKeepsTheEndpointContract()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // A 5xx is a technical failure, not an absence of route.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(502,"NEARBY_PROVIDER_ERROR","lỗi nhà cung cấp"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive"));
+        assertEquals(502,error.status);
+        assertEquals("NEARBY_PROVIDER_ERROR",error.code);
+    }
+
+    @Test void onlyAVendorNoRouteBecomesNoRoute()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenThrow(new ApiException(200,"ROUTE_ABSENT","không có tuyến"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        assertTrue(cells.get(0).measured(),"nhà cung cấp xác nhận: đã đo, không có tuyến");
+        assertNull(cells.get(0).durationSeconds());
     }
     // ---- hosted endpoint shape -------------------------------------------------
 
