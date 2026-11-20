@@ -37,8 +37,17 @@ public class CommuteRoutingService {
 
     /** One measured trip. {@code geometry} is null when only a summary was requested. */
     public record Measured(double distanceMeters, double durationSeconds, JsonNode geometry, String provider) {}
+    /**
+     * Wall-clock budget for one Geoapify matrix batch. RAG abandons the call after ten
+     * seconds, so measuring must finish inside that window and return partial results.
+     */
+    static final long GEOAPIFY_MATRIX_BUDGET_SECONDS = 8;
     /** One cell of a matrix result; a missing cell means the vendor had no route. */
-    public record Cell(String propertyId, Double distanceMeters, Double durationSeconds) {}
+    public record Cell(String propertyId, Double distanceMeters, Double durationSeconds, boolean measured) {
+        public Cell(String propertyId, Double distanceMeters, Double durationSeconds) {
+            this(propertyId, distanceMeters, durationSeconds, true);
+        }
+    }
     public record Origin(String propertyId, double latitude, double longitude) {}
 
     private final ObjectMapper json;
@@ -117,6 +126,16 @@ public class CommuteRoutingService {
      * vendor supports it, otherwise one call per origin. Result order matches input.
      */
     public List<Cell> matrix(List<Origin> origins, double destLat, double destLon, String mode) {
+        return matrix(origins, destLat, destLon, mode,
+            System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(GEOAPIFY_MATRIX_BUDGET_SECONDS));
+    }
+
+    /**
+     * Same batch, with a deadline the caller already started. The caller's clock is the
+     * one that matters: time spent waiting for a concurrent batch is time it also waits.
+     */
+    public List<Cell> matrix(List<Origin> origins, double destLat, double destLon, String mode,
+                             long deadline) {
         if (origins == null || origins.isEmpty()) return List.of();
         if (!NearbyService.valid(destLat, destLon) || !Set.of("walk", "drive").contains(mode))
             throw new ApiException(400, "VALIDATION_ERROR", "Điểm hoặc phương tiện không hợp lệ.");
@@ -128,7 +147,7 @@ public class CommuteRoutingService {
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
         return OPENROUTESERVICE.equals(vendor)
             ? orsMatrix(origins, destLat, destLon, mode)
-            : geoapifyMatrix(origins, destLat, destLon, mode);
+            : geoapifyMatrix(origins, destLat, destLon, mode, deadline);
     }
 
     // ---------------------------------------------------------------- openrouteservice
@@ -235,7 +254,8 @@ public class CommuteRoutingService {
 
     // ---------------------------------------------------------------------- geoapify
 
-    private List<Cell> geoapifyMatrix(List<Origin> origins, double destLat, double destLon, String mode) {
+    private List<Cell> geoapifyMatrix(List<Origin> origins, double destLat, double destLon, String mode,
+                                      long deadline) {
         List<Cell> cells = new ArrayList<>();
         for (Origin origin : origins) {
             Measured measured = null;
@@ -243,6 +263,7 @@ public class CommuteRoutingService {
             // pairs must be paced. Without this the second listing always trips our own
             // limiter and the whole matrix is reported as rate limited.
             for (int attempt = 0; attempt < 3 && measured == null; attempt++) {
+                if (System.nanoTime() > deadline) break;
                 try {
                     measured = geoapifyDirections(origin.latitude(), origin.longitude(), destLat, destLon, mode);
                 } catch (ApiException error) {
@@ -266,8 +287,10 @@ public class CommuteRoutingService {
                     }
                 }
             }
+            // A listing left unmeasured because the budget ran out stays null: the caller
+            // reports it as not measured, never as a zero or as another listing's time.
             cells.add(measured == null
-                ? new Cell(origin.propertyId(), null, null)
+                ? new Cell(origin.propertyId(), null, null, false)
                 : new Cell(origin.propertyId(), measured.distanceMeters(), measured.durationSeconds()));
         }
         return cells;

@@ -212,6 +212,37 @@ class CommuteRoutingServiceTest {
         assertNull(cells.get(1).distanceMeters());
         assertEquals(600.0,cells.get(2).durationSeconds(),0.001);
     }
+    @Test void aBatchStopsMeasuringBeforeTheCallerGivesUp()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Every pair is throttled on egress, so each one would sleep 1.1s. The bounded retry
+        // must give up instead of letting the batch run past the caller's ten-second window.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString()))
+            .thenThrow(new RequestLimits.Exceeded(1,"geo:egress"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22),
+                            new CommuteRoutingService.Origin("b",16.07,108.23),
+                            new CommuteRoutingService.Origin("c",16.05,108.21),
+                            new CommuteRoutingService.Origin("d",16.04,108.20),
+                            new CommuteRoutingService.Origin("e",16.03,108.19),
+                            new CommuteRoutingService.Origin("f",16.02,108.18));
+        long start=System.nanoTime();
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive"));
+        long millis=(System.nanoTime()-start)/1_000_000;
+        assertEquals(429,error.status);
+        // Three attempts on the first pair, then the batch stops: it never walks all six.
+        assertTrue(millis<CommuteRoutingService.GEOAPIFY_MATRIX_BUDGET_SECONDS*1000L+2000,
+            "phải dừng trong ngân sách: "+millis+"ms");
+        verify(geoapify,times(3)).route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString());
+    }
+
+    @Test void aMeasuredCellIsFlaggedMeasured(){
+        var measured=new CommuteRoutingService.Cell("a",1500.0,300.0);
+        assertTrue(measured.measured());
+        var unmeasured=new CommuteRoutingService.Cell("b",null,null,false);
+        assertFalse(unmeasured.measured());
+        assertNull(unmeasured.durationSeconds());
+        assertNull(unmeasured.distanceMeters());
+    }
     // ---- hosted endpoint shape -------------------------------------------------
 
     @Test void defaultBaseIsTheHostedGatewayWithASinglePrefix(){

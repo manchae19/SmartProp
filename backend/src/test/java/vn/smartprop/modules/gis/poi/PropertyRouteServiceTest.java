@@ -36,6 +36,35 @@ class PropertyRouteServiceTest {
         assertEquals("GEOAPIFY",result.provider());
         assertEquals("Công ty",result.destinationLabel());
     }
+    @Test void anIncompleteBatchIsNotCachedSoTheGapCanBeRetried()throws Exception{
+        var located=new Property();located.id="located";located.contentVersion=1;
+        located.location=new GeometryFactory(new PrecisionModel(),4326).createPoint(new Coordinate(108.24,16.07));
+        when(properties.publicProperty("located")).thenReturn(located);
+        // First batch: one listing measured, one never reached.
+        when(routing.matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong()))
+            .thenReturn(List.of(new CommuteRoutingService.Cell("test-property",4200.0,900.0),
+                                new CommuteRoutingService.Cell("located",null,null,false)));
+        var first=service.commuteMatrix(List.of("test-property","located"),16.07,108.24,"Cty","drive");
+        assertEquals("OK",first.cells().get(0).status());
+        assertEquals("NOT_MEASURED",first.cells().get(1).status());
+
+        // Second batch, same ids and destination: it must run again, not replay the gap.
+        when(routing.matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong()))
+            .thenReturn(List.of(new CommuteRoutingService.Cell("test-property",4200.0,900.0),
+                                new CommuteRoutingService.Cell("located",2600.0,600.0)));
+        var second=service.commuteMatrix(List.of("test-property","located"),16.07,108.24,"Cty","drive");
+        assertEquals("OK",second.cells().get(1).status());
+        assertEquals(600.0,second.cells().get(1).durationSeconds(),0.001);
+        verify(routing,times(2)).matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong());
+    }
+
+    @Test void aCompleteBatchIsCached()throws Exception{
+        when(routing.matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong()))
+            .thenReturn(List.of(new CommuteRoutingService.Cell("test-property",4200.0,900.0)));
+        service.commuteMatrix(List.of("test-property"),16.07,108.24,"Cty","drive");
+        service.commuteMatrix(List.of("test-property"),16.07,108.24,"Cty","drive");
+        verify(routing,times(1)).matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong());
+    }
     @Test void rejectsDestinationOutsideTheSupportedArea(){
         var error=assertThrows(ApiException.class,()->service.commute(property.id,51.5,-0.12,"London","drive"));
         assertEquals(422,error.status);
@@ -70,7 +99,7 @@ class PropertyRouteServiceTest {
         Property located=new Property();located.id="located";located.contentVersion=1;
         located.location=new GeometryFactory(new PrecisionModel(),4326).createPoint(new Coordinate(108.24,16.07));
         when(properties.publicProperty("located")).thenReturn(located);
-        when(routing.matrix(anyList(),anyDouble(),anyDouble(),anyString()))
+        when(routing.matrix(anyList(),anyDouble(),anyDouble(),anyString(),anyLong()))
             .thenReturn(List.of(new CommuteRoutingService.Cell("located",1500.0,300.0)));
         var result=service.commuteMatrix(List.of("missing","located"),16.07,108.24,"Cty","drive");
         assertEquals(2,result.cells().size());

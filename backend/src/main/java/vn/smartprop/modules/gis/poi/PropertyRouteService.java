@@ -107,9 +107,13 @@ public class PropertyRouteService {
             else cells.add(new CommuteCell(origin.propertyId(),null,null,"LOCATION_UNVERIFIED"));
         }
         if(!routable.isEmpty()){
-            for(var cell:routing.matrix(routable,latitude,longitude,mode))
+            // The budget starts when the request arrives, not when the lock is acquired:
+            // time spent waiting for a concurrent batch is time the caller also waits.
+            long deadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(
+                CommuteRoutingService.GEOAPIFY_MATRIX_BUDGET_SECONDS);
+            for(var cell:routing.matrix(routable,latitude,longitude,mode,deadline))
                 cells.add(new CommuteCell(cell.propertyId(),cell.distanceMeters(),cell.durationSeconds(),
-                    cell.durationSeconds()==null?"NO_ROUTE":"OK"));
+                    !cell.measured()?"NOT_MEASURED":cell.durationSeconds()==null?"NO_ROUTE":"OK"));
         }
         // Restore the caller's order so index i always means the i-th requested listing.
         Map<String,CommuteCell> byId=new LinkedHashMap<>();
@@ -118,8 +122,15 @@ public class PropertyRouteService {
         for(String propertyId:propertyIds)
             ordered.add(byId.getOrDefault(propertyId,new CommuteCell(propertyId,null,null,"NO_ROUTE")));
         var matrix=new CommuteMatrix(mode,vendor,safeLabel,List.copyOf(ordered),now);
-        if(matrixCache.size()>=128)matrixCache.remove(matrixCache.keySet().iterator().next());
-        matrixCache.put(key,new MatrixEntry(now.plusSeconds(900),matrix));return matrix;
+        // A batch that ran out of time left some listings unmeasured. Caching that would
+        // pin the gap for fifteen minutes, so only a complete batch is cached; the next
+        // call retries the listings that were never reached.
+        boolean complete=ordered.stream().noneMatch(cell->"NOT_MEASURED".equals(cell.status()));
+        if(complete){
+            if(matrixCache.size()>=128)matrixCache.remove(matrixCache.keySet().iterator().next());
+            matrixCache.put(key,new MatrixEntry(now.plusSeconds(900),matrix));
+        }
+        return matrix;
     }
     /** Verified origin for a listing, or null when it is not public or has no usable pin. */
     private Location originFor(String propertyId){
