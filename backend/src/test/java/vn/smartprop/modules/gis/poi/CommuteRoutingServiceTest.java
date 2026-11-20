@@ -322,6 +322,32 @@ class CommuteRoutingServiceTest {
         assertTrue(cells.get(0).measured(),"nhà cung cấp xác nhận: đã đo, không có tuyến");
         assertNull(cells.get(0).durationSeconds());
     }
+    @Test void aSingleRouteWithNoFeaturesIsTheEndpointsOwnFailure()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Geoapify answered 200 with an empty feature list. The matrix records NO_ROUTE for
+        // that one listing, but a single route has no cell to record it in, so it must stay
+        // the endpoint's own 502 instead of escaping as a 200 carrying an error body.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[]}"));
+        var error=assertThrows(ApiException.class,
+            ()->service("GEOAPIFY","k").directions(16.06,108.22,16.08,108.24,"drive"));
+        assertEquals(502,error.status);
+        assertEquals("ROUTE_UNAVAILABLE",error.code);
+    }
+
+    @Test void theSameEmptyFeatureListBecomesNoRouteInAMatrix()throws Exception{
+        when(geoapify.configured()).thenReturn(true);
+        // Same simulated response, through the matrix: the listing is measured with no
+        // duration, which PropertyRouteService reports as NO_ROUTE.
+        when(geoapify.route(anyDouble(),anyDouble(),anyDouble(),anyDouble(),anyString(),anyLong()))
+            .thenReturn(json.readTree("{\"features\":[]}"));
+        var origins=List.of(new CommuteRoutingService.Origin("a",16.06,108.22));
+        var cells=service("GEOAPIFY","k").matrix(origins,16.08,108.24,"drive");
+        assertEquals(1,cells.size());
+        assertTrue(cells.get(0).measured(),"nhà cung cấp xác nhận: đã đo, không có tuyến");
+        assertNull(cells.get(0).durationSeconds());
+        assertNull(cells.get(0).distanceMeters());
+    }
     // ---- hosted endpoint shape -------------------------------------------------
 
     @Test void defaultBaseIsTheHostedGatewayWithASinglePrefix(){

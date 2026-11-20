@@ -116,10 +116,18 @@ public class CommuteRoutingService {
         String vendor = provider();
         if (vendor == null)
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
-        return OPENROUTESERVICE.equals(vendor)
-            ? orsDirections(fromLat, fromLon, toLat, toLon, mode)
-            : geoapifyDirections(fromLat, fromLon, toLat, toLon, mode,
+        if (OPENROUTESERVICE.equals(vendor))
+            return orsDirections(fromLat, fromLon, toLat, toLon, mode);
+        try {
+            return geoapifyDirections(fromLat, fromLon, toLat, toLon, mode,
                 System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(GEOAPIFY_MATRIX_BUDGET_SECONDS));
+        } catch (ApiException error) {
+            // ROUTE_ABSENT is a signal for the matrix, which records NO_ROUTE for that one
+            // listing. A single route has no such cell, so it stays the endpoint's own
+            // failure instead of escaping as a 200 carrying an error body.
+            if (isVendorNoRoute(error)) throw unavailable();
+            throw error;
+        }
     }
 
     /**
