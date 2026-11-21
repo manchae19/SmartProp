@@ -47,8 +47,8 @@ public class GeocodingService {
         limits.check("geo:ip:"+ip,30,60);
         if(!enabled||key==null||key.isBlank()) throw new ApiException(503,"GEOCODING_NOT_CONFIGURED","Tìm vị trí tự động chưa được cấu hình. Bạn vẫn có thể đặt ghim thủ công.");
         var scope=scopes.resolve(request);
-        if(!scope.available())return new Result(scope.status(),provider,List.of());
-        if(provider!=Provider.GEOAPIFY)return new Result("SCOPE_UNAVAILABLE",provider,List.of());
+        if(!scope.available())return new Result(scope.status(),provider,List.of(),scopeName(scope));
+        if(provider!=Provider.GEOAPIFY)return new Result("SCOPE_UNAVAILABLE",provider,List.of(),scopeName(scope));
         String cacheKey=user+":"+hash(scope.id()+"\n"+scope.street()+"\n"+query);
         long now=clock.millis();
         synchronized(cache) {
@@ -61,12 +61,16 @@ public class GeocodingService {
         limits.check("geo:daily",250,86400);
         var received=client.search(provider,key,query,scope);
         var candidates=scopes.filter(received,scope);
-        var result=new Result(candidates.isEmpty()?(received.isEmpty()?"ZERO_RESULTS":"NO_MATCHING_LOCALITY"):"OK",provider,candidates);
+        var result=new Result(candidates.isEmpty()?(received.isEmpty()?"ZERO_RESULTS":"NO_MATCHING_LOCALITY"):"OK",provider,candidates,scopeName(scope));
         if(provider==Provider.GEOAPIFY) synchronized(cache) {
             if(cache.size()>=256) cache.remove(cache.keySet().iterator().next());
             cache.put(cacheKey,new Entry(now+(candidates.isEmpty()?60_000:600_000),result));
         }
         return result;
+    }
+    /** The boundary the Backend actually searched, so the client can report it honestly. */
+    private static String scopeName(GeocodingScopes.Scope scope) {
+        return scope.id().endsWith(":district") ? "DISTRICT" : "CITY";
     }
     static String normalize(Search request) {
         return GeocodingAddress.normalize(request);
