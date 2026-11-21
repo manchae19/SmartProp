@@ -47,8 +47,10 @@ public class GeocodingService {
         limits.check("geo:ip:"+ip,30,60);
         if(!enabled||key==null||key.isBlank()) throw new ApiException(503,"GEOCODING_NOT_CONFIGURED","Tìm vị trí tự động chưa được cấu hình. Bạn vẫn có thể đặt ghim thủ công.");
         var scope=scopes.resolve(request);
-        if(!scope.available())return new Result(scope.status(),provider,List.of(),scopeName(scope));
-        if(provider!=Provider.GEOAPIFY)return new Result("SCOPE_UNAVAILABLE",provider,List.of(),scopeName(scope));
+        // Neither branch below reaches the provider, so no district query ran: the scope
+        // stays empty and the client must not claim a district search happened.
+        if(!scope.available())return new Result(scope.status(),provider,List.of(),null);
+        if(provider!=Provider.GEOAPIFY)return new Result("SCOPE_UNAVAILABLE",provider,List.of(),null);
         String cacheKey=user+":"+hash(scope.id()+"\n"+scope.street()+"\n"+query);
         long now=clock.millis();
         synchronized(cache) {
