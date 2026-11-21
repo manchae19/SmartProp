@@ -57,12 +57,13 @@ export async function searchLocations(value, request = api) {
   if (!String(value.address || '').trim() || !String(value.city || '').trim()) throw Error('Nhập địa chỉ đầy đủ và thành phố trước khi tìm vị trí.');
   if (value.shareAddress !== true) throw Error('Cần đồng ý gửi địa chỉ tới dịch vụ tìm vị trí trước khi tìm kiếm.');
   // Selected geography must reach the Backend unchanged, even when the address text conflicts.
+  // districtOnly is a client-side hint only: the Backend request record has no such field and
+  // rejects the whole body when it is present.
   const result = await request('/geocoding/search', {
     method: 'POST',
     body: {
       ...geocodingInput(value),
-      shareAddress: true,
-      districtOnly: value.districtOnly === true
+      shareAddress: true
     }
   });
   return {

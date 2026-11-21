@@ -25,7 +25,7 @@ public class ValuationClient {
     }
     public JsonNode exchange(String path,Object payload){
         if(!enabled)throw unavailable();
-        if(!Set.of("/model/options","/predict").contains(path))throw new IllegalArgumentException("Unknown model route");
+        if(!Set.of("/model/options","/predict","/predict/v1_3_preview").contains(path))throw new IllegalArgumentException("Unknown model route");
         CompletableFuture<HttpResponse<byte[]>> pending=null;
         try {
             var request=HttpRequest.newBuilder(base.resolve(path)).timeout(Duration.ofSeconds(5)).header("Accept","application/json");

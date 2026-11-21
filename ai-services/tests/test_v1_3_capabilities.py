@@ -54,7 +54,8 @@ class V13CapabilityTests(unittest.TestCase):
         with TestClient(app) as client:
             cap = client.get("/model/options").json()["v1_3"]
             self.assertTrue(cap["available"])
-            self.assertEqual(cap["status"], "PREVIEW_EXPERIMENTAL")
+            # V1.3 is the primary model now, not an experimental preview.
+            self.assertEqual(cap["status"], "PRIMARY")
 
 
 if __name__ == "__main__":

@@ -18,11 +18,12 @@ class TestV1_3APIIntegration(unittest.TestCase):
     def tearDownClass(cls):
         cls.client_cm.__exit__(None, None, None)
 
-    def test_v6_health_endpoint(self):
+    def test_public_health_endpoint_serves_v13(self):
+        # The public route is now the V1.3 model, not V6.
         resp = self.client.get("/health")
         self.assertEqual(resp.status_code, 200)
         data = resp.json()
-        self.assertEqual(data["model_version"], "v6")
+        self.assertEqual(data["model_version"], "v1.3")
         self.assertTrue(data["model_ready"])
 
     def test_v1_3_health_endpoint(self):

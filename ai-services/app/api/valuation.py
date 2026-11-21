@@ -10,7 +10,8 @@ router = APIRouter()
 
 
 def predictor_for(request):
-    predictor = getattr(request.app.state, "predictor", None)
+    """The primary predictor is V1.3; V6 is only an optional fallback."""
+    predictor = getattr(request.app.state, "predictor_v1_3", None)
     if predictor is None:
         raise HTTPException(status_code=503, detail="Model chưa sẵn sàng.")
     return predictor
@@ -18,8 +19,17 @@ def predictor_for(request):
 
 @router.get("/health")
 def health(request: Request):
-    predictor_for(request)
-    return {"status": "ok", "model_version": "v6", "model_ready": True}
+    predictor = getattr(request.app.state, "predictor_v1_3", None)
+    if predictor is None:
+        # Report the real state instead of failing the probe: the service is up but the
+        # artifacts are missing or broken, and the reason is what an operator needs.
+        return {
+            "status": "degraded",
+            "model_version": "v1.3",
+            "model_ready": False,
+            "reason": getattr(request.app.state, "v1_3_error", None),
+        }
+    return {"status": "ok", "model_version": "v1.3", "model_ready": True}
 
 
 def real_features_enabled() -> bool:
@@ -30,6 +40,11 @@ OPTIONAL_INPUTS = [
     "road_width_m", "frontage_width_m", "street_name", "project_name",
     "bathrooms", "house_direction", "balcony_direction",
 ]
+DISTRICT_DISPLAY = {
+    "cẩm lệ": "Cẩm Lệ", "hòa vang": "Hòa Vang", "hải châu": "Hải Châu",
+    "liên chiểu": "Liên Chiểu", "ngũ hành sơn": "Ngũ Hành Sơn",
+    "sơn trà": "Sơn Trà", "thanh khê": "Thanh Khê",
+}
 TYPE_TO_CATEGORY = {
     "house": "Nhà ở", "villa": "Nhà ở",
     "land": "Đất nền", "apartment": "Căn hộ chung cư",
@@ -38,48 +53,94 @@ TYPE_TO_CATEGORY = {
 
 @router.get("/model/options")
 def model_options(request: Request):
-    data = predictor_for(request).options()
-    predictor_v1_3 = getattr(request.app.state, "predictor_v1_3", None)
-    supported_types = []
-    if predictor_v1_3 is not None:
-        supported_types = [str(item).lower() for item in predictor_v1_3.info().get("supported_types", [])]
-    supported_categories = sorted({TYPE_TO_CATEGORY[item] for item in supported_types if item in TYPE_TO_CATEGORY})
+    """Options come from V1.3 itself: its own supported types and districts.
+
+    When the artifacts are missing the route still answers, reporting the model as
+    unavailable, so a client can render the reason instead of failing outright.
+    """
+    predictor = getattr(request.app.state, "predictor_v1_3", None)
     enabled = real_features_enabled()
-    data["v1_3"] = {
-        "available": predictor_v1_3 is not None,
-        "status": "PREVIEW_EXPERIMENTAL" if predictor_v1_3 is not None else "UNAVAILABLE",
-        "real_features_enabled": enabled,
-        "optional_inputs": list(OPTIONAL_INPUTS) if enabled and predictor_v1_3 is not None else [],
-        "supported_types": supported_types,
-        "supported_categories": supported_categories,
-        "unavailable_reason": None if predictor_v1_3 is not None else "V1.3 artifacts unavailable",
+    if predictor is None:
+        return {
+            "model_version": "v1.3",
+            "model_run": None,
+            "categories": [],
+            "v1_3": {
+                "available": False,
+                "status": "UNAVAILABLE",
+                "real_features_enabled": enabled,
+                "optional_inputs": [],
+                "supported_types": [],
+                "supported_categories": [],
+                "unavailable_reason": getattr(request.app.state, "v1_3_error", None)
+                or "V1.3 artifacts unavailable",
+            },
+        }
+    info = predictor.info()
+    supported_types = [str(item).lower() for item in info.get("supported_types", [])]
+    supported_categories = sorted({TYPE_TO_CATEGORY[item] for item in supported_types if item in TYPE_TO_CATEGORY})
+    # V1.3 stores districts in lower case; the API and the form use the display form.
+    districts = [DISTRICT_DISPLAY.get(str(item).lower(), str(item)) for item in info.get("supported_districts", [])]
+    return {
+        "model_version": "v1.3",
+        "model_run": info.get("model_run"),
+        "categories": [
+            {"category": category, "locations": list(districts)}
+            for category in supported_categories
+        ],
+        "v1_3": {
+            "available": True,
+            "status": "PRIMARY",
+            "real_features_enabled": enabled,
+            "optional_inputs": list(OPTIONAL_INPUTS) if enabled else [],
+            "supported_types": supported_types,
+            "supported_categories": supported_categories,
+            "unavailable_reason": None,
+        },
     }
-    return data
 
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post("/predict", response_model=V1_3PreviewResponse)
 def predict(payload: ValuationRequest, request: Request, background_tasks: BackgroundTasks):
     predictor = predictor_for(request)
     t0 = time.perf_counter()
     try:
-        response = predictor.predict(payload.model_dump())
-    except ValueError as error:
+        response = predictor.predict_from_v6_payload(payload.model_dump())
+    except (ValueError, KeyError) as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-    v6_latency_ms = (time.perf_counter() - t0) * 1000.0
+    except Exception as error:
+        # A model fault must surface as an error response, never take the service down.
+        raise HTTPException(status_code=500, detail=f"Lỗi suy luận mô hình V1.3: {error}") from error
+    latency_ms = (time.perf_counter() - t0) * 1000.0
 
-    # Non-blocking async shadow hook for V1.3 comparison
+    # Shadow comparison only exists when the optional V6 model is loaded.
     shadow_manager = getattr(request.app.state, "shadow_manager", None)
-    predictor_v1_3 = getattr(request.app.state, "predictor_v1_3", None)
-    if shadow_manager and shadow_manager.is_enabled() and predictor_v1_3:
+    predictor_v6 = getattr(request.app.state, "predictor", None)
+    if shadow_manager and shadow_manager.is_enabled() and predictor_v6:
         background_tasks.add_task(
             shadow_manager.record_shadow_evaluation,
-            predictor_v1_3=predictor_v1_3,
+            predictor_v1_3=predictor,
             v6_payload=payload.model_dump(),
             v6_response=response,
-            v6_latency_ms=v6_latency_ms,
+            v6_latency_ms=latency_ms,
         )
 
-    return response
+    return {
+        "is_preview": False,
+        "model_version": "v1.3",
+        "status": "PRIMARY",
+        "predicted_asking_price_vnd": response["predicted_asking_price_vnd"],
+        "predicted_asking_price_billion": response["predicted_asking_price_billion"],
+        "price_band": response["price_band"],
+        "calibration_factor": response["calibration_factor"],
+        "calibration_policy": response["calibration_policy"],
+        "naive_price_vnd": response["naive_price_vnd"],
+        "features_used": response["features_used"],
+        "missing_features": response.get("missing_features", []),
+        "shap_explanation": response.get("shap_explanation"),
+        "valuation_timestamp": datetime.now(timezone.utc).isoformat(),
+        "disclaimer": "Giá rao ước tính từ mô hình V1.3 (Multi-Source Zenodo + TiniX).",
+    }
 
 
 @router.post("/predict/v1_3_preview", response_model=V1_3PreviewResponse)

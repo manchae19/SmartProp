@@ -276,7 +276,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
       <div className="flex flex-wrap items-start justify-between gap-3" data-sp-018bbc28="">
         <div data-sp-018bbc28="">
           <p className="text-xs text-brand-navy/60 uppercase tracking-widest" data-sp-018bbc28="">
-            {"Định giá tham chiếu · XGBoost v6"}
+            {"Định giá tham chiếu · XGBoost v1.3"}
           </p>
           <h2 id="valuation-heading" className="text-2xl font-semibold mt-2" data-sp-018bbc28="">
             {"Ước tính giá rao"}
@@ -480,7 +480,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.missingLabels.join(", "))}
                 {"."}
               </p> : null}
-            {view.result.warnings.length ? <ul className="list-disc pl-5 mt-3 space-y-2 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
+            {(view.result.warnings ?? []).length ? <ul className="list-disc pl-5 mt-3 space-y-2 text-sm text-[var(--ui-ink)]" data-sp-018bbc28="">
                 {((items, render) => typeof items === "number" ? Array.from({
               length: Math.max(0, items)
             }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.result.warnings, warning => <li key={warning} data-sp-018bbc28="">

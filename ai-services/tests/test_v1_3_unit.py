@@ -70,8 +70,10 @@ class TestV1_3Unit(unittest.TestCase):
         self.assertEqual(v1_3_rec["ward"], "Phước Mỹ")
         self.assertEqual(v1_3_rec["bedroom_count"], 5)
         self.assertEqual(v1_3_rec["floor_count"], 3.0)
-        self.assertEqual(v1_3_rec["road_width"], 10.0)
-        self.assertEqual(v1_3_rec["frontage_width"], 5.0)
+        # A frontage access type is not a measurement: the width stays missing rather
+        # than being invented from the access type.
+        self.assertIsNone(v1_3_rec["road_width"])
+        self.assertIsNone(v1_3_rec["frontage_width"])
 
     def test_predict_standard_house(self):
         sample = {

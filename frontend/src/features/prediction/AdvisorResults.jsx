@@ -26,7 +26,7 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
       {isPartial ? (
         <p className="ar-partial" role="status" data-advisor-partial>
           Kết quả một phần: một dịch vụ bằng chứng chưa khả dụng.
-          {result.serviceStatus?.valuationService === 'UNAVAILABLE' ? ' Định giá V6 tạm không khả dụng.' : ''}
+          {result.serviceStatus?.valuationService === 'UNAVAILABLE' ? ' Định giá V1.3 tạm không khả dụng.' : ''}
         </p>
       ) : null}
 

@@ -15,24 +15,42 @@ class ValuationServiceTest {
     final ObjectMapper json = new ObjectMapper();
     final AccountAccess access = mock(AccountAccess.class);
     final ValuationClient client = mock(ValuationClient.class);
-    final ValuationService service = new ValuationService(access, client);
+    final ValuationService service = new ValuationService(access, client, "v1.3");
 
     @BeforeEach
     void options() throws Exception {
         when(client.exchange(eq("/model/options"), nullable(Object.class))).thenReturn(json.readTree("""
-            {"model_version":"v6","model_run":"b4b1339d3f35857e","categories":[
+            {"model_version":"v1.3","model_run":"tinix_xgboost_v1_3_integrated","categories":[
               {"category":"Nhà ở","locations":["Hải Châu"]},
               {"category":"Đất nền","locations":["Hải Châu"]},
               {"category":"Căn hộ chung cư","locations":["Hải Châu"]}]}
             """));
         when(client.exchange(eq("/predict"), any())).thenReturn(json.readTree("""
-            {"model_version":"v6","model_run":"b4b1339d3f35857e","configuration":"all","category":"Nhà ở",
-             "predicted_asking_price_vnd":3000000000,"predicted_asking_price_million":3000,
-             "currency":"VND","price_basis":"Giá rao tham khảo",
-             "features_used":{"area_sqm":80,"location_feature":"Hải Châu","ward_source":null,"rooms":3,
-               "floors":null,"access_type":null,"house_subtype":null},
-             "missing_features":[],"warnings":[]}
+            {"model_version":"v1.3","predicted_asking_price_vnd":3100000000,
+             "predicted_asking_price_billion":3.1,"price_band":"3.0-3.2 ty",
+             "calibration_factor":1.02,"calibration_policy":"isotonic","naive_price_vnd":3000000000,
+             "features_used":{"area":80,"district":"Hải Châu","bedroom_count":3},
+             "missing_features":[],"shap_explanation":null}
             """));
+    }
+
+    @Test
+    void optionsReportTheVersionTheServiceActuallyServes() throws Exception {
+        var options = service.options(42L);
+        assertEquals("v1.3", options.modelVersion());
+        assertEquals("tinix_xgboost_v1_3_integrated", options.modelRun());
+        assertEquals(3, options.categories().size());
+    }
+
+    @Test
+    void aPreviewReportsV13AndItsPrice() throws Exception {
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+        var preview = service.preview(42L, request);
+        assertTrue(preview.available());
+        assertEquals("v1.3", preview.modelVersion());
+        assertEquals("3100000000", preview.predictedAskingPriceVnd());
+        verify(client).exchange(eq("/predict"), any());
     }
 
     @Test
@@ -41,8 +59,7 @@ class ValuationServiceTest {
             new BigDecimal("80"), "Hải Châu", "Hải Châu 1", 3, "", "",
             new BigDecimal("7.5"), new BigDecimal("4.5"), "Nguyễn Văn Linh", "Dự án A", 2,
             "Đông Nam", "Tây Bắc");
-        var preview = service.preview(42L, request);
-        assertTrue(preview.available());
+        service.preview(42L, request);
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(client).exchange(eq("/predict"), captor.capture());
         JsonNode input = json.valueToTree(captor.getValue());
@@ -67,5 +84,49 @@ class ValuationServiceTest {
                                     "bathrooms", "house_direction", "balcony_direction")) {
             assertFalse(input.has(field), field);
         }
+    }
+
+    @Test
+    void theBathroomCountReachesTheModelInput() throws Exception {
+        when(client.exchange(eq("/predict"), any())).thenReturn(json.readTree("""
+            {"model_version":"v1.3","predicted_asking_price_vnd":3100000000,
+             "features_used":{"area":80,"bathroom_count":2},"missing_features":[]}
+            """));
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, 2, null, null);
+        var preview = service.preview(42L, request);
+        assertEquals(2, preview.featuresUsed().get("bathrooms"));
+    }
+
+    @Test
+    void anUnavailableModelLeavesThePreviewUnavailableInsteadOfFailing() throws Exception {
+        when(client.exchange(eq("/predict"), any())).thenThrow(ValuationClient.unavailable());
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+        var preview = service.preview(42L, request);
+        assertFalse(preview.available(), "nguoi dung van luu duoc tin");
+        assertNotNull(preview.reason());
+    }
+
+    @Test
+    void aResponseThatIsNotVersionedV13IsRejected() throws Exception {
+        when(client.exchange(eq("/predict"), any())).thenReturn(json.readTree("""
+            {"model_version":"v6","predicted_asking_price_vnd":3000000000,
+             "features_used":{"area":80}}
+            """));
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+        assertThrows(vn.smartprop.common.ApiException.class, () -> service.preview(42L, request));
+    }
+
+    @Test
+    void anAreaMismatchIsRejected() throws Exception {
+        when(client.exchange(eq("/predict"), any())).thenReturn(json.readTree("""
+            {"model_version":"v1.3","predicted_asking_price_vnd":3100000000,
+             "features_used":{"area":99},"missing_features":[]}
+            """));
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+        assertThrows(vn.smartprop.common.ApiException.class, () -> service.preview(42L, request));
     }
 }

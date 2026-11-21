@@ -222,8 +222,8 @@ export function validateAdvisorResponse(data) {
     if (prop.valuationEvidence) {
       const val = prop.valuationEvidence
       if (val.available) {
-        if (val.modelVersion !== 'v6' || !Number.isFinite(Number(val.predictedAskingPriceVnd)) || Number(val.predictedAskingPriceVnd) <= 0) {
-          throw Error('Bằng chứng định giá V6 thiếu giá hợp lệ hoặc sai phiên bản mô hình.')
+        if (val.modelVersion !== 'v1.3' || !Number.isFinite(Number(val.predictedAskingPriceVnd)) || Number(val.predictedAskingPriceVnd) <= 0) {
+          throw Error('Bằng chứng định giá V1.3 thiếu giá hợp lệ hoặc sai phiên bản mô hình.')
         }
       } else if (val.predictedAskingPriceVnd != null) {
         throw Error('Không được hiển thị giá dự đoán khi định giá AI không khả dụng.')
