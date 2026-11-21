@@ -1,0 +1,179 @@
+{
+  "mappingVersion": "DANANG_ADMIN_MAPPING_V1_2026_11_02",
+  "generatedDate": "2026-11-02",
+  "jurisdiction": "Thành phố Đà Nẵng",
+  "legalSources": [
+    {
+      "stageId": "HISTORICAL_PRE_2025",
+      "title": "Danh mục đơn vị hành chính TP. Đà Nẵng trước 01/01/2025 (8 quận/huyện, 56 phường/xã) & geoBoundaries VNM-ADM2",
+      "effectiveFrom": "2005-08-05",
+      "effectiveUntil": "2024-12-31",
+      "reference": "backend/src/main/resources/geocoding/SOURCES.md (OCHA-2020-geoBoundaries-9469f09)"
+    },
+    {
+      "stageId": "NQ_1251_2025_01_01",
+      "title": "Nghị quyết số 1251/NQ-UBTVQH15 ngày 24/10/2024 của UBTVQH về việc sắp xếp ĐVHC cấp huyện, cấp xã của TP. Đà Nẵng giai đoạn 2023–2025 (8 quận/huyện, 47 phường/xã)",
+      "effectiveFrom": "2025-01-01",
+      "effectiveUntil": "2025-06-30",
+      "reference": "Nghị quyết số 1251/NQ-UBTVQH15 (UBTVQH, ban hành 24/10/2024, hiệu lực 01/01/2025)"
+    },
+    {
+      "stageId": "NQ_1659_2025_07_01",
+      "title": "Nghị quyết số 1659/NQ-UBTVQH15 ngày 16/06/2025 của UBTVQH về việc sắp xếp các ĐVHC cấp xã của TP. Đà Nẵng năm 2025 (mô hình 2 cấp từ 01/07/2025: 94 phường/xã/đặc khu)",
+      "effectiveFrom": "2025-07-01",
+      "effectiveUntil": null,
+      "reference": "https://xaydungchinhsach.chinhphu.vn/toan-van-nghi-quyet-so-1659-nq-ubtvqh15-sap-xep-cac-dvhc-cap-xa-cua-thanh-pho-da-nang-nam-2025-119250616202714604.htm"
+    }
+  ],
+  "historicalDistricts": {
+    "Hải Châu": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Hải Châu", "Q. Hải Châu", "Q Hải Châu", "HC"]
+    },
+    "Thanh Khê": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Thanh Khê", "Q. Thanh Khê", "Q Thanh Khê", "TK"]
+    },
+    "Sơn Trà": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Sơn Trà", "Q. Sơn Trà", "Q Sơn Trà", "ST"]
+    },
+    "Ngũ Hành Sơn": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Ngũ Hành Sơn", "Q. Ngũ Hành Sơn", "Q Ngũ Hành Sơn", "NHS"]
+    },
+    "Liên Chiểu": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Liên Chiểu", "Q. Liên Chiểu", "Q Liên Chiểu", "LC"]
+    },
+    "Cẩm Lệ": {
+      "adminType": "QUAN",
+      "isUrban": true,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Quận Cẩm Lệ", "Q. Cẩm Lệ", "Q Cẩm Lệ", "CL"]
+    },
+    "Hòa Vang": {
+      "adminType": "HUYEN",
+      "isUrban": false,
+      "residentialEligibleForLiving": true,
+      "hasBundledAdm2Polygon": true,
+      "aliases": ["Huyện Hòa Vang", "H. Hòa Vang", "H Hòa Vang", "Hoà Vang"]
+    },
+    "Hoàng Sa": {
+      "adminType": "HUYEN_DAO",
+      "isUrban": false,
+      "residentialEligibleForLiving": false,
+      "hasBundledAdm2Polygon": false,
+      "post2025Unit": "Đặc khu Hoàng Sa",
+      "specialTerritoryNote": "Huyện đảo / Đặc khu Hoàng Sa không có đơn vị hành chính cấp xã trực thuộc và không phải khu dân cư thương mại thông thường phục vụ nhu cầu mua nhà ở dân sự (LIVING). Cần kiểm tra nhầm lẫn với 'Đường Hoàng Sa' tại Quận Sơn Trà.",
+      "aliases": ["Huyện Hoàng Sa", "Huyện đảo Hoàng Sa", "Đặc khu Hoàng Sa"]
+    }
+  },
+  "historicalWards": [
+    {"ward": "Hải Châu I", "district": "Hải Châu", "stage": "PRE_2025", "nq1251Ward": "Hải Châu", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hải Châu 1"]},
+    {"ward": "Hải Châu II", "district": "Hải Châu", "stage": "PRE_2025", "nq1251Ward": "Hải Châu", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hải Châu 2"]},
+    {"ward": "Hải Châu", "district": "Hải Châu", "stage": "NQ_1251", "nq1251Ward": "Hải Châu", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Hải Châu I", "Hải Châu II"]},
+    {"ward": "Thạch Thang", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Thạch Thang", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Thanh Bình", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Thanh Bình", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Thuận Phước", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Thuận Phước", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "note": "Một phần điều chỉnh sang Thanh Bình ngày 01/01/2025, nhưng cả hai đều nhập vào Phường Hải Châu từ 01/07/2025."},
+    {"ward": "Phước Ninh", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Phước Ninh", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Phước Ninh", "Nam Dương", "Bình Hiên"]},
+    {"ward": "Nam Dương", "district": "Hải Châu", "stage": "PRE_2025", "nq1251Ward": "Phước Ninh", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Bình Hiên", "district": "Hải Châu", "stage": "PRE_2025", "nq1251Ward": "Phước Ninh", "nq1659Unit": "Phường Hải Châu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Bình Thuận", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Bình Thuận", "nq1659Unit": "Phường Hòa Cường", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Bình Thuận", "Hòa Thuận Đông"]},
+    {"ward": "Hòa Thuận Đông", "district": "Hải Châu", "stage": "PRE_2025", "nq1251Ward": "Bình Thuận", "nq1659Unit": "Phường Hòa Cường", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Thuận Đông"]},
+    {"ward": "Hòa Thuận Tây", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Hòa Thuận Tây", "nq1659Unit": "Phường Hòa Cường", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Thuận Tây"]},
+    {"ward": "Hòa Cường Bắc", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Hòa Cường Bắc", "nq1659Unit": "Phường Hòa Cường", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Cường Bắc"]},
+    {"ward": "Hòa Cường Nam", "district": "Hải Châu", "stage": "BOTH", "nq1251Ward": "Hòa Cường Nam", "nq1659Unit": "Phường Hòa Cường", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Cường Nam"]},
+
+    {"ward": "Tam Thuận", "district": "Thanh Khê", "stage": "PRE_2025", "nq1251Ward": "Xuân Hà", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Xuân Hà", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "Xuân Hà", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Xuân Hà", "Tam Thuận"]},
+    {"ward": "Tân Chính", "district": "Thanh Khê", "stage": "PRE_2025", "nq1251Ward": "Chính Gián", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Chính Gián", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "Chính Gián", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Chính Gián", "Tân Chính"]},
+    {"ward": "Vĩnh Trung", "district": "Thanh Khê", "stage": "PRE_2025", "nq1251Ward": "Thạc Gián", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Thạc Gián", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "Thạc Gián", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Thạc Gián", "Vĩnh Trung"]},
+    {"ward": "Hòa Khê", "district": "Thanh Khê", "stage": "PRE_2025", "nq1251Ward": "Thanh Khê Đông", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Khê"]},
+    {"ward": "Thanh Khê Đông", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "Thanh Khê Đông", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["Thanh Khê Đông", "Hòa Khê"]},
+    {"ward": "Thanh Khê Tây", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "Thanh Khê Tây", "nq1659Unit": "Phường Thanh Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "An Khê", "district": "Thanh Khê", "stage": "BOTH", "nq1251Ward": "An Khê", "nq1659Unit": "Phường An Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+
+    {"ward": "An Hải Bắc", "district": "Sơn Trà", "stage": "BOTH", "nq1251Ward": "An Hải Bắc", "nq1659Unit": "Phường An Hải", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "An Hải Đông", "district": "Sơn Trà", "stage": "PRE_2025", "nq1251Ward": "An Hải Nam", "nq1659Unit": "Phường An Hải", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "An Hải Tây", "district": "Sơn Trà", "stage": "PRE_2025", "nq1251Ward": "An Hải Nam", "nq1659Unit": "Phường An Hải", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "An Hải Nam", "district": "Sơn Trà", "stage": "NQ_1251", "nq1251Ward": "An Hải Nam", "nq1659Unit": "Phường An Hải", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "pre2025Members": ["An Hải Đông", "An Hải Tây"]},
+    {"ward": "Phước Mỹ", "district": "Sơn Trà", "stage": "BOTH", "nq1251Ward": "Phước Mỹ", "nq1659Unit": "Phường An Hải", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Mân Thái", "district": "Sơn Trà", "stage": "BOTH", "nq1251Ward": "Mân Thái", "nq1659Unit": "Phường Sơn Trà", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Nại Hiên Đông", "district": "Sơn Trà", "stage": "BOTH", "nq1251Ward": "Nại Hiên Đông", "nq1659Unit": "Phường Sơn Trà", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Thọ Quang", "district": "Sơn Trà", "stage": "BOTH", "nq1251Ward": "Thọ Quang", "nq1659Unit": "Phường Sơn Trà", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "note": "Một phần điều chỉnh sang Mân Thái ngày 01/01/2025, nhưng cả hai đều nhập vào Phường Sơn Trà từ 01/07/2025."},
+
+    {"ward": "Mỹ An", "district": "Ngũ Hành Sơn", "stage": "BOTH", "nq1251Ward": "Mỹ An", "nq1659Unit": "Phường Ngũ Hành Sơn", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Khuê Mỹ", "district": "Ngũ Hành Sơn", "stage": "BOTH", "nq1251Ward": "Khuê Mỹ", "nq1659Unit": "Phường Ngũ Hành Sơn", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Hòa Hải", "district": "Ngũ Hành Sơn", "stage": "BOTH", "nq1251Ward": "Hòa Hải", "nq1659Unit": "Phường Ngũ Hành Sơn", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Hải"]},
+    {"ward": "Hòa Quý", "district": "Ngũ Hành Sơn", "stage": "BOTH", "nq1251Ward": "Hòa Quý", "nq1659Unit": "Phường Ngũ Hành Sơn", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Quý"]},
+
+    {"ward": "Hòa Hiệp Bắc", "district": "Liên Chiểu", "stage": "BOTH", "nq1251Ward": "Hòa Hiệp Bắc", "nq1659Unit": "Phường Hải Vân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Hiệp Bắc"]},
+    {"ward": "Hòa Hiệp Nam", "district": "Liên Chiểu", "stage": "BOTH", "nq1251Ward": "Hòa Hiệp Nam", "nq1659Unit": "Phường Hải Vân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Hiệp Nam"]},
+    {"ward": "Hòa Khánh Bắc", "district": "Liên Chiểu", "stage": "BOTH", "nq1251Ward": "Hòa Khánh Bắc", "nq1659Unit": "Phường Liên Chiểu", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Khánh Bắc"]},
+    {"ward": "Hòa Khánh Nam", "district": "Liên Chiểu", "stage": "BOTH", "nq1251Ward": "Hòa Khánh Nam", "nq1659Unit": "Phường Hòa Khánh", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Khánh Nam"]},
+    {"ward": "Hòa Minh", "district": "Liên Chiểu", "stage": "BOTH", "nq1251Ward": "Hòa Minh", "nq1659Unit": "Phường Hòa Khánh", "mappingCertainty": "PARTIAL_ADJUSTMENT_2025_01", "nq1659Candidates": ["Phường Hòa Khánh", "Phường Thanh Khê"], "note": "Nghị quyết 1251/NQ-UBTVQH15 điều chỉnh một phần Hòa Minh sang Thanh Khê Tây từ 01/01/2025; phần Hòa Minh thuộc Liên Chiểu từ 01/01/2025 nhập vào Phường Hòa Khánh từ 01/07/2025.", "aliases": ["Hoà Minh"]},
+
+    {"ward": "Khuê Trung", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Khuê Trung", "nq1659Unit": "Phường Cẩm Lệ", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE"},
+    {"ward": "Hòa Thọ Đông", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Hòa Thọ Đông", "nq1659Unit": "Phường Cẩm Lệ", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Thọ Đông"]},
+    {"ward": "Hòa Thọ Tây", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Hòa Thọ Tây", "nq1659Unit": "Phường Cẩm Lệ", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Thọ Tây"]},
+    {"ward": "Hòa An", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Hòa An", "nq1659Unit": "Phường An Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà An"]},
+    {"ward": "Hòa Phát", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Hòa Phát", "nq1659Unit": "Phường An Khê", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Phát"]},
+    {"ward": "Hòa Xuân", "district": "Cẩm Lệ", "stage": "BOTH", "nq1251Ward": "Hòa Xuân", "nq1659Unit": "Phường Hòa Xuân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Xuân"]},
+
+    {"ward": "Hòa Bắc", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Bắc", "nq1659Unit": "Phường Hải Vân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Bắc"]},
+    {"ward": "Hòa Liên", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Liên", "nq1659Unit": null, "nq1659Candidates": ["Phường Liên Chiểu", "Phường Hải Vân"], "mappingCertainty": "SPLIT_BOUNDARY_NEEDS_MAPPING", "note": "Nghị quyết 1659/NQ-UBTVQH15 chia xã Hòa Liên thành 2 phần nhập vào Phường Hải Vân và Phường Liên Chiểu; không thể ép ánh xạ 1-1 nếu thiếu tọa độ/thôn xác minh.", "aliases": ["Hoà Liên"]},
+    {"ward": "Hòa Ninh", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Ninh", "nq1659Unit": "Xã Bà Nà", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Ninh"]},
+    {"ward": "Hòa Nhơn", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Nhơn", "nq1659Unit": "Xã Bà Nà", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Nhơn"]},
+    {"ward": "Hòa Sơn", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Sơn", "nq1659Unit": "Phường Hòa Khánh", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Sơn"]},
+    {"ward": "Hòa Phú", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Phú", "nq1659Unit": "Xã Hòa Vang", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Phú"]},
+    {"ward": "Hòa Phong", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Phong", "nq1659Unit": "Xã Hòa Vang", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Phong"]},
+    {"ward": "Hòa Châu", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Châu", "nq1659Unit": "Phường Hòa Xuân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Châu"]},
+    {"ward": "Hòa Phước", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Phước", "nq1659Unit": "Phường Hòa Xuân", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Phước"]},
+    {"ward": "Hòa Tiến", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Tiến", "nq1659Unit": "Xã Hòa Tiến", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Tiến"]},
+    {"ward": "Hòa Khương", "district": "Hòa Vang", "stage": "BOTH", "nq1251Ward": "Hòa Khương", "nq1659Unit": "Xã Hòa Tiến", "mappingCertainty": "DETERMINISTIC_MANY_TO_ONE", "aliases": ["Hoà Khương"]}
+  ],
+  "post2025CoreUnits": {
+    "Phường Hải Châu": {"historicalDistricts": ["Hải Châu"], "memberWards": ["Hải Châu I", "Hải Châu II", "Hải Châu", "Thạch Thang", "Thanh Bình", "Thuận Phước", "Phước Ninh", "Nam Dương", "Bình Hiên"]},
+    "Phường Hòa Cường": {"historicalDistricts": ["Hải Châu"], "memberWards": ["Bình Thuận", "Hòa Thuận Đông", "Hòa Thuận Tây", "Hòa Cường Bắc", "Hòa Cường Nam"]},
+    "Phường Thanh Khê": {"historicalDistricts": ["Thanh Khê"], "memberWards": ["Xuân Hà", "Tam Thuận", "Chính Gián", "Tân Chính", "Thạc Gián", "Vĩnh Trung", "Thanh Khê Đông", "Hòa Khê", "Thanh Khê Tây"]},
+    "Phường An Khê": {"historicalDistricts": ["Thanh Khê", "Cẩm Lệ"], "memberWards": ["An Khê", "Hòa An", "Hòa Phát"]},
+    "Phường An Hải": {"historicalDistricts": ["Sơn Trà"], "memberWards": ["Phước Mỹ", "An Hải Bắc", "An Hải Nam", "An Hải Đông", "An Hải Tây"]},
+    "Phường Sơn Trà": {"historicalDistricts": ["Sơn Trà"], "memberWards": ["Thọ Quang", "Nại Hiên Đông", "Mân Thái"]},
+    "Phường Ngũ Hành Sơn": {"historicalDistricts": ["Ngũ Hành Sơn"], "memberWards": ["Mỹ An", "Khuê Mỹ", "Hòa Hải", "Hòa Quý"]},
+    "Phường Cẩm Lệ": {"historicalDistricts": ["Cẩm Lệ"], "memberWards": ["Khuê Trung", "Hòa Thọ Đông", "Hòa Thọ Tây"]},
+    "Phường Hòa Xuân": {"historicalDistricts": ["Cẩm Lệ", "Hòa Vang"], "memberWards": ["Hòa Xuân", "Hòa Châu", "Hòa Phước"]},
+    "Phường Hải Vân": {"historicalDistricts": ["Liên Chiểu", "Hòa Vang"], "memberWards": ["Hòa Hiệp Bắc", "Hòa Hiệp Nam", "Hòa Bắc", "Hòa Liên"]},
+    "Phường Liên Chiểu": {"historicalDistricts": ["Liên Chiểu", "Hòa Vang"], "memberWards": ["Hòa Khánh Bắc", "Hòa Liên"]},
+    "Phường Hòa Khánh": {"historicalDistricts": ["Liên Chiểu", "Hòa Vang"], "memberWards": ["Hòa Khánh Nam", "Hòa Minh", "Hòa Sơn"]},
+    "Xã Hòa Vang": {"historicalDistricts": ["Hòa Vang"], "memberWards": ["Hòa Phong", "Hòa Phú"]},
+    "Xã Hòa Tiến": {"historicalDistricts": ["Hòa Vang"], "memberWards": ["Hòa Tiến", "Hòa Khương"]},
+    "Xã Bà Nà": {"historicalDistricts": ["Hòa Vang"], "memberWards": ["Hòa Ninh", "Hòa Nhơn"]},
+    "Đặc khu Hoàng Sa": {"historicalDistricts": ["Hoàng Sa"], "memberWards": []}
+  },
+  "expandedQuangNamUnitsRequiringMapping": [
+    "Điện Bàn", "Điện Bàn Đông", "Điện Bàn Bắc", "Điện Ngọc", "Điện Dương", "Điện Nam",
+    "Điện Nam Bắc", "Điện Nam Trung", "Điện Nam Đông", "Điện Thắng", "An Thắng",
+    "Hội An", "Hội An Đông", "Hội An Tây", "Cẩm Châu", "Cẩm An", "Cẩm Hà", "Cẩm Nam",
+    "Tam Kỳ", "Bàn Thạch", "Hương Trà", "Núi Thành", "Đại Lộc", "Duy Xuyên",
+    "Thăng Bình", "Thăng An", "Thăng Phú", "Quế Sơn", "Phú Ninh", "Tân Hiệp", "Vu Gia"
+  ]
+}

@@ -25,7 +25,8 @@ public class PrePurchaseRepository {
     public record Flood(String id, String recordType, String locationText, String street,
                         String ward, String district, String scope, String depthNote,
                         LocalDate eventDate, LocalDate publicationDate, String sourceUrl,
-                        String sourceTitle, LocalDate checkedAt) {}
+                        String sourceTitle, LocalDate checkedAt, String currentUnit,
+                        String areaBasis) {}
 
     /**
      * Planning documents that name this project, this lot, or this ward.
@@ -54,18 +55,24 @@ public class PrePurchaseRepository {
     }
 
     /**
-     * Flood records on this street, or in this ward when the street is unknown.
+     * Flood records on this street inside this current ward/commune.
      *
-     * <p>A street name alone is not enough: the caller also checks the district, because
-     * the same street name exists in more than one district.
+     * <p>A street name alone is not enough: Nguyễn Lương Bằng runs through Hải Vân, Liên
+     * Chiểu and Hòa Khánh, and the catalogue puts a different flood point in each. The
+     * current unit is filtered in the query, before the row limit, so a record from
+     * another ward can never take the place of a matching one.
+     *
+     * <p>Records without a current unit (the 77 catalogue rows whose source names no
+     * ward) are never attached to a listing: the caller cannot verify them.
      */
-    public List<Flood> flood(String street, String ward, String district) {
+    public List<Flood> flood(String street, String currentUnit) {
+        if (currentUnit == null || currentUnit.isBlank()) return List.of();
         return jdbc.query("""
             SELECT id,record_type,location_text,street,ward,district,scope,depth_note,
-                   event_date,publication_date,source_url,source_title,checked_at
+                   event_date,publication_date,source_url,source_title,checked_at,
+                   current_unit,area_basis
             FROM flood_records
-            WHERE (street IS NOT NULL AND street = ?)
-               OR (street IS NULL AND ward IS NOT NULL AND ward = ? AND district IS NOT NULL AND district = ?)
+            WHERE street IS NOT NULL AND street = ? AND current_unit = ?
             ORDER BY publication_date DESC, id
             LIMIT 10
             """,
@@ -74,7 +81,8 @@ public class PrePurchaseRepository {
                 rs.getString("district"), rs.getString("scope"), rs.getString("depth_note"),
                 rs.getObject("event_date", LocalDate.class),
                 rs.getObject("publication_date", LocalDate.class), rs.getString("source_url"),
-                rs.getString("source_title"), rs.getObject("checked_at", LocalDate.class)),
-            street == null ? "" : street, ward == null ? "" : ward, district == null ? "" : district);
+                rs.getString("source_title"), rs.getObject("checked_at", LocalDate.class),
+                rs.getString("current_unit"), rs.getString("area_basis")),
+            street == null ? "" : street, currentUnit);
     }
 }
