@@ -15,6 +15,7 @@ import ContactPanel from "./ContactPanel.jsx";
 import { chatSession } from "../prediction/chatRuntime.js";
 import { safeListingsReturnTo } from "./listingJourney.js";
 import PropertyExplorer from "../map/PropertyExplorer.jsx";
+import PrePurchaseChecks from "./PrePurchaseChecks.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
 import "./ListingDetailView.css";
 function useListingDetailViewState(inputProps, forwardedRef) {
@@ -543,6 +544,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   <h2 className="font-bold text-sm mb-2">Thông tin cần đối chiếu</h2>
                   <p className="text-sm text-brand-muted">Duyệt hiển thị tin không phải xác nhận pháp lý, thực địa hoặc an toàn giao dịch. Hãy đối chiếu hồ sơ gốc và tình trạng tài sản.</p>
                 </section>
+                <PrePurchaseChecks property={view.property} />
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <h2 className="text-base font-bold text-[var(--ui-accent)] mb-4 flex items-center gap-2" data-sp-4f294819="">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ui-accent)]" data-sp-4f294819="">
