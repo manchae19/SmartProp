@@ -128,7 +128,7 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
   const view = usePostValuationPanelState(props, ref);
   return <><section data-ui-view="PostValuationPanel" data-testid="valuation-panel" {...view.rootAttributes} className={classNames(["bg-[var(--ui-soft)] text-brand-navy rounded-[22px] p-6", view.rootAttributes.className])}>
       <h2 className="text-xs tracking-[0.18em] text-brand-navy/60">
-        {"GIÁ THAM CHIẾU XGBOOST · v6"}
+        {`GIÁ THAM CHIẾU XGBOOST · ${view.state.result?.modelVersion || "v1.3"}`}
       </h2>
       <div data-testid="valuation-price" aria-live="polite" className="text-xl font-light mt-3 break-words">
         {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.state.result?.available ? view.exactVnd(view.state.result.predictedAskingPriceVnd) : "—")}

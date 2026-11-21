@@ -1,4 +1,10 @@
-"""Contract tests validating schema alignment and behavioral parity between V6 and V1.3."""
+"""Contract tests for the public valuation endpoint, now served by V1.3.
+
+The public /predict route used to answer with V6 and this file compared it against
+the internal V1.3 route. V1.3 is now the only model that produces new results, so
+the contract checks the public route on its own terms and keeps the schema,
+validation and explanation checks that still carry value.
+"""
 import unittest
 
 from fastapi.testclient import TestClient
@@ -8,7 +14,7 @@ from main import app
 AUTH_HEADER = {"X-Internal-Token": "smartprop-internal-shadow-key"}
 
 
-class TestV6V1_3Contract(unittest.TestCase):
+class TestV13Contract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.client_cm = TestClient(app)
@@ -19,7 +25,7 @@ class TestV6V1_3Contract(unittest.TestCase):
         cls.client_cm.__exit__(None, None, None)
 
     def test_contract_all_property_categories(self):
-        """Verify that all 4 supported categories execute successfully through both endpoints."""
+        """Every supported category executes and answers with a V1.3 price."""
         cases = [
             (
                 "Nhà phố thông thường",
@@ -70,26 +76,22 @@ class TestV6V1_3Contract(unittest.TestCase):
 
         for case_name, payload in cases:
             with self.subTest(case=case_name):
-                # 1. Call V6
-                resp_v6 = self.client.post("/predict", json=payload)
-                self.assertEqual(resp_v6.status_code, 200, f"V6 failed for {case_name}: {resp_v6.text}")
-                data_v6 = resp_v6.json()
-                self.assertEqual(data_v6["model_version"], "v6")
-                self.assertGreater(data_v6["predicted_asking_price_vnd"], 0)
+                resp = self.client.post("/predict", json=payload)
+                self.assertEqual(resp.status_code, 200, f"V1.3 failed for {case_name}: {resp.text}")
+                data = resp.json()
+                self.assertEqual(data["model_version"], "v1.3")
+                self.assertGreater(data["predicted_asking_price_vnd"], 0)
+                self.assertIn("price_band", data)
+                self.assertIn("calibration_policy", data)
+                self.assertIsInstance(data["features_used"], dict)
 
-                # 2. Call V1.3 via adapter
-                resp_v1_3 = self.client.post("/api/internal/v1_3/predict", json=payload, headers=AUTH_HEADER)
-                self.assertEqual(resp_v1_3.status_code, 200, f"V1.3 failed for {case_name}: {resp_v1_3.text}")
-                data_v1_3 = resp_v1_3.json()
-                self.assertEqual(data_v1_3["model_version"], "v1.3")
-                self.assertGreater(data_v1_3["predicted_asking_price_vnd"], 0)
-
-                # Check monetary scale sanity (within 0.3x - 3.0x of each other)
-                ratio = data_v1_3["predicted_asking_price_vnd"] / data_v6["predicted_asking_price_vnd"]
-                self.assertTrue(0.3 <= ratio <= 3.0, f"Divergence too wide for {case_name}: ratio={ratio:.2f}")
+                # The internal route must answer the same model version.
+                internal = self.client.post("/api/internal/v1_3/predict", json=payload, headers=AUTH_HEADER)
+                self.assertEqual(internal.status_code, 200, f"internal failed for {case_name}: {internal.text}")
+                self.assertEqual(internal.json()["model_version"], "v1.3")
 
     def test_contract_missing_ward(self):
-        """Verify behavior when ward is omitted or unknown."""
+        """An omitted ward stays missing instead of being invented."""
         payload = {
             "category": "Nhà ở",
             "area_sqm": 90.0,
@@ -97,13 +99,57 @@ class TestV6V1_3Contract(unittest.TestCase):
             "rooms": 3,
             "floors": 2.0,
         }
-        resp_v6 = self.client.post("/predict", json=payload)
-        self.assertEqual(resp_v6.status_code, 200)
+        resp = self.client.post("/predict", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["model_version"], "v1.3")
 
-        resp_v1_3 = self.client.post("/api/internal/v1_3/predict", json=payload, headers=AUTH_HEADER)
-        self.assertEqual(resp_v1_3.status_code, 200)
-        data_v1_3 = resp_v1_3.json()
-        self.assertIsNone(data_v1_3["features_used"]["ward"])
+        internal = self.client.post("/api/internal/v1_3/predict", json=payload, headers=AUTH_HEADER)
+        self.assertEqual(internal.status_code, 200)
+        self.assertIsNone(internal.json()["features_used"]["ward"])
+
+    def test_optional_measurements_reach_the_model(self):
+        """A bathroom count the user entered is visible in the model's own features."""
+        payload = {
+            "category": "Nhà ở",
+            "area_sqm": 80.0,
+            "location_feature": "Hải Châu",
+            "rooms": 3,
+            "bathrooms": 2,
+        }
+        resp = self.client.post("/predict", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["features_used"]["bathroom_count"], 2)
+
+    def test_an_omitted_measurement_is_not_defaulted(self):
+        """Road width and frontage stay null when the user did not enter them."""
+        payload = {
+            "category": "Nhà ở",
+            "area_sqm": 80.0,
+            "location_feature": "Hải Châu",
+            "rooms": 3,
+        }
+        resp = self.client.post("/predict", json=payload)
+        self.assertEqual(resp.status_code, 200)
+        features = resp.json()["features_used"]
+        self.assertIsNone(features["road_width"])
+        self.assertIsNone(features["frontage_width"])
+
+    def test_health_reports_v13(self):
+        resp = self.client.get("/health")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["model_version"], "v1.3")
+        self.assertTrue(body["model_ready"])
+
+    def test_options_come_from_v13(self):
+        resp = self.client.get("/model/options")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["model_version"], "v1.3")
+        categories = {item["category"] for item in body["categories"]}
+        self.assertEqual(categories, {"Nhà ở", "Đất nền", "Căn hộ chung cư"})
+        for item in body["categories"]:
+            self.assertTrue(item["locations"], item["category"])
 
 
 if __name__ == "__main__":

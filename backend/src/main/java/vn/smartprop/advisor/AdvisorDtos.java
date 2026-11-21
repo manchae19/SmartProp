@@ -26,7 +26,7 @@ import vn.smartprop.modules.recommendation.RecommendationDtos.Source;
  *   <li>Heuristic scores carry explicit uncalibrated labels and are never presented as probabilities.</li>
  *   <li>Research observations (TiniX CC BY-NC 4.0) carry {@code researchReference=true},
  *       {@code liveListing=false}, {@code availabilityStatus="UNKNOWN_HISTORICAL_RESEARCH"}, and {@code null} URLs.</li>
- *   <li>Valuation (XGBoost V6) and Comparable Evidence are independent signals; V6 output is never fed into
+ *   <li>Valuation (XGBoost V1.3) and Comparable Evidence are independent signals; V1.3 output is never fed into
  *       Comparable Ranking or used to self-confirm accuracy.</li>
  * </ul>
  */

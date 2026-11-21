@@ -92,7 +92,7 @@ class AdvisorValuationAdapterTest {
     }
 
     @Test
-    void parsesValidV6PredictionAndTreeShapAndRejectsPinMismatch() throws Exception {
+    void parsesValidV13PredictionAndTreeShapAndRejectsPinMismatch() throws Exception {
         Property published = new Property();
         published.id = "prop-hc-1";
         published.status = Property.Status.PUBLISHED;
@@ -102,14 +102,15 @@ class AdvisorValuationAdapterTest {
 
         String validJson = """
             {
-              "model_version": "v6",
-              "model_run": "b4b1339d3f35857e",
+              "model_version": "v1.3",
+              "model_run": "tinix_xgboost_v1_3_integrated",
+              "price_band": "5-10B",
               "predicted_asking_price_vnd": 5000000000,
               "features_used": {
-                "area_sqm": 80.0,
-                "location_feature": "Hải Châu",
-                "ward_source": "explicit",
-                "rooms": 3
+                "area": 80.0,
+                "district": "Hải Châu",
+                "ward": "Hòa Cường Bắc",
+                "bedroom_count": 3
               },
               "missing_features": ["floors"],
               "warnings": [],
@@ -157,8 +158,8 @@ class AdvisorValuationAdapterTest {
 
         assertThat(ev.available()).isTrue();
         assertThat(ev.status()).isEqualTo("AVAILABLE");
-        assertThat(ev.modelVersion()).isEqualTo("v6");
-        assertThat(ev.modelRun()).isEqualTo("b4b1339d3f35857e");
+        assertThat(ev.modelVersion()).isEqualTo("v1.3");
+        assertThat(ev.modelRun()).isEqualTo("tinix_xgboost_v1_3_integrated");
         assertThat(ev.predictedAskingPriceVnd()).isEqualByComparingTo("5000000000");
         // (4.75B - 5.00B) / 5.00B = -5.0%
         assertThat(ev.askingVsEstimatePct()).isEqualByComparingTo("-5.0");
@@ -171,7 +172,7 @@ class AdvisorValuationAdapterTest {
             @Override
             protected JsonNode exchange(String path, Object payload, long timeoutMs) {
                 try {
-                    return json.readTree(validJson.replace("b4b1339d3f35857e", "wrong-run-id"));
+                    return json.readTree(validJson.replace("\"v1.3\"", "\"v6\""));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }

@@ -24,6 +24,12 @@ export function valuationInput(draft, location) {
   if (propertyType !== 'LAND' && (!/^\d+$/.test(rooms) || Number(rooms) > 30)) return {
     reason: 'Số phòng ngủ nằm ngoài phạm vi model (0–30; 0 là chưa khai báo).'
   };
+  // Bathrooms is the only optional field the posting form collects that the model also
+  // accepts. Backend allows 1–30 and rejects 0, so an empty or zero value is omitted
+  // rather than sent as a number the request would refuse.
+  const bathrooms = Number(draft.bathrooms ?? 0);
+  const hasBathrooms = propertyType !== 'LAND' && Number.isInteger(bathrooms)
+    && bathrooms >= 1 && bathrooms <= 30;
   return {
     body: {
       propertyType,
@@ -31,6 +37,7 @@ export function valuationInput(draft, location) {
       areaSqm: Number(area),
       locationFeature: location,
       bedrooms: propertyType === 'LAND' ? null : Number(rooms),
+      ...(hasBathrooms ? { bathrooms } : {}),
       title: String(draft.title || ''),
       description: String(draft.description || '')
     }
@@ -128,6 +135,27 @@ export function buildValuationPayload(form, options) {
     if (!['alley', 'frontage'].includes(form.access_type)) throw new ValuationError('Lối vào không hợp lệ.');
     payload.access_type = form.access_type;
   }
+  // Optional real measurements. An empty field stays absent so the model keeps it as
+  // missing data instead of receiving a default. Apartments have no road or frontage.
+  if (form.category !== 'Căn hộ chung cư') {
+    if (!isBlank(form.road_width_m)) payload.road_width_m = numeric(form.road_width_m, 'Chiều rộng đường (m)', 0.1, 100);
+    if (!isBlank(form.frontage_width_m)) payload.frontage_width_m = numeric(form.frontage_width_m, 'Chiều rộng mặt tiền (m)', 0.1, 500);
+  }
+  const street = String(form.street_name ?? '').trim();
+  if (street.length > 200) throw new ValuationError('Tên đường tối đa 200 ký tự.');
+  if (street) payload.street_name = street;
+  const project = String(form.project_name ?? '').trim();
+  if (project.length > 200) throw new ValuationError('Tên dự án tối đa 200 ký tự.');
+  if (project) payload.project_name = project;
+  if (form.category !== 'Đất nền' && !isBlank(form.bathrooms)) {
+    payload.bathrooms = numeric(form.bathrooms, 'Số phòng tắm', 1, 30, true);
+  }
+  const houseDirection = String(form.house_direction ?? '').trim();
+  if (houseDirection.length > 50) throw new ValuationError('Hướng nhà tối đa 50 ký tự.');
+  if (houseDirection) payload.house_direction = houseDirection;
+  const balconyDirection = String(form.balcony_direction ?? '').trim();
+  if (balconyDirection.length > 50) throw new ValuationError('Hướng ban công tối đa 50 ký tự.');
+  if (balconyDirection) payload.balcony_direction = balconyDirection;
   return payload;
 }
 export function formatPrice(vnd) {
@@ -205,7 +233,9 @@ export function createValuationClient({
       const data = await request('/model/options', {
         signal
       });
-      if (data?.model_version !== 'v6' || !Array.isArray(data.categories) || !data.categories.length || data.categories.some(item => !API_CATEGORIES.includes(item.category) || !Array.isArray(item.locations) || !item.locations.every(value => typeof value === 'string')) || !data.access_types || !data.house_subtypes) {
+      // V1.3 is the model behind the public options route. It reports categories and
+      // districts only; access types and house subtypes are not part of its schema.
+      if (data?.model_version !== 'v1.3' || !Array.isArray(data.categories) || !data.categories.length || data.categories.some(item => !API_CATEGORIES.includes(item.category) || !Array.isArray(item.locations) || !item.locations.every(value => typeof value === 'string'))) {
         throw new ValuationError('Dữ liệu lựa chọn từ dịch vụ chưa hợp lệ. Vui lòng thử lại.');
       }
       const labels = data.location_labels ?? {};
@@ -224,7 +254,9 @@ export function createValuationClient({
         payload,
         signal
       });
-      if (data?.model_version !== 'v6' || data.category !== payload.category || data.currency !== 'VND' || !Number.isFinite(data.predicted_asking_price_vnd) || data.predicted_asking_price_vnd <= 0 || !data.features_used || !Array.isArray(data.missing_features) || !Array.isArray(data.warnings)) {
+      // V1.3 answers with its own schema: a price band and calibration instead of
+      // category/currency/warnings.
+      if (data?.model_version !== 'v1.3' || !Number.isFinite(data.predicted_asking_price_vnd) || data.predicted_asking_price_vnd <= 0 || !data.features_used || !Array.isArray(data.missing_features)) {
         throw new ValuationError('Kết quả từ dịch vụ chưa hợp lệ. Vui lòng thử lại.');
       }
       return data;

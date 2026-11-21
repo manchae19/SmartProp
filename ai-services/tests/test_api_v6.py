@@ -1,4 +1,10 @@
-"""API contract and replay against the already exposed v6 validation results."""
+"""API contract and replay against the already exposed v6 validation results.
+
+V6 is no longer the model behind the public /predict route: V1.3 is. These cases
+replay a pinned V6 fixture and assert V6-specific response fields, so they are
+skipped rather than rewritten. The V1.3 contract lives in
+tests/test_v6_v1_3_contract.py.
+"""
 import json
 import math
 import shutil
@@ -17,6 +23,7 @@ from app.core.model_registry import DATA_DIR, V6_MANIFEST_SHA256, V6_MODEL_DIR, 
 from app.models.xgboost.predictor_v6 import ModelArtifactError
 
 
+@unittest.skip("V6 is no longer the public model; see test_v6_v1_3_contract.py")
 class ApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -199,25 +206,33 @@ class ArtifactTests(unittest.TestCase):
                 shutil.copy2(V6_MODEL_DIR / name, root / name)
         return selection
 
-    def test_missing_manifest_stops_startup(self):
+    def test_missing_manifest_skips_v6_and_keeps_serving(self):
+        # V6 is optional now: a broken bundle is reported, not fatal.
         with tempfile.TemporaryDirectory() as directory:
-            with self.assertRaises(ModelArtifactError), TestClient(create_app(directory)):
-                pass
+            with TestClient(create_app(directory)) as client:
+                self.assertIsNone(client.app.state.predictor)
+                self.assertIsNotNone(client.app.state.v6_error)
+                self.assertEqual(client.get("/health").status_code, 200)
 
-    def test_tampered_manifest_stops_startup(self):
+    def test_tampered_manifest_skips_v6_and_keeps_serving(self):
+        # V6 is optional now: a tampered bundle is reported, not fatal.
         with tempfile.TemporaryDirectory() as directory:
             (Path(directory) / "manifest.json").write_text("{}", encoding="utf-8")
-            with self.assertRaises(ModelArtifactError), TestClient(create_app(directory)):
-                pass
+            with TestClient(create_app(directory)) as client:
+                self.assertIsNone(client.app.state.predictor)
+                self.assertIsNotNone(client.app.state.v6_error)
+                self.assertEqual(client.get("/health").status_code, 200)
 
-    def test_tampered_selected_model_stops_startup(self):
+    def test_tampered_selected_model_skips_v6_and_keeps_serving(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             selection = self.copy_compact_release(root)
             info = next(iter(selection["category_artifacts"].values()))
             (root / info["model_file"]).write_text("tampered", encoding="utf-8")
-            with self.assertRaises(ModelArtifactError), TestClient(create_app(root)):
-                pass
+            with TestClient(create_app(root)) as client:
+                self.assertIsNone(client.app.state.predictor)
+                self.assertIsNotNone(client.app.state.v6_error)
+                self.assertEqual(client.get("/health").status_code, 200)
 
     def test_compact_relocated_release_loads_without_history_files(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -231,7 +246,7 @@ class ArtifactTests(unittest.TestCase):
                     category=category["category"], area_sqm=80, location_feature=category["locations"][0]))
                 self.assertEqual(response.status_code, 200, response.text)
 
-    def test_tampered_feature_code_stops_startup(self):
+    def test_tampered_feature_code_skips_v6_and_keeps_serving(self):
         # Change only a temporary copy; frozen repository sources remain intact.
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -240,9 +255,10 @@ class ArtifactTests(unittest.TestCase):
             with (root / "property_text_features_v6.py").open("a", encoding="utf-8") as stream:
                 stream.write("\n# changed\n")
             with patch("app.models.xgboost.predictor_v6.DATA_DIR", root):
-                with self.assertRaisesRegex(ModelArtifactError, "property_text_features_v6.py"):
-                    with TestClient(create_app()):
-                        pass
+                with TestClient(create_app()) as client:
+                    self.assertIsNone(client.app.state.predictor)
+                    self.assertIn("property_text_features_v6.py", client.app.state.v6_error or "")
+                    self.assertEqual(client.get("/health").status_code, 200)
 
 
 if __name__ == "__main__":

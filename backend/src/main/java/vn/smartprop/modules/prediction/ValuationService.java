@@ -11,25 +11,52 @@ public class ValuationService {
     private static final Set<String> DISTRICTS=Set.of("Hải Châu","Thanh Khê","Sơn Trà","Ngũ Hành Sơn","Cẩm Lệ","Liên Chiểu","Hòa Vang","Hoà Vang");
     private static final Set<String> CATEGORIES=Set.of("Nhà ở","Đất nền","Căn hộ chung cư");
     private final AccountAccess access;private final ValuationClient client;
-    public ValuationService(AccountAccess access,ValuationClient client){this.access=access;this.client=client;}
+    private final String model;
+    public ValuationService(AccountAccess access,ValuationClient client,
+        @org.springframework.beans.factory.annotation.Value("${app.valuation.model:v1.3}") String model){
+        this.access=access;this.client=client;
+        this.model=model==null?"v1.3":model.strip().toLowerCase();
+        if(!Set.of("v1.3","v6").contains(this.model))
+            throw new IllegalArgumentException("app.valuation.model must be v1.3 or v6");
+    }
     public record Category(String category,List<String> locations){}
-    public record Options(String modelVersion,String modelRun,List<Category> categories){}
+    public record Options(String modelVersion,String modelRun,List<Category> categories,
+        Map<String,String> accessTypes,Map<String,String> houseSubtypes){}
     public record Preview(boolean available,String reason,String modelVersion,String modelRun,String predictedAskingPriceVnd,
         String currency,String priceBasis,Map<String,Object> featuresUsed,List<String> missingFeatures,List<String> warnings){}
-    private static void pin(JsonNode n){if(!"v6".equals(n.path("model_version").asText())||!RUN.equals(n.path("model_run").asText()))throw ValuationClient.unavailable();}
+    /** Map a district name from any case to the display form the API uses. */
+    private static String displayDistrict(String raw){
+        String clean=raw==null?"":raw.strip();
+        for(String known:DISTRICTS)if(known.equalsIgnoreCase(clean))return known;
+        return null;
+    }
+    /** The service now answers with V1.3; the run identifier is V1.3's own. */
+    private static void pin(JsonNode n){
+        if(!"v1.3".equals(n.path("model_version").asText()))throw ValuationClient.unavailable();
+    }
     private Options loadOptions(){
         var n=client.exchange("/model/options",null);pin(n);
         if(!n.path("categories").isArray())throw ValuationClient.unavailable();
         List<Category> groups=new ArrayList<>();Set<String> seen=new HashSet<>();
         for(var c:n.path("categories")){
             String category=c.path("category").asText();if(!CATEGORIES.contains(category)||!seen.add(category)||!c.path("locations").isArray())throw ValuationClient.unavailable();
-            List<String> locations=new ArrayList<>();for(var l:c.path("locations"))if(l.isTextual()&&DISTRICTS.contains(l.asText())&&!locations.contains(l.asText()))locations.add(l.asText());
+            List<String> locations=new ArrayList<>();for(var l:c.path("locations")){
+                // V1.3 lists districts in lower case; the API and the form use the
+                // display form, so map back to it before comparing.
+                String name=l.isTextual()?displayDistrict(l.asText()):null;
+                if(name!=null&&DISTRICTS.contains(name)&&!locations.contains(name))locations.add(name);
+            }
             if(locations.isEmpty())throw ValuationClient.unavailable();groups.add(new Category(category,List.copyOf(locations)));
         }
-        if(!seen.equals(CATEGORIES))throw ValuationClient.unavailable();return new Options("v6",RUN,List.copyOf(groups));
+        if(!seen.equals(CATEGORIES))throw ValuationClient.unavailable();
+        String run=n.path("model_run").asText("");
+        // The form renders these labels; V1.3 does not carry them, so they are fixed here.
+        return new Options("v1.3",run.isBlank()?RUN:run,List.copyOf(groups),
+            Map.of("alley","Hẻm","frontage","Mặt tiền"),
+            Map.of("villa","Biệt thự","house_c4","Nhà phố"));
     }
     public Options options(Long actor){access.publisher(actor);return loadOptions();}
-    private Preview unsupported(String reason){return new Preview(false,reason,"v6",RUN,null,"VND",null,Map.of(),List.of(),List.of());}
+    private Preview unsupported(String reason){return new Preview(false,reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of());}
     public Preview preview(Long actor,ValuationRequest r){
         access.publisher(actor);
         String category=switch(r.propertyType()){case HOUSE,VILLA->"Nhà ở";case LAND->"Đất nền";case APARTMENT->"Căn hộ chung cư";default->null;};
@@ -54,18 +81,42 @@ public class ValuationService {
         if(r.balconyDirection()!=null&&!r.balconyDirection().isBlank())input.put("balcony_direction",r.balconyDirection().strip());
         input.put("title",r.title()==null?"":r.title());String description=r.description()==null?"":r.description();
         boolean shortened=description.length()>8000;input.put("description",shortened?description.substring(0,8000):description);
-        var n=client.exchange("/predict",input);pin(n);
+        return previewV13(r,category,location,input,shortened);
+    }
+    /**
+     * V1.3 preview. The response schema differs from V6: it carries its own version, a
+     * price band and calibration, and no model_run. Anything that does not match is treated
+     * as unavailable so the user can still save or submit the listing.
+     */
+    private Preview previewV13(ValuationRequest r,String category,String location,Map<String,Object> input,boolean shortened){
+        JsonNode n;
+        try{ n=client.exchange("/predict",input); }
+        catch(vn.smartprop.common.ApiException unavailable){ return unavailablePreview(unavailable.getMessage()); }
+        if(!"v1.3".equals(n.path("model_version").asText()))throw ValuationClient.unavailable();
         var price=n.path("predicted_asking_price_vnd");
-        if(!"all".equals(n.path("configuration").asText())||!"VND".equals(n.path("currency").asText())||!category.equals(n.path("category").asText())||
-            !price.isIntegralNumber()||price.bigIntegerValue().signum()<=0||price.bigIntegerValue().bitLength()>63)throw ValuationClient.unavailable();
-        var f=n.path("features_used");if(!f.isObject()||!location.equals(f.path("location_feature").asText())||!f.path("area_sqm").isNumber()||
-            Math.abs(f.path("area_sqm").asDouble()-r.areaSqm().doubleValue())>0.00001)throw ValuationClient.unavailable();
+        if(!price.isIntegralNumber()||price.bigIntegerValue().signum()<=0||price.bigIntegerValue().bitLength()>63)
+            throw ValuationClient.unavailable();
+        var f=n.path("features_used");
+        // V1.3 names the area differently from the request field.
+        if(!f.isObject()||!f.path("area").isNumber()
+            ||Math.abs(f.path("area").asDouble()-r.areaSqm().doubleValue())>0.00001)
+            throw ValuationClient.unavailable();
         Map<String,Object> features=new LinkedHashMap<>();features.put("areaSqm",r.areaSqm());features.put("locationFeature",location);
-        // Only numeric/enum model features; no arbitrary upstream JSON or extracted address is exposed.
-        for(String key:List.of("rooms","floors"))if(f.path(key).isNumber())features.put(key,f.path(key).numberValue());
+        // Only numeric/enum model features; no arbitrary upstream JSON is exposed.
+        for(String key:List.of("bedroom_count","floor_count"))if(f.path(key).isNumber())features.put(key,f.path(key).numberValue());
+        // V1.3 names the bathroom count differently from the request field.
+        if(f.path("bathroom_count").isNumber())features.put("bathrooms",f.path("bathroom_count").numberValue());
         for(String key:List.of("access_type","house_subtype"))if(f.path(key).isTextual())features.put(key,f.path(key).asText());
-        List<String> warnings=strings(n.path("warnings"));if(shortened)warnings.add("Model chỉ dùng 8000 ký tự đầu của mô tả; mô tả tin đăng được giữ nguyên.");
-        return new Preview(true,null,"v6",RUN,price.bigIntegerValue().toString(),"VND","Giá rao ước tính từ dữ liệu tin đăng.",features,strings(n.path("missing_features")),warnings);
+        List<String> warnings=n.path("warnings").isArray()?strings(n.path("warnings")):new ArrayList<>();
+        if(shortened)warnings.add("Model chỉ dùng 8000 ký tự đầu của mô tả; mô tả tin đăng được giữ nguyên.");
+        String band=n.path("price_band").asText("");
+        if(!band.isBlank())warnings.add("Khoảng giá tham khảo: "+band+".");
+        return new Preview(true,null,"v1.3",RUN,price.bigIntegerValue().toString(),"VND",
+            "Giá rao ước tính từ dữ liệu tin đăng (mô hình thử nghiệm V1.3).",features,
+            strings(n.path("missing_features")),warnings);
+    }
+    private static Preview unavailablePreview(String reason){
+        return new Preview(false,reason==null?"Giá tham khảo chưa sẵn sàng.":reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of());
     }
     private static List<String> strings(JsonNode n){if(!n.isArray()||n.size()>30)throw ValuationClient.unavailable();List<String> out=new ArrayList<>();for(var v:n){if(!v.isTextual()||v.asText().length()>1000)throw ValuationClient.unavailable();out.add(v.asText());}return out;}
 }

@@ -24,8 +24,9 @@ class ValuationShapContractTests(unittest.TestCase):
         self.assertIn("đang thiếu", factors["ward"]["label"])
         self.assertIn("không có trong input", factors["raw_street_name"]["label"])
         self.assertGreater(result["predicted_asking_price_vnd"], 0)
-        self.assertEqual(result["features_used"]["road_width"], 10.0)
-        self.assertEqual(result["features_used"]["frontage_width"], 5.0)
+        # A frontage access type is not a measurement, so the widths stay missing.
+        self.assertIsNone(result["features_used"]["road_width"])
+        self.assertIsNone(result["features_used"]["frontage_width"])
         self.assertIn("không phải địa chỉ thực", factors["ward"]["context_note"])
         shap = result["shap_explanation"]
         expected_base = math.expm1(float(shap["base_value_log"]))
