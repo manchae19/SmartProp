@@ -32,11 +32,13 @@ const EVENT_LABEL = {
 };
 
 // How closely the record matches this listing, not what the source itself covers.
+// SUGGESTED means the title merely names the project or lot: worth reading, not evidence.
 const MATCH_LABEL = {
   LAND_PARCEL: "Đã đối chiếu lô đất",
   PROJECT: "Thông tin cấp dự án",
   REGION: "Thông tin khu vực",
   STREET: "Có ghi nhận ngập trên cùng tuyến đường",
+  SUGGESTED: "Văn bản liên quan · Chưa xác minh cho tin này",
 };
 
 // What the source document itself covers.
@@ -214,7 +216,7 @@ export default function PrePurchaseChecks({ property }) {
               <Row
                 label={MATCH_LABEL[item.match] || "Thông tin quy hoạch"}
                 value={item.projectName}
-                kind="verified"
+                kind={item.match === "SUGGESTED" ? "unverified" : "verified"}
                 source={`Nguồn: ${SOURCE_SCOPE_LABEL[item.sourceScope] || item.sourceScope}${
                   item.lotCode ? ` · Lô ${item.lotCode}` : ""
                 }${item.landParcel ? ` · Khu đất ${item.landParcel}` : ""}`}

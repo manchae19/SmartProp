@@ -22,8 +22,13 @@ public class PrePurchaseService {
 
     public PrePurchaseService(PrePurchaseRepository repository) { this.repository = repository; }
 
-    /** How closely a record matches the listing being viewed. */
-    public enum Match { LAND_PARCEL, PROJECT, REGION, STREET }
+    /**
+     * How closely a record matches the listing being viewed.
+     *
+     * <p>{@link #SUGGESTED} is not evidence: the listing title merely names the project or the
+     * lot, so the document is worth reading but says nothing verified about this listing.
+     */
+    public enum Match { LAND_PARCEL, PROJECT, REGION, STREET, SUGGESTED }
 
     public record PlanningView(String id, String eventType, String projectName, String lotCode,
                                String landParcel, String documentNumber, LocalDate documentDate,
@@ -70,13 +75,19 @@ public class PrePurchaseService {
     /**
      * A lot code only counts inside the project it belongs to: the same code appears in
      * other projects. Without a project or lot on the listing, only the ward matches.
+     *
+     * <p>A project or lot read from the listing title is a hint, never evidence: "Nhà gần
+     * ALIZÉ, lô A1" names both and still proves nothing about this listing. Such a row is
+     * reported as {@link Match#SUGGESTED} so the buyer can read the document himself.
+     * {@link Match#LAND_PARCEL} and {@link Match#PROJECT} need a verified link between the
+     * listing and the project or lot, which the system does not store yet.
      */
     static Match planningMatch(PrePurchaseRepository.Planning row, String project, String lot,
                                PropertyDtos.View listing) {
         boolean sameProject = project != null && sameText(project, row.projectName());
         boolean sameLot = lot != null && sameText(lot, row.lotCode());
-        if (sameProject && sameLot) return Match.LAND_PARCEL;
-        if (sameProject) return Match.PROJECT;
+        if (sameProject && sameLot) return Match.SUGGESTED;
+        if (sameProject) return Match.SUGGESTED;
         if (sameLot) return null; // a lot code from another project is not this listing
         if (sameText(listing.ward(), row.ward()) && sameText(listing.district(), row.district()))
             return Match.REGION;
