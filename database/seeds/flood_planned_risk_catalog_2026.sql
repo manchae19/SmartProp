@@ -25,6 +25,43 @@
 --   PL8-IV-08  Ngo Quyen - An Trung Dong 6 -> Phuong An Hai
 --   PL8-IV-09  Le Tan Trung (Dinh Cong Tru -> Nguyen Thi Hong) -> Phuong Son Tra
 -- Nguon nguy co ngap van la Phu luc VIII; OSM chi dung de xac dinh phuong.
+--
+-- Nhom II (Thanh Khe cu) — 41 dong ra soat, 40 dong xac dinh duoc phuong.
+-- Dia ban nhom nay chi con hai don vi theo NQ 1659: Phuong Thanh Khe
+-- (Xuan Ha, Tam Thuan, Chinh Gian, Tan Chinh, Thac Gian, Vinh Trung,
+-- Thanh Khe Dong, Hoa Khe, Thanh Khe Tay) va Phuong An Khe (An Khe, Hoa An, Hoa Phat).
+-- Moi dong duoi day tra dung so nha / so kiet / giao lo / hai dau doan ma nguon neu:
+--   Phuong Thanh Khe (32 dong):
+--     II-01 Nguyen Van Linh (to 28 Thac Gian)   II-02 Le Duan (to 14 Tan Chinh)
+--     II-03 Huynh Ngoc Hue (to 63 Hoa Khe)      II-06 Tran Cao Van 213 (to 10 Tan Chinh)
+--     II-07 Kiet 814 Tran Cao Van (to 50 Thanh Khe Dong)
+--     II-08 Ha Huy Tap (to 56 Hoa Khe)          II-09 Tran Xuan Le (to 58 Hoa Khe)
+--     II-10 Ky Dong (to 39 Xuan Ha)             II-11 Dien Bien Phu (to 64 Hoa Khe)
+--     II-12 Tran Cao Van (to 36 Xuan Ha)        II-13 Thai Thi Boi (to 45 Chinh Gian)
+--     II-14 Le Duan 390 (to 14 Tan Chinh)       II-15 Dien Bien Phu (to 64 Hoa Khe)
+--     II-16 Mai Xuan Thuong (to 54 Hoa Khe)     II-17 Cu Chinh Lan (to 64 Hoa Khe)
+--     II-18 Tran Cao Van 147 (to 08 Tam Thuan)  II-19 Tran Cao Van (to 34)
+--     II-20 Tran Cao Van (to 36 Xuan Ha)        II-21 Tran Cao Van (to 34)
+--     II-22 Tran Cao Van (to 53 Thanh Khe Dong) II-23 Ton That Dam (to 32 Xuan Ha)
+--     II-24 Le Duan 390 (to 14 Tan Chinh)       II-25 Thai Thi Boi (to 45 Chinh Gian)
+--     II-26 Phan Thanh (to 26/28 Thac Gian)     II-27 Pham Van Nghi (to 29 Thac Gian)
+--     II-28 Bau Hac 1 (to 17 Vinh Trung)        II-29 Do Quang (to 21 Vinh Trung)
+--     II-30 Tran Tong (to 29 Thac Gian)         II-31 Cau vuot Nga ba Hue (to 65 Thanh Khe Tay)
+--     II-32 Bau Trang 6 (to 65 Thanh Khe Tay)   II-33 Me Nhu (to 66/67 Thanh Khe Tay)
+--     II-41 Ham chui Dien Bien Phu (to 28 Thac Gian / 42 Chinh Gian)
+--   Phuong An Khe (8 dong):
+--     II-04 Nguyen Dinh Tuu (to Dong Xuan 3)    II-05 Truong Chinh (to Phuoc Truong 7)
+--     II-34 Nguyen Phuoc Nguyen (to Dong Xuan 3)
+--     II-35 Nguyen Phuoc Nguyen (to Dong Xuan 2/3)
+--     II-36 Nguyen Phuoc Nguyen (to Dong Xuan 2/3)
+--     II-37 Tan Hoa 1 (to Tan Hoa 1 / Tan An 2)
+--     II-38 Pham Ngoc Mau (to Tan An 1/2)       II-39 Can Giuoc (to Phan Lang 1/2)
+--   Con cho (1 dong):
+--     II-40 Khu vuc Khe Can — nguon chi neu ten kenh, khong co so nha / kiet /
+--           giao lo. Kenh chay qua nhieu phuong nen khong du can cu gan mot phuong.
+--           Giu current_unit NULL, area_basis 'NO_AREA_IN_SOURCE'.
+-- Tran Cao Van chay qua ca Phuong Thanh Khe va Phuong Hai Chau; cac so nha
+-- 112-272 deu nam trong doan Phuong Thanh Khe (da quet doc truc duong).
 
 
 INSERT INTO flood_records (
@@ -288,7 +325,7 @@ INSERT INTO flood_records (
   'Nguyễn Văn Linh', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -309,7 +346,7 @@ INSERT INTO flood_records (
   'Lê Duẩn', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -330,7 +367,7 @@ INSERT INTO flood_records (
   'Hà Huy Tập trước Trường Huỳnh Ngọc Huệ', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -351,7 +388,7 @@ INSERT INTO flood_records (
   'Nguyễn Đình Tựu', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -372,7 +409,7 @@ INSERT INTO flood_records (
   'Trường Chinh', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -393,7 +430,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -414,7 +451,7 @@ INSERT INTO flood_records (
   'Trần Cao Vân', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -435,7 +472,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -456,7 +493,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -477,7 +514,7 @@ INSERT INTO flood_records (
   'Kỳ Đồng', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -498,7 +535,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -519,7 +556,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -540,7 +577,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -561,7 +598,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -582,7 +619,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -603,7 +640,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -624,7 +661,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -645,7 +682,7 @@ INSERT INTO flood_records (
   'Nguyễn Tất Thành', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -666,7 +703,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -687,7 +724,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -708,7 +745,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -729,7 +766,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -750,7 +787,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -771,7 +808,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -792,7 +829,7 @@ INSERT INTO flood_records (
   'Thái Thị Bôi', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -813,7 +850,7 @@ INSERT INTO flood_records (
   'Phan Thanh: đoạn từ Tản Đà đến số nhà 138', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -834,7 +871,7 @@ INSERT INTO flood_records (
   'Phạm Văn Nghị: đoạn từ trước nhà số 10 đế', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -855,7 +892,7 @@ INSERT INTO flood_records (
   'Bàu Hạc 1', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -876,7 +913,7 @@ INSERT INTO flood_records (
   'Đỗ Quang từ số 153 đến 191', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -897,7 +934,7 @@ INSERT INTO flood_records (
   'Đỗ Quang', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -918,7 +955,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 33
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -939,7 +976,7 @@ INSERT INTO flood_records (
   'Bàu Trảng 6', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -960,7 +997,7 @@ INSERT INTO flood_records (
   'Mẹ Nhu', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -981,7 +1018,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1002,7 +1039,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1023,7 +1060,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1044,7 +1081,7 @@ INSERT INTO flood_records (
   'Tân Hòa 1', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1065,7 +1102,7 @@ INSERT INTO flood_records (
   'Phạm Ngọc Mậu', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1086,7 +1123,7 @@ INSERT INTO flood_records (
   'Cần Giuộc', NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1128,7 +1165,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Thanh Khê',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Thanh Khê', NULL, 'NO_AREA_IN_SOURCE',
+  'Thanh Khê', 'Phường Thanh Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
