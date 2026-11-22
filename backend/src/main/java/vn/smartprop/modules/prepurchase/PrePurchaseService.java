@@ -141,19 +141,45 @@ public class PrePurchaseService {
      * same street, so it is read the same way; the alley number itself is dropped
      * because the catalogue records a street, not a house.
      */
+    /**
+     * The street named in the listing address, or null when it cannot be read.
+     *
+     * <p>Listings write the street three ways:
+     * <ul>
+     *   <li>"Đường Trần Cao Vân, …" — the plain form.</li>
+     *   <li>"Kiệt Trần Cao Vân, …" — the alley names the street it opens onto.</li>
+     *   <li>"Kiệt 350, Đường Điện Biên Phủ, …" — the alley number and the street are
+     *       separate parts, so the "Đường …" part must win over the bare number.</li>
+     * </ul>
+     *
+     * <p>A part that only carries an alley number ("Kiệt 350") names no street and is
+     * never used as one. The "Đường …" form is preferred over the alley form because it
+     * is the explicit one; the alley form is the fallback for addresses that only have it.
+     */
     static String streetOf(String address) {
         if (address == null || address.isBlank()) return null;
+        String alley = null;
         for (String part : address.split(",")) {
             String text = part.strip();
-            if (text.regionMatches(true, 0, "đường ", 0, 6)) return text.substring(6).strip();
-            if (text.regionMatches(true, 0, "duong ", 0, 6)) return text.substring(6).strip();
-            String alley = alleyStreet(text);
-            if (alley != null) return alley;
+            if (text.regionMatches(true, 0, "đường ", 0, 6)) {
+                String name = text.substring(6).strip();
+                if (!name.isBlank()) return name;
+            } else if (text.regionMatches(true, 0, "duong ", 0, 6)) {
+                String name = text.substring(6).strip();
+                if (!name.isBlank()) return name;
+            } else if (alley == null) {
+                alley = alleyStreet(text);
+            }
         }
-        return null;
+        return alley;
     }
 
-    /** "Kiệt 350 Điện Biên Phủ" -> "Điện Biên Phủ"; "Kiệt Trần Cao Vân" -> "Trần Cao Vân". */
+    /**
+     * "Kiệt 350 Điện Biên Phủ" -> "Điện Biên Phủ"; "Kiệt Trần Cao Vân" -> "Trần Cao Vân".
+     *
+     * <p>Returns null when the part carries only an alley number ("Kiệt 350"), because a
+     * number is not a street name.
+     */
     private static String alleyStreet(String text) {
         String rest;
         if (text.regionMatches(true, 0, "kiệt ", 0, 5)) rest = text.substring(5).strip();
@@ -163,6 +189,10 @@ public class PrePurchaseService {
         int space = rest.indexOf(' ');
         if (space > 0 && rest.substring(0, space).chars().allMatch(Character::isDigit)) {
             rest = rest.substring(space + 1).strip();
+        } else if (space < 0 && !rest.isEmpty()
+                   && rest.chars().allMatch(Character::isDigit)) {
+            // "Kiệt 350" — chỉ có số, không phải tên đường.
+            return null;
         }
         return rest.isBlank() ? null : rest;
     }

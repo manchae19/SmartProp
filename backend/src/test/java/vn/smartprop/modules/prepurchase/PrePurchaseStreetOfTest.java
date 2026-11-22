@@ -31,6 +31,20 @@ class PrePurchaseStreetOfTest {
     }
 
     @Test
+    void prefersDuongOverBareAlleyNumber() {
+        // "Kiệt 350" chỉ là số kiệt; tên đường nằm ở phần "Đường …" phía sau.
+        assertEquals("Điện Biên Phủ",
+            PrePurchaseService.streetOf("Kiệt 350, Đường Điện Biên Phủ, Chính Gián"));
+    }
+
+    @Test
+    void returnsNullWhenOnlyAnAlleyNumberIsGiven() {
+        // Không có tên đường nào trong địa chỉ: số kiệt không được dùng làm tên đường.
+        assertNull(PrePurchaseService.streetOf("Kiệt 350, Chính Gián"));
+        assertNull(PrePurchaseService.streetOf("Kiệt 350"));
+    }
+
+    @Test
     void ignoresAddressWithoutStreet() {
         assertNull(PrePurchaseService.streetOf("Đường Phan Xích Long".replace("Đường ", "")));
         assertNull(PrePurchaseService.streetOf("Hòa An"));
