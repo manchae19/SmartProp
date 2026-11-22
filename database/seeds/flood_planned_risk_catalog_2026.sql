@@ -27,41 +27,64 @@
 -- Nguon nguy co ngap van la Phu luc VIII; OSM chi dung de xac dinh phuong.
 --
 -- Nhom II (Thanh Khe cu) — 41 dong ra soat, 40 dong xac dinh duoc phuong.
--- Dia ban nhom nay chi con hai don vi theo NQ 1659: Phuong Thanh Khe
--- (Xuan Ha, Tam Thuan, Chinh Gian, Tan Chinh, Thac Gian, Vinh Trung,
--- Thanh Khe Dong, Hoa Khe, Thanh Khe Tay) va Phuong An Khe (An Khe, Hoa An, Hoa Phat).
+--
+-- Hai dot sap xep don vi hanh chinh, can doc dung thu tu:
+--   NQ 1251/NQ-UBTVQH15 (hieu luc 01/01/2025) — cap xa trong quan Thanh Khe:
+--     Tan Chinh nhap vao Chinh Gian, Tam Thuan nhap vao Xuan Ha,
+--     Vinh Trung nhap vao Thac Gian, Hoa Khe nhap vao Thanh Khe Dong.
+--   NQ 1659/NQ-UBTVQH15 (hieu luc 01/07/2025) — mo hinh 2 cap:
+--     Xuan Ha, Chinh Gian, Thac Gian, Thanh Khe Tay va Thanh Khe Dong
+--     hop thanh Phuong Thanh Khe hien tai.
+--     An Khe, Hoa An, Hoa Phat hop thanh Phuong An Khe hien tai.
+-- Vi vay to dan pho cu (Tan Chinh, Tam Thuan, Vinh Trung, Hoa Khe) van xuat hien
+-- trong ket qua tra cuu, nhung deu da nam trong Phuong Thanh Khe.
+--
 -- Moi dong duoi day tra dung so nha / so kiet / giao lo / hai dau doan ma nguon neu:
 --   Phuong Thanh Khe (32 dong):
 --     II-01 Nguyen Van Linh (to 28 Thac Gian)   II-02 Le Duan (to 14 Tan Chinh)
---     II-03 Huynh Ngoc Hue (to 63 Hoa Khe)      II-06 Tran Cao Van 213 (to 10 Tan Chinh)
+--     II-03 Huynh Ngoc Hue (to 63 Hoa Khe)      II-06 Tran Cao Van (to 65 Thanh Khe Tay)
 --     II-07 Kiet 814 Tran Cao Van (to 50 Thanh Khe Dong)
---     II-08 Ha Huy Tap (to 56 Hoa Khe)          II-09 Tran Xuan Le (to 58 Hoa Khe)
---     II-10 Ky Dong (to 39 Xuan Ha)             II-11 Dien Bien Phu (to 64 Hoa Khe)
---     II-12 Tran Cao Van (to 36 Xuan Ha)        II-13 Thai Thi Boi (to 45 Chinh Gian)
---     II-14 Le Duan 390 (to 14 Tan Chinh)       II-15 Dien Bien Phu (to 64 Hoa Khe)
---     II-16 Mai Xuan Thuong (to 54 Hoa Khe)     II-17 Cu Chinh Lan (to 64 Hoa Khe)
---     II-18 Tran Cao Van 147 (to 08 Tam Thuan)  II-19 Tran Cao Van (to 34)
---     II-20 Tran Cao Van (to 36 Xuan Ha)        II-21 Tran Cao Van (to 34)
---     II-22 Tran Cao Van (to 53 Thanh Khe Dong) II-23 Ton That Dam (to 32 Xuan Ha)
---     II-24 Le Duan 390 (to 14 Tan Chinh)       II-25 Thai Thi Boi (to 45 Chinh Gian)
---     II-26 Phan Thanh (to 26/28 Thac Gian)     II-27 Pham Van Nghi (to 29 Thac Gian)
---     II-28 Bau Hac 1 (to 17 Vinh Trung)        II-29 Do Quang (to 21 Vinh Trung)
---     II-30 Tran Tong (to 29 Thac Gian)         II-31 Cau vuot Nga ba Hue (to 65 Thanh Khe Tay)
+--     II-08 Ha Huy Tap 88 (to 53 Thanh Khe Dong)
+--     II-09 Tran Xuan Le (to 58 Hoa Khe)        II-10 Ky Dong (to 39 Xuan Ha)
+--     II-11 Kiet 96 Dien Bien Phu (to 44 Chinh Gian)
+--     II-12 Kiet 246 Tran Cao Van (to 32 Xuan Ha)
+--     II-13 Thai Thi Boi (to 45 Chinh Gian)     II-14 Kiet 402 Le Duan (to 14 Tan Chinh)
+--     II-15 Kiet 384 Dien Bien Phu (to 53 Thanh Khe Dong)
+--     II-16 Mai Xuan Thuong (to 54 Hoa Khe)     II-17 Kiet 5 Cu Chinh Lan (to 55 Hoa Khe)
+--     II-18 Kiet 112 Tran Cao Van (to 04 Tam Thuan)
+--     II-19 Kiet 196 Tran Cao Van (to 05 Tam Thuan)
+--     II-20 Tran Cao Van (to 36 Xuan Ha)        II-21 Tran Cao Van (to 34 Xuan Ha)
+--     II-22 Kiet 272 Tran Cao Van (to 07 Tam Thuan)
+--     II-23 Ton That Dam (to 32 Xuan Ha)        II-24 390 Le Duan (to 14 Tan Chinh)
+--     II-25 Thai Thi Boi (to 45 Chinh Gian)     II-26 Phan Thanh (to 26 Thac Gian)
+--     II-27 Pham Van Nghi (to 29 Thac Gian)     II-28 Bau Hac 1 (to 17 Vinh Trung)
+--     II-29 Do Quang (to 21 Vinh Trung)         II-30 Tran Tong (to 29 Thac Gian)
+--     II-31 Cau vuot Nga ba Hue (to 65 Thanh Khe Tay)
 --     II-32 Bau Trang 6 (to 65 Thanh Khe Tay)   II-33 Me Nhu (to 66/67 Thanh Khe Tay)
 --     II-41 Ham chui Dien Bien Phu (to 28 Thac Gian / 42 Chinh Gian)
 --   Phuong An Khe (8 dong):
 --     II-04 Nguyen Dinh Tuu (to Dong Xuan 3)    II-05 Truong Chinh (to Phuoc Truong 7)
---     II-34 Nguyen Phuoc Nguyen (to Dong Xuan 3)
---     II-35 Nguyen Phuoc Nguyen (to Dong Xuan 2/3)
+--     II-34 Kiet 317 Nguyen Phuoc Nguyen (to Thuan An 2)
+--     II-35 Kiet 325 Nguyen Phuoc Nguyen (to Thuan An 2)
 --     II-36 Nguyen Phuoc Nguyen (to Dong Xuan 2/3)
 --     II-37 Tan Hoa 1 (to Tan Hoa 1 / Tan An 2)
---     II-38 Pham Ngoc Mau (to Tan An 1/2)       II-39 Can Giuoc (to Phan Lang 1/2)
+--     II-38 Pham Ngoc Mau (to Tan An 1/2)
+--     II-39 Can Giuoc + Nguyen Gian Thanh + Phan Lang 1 (to Phan Lang 1/2)
 --   Con cho (1 dong):
 --     II-40 Khu vuc Khe Can — nguon chi neu ten kenh, khong co so nha / kiet /
 --           giao lo. Kenh chay qua nhieu phuong nen khong du can cu gan mot phuong.
 --           Giu current_unit NULL, area_basis 'NO_AREA_IN_SOURCE'.
--- Tran Cao Van chay qua ca Phuong Thanh Khe va Phuong Hai Chau; cac so nha
--- 112-272 deu nam trong doan Phuong Thanh Khe (da quet doc truc duong).
+--
+-- Duong chay qua nhieu phuong da duoc kiem o cap vi tri, khong dung ten duong chung:
+--   Tran Cao Van  chay qua Phuong Thanh Khe va Phuong Hai Chau. Cac so nha
+--                 112-272 va kiet 814 deu nam trong doan Phuong Thanh Khe
+--                 (quet doc truc duong, reverse-check tung diem).
+--   Cu Chinh Lan  chay qua Phuong Thanh Khe (to 62, 64 Hoa Khe) va Phuong An Khe
+--                 (to Dong Xuan 4, An Xuan). Kiet 5 nam o to 55 Hoa Khe
+--                 -> Phuong Thanh Khe.
+--   Le Duan       kiet 402 nam o to 14 Tan Chinh -> Phuong Thanh Khe.
+--   Phan Lang 9   thuoc Phuong Thanh Khe, nhung nguon chi neu Phan Lang 1
+--                 (to Phan Lang 1, Phuong An Khe) nen khong anh huong ket luan.
 
 
 INSERT INTO flood_records (
