@@ -11,6 +11,20 @@
 -- backend/scripts/danang_admin_mapping_v1.json (NQ 1659/NQ-UBTVQH15).
 -- Dong chua doi chieu duoc dia ban co current_unit NULL va area_basis
 -- 'NO_AREA_IN_SOURCE': van nam trong danh muc, hien thi "Chua doi chieu dia ban".
+--
+-- area_basis = 'OSM_ADDRESS': dia ban xac dinh bang dia chi duong/to dan pho tren
+-- OpenStreetMap Nominatim (addressdetails), doi chieu cheo voi trang gioi thieu
+-- phuong An Hai (https://anhai.danang.gov.vn/gioi-thieu/gioi-thieu-chung).
+-- Nam dong duoc doi chieu o nhom IV (Son Tra cu):
+--   PL8-IV-01  Bung binh Pham Van Dong - Ngo Quyen  -> Phuong An Hai
+--              Moi diem doc Pham Van Dong va quanh giao lo voi Ngo Quyen deu
+--              thuoc to dan pho cua An Hai (An My 2, An Trung 1, An Don 2).
+--   PL8-IV-04  Tran Hung Dao giao Tran Quang Dieu / Ha Thi Than / Trieu Viet Vuong
+--              -> Phuong An Hai. Ca ba duong giao deu thuoc An Hai.
+--   PL8-IV-07  Le Tan Trung (Phan Ba Phien -> Ho Ngoc Lam) -> Phuong Son Tra
+--   PL8-IV-08  Ngo Quyen - An Trung Dong 6 -> Phuong An Hai
+--   PL8-IV-09  Le Tan Trung (Dinh Cong Tru -> Nguyen Thi Hong) -> Phuong Son Tra
+-- Nguon nguy co ngap van la Phu luc VIII; OSM chi dung de xac dinh phuong.
 
 
 INSERT INTO flood_records (
@@ -1744,7 +1758,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Sơn Trà',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Sơn Trà', NULL, 'NO_AREA_IN_SOURCE',
+  'Sơn Trà', 'Phường An Hải', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1807,7 +1821,7 @@ INSERT INTO flood_records (
   'Trần Hưng Đạo', NULL, 'Sơn Trà',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Sơn Trà', NULL, 'NO_AREA_IN_SOURCE',
+  'Sơn Trà', 'Phường An Hải', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1870,7 +1884,7 @@ INSERT INTO flood_records (
   'Lê Tấn Trung', NULL, 'Sơn Trà',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Sơn Trà', NULL, 'NO_AREA_IN_SOURCE',
+  'Sơn Trà', 'Phường Sơn Trà', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1891,7 +1905,7 @@ INSERT INTO flood_records (
   'Ngô Quyền', NULL, 'Sơn Trà',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Sơn Trà', NULL, 'NO_AREA_IN_SOURCE',
+  'Sơn Trà', 'Phường An Hải', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -1912,7 +1926,7 @@ INSERT INTO flood_records (
   'Lê Tấn Trung', NULL, 'Sơn Trà',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Sơn Trà', NULL, 'NO_AREA_IN_SOURCE',
+  'Sơn Trà', 'Phường Sơn Trà', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 34
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
