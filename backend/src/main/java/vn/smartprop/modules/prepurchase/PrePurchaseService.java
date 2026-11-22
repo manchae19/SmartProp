@@ -19,8 +19,12 @@ import vn.smartprop.modules.property.PropertyDtos;
 @Service
 public class PrePurchaseService {
     private final PrePurchaseRepository repository;
+    private final AdminAreaMapping areas;
 
-    public PrePurchaseService(PrePurchaseRepository repository) { this.repository = repository; }
+    public PrePurchaseService(PrePurchaseRepository repository, AdminAreaMapping areas) {
+        this.repository = repository;
+        this.areas = areas;
+    }
 
     /**
      * How closely a record matches the listing being viewed.
@@ -38,7 +42,8 @@ public class PrePurchaseService {
     public record FloodView(String id, String recordType, String locationText, String street,
                             String ward, String district, String sourceScope, String match,
                             String depthNote, LocalDate eventDate, LocalDate publicationDate,
-                            String sourceUrl, String sourceTitle, LocalDate checkedAt) {}
+                            String sourceUrl, String sourceTitle, LocalDate checkedAt,
+                            String currentUnit, String areaBasis) {}
 
     public record Checks(String propertyId, List<PlanningView> planning, List<FloodView> flood) {}
 
@@ -49,6 +54,8 @@ public class PrePurchaseService {
         String project = projectOf(listing);
         String lot = lotOf(listing);
         String street = streetOf(listing.address());
+        // Listings still carry the pre-2025 ward name; flood records carry the current one.
+        String currentUnit = areas.currentUnit(listing.ward());
 
         List<PlanningView> planning = new ArrayList<>();
         for (var row : repository.planning(project, lot, listing.ward(), listing.district())) {
@@ -61,13 +68,13 @@ public class PrePurchaseService {
         }
 
         List<FloodView> flood = new ArrayList<>();
-        for (var row : repository.flood(street, listing.ward(), listing.district())) {
-            Match match = floodMatch(row, street, listing);
+        for (var row : repository.flood(street, currentUnit)) {
+            Match match = floodMatch(row, street, currentUnit);
             if (match == null) continue;
             flood.add(new FloodView(row.id(), row.recordType(), row.locationText(), row.street(),
                 row.ward(), row.district(), row.scope(), match.name(), row.depthNote(),
                 row.eventDate(), row.publicationDate(), row.sourceUrl(), row.sourceTitle(),
-                row.checkedAt()));
+                row.checkedAt(), row.currentUnit(), row.areaBasis()));
         }
         return new Checks(listing.id(), List.copyOf(planning), List.copyOf(flood));
     }
@@ -95,19 +102,17 @@ public class PrePurchaseService {
     }
 
     /**
-     * A street name is only evidence inside the district it was recorded in: the same name
-     * exists elsewhere. Without a street, only the ward matches.
+     * A street name is only evidence inside the current ward/commune it was recorded in:
+     * Nguyễn Lương Bằng runs through Hải Vân, Liên Chiểu and Hòa Khánh, and the catalogue
+     * puts a different flood point in each. A record whose source names no ward is never
+     * attached, because the listing cannot be verified against it.
      */
-    static Match floodMatch(PrePurchaseRepository.Flood row, String street,
-                            PropertyDtos.View listing) {
-        if (row.street() != null && !row.street().isBlank()) {
-            if (street == null || !sameText(street, row.street())) return null;
-            if (!sameText(listing.district(), row.district())) return null;
-            return Match.STREET;
-        }
-        if (sameText(listing.ward(), row.ward()) && sameText(listing.district(), row.district()))
-            return Match.REGION;
-        return null;
+    static Match floodMatch(PrePurchaseRepository.Flood row, String street, String currentUnit) {
+        if (currentUnit == null || row.currentUnit() == null) return null;
+        if (row.street() == null || row.street().isBlank()) return null;
+        if (street == null || !sameText(street, row.street())) return null;
+        if (!sameText(currentUnit, row.currentUnit())) return null;
+        return Match.STREET;
     }
 
     /** The project named in the listing title, when the title names one. */

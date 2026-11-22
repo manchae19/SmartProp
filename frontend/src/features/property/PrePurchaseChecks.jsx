@@ -56,7 +56,16 @@ const FLOOD_TYPE_LABEL = {
   RECORDED_POINT: "Điểm ngập ghi nhận",
   RISK_AREA: "Vùng nguy cơ ngập",
   WEATHER_WARNING: "Cảnh báo theo thời điểm",
+  PLANNED_RISK: "Vị trí có nguy cơ ngập khi mưa lớn",
   OTHER: "Ghi nhận ngập lụt",
+};
+
+// Nhãn theo loại bằng chứng, không theo mức khớp: mỗi loại nguồn nói một điều khác nhau.
+const FLOOD_MATCH_LABEL = {
+  PLANNED_RISK: "Có vị trí nguy cơ ngập trên cùng tuyến đường",
+  RECORDED_POINT: "Có ghi nhận ngập trên cùng tuyến đường",
+  WEATHER_WARNING: "Cảnh báo ngập theo thời điểm",
+  RISK_AREA: "Có vùng nguy cơ ngập trên cùng tuyến đường",
 };
 
 const STATUS = {
@@ -260,12 +269,14 @@ export default function PrePurchaseChecks({ property }) {
           flood.map((item) => (
             <div key={item.id} className="border-b border-brand-line/40 py-2 last:border-b-0">
               <Row
-                label={MATCH_LABEL[item.match] || "Ghi nhận ngập lụt"}
+                label={FLOOD_MATCH_LABEL[item.recordType] || "Ghi nhận ngập lụt"}
                 value={item.locationText}
                 kind="verified"
                 source={`${FLOOD_TYPE_LABEL[item.recordType] || "Ghi nhận ngập lụt"} · Nguồn: ${
                   SOURCE_SCOPE_LABEL[item.sourceScope] || item.sourceScope
-                }${item.depthNote ? ` · ${item.depthNote}` : ""}`}
+                }${item.currentUnit ? ` · ${item.currentUnit}` : ""}${
+                  item.depthNote ? ` · ${item.depthNote}` : ""
+                }`}
               />
               <Row
                 label="Thời gian"

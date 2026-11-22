@@ -43,7 +43,8 @@ INSERT INTO planning_publications (
 -- ---------------------------------------------------------------------------
 INSERT INTO flood_records (
   id, record_type, location_text, street, ward, district, scope, depth_note,
-  event_date, publication_date, source_url, source_title, checked_at
+  event_date, publication_date, source_url, source_title, checked_at,
+  current_unit, area_basis
 ) VALUES (
   'b1000000-0000-4000-8000-000000000001',
   'RECORDED_POINT',
@@ -57,12 +58,14 @@ INSERT INTO flood_records (
   '2025-10-22',
   'https://huongtra.danang.gov.vn/chi-tiet-tin/group/144/nid/4388/theo-doi-toan-canh-diem-ngap-tai-da-nang-tranh-dua-xe-vao-vung-nuoc-dang-len',
   'Theo dõi toàn cảnh điểm ngập tại Đà Nẵng, tránh đưa xe vào vùng nước đang lên',
-  '2026-11-21'
+  '2026-11-21',
+  'Phường Hòa Cường', 'HISTORICAL_WARD_MAPPED'
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text), street=VALUES(street),
   ward=VALUES(ward), district=VALUES(district), scope=VALUES(scope), depth_note=VALUES(depth_note),
   event_date=VALUES(event_date), publication_date=VALUES(publication_date),
-  source_url=VALUES(source_url), source_title=VALUES(source_title), checked_at=VALUES(checked_at);
+  source_url=VALUES(source_url), source_title=VALUES(source_title), checked_at=VALUES(checked_at),
+  current_unit=VALUES(current_unit), area_basis=VALUES(area_basis);
 
 -- ---------------------------------------------------------------------------
 -- Ngập lụt: bản tin cảnh báo ngập lụt của Đài Khí tượng Thuỷ văn Trung Bộ,
@@ -71,7 +74,8 @@ INSERT INTO flood_records (
 -- ---------------------------------------------------------------------------
 INSERT INTO flood_records (
   id, record_type, location_text, street, ward, district, scope, depth_note,
-  event_date, publication_date, source_url, source_title, checked_at
+  event_date, publication_date, source_url, source_title, checked_at,
+  current_unit, area_basis
 ) VALUES (
   'b1000000-0000-4000-8000-000000000002',
   'WEATHER_WARNING',
@@ -85,12 +89,14 @@ INSERT INTO flood_records (
   '2025-10-28',
   'https://pctt.danang.gov.vn/Portals/0/DNAN_LULU_20251029_1040.pdf',
   'Tin cảnh báo ngập lụt trên khu vực thành phố Đà Nẵng — số NGLU-19/10h40/DNAN ngày 28/10/2025',
-  '2026-11-21'
+  '2026-11-21',
+  NULL, NULL
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text), street=VALUES(street),
   ward=VALUES(ward), district=VALUES(district), scope=VALUES(scope), depth_note=VALUES(depth_note),
   event_date=VALUES(event_date), publication_date=VALUES(publication_date),
-  source_url=VALUES(source_url), source_title=VALUES(source_title), checked_at=VALUES(checked_at);
+  source_url=VALUES(source_url), source_title=VALUES(source_title), checked_at=VALUES(checked_at),
+  current_unit=VALUES(current_unit), area_basis=VALUES(area_basis);
 
 SELECT id, event_type, project_name, lot_code, scope FROM planning_publications;
 SELECT id, record_type, scope, street, ward FROM flood_records;
