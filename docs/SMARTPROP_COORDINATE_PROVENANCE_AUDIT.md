@@ -11,13 +11,14 @@
 
 **1. 152 tin bất động sản này thực chất từ đâu ra?**
 
-Có **bằng chứng trực tiếp** của một chiến dịch nạp hàng loạt bằng script: 81/168 ảnh
-mang tên `batch_N_M.jpg` chia thành **6 lô** (`batch_1`, `batch_2`, `batch_3`,
-`batch_5`, `batch_7`, `batch_8`), 173/173 ảnh lưu `storage_provider='LOCAL'` với
-**0 ảnh qua Cloudinary**, và 173/173 ảnh có `uploaded_by` trùng `owner_id`.
+Có **dấu hiệu mạnh** của một chiến dịch nạp hàng loạt: **151/152 tin** có ảnh theo quy
+ước máy sinh (`batch_N_M.jpg` hoặc `<Tên_Đường>_N.jpg`), 173/173 ảnh lưu
+`storage_provider='LOCAL'` với **0 ảnh qua Cloudinary**, 168/168 ảnh có `uploaded_by`
+trùng `owner_id`, và 135 tin tạo trong **10 phút** cùng ngày.
 
-Nhưng **không tìm thấy script nạp** trong repository hay git history. Vì vậy:
-**cơ chế nạp hàng loạt là CONFIRMED, công cụ cụ thể là UNKNOWN.**
+Nhưng **không tìm thấy script nạp** trong repository hay git history, không có
+`import_batch_id`, không có audit log. Vì vậy: **`STRONGLY_INFERRED`, không phải
+`DIRECTLY_CONFIRMED`.**
 
 **2. Vì sao database có 153 tin nhưng mẫu chỉ có 152?**
 
@@ -28,12 +29,12 @@ Vì **1 tin `DRAFT`** (`SP257`, "AutoScan local duplicate"). Bộ lọc mẫu d�
 
 | Nhóm | Confirmed | Inferred | Unknown |
 |---|---:|---:|---:|
-| Người dùng đăng thật | 0 | 0 | 0 |
-| Nạp hàng loạt | **151** | — | — |
-| Crawler / Tinix | 0 | 0 | 0 |
+| Người dùng đăng thật | 0 | 0 | **0** |
+| Nạp hàng loạt | **0** | **151** | 0 |
+| Crawler / Tinix | 0 | 0 | **0** |
 | Demo / seed / test | **1** | — | — |
 | Chưa xác định | — | — | 0 |
-| **Tổng** | **152** | | |
+| **Tổng** | **0** | **151** | **1** |
 
 **4. Bao nhiêu tọa độ được xác minh cấp bất động sản?**
 
@@ -87,24 +88,67 @@ WHERE status='PUBLISHED' AND deleted_at IS NULL
   AND id NOT LIKE 'f0000000-%'
 ```
 
-### A.2. Bằng chứng trực tiếp — tên file ảnh
+### A.2. Bằng chứng về quy ước đặt tên ảnh
 
-Đây là bằng chứng **mạnh nhất** tìm được:
+**Kiểm tra quan hệ ảnh ↔ property ID** (không dùng số ảnh thay cho số tin):
 
-| Dấu hiệu | Giá trị |
-|---|---|
-| Tổng ảnh | 168 |
-| Tên `batch_N_M.jpg` | **81 ảnh** |
-| Tên `<Tên_Đường>_N.jpg` | 87 ảnh |
-| Số lô | **6** (`batch_1`, `batch_2`, `batch_3`, `batch_5`, `batch_7`, `batch_8`) |
+| Chỉ số | Giá trị |
+|---|---:|
+| Tổng ảnh trong bảng | 173 |
+| Ảnh liên kết với 152 tin PUBLISHED | **168** |
+| Ảnh tên `batch_N_M.jpg` (toàn bảng) | **81** |
+| **Property ID duy nhất có ảnh batch** | **73** |
+| Tin **không** có ảnh batch | **79** |
+| Ảnh batch có `uploaded_by` = owner | **81/81** |
+| Ảnh không liên kết tin PUBLISHED | 5 |
 | `storage_provider` | `LOCAL` cho **173/173** |
 | Ảnh qua Cloudinary | **0** |
-| `uploaded_by` = `owner_id` | **173/173** |
-| Ảnh dùng lại (sha256 trùng) | 5 nhóm, tối đa 3 ảnh/nhóm |
+| `uploaded_by` = `owner_id` (168 ảnh của mẫu) | **168/168** |
+| Ảnh dùng lại (sha256 trùng) | 38 ảnh có sha, 24 sha khác nhau |
 
-**`batch_N_M.jpg` là tên file do script sinh**, không phải tên ảnh gốc từ máy ảnh.
-Kết hợp với `storage_provider='LOCAL'` và 0 ảnh Cloudinary, đây là **bằng chứng trực
-tiếp** của nạp hàng loạt — không phải suy luận từ thời gian tạo.
+**Phân bố ảnh batch theo ngày tạo tin:**
+
+| Ngày | Tin có ảnh batch | Ảnh batch |
+|---|---:|---:|
+| 2026-11-02 | 6 | 14 |
+| 2026-11-07 | 67 | 67 |
+
+**Số lô:** 6 (`batch_1`, `batch_2`, `batch_3`, `batch_5`, `batch_7`, `batch_8`).
+
+#### Nhóm 79 tin KHÔNG có ảnh batch — vẫn có bằng chứng
+
+Đây là điểm quan trọng: **79 tin không có ảnh batch nhưng vẫn có ảnh theo quy ước
+sinh tự động khác** — `<Tên_Đường>_N.jpg`:
+
+```
+SP001 | Ngô_Thế_Liễu_0.jpg
+SP002 | Phan_Xích_Long_0.jpg, Phan_Xích_Long_1.jpg, Phan_Xích_Long_2.jpg
+SP004 | Hòa_Minh_19_0.jpg, Hòa_Minh_19_1.jpg, Hòa_Minh_19_2.jpg
+```
+
+| Chỉ số | Giá trị |
+|---|---:|
+| Tin có ảnh `batch_N_M.jpg` **hoặc** `<Tên>_N.jpg` | **151/152** |
+| Tin không có ảnh theo quy ước nào | **1** (`SP256`, ảnh `baseline.png`) |
+| 79 tin không batch: có ảnh | **79/79** |
+| 79 tin không batch: `created_at` = `published_at` cùng giây | **72/79** |
+| 73 tin có batch: `created_at` = `published_at` cùng giây | **73/73** |
+| 79 tin không batch: khung giờ tạo ngày 11-07 | 03:37:52 → 03:47:37 |
+| 73 tin có batch: khung giờ tạo ngày 11-07 | 03:37:52 → 03:47:37 |
+
+**Hai nhóm dùng chung khung giờ 10 phút, cùng owner, cùng quy ước đặt tên ảnh.**
+Điều này cho thấy cả 151 tin được xử lý bởi cùng một quy trình, không chỉ 73 tin có
+ảnh batch.
+
+#### Giới hạn của bằng chứng này
+
+**Tên ảnh là bằng chứng về quy ước đặt tên hoặc xử lý ảnh, không tự động chứng minh
+cơ chế tạo bản ghi `properties`.**
+
+Không kết luận ảnh được script sinh nếu chưa có bằng chứng về script đó. Có thể mô tả
+chính xác hơn: *tên ảnh phù hợp quy ước batch do máy sinh*.
+
+Không tìm thấy script nạp trong repo hay git history (xem A.4).
 
 ### A.3. Bằng chứng gián tiếp (INFERRED)
 
@@ -140,16 +184,54 @@ là UNKNOWN.**
 
 | Nhóm nguồn | Confirmed | Inferred | Unknown | Bằng chứng |
 |---|---:|---:|---:|---|
-| `MANUAL_USER_LISTING` | 0 | 0 | 0 | Không có tin nào có dấu hiệu đăng riêng lẻ |
-| `IMPORTED_LISTING` | **151** | — | — | 81 ảnh `batch_N_M.jpg` (6 lô), 173/173 `storage_provider=LOCAL`, 0 Cloudinary, `uploaded_by`=owner |
-| `CRAWLER_DATA` | 0 | 0 | 0 | `external_listings` (3204) không có FK tới `properties`; `tinix_dataset_records` (185 973) tách biệt |
-| `SEED_OR_DEMO` | **1** | — | — | `SP256` "AutoScan local baseline", owner `ADMIN` |
+| `MANUAL_USER_LISTING` | 0 | 0 | **0** | Không tìm thấy dấu hiệu đăng riêng lẻ — **không** khẳng định chắc chắn không có |
+| `IMPORTED_LISTING` | **0** | **151** | 0 | Xem giải thích dưới |
+| `CRAWLER_DATA` | 0 | 0 | **0** | `external_listings` (3204) không có FK tới `properties`; `tinix_dataset_records` (185 973) tách biệt — **không** khẳng định dữ liệu chưa từng xuất phát từ crawler |
+| `SEED_OR_DEMO` | **1** | — | — | `SP256` "AutoScan local baseline", owner `ADMIN`, ảnh `baseline.png` |
 | `UNKNOWN_ORIGIN` | — | — | 0 | — |
-| **Tổng** | **152** | | | |
+| **Tổng** | **0** | **151** | **1** | **152** |
 
-**Lưu ý về `IMPORTED_LISTING`:** nhãn này khẳng định **cơ chế nạp hàng loạt**, **không**
-khẳng định nội dung là dữ liệu thật hay giả. Báo cáo này **không** kết luận 135 tin là
-"dữ liệu bất động sản thật" — chỉ khẳng định chúng được nạp bằng script.
+#### Vì sao `IMPORTED_LISTING` là `STRONGLY_INFERRED`, không phải `DIRECTLY_CONFIRMED`
+
+**Định nghĩa ba mức:**
+
+| Mức | Nghĩa |
+|---|---|
+| `DIRECTLY_CONFIRMED` | Có chứng cứ trực tiếp về cơ chế tạo/import: script, import log, batch metadata có quan hệ rõ ràng đến bản ghi |
+| `STRONGLY_INFERRED` | Có dấu hiệu mạnh: thời gian tạo hàng loạt, owner chung, tên ảnh batch, mã tin tuần tự — nhưng **chưa có log trực tiếp** của việc tạo tin |
+| `UNKNOWN_ORIGIN` | Không đủ căn cứ kết luận |
+
+**Bằng chứng hiện có cho 151 tin:**
+
+| Bằng chứng | Loại | Có chứng minh cơ chế tạo `properties`? |
+|---|---|---|
+| 151/152 tin có ảnh theo quy ước máy sinh (`batch_N_M.jpg` hoặc `<Tên>_N.jpg`) | Gián tiếp | **Không** — chứng minh quy ước đặt tên ảnh |
+| 168/168 ảnh `uploaded_by` = `owner_id` | Gián tiếp | **Không** — chứng minh cùng tài khoản |
+| 173/173 ảnh `storage_provider='LOCAL'`, 0 Cloudinary | Gián tiếp | **Không** — chứng minh không qua UI upload |
+| 135 tin tạo trong 10 phút ngày 11-07 | Gián tiếp | **Không** — chứng minh tạo nhanh |
+| `created_at` = `published_at` cùng giây (135/135) | Gián tiếp | **Không** — chứng minh không qua duyệt thủ công |
+| 151/152 tin một owner | Gián tiếp | **Không** — chứng minh cùng tài khoản |
+| `listing_code` tuần tự `SP001`..`SP256` | Gián tiếp | **Không** — chứng minh cấp mã tự động |
+
+**Không có bằng chứng trực tiếp nào:** không script, không `import_batch_id`, không
+audit log, không FK từ bảng nguồn.
+
+**Vì vậy: `STRONGLY_INFERRED`, không phải `DIRECTLY_CONFIRMED`.**
+
+#### Điều báo cáo này KHÔNG khẳng định
+
+| Không khẳng định | Lý do |
+|---|---|
+| "151 tin được import bằng script X" | Không tìm thấy script |
+| "0 tin người dùng thật đăng" | Chỉ là **chưa tìm thấy bằng chứng** người dùng tự đăng |
+| "0 tin từ crawler" | Không có provenance để kiểm chứng nguồn gốc dữ liệu ban đầu |
+| "135 tin là dữ liệu bất động sản thật" | Giá/diện tích/ảnh khác nhau không chứng minh tính xác thực ngoài đời |
+| "135 tin là dữ liệu giả" | Không có bằng chứng |
+
+**Tách biệt hai kết luận:**
+
+1. **Cơ chế nạp:** 151 tin có dấu hiệu mạnh của nạp hàng loạt (`STRONGLY_INFERRED`).
+2. **Tính xác thực nội dung:** `UNKNOWN` — không đủ bằng chứng để kết luận thật hay giả.
 
 ---
 
@@ -410,77 +492,106 @@ và API clients. Kế hoạch cho PR triển khai sau:
 
 ## E. Phân loại khả năng dùng cho GIS V2
 
-### E.1. Tiêu chí — tái hiện được
+### E.1. Ba khả năng tách biệt
 
-Không mặc định `VERIFIED_EXACT = APPROXIMATE_MAP_ONLY`. Mỗi tin được đánh giá theo
-**5 câu hỏi độc lập**:
+Báo cáo trước gộp "hiển thị marker" và "đo khoảng cách" vào một nhóm
+`ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY`, rồi cho phép đo khoảng cách chỉ dựa trên
+`VERIFIED_EXACT` + số chữ số thập phân. **Đó là mâu thuẫn**: số chữ số thập phân
+không phải độ chính xác thực tế.
 
-| # | Câu hỏi | Nguồn |
-|---|---|---|
-| Q1 | Tọa độ hợp lệ kỹ thuật? | `ST_IsValid`, SRID, không (0,0), không đảo trục |
-| Q2 | Phù hợp địa bàn khai báo? | `CoordinateStatus` từ Java validator |
-| Q3 | Nguồn tọa độ rõ ràng? | Có metadata provenance? |
-| Q4 | Có xác minh độc lập? | Có audit log / thực địa? |
-| Q5 | Đủ căn cứ đo khoảng cách? | Q1 ∧ Q2 ∧ (Q3 ∨ Q4) |
+Tách thành ba khả năng độc lập:
 
-### E.2. Quy tắc phân loại
+#### A. `REFERENCE_MAP_ELIGIBLE` — hiển thị marker tham khảo
 
-```text
-ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK
-  Q1 ∧ Q2 ∧ Q3 ∧ Q4 ∧ accuracy_level IN (PARCEL, BUILDING)
-  -> 0 tin (không tin nào có Q3 hoặc Q4)
+Điều kiện tối thiểu:
 
-ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY
-  Q1 ∧ Q2 = VERIFIED_EXACT ∧ độ phân giải ≥ 4 chữ số
-  -> hiển thị marker + đo khoảng cách CÓ CẢNH BÁO sai số
+- Geometry hợp lệ (`ST_IsValid`, SRID 4326, không `(0,0)`, không đảo trục)
+- Tọa độ phù hợp phạm vi địa lý được kiểm tra (`VERIFIED_EXACT` hoặc
+  `VERIFIED_BOUNDARY_BUFFER`)
+- Không có bằng chứng rõ ràng về lỗi vị trí
 
-ADMINISTRATIVE_ONLY
-  Q1 ∧ (Q2 ∈ {VERIFIED_BOUNDARY_BUFFER, VERIFIED_DANANG_POLYGON})
-  -> chỉ nói "thuộc khu vực X", KHÔNG đo khoảng cách
+**Hiển thị nhãn "vị trí tham khảo, chưa xác minh".** Không gọi marker này là vị trí
+chính xác của căn nhà.
 
-NEEDS_REVIEW
-  Q1 ∧ Q2 = INVALID_DISTRICT_MISMATCH
-  -> tọa độ không khớp địa bàn khai báo, KHÔNG tự coi là đáng tin
+#### B. `DISTANCE_ANALYSIS_ELIGIBLE` — đủ căn cứ đo khoảng cách
 
-UNSUITABLE_OR_UNKNOWN
-  ¬Q1 hoặc Q2 = OUTSIDE_DANANG_BOUNDS
-```
+Cần **tất cả**:
 
-### E.3. Kết quả đo lại
+- Tọa độ hợp lệ
+- **Nguồn gốc xác định được** (`coordinate_source` khác `UNKNOWN`)
+- **Có căn cứ về độ chính xác hoặc sai số** (`accuracy_meters` có giá trị)
+- Phương pháp đo phù hợp với loại geometry
+- Kết quả kèm độ không chắc chắn
 
-| Nhóm | Số tin | Ghi chú |
+**Không cho phép chỉ dựa vào `VERIFIED_EXACT`.** Không cho phép suy `accuracy_meters`
+từ số chữ số thập phân.
+
+#### C. `PARCEL_ANALYSIS_ELIGIBLE` — đủ điều kiện phân tích cấp bất động sản
+
+Cần **tất cả**:
+
+- Provenance rõ
+- Xác minh độc lập (thực địa hoặc đối chiếu địa chính)
+- Độ chính xác đủ cho quyết định cấp bất động sản
+- Geometry nguồn GIS được xác minh
+- Kiểm tra mức sai số tương ứng
+
+Nếu không có bằng chứng → `FALSE` hoặc `UNKNOWN`.
+
+### E.2. Kết quả đo — bảng chỉ số (có thể giao nhau)
+
+Các chỉ số dưới đây **không loại trừ nhau**. Không cộng chúng.
+
+| Chỉ số | Số tin | Tiêu chí |
 |---|---:|---|
-| `ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK` | **0** | Không tin nào có provenance + xác minh |
-| `ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY` | **52** | `VERIFIED_EXACT` + độ phân giải ≥4 chữ số |
-| `ADMINISTRATIVE_ONLY` | **11** | `VERIFIED_BOUNDARY_BUFFER` |
+| Geometry hợp lệ | **152** | `ST_IsValid`, SRID 4326, không `(0,0)`, không đảo trục |
+| `REFERENCE_MAP_ELIGIBLE` | **152** | Hợp lệ + `VERIFIED_EXACT` hoặc `VERIFIED_BOUNDARY_BUFFER` |
+| Cần review địa giới | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
+| Có provenance trực tiếp | **0** | Không có `coordinate_source` nào được ghi |
+| Có sai số tọa độ được chứng minh | **0** | Không có `accuracy_meters` |
+| `DISTANCE_ANALYSIS_ELIGIBLE` | **0** | Cần provenance + accuracy — không tin nào có |
+| `PARCEL_ANALYSIS_ELIGIBLE` | **0** | Cần xác minh độc lập — không tin nào có |
+| `LOCATION_ACCURACY_UNVERIFIED` | **152** | Tất cả — chưa có bằng chứng độ chính xác |
+
+### E.3. Bảng phân nhóm loại trừ nhau — tổng = 152
+
+| Nhóm | Số tin | Tiêu chí |
+|---|---:|---|
+| `REFERENCE_MAP_ONLY` | **150** | Hợp lệ + `VERIFIED_EXACT`/`VERIFIED_BOUNDARY_BUFFER`, không có provenance |
 | `NEEDS_REVIEW` | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
-| `UNSUITABLE_OR_UNKNOWN` | **88** | `VERIFIED_EXACT` nhưng độ phân giải ≤3 chữ số |
+| `DEMO_OR_TEST` | **1** | `SP256` — tin test, ảnh `baseline.png` |
 | **Tổng** | **152** | |
 
-**Thay đổi so với báo cáo trước (137/13/2):**
+**Không còn nhóm `UNSUITABLE_OR_UNKNOWN` dựa trên số chữ số thập phân.**
 
-- `137 → 52`: **85 tin** `VERIFIED_EXACT` có độ phân giải ≤3 chữ số bị chuyển sang
-  `UNSUITABLE_OR_UNKNOWN` — không đủ chính xác để đo khoảng cách. Đây là thay đổi lớn
-  nhất và là hệ quả trực tiếp của việc sửa thống kê chữ số thập phân (mục B.2).
-- `13 → 11`: `SP013` (`INVALID_DISTRICT_MISMATCH`) tách khỏi `ADMINISTRATIVE_ONLY`
-  thành `NEEDS_REVIEW` — tọa độ không khớp địa bàn **không thể** coi là đáng tin.
-- `2 → 0`: `SP105`/`SP111` thực ra `VERIFIED_EXACT`, không phải ngoài Đà Nẵng.
+### E.4. Vì sao bỏ tiêu chí số chữ số thập phân
 
-**Kiểm chứng:** script `verify-classification.py` kết hợp output Java harness với thống
-kê chữ số thập phân, cho tổng đúng 152.
+Báo cáo trước phân loại 88 tin là `UNSUITABLE_OR_UNKNOWN` chỉ vì tọa độ có ≤3 chữ số
+thập phân. **Đó là suy luận sai:**
 
-### E.4. Rủi ro cảnh báo ngập sai
+| Suy luận sai | Thực tế |
+|---|---|
+| "3 chữ số thập phân → sai 110 m" | Số chữ số là **độ phân giải biểu diễn**, không phải sai số |
+| "Nhiều chữ số → chính xác" | Tọa độ 7 chữ số vẫn có thể sai hoàn toàn nếu ghim nhầm chỗ |
+| "Ít chữ số → không dùng được" | Tọa độ 3 chữ số vẫn hiển thị marker tham khảo được |
+
+**Tọa độ chưa được chứng minh chính xác không đồng nghĩa với tọa độ không thể sử dụng.**
+
+Đánh dấu đúng là `LOCATION_ACCURACY_UNVERIFIED` — chưa có bằng chứng về độ chính xác,
+không phải "không dùng được".
+
+### E.5. Rủi ro cảnh báo ngập sai
 
 | Rủi ro | Mức | Giải thích |
 |---|---|---|
-| Kết luận "nằm trong vùng ngập" từ tọa độ 3 chữ số | **Cao** | Độ phân giải ~110 m có thể nhảy qua ranh giới vùng ngập |
+| Kết luận "nằm trong vùng ngập" từ tọa độ chưa xác minh | **Cao** | Không có `accuracy_meters` để đánh giá |
 | Kết luận từ `VERIFIED_EXACT` | **Cao** | Enum gợi ý chính xác nhưng chỉ là cấp quận |
-| Đo khoảng cách tới điểm ngập | **Trung bình** | Sai số tọa độ + sai vị trí ngập cộng dồn |
-| Hiển thị marker | **Thấp** | Chấp nhận được nếu có nhãn "vị trí tham khảo" |
+| Đo khoảng cách khi chưa có provenance | **Cao** | Sai số tọa độ + sai vị trí ngập cộng dồn, không định lượng được |
+| Hiển thị marker tham khảo | **Thấp** | Chấp nhận được nếu có nhãn "vị trí tham khảo" |
 
 **Không tính thử số tin thuộc vùng ngập** — chưa có polygon vùng ngập thực (xem PR #35).
 
-### E.5. Baseline 10/152
+### E.6. Baseline 10/152
 
 Baseline **10/152 tin có bằng chứng cấp đường** vẫn đúng — khớp theo
 `street + current_unit`, **không dùng tọa độ**. Kiểm toán này chứng minh **không thể
@@ -640,12 +751,14 @@ phải hiển thị `UNKNOWN` cho tọa độ mới, không kế thừa trạng 
 | Tin có tọa độ hợp lệ kỹ thuật | 152/152 |
 | Tin có bằng chứng xác minh cấp thửa | **0/152** |
 | Tin có metadata nguồn gốc tọa độ | **0/152** |
-| Tin do người dùng thật đăng | **0/152** |
-| Tin nạp hàng loạt (CONFIRMED qua tên ảnh) | 151/152 |
+| Tin do người dùng thật đăng | **0/152** (chưa tìm thấy bằng chứng) |
+| Tin nạp hàng loạt (`STRONGLY_INFERRED`) | 151/152 |
 | Tin test/demo | 1/152 |
 | Tin `VERIFIED_EXACT` (chỉ cấp quận) | 140/152 |
 | Tin có độ phân giải ≤3 chữ số | 98/152 |
-| Tin đủ dùng cho marker tham khảo | **52/152** |
+| Tin đủ dùng cho marker tham khảo | **152/152** |
+| Tin đủ điều kiện đo khoảng cách | **0/152** |
+| Tin đủ điều kiện phân tích cấp thửa | **0/152** |
 
 **Ba lý do không đủ điều kiện:**
 
@@ -653,6 +766,9 @@ phải hiển thị `UNKNOWN` cho tọa độ mới, không kế thừa trạng 
 2. **`VERIFIED_EXACT` không phải cấp thửa.** Nó chỉ kiểm tra điểm nằm trong polygon quận.
 3. **Không có dữ liệu địa chính.** Không ranh giới thửa, không số nhà, không xác minh
    thực địa.
+
+**Điều kết luận này KHÔNG nói:** không khẳng định cả 152 tọa độ đều sai. Nhiều điểm có
+thể đúng thực tế — chỉ là **chưa có bằng chứng** để chứng minh.
 
 ### Điều kiện chuyển sang `PARTIALLY_READY_NEEDS_PROVENANCE`
 
