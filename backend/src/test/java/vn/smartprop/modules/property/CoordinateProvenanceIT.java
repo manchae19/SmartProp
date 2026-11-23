@@ -613,4 +613,108 @@ class CoordinateProvenanceIT {
             """, Integer.class, id);
         assertThat(currentCount).as("không có partial update").isEqualTo(1);
     }
+
+    // ---------- I. Admin review endpoints ----------
+
+    @Test
+    void adminStatsCountsWholeTableNotOnePage() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/stats").with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").isNumber())
+            .andExpect(jsonPath("$.unverified").isNumber())
+            .andExpect(jsonPath("$.verified").isNumber())
+            .andExpect(jsonPath("$.districtMismatch").isNumber());
+
+        // Tin vừa tạo phải nằm trong tổng, không phụ thuộc phân trang.
+        Long total = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM property_coordinate_audit a
+            JOIN properties p ON p.id = a.property_id
+            WHERE a.superseded_at IS NULL AND p.deleted_at IS NULL
+            """, Long.class);
+        String body = mvc.perform(get("/api/v1/admin/coordinates/stats").with(asAdmin(adminId)))
+            .andReturn().getResponse().getContentAsString();
+        Number reported = com.jayway.jsonpath.JsonPath.read(body, "$.total");
+        assertThat(reported.longValue()).as("stats phải đếm toàn bộ bảng").isEqualTo(total);
+    }
+
+    @Test
+    void nonAdminCannotReadStats() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/stats").with(as(brokerId)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousCannotReadStats() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/stats"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adminReviewDetailReturnsCoordinatesAndEvidence() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.propertyId").value(id))
+            .andExpect(jsonPath("$.latitude").isNumber())
+            .andExpect(jsonPath("$.longitude").isNumber())
+            .andExpect(jsonPath("$.revision").value(1))
+            .andExpect(jsonPath("$.coordinateSource").value("UNKNOWN"))
+            .andExpect(jsonPath("$.verificationStatus").value("UNVERIFIED"))
+            .andExpect(jsonPath("$.geographicValidationStatus").isNotEmpty());
+    }
+
+    @Test
+    void nonAdminCannotReadReviewDetail() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(as(brokerId)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void reviewDetailForPropertyWithoutAuditIs404() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/" + java.util.UUID.randomUUID())
+                .with(asAdmin(adminId)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void pendingQueueFiltersByStatusAndQuery() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // Lọc theo trạng thái: tin mới tạo là UNVERIFIED nên phải xuất hiện.
+        String unverified = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("verificationStatus", "UNVERIFIED")
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(unverified).contains(id);
+
+        // Lọc theo trạng thái khác: không được chứa tin này.
+        String verified = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("verificationStatus", "VERIFIED")
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(verified).doesNotContain(id);
+
+        // Tìm theo mã tin.
+        String code = jdbc.queryForObject(
+            "SELECT listing_code FROM properties WHERE id = ?", String.class, id);
+        String searched = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("q", code)
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(searched).contains(id);
+    }
+
+    @Test
+    void pendingQueueDoesNotLeakToNonAdmin() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/pending").with(as(brokerId)))
+            .andExpect(status().isForbidden());
+    }
 }

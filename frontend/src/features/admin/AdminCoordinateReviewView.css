@@ -1,0 +1,337 @@
+/* Coordinate Provenance V1 — trang admin xác minh tọa độ. */
+
+.coord-review {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.coord-review__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.coord-review__header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.coord-review__subtitle {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #64748b);
+}
+
+.coord-review__refresh {
+  padding: 8px 14px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.coord-review__refresh:focus-visible,
+.coord-review__item:focus-visible,
+.coord-review__conflict button:focus-visible {
+  outline: 2px solid var(--ui-accent, #0f766e);
+  outline-offset: 2px;
+}
+
+/* Thống kê */
+.coord-review__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.coord-review__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+}
+
+.coord-review__stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.coord-review__stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.coord-review__stat--verified { border-color: #86efac; background: #f0fdf4; }
+.coord-review__stat--warning { border-color: #fcd34d; background: #fffbeb; }
+.coord-review__stat--danger { border-color: #fca5a5; background: #fef2f2; }
+.coord-review__stat--pending { border-color: #cbd5e1; background: #f8fafc; }
+
+/* Bố cục hai cột */
+.coord-review__body {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .coord-review__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Danh sách */
+.coord-review__list,
+.coord-review__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.coord-review__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.coord-review__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748b);
+  flex: 1 1 140px;
+}
+
+.coord-review__filters input,
+.coord-review__filters select {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  background: #fff;
+  color: inherit;
+}
+
+.coord-review__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coord-review__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font-size: 0.82rem;
+}
+
+.coord-review__item.is-selected {
+  border-color: var(--ui-accent, #0f766e);
+  box-shadow: 0 0 0 1px var(--ui-accent, #0f766e) inset;
+}
+
+.coord-review__code {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.coord-review__title {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.coord-review__address {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted, #64748b);
+}
+
+.coord-review__meta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.coord-review__rev {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted, #64748b);
+}
+
+/* Badge — không dùng đỏ cho "chưa xác minh" */
+.coord-review__badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.coord-review__badge--verified { background: #dcfce7; color: #166534; border-color: #86efac; }
+.coord-review__badge--danger { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.coord-review__badge--warning { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.coord-review__badge--pending { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
+.coord-review__badge--neutral { background: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+
+/* Chi tiết */
+.coord-review__detail-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.coord-review__detail-head p {
+  margin: 0 0 2px;
+  font-size: 0.85rem;
+}
+
+.coord-review__muted {
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.78rem;
+}
+
+.coord-review__headline {
+  margin-top: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.coord-review__warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.coord-review__notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+.coord-review__conflict {
+  padding: 12px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.coord-review__conflict p {
+  margin: 0 0 8px;
+}
+
+.coord-review__conflict button {
+  padding: 7px 12px;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  background: #fff;
+  color: #92400e;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coord-review__empty {
+  margin: 0;
+  padding: 20px 12px;
+  border: 1px dashed var(--color-border, #cbd5e1);
+  border-radius: 10px;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Ba panel thông tin */
+.coord-review__panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.coord-review__panel {
+  padding: 12px;
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+}
+
+.coord-review__panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted, #64748b);
+}
+
+.coord-review__panel dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.coord-review__panel dt {
+  color: var(--color-text-muted, #64748b);
+}
+
+.coord-review__panel dd {
+  margin: 0;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Lịch sử */
+.coord-review__history h3 {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+}
+
+.coord-review__history ol {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.coord-review__history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}

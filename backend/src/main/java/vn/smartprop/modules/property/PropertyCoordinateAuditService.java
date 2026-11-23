@@ -53,7 +53,29 @@ public class PropertyCoordinateAuditService {
 
     @Transactional(readOnly = true)
     public List<PropertyCoordinateAuditRepository.PendingRow> pending(int limit) {
-        return repository.pending(Math.min(Math.max(limit, 1), 200));
+        return pending(limit, null, null);
+    }
+
+    /** Hàng đợi xác minh có lọc theo trạng thái và từ khoá. */
+    @Transactional(readOnly = true)
+    public List<PropertyCoordinateAuditRepository.PendingRow> pending(int limit,
+                                                                     String verificationStatus,
+                                                                     String query) {
+        return repository.pending(Math.min(Math.max(limit, 1), 200),
+            verificationStatus, query);
+    }
+
+    /** Thống kê hàng đợi — đếm toàn bộ, không suy từ trang đã phân trang. */
+    @Transactional(readOnly = true)
+    public PropertyCoordinateAuditRepository.Stats stats() {
+        return repository.stats();
+    }
+
+    /** Chi tiết một tin cho admin review. */
+    @Transactional(readOnly = true)
+    public PropertyCoordinateAuditRepository.ReviewDetail reviewDetail(String propertyId) {
+        return repository.reviewDetail(propertyId).orElseThrow(
+            () -> vn.smartprop.common.ApiInputs.missing());
     }
 
     /**
