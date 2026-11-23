@@ -24,22 +24,49 @@ public class PropertyCoordinateAuditRepository {
     public PropertyCoordinateAuditRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     /**
-     * Fingerprint của (tọa độ + địa chỉ + phiên bản validator).
+     * Fingerprint của snapshot tọa độ + địa chỉ.
      *
-     * <p>Đổi bất kỳ thành phần nào cũng làm fingerprint đổi — nên audit cũ không thể
-     * áp dụng cho trạng thái mới. Đây là điểm sửa của vấn đề "đổi địa chỉ nhưng giữ
-     * tọa độ": fingerprint đổi, audit cũ bị supersede.
+     * <p><b>Không bao gồm {@code validatorScopeVersion}.</b> Phiên bản dữ liệu địa giới
+     * là thuộc tính của kết quả validation, không phải của vị trí người dùng đã chọn.
+     * Gộp nó vào fingerprint khiến việc cập nhật ranh giới hành chính trông giống như
+     * người dùng đã di chuyển điểm — tạo revision giả và làm mất xác minh không cần thiết.
      *
-     * <p>Tọa độ được làm tròn 7 chữ số thập phân (≈1 cm) trước khi hash để tránh
-     * sai số biểu diễn DOUBLE gây fingerprint khác nhau cho cùng một điểm.
+     * <p>Khi validator scope đổi, {@link #record} phát hiện qua cột
+     * {@code validator_scope_version} riêng và chỉ cập nhật lại kết quả geographic
+     * validation trên bản ghi hiện hành, không tạo revision mới.
+     *
+     * <p>Đổi bất kỳ thành phần nào dưới đây đều làm fingerprint đổi → audit cũ bị
+     * supersede: tọa độ, địa chỉ, quận, phường.
+     *
+     * <p>Tọa độ được làm tròn 7 chữ số thập phân (≈1 cm) trước khi hash để sai số biểu
+     * diễn DOUBLE không làm fingerprint khác nhau cho cùng một điểm.
      */
     public static String fingerprint(double latitude, double longitude,
-                                     String address, String district, String ward,
-                                     String validatorScopeVersion) {
-        String payload = String.format(java.util.Locale.ROOT, "%.7f|%.7f|%s|%s|%s|%s",
+                                     String address, String district, String ward) {
+        String payload = String.format(java.util.Locale.ROOT, "%.7f|%.7f|%s|%s|%s",
             latitude, longitude,
-            nullToEmpty(address), nullToEmpty(district), nullToEmpty(ward),
-            nullToEmpty(validatorScopeVersion));
+            nullToEmpty(address), nullToEmpty(district), nullToEmpty(ward));
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 không khả dụng", e);
+        }
+    }
+
+    /**
+     * Fingerprint dùng cho backfill — cùng công thức với {@link #fingerprint}, nhận
+     * tọa độ đã ở dạng chuỗi DECIMAL(10,7) để SQL và Java cho cùng kết quả.
+     *
+     * <p>Backfill dùng chính hàm này (qua SQL tương đương) nên fingerprint của bản
+     * backfill khớp runtime khi tọa độ và địa chỉ không đổi. Nhờ vậy lần đầu người
+     * dùng sửa tiêu đề không tạo revision mới.
+     */
+    public static String fingerprintFromDecimal(String latitude, String longitude,
+                                                String address, String district, String ward) {
+        String payload = String.format(java.util.Locale.ROOT, "%s|%s|%s|%s|%s",
+            latitude, longitude,
+            nullToEmpty(address), nullToEmpty(district), nullToEmpty(ward));
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(payload.getBytes(StandardCharsets.UTF_8)));
@@ -146,16 +173,26 @@ public class PropertyCoordinateAuditRepository {
     }
 
     /**
-     * Ghi quyết định xác minh lên đúng revision admin đã kiểm tra.
+     * Ghi quyết định xác minh lên đúng revision admin đã kiểm tra, chỉ khi revision đó
+     * chưa có quyết định cuối cùng.
      *
-     * <p>Điều kiện {@code revision = ?} chặn race condition: admin mở revision 1,
-     * người đăng sửa tạo revision 2, admin bấm xác minh — câu UPDATE không khớp dòng
-     * nào nên trả 0, caller trả 409. Không bao giờ xác minh nhầm bản mới.
+     * <p>Ba điều kiện chống race:
+     * <ol>
+     *   <li>{@code revision = ?} — admin mở revision 1, người đăng sửa tạo revision 2,
+     *       câu UPDATE không khớp dòng nào → 409. Không xác minh nhầm bản mới.</li>
+     *   <li>{@code superseded_at IS NULL} — revision đúng nhưng đã bị thay thế cũng
+     *       không được xác minh.</li>
+     *   <li>{@code verification_status IN ('UNVERIFIED','PENDING_REVIEW')} — hai admin
+     *       cùng mở revision 3, admin A xác minh VERIFIED, admin B gửi REJECTED dựa
+     *       trên trạng thái cũ. Câu UPDATE của B không khớp vì trạng thái đã là
+     *       VERIFIED → 409. Quyết định của A không bị ghi đè âm thầm.</li>
+     * </ol>
      *
-     * <p>{@code superseded_at IS NULL} là điều kiện thứ hai: revision đúng nhưng đã bị
-     * thay thế cũng không được xác minh.
+     * <p>Muốn thu hồi một quyết định đã có, phải dùng luồng riêng có audit trail —
+     * không ghi đè trực tiếp qua endpoint này.
      *
-     * @return số dòng cập nhật; 0 nghĩa là revision đã đổi hoặc đã bị supersede
+     * @return số dòng cập nhật; 0 nghĩa là revision đã đổi, đã bị supersede, hoặc đã có
+     *         quyết định xác minh
      */
     public int verifyCurrent(String propertyId, int expectedRevision,
                              PropertyCoordinateAudit.Verification status,
@@ -169,10 +206,40 @@ public class PropertyCoordinateAuditRepository {
                 verified_by = ?, evidence_reference = ?,
                 accuracy_level = ?, accuracy_meters = ?, accuracy_method = ?
             WHERE property_id = ? AND revision = ? AND superseded_at IS NULL
+              AND verification_status IN ('UNVERIFIED','PENDING_REVIEW')
             """,
             status.name(), method == null ? null : method.name(), verifiedBy,
             evidenceReference, accuracy.name(), accuracyMeters, accuracyMethod,
             propertyId, expectedRevision);
+    }
+
+    /**
+     * Cập nhật lại kết quả geographic validation trên bản ghi hiện hành khi
+     * {@code validatorScopeVersion} đổi nhưng tọa độ và địa chỉ không đổi.
+     *
+     * <p>Không tạo revision mới, không đụng tới verification — người dùng không di
+     * chuyển điểm, chỉ dữ liệu ranh giới hành chính được cập nhật.
+     *
+     * @return số dòng cập nhật
+     */
+    public int refreshValidation(String propertyId, String geographicStatus,
+                                 String geographicNote, String validatorScopeVersion) {
+        return jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET geographic_validation_status = ?, geographic_validation_note = ?,
+                validator_scope_version = ?, validated_at = UTC_TIMESTAMP(6)
+            WHERE property_id = ? AND superseded_at IS NULL
+            """,
+            geographicStatus, geographicNote, validatorScopeVersion, propertyId);
+    }
+
+    /** Phiên bản validator đã dùng cho bản ghi hiện hành. */
+    public Optional<String> currentValidatorScope(String propertyId) {
+        List<String> rows = jdbc.queryForList("""
+            SELECT validator_scope_version FROM property_coordinate_audit
+            WHERE property_id = ? AND superseded_at IS NULL
+            """, String.class, propertyId);
+        return rows.stream().findFirst();
     }
 
     /** Lịch sử đầy đủ của một tin, mới nhất trước. */

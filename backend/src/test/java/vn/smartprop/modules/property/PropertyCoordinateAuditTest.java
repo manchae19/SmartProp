@@ -99,31 +99,38 @@ class PropertyCoordinateAuditTest {
     @Test
     void fingerprintChangesWhenAddressChanges() {
         String base = PropertyCoordinateAuditRepository.fingerprint(
-            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An", "v1");
+            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
         String samePoint = PropertyCoordinateAuditRepository.fingerprint(
-            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An", "v1");
+            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
         String newAddress = PropertyCoordinateAuditRepository.fingerprint(
-            16.0430, 108.1840, "Đường Tôn Đản, Hòa Phát", "Cẩm Lệ", "Hòa Phát", "v1");
+            16.0430, 108.1840, "Đường Tôn Đản, Hòa Phát", "Cẩm Lệ", "Hòa Phát");
         String newPoint = PropertyCoordinateAuditRepository.fingerprint(
-            16.0500, 108.1900, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An", "v1");
-        String newValidator = PropertyCoordinateAuditRepository.fingerprint(
-            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An", "v2");
+            16.0500, 108.1900, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
 
         assertEquals(base, samePoint, "cùng đầu vào phải cùng fingerprint");
         assertNotEquals(base, newAddress,
             "đổi địa chỉ phải đổi fingerprint — nếu không, xác minh cũ bị dùng lại sai");
         assertNotEquals(base, newPoint, "đổi tọa độ phải đổi fingerprint");
-        assertNotEquals(base, newValidator,
-            "đổi phiên bản validator phải đổi fingerprint");
     }
 
+    @Test
+    void fingerprintDoesNotDependOnValidatorScope() {
+        // Phiên bản dữ liệu địa giới KHÔNG được nằm trong fingerprint: cập nhật ranh
+        // giới hành chính không phải là người dùng di chuyển điểm. Nếu gộp vào, mỗi lần
+        // cập nhật địa giới sẽ tạo revision giả và làm mất xác minh không cần thiết.
+        String a = PropertyCoordinateAuditRepository.fingerprint(
+            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        String b = PropertyCoordinateAuditRepository.fingerprint(
+            16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        assertEquals(a, b, "cùng vị trí và địa chỉ phải cùng fingerprint bất kể scope");
+    }
     @Test
     void fingerprintIgnoresFloatingPointNoise() {
         // 16.043000000000001 là artifact IEEE-754 của 16.043.
         String clean = PropertyCoordinateAuditRepository.fingerprint(
-            16.043, 108.184, "A", "B", "C", "v1");
+            16.043, 108.184, "A", "B", "C");
         String noisy = PropertyCoordinateAuditRepository.fingerprint(
-            16.043000000000001, 108.18400000000001, "A", "B", "C", "v1");
+            16.043000000000001, 108.18400000000001, "A", "B", "C");
         assertEquals(clean, noisy,
             "nhiễu biểu diễn DOUBLE không được làm đổi fingerprint");
     }

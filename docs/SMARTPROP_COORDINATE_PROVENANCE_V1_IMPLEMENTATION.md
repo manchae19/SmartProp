@@ -299,13 +299,14 @@ trong PR này** — cần thiết kế prompt riêng để không cho AI khẳng
 
 | Suite | Passed | Failed | Skipped |
 |---|---:|---:|---:|
-| Backend unit (toàn bộ) | **196** | 0 | 0 |
-| — trong đó `PropertyCoordinateAuditTest` | **8** | 0 | 0 |
-| **HTTP integration (`CoordinateProvenanceIT`)** | **14** | 0 | 0 |
+| Backend unit (toàn bộ) | **197** | 0 | 0 |
+| — trong đó `PropertyCoordinateAuditTest` | **9** | 0 | 0 |
+| **HTTP integration (`CoordinateProvenanceIT`)** | **24** | 0 | 0 |
 | Flyway validate | **12 migrations** | 0 | 0 |
 | Constraint SQL (DB cô lập) | **11** | 0 | 0 |
-| Backfill idempotency | **2 lần** | 0 | 0 |
-| Frontend build (Vite) | **PASS** (8.25s) | 0 | 0 |
+| Backfill idempotency | **2 lần** (155 → 0) | 0 | 0 |
+| Fingerprint SQL↔Java | **7 ca** | 0 | 0 |
+| Frontend build (Vite) | **PASS** (5.29s) | 0 | 0 |
 | Frontend unit | **NOT_RUN** | — | — |
 
 **Frontend unit chưa chạy:** chưa có test cho `CoordinateStatusPanel`. Cần bổ sung ở PR
@@ -335,7 +336,9 @@ sau — component hiện chỉ render, logic eligibility nằm ở backend đã 
 | Ghi audit khi create/update | **IMPLEMENTED + TESTED** | 14 HTTP integration test |
 | Fingerprint đổi theo địa chỉ | **IMPLEMENTED + TESTED** | Unit + integration test |
 | API đọc trạng thái | **IMPLEMENTED + TESTED** | Public detail trả audit thật |
-| API verify (admin) | **IMPLEMENTED + TESTED** | `expectedRevision` chặn race |
+| API verify (admin) | **IMPLEMENTED + TESTED** | `expectedRevision` + compare-and-set chặn race |
+| History endpoint | **IMPLEMENTED + TESTED** | `authenticated()` + owner/admin check |
+| Backfill identity | **IMPLEMENTED + TESTED** | Fingerprint khớp runtime, sửa tiêu đề không mất xác minh |
 | Backfill dữ liệu cũ | **IMPLEMENTED + TESTED** | Idempotent, 155 tin |
 | Frontend hiển thị trạng thái | **IMPLEMENTED** | Build PASS, chưa có unit test |
 | Frontend cảnh báo sai địa bàn | **IMPLEMENTED** | Chưa có test |
@@ -444,6 +447,95 @@ Thêm hai rule trước `anyRequest().denyAll()`:
 Không thêm rule này thì endpoint mới bị `denyAll()` chặn.
 
 ---
+## F.3. Ba vấn đề cuối đã sửa
+
+### A. Fingerprint backfill không tương thích runtime
+
+**Vấn đề:** `fingerprint()` gộp `validatorScopeVersion` vào hash. Backfill dùng
+`'BACKFILL_V1'`, runtime dùng `validator.scopeVersion()` → hai fingerprint luôn khác
+nhau dù vị trí không đổi. Hệ quả: sửa tiêu đề tạo revision mới và làm mất xác minh.
+
+**Sửa:** tách hai khái niệm.
+
+| Thành phần | Vai trò |
+|---|---|
+| `coordinate_fingerprint` | Định danh snapshot **tọa độ + địa chỉ + quận + phường** |
+| `validator_scope_version` | Phiên bản dữ liệu địa giới (cột riêng) |
+| `geographic_validation_status` | Kết quả validation tương ứng phiên bản đó |
+
+`fingerprint()` bỏ tham số scope. `record()` có ba nhánh:
+
+```text
+1. fingerprint khớp + scope khớp  → không làm gì
+2. fingerprint khớp + scope khác  → refreshValidation() — cập nhật lại kết quả
+                                     geographic validation, KHÔNG tạo revision,
+                                     KHÔNG đụng verification
+3. fingerprint khác               → supersede + revision mới với UNVERIFIED
+```
+
+Nhánh 2 là điểm quan trọng: cập nhật ranh giới hành chính không phải người dùng di
+chuyển điểm. Không tạo revision giả, không mất xác minh.
+
+**Test chứng minh:**
+- `backfillFingerprintMatchesRuntimeSoTitleEditKeepsRevision` — backfill rồi sửa tiêu đề
+  → vẫn 1 revision
+- `backfillVerificationSurvivesTitleEdit` — verify rồi sửa tiêu đề → vẫn `VERIFIED`
+- `coordinateChangeResetsVerificationToUnverified` — đổi tọa độ → `UNVERIFIED`
+- `fingerprintDoesNotDependOnValidatorScope` (unit)
+- 7 ca SQL↔Java fingerprint khớp
+
+### B. Anonymous đọc được history
+
+**Vấn đề:** `SecurityConfig` đặt `/coordinate/history` trong `permitAll()`, nhưng
+controller gọi `actor(jwt)` → NPE khi anonymous, trả 500 thay vì 401.
+
+**Sửa:** tách matcher.
+
+```java
+.requestMatchers(HttpMethod.POST,"/api/v1/properties/*/coordinate/verify").hasRole("ADMIN")
+.requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate/history").authenticated()
+.requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate").permitAll()
+```
+
+Thứ tự quan trọng: `history` phải đứng **trước** `coordinate` — nếu không, pattern
+`/coordinate` khớp trước và `history` bị `permitAll()`.
+
+**Test chứng minh:**
+- `anonymousCannotReadCoordinateHistory` → 401
+- `ownerCanReadCoordinateHistory` → 200
+- `nonOwnerBrokerCannotReadCoordinateHistory` → 403
+- `adminCanReadCoordinateHistory` → 200
+- `anonymousCanReadPublishedCoordinateButNotDraft` → 200 / 404
+
+### C. Hai admin verify đồng thời
+
+**Vấn đề:** `verifyCurrent()` chỉ kiểm tra `revision` và `superseded_at`. Admin A xác
+minh `VERIFIED`, admin B gửi `REJECTED` dựa trên trạng thái cũ → câu UPDATE của B vẫn
+khớp và ghi đè quyết định của A mà không có dấu vết.
+
+**Sửa:** thêm điều kiện compare-and-set.
+
+```sql
+UPDATE property_coordinate_audit
+SET verification_status = ?, ...
+WHERE property_id = ? AND revision = ? AND superseded_at IS NULL
+  AND verification_status IN ('UNVERIFIED','PENDING_REVIEW')
+```
+
+Revision đã có quyết định cuối (`VERIFIED`/`REJECTED`) → 0 dòng → 409. Admin phải tải
+lại trước khi xử lý tiếp.
+
+**Thu hồi quyết định** cần luồng riêng có audit trail — không ghi đè trực tiếp qua
+endpoint này.
+
+**Test chứng minh:**
+- `secondVerificationOnSameRevisionIsRejected` — A `VERIFIED`, B `REJECTED` → 409,
+  trạng thái vẫn `VERIFIED`
+- `concurrentVerificationAllowsExactlyOneWinner` — 4 thread đồng thời qua
+  `CyclicBarrier`, đúng **1** nhận 200, còn lại 409, không partial update
+
+---
+
 ## G. Quyết định thiết kế
 
 | Quyết định | Lý do |

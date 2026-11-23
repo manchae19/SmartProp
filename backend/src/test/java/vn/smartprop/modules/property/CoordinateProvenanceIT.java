@@ -363,4 +363,254 @@ class CoordinateProvenanceIT {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.parcelAnalysisEligible").value(false));
     }
+
+    // ---------- F. Backfill identity (blocker A) ----------
+
+    @Test
+    void backfillFingerprintMatchesRuntimeSoTitleEditKeepsRevision() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // Mô phỏng bản ghi backfill: fingerprint tính bằng công thức SQL (không có scope).
+        jdbc.update("DELETE FROM property_coordinate_audit WHERE property_id = ?", id);
+        jdbc.update("""
+            INSERT INTO property_coordinate_audit (
+              id, property_id, revision, audited_latitude, audited_longitude, srid,
+              coordinate_fingerprint, fingerprint_version,
+              address_snapshot, district_snapshot, ward_snapshot,
+              coordinate_source, accuracy_level, verification_status,
+              validator_scope_version, validated_at)
+            SELECT UUID(), p.id, 1,
+              CAST(ROUND(ST_Latitude(p.location), 7) AS DECIMAL(10,7)),
+              CAST(ROUND(ST_Longitude(p.location), 7) AS DECIMAL(10,7)),
+              4326,
+              SHA2(CONCAT(
+                CAST(CAST(ROUND(ST_Latitude(p.location), 7) AS DECIMAL(10,7)) AS CHAR), '|',
+                CAST(CAST(ROUND(ST_Longitude(p.location), 7) AS DECIMAL(10,7)) AS CHAR), '|',
+                COALESCE(TRIM(p.address), ''), '|',
+                COALESCE(TRIM(p.district), ''), '|',
+                COALESCE(TRIM(p.ward), '')), 256),
+              1, p.address, p.district, p.ward,
+              'UNKNOWN', 'UNKNOWN', 'UNVERIFIED', 'BACKFILL_V1', UTC_TIMESTAMP(6)
+            FROM properties p WHERE p.id = ?
+            """, id);
+
+        // Sửa tiêu đề, không đổi vị trí → fingerprint backfill phải khớp runtime,
+        // nên KHÔNG tạo revision mới.
+        mvc.perform(patch("/api/v1/properties/" + id).param("expectedVersion", "1").with(as(brokerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"title":"Coordinate IT fixture renamed","propertyType":"HOUSE",
+                     "transactionType":"SALE","price":1000000000,"priceUnit":"TOTAL","areaSqm":50.0,
+                     "address":"Đường Tôn Đản, Hòa An","city":"Da Nang","district":"Cẩm Lệ",
+                     "ward":"Hòa An","latitude":16.0430,"longitude":108.1840}
+                    """))
+            .andExpect(status().isOk());
+
+        Integer revisions = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM property_coordinate_audit WHERE property_id = ?",
+            Integer.class, id);
+        assertThat(revisions)
+            .as("fingerprint backfill phải khớp runtime — sửa tiêu đề không tạo revision")
+            .isEqualTo(1);
+    }
+
+    @Test
+    void backfillVerificationSurvivesTitleEdit() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // Admin xác minh revision 1.
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                     "verificationMethod":"CADASTRAL_RECORD","evidenceReference":"IT-EVIDENCE-3",
+                     "accuracyLevel":"STREET","accuracyMeters":15.0}
+                    """))
+            .andExpect(status().isOk());
+
+        // Sửa tiêu đề, không đổi vị trí → xác minh vẫn còn hiệu lực.
+        mvc.perform(patch("/api/v1/properties/" + id).param("expectedVersion", "1").with(as(brokerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"title":"Coordinate IT fixture renamed","propertyType":"HOUSE",
+                     "transactionType":"SALE","price":1000000000,"priceUnit":"TOTAL","areaSqm":50.0,
+                     "address":"Đường Tôn Đản, Hòa An","city":"Da Nang","district":"Cẩm Lệ",
+                     "ward":"Hòa An","latitude":16.0430,"longitude":108.1840}
+                    """))
+            .andExpect(status().isOk());
+
+        String status = jdbc.queryForObject("""
+            SELECT verification_status FROM property_coordinate_audit
+            WHERE property_id = ? AND superseded_at IS NULL
+            """, String.class, id);
+        assertThat(status)
+            .as("sửa tiêu đề không được làm mất xác minh")
+            .isEqualTo("VERIFIED");
+    }
+
+    @Test
+    void coordinateChangeResetsVerificationToUnverified() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                     "verificationMethod":"CADASTRAL_RECORD","evidenceReference":"IT-EVIDENCE-4",
+                     "accuracyLevel":"STREET","accuracyMeters":15.0}
+                    """))
+            .andExpect(status().isOk());
+
+        // Đổi tọa độ → revision mới, verification về UNVERIFIED.
+        mvc.perform(patch("/api/v1/properties/" + id).param("expectedVersion", "1").with(as(brokerId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"title":"Coordinate IT fixture","propertyType":"HOUSE",
+                     "transactionType":"SALE","price":1000000000,"priceUnit":"TOTAL","areaSqm":50.0,
+                     "address":"Đường Tôn Đản, Hòa An","city":"Da Nang","district":"Cẩm Lệ",
+                     "ward":"Hòa An","latitude":16.0700,"longitude":108.2100}
+                    """))
+            .andExpect(status().isOk());
+
+        String status = jdbc.queryForObject("""
+            SELECT verification_status FROM property_coordinate_audit
+            WHERE property_id = ? AND superseded_at IS NULL
+            """, String.class, id);
+        assertThat(status)
+            .as("đổi tọa độ phải reset verification — không kế thừa xác minh vị trí cũ")
+            .isEqualTo("UNVERIFIED");
+    }
+
+    // ---------- G. History endpoint security (blocker B) ----------
+
+    @Test
+    void anonymousCannotReadCoordinateHistory() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void ownerCanReadCoordinateHistory() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history").with(as(brokerId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].revision").value(1));
+    }
+
+    @Test
+    void nonOwnerBrokerCannotReadCoordinateHistory() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // 9003 là BROKER khác, không phải owner.
+        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history").with(as(9003L)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminCanReadCoordinateHistory() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history").with(asAdmin(adminId)))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    void anonymousCanReadPublishedCoordinateButNotDraft() throws Exception {
+        String published = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        jdbc.update("UPDATE properties SET status='PUBLISHED', published_at=UTC_TIMESTAMP(6) WHERE id=?",
+            published);
+        mvc.perform(get("/api/v1/properties/" + published + "/coordinate"))
+            .andExpect(status().isOk());
+
+        String draft = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        mvc.perform(get("/api/v1/properties/" + draft + "/coordinate"))
+            .andExpect(status().isNotFound());
+    }
+
+    // ---------- H. Concurrent verification (blocker C) ----------
+
+    @Test
+    void secondVerificationOnSameRevisionIsRejected() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // Admin A xác minh VERIFIED.
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                     "verificationMethod":"CADASTRAL_RECORD","evidenceReference":"IT-EVIDENCE-A",
+                     "accuracyLevel":"STREET","accuracyMeters":15.0}
+                    """))
+            .andExpect(status().isOk());
+
+        // Admin B gửi REJECTED trên cùng revision → 409, không ghi đè quyết định của A.
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"REJECTED",
+                     "verificationMethod":"ADMIN_REVIEW","evidenceReference":"IT-EVIDENCE-B",
+                     "accuracyLevel":"UNKNOWN"}
+                    """))
+            .andExpect(status().isConflict());
+
+        String status = jdbc.queryForObject("""
+            SELECT verification_status FROM property_coordinate_audit
+            WHERE property_id = ? AND superseded_at IS NULL
+            """, String.class, id);
+        assertThat(status)
+            .as("quyết định của admin A không bị ghi đè âm thầm")
+            .isEqualTo("VERIFIED");
+    }
+
+    @Test
+    void concurrentVerificationAllowsExactlyOneWinner() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        int threads = 4;
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(threads);
+        java.util.concurrent.ExecutorService pool =
+            java.util.concurrent.Executors.newFixedThreadPool(threads);
+        java.util.List<java.util.concurrent.Future<Integer>> futures = new java.util.ArrayList<>();
+        java.util.concurrent.atomic.AtomicInteger ok =
+            new java.util.concurrent.atomic.AtomicInteger();
+
+        for (int i = 0; i < threads; i++) {
+            final int index = i;
+            futures.add(pool.submit(() -> {
+                barrier.await();
+                var result = mvc.perform(
+                        post("/api/v1/properties/" + id + "/coordinate/verify")
+                            .with(asAdmin(adminId))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                                 "verificationMethod":"CADASTRAL_RECORD",
+                                 "evidenceReference":"IT-CONCURRENT-%d",
+                                 "accuracyLevel":"STREET","accuracyMeters":15.0}
+                                """.formatted(index)))
+                    .andReturn();
+                int code = result.getResponse().getStatus();
+                if (code == 200) ok.incrementAndGet();
+                return code;
+            }));
+        }
+
+        java.util.List<Integer> codes = new java.util.ArrayList<>();
+        for (var future : futures) codes.add(future.get());
+        pool.shutdown();
+
+        assertThat(ok.get())
+            .as("chỉ một quyết định xác minh được ghi: %s", codes)
+            .isEqualTo(1);
+        assertThat(codes).as("các request còn lại phải nhận 409").containsOnly(200, 409);
+
+        Integer currentCount = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM property_coordinate_audit
+            WHERE property_id = ? AND superseded_at IS NULL
+            """, Integer.class, id);
+        assertThat(currentCount).as("không có partial update").isEqualTo(1);
+    }
 }

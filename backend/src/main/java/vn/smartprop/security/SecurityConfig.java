@@ -93,9 +93,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/users/me/valuation-history","/api/v1/users/me/valuation-history/*").authenticated()
                 .requestMatchers("/api/v1/users/me/avatar","/api/v1/users/me/avatar/content").authenticated()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                // Coordinate Provenance V1: verify chỉ admin; đọc trạng thái công khai cho tin PUBLISHED.
+                // Coordinate Provenance V1.
+                // verify: chỉ admin. history: phải đăng nhập (controller kiểm tra owner/admin).
+                // coordinate: công khai cho tin PUBLISHED; controller chặn tin chưa công khai.
                 .requestMatchers(HttpMethod.POST,"/api/v1/properties/*/coordinate/verify").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate","/api/v1/properties/*/coordinate/history").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate/history").authenticated()
+                .requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/v1/users/me/advisor-context").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/v1/users/me/broker-application","/api/v1/users/me/properties/*/moderation").authenticated()
                 .requestMatchers(HttpMethod.POST,"/api/v1/users/me/broker-application").authenticated()

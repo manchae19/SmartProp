@@ -8,8 +8,15 @@
 -- Không sửa properties.location, listing_code, status hay owner.
 --
 -- FINGERPRINT: phải khớp CHÍNH XÁC PropertyCoordinateAuditRepository.fingerprint():
---   String.format(Locale.ROOT, "%.7f|%.7f|%s|%s|%s|%s", lat, lon, address, district, ward, scope)
+--   String.format(Locale.ROOT, "%.7f|%.7f|%s|%s|%s", lat, lon, address, district, ward)
 --   rồi SHA-256 hex.
+--
+-- KHÔNG có validatorScopeVersion trong fingerprint. Lý do: phiên bản dữ liệu địa giới
+-- là thuộc tính của kết quả validation, không phải của vị trí người dùng đã chọn.
+-- Gộp nó vào fingerprint khiến việc cập nhật ranh giới hành chính trông giống như
+-- người dùng đã di chuyển điểm — tạo revision giả và làm mất xác minh không cần thiết.
+-- Khi scope đổi, runtime phát hiện qua cột validator_scope_version riêng và chỉ cập
+-- nhật lại geographic validation, không tạo revision.
 --
 -- KHÔNG dùng FORMAT(x, 7): MySQL FORMAT thêm dấu phẩy phân cách hàng nghìn
 -- (FORMAT(1234.5,7) = '1,234.5000000'), Java String.format thì không.
@@ -19,11 +26,9 @@
 -- lat 15–16, lon 107–108 nên an toàn. Nếu dùng cho toạ độ ngoài khoảng này,
 -- phải nâng lên DECIMAL(12,7) ở cả migration và backfill.
 --
--- Scope version: dùng 'BACKFILL_V1' — khác runtime validator.scopeVersion().
--- Vì vậy fingerprint backfill KHÔNG BAO GIỜ khớp fingerprint runtime. Đây là chủ ý:
--- lần đầu người dùng lưu tin, fingerprint runtime khác → audit backfill bị supersede
--- và revision mới được tạo với provenance/accuracy đúng. Không có revision giả vì
--- backfill chỉ tạo MỘT bản cho mỗi tin, và bản đó mang trạng thái UNKNOWN an toàn.
+-- validator_scope_version của bản backfill là 'BACKFILL_V1'. Vì scope KHÔNG nằm trong
+-- fingerprint, lần đầu người dùng lưu tin (không đổi vị trí) sẽ chỉ kích hoạt nhánh
+-- refresh validation — không tạo revision, không mất xác minh.
 
 INSERT INTO property_coordinate_audit (
   id, property_id, revision, audited_latitude, audited_longitude, srid,
@@ -44,8 +49,7 @@ SELECT
     CAST(CAST(ROUND(ST_Longitude(p.location), 7) AS DECIMAL(10,7)) AS CHAR), '|',
     COALESCE(TRIM(p.address), ''), '|',
     COALESCE(TRIM(p.district), ''), '|',
-    COALESCE(TRIM(p.ward), ''), '|',
-    'BACKFILL_V1'), 256),
+    COALESCE(TRIM(p.ward), '')), 256),
   1,
   p.address, p.district, p.ward,
   'UNKNOWN', 'UNKNOWN', NULL,

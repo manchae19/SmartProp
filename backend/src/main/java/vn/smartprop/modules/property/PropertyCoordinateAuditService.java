@@ -59,8 +59,16 @@ public class PropertyCoordinateAuditService {
     /**
      * Ghi nhận tọa độ sau khi property đã được lưu.
      *
-     * <p>Nếu fingerprint không đổi so với bản hiện hành, không tạo bản ghi mới —
-     * tránh phình lịch sử khi người dùng lưu form mà không đổi vị trí.
+     * <p>Ba nhánh, theo thứ tự:
+     * <ol>
+     *   <li><b>Không đổi gì</b> — fingerprint khớp và validator scope khớp → không làm
+     *       gì. Sửa tiêu đề, giá, mô tả không tạo revision, không mất xác minh.</li>
+     *   <li><b>Chỉ validator scope đổi</b> — fingerprint khớp nhưng scope khác → cập
+     *       nhật lại geographic validation trên bản ghi hiện hành. Không tạo revision,
+     *       không đụng verification: người dùng không di chuyển điểm.</li>
+     *   <li><b>Tọa độ hoặc địa chỉ đổi</b> — fingerprint khác → supersede bản cũ, tạo
+     *       revision mới với {@code UNVERIFIED}. Không kế thừa xác minh của vị trí cũ.</li>
+     * </ol>
      *
      * @param source nguồn tọa độ do backend xác định, không lấy từ request
      */
@@ -73,18 +81,25 @@ public class PropertyCoordinateAuditService {
         double longitude = property.location.getX();
         String scopeVersion = validator.scopeVersion();
         String fingerprint = PropertyCoordinateAuditRepository.fingerprint(
-            latitude, longitude, property.address, property.district, property.ward,
-            scopeVersion);
+            latitude, longitude, property.address, property.district, property.ward);
 
         Optional<String> current = repository.currentFingerprint(property.id);
-        if (current.isPresent() && current.get().equals(fingerprint)) return;
+        if (current.isPresent() && current.get().equals(fingerprint)) {
+            // Vị trí không đổi. Kiểm tra riêng phiên bản validator: nếu dữ liệu địa giới
+            // đã cập nhật thì đánh giá lại geographic validity, nhưng KHÔNG tạo revision
+            // và KHÔNG đụng verification — người dùng không di chuyển điểm.
+            Optional<String> currentScope = repository.currentValidatorScope(property.id);
+            if (currentScope.isPresent() && !currentScope.get().equals(scopeVersion)) {
+                GisDtos.CoordinateValidationResult refreshed = validate(property);
+                repository.refreshValidation(property.id, refreshed.status().name(),
+                    refreshed.validationNote(), scopeVersion);
+            }
+            return;
+        }
 
         // Tọa độ hoặc địa chỉ đã đổi — kết thúc hiệu lực bản cũ trước.
-        PropertyCoordinateAudit.SupersedeReason reason =
-            current.isPresent()
-                ? PropertyCoordinateAudit.SupersedeReason.COORDINATE_CHANGED
-                : PropertyCoordinateAudit.SupersedeReason.COORDINATE_CHANGED;
-        repository.supersedeCurrent(property.id, reason);
+        repository.supersedeCurrent(property.id,
+            PropertyCoordinateAudit.SupersedeReason.COORDINATE_CHANGED);
 
         GisDtos.CoordinateValidationResult validation = validate(property);
 
