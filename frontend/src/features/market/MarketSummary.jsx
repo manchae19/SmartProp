@@ -2,6 +2,7 @@ import { classNames } from "../../shared/lib/ui.js";
 import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api } from "../auth/api.js";
+import AppIcon from "../../shared/components/AppIcon.jsx";
 import { types } from "../property/property.js";
 function useMarketSummaryState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
@@ -74,8 +75,8 @@ export default React.forwardRef(function MarketSummary(props, ref) {
   const view = useMarketSummaryState(props, ref);
   return <><section id="market-current" aria-labelledby="market-current-heading" {...view.rootAttributes} className={classNames(["bg-[var(--ui-surface)] pb-14 text-[var(--ui-accent)] md:pb-20", view.rootAttributes.className])}>
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
-        <div className="rounded-3xl border border-[var(--ui-border)] bg-brand-card p-5 md:p-7" aria-busy={view.busy}>
-          <div className="flex flex-wrap items-start justify-between gap-5">
+        <div className="market-data-panel rounded-3xl border border-[var(--ui-border)] bg-brand-card p-5 md:p-7" aria-busy={view.busy}>
+          <div className="market-panel-header flex flex-wrap items-start justify-between gap-5">
             <div className="max-w-2xl">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--ui-accent)]">
                 {"Dữ liệu từ SmartProp"}
@@ -119,10 +120,10 @@ export default React.forwardRef(function MarketSummary(props, ref) {
                 {"Thử lại"}
               </button>
             </p> : null}
-          {view.summary ? <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {view.summary ? <div className="market-kpis mt-6 grid gap-4 md:grid-cols-3">
               <div className="min-w-0 rounded-2xl bg-[var(--ui-surface)] p-5">
                 <p className="text-sm text-[var(--ui-accent)]">
-                  {"Tin phù hợp"}
+                  <AppIcon name="properties" className="market-kpi-icon hidden" />{"Tin phù hợp"}
                 </p>
                 <strong className="mt-2 block text-3xl font-bold">
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.summary.overall.count)}
@@ -130,7 +131,7 @@ export default React.forwardRef(function MarketSummary(props, ref) {
               </div>
               <div className="min-w-0 rounded-2xl bg-[var(--ui-surface)] p-5">
                 <p className="text-sm text-[var(--ui-accent)]">
-                  {"Giá chào trung bình"}
+                  <AppIcon name="tools" className="market-kpi-icon hidden" />{"Giá chào trung bình"}
                 </p>
                 <strong className="mt-2 block text-xl font-semibold wrap-anywhere">
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.price(view.summary.overall.averageAskingPrice))}{" "}
@@ -141,7 +142,7 @@ export default React.forwardRef(function MarketSummary(props, ref) {
               </div>
               <div className="min-w-0 rounded-2xl bg-[var(--ui-surface)] p-5">
                 <p className="text-sm text-[var(--ui-accent)]">
-                  {"Giá chào theo tổng diện tích"}
+                  <AppIcon name="gis" className="market-kpi-icon hidden" />{"Giá chào theo tổng diện tích"}
                 </p>
                 <strong className="mt-2 block text-xl font-semibold wrap-anywhere">
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.price(view.summary.overall.weightedAskingPricePerSqm))}{" "}
@@ -154,17 +155,18 @@ export default React.forwardRef(function MarketSummary(props, ref) {
           {view.summary?.overall.count === 0 ? <p className="mt-5 text-sm text-[var(--ui-accent)]">
               {"Chưa có tin đủ điều kiện để thống kê."}
             </p> : null}
-          {view.summary?.byDistrict?.length ? <ul className="mt-5 grid gap-3 md:grid-cols-3">
+          {view.summary?.byDistrict?.length ? <ul className="market-area-grid mt-5 grid gap-3 md:grid-cols-3">
               {((items, render) => typeof items === "number" ? Array.from({
               length: Math.max(0, items)
             }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.summary.byDistrict, group => <li key={group.key} className="rounded-xl border border-[var(--ui-border)] p-4 text-sm leading-6 text-[var(--ui-accent)]">
                   <strong className="block font-semibold text-[var(--ui-accent)]">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(group.key || "Chưa xác định khu vực")}
                   </strong>{" "}
-                  {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(group.amounts.count)}
-                  {" tin · "}
+                  <span className="market-area-count">{(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(group.amounts.count)}{" tin"}</span><span className="market-area-separator">{" · "}</span>
+                  <span className="market-area-price">
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.price(group.amounts.weightedAskingPricePerSqm))}
                   {" VND/m² "}
+                  </span>
                 </li>)}
             </ul> : null}
           {view.summary?.districtsTruncated ? <p className="mt-4 text-sm text-[var(--ui-accent)]">

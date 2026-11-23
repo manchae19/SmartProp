@@ -195,7 +195,7 @@ export default React.forwardRef(function LoginView(props, ref) {
             <h1 className="text-4xl xl:text-5xl font-medium tracking-tight text-brand-navy leading-[1.25]">
               {" Không gian sống."}
               <br />
-              <em className="font-serif not-italic text-[var(--ui-ink)]">
+              <em className="[font-family:inherit] not-italic text-[var(--ui-ink)]">
                 {"Khởi đầu của bạn."}
               </em>
             </h1>

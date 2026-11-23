@@ -12,6 +12,7 @@ import MobileDrawer from "./MobileDrawer.jsx";
 import AccountNavigation from "./AccountNavigation.jsx";
 import UserAvatar from "../UserAvatar.jsx";
 import AppIcon from "../AppIcon.jsx";
+import './AppHeader.css';
 function useAppHeaderState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
@@ -138,7 +139,7 @@ export default React.forwardRef(function AppHeader(props, ref) {
   }, []);
   return <><header data-scrolled={scrolled ? "true" : undefined} {...view.rootAttributes} className={classNames(["app-header sticky top-0 z-50 h-[var(--sp-header-height)] border-b border-brand-line bg-brand-cream/95 text-brand-navy backdrop-blur-xl", view.rootAttributes.className])}>
       <div className="sp-container flex h-full items-center justify-between gap-4">
-        <SiteLink to={view.homeLink} className="inline-flex shrink-0 items-center gap-2.5 text-xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-gold" aria-label="SmartProp — Trang chủ" onClick={$event => {
+        <SiteLink to={view.homeLink} className="header-brand inline-flex shrink-0 items-center gap-2.5 text-xl font-bold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-gold" aria-label="SmartProp — Trang chủ" onClick={$event => {
           view.route.path === "/home" && view.scrollHomeSection("home");
         }}>
           <span className="grid size-9 place-items-center rounded-control bg-brand-raised text-lg text-brand-navy">

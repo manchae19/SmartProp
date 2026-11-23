@@ -1,0 +1,22 @@
+/* Closing colors are limited to Homepage CTA and its shared footer context. */
+.home-light #account.light-tools { position: relative; isolation: isolate; padding-top: 48px; padding-bottom: 48px; color: #fff; }
+.home-light #account.light-tools::before { content: ''; position: absolute; inset: 0 auto 0 50%; width: 100vw; transform: translateX(-50%); z-index: -1; background: linear-gradient(120deg,#142b45,#294c70 65%,#142b45); pointer-events: none; }
+.home-light #account.light-tools .light-eyebrow { color: #d9ad55; letter-spacing: .19em; }
+.home-light #account.light-tools h2 { color: #fff; font-weight: 700; line-height: 1.25; }
+.home-light #account.light-tools .light-actions { gap: 12px; }
+.home-light #account.light-tools .light-button { background: #294c70; color: #fff!important; border: 1px solid #b8cbd959; box-shadow: 0 4px 12px #10243b26; min-height: 46px; transition: background-color 200ms ease,border-color 200ms ease,transform 200ms ease; }
+.home-light #account.light-tools .light-button:first-child { background: #d9ad55; color: #10243b!important; border-color: #d9ad55; }
+.home-light #account.light-tools .light-button:first-child:hover { background: #e4ba6b; border-color: #e4ba6b; }
+.home-light #account.light-tools .light-button:nth-child(2):hover { background: #10615d; border-color: #168f89; }
+.home-light #account.light-tools .light-button:last-child { background: #ffffff0c; }
+.home-light #account.light-tools .light-button:last-child:hover { background: #294c70; border-color: #b8cbd9; transform: translateY(-1px); }
+.home-light #account.light-tools .light-button:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+@media(max-width:767px) {
+ .home-light #account.light-tools { padding-block: 36px; }
+ .home-light #account.light-tools .light-actions { width: 100%; }
+ .home-light #account.light-tools .light-button { flex: 1 1 180px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .home-light #account.light-tools .light-button { transition: none; }
+ .home-light #account.light-tools .light-button:hover { transform: none; }
+}

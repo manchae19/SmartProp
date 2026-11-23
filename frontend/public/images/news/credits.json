@@ -1,0 +1,62 @@
+{
+  "notice": "These adapted images are distributed under the respective ShareAlike license stated for each file. No additional restrictions.",
+  "images": [
+    {
+      "file": "hanoi-office.webp",
+      "id": "hanoi-office",
+      "src": "/images/news/hanoi-office.webp",
+      "title": "Hanoi Skyline.jpg",
+      "author": "Minhvuong308hn",
+      "source": "Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hanoi_Skyline.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "location": "Hà Nội, Việt Nam",
+      "photographedAt": "2015-05-05",
+      "checkedAt": "2026-11-21",
+      "changes": "Cắt giữa khung 16:9 từ bản xem trước 960 × 720, chuyển WebP 960 × 540.",
+      "caption": "Hà Nội (2015); ảnh bối cảnh đô thị, không đại diện nguồn cung văn phòng trong bài.",
+      "automatic": false,
+      "derivativeLicense": "CC BY-SA 4.0",
+      "derivativeLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+    },
+    {
+      "file": "cantho-urban.webp",
+      "id": "cantho-urban",
+      "src": "/images/news/cantho-urban.webp",
+      "title": "Can tho.jpg",
+      "author": "Gnguyen5",
+      "source": "Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Can_tho.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "location": "Cần Thơ, Việt Nam",
+      "photographedAt": "2015-08-02",
+      "checkedAt": "2026-11-21",
+      "changes": "Cắt khung 16:9 về phía dưới để giữ sông và cầu từ bản xem trước 960 × 720, chuyển WebP 960 × 540.",
+      "caption": "Cảnh quan Cần Thơ (2015); không phải hình ảnh quy hoạch hay hiện trạng năm 2026.",
+      "automatic": false,
+      "derivativeLicense": "CC BY-SA 4.0",
+      "derivativeLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+    },
+    {
+      "file": "camau-urban.webp",
+      "id": "camau-urban",
+      "src": "/images/news/camau-urban.webp",
+      "title": "Cà Mau city center.jpg",
+      "author": "[Tycho] / Shansov.net",
+      "source": "Wikimedia Commons",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:C%C3%A0_Mau_city_center.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "location": "Cà Mau, Việt Nam",
+      "photographedAt": "2015-12-25",
+      "checkedAt": "2026-11-21",
+      "changes": "Giữ khung 16:9, chuyển bản xem trước thành WebP 960 × 540.",
+      "caption": "Trung tâm Cà Mau (2015); không phải phối cảnh hoặc kết quả thực hiện quy hoạch.",
+      "automatic": false,
+      "derivativeLicense": "CC BY-SA 3.0",
+      "derivativeLicenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+    }
+  ]
+}

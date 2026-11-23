@@ -56,7 +56,7 @@ export const usesPageLayout = path => !["/login", "/register", "/reset-password"
 export function homeSectionId(hash) {
   const id = String(hash || "").replace(/^#/, "");
   if (id === "search" || id === "properties") return "search";
-  return ["home", "properties", "gis", "lifestyle", "market", "market-current", "projects", "account"].includes(id) ? id : null;
+  return ["home", "properties", "gis", "lifestyle", "market", "market-current", "news", "projects", "account"].includes(id) ? id : null;
 }
 export function navigationOffset() {
   if (typeof document === "undefined") return 0;

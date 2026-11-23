@@ -188,7 +188,7 @@ function usePriceTrendChartState(inputProps, forwardedRef) {
 }
 export default React.forwardRef(function PriceTrendChart(props, ref) {
   const view = usePriceTrendChartState(props, ref);
-  return <><div {...view.rootAttributes} className={classNames(["rounded-3xl bg-brand-card p-6 sm:p-8 border border-[var(--ui-border)] shadow-2xs", view.rootAttributes.className])}>
+  return <><div {...view.rootAttributes} className={classNames(["market-price-chart rounded-3xl bg-brand-card p-6 sm:p-8 border border-[var(--ui-border)] shadow-2xs", view.rootAttributes.className])}>
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 pb-6 border-b border-[var(--ui-border)]">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--ui-accent)] mb-2">
@@ -207,10 +207,10 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
             </strong>
           </p>
         </div>
-        <div className="inline-flex items-center gap-1 bg-[var(--ui-surface)] p-1.5 rounded-full border border-[var(--ui-border)] self-start lg:self-auto text-xs">
+        <div className="chart-time-selector inline-flex items-center gap-1 bg-[var(--ui-surface)] p-1.5 rounded-full border border-[var(--ui-border)] self-start lg:self-auto text-xs">
           {((items, render) => typeof items === "number" ? Array.from({
             length: Math.max(0, items)
-          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.timeRanges, range => <button key={range} type="button" onClick={$event => {
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.timeRanges, range => <button key={range} type="button" aria-pressed={view.activeRange === range} onClick={$event => {
             view.updateActiveRangeValue(range);
             view.updateHoveredIndexValue(null);
           }} className={classNames(["px-3.5 py-1.5 rounded-full font-semibold transition-all cursor-pointer", view.activeRange === range ? "bg-[var(--ui-soft)] text-[var(--ui-ink)] shadow-xs" : "text-[var(--ui-accent)] hover:text-[var(--ui-accent)]"])}>
@@ -225,9 +225,9 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
           </span>
           {((items, render) => typeof items === "number" ? Array.from({
             length: Math.max(0, items)
-          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.seriesConfig, (cfg, key) => <button key={key} type="button" onClick={$event => {
+          }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.seriesConfig, (cfg, key) => <button key={key} type="button" aria-pressed={!!view.visibleSeries[key]} onClick={$event => {
             view.toggleSeries(key);
-          }} className={classNames(["inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer", view.visibleSeries[key] ? "bg-[var(--ui-surface)] border-[var(--ui-border)] text-[var(--ui-accent)] shadow-2xs" : "bg-brand-card border-[var(--ui-border)] text-[var(--ui-muted)] opacity-55 line-through"])}>
+          }} className={classNames(["chart-segment inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer", view.visibleSeries[key] ? "bg-[var(--ui-surface)] border-[var(--ui-border)] text-[var(--ui-accent)] shadow-2xs" : "bg-brand-card border-[var(--ui-border)] text-[var(--ui-muted)] opacity-55 line-through"])}>
               <span className="w-2.5 h-2.5 rounded-full" style={{
               backgroundColor: cfg.color
             }} />
@@ -238,7 +238,9 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
           {" Rê chuột trên biểu đồ để đối chiếu đơn giá từng quý "}
         </span>
       </div>
-      <div className="relative w-full overflow-x-auto mt-2">
+      <p className="price-data-note">Lịch sử giá tham khảo cấu hình sẵn; chưa được đối chiếu với dữ liệu giao dịch đã kiểm chứng.</p>
+      <div className="chart-canvas relative">
+      <div className="chart-scroll relative w-full overflow-x-auto mt-2">
         <div className="min-w-[680px]">
           <svg viewBox={`0 0 ${view.svgWidth} ${view.svgHeight}`} className="w-full h-auto overflow-visible select-none">
             <defs>
@@ -278,7 +280,7 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
                 <text x={view.padding.left + idx / Math.max(1, view.filteredLabels.length - 1) * (view.svgWidth - view.padding.left - view.padding.right)} y={view.svgHeight - 12} textAnchor="middle" className={classNames(["text-[11px] font-semibold transition", view.hoveredIndex === idx ? "fill-[var(--ui-accent)] font-bold" : "fill-[var(--ui-muted)]"])}>
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(lbl)}
                 </text>
-                <rect x={view.padding.left + idx / Math.max(1, view.filteredLabels.length - 1) * (view.svgWidth - view.padding.left - view.padding.right) - 25} y={view.padding.top} width="50" height={view.svgHeight - view.padding.top - view.padding.bottom} fill="transparent" className="cursor-pointer" onMouseEnter={$event => {
+                <rect tabIndex={0} role="button" aria-describedby={view.hoveredIndex === idx ? "market-price-tooltip" : undefined} aria-label={"Xem đơn giá " + lbl} onFocus={() => view.updateHoveredIndexValue(idx)} onBlur={() => view.updateHoveredIndexValue(null)} x={view.padding.left + idx / Math.max(1, view.filteredLabels.length - 1) * (view.svgWidth - view.padding.left - view.padding.right) - 25} y={view.padding.top} width="50" height={view.svgHeight - view.padding.top - view.padding.bottom} fill="transparent" className="cursor-pointer" onMouseEnter={$event => {
                 view.updateHoveredIndexValue(idx);
               }} onMouseLeave={$event => {
                 view.updateHoveredIndexValue(null);
@@ -290,8 +292,10 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
                   </React.Fragment>)}
               </g>)}
           </svg>
-          {view.hoveredIndex !== null ? <div className="absolute pointer-events-none z-20 transition-all duration-100" style={{
-            left: `${Math.min(78, Math.max(12, view.hoveredIndex / Math.max(1, view.filteredLabels.length - 1) * 100))}%`,
+        </div>
+      </div>
+          {view.hoveredIndex !== null ? <div id="market-price-tooltip" role="tooltip" className="chart-tooltip absolute pointer-events-none z-20 transition-all duration-100" style={{
+            "--tooltip-x": `${Math.min(78, Math.max(12, view.hoveredIndex / Math.max(1, view.filteredLabels.length - 1) * 100))}%`,
             top: "14px"
           }}>
               <div className="bg-[var(--ui-soft)]/95 backdrop-blur-md text-brand-navy p-4 rounded-2xl shadow-xl border border-[var(--ui-border)]/35 text-xs min-w-[220px]">
@@ -326,7 +330,6 @@ export default React.forwardRef(function PriceTrendChart(props, ref) {
                 </div>
               </div>
             </div> : null}
-        </div>
       </div>
     </div></>;
 });

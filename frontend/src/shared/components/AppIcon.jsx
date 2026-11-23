@@ -4,6 +4,7 @@ function useAppIconState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
   const paths = {
+    newspaper: "M4 4h16v16H4ZM7 8h4v4H7Zm7 0h3m-3 4h3M7 16h10",
     home: "m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z",
     properties: "M4 21V5l8-3 8 3v16M9 21v-5h6v5M8 7h1m6 0h1M8 11h1m6 0h1",
     projects: "M3 21V9h7v12m0-17h11v17M14 8h3m-3 4h3m-3 4h3",

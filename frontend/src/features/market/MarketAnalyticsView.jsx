@@ -11,6 +11,7 @@ import {
   loadMarketAnalytics,
 } from './marketAnalytics.js'
 import './MarketAnalyticsView.css'
+import {marketAnalyticsLabel} from './marketAnalyticsLabels.js'
 
 // Static Da Nang districts; the API's own district keys are merged in when available.
 const BASE_DISTRICTS = ['Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Cẩm Lệ', 'Liên Chiểu', 'Hòa Vang']
@@ -132,7 +133,7 @@ export default function MarketAnalyticsView() {
               <div className="ma-card">
                 <p className="ma-card-label">Trung vị giá rao</p>
                 <strong className="ma-card-value" data-ma-median-price>{formatBillion(data.overall.medianAskingPriceVnd) || '—'}</strong>
-                <p className="ma-card-note" data-ma-status>{data.overall.dataStatus}</p>
+                <p className="ma-card-note" data-ma-status>{marketAnalyticsLabel(data.overall.dataStatus)}</p>
               </div>
               <div className="ma-card">
                 <p className="ma-card-label">Trung vị giá rao / m²</p>
@@ -145,7 +146,7 @@ export default function MarketAnalyticsView() {
               </div>
               <div className="ma-card">
                 <p className="ma-card-label">Cơ sở</p>
-                <strong className="ma-card-value small">{data.meta.priceBasis}</strong>
+                <strong className="ma-card-value small">{marketAnalyticsLabel(data.meta.priceBasis)}</strong>
                 <p className="ma-card-note">{researchIncluded ? 'Gồm nghiên cứu TiniX' : 'Chỉ nguồn công khai'}</p>
               </div>
             </div>
@@ -161,7 +162,7 @@ export default function MarketAnalyticsView() {
                       <li key={d.key} data-ma-district>
                         <span className="ma-bar-label">{d.key} <em>({formatCount(d.count)})</em></span>
                         <span className="ma-bar-track"><span className="ma-bar-fill" style={{ width: bandWidth(d.count, data.byDistrict) + '%' }} /></span>
-                        <span className="ma-bar-value">{formatPerSqm(d.medianPricePerSqm) || 'INSUFFICIENT_DATA'}</span>
+                        <span className="ma-bar-value">{formatPerSqm(d.medianPricePerSqm) || marketAnalyticsLabel('INSUFFICIENT_DATA')}</span>
                       </li>
                     ))}
                   </ul>
@@ -173,7 +174,7 @@ export default function MarketAnalyticsView() {
                 <ul className="ma-bars">
                   {data.byPropertyType.map((t) => (
                     <li key={t.key} data-ma-type>
-                      <span className="ma-bar-label">{t.label}</span>
+                      <span className="ma-bar-label">{marketAnalyticsLabel(t.label)}</span>
                       <span className="ma-bar-track"><span className="ma-bar-fill alt" style={{ width: bandWidth(t.count, data.byPropertyType) + '%' }} /></span>
                       <span className="ma-bar-value">{formatCount(t.count)}</span>
                     </li>
@@ -214,14 +215,14 @@ export default function MarketAnalyticsView() {
                 <p className="ma-muted" data-ma-temporal>Chưa bật dữ liệu nghiên cứu nên không có chuỗi thời gian.</p>
               ) : !temporalAvailable ? (
                 <p className="ma-insufficient" data-ma-temporal>
-                  <strong>INSUFFICIENT_DATA.</strong> Dữ liệu thời gian chưa đủ điều kiện để mô tả xu hướng; hệ thống không tự tạo xu hướng.
+                  <strong>{marketAnalyticsLabel('INSUFFICIENT_DATA')}.</strong> Dữ liệu thời gian chưa đủ điều kiện để mô tả xu hướng; hệ thống không tự tạo xu hướng.
                 </p>
               ) : (
                 <div className="ma-months" data-ma-monthly>
                   {monthly.map((p) => (
                     <div key={p.period} className="ma-month" data-ma-month-status={p.dataStatus}>
                       <span className="ma-month-period">{p.period}</span>
-                      <strong>{formatPerSqm(p.medianPricePerSqm) || 'INSUFFICIENT_DATA'}</strong>
+                      <strong>{formatPerSqm(p.medianPricePerSqm) || marketAnalyticsLabel('INSUFFICIENT_DATA')}</strong>
                       <span className="ma-month-count">{formatCount(p.count)} tin</span>
                     </div>
                   ))}

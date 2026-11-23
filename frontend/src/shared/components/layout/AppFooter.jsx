@@ -1,3 +1,4 @@
+import "./AppFooter.css";
 import { classNames } from "../../lib/ui.js";
 import React, { useSyncExternalStore, useRef } from "react";
 import { SiteLink } from "../../../app/navigation.jsx";

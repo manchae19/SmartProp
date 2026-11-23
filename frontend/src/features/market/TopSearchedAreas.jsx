@@ -1,5 +1,5 @@
 import { classNames, chainHandlers } from "../../shared/lib/ui.js";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { useAppNavigation } from "../../app/navigation.jsx";
 import { DISTRICT_PROFILES } from "./marketData.js";
@@ -66,6 +66,13 @@ function useTopSearchedAreasState(inputProps, forwardedRef) {
 }
 export default React.forwardRef(function TopSearchedAreas(props, ref) {
   const view = useTopSearchedAreasState(props, ref);
+  const [failedImages, setFailedImages] = useState(() => new Set());
+  function districtImage(district) {
+    if (view.mode === "market" && failedImages.has(district.id)) return <div className="district-image-fallback" role="img" aria-label={"Chưa có ảnh khu vực " + district.name}>
+      <svg aria-hidden="true" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8V16Z M24 8v40M40 16v40" /></svg>
+    </div>;
+    return <img src={district.image} alt={district.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" onError={view.mode === "market" ? () => setFailedImages(previous => new Set(previous).add(district.id)) : undefined} />;
+  }
   return <><div {...view.rootAttributes} className={classNames(["top-searched-areas", view.rootAttributes.className])}>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
@@ -98,7 +105,7 @@ export default React.forwardRef(function TopSearchedAreas(props, ref) {
           $event.preventDefault();
           view.handleSelect(view.featuredDistrict);
         })} aria-label={`${view.featuredDistrict.name}, Đà Nẵng - ${view.featuredDistrict.viewsCount} lượt xem`} className="lg:col-span-6 relative min-h-[340px] sm:min-h-[400px] lg:h-[468px] rounded-[22px] overflow-hidden cursor-pointer group shadow-md border border-[var(--ui-border)] select-none">
-            <img src={view.featuredDistrict.image} alt={view.featuredDistrict.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+            {districtImage(view.featuredDistrict)}
             <div className="absolute inset-0 bg-gradient-to-t from-[var(--ui-soft)]/90 via-[var(--ui-soft)]/25 to-brand-cream/15 transition-opacity duration-300 group-hover:from-[var(--ui-soft)]/95" aria-hidden="true" />
             <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--ui-surface)]/95 backdrop-blur-md text-[var(--ui-ink)] text-xs font-bold shadow-md border border-[var(--ui-border)]">
@@ -152,7 +159,7 @@ export default React.forwardRef(function TopSearchedAreas(props, ref) {
             $event.preventDefault();
             view.handleSelect(item);
           })} aria-label={`${item.name}, Đà Nẵng - ${item.viewsCount} lượt xem`} className="relative h-[224px] rounded-[20px] overflow-hidden cursor-pointer group shadow-sm border border-[var(--ui-border)] select-none">
-                <img src={item.image} alt={item.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" />
+                {districtImage(item)}
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--ui-soft)]/90 via-[var(--ui-soft)]/25 to-brand-cream/10 transition-opacity duration-300 group-hover:from-[var(--ui-soft)]/95" aria-hidden="true" />
                 <div className="absolute top-3.5 left-3.5 z-10">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[var(--ui-surface)]/95 backdrop-blur-md text-[var(--ui-ink)] text-[11px] font-bold shadow-sm border border-[var(--ui-border)]">

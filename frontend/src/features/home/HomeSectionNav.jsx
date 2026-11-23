@@ -16,6 +16,14 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
     label: "GIS Explorer",
     icon: "gis"
   }, {
+    id: "news",
+    label: "Tin tức",
+    icon: "newspaper"
+  }, {
+    id: "projects",
+    label: "Dự án",
+    icon: "projects"
+  }, {
     id: "lifestyle",
     label: "Phong cách sống",
     icon: "lifestyle"
@@ -23,10 +31,6 @@ function useHomeSectionNavState(inputProps, forwardedRef) {
     id: "market",
     label: "Thị trường",
     icon: "market"
-  }, {
-    id: "projects",
-    label: "Dự án",
-    icon: "projects"
   }];
   const [bar] = useState(() => createStateStore(null));
   useSyncExternalStore(bar.subscribe, bar.getSnapshot);

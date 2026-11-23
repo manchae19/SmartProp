@@ -52,7 +52,7 @@ export default function PropertyCarousel({
           zIndex: 5 - Math.abs(offset)
         }} aria-label={i + 1 + ' / ' + count}>
         <SiteLink className="light-slide-photo" to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{cover?.url ? <PrivateImage src={cover.url} alt={p.title} /> : <span>Chưa có ảnh</span>}</SiteLink>
-        <div className="light-slide-body"><p className="light-slide-meta">{p.district || p.city} · {types[p.propertyType] || p.propertyType}</p><h2><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{p.title}</SiteLink></h2><strong className="light-slide-price" title={price(p)}>{compactPrice(p)}</strong><p>{displayDecimal(p.areaSqmExact ?? p.areaSqm)} m²{p.bedrooms != null ? ' · ' + p.bedrooms + ' phòng ngủ' : ''}</p><div className="light-slide-links"><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>Khám phá không gian ↗</SiteLink>{publicMapPoint(p) && <SiteLink to={{
+        <div className="light-slide-body"><p className="light-slide-meta">{p.district || p.city} · {types[p.propertyType] || p.propertyType}</p><h2 title={p.title}><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{p.title}</SiteLink></h2><strong className="light-slide-price" title={price(p)}>{compactPrice(p)}</strong><p>{displayDecimal(p.areaSqmExact ?? p.areaSqm)} m²{p.bedrooms != null ? ' · ' + p.bedrooms + ' phòng ngủ' : ''}</p><div className="light-slide-links"><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>Khám phá không gian ↗</SiteLink>{publicMapPoint(p) && <SiteLink to={{
                 path: '/map',
                 query: {
                   propertyId: p.id

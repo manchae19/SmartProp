@@ -21,6 +21,7 @@ const restoredViews = {
   AiConfigView: () => import('../features/admin/AiConfigView.jsx')
 };
 const routes = [
+  {path:'/news', component:()=>import('../features/news/NewsView.jsx')},
   {path:'/market-analytics', component:()=>import('../features/market/MarketAnalyticsView.jsx')},
   {path:'/comparables', component:()=>import('../features/property/ComparablesView.jsx'), meta:{requiresAuth:true,roles:['BROKER','ADMIN']}},
   {path:'/advisor/analysis', component:()=>import('../features/prediction/UnifiedAdvisorView.jsx')},

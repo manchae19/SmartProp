@@ -1,3 +1,4 @@
+import "../property/ListingsCardsPolish.css";
 import { classNames } from "../../shared/lib/ui.js";
 import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
@@ -156,20 +157,44 @@ function useMarketInsightsViewState(inputProps, forwardedRef) {
   const _sectionObserverRef = useRef(null);
   useEffect(() => {
     const result = (() => {
-      if (typeof IntersectionObserver === "undefined") return;
-      _sectionObserverRef.current = new IntersectionObserver(entries => {
-        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]?.target?.id) {
-          activeSection.set(visible[0].target.id);
+      let frame = null;
+      function updateActiveSection() {
+        frame = null;
+        const nav = document.querySelector('[data-ui-view="MarketInsightsView"] .sticky');
+        const threshold = (nav?.getBoundingClientRect().bottom || 128) + 64;
+        let current = inPageTabs[0].id;
+        for (const tab of inPageTabs) {
+          const el = document.getElementById(tab.id);
+          if (el && el.getBoundingClientRect().top <= threshold) current = tab.id;
         }
-      }, {
-        rootMargin: "-20% 0px -60% 0px",
-        threshold: [0.05, 0.25, 0.5]
-      });
-      for (const tab of inPageTabs) {
-        const el = document.getElementById(tab.id);
-        if (el) _sectionObserverRef.current.observe(el);
+        // The last section may be too short to reach the sticky offset.
+        if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2) current = inPageTabs.at(-1).id;
+        if (activeSection.getSnapshot() !== current) activeSection.set(current);
       }
+      function scheduleUpdate() {
+        if (frame === null) frame = requestAnimationFrame(updateActiveSection);
+      }
+      // Use the observer as an additional scroll signal where it is supported.
+      // Scroll/resize listeners also keep section navigation working without it.
+      if (typeof IntersectionObserver !== "undefined") {
+        _sectionObserverRef.current = new IntersectionObserver(scheduleUpdate, {
+          rootMargin: "-20% 0px -60% 0px",
+          threshold: [0.05, 0.25, 0.5]
+        });
+        for (const tab of inPageTabs) {
+          const el = document.getElementById(tab.id);
+          if (el) _sectionObserverRef.current.observe(el);
+        }
+      }
+      window.addEventListener("scroll", scheduleUpdate, { passive: true });
+      window.addEventListener("resize", scheduleUpdate);
+      scheduleUpdate();
+      return () => {
+        window.removeEventListener("scroll", scheduleUpdate);
+        window.removeEventListener("resize", scheduleUpdate);
+        if (frame !== null) cancelAnimationFrame(frame);
+        _sectionObserverRef.current?.disconnect();
+      };
     })();
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
@@ -336,7 +361,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
               </div>
             </div>
           </div>
-          <div className="relative z-10 pt-6" data-sp-f9d979a0="">
+          <div className="market-district-selector relative z-10 pt-6" data-sp-f9d979a0="">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5" data-sp-f9d979a0="">
               <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-navy/60" data-sp-f9d979a0="">
                 {" CHỌN QUẬN / KHU VỰC PHÂN TÍCH CHUYÊN SÂU "}
@@ -348,7 +373,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5" data-sp-f9d979a0="">
               {((items, render) => typeof items === "number" ? Array.from({
                 length: Math.max(0, items)
-              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.DISTRICT_LIST, name => <button key={name} type="button" onClick={$event => {
+              }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.DISTRICT_LIST, name => <button key={name} type="button" aria-pressed={view.currentDistrict.shortName === name} onClick={$event => {
                 view.selectDistrict(view.DISTRICT_PROFILES[name].slug);
               }} className={classNames(["group px-4 py-3 rounded-2xl text-left transition-all cursor-pointer border flex flex-col justify-between", view.currentDistrict.shortName === name ? "bg-[var(--ui-soft)] text-[var(--ui-accent)] border-[var(--ui-border)] shadow-lg" : "bg-brand-card/7 text-brand-navy border-brand-line/12 hover:bg-brand-card/14 hover:border-[var(--ui-border)]/50"])} data-sp-f9d979a0="">
                   <div className="flex items-center justify-between gap-2 w-full mb-1" data-sp-f9d979a0="">
@@ -363,6 +388,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                 </button>)}
             </div>
           </div>
+          <p className="market-hero-source relative z-10">Số liệu tham khảo cấu hình sẵn; chưa xác minh nguồn cho từng chỉ số. Không phải số liệu giao dịch đã được kiểm chứng.</p>
         </section>
         <div className="sticky top-[calc(var(--sp-header-height,64px)+10px)] z-30 my-7" data-sp-f9d979a0="">
           <div className="rounded-full bg-brand-card/95 backdrop-blur-md border border-[var(--ui-border)] shadow-sm p-1.5 flex items-center justify-between gap-1 overflow-x-auto" data-sp-f9d979a0="">
@@ -382,7 +408,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
         </div>
         <div className="space-y-12" data-sp-f9d979a0="">
           <section id="overview" className="scroll-mt-32 grid grid-cols-1 lg:grid-cols-12 gap-7 items-start" data-sp-f9d979a0="">
-            <div className="lg:col-span-7 bg-brand-card rounded-3xl p-6 sm:p-8 border border-[var(--ui-border)] shadow-2xs" data-sp-f9d979a0="">
+            <div className="market-overview-card lg:col-span-7 bg-brand-card rounded-3xl p-6 sm:p-8 border border-[var(--ui-border)] shadow-2xs" data-sp-f9d979a0="">
               <div className="pb-5 mb-6 border-b border-[var(--ui-border)]" data-sp-f9d979a0="">
                 <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--ui-accent)] mb-2" data-sp-f9d979a0="">
                   {" 01 / TỔNG QUAN VĨ MÔ & ĐỊA LÝ "}
@@ -395,7 +421,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                   </span>
                 </h2>
               </div>
-              <div className="space-y-4 mb-7" data-sp-f9d979a0="">
+              <div className="market-analysis-cards space-y-4 mb-7" data-sp-f9d979a0="">
                 <div className="p-5 rounded-2xl bg-[var(--ui-surface)] border border-[var(--ui-border)] border-l-4 border-l-[#183e54]" data-sp-f9d979a0="">
                   <div className="flex items-center gap-2 text-xs font-bold text-[var(--ui-accent)] uppercase tracking-wider mb-2" data-sp-f9d979a0="">
                     <svg className="size-4 text-[var(--ui-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-f9d979a0="">
@@ -434,7 +460,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                     {"Đơn vị chuẩn hóa theo m²"}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4" data-sp-f9d979a0="">
+                <div className="market-overview-stats grid grid-cols-2 sm:grid-cols-3 gap-4" data-sp-f9d979a0="">
                   <div className="p-4 rounded-2xl bg-[var(--ui-surface)] border border-[var(--ui-border)]" data-sp-f9d979a0="">
                     <p className="text-[11px] font-semibold text-[var(--ui-accent)] uppercase tracking-wider" data-sp-f9d979a0="">
                       {"Diện tích tự nhiên"}
@@ -510,7 +536,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                 </div>
               </div>
             </div>
-            <div className="lg:col-span-5 bg-brand-card rounded-3xl p-5 sm:p-6 border border-[var(--ui-border)] shadow-2xs lg:sticky lg:top-28" data-sp-f9d979a0="">
+            <div className="market-spatial-card lg:col-span-5 bg-brand-card rounded-3xl p-5 sm:p-6 border border-[var(--ui-border)] shadow-2xs lg:sticky lg:top-28" data-sp-f9d979a0="">
               <div className="flex items-center justify-between gap-3 mb-4" data-sp-f9d979a0="">
                 <div data-sp-f9d979a0="">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ui-accent)]" data-sp-f9d979a0="">
@@ -560,6 +586,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
             </div>
           </section>
           <section id="planning" className="scroll-mt-32 bg-brand-card rounded-3xl p-6 sm:p-8 lg:p-10 border border-[var(--ui-border)] shadow-2xs" data-sp-f9d979a0="">
+            <p className="planning-source-note">Nội dung và trạng thái hạ tầng là thông tin tham khảo cấu hình sẵn; chưa có nguồn đối chiếu cho từng dự án. Không phải xác nhận tiến độ hoặc thông tin quy hoạch đã được xác minh.</p>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 mb-7 border-b border-[var(--ui-border)]" data-sp-f9d979a0="">
               <div data-sp-f9d979a0="">
                 <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--ui-accent)] mb-2" data-sp-f9d979a0="">
@@ -580,7 +607,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
             </div>
             <div className="space-y-4" data-sp-f9d979a0="">
               <div className="rounded-2xl border border-[var(--ui-border)] overflow-hidden transition-all" data-sp-f9d979a0="">
-                <button type="button" onClick={$event => {
+                <button type="button" id="planning-toggle-1" aria-expanded={!!view.expandedPanels.planning1} aria-controls="planning-panel-1" onClick={$event => {
                   view.togglePanel("planning1");
                 }} className={classNames(["w-full px-6 py-4 flex items-center justify-between text-left text-xs sm:text-sm font-bold cursor-pointer transition-colors", view.expandedPanels.planning1 ? "bg-[var(--ui-soft)] text-brand-navy" : "bg-[var(--ui-surface)] text-[var(--ui-accent)] hover:bg-[var(--ui-surface)]"])} data-sp-f9d979a0="">
                   <div className="flex items-center gap-3.5" data-sp-f9d979a0="">
@@ -596,7 +623,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                     {" ▼ "}
                   </span>
                 </button>
-                <div className="p-6 bg-brand-card text-xs sm:text-[13px] leading-relaxed text-[var(--ui-accent)] space-y-4 border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
+                <div id="planning-panel-1" role="region" aria-labelledby="planning-toggle-1" className="p-6 bg-brand-card text-xs sm:text-[13px] leading-relaxed text-[var(--ui-accent)] space-y-4 border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
                   display: view.expandedPanels.planning1 ? undefined : "none"
                 }}>
                   <p data-sp-f9d979a0="">
@@ -631,7 +658,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                 </div>
               </div>
               <div className="rounded-2xl border border-[var(--ui-border)] overflow-hidden transition-all" data-sp-f9d979a0="">
-                <button type="button" onClick={$event => {
+                <button type="button" id="planning-toggle-2" aria-expanded={!!view.expandedPanels.planning2} aria-controls="planning-panel-2" onClick={$event => {
                   view.togglePanel("planning2");
                 }} className={classNames(["w-full px-6 py-4 flex items-center justify-between text-left text-xs sm:text-sm font-bold cursor-pointer transition-colors", view.expandedPanels.planning2 ? "bg-[var(--ui-soft)] text-brand-navy" : "bg-[var(--ui-surface)] text-[var(--ui-accent)] hover:bg-[var(--ui-surface)]"])} data-sp-f9d979a0="">
                   <div className="flex items-center gap-3.5" data-sp-f9d979a0="">
@@ -647,7 +674,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                     {" ▼ "}
                   </span>
                 </button>
-                <div className="p-6 bg-brand-card border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
+                <div id="planning-panel-2" role="region" aria-labelledby="planning-toggle-2" className="p-6 bg-brand-card border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
                   display: view.expandedPanels.planning2 ? undefined : "none"
                 }}>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-sp-f9d979a0="">
@@ -655,7 +682,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                       length: Math.max(0, items)
                     }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.currentDistrict.infrastructure, item => <div key={item.name} className="p-4 rounded-2xl bg-[var(--ui-surface)] border border-[var(--ui-border)] flex flex-col justify-between gap-3" data-sp-f9d979a0="">
                         <div data-sp-f9d979a0="">
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full inline-block mb-2.5 bg-brand-card border border-[var(--ui-border)] text-[var(--ui-accent)] uppercase tracking-wider" data-sp-f9d979a0="">
+                          <span data-planning-status={item.status} className="text-[10px] font-bold px-2.5 py-1 rounded-full inline-block mb-2.5 bg-brand-card border border-[var(--ui-border)] text-[var(--ui-accent)] uppercase tracking-wider" data-sp-f9d979a0="">
                             {" ● "}
                             {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.status)}
                           </span>
@@ -671,7 +698,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                 </div>
               </div>
               <div className="rounded-2xl border border-[var(--ui-border)] overflow-hidden transition-all" data-sp-f9d979a0="">
-                <button type="button" onClick={$event => {
+                <button type="button" id="planning-toggle-3" aria-expanded={!!view.expandedPanels.planning3} aria-controls="planning-panel-3" onClick={$event => {
                   view.togglePanel("planning3");
                 }} className={classNames(["w-full px-6 py-4 flex items-center justify-between text-left text-xs sm:text-sm font-bold cursor-pointer transition-colors", view.expandedPanels.planning3 ? "bg-[var(--ui-soft)] text-brand-navy" : "bg-[var(--ui-surface)] text-[var(--ui-accent)] hover:bg-[var(--ui-surface)]"])} data-sp-f9d979a0="">
                   <div className="flex items-center gap-3.5" data-sp-f9d979a0="">
@@ -686,7 +713,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                     {" ▼ "}
                   </span>
                 </button>
-                <div className="p-6 bg-brand-card text-xs sm:text-[13px] leading-relaxed text-[var(--ui-accent)] border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
+                <div id="planning-panel-3" role="region" aria-labelledby="planning-toggle-3" className="p-6 bg-brand-card text-xs sm:text-[13px] leading-relaxed text-[var(--ui-accent)] border-t border-[var(--ui-border)]" data-sp-f9d979a0="" style={{
                   display: view.expandedPanels.planning3 ? undefined : "none"
                 }}>
                   <p data-sp-f9d979a0="">
@@ -701,7 +728,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
           </section>
           <section id="price-trend" className="scroll-mt-32 space-y-6" data-sp-f9d979a0="">
             <PriceTrendChart history={view.currentDistrict.priceHistory} data-sp-f9d979a0="" />
-            <div className="rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-br from-[var(--ui-soft)] via-[var(--ui-soft)] to-[var(--ui-soft)] text-brand-navy shadow-xl border border-[var(--ui-border)]/35 relative overflow-hidden" data-sp-f9d979a0="">
+            <div className="market-ai-insights rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-br from-[var(--ui-soft)] via-[var(--ui-soft)] to-[var(--ui-soft)] text-brand-navy shadow-xl border border-[var(--ui-border)]/35 relative overflow-hidden" data-sp-f9d979a0="">
               <div className="pointer-events-none absolute -right-16 -bottom-16 h-64 w-64 rounded-full bg-[var(--ui-soft)]/10 blur-3xl" aria-hidden="true" data-sp-f9d979a0="" />
               <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 mb-6 border-b border-brand-line/12" data-sp-f9d979a0="">
                 <div data-sp-f9d979a0="">
@@ -728,6 +755,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                   </span>
                 </SiteLink>
               </div>
+              <p className="ai-data-note relative z-10">Nhận định tham khảo cấu hình sẵn, chưa xác minh nguồn và không phải kết quả dự báo được tạo trực tiếp cho yêu cầu này. Không cam kết tăng giá, lợi nhuận hoặc thanh khoản.</p>
               <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 text-xs sm:text-[13px] leading-relaxed" data-sp-f9d979a0="">
                 <div className="bg-brand-card/8 backdrop-blur-md rounded-2xl p-5 border border-brand-line/12" data-sp-f9d979a0="">
                   <div className="flex items-center gap-2 font-bold text-[var(--ui-ink)] uppercase tracking-wider text-xs mb-2.5" data-sp-f9d979a0="">
@@ -844,6 +872,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
               </div>}
           </section>
           <section id="neighboring" className="scroll-mt-32 bg-brand-card rounded-3xl p-6 sm:p-8 lg:p-10 border border-[var(--ui-border)] shadow-2xs space-y-8" data-sp-f9d979a0="">
+            <p className="district-data-note">Chỉ số khu vực là dữ liệu tham khảo cấu hình sẵn, chưa xác minh nguồn. Lượt xem không đồng nghĩa với lượt tìm kiếm được đo thực tế.</p>
             <TopSearchedAreas currentSlug={view.currentDistrict.slug} eyebrow="05 / XU HƯỚNG TÌM KIẾM · ĐÀ NẴNG" mode="market" onSelectDistrict={$event => {
               return view.selectDistrict?.($event);
             }} data-sp-f9d979a0="" />
