@@ -43,10 +43,6 @@ test-results/
 !/docs/ADVISOR_FRONTEND.md
 !/docs/STEP17_RECOMMENDATION_LIVE.md
 
-# Coordinate provenance audit: read-only findings on where the 152 listing
-# coordinates came from. No PII, no credentials, no coordinate changes.
-!/docs/SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md
-
 # Team handoff reports only: versionable, no secrets, no local evidence.
 !/docs/handoff/
 !/docs/handoff/**
@@ -140,3 +136,7 @@ Thumbs.db
 # Ad-hoc demo/seed scripts for the local staging stack; not part of the test suite.
 ai-services/tests/demo_*.py
 ai-services/tests/seed_*.py
+
+# Coordinate provenance audit: read-only findings on where the 152 listing
+# coordinates came from. No PII, no credentials, no coordinate changes.
+!/docs/SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md
