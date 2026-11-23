@@ -1,0 +1,154 @@
+package vn.smartprop.modules.property;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import vn.smartprop.gis.DanangAdminNormalizer;
+import vn.smartprop.gis.DanangSpatialValidator;
+import vn.smartprop.gis.GisDtos;
+
+/**
+ * Coordinate Provenance V1 — điều phối ghi nhận nguồn gốc tọa độ.
+ *
+ * <p>Chạy trong transaction của caller ({@code MANDATORY}) để property và audit luôn
+ * nhất quán: nếu audit lỗi, property rollback theo.
+ *
+ * <p>Nguyên tắc:
+ * <ul>
+ *   <li>Không suy {@code accuracy} từ {@code VERIFIED_EXACT} hay số chữ số thập phân.</li>
+ *   <li>Không cho client tự khai {@code coordinateSource} đã xác minh — nguồn do
+ *       backend xác định theo ngữ cảnh luồng gọi.</li>
+ *   <li>Đổi tọa độ hoặc địa chỉ đều làm fingerprint đổi → audit cũ bị supersede.</li>
+ * </ul>
+ */
+@Service
+public class PropertyCoordinateAuditService {
+    private final PropertyCoordinateAuditRepository repository;
+    private final DanangSpatialValidator validator;
+    private final DanangAdminNormalizer normalizer;
+
+    public PropertyCoordinateAuditService(PropertyCoordinateAuditRepository repository,
+                                          DanangSpatialValidator validator,
+                                          DanangAdminNormalizer normalizer) {
+        this.repository = repository;
+        this.validator = validator;
+        this.normalizer = normalizer;
+    }
+
+    /** Trạng thái tọa độ hiện hành, hoặc {@code absent()} nếu tin chưa có audit. */
+    @Transactional(readOnly = true)
+    public PropertyCoordinateAudit.Status status(String propertyId) {
+        return repository.current(propertyId).orElseGet(PropertyCoordinateAudit.Status::absent);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PropertyCoordinateAuditRepository.HistoryRow> history(String propertyId) {
+        return repository.history(propertyId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PropertyCoordinateAuditRepository.PendingRow> pending(int limit) {
+        return repository.pending(Math.min(Math.max(limit, 1), 200));
+    }
+
+    /**
+     * Ghi nhận tọa độ sau khi property đã được lưu.
+     *
+     * <p>Nếu fingerprint không đổi so với bản hiện hành, không tạo bản ghi mới —
+     * tránh phình lịch sử khi người dùng lưu form mà không đổi vị trí.
+     *
+     * @param source nguồn tọa độ do backend xác định, không lấy từ request
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void record(Property property, PropertyCoordinateAudit.Source source,
+                       String sourceReference, Long actor) {
+        if (property.location == null) return;
+
+        double latitude = property.location.getY();
+        double longitude = property.location.getX();
+        String scopeVersion = validator.scopeVersion();
+        String fingerprint = PropertyCoordinateAuditRepository.fingerprint(
+            latitude, longitude, property.address, property.district, property.ward,
+            scopeVersion);
+
+        Optional<String> current = repository.currentFingerprint(property.id);
+        if (current.isPresent() && current.get().equals(fingerprint)) return;
+
+        // Tọa độ hoặc địa chỉ đã đổi — kết thúc hiệu lực bản cũ trước.
+        PropertyCoordinateAudit.SupersedeReason reason =
+            current.isPresent()
+                ? PropertyCoordinateAudit.SupersedeReason.COORDINATE_CHANGED
+                : PropertyCoordinateAudit.SupersedeReason.COORDINATE_CHANGED;
+        repository.supersedeCurrent(property.id, reason);
+
+        GisDtos.CoordinateValidationResult validation = validate(property);
+
+        repository.insert(
+            UUID.randomUUID().toString(), property.id,
+            repository.maxRevision(property.id) + 1,
+            latitude, longitude, fingerprint,
+            property.address, property.district, property.ward,
+            source, sourceReference, actor,
+            // Accuracy mặc định UNKNOWN: chưa có bằng chứng độ chính xác.
+            PropertyCoordinateAudit.Accuracy.UNKNOWN, null, null,
+            // Verification mặc định UNVERIFIED: publish không nâng mức xác minh.
+            PropertyCoordinateAudit.Verification.UNVERIFIED, null, null, null, null,
+            validation.status().name(), validation.validationNote(), scopeVersion);
+    }
+
+    /**
+     * Chạy validator với district đã chuẩn hoá như production.
+     *
+     * <p>Kết quả chỉ phản ánh {@code geographic_validity} — KHÔNG phải độ chính xác
+     * cấp thửa.
+     */
+    private GisDtos.CoordinateValidationResult validate(Property property) {
+        GisDtos.AdminNormalizationResult normalized =
+            normalizer.normalize(property.district, property.ward, property.city);
+        return validator.validate(property.location.getY(), property.location.getX(),
+            normalized.canonicalDistrict(), true);
+    }
+
+    /**
+     * Ghi quyết định xác minh. Chỉ gọi từ luồng đã kiểm tra quyền admin.
+     *
+     * @return false nếu revision hiện hành đã bị thay thế (race condition)
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public boolean verify(String propertyId, PropertyCoordinateAudit.Verification status,
+                          PropertyCoordinateAudit.VerificationMethod method,
+                          Long verifiedBy, String evidenceReference,
+                          PropertyCoordinateAudit.Accuracy accuracy, Double accuracyMeters,
+                          String accuracyMethod) {
+        if (status == PropertyCoordinateAudit.Verification.VERIFIED
+                && (method == null || evidenceReference == null || evidenceReference.isBlank())) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "Xác minh cần verificationMethod và evidenceReference");
+        }
+        if (accuracy == PropertyCoordinateAudit.Accuracy.PARCEL
+                && status != PropertyCoordinateAudit.Verification.VERIFIED) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyLevel PARCEL chỉ hợp lệ khi verificationStatus VERIFIED");
+        }
+        int updated = repository.verifyCurrent(propertyId, status, method, verifiedBy,
+            evidenceReference, accuracy, accuracyMeters, accuracyMethod);
+        return updated == 1;
+    }
+
+    /**
+     * Đánh dấu audit hiện hành là STALE khi địa chỉ đổi nhưng tọa độ giữ nguyên.
+     *
+     * <p>Fingerprint đã bao gồm địa chỉ nên {@link #record} sẽ tự supersede. Hàm này
+     * dùng khi cần đánh dấu rõ lý do mà không tạo revision mới.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void markStale(String propertyId) {
+        repository.supersedeCurrent(propertyId,
+            PropertyCoordinateAudit.SupersedeReason.ADDRESS_CHANGED);
+    }
+}

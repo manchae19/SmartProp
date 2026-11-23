@@ -24,11 +24,36 @@ public final class PropertyDtos {
         BigDecimal areaSqm,Short bedrooms,Short bathrooms,String floor,String block,String direction,
         String address,String city,String district,String ward,double latitude,double longitude,
         List<String> declaredAmenities,Property.Status status,int contentVersion,Instant publishedAt,
-        Instant expiresAt,Instant createdAt,Instant updatedAt,List<Image> images,String listingCode) {
+        Instant expiresAt,Instant createdAt,Instant updatedAt,List<Image> images,String listingCode,
+        Coordinate coordinate) {
         @com.fasterxml.jackson.annotation.JsonProperty("priceExact")
         public String priceExact() { return price == null ? null : price.toPlainString(); }
         @com.fasterxml.jackson.annotation.JsonProperty("areaSqmExact")
         public String areaSqmExact() { return areaSqm == null ? null : areaSqm.toPlainString(); }
+    }
+
+    /**
+     * Trạng thái tọa độ kèm ba cờ eligibility.
+     *
+     * <p>Client không phải tự suy luận từ {@code geographicValidationStatus} —
+     * backend đã tính sẵn. Ba cờ độc lập, không suy ra lẫn nhau.
+     */
+    public record Coordinate(String coordinateSource,String accuracyLevel,Double accuracyMeters,
+        String verificationStatus,String verificationMethod,Instant verifiedAt,
+        String geographicValidationStatus,String geographicValidationNote,
+        boolean referenceMapEligible,boolean distanceAnalysisEligible,
+        boolean parcelAnalysisEligible,int revision,Instant auditedAt) {
+        public static Coordinate absent() {
+            return new Coordinate("UNKNOWN","UNKNOWN",null,"UNVERIFIED",null,null,
+                null,null,false,false,false,0,null);
+        }
+        public static Coordinate of(vn.smartprop.modules.property.PropertyCoordinateAudit.Status s) {
+            return new Coordinate(s.coordinateSource(),s.accuracyLevel(),s.accuracyMeters(),
+                s.verificationStatus(),s.verificationMethod(),s.verifiedAt(),
+                s.geographicValidationStatus(),s.geographicValidationNote(),
+                s.referenceMapEligible(),s.distanceAnalysisEligible(),
+                s.parcelAnalysisEligible(),s.revision(),s.auditedAt());
+        }
     }
     public record Managed(View property,Long ownerId,String contactName,String contactPhone,String contactEmail) {}
 }
