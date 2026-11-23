@@ -43,6 +43,10 @@ test-results/
 !/docs/ADVISOR_FRONTEND.md
 !/docs/STEP17_RECOMMENDATION_LIVE.md
 
+# GIS V2 research: source audit and readiness decision. No secrets, no local
+# paths, no fabricated geometry — it records why the feature is not built yet.
+!/docs/SMARTPROP_GIS_V2_RESEARCH_AND_READINESS.md
+
 # Team handoff reports only: versionable, no secrets, no local evidence.
 !/docs/handoff/
 !/docs/handoff/**
