@@ -541,18 +541,82 @@ WHERE MBRContains(
   AND ST_Distance(flood_geometry, property_location, 'metre') <= ?
 ```
 
-#### Phương án dự phòng
+#### Phương án dự phòng — theo điều kiện thực tế, không theo version string
 
-Nếu môi trường triển khai dùng MySQL < 8.0.12 (không có `ST_Distance` cho geographic
-SRS) hoặc MariaDB (không hỗ trợ đầy đủ):
+**Phương án chính** (đã kiểm chứng trên MySQL 8.4.13): `ST_Distance(g1, g2, 'metre')`
+trên SRID 4326. Dùng trực tiếp, không cần chuyển hệ tọa độ.
 
-| Phương án | Khi nào dùng | Đã kiểm chứng |
-|---|---|---|
-| `ST_Transform(32648)` + `ST_Distance` | MySQL ≥ 8.0.12 nhưng `ST_Distance` 4326 lỗi | ✅ 76.9886 m |
-| JTS local metric projection | Không có `ST_Transform` | ✅ 77.0477 m |
+**Fallback A — chuyển hệ tọa độ**
 
-**Kiểm tra phiên bản trước khi triển khai:** `SELECT VERSION();` — nếu < 8.0.12, dùng
-phương án dự phòng.
+Chỉ dùng khi môi trường thực tế **xác nhận được tất cả** các điều kiện sau:
+
+| Điều kiện | Cách kiểm tra |
+|---|---|
+| Có SRS nguồn (4326) và SRS đích | `SELECT * FROM information_schema.ST_SPATIAL_REFERENCE_SYSTEMS WHERE SRS_ID IN (4326, 32648);` |
+| Hỗ trợ `ST_Transform` | `SELECT ST_Transform(ST_GeomFromText('POINT(108.2 16.05)', 4326, 'axis-order=long-lat'), 32648);` |
+| Hệ chiếu đích phù hợp vị trí | Kiểm tra kinh độ điểm so với ranh giới zone |
+| Phép biến đổi chạy được | Không lỗi, trả geometry có `ST_SRID = 32648` |
+| Đơn vị sau chuyển đổi là mét | Đo một khoảng cách đã biết, ví dụ 0.001° vĩ độ phải ≈ 110.66 m |
+
+**Không mặc định EPSG:32648 luôn phù hợp cho mọi vị trí.** Đà Nẵng vắt qua ranh giới
+zone 48N/49N tại kinh tuyến 108°E. Đo thực tế cho thấy sai lệch giữa hai zone chỉ
+2,4 cm ở ~77 m, nhưng nếu ngưỡng phân tích nhỏ hơn 10 m thì phải chọn zone theo kinh
+độ từng điểm.
+
+**Fallback B — Java/JTS**
+
+Nếu database không có phép tính khoảng cách tương thích, dùng JTS với phép chiếu sang
+hệ metric đã kiểm chứng (77.0477 m cho cùng cặp điểm).
+
+**Không tính trực tiếp khoảng cách bằng độ kinh/vĩ rồi gọi là mét.**
+
+#### Trạng thái kiểm chứng của từng phương án
+
+| Phương án | Môi trường đã kiểm chứng | Kết quả | Trạng thái |
+|---|---|---|---|
+| `ST_Distance` 4326 | **MySQL 8.4.13** | 76.9032 m | ✅ **VERIFIED** |
+| `ST_Transform(32648)` + `ST_Distance` | **MySQL 8.4.13** | 76.9886 m | ✅ VERIFIED trên 8.4.13 |
+| `ST_Transform(32649)` + `ST_Distance` | **MySQL 8.4.13** | 76.9651 m | ✅ VERIFIED trên 8.4.13 |
+| JTS local metric | **Java 21 + JTS** | 77.0477 m | ✅ VERIFIED |
+| `ST_Transform` trên MySQL < 8.0.12 | — | — | ⚠️ **NOT_VERIFIED_ON_TARGET_ENVIRONMENT** |
+| `ST_Transform` trên MariaDB | — | — | ⚠️ **NOT_VERIFIED_ON_TARGET_ENVIRONMENT** |
+| `ST_Distance` 4326 trên MariaDB | — | — | ⚠️ **NOT_VERIFIED_ON_TARGET_ENVIRONMENT** |
+
+**Không khẳng định MySQL cũ chắc chắn có `ST_Transform`.** Không khẳng định MariaDB có
+cùng semantics với MySQL 8.4. Chưa có môi trường MySQL cũ hoặc MariaDB để kiểm thử
+trong lượt này.
+
+**Không chọn fallback theo version string đơn thuần.** `SELECT VERSION()` chỉ là bước
+đầu — phải chạy thử phép tính thật trên môi trường đích trước khi tin kết quả.
+
+#### Quy trình kiểm tra trước khi triển khai
+
+```sql
+-- Bước 1: phiên bản (chỉ để biết, không đủ để quyết định)
+SELECT VERSION();
+
+-- Bước 2: SRS có sẵn không
+SELECT SRS_ID, SRS_NAME FROM information_schema.ST_SPATIAL_REFERENCE_SYSTEMS
+WHERE SRS_ID IN (4326, 32648, 32649);
+
+-- Bước 3: ST_Distance 4326 có chạy không
+SELECT ST_Distance(
+  ST_GeomFromText('POINT(108.205 16.055)', 4326, 'axis-order=long-lat'),
+  ST_GeomFromText('POINT(108.205 16.056)', 4326, 'axis-order=long-lat'),
+  'metre'
+) AS should_be_about_110_66;
+
+-- Bước 4: nếu bước 3 lỗi, thử ST_Transform
+SELECT ST_Distance(
+  ST_Transform(ST_GeomFromText('POINT(108.205 16.055)', 4326, 'axis-order=long-lat'), 32648),
+  ST_Transform(ST_GeomFromText('POINT(108.205 16.056)', 4326, 'axis-order=long-lat'), 32648)
+) AS should_be_about_110_66;
+
+-- Bước 5: nếu cả hai lỗi, dùng JTS trong Java
+```
+
+**Kết quả bước 3 phải ≈ 110.66.** Nếu ra số khác (ví dụ 0.001), đơn vị không phải mét —
+không dùng phương án đó.
 
 #### Bảng chọn hàm theo geometry
 
