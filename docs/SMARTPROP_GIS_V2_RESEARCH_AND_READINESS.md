@@ -12,7 +12,8 @@
 
 SmartProp đã có hạ tầng không gian tốt hơn mức cần thiết cho GIS V2: MySQL 8 Spatial
 với `POINT SRID 4326`, spatial index, validator chất lượng tọa độ 8 mức, và pattern
-truy vấn `MBRContains` + `ST_Distance_Sphere` đang chạy production.
+truy vấn `MBRContains` + `ST_Distance_Sphere` đang chạy production. `ST_Distance` trên
+SRID 4326 đã kiểm chứng trả **mét** cho cả POINT và LINESTRING (mục C.3b).
 
 **Thiếu là dữ liệu, không phải mã.** Trong phạm vi khảo sát và tại thời điểm kiểm tra,
 chưa xác minh được nguồn geometry nguy cơ ngập có quyền sử dụng phù hợp. Cụ thể:
@@ -22,7 +23,7 @@ chưa xác minh được nguồn geometry nguy cơ ngập có quyền sử dụn
 | Tọa độ bất động sản | **Có** — 152/152 tin |
 | Hạ tầng spatial MySQL | **Có** — POINT SRID 4326 + SPATIAL KEY |
 | Validator chất lượng tọa độ | **Có** — 8 mức, đang dùng |
-| Pattern truy vấn khoảng cách | **Có** — `ST_Distance_Sphere` cho POINT |
+| Pattern truy vấn khoảng cách | **Có** — `ST_Distance_Sphere` cho POINT; `ST_Distance` 4326 trả mét cho cả POINT và LINESTRING |
 | Polygon ranh giới phường | **Không** — chỉ có cấp quận cũ |
 | Geometry vị trí ngập | **Không** — `flood_records` không có cột geometry |
 | Provenance tọa độ BĐS | **Không** — xem `SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md` |
@@ -317,7 +318,7 @@ public record FloodEvidenceMatch(
                                  // | SAME_STREET_WARD | INSUFFICIENT_EVIDENCE
     String geometryType,         // POINT | LINESTRING | POLYGON | UNKNOWN
     Double distanceMeters,       // null khi không đo được
-    String distanceMethod,       // ST_Distance_Sphere | ST_Transform+ST_Distance | null
+    String distanceMethod,       // "ST_Distance_4326_metre" | null
     String locationAccuracy,     // từ flood_records
     String verificationStatus,   // từ flood_records
     String sourceName,
@@ -382,10 +383,8 @@ Trả về danh sách bằng chứng có thứ hạng:
        theo nguồn dữ liệu được dẫn."
 
 2. NEAR_VERIFIED_LOCATION
-   geometry_type = POINT
-     AND ST_Distance_Sphere(geometry, property.location) <= radiusMeters
-   geometry_type = LINESTRING
-     AND ST_Distance(geometry_metric, property.location_metric) <= radiusMeters
+   geometry_type IN (POINT, LINESTRING)
+     AND ST_Distance(geometry, property.location, 'metre') <= radiusMeters
    -> hiển thị khoảng cách thực + nguồn + cảnh báo "gần không đồng nghĩa nằm trong"
 
 3. SAME_STREET_WARD
@@ -423,37 +422,53 @@ response. Không chuyển thành xác suất ngập.
 -- Điểm lệch:      (108.205, 16.056)
 ```
 
-#### Kết quả đo — bảng đối chiếu
+#### Kết quả đo — bảng đối chiếu đầy đủ
 
-| Phương pháp | Điểm trên đường | Điểm lệch | Đơn vị | Kết luận |
-|---|---:|---:|---|---|
-| `ST_Distance` SRID 4326 | **0** | **76.9032** | **độ** | Chạy được, nhưng **không phải mét** |
-| `ST_Distance_Sphere` POINT↔POINT | — | 1542.17 | mét | Chạy được (đối chứng POINT) |
-| `ST_Distance_Sphere` LINESTRING↔POINT | — | **ERROR 3618** | — | **Không hỗ trợ** |
-| `ST_Transform` 32648 + `ST_Distance` | **0.0160** | **76.9886** | **mét** | **Chạy được** |
-| `ST_Transform` 32649 + `ST_Distance` | **0.0126** | **76.9651** | **mét** | **Chạy được** |
-| JTS local metric projection (đối chứng) | **0.0000** | **77.0477** | mét | Đối chứng độc lập |
+| Test | Hàm | Kết quả | Đơn vị xác minh | PASS/FAIL |
+|---|---|---:|---|---|
+| T1 | `ST_Distance` 4326 mặc định | **76.9032** | **mét** | PASS |
+| T2 | `ST_Distance` 4326, `'metre'` | **76.9032** | mét | PASS — trùng T1 |
+| T3 | Điểm nằm trên đường | **0** | mét | PASS |
+| T4 | `ST_Distance` POINT–POINT | **1539.3246** | mét | PASS |
+| T4b | `ST_Distance_Sphere` POINT–POINT | 1542.1738 | mét | PASS — chênh 2,85 m |
+| T5 | LINESTRING nhiều đoạn | **0** | mét | PASS |
+| T6 | UTM 48N + `ST_Distance` | **76.9886** | mét | PASS |
+| T7 | UTM 49N + `ST_Distance` | **76.9651** | mét | PASS |
+| T8 | 0.001° vĩ độ | **110.6587** | mét | PASS — xác nhận đơn vị |
+| T9 | 0.001° kinh độ @16.055° | **107.0051** | mét | PASS |
+| T10 | `'foot'` | **363.0534** | foot | PASS — tham số unit hoạt động |
+| T11 | 1° vĩ độ | **110663.37** | mét | PASS — 110,66 km |
+| T12 | 1° kinh độ @16.055° | **107004.99** | mét | PASS — 107 km |
+| T13 | NULL geometry | **NULL** | — | PASS — an toàn |
+| T14 | `ST_Distance_Sphere` LINESTRING | **ERROR 3618** | — | FAIL — không hỗ trợ |
 
-**Sai lệch giữa UTM48 và UTM49:** `76.9886 − 76.9651 = 0.0235 m` (2,4 cm) — không đáng
-kể cho ngưỡng 200 m.
+#### Kết luận về đơn vị — `ST_Distance` trên SRID 4326 trả MÉT
 
-**Sai lệch giữa MySQL UTM48 và JTS:** `77.0477 − 76.9886 = 0.0591 m` (5,9 cm, 0,08%) —
-do JTS dùng phép chiếu phẳng cục bộ, MySQL dùng phép chiếu UTM chính thức. Cả hai đều
-đúng trong sai số cho phép.
+**Báo cáo trước ghi "trả độ" là SAI.** Đã chứng minh bằng ba phép đo độc lập:
 
-#### Kết luận về đơn vị đo
+| Phép đo | Kết quả | Nếu là độ thì vô lý vì | Kết luận |
+|---|---:|---|---|
+| 0.001° vĩ độ | **110.6587** | 0.001° không thể là 110 độ | **mét** |
+| 1° vĩ độ | **110663.37** | 1° không thể là 110 663 độ | **mét** |
+| 1° kinh độ @16.055° | **107004.99** | 1° không thể là 107 005 độ | **mét** |
 
-**`ST_Distance` trên SRID 4326 trả ĐỘ, không phải mét.** Đã kiểm chứng: điểm lệch
-~77 m cho kết quả `76.9032` — nếu là mét thì vô lý vì 0.001° vĩ độ ≈ 111 m.
+**Giá trị 110.66 m cho 0.001° vĩ độ khớp chính xác với độ dài cung kinh tuyến trên
+ellipsoid WGS84** (1° ≈ 110 574 m ở xích đạo, 111 694 m ở cực; 110 663 m ở vĩ độ 16°
+là hợp lý).
 
-**Không được** dùng `ST_Distance` trên SRID 4326 rồi gọi là mét.
+**Tham số đơn vị hoạt động:** `ST_Distance(g1, g2, 'metre')` cho cùng kết quả với
+mặc định; `ST_Distance(g1, g2, 'foot')` cho `363.0534` = `110.6587 × 3.28084` — đúng
+hệ số chuyển đổi.
+
+**Vì vậy:** `ST_Distance` trên SRID 4326 tính khoảng cách **geodesic trên ellipsoid**,
+trả về **mét** theo mặc định.
 
 #### Kết luận về `ST_Distance_Sphere` cho LINESTRING
 
 ```sql
 SELECT ST_Distance_Sphere(
-  ST_GeomFromText('LINESTRING(108.20 16.05, 108.21 16.06)', 4326, 'axis-order=long-lat'),
-  ST_GeomFromText('POINT(108.205 16.055)', 4326, 'axis-order=long-lat'));
+  ST_GeomFromText('LINESTRING(108.20 16.05,108.21 16.06)', 4326, 'axis-order=long-lat'),
+  ST_GeomFromText('POINT(108.205 16.056)', 4326, 'axis-order=long-lat'));
 -- ERROR 3618 (22S00): st_distance_sphere(LINESTRING, POINT) has not been
 -- implemented for geographic spatial reference systems.
 ```
@@ -461,96 +476,93 @@ SELECT ST_Distance_Sphere(
 **MySQL 8 không hỗ trợ `ST_Distance_Sphere` cho LINESTRING với SRID 4326.** Chỉ hỗ trợ
 POINT↔POINT.
 
-#### Lựa chọn hệ chiếu — có căn cứ
+#### So sánh ba phương án
 
-**Không mặc định EPSG:32648 cho toàn Đà Nẵng.** Kiểm tra phạm vi dữ liệu thực tế:
+| Phương án | Kết quả | Chênh so với T1 | Đánh giá |
+|---|---:|---:|---|
+| `ST_Distance` 4326 (T1) | **76.9032** | mốc | **Đơn giản nhất, geodesic** |
+| UTM 48N (T6) | 76.9886 | +0.0854 m | Cần `ST_Transform` |
+| UTM 49N (T7) | 76.9651 | +0.0619 m | Cần `ST_Transform` |
+| JTS local metric | 77.0477 | +0.1445 m | Cần thư viện, phép chiếu phẳng |
 
-| Yếu tố | Giá trị |
-|---|---|
-| Kinh độ Đà Nẵng (khung Java validator) | 107.80°E – 108.40°E |
-| Kinh tuyến trung tâm UTM 48N | 105°E (phạm vi 102°E–108°E) |
-| Kinh tuyến trung tâm UTM 49N | 111°E (phạm vi 108°E–114°E) |
-| **Ranh giới zone** | **108°E** |
+**Sai lệch giữa các phương án: 6–14 cm** ở khoảng cách ~77 m (0,08–0,19%). Với ngưỡng
+200 m, cả bốn đều chấp nhận được.
 
-**Đà Nẵng nằm vắt qua ranh giới zone 48N/49N tại kinh tuyến 108°E.** Phần lớn đô thị
-(108.15–108.25°E) nằm trong **zone 49N**; phần phía tây (Hòa Vang, 107.8–108.0°E) nằm
-trong **zone 48N**.
+**Sai lệch này là sai số thuật toán** (ellipsoid vs phép chiếu phẳng), **không phải sai
+số nguồn tọa độ**. Sai số nguồn tọa độ là `UNKNOWN` cho cả 152 tin (xem PR #36).
 
-**Đo thực tế cho thấy sai lệch giữa hai zone chỉ 2,4 cm** ở khoảng cách ~77 m. Với
-ngưỡng 200 m, sai lệch này không ảnh hưởng kết luận.
+#### Thiết kế cuối cùng — dùng `ST_Distance` trực tiếp trên SRID 4326
 
-**Quyết định:** dùng **EPSG:32648 (UTM 48N)** cho toàn bộ Đà Nẵng vì:
+**Chọn `ST_Distance` trên SRID 4326 cho cả POINT và LINESTRING.** Lý do:
 
-1. Sai lệch đo được so với 49N chỉ 2,4 cm — dưới ngưỡng đáng kể.
-2. 48N phủ trọn khung 107.80–108.40°E ở mức sai số chấp nhận được (hệ số scale ~1.0004
-   tại biên zone, tương đương 0,04% ≈ 8 cm ở 200 m).
-3. Dùng một zone duy nhất tránh phải xử lý chuyển zone giữa các bản ghi.
-
-**Nếu cần chính xác hơn** (ngưỡng < 10 m), dùng zone theo kinh độ từng điểm:
-
-```sql
-CASE WHEN ST_X(property_location) < 108.0 THEN 32648 ELSE 32649 END
-```
-
-Nhưng với ngưỡng 200 m hiện tại, một zone là đủ và đơn giản hơn.
-
-#### Thiết kế cuối cùng
+1. **Đơn vị đã kiểm chứng là mét** — không cần chuyển đổi.
+2. **Hỗ trợ POINT–LINESTRING** — đã kiểm chứng T1, T3, T5.
+3. **Tính geodesic trên ellipsoid** — chính xác hơn phép chiếu phẳng.
+4. **Không phụ thuộc lựa chọn UTM zone** — loại bỏ hoàn toàn vấn đề ranh giới 48N/49N.
+5. **Không cần `ST_Transform`** — giảm một phép biến đổi, dễ bảo trì.
+6. **Không cần thư viện mới** — JTS chỉ dùng làm đối chứng.
 
 ```sql
--- POINT: dùng ST_Distance_Sphere (hỗ trợ SRID 4326, trả mét)
-SELECT ST_Distance_Sphere(flood_geometry, property_location) AS distance_meters
+-- Dùng chung một hàm cho cả POINT và LINESTRING
+SELECT ST_Distance(flood_geometry, property_location, 'metre') AS distance_meters
 FROM flood_records, properties
-WHERE flood_records.geometry_type = 'POINT'
-  AND ST_Distance_Sphere(flood_geometry, property_location) <= ?;
-
--- LINESTRING: chiếu sang UTM 48N rồi dùng ST_Distance (trả mét)
-SELECT ST_Distance(
-         ST_Transform(flood_geometry, 32648),
-         ST_Transform(property_location, 32648)
-       ) AS distance_meters
-FROM flood_records, properties
-WHERE flood_records.geometry_type = 'LINESTRING'
-  AND ST_Distance(
-        ST_Transform(flood_geometry, 32648),
-        ST_Transform(property_location, 32648)
-      ) <= ?;
+WHERE flood_records.geometry_type IN ('POINT', 'LINESTRING')
+  AND ST_Distance(flood_geometry, property_location, 'metre') <= ?;
 ```
 
-**Lưu ý hiệu năng:** `ST_Transform` không dùng được spatial index. Với 124 bản ghi ngập
-và 152 tin, quét toàn bộ là chấp nhận được. Nếu dữ liệu tăng, lọc thô bằng
-`MBRContains` trên SRID 4326 trước rồi mới `ST_Transform`:
+**Ghi rõ `'metre'` trong truy vấn** dù đó là mặc định — để người đọc sau không phải
+suy đoán đơn vị.
+
+**Kiểm tra an toàn trước khi gọi:**
+
+| Điều kiện | Cách kiểm tra | Hành vi |
+|---|---|---|
+| SRID tương thích | `ST_SRID(a) = ST_SRID(b)` | Khác SRID → `ERROR 3033`, phải chặn trước |
+| NULL geometry | `geometry IS NOT NULL` | `ST_Distance` trả `NULL` (T13) — an toàn |
+| Geometry hợp lệ | `ST_IsValid(geometry)` | Không hợp lệ → kết quả không xác định, phải chặn |
+| Loại geometry | `geometry_type IN ('POINT','LINESTRING')` | POLYGON dùng `ST_Intersects` |
+
+**`ERROR 3033` đã gặp khi test:** `st_distance given two geometries of different srids:
+4326 and 32648, which should have been identical.` Phải đảm bảo cả hai geometry cùng
+SRID trước khi gọi.
+
+#### Hiệu năng
+
+`ST_Distance` trên SRID 4326 **không dùng được spatial index** cho phép đo — index chỉ
+hỗ trợ quan hệ `MBRContains`/`ST_Intersects`. Với 124 bản ghi ngập và 152 tin, quét
+toàn bộ là chấp nhận được.
+
+Nếu dữ liệu tăng, lọc thô bằng `MBRContains` trên SRID 4326 trước:
 
 ```sql
 WHERE MBRContains(
         ST_GeomFromText(bbox_4326, 4326, 'axis-order=long-lat'),
         property_location)
-  AND ST_Distance(ST_Transform(...), ST_Transform(...)) <= ?
+  AND ST_Distance(flood_geometry, property_location, 'metre') <= ?
 ```
 
-#### Phương án dự phòng — JTS trong Java
+#### Phương án dự phòng
 
-Nếu môi trường triển khai không có `ST_Transform` (MySQL < 8.0.12 hoặc thiếu SRS),
-dùng JTS đã có sẵn (`org.locationtech.jts`):
+Nếu môi trường triển khai dùng MySQL < 8.0.12 (không có `ST_Distance` cho geographic
+SRS) hoặc MariaDB (không hỗ trợ đầy đủ):
 
-```java
-// Chiếu cục bộ quanh vĩ độ tham chiếu rồi tính khoảng cách phẳng
-double metersPerDegLat = 6371008.8 * Math.PI / 180.0;
-double metersPerDegLon = metersPerDegLat * Math.cos(Math.toRadians(refLat));
-// ... chiếu từng đỉnh của LINESTRING, rồi metricLine.distance(metricPoint)
-```
+| Phương án | Khi nào dùng | Đã kiểm chứng |
+|---|---|---|
+| `ST_Transform(32648)` + `ST_Distance` | MySQL ≥ 8.0.12 nhưng `ST_Distance` 4326 lỗi | ✅ 76.9886 m |
+| JTS local metric projection | Không có `ST_Transform` | ✅ 77.0477 m |
 
-Đã kiểm chứng: JTS cho `77.0477 m` so với MySQL UTM48 `76.9886 m` — chênh 5,9 cm.
-
-**Ưu tiên phương án MySQL** vì giữ truy vấn trong DB và dùng được spatial index cho
-bước lọc thô.
+**Kiểm tra phiên bản trước khi triển khai:** `SELECT VERSION();` — nếu < 8.0.12, dùng
+phương án dự phòng.
 
 #### Bảng chọn hàm theo geometry
 
-| Geometry | Hàm khoảng cách | Đơn vị | Đã kiểm chứng |
+| Geometry | Hàm | Đơn vị | Đã kiểm chứng |
 |---|---|---|---|
-| `POINT` | `ST_Distance_Sphere` | mét | ✅ 1542.17 m cho 0.01° |
-| `LINESTRING` | `ST_Distance(ST_Transform(...,32648), ...)` | mét | ✅ 76.99 m |
+| `POINT` | `ST_Distance(g1, g2, 'metre')` | mét | ✅ T4 = 1539.32 m |
+| `LINESTRING` | `ST_Distance(g1, g2, 'metre')` | mét | ✅ T1 = 76.90 m |
 | `POLYGON` | `ST_Intersects` (quan hệ) | boolean | ✅ xem dưới |
+
+**Không dùng `ST_Distance_Sphere` cho LINESTRING** — `ERROR 3618`.
 
 #### `ST_Contains` vs `ST_Intersects` cho POLYGON
 
