@@ -17,12 +17,11 @@ public class PropertyService {
     private final PropertyImageRepository images;
     private final ProjectRepository projects;
     private final AccountAccess access;
-    @org.springframework.beans.factory.annotation.Autowired(required=false)
-    private PropertyCoordinateAuditService coordinateAudit;
+    private final PropertyCoordinateAuditService coordinateAudit;
     @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private vn.smartprop.modules.project.ProjectManagementRepository projectLifecycle;
-    public PropertyService(PropertyRepository properties,PropertyImageRepository images,ProjectRepository projects,AccountAccess access) {
-        this.properties=properties;this.images=images;this.projects=projects;this.access=access;
+    public PropertyService(PropertyRepository properties,PropertyImageRepository images,ProjectRepository projects,AccountAccess access,PropertyCoordinateAuditService coordinateAudit) {
+        this.properties=properties;this.images=images;this.projects=projects;this.access=access;this.coordinateAudit=coordinateAudit;
     }
     public static boolean visible(Property p,Instant now) { return p.deletedAt==null && p.status==Property.Status.PUBLISHED && (p.expiresAt==null || p.expiresAt.isAfter(now)); }
     public Property existing(String id) { return properties.findByIdAndDeletedAtIsNull(ApiInputs.uuid(id)).orElseThrow(ApiInputs::missing); }
@@ -66,10 +65,10 @@ public class PropertyService {
         access.publisherForUpdate(actor);Property p=new Property();p.id=UUID.randomUUID().toString();p.ownerId=actor;
         p.status=Property.Status.DRAFT;p.contentVersion=1;p.currency="VND";p.city="Da Nang";p.declaredAmenities=JsonNodeFactory.instance.arrayNode();
         fill(p,r);properties.saveAndFlush(p);
-        // Coordinate Provenance V1: ghi audit trong cùng transaction. Tọa độ đến từ
-        // request của người đăng nên nguồn là USER_PINNED — backend xác định theo luồng
-        // gọi, không tin giá trị client gửi.
-        if(coordinateAudit!=null) coordinateAudit.record(p,PropertyCoordinateAudit.Source.USER_PINNED,null,actor);
+        // Coordinate Provenance V1: ghi audit trong cùng transaction.
+        // Nguồn là UNKNOWN: request chỉ mang lat/lon, không chứng minh được người dùng
+        // đã ghim trên bản đồ hay nhập tay. Chỉ ghi nguồn khi có bằng chứng thực tế.
+        coordinateAudit.record(p,PropertyCoordinateAudit.Source.UNKNOWN,null,actor);
         entityManager.clear();Property created=properties.findById(p.id).orElseThrow();return managed(created,List.of(),coordinate(created.id));
     }
     @Transactional public PropertyDtos.Managed patch(Long actor,String id,int version,PropertyDtos.Write r) {
@@ -77,7 +76,7 @@ public class PropertyService {
         reserve(p,version);fill(p,r);p.status=Property.Status.DRAFT;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;
         properties.saveAndFlush(p);
         // Audit tự supersede bản cũ khi tọa độ hoặc địa chỉ đổi (fingerprint đổi).
-        if(coordinateAudit!=null) coordinateAudit.record(p,PropertyCoordinateAudit.Source.USER_PINNED,null,actor);
+        coordinateAudit.record(p,PropertyCoordinateAudit.Source.UNKNOWN,null,actor);
         return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),coordinate(p.id));
     }
     @Transactional public PropertyDtos.Managed transition(Long actor,String id,int version,String action) {

@@ -301,10 +301,11 @@ trong PR này** — cần thiết kế prompt riêng để không cho AI khẳng
 |---|---:|---:|---:|
 | Backend unit (toàn bộ) | **196** | 0 | 0 |
 | — trong đó `PropertyCoordinateAuditTest` | **8** | 0 | 0 |
+| **HTTP integration (`CoordinateProvenanceIT`)** | **14** | 0 | 0 |
 | Flyway validate | **12 migrations** | 0 | 0 |
 | Constraint SQL (DB cô lập) | **11** | 0 | 0 |
 | Backfill idempotency | **2 lần** | 0 | 0 |
-| Frontend build (Vite) | **PASS** | 0 | 0 |
+| Frontend build (Vite) | **PASS** (8.25s) | 0 | 0 |
 | Frontend unit | **NOT_RUN** | — | — |
 
 **Frontend unit chưa chạy:** chưa có test cho `CoordinateStatusPanel`. Cần bổ sung ở PR
@@ -331,17 +332,17 @@ sau — component hiện chỉ render, logic eligibility nằm ở backend đã 
 |---|---|---|
 | Migration V26 | **IMPLEMENTED + TESTED** | Chạy trên DB cô lập |
 | Bảng audit + constraints | **IMPLEMENTED + TESTED** | 11/11 constraint test PASS |
-| Ghi audit khi create/update | **IMPLEMENTED + TESTED** | Unit test cho logic; chưa có integration test E2E |
-| Fingerprint đổi theo địa chỉ | **IMPLEMENTED + TESTED** | Unit test |
-| API đọc trạng thái | **IMPLEMENTED** | Chưa có integration test HTTP |
-| API verify (admin) | **IMPLEMENTED** | Chưa có integration test HTTP |
+| Ghi audit khi create/update | **IMPLEMENTED + TESTED** | 14 HTTP integration test |
+| Fingerprint đổi theo địa chỉ | **IMPLEMENTED + TESTED** | Unit + integration test |
+| API đọc trạng thái | **IMPLEMENTED + TESTED** | Public detail trả audit thật |
+| API verify (admin) | **IMPLEMENTED + TESTED** | `expectedRevision` chặn race |
 | Backfill dữ liệu cũ | **IMPLEMENTED + TESTED** | Idempotent, 155 tin |
 | Frontend hiển thị trạng thái | **IMPLEMENTED** | Build PASS, chưa có unit test |
 | Frontend cảnh báo sai địa bàn | **IMPLEMENTED** | Chưa có test |
 | Admin review UI | **NOT_IMPLEMENTED** | API có, UI chưa |
 | GIS flood integration | **BLOCKED** | Thiếu geometry ngập |
 | AI Advisor integration | **NOT_IMPLEMENTED** | Cần thiết kế prompt riêng |
-| Integration test HTTP | **NOT_IMPLEMENTED** | Cần DB cô lập + Spring context |
+| Integration test HTTP | **IMPLEMENTED + TESTED** | 14/14 PASS trên DB cô lập |
 
 ### F.1. Việc cần làm ở PR sau
 
@@ -354,6 +355,95 @@ sau — component hiện chỉ render, logic eligibility nằm ở backend đã 
 
 ---
 
+## F.2. Bảy blocker đã sửa sau review
+
+| Blocker | Trước | Sau |
+|---|---|---|
+| Transaction verify | `MANDATORY` không có transaction bao ngoài → `IllegalTransactionStateException` | `@Transactional` trên service — service tự mở transaction |
+| Revision race | `WHERE property_id = ? AND superseded_at IS NULL` — xác minh nhầm revision mới | `WHERE property_id = ? AND revision = ? AND superseded_at IS NULL` + `expectedRevision` bắt buộc → 409 |
+| Public detail | `PropertySearch.detail()` dùng `view()` không coordinate → luôn `absent()` | Nối `service.coordinate(id)` vào tất cả 8 điểm gọi |
+| Source provenance | Gán `USER_PINNED` cho mọi request | `UNKNOWN` — request chỉ mang lat/lon, không chứng minh thao tác ghim |
+| Optional audit | `@Autowired(required=false)` + `if (coordinateAudit != null)` | Constructor injection bắt buộc — audit lỗi thì property rollback |
+| Eligibility cấp thửa | Chỉ `PARCEL` + `VERIFIED` | Thêm geographic validity + provenance + evidence (method + verifiedAt) |
+| Backfill fingerprint | `FORMAT(x, 7)` thêm dấu phẩy phân cách (`1,234.5000000`) | `CAST(... AS DECIMAL(10,7))` — khớp `String.format(Locale.ROOT)` |
+
+### Chi tiết từng sửa
+
+**Blocker 1 — transaction.** `verify()` đổi từ `MANDATORY` sang `@Transactional`. Controller
+không mở transaction; service tự mở. Đã kiểm chứng qua HTTP: `adminVerifySucceedsWithoutTransactionException`
+PASS, không ném `IllegalTransactionStateException`.
+
+**Blocker 2 — revision race.** Thêm `expectedRevision` vào `VerifyRequest` (`@NotNull @Min(1)`).
+Repository `UPDATE ... WHERE property_id = ? AND revision = ? AND superseded_at IS NULL`.
+Affected rows = 0 → 409. Test `staleExpectedRevisionReturns409` PASS: admin gửi revision 1
+sau khi người đăng đã tạo revision 2 → 409, revision 2 vẫn `UNVERIFIED`.
+
+Thêm `CONSTRAINT uq_coord_audit_revision UNIQUE (property_id, revision)` chặn hai request
+đồng thời cùng tính `maxRevision()+1`.
+
+**Blocker 3 — public detail.** `PropertySearch.detail()` và 7 điểm gọi khác
+(`FavoriteService` ×2, `PropertyMediaService`, `PropertyModerationService` ×3) đã nối
+`service.coordinate(id)`. Test `publicDetailReturnsRealAuditNotAbsent` PASS — trả
+`coordinateSource=UNKNOWN`, `revision=1`, không phải `absent()`.
+
+Test `publicDetailDoesNotLeakVerifierIdentity` PASS — response không chứa `verifiedBy`
+hay `evidenceReference`.
+
+**Blocker 4 — provenance.** `create()` và `patch()` ghi `Source.UNKNOWN`. Lý do: request
+chỉ mang `latitude`/`longitude`, không có bằng chứng người dùng đã ghim trên bản đồ hay
+nhập tay. Ghi `USER_PINNED` sẽ là khai man. Test `createWritesAuditWithUnknownProvenance`
+PASS.
+
+**Blocker 5 — audit bắt buộc.** Bỏ `@Autowired(required=false)` và `if (coordinateAudit != null)`.
+Constructor injection bắt buộc. Nếu bảng audit thiếu, Spring context fail rõ ràng thay vì
+âm thầm bỏ qua.
+
+**Blocker 6 — eligibility cấp thửa.** `derive()` yêu cầu **đồng thời**: geographic validity
++ provenance khác `UNKNOWN` + accuracy khác `UNKNOWN` + `VERIFIED` + có
+`verificationMethod` và `verifiedAt` + `accuracyLevel = PARCEL`. Test
+`parcelEligibilityRequiresAllConditions` PASS: `PARCEL` + `VERIFIED` nhưng provenance
+`UNKNOWN` → `parcelAnalysisEligible = false`.
+
+**Blocker 7 — fingerprint.** MySQL `FORMAT(1234.5, 7)` = `'1,234.5000000'` (có dấu phẩy);
+Java `String.format(Locale.ROOT, "%.7f", 1234.5)` = `'1234.5000000'`. Đổi sang
+`CAST(... AS DECIMAL(10,7))`. Đã kiểm chứng 7 ca: toạ độ nhỏ, âm, trailing zeros,
+address NULL, unicode, scope khác — tất cả khớp.
+
+**Giới hạn `DECIMAL(10,7)`:** tối đa 3 chữ số nguyên. Đà Nẵng có lat 15–16, lon 107–108
+nên an toàn. Toạ độ ngoài khoảng này cần `DECIMAL(12,7)`.
+
+**Scope version backfill:** `'BACKFILL_V1'` khác `validator.scopeVersion()` — fingerprint
+backfill **không bao giờ** khớp runtime. Đây là chủ ý: lần đầu người dùng lưu tin, audit
+backfill bị supersede và revision mới được tạo. Không có revision giả vì backfill chỉ tạo
+một bản/tin với trạng thái `UNKNOWN` an toàn.
+
+### Môi trường kiểm chứng HTTP
+
+```
+MySQL 8.4.13 @ 127.0.0.1:3307/smartprop (DB cô lập)
+Profile: hybrid-local-existing-v13-staging
+58 bảng + trigger properties_listing_code_insert/update
+Users: 9001 BROKER, 9002 ADMIN, 9003 BROKER
+```
+
+**Lưu ý khi dựng DB test:** phải copy `flyway_schema_history` (lineage guard
+`MigrationLineageConfiguration` yêu cầu BASELINE13/crawler14) và trigger V16
+(`properties_listing_code_insert`) — nếu thiếu, `listing_code` không có default và
+POST /properties trả 500.
+
+### SecurityConfig
+
+Thêm hai rule trước `anyRequest().denyAll()`:
+
+```java
+.requestMatchers(HttpMethod.POST,"/api/v1/properties/*/coordinate/verify").hasRole("ADMIN")
+.requestMatchers(HttpMethod.GET,"/api/v1/properties/*/coordinate",
+                 "/api/v1/properties/*/coordinate/history").permitAll()
+```
+
+Không thêm rule này thì endpoint mới bị `denyAll()` chặn.
+
+---
 ## G. Quyết định thiết kế
 
 | Quyết định | Lý do |

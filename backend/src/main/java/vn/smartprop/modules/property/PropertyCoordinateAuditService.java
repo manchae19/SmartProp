@@ -115,12 +115,18 @@ public class PropertyCoordinateAuditService {
     }
 
     /**
-     * Ghi quyết định xác minh. Chỉ gọi từ luồng đã kiểm tra quyền admin.
+     * Ghi quyết định xác minh. Đây là transaction boundary của luồng verify —
+     * controller không mở transaction, service tự mở.
      *
-     * @return false nếu revision hiện hành đã bị thay thế (race condition)
+     * <p>Kiểm tra {@code expectedRevision} để không xác minh nhầm bản mới: admin mở
+     * revision 1, người đăng sửa tạo revision 2, admin bấm xác minh → UPDATE không
+     * khớp dòng nào → trả false → controller trả 409.
+     *
+     * @return false nếu revision đã đổi hoặc đã bị supersede
      */
-    @Transactional(propagation = Propagation.MANDATORY)
-    public boolean verify(String propertyId, PropertyCoordinateAudit.Verification status,
+    @Transactional
+    public boolean verify(String propertyId, int expectedRevision,
+                          PropertyCoordinateAudit.Verification status,
                           PropertyCoordinateAudit.VerificationMethod method,
                           Long verifiedBy, String evidenceReference,
                           PropertyCoordinateAudit.Accuracy accuracy, Double accuracyMeters,
@@ -135,8 +141,13 @@ public class PropertyCoordinateAuditService {
             throw vn.smartprop.common.ApiInputs.bad(
                 "accuracyLevel PARCEL chỉ hợp lệ khi verificationStatus VERIFIED");
         }
-        int updated = repository.verifyCurrent(propertyId, status, method, verifiedBy,
-            evidenceReference, accuracy, accuracyMeters, accuracyMethod);
+        if (accuracy == PropertyCoordinateAudit.Accuracy.PARCEL
+                && (accuracyMeters == null || accuracyMeters <= 0)) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyLevel PARCEL cần accuracyMeters dương");
+        }
+        int updated = repository.verifyCurrent(propertyId, expectedRevision, status, method,
+            verifiedBy, evidenceReference, accuracy, accuracyMeters, accuracyMethod);
         return updated == 1;
     }
 

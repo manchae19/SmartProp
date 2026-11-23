@@ -2,6 +2,7 @@ package vn.smartprop.modules.property;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
@@ -83,6 +84,9 @@ public class PropertyCoordinateController {
      *
      * <p>Không có endpoint nào cho phép người đăng tự đặt {@code verificationStatus}.
      * Quyền được kiểm tra ở đây, không dựa vào giá trị client gửi.
+     *
+     * <p>{@code expectedRevision} bắt buộc: admin phải gửi revision đã thấy. Nếu người
+     * đăng đã sửa tọa độ trong lúc admin xem, UPDATE không khớp dòng nào → 409.
      */
     @PostMapping("/properties/{id}/coordinate/verify")
     public PropertyCoordinateAudit.Status verify(@AuthenticationPrincipal Jwt jwt,
@@ -92,17 +96,19 @@ public class PropertyCoordinateController {
         access.admin(admin);
         properties.existing(id);
 
-        boolean applied = audit.verify(id, request.verificationStatus(),
-            request.verificationMethod(), admin, request.evidenceReference(),
-            request.accuracyLevel(), request.accuracyMeters(), request.accuracyMethod());
+        boolean applied = audit.verify(id, request.expectedRevision(),
+            request.verificationStatus(), request.verificationMethod(), admin,
+            request.evidenceReference(), request.accuracyLevel(),
+            request.accuracyMeters(), request.accuracyMethod());
         if (!applied) {
             throw ApiInputs.conflict(
-                "Revision tọa độ đã bị thay thế; tải lại trước khi xác minh");
+                "Revision tọa độ đã thay đổi; tải lại trước khi xác minh");
         }
         return audit.status(id);
     }
 
     public record VerifyRequest(
+        @NotNull @Min(1) Integer expectedRevision,
         @NotNull PropertyCoordinateAudit.Verification verificationStatus,
         PropertyCoordinateAudit.VerificationMethod verificationMethod,
         @Size(max = 500) String evidenceReference,

@@ -146,14 +146,19 @@ public class PropertyCoordinateAuditRepository {
     }
 
     /**
-     * Ghi quyết định xác minh lên bản ghi hiện hành.
+     * Ghi quyết định xác minh lên đúng revision admin đã kiểm tra.
      *
-     * <p>Điều kiện {@code superseded_at IS NULL} chặn xác minh một revision đã bị
-     * thay thế — phòng race condition khi hai admin xác minh đồng thời.
+     * <p>Điều kiện {@code revision = ?} chặn race condition: admin mở revision 1,
+     * người đăng sửa tạo revision 2, admin bấm xác minh — câu UPDATE không khớp dòng
+     * nào nên trả 0, caller trả 409. Không bao giờ xác minh nhầm bản mới.
      *
-     * @return số dòng cập nhật; 0 nghĩa là revision đã bị thay thế
+     * <p>{@code superseded_at IS NULL} là điều kiện thứ hai: revision đúng nhưng đã bị
+     * thay thế cũng không được xác minh.
+     *
+     * @return số dòng cập nhật; 0 nghĩa là revision đã đổi hoặc đã bị supersede
      */
-    public int verifyCurrent(String propertyId, PropertyCoordinateAudit.Verification status,
+    public int verifyCurrent(String propertyId, int expectedRevision,
+                             PropertyCoordinateAudit.Verification status,
                              PropertyCoordinateAudit.VerificationMethod method,
                              Long verifiedBy, String evidenceReference,
                              PropertyCoordinateAudit.Accuracy accuracy, Double accuracyMeters,
@@ -163,10 +168,11 @@ public class PropertyCoordinateAuditRepository {
             SET verification_status = ?, verification_method = ?, verified_at = UTC_TIMESTAMP(6),
                 verified_by = ?, evidence_reference = ?,
                 accuracy_level = ?, accuracy_meters = ?, accuracy_method = ?
-            WHERE property_id = ? AND superseded_at IS NULL
+            WHERE property_id = ? AND revision = ? AND superseded_at IS NULL
             """,
             status.name(), method == null ? null : method.name(), verifiedBy,
-            evidenceReference, accuracy.name(), accuracyMeters, accuracyMethod, propertyId);
+            evidenceReference, accuracy.name(), accuracyMeters, accuracyMethod,
+            propertyId, expectedRevision);
     }
 
     /** Lịch sử đầy đủ của một tin, mới nhất trước. */

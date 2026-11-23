@@ -108,7 +108,9 @@ CREATE TABLE property_coordinate_audit (
     verification_status <> 'VERIFIED'
     OR (verification_method IS NOT NULL AND verified_at IS NOT NULL)),
 
-  CONSTRAINT uq_coord_audit_current UNIQUE (current_key)
+  CONSTRAINT uq_coord_audit_current UNIQUE (current_key),
+  -- Chặn hai request đồng thời cùng tính ra maxRevision()+1 giống nhau.
+  CONSTRAINT uq_coord_audit_revision UNIQUE (property_id, revision)
 );
 
 CREATE INDEX idx_coord_audit_property ON property_coordinate_audit(property_id, revision);

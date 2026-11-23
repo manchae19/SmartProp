@@ -99,9 +99,14 @@ public final class PropertyCoordinateAudit {
      *       (validator trả {@code VERIFIED_EXACT} hoặc {@code VERIFIED_BOUNDARY_BUFFER}).</li>
      *   <li>{@code distanceAnalysisEligible} — cần provenance xác định VÀ accuracy
      *       được chứng minh. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
-     *   <li>{@code parcelAnalysisEligible} — cần {@code accuracyLevel = PARCEL} VÀ
+     *   <li>{@code parcelAnalysisEligible} — cần ĐỒNG THỜI: geographic validity,
+     *       provenance xác định, {@code accuracyLevel = PARCEL}, và
      *       {@code verificationStatus = VERIFIED}.</li>
      * </ul>
+     *
+     * <p>Ràng buộc DB ({@code ck_coord_audit_parcel_requires_verification}) chỉ chặn
+     * cặp PARCEL+chưa-VERIFIED. Nó KHÔNG kiểm tra geographic validity hay provenance —
+     * đó là việc của hàm này. DB CHECK không thay thế kiểm tra nghiệp vụ.
      */
     public static Status derive(String coordinateSource, String accuracyLevel,
                                 Double accuracyMeters, String verificationStatus,
@@ -113,11 +118,14 @@ public final class PropertyCoordinateAudit {
         boolean hasProvenance = coordinateSource != null
             && !"UNKNOWN".equals(coordinateSource);
         boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel);
+        boolean verified = "VERIFIED".equals(verificationStatus);
+        boolean hasEvidence = verificationMethod != null && verifiedAt != null;
 
         boolean referenceMap = geoOk;
         boolean distance = geoOk && hasProvenance && hasAccuracy;
-        boolean parcel = "PARCEL".equals(accuracyLevel)
-            && "VERIFIED".equals(verificationStatus);
+        // Cấp thửa cần đủ bốn điều kiện — không chỉ PARCEL + VERIFIED.
+        boolean parcel = geoOk && hasProvenance && hasAccuracy && verified && hasEvidence
+            && "PARCEL".equals(accuracyLevel);
 
         return new Status(coordinateSource, accuracyLevel, accuracyMeters,
             verificationStatus, verificationMethod, verifiedAt,
