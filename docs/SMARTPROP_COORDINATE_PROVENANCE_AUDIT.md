@@ -545,22 +545,46 @@ Các chỉ số dưới đây **không loại trừ nhau**. Không cộng chúng
 | Chỉ số | Số tin | Tiêu chí |
 |---|---:|---|
 | Geometry hợp lệ | **152** | `ST_IsValid`, SRID 4326, không `(0,0)`, không đảo trục |
-| `REFERENCE_MAP_ELIGIBLE` | **152** | Hợp lệ + `VERIFIED_EXACT` hoặc `VERIFIED_BOUNDARY_BUFFER` |
-| Cần review địa giới | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
+| `REFERENCE_MAP_ELIGIBLE` | **151** | Hợp lệ + `VERIFIED_EXACT` (140) hoặc `VERIFIED_BOUNDARY_BUFFER` (11) |
+| `NEEDS_LOCATION_REVIEW` | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
+| `DEMO_OR_TEST` | **1** | `SP256` — tin test, ảnh `baseline.png` |
 | Có provenance trực tiếp | **0** | Không có `coordinate_source` nào được ghi |
 | Có sai số tọa độ được chứng minh | **0** | Không có `accuracy_meters` |
 | `DISTANCE_ANALYSIS_ELIGIBLE` | **0** | Cần provenance + accuracy — không tin nào có |
 | `PARCEL_ANALYSIS_ELIGIBLE` | **0** | Cần xác minh độc lập — không tin nào có |
 | `LOCATION_ACCURACY_UNVERIFIED` | **152** | Tất cả — chưa có bằng chứng độ chính xác |
 
+**`REFERENCE_MAP_ELIGIBLE = 151`, không phải 152.** Điều kiện chính thức là
+`CoordinateStatus IN (VERIFIED_EXACT, VERIFIED_BOUNDARY_BUFFER)`:
+`140 + 11 = 151`. `SP013` có `INVALID_DISTRICT_MISMATCH` nên **không** đạt.
+
+**`SP256` nằm trong 151** vì có `VERIFIED_EXACT` — eligibility kỹ thuật của nó hợp lệ.
+Nó **đồng thời** thuộc `DEMO_OR_TEST`. Hai nhãn độc lập, không trừ hai lần.
+
 ### E.3. Bảng phân nhóm loại trừ nhau — tổng = 152
+
+Thứ tự ưu tiên: `DEMO_OR_TEST` → `NEEDS_LOCATION_REVIEW` → `REFERENCE_MAP_ONLY`.
 
 | Nhóm | Số tin | Tiêu chí |
 |---|---:|---|
-| `REFERENCE_MAP_ONLY` | **150** | Hợp lệ + `VERIFIED_EXACT`/`VERIFIED_BOUNDARY_BUFFER`, không có provenance |
-| `NEEDS_REVIEW` | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
 | `DEMO_OR_TEST` | **1** | `SP256` — tin test, ảnh `baseline.png` |
+| `NEEDS_LOCATION_REVIEW` | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
+| `REFERENCE_MAP_ONLY` | **150** | `VERIFIED_EXACT`/`VERIFIED_BOUNDARY_BUFFER`, không demo, không review |
 | **Tổng** | **152** | |
+
+**Quan hệ giữa hai bảng:**
+
+```text
+REFERENCE_MAP_ELIGIBLE (151)
+  = REFERENCE_MAP_ONLY (150) + DEMO_OR_TEST đạt điều kiện (1 = SP256)
+
+152 tin
+  = REFERENCE_MAP_ELIGIBLE (151) + NEEDS_LOCATION_REVIEW (1 = SP013)
+  = REFERENCE_MAP_ONLY (150) + DEMO_OR_TEST (1) + NEEDS_LOCATION_REVIEW (1)
+```
+
+**`SP256` xuất hiện ở cả hai bảng** — trong bảng 1 với tư cách đạt điều kiện kỹ thuật,
+trong bảng 2 với tư cách là dữ liệu demo. **Không trừ hai lần.**
 
 **Không còn nhóm `UNSUITABLE_OR_UNKNOWN` dựa trên số chữ số thập phân.**
 
@@ -580,7 +604,53 @@ thập phân. **Đó là suy luận sai:**
 Đánh dấu đúng là `LOCATION_ACCURACY_UNVERIFIED` — chưa có bằng chứng về độ chính xác,
 không phải "không dùng được".
 
-### E.5. Rủi ro cảnh báo ngập sai
+### E.5. Hai trường hợp ngoại lệ — xử lý riêng
+
+#### `SP013` — `NEEDS_LOCATION_REVIEW`
+
+| Trường hợp | Giá trị |
+|---|---|
+| `listing_code` | `SP013` |
+| `CoordinateStatus` | **`INVALID_DISTRICT_MISMATCH`** |
+| Quận khai báo | Liên Chiểu |
+| Quận thực tế theo validator | **Hải Châu** |
+| Mức lệch | **2 734 m** |
+| Ghi chú validator | "ẩn ghim và không tính khoảng cách tiện ích cấp căn để tránh sai lệch vị trí" |
+
+**Xử lý:**
+
+- Đánh dấu `NEEDS_LOCATION_REVIEW`
+- **Không** coi điểm đã được xác minh
+- **Không** đưa vào phân tích khoảng cách đáng tin cậy
+- **Không** đưa vào phân tích ngập cấp bất động sản
+- **Không** sửa dữ liệu gốc (không đổi quận để ép validator PASS)
+
+**Đây là lỗi dữ liệu cần người dùng đăng sửa**, không phải lỗi hệ thống. Validator đã
+làm đúng: phát hiện và từ chối.
+
+#### `SP256` — `DEMO_OR_TEST`
+
+| Trường hợp | Giá trị |
+|---|---|
+| `listing_code` | `SP256` |
+| Tiêu đề | "AutoScan local baseline" |
+| `CoordinateStatus` | **`VERIFIED_EXACT`** (Hải Châu) |
+| Ảnh | `baseline.png` (không theo quy ước batch) |
+| Owner | `ADMIN` |
+
+**Xử lý — hai nhãn độc lập:**
+
+| Nhãn | Giá trị | Ý nghĩa |
+|---|---|---|
+| Eligibility kỹ thuật | **Đạt** — nằm trong 151 `REFERENCE_MAP_ELIGIBLE` | Tọa độ hợp lệ về mặt địa giới |
+| Loại dữ liệu | **`DEMO_OR_TEST`** | Không phải bất động sản thật |
+
+**Không trừ `SP256` hai lần.** Nó đạt điều kiện kỹ thuật của marker, nhưng **không được
+dùng làm bằng chứng về vị trí bất động sản ngoài đời**.
+
+**Không mặc định tin demo là bất động sản thật** chỉ vì tọa độ hợp lệ.
+
+### E.6. Rủi ro cảnh báo ngập sai
 
 | Rủi ro | Mức | Giải thích |
 |---|---|---|
@@ -588,10 +658,12 @@ không phải "không dùng được".
 | Kết luận từ `VERIFIED_EXACT` | **Cao** | Enum gợi ý chính xác nhưng chỉ là cấp quận |
 | Đo khoảng cách khi chưa có provenance | **Cao** | Sai số tọa độ + sai vị trí ngập cộng dồn, không định lượng được |
 | Hiển thị marker tham khảo | **Thấp** | Chấp nhận được nếu có nhãn "vị trí tham khảo" |
+| Dùng `SP256` làm bằng chứng vị trí | **Cao** | Tin demo, không phải bất động sản thật |
+| Dùng `SP013` cho bất kỳ phân tích nào | **Cao** | Lệch 2 734 m so với quận khai báo |
 
 **Không tính thử số tin thuộc vùng ngập** — chưa có polygon vùng ngập thực (xem PR #35).
 
-### E.6. Baseline 10/152
+### E.7. Baseline 10/152
 
 Baseline **10/152 tin có bằng chứng cấp đường** vẫn đúng — khớp theo
 `street + current_unit`, **không dùng tọa độ**. Kiểm toán này chứng minh **không thể
@@ -756,7 +828,8 @@ phải hiển thị `UNKNOWN` cho tọa độ mới, không kế thừa trạng 
 | Tin test/demo | 1/152 |
 | Tin `VERIFIED_EXACT` (chỉ cấp quận) | 140/152 |
 | Tin có độ phân giải ≤3 chữ số | 98/152 |
-| Tin đủ dùng cho marker tham khảo | **152/152** |
+| Tin đủ dùng cho marker tham khảo | **151/152** |
+| Tin cần review địa giới | **1/152** (`SP013`) |
 | Tin đủ điều kiện đo khoảng cách | **0/152** |
 | Tin đủ điều kiện phân tích cấp thửa | **0/152** |
 
