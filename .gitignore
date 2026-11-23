@@ -140,3 +140,7 @@ Thumbs.db
 # Ad-hoc demo/seed scripts for the local staging stack; not part of the test suite.
 ai-services/tests/demo_*.py
 ai-services/tests/seed_*.py
+
+# Coordinate provenance audit: read-only findings on where the 152 listing
+# coordinates came from. No PII, no credentials, no coordinate changes.
+!/docs/SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md
