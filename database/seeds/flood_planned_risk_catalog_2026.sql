@@ -85,6 +85,35 @@
 --   Le Duan       kiet 402 nam o to 14 Tan Chinh -> Phuong Thanh Khe.
 --   Phan Lang 9   thuoc Phuong Thanh Khe, nhung nguon chi neu Phan Lang 1
 --                 (to Phan Lang 1, Phuong An Khe) nen khong anh huong ket luan.
+--
+-- Nhom VI (Cam Le cu) — 13 dong chua anh xa, da ra soat toan bo.
+-- Theo NQ 1659/NQ-UBTVQH15, dia ban Cam Le cu nay thuoc ba don vi:
+--   Phuong Cam Le   <- Khue Trung, Hoa Tho Dong, Hoa Tho Tay
+--   Phuong An Khe   <- Hoa An, Hoa Phat
+--   Phuong Hoa Xuan <- Hoa Xuan
+-- Bon dong xac dinh duoc phuong hien tai (area_basis 'OSM_ADDRESS'):
+--   VI-04  Ton Dan (Vu Lang -> lang mo Thai Thi Boi, to 22, 25, 27)
+--          -> Phuong An Khe. Ca hai dau doan deu thuoc Phuong An Khe
+--          (Ton Dan to Hoa Binh 1, Vu Lang to Nghi An 1/2).
+--   VI-12  Nga ba Hue -> Phuong An Khe. Dia danh cu the, to Binh Thuan 4
+--          nay thuoc Phuong An Khe.
+--   VI-15  Khe Can - to 25-34, 43, 44 phuong Hoa An -> Phuong An Khe.
+--          Nguon neu ro phuong cu Hoa An, theo NQ 1659 thuoc Phuong An Khe.
+--   VI-18  Nguyen Thi Sau, Thanh Luong 20, Thai Van Lung -> Phuong Hoa Xuan.
+--          Thanh Luong 20 (to Thanh Luong 3) va Thai Van Lung (to Trung Luong 8)
+--          deu thuoc Phuong Hoa Xuan; tuyen thu ba khong tra duoc nhung cung khu vuc.
+-- Chin dong con lai giu current_unit NULL:
+--   VI-01  Cau vuot Hoa Cam — nut giao tren ranh gioi Phuong Cam Le / Phuong Hoa Cuong.
+--   VI-02  Truong Son (QL1AB, Km21+200) — duong dai qua nhieu xa/phuong.
+--   VI-03  Kenh Yen The - Bac Son — cong trinh kenh/cong, khong phai cap duong.
+--   VI-05  Bau Sen - to 3, 4 phuong Hoa Tho Dong — khong tra duoc vi tri to.
+--   VI-10  Tuyen Son - Tuy Loan — doan dai qua nhieu don vi.
+--   VI-11  Nguyen Nhan — chi tra duoc co so y te ten gan dung.
+--   VI-13  Cong Khe Can GD2 — doan dai tu cho Chieu den Phuoc Tuong.
+--   VI-14  Nut giao Nguyen Hien Le - Phan Triem — khong tra duoc toa do nut giao.
+--   VI-17  Nut giao Pham Xuan An - 29/3 — khong dinh vi duoc ca hai duong.
+-- Luu y: xac dinh phuong cua vi tri nguy co ngap KHONG phai chung minh mot lo dat
+-- cu the nam trong vung ngap. Ket qua chi cho biet vi tri nguon thuoc phuong nao.
 
 
 INSERT INTO flood_records (
@@ -2343,7 +2372,7 @@ INSERT INTO flood_records (
   'Tôn Đản', NULL, 'Cẩm Lệ',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Cẩm Lệ', NULL, 'NO_AREA_IN_SOURCE',
+  'Cẩm Lệ', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 35
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -2511,7 +2540,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Cẩm Lệ',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Cẩm Lệ', NULL, 'NO_AREA_IN_SOURCE',
+  'Cẩm Lệ', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 35
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -2574,7 +2603,7 @@ INSERT INTO flood_records (
   NULL, NULL, 'Cẩm Lệ',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Cẩm Lệ', NULL, 'NO_AREA_IN_SOURCE',
+  'Cẩm Lệ', 'Phường An Khê', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 35
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
@@ -2637,7 +2666,7 @@ INSERT INTO flood_records (
   'Nguyễn Thị Sáu', NULL, 'Cẩm Lệ',
   'AREA', NULL, NULL, '2026-05-26',
   'https://pctt.danang.gov.vn/Portals/0/2026_QD%202322_QD_UBND_26_05_2026_PA%20UPTT%202026_PL.pdf', 'Phụ lục VIII — Danh sách các vị trí có nguy cơ ngập úng khi xảy ra mưa lớn trên địa bàn thành phố Đà Nẵng (kèm Quyết định 2322/QĐ-UBND ngày 26/05/2026)', '2026-11-21',
-  'Cẩm Lệ', NULL, 'NO_AREA_IN_SOURCE',
+  'Cẩm Lệ', 'Phường Hòa Xuân', 'OSM_ADDRESS',
   NULL, '2322/QĐ-UBND', 35
 ) ON DUPLICATE KEY UPDATE
   record_type=VALUES(record_type), location_text=VALUES(location_text),
