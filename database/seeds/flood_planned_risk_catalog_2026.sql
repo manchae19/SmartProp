@@ -101,7 +101,7 @@
 --          Ca ba tuyen deu xac minh duoc (reverse-check tung diem):
 --          Nguyen Thi Sau to Trung Luong 5, Thanh Luong 20 to Thanh Luong 2,
 --          Thai Van Lung to Trung Luong 8 — deu Phuong Hoa Xuan.
--- Chin dong con lai giu current_unit NULL:
+-- Muoi dong con lai giu current_unit NULL:
 --   VI-01  Cau vuot Hoa Cam — nut giao tren ranh gioi Phuong Cam Le / Phuong Hoa Cuong.
 --   VI-02  Truong Son (QL1AB, Km21+200) — duong dai qua nhieu xa/phuong.
 --   VI-03  Kenh Yen The - Bac Son — cong trinh kenh/cong, khong phai cap duong.
