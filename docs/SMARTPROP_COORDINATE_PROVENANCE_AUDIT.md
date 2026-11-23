@@ -177,8 +177,16 @@ quy trình duyệt.
 | File CSV/JSON nguồn | **Không tìm thấy** |
 | `DevDatabaseSeed` tạo properties | **Không có** — chỉ `DevAdminSeed` tạo admin |
 
-**Vì vậy: cơ chế nạp hàng loạt là CONFIRMED (qua tên file ảnh), nhưng công cụ cụ thể
-là UNKNOWN.**
+**Vì vậy: 151 tin có dấu hiệu mạnh của việc nạp hàng loạt (`STRONGLY_INFERRED`), dựa
+trên quy ước tên ảnh, thời điểm tạo tin và owner chung. Tuy nhiên, chưa có script,
+import log hoặc metadata trực tiếp để chứng minh cơ chế tạo từng bản ghi.**
+
+Báo cáo này **không** khẳng định:
+
+- 151 tin chắc chắn được import bằng một script cụ thể
+- 151 tin chắc chắn là dữ liệu bất động sản thật
+- Không có người dùng thật nào từng đăng tin
+- Không có dữ liệu nào từng bắt nguồn từ crawler
 
 ### A.5. Phân loại nguồn — bảng cuối
 
