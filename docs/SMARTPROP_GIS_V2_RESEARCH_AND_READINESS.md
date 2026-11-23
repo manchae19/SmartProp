@@ -406,10 +406,45 @@ tin** đáp ứng — nên mức 1 chưa thể kích hoạt.
 **Ngưỡng `radiusMeters`:** tham số cấu hình, mặc định 200 m, phải ghi rõ trong
 response. Không chuyển thành xác suất ngập.
 
-### C.3b. Khoảng cách tới LINESTRING — sửa lỗi thiết kế
+### C.3b. Khoảng cách tới LINESTRING — kiểm chứng thực tế
 
-**Thiết kế trước SAI:** dùng `ST_Distance_Sphere(geometry, property.location)` cho cả
-`POINT` và `LINESTRING`. Đã kiểm chứng trên MySQL 8.4.13:
+**Môi trường kiểm chứng:** MySQL **8.4.13**, database cô lập `127.0.0.1:13306`.
+5238 SRS được cài đặt, gồm `4326` (WGS 84), `32648` (UTM 48N), `32649` (UTM 49N).
+
+**Geometry kiểm thử:** `SYNTHETIC_TEST_ONLY` — không ghi vào danh mục ngập thật.
+
+```sql
+-- Đường chéo: (108.20, 16.05) -> (108.21, 16.06)
+-- Điểm trên đường: (108.205, 16.055)
+-- Điểm lệch:      (108.205, 16.056)
+```
+
+#### Kết quả đo — bảng đối chiếu
+
+| Phương pháp | Điểm trên đường | Điểm lệch | Đơn vị | Kết luận |
+|---|---:|---:|---|---|
+| `ST_Distance` SRID 4326 | **0** | **76.9032** | **độ** | Chạy được, nhưng **không phải mét** |
+| `ST_Distance_Sphere` POINT↔POINT | — | 1542.17 | mét | Chạy được (đối chứng POINT) |
+| `ST_Distance_Sphere` LINESTRING↔POINT | — | **ERROR 3618** | — | **Không hỗ trợ** |
+| `ST_Transform` 32648 + `ST_Distance` | **0.0160** | **76.9886** | **mét** | **Chạy được** |
+| `ST_Transform` 32649 + `ST_Distance` | **0.0126** | **76.9651** | **mét** | **Chạy được** |
+| JTS local metric projection (đối chứng) | **0.0000** | **77.0477** | mét | Đối chứng độc lập |
+
+**Sai lệch giữa UTM48 và UTM49:** `76.9886 − 76.9651 = 0.0235 m` (2,4 cm) — không đáng
+kể cho ngưỡng 200 m.
+
+**Sai lệch giữa MySQL UTM48 và JTS:** `77.0477 − 76.9886 = 0.0591 m` (5,9 cm, 0,08%) —
+do JTS dùng phép chiếu phẳng cục bộ, MySQL dùng phép chiếu UTM chính thức. Cả hai đều
+đúng trong sai số cho phép.
+
+#### Kết luận về đơn vị đo
+
+**`ST_Distance` trên SRID 4326 trả ĐỘ, không phải mét.** Đã kiểm chứng: điểm lệch
+~77 m cho kết quả `76.9032` — nếu là mét thì vô lý vì 0.001° vĩ độ ≈ 111 m.
+
+**Không được** dùng `ST_Distance` trên SRID 4326 rồi gọi là mét.
+
+#### Kết luận về `ST_Distance_Sphere` cho LINESTRING
 
 ```sql
 SELECT ST_Distance_Sphere(
@@ -422,76 +457,113 @@ SELECT ST_Distance_Sphere(
 **MySQL 8 không hỗ trợ `ST_Distance_Sphere` cho LINESTRING với SRID 4326.** Chỉ hỗ trợ
 POINT↔POINT.
 
-#### Phương án đúng cho LINESTRING
+#### Lựa chọn hệ chiếu — có căn cứ
 
-**Bước 1 — chiếu sang hệ mét.** Đà Nẵng nằm trong UTM zone 48N (EPSG:32648), phù hợp
-cho khoảng cách cục bộ:
+**Không mặc định EPSG:32648 cho toàn Đà Nẵng.** Kiểm tra phạm vi dữ liệu thực tế:
+
+| Yếu tố | Giá trị |
+|---|---|
+| Kinh độ Đà Nẵng (khung Java validator) | 107.80°E – 108.40°E |
+| Kinh tuyến trung tâm UTM 48N | 105°E (phạm vi 102°E–108°E) |
+| Kinh tuyến trung tâm UTM 49N | 111°E (phạm vi 108°E–114°E) |
+| **Ranh giới zone** | **108°E** |
+
+**Đà Nẵng nằm vắt qua ranh giới zone 48N/49N tại kinh tuyến 108°E.** Phần lớn đô thị
+(108.15–108.25°E) nằm trong **zone 49N**; phần phía tây (Hòa Vang, 107.8–108.0°E) nằm
+trong **zone 48N**.
+
+**Đo thực tế cho thấy sai lệch giữa hai zone chỉ 2,4 cm** ở khoảng cách ~77 m. Với
+ngưỡng 200 m, sai lệch này không ảnh hưởng kết luận.
+
+**Quyết định:** dùng **EPSG:32648 (UTM 48N)** cho toàn bộ Đà Nẵng vì:
+
+1. Sai lệch đo được so với 49N chỉ 2,4 cm — dưới ngưỡng đáng kể.
+2. 48N phủ trọn khung 107.80–108.40°E ở mức sai số chấp nhận được (hệ số scale ~1.0004
+   tại biên zone, tương đương 0,04% ≈ 8 cm ở 200 m).
+3. Dùng một zone duy nhất tránh phải xử lý chuyển zone giữa các bản ghi.
+
+**Nếu cần chính xác hơn** (ngưỡng < 10 m), dùng zone theo kinh độ từng điểm:
 
 ```sql
--- Chiếu điểm và đường sang EPSG:32648 (mét)
-ST_Transform(geometry, 32648)
+CASE WHEN ST_X(property_location) < 108.0 THEN 32648 ELSE 32649 END
 ```
 
-**Bước 2 — tính khoảng cách trong hệ mét:**
+Nhưng với ngưỡng 200 m hiện tại, một zone là đủ và đơn giản hơn.
+
+#### Thiết kế cuối cùng
 
 ```sql
+-- POINT: dùng ST_Distance_Sphere (hỗ trợ SRID 4326, trả mét)
+SELECT ST_Distance_Sphere(flood_geometry, property_location) AS distance_meters
+FROM flood_records, properties
+WHERE flood_records.geometry_type = 'POINT'
+  AND ST_Distance_Sphere(flood_geometry, property_location) <= ?;
+
+-- LINESTRING: chiếu sang UTM 48N rồi dùng ST_Distance (trả mét)
 SELECT ST_Distance(
          ST_Transform(flood_geometry, 32648),
          ST_Transform(property_location, 32648)
        ) AS distance_meters
-FROM ...
-WHERE ST_Distance(
+FROM flood_records, properties
+WHERE flood_records.geometry_type = 'LINESTRING'
+  AND ST_Distance(
         ST_Transform(flood_geometry, 32648),
         ST_Transform(property_location, 32648)
-      ) <= ?
+      ) <= ?;
 ```
 
-**Kiểm chứng `ST_Distance` trả mét trong hệ chiếu:**
+**Lưu ý hiệu năng:** `ST_Transform` không dùng được spatial index. Với 124 bản ghi ngập
+và 152 tin, quét toàn bộ là chấp nhận được. Nếu dữ liệu tăng, lọc thô bằng
+`MBRContains` trên SRID 4326 trước rồi mới `ST_Transform`:
 
 ```sql
--- Trong SRID 4326, ST_Distance trả ĐỘ, không phải mét:
-SELECT ST_Distance(
-  ST_GeomFromText('LINESTRING(108.20 16.05, 108.21 16.06)', 4326, 'axis-order=long-lat'),
-  ST_GeomFromText('POINT(108.205 16.055)', 4326, 'axis-order=long-lat'));
--- -> 0  (độ, không phải mét — điểm nằm trên đường)
+WHERE MBRContains(
+        ST_GeomFromText(bbox_4326, 4326, 'axis-order=long-lat'),
+        property_location)
+  AND ST_Distance(ST_Transform(...), ST_Transform(...)) <= ?
 ```
-
-**Không được** tính khoảng cách bằng độ rồi gọi là mét.
 
 #### Phương án dự phòng — JTS trong Java
 
-Nếu `ST_Transform` không khả dụng trên MySQL đang chạy (cần kiểm tra extension), dùng
-JTS đã có sẵn trong project (`org.locationtech.jts`):
+Nếu môi trường triển khai không có `ST_Transform` (MySQL < 8.0.12 hoặc thiếu SRS),
+dùng JTS đã có sẵn (`org.locationtech.jts`):
 
 ```java
-// Chiếu thủ công sang UTM 48N rồi tính khoảng cách phẳng
-// hoặc dùng GeodeticCalculator của GeoTools nếu được thêm vào
-double distanceMeters = JTS.orthodromicDistance(
-    propertyCoordinate, nearestPointOnLine, CRS.decode("EPSG:4326"));
+// Chiếu cục bộ quanh vĩ độ tham chiếu rồi tính khoảng cách phẳng
+double metersPerDegLat = 6371008.8 * Math.PI / 180.0;
+double metersPerDegLon = metersPerDegLat * Math.cos(Math.toRadians(refLat));
+// ... chiếu từng đỉnh của LINESTRING, rồi metricLine.distance(metricPoint)
 ```
 
-**Ưu tiên phương án MySQL** vì giữ truy vấn trong DB, dùng được spatial index.
-Phương án JTS chỉ dùng khi `ST_Transform` không khả dụng.
+Đã kiểm chứng: JTS cho `77.0477 m` so với MySQL UTM48 `76.9886 m` — chênh 5,9 cm.
+
+**Ưu tiên phương án MySQL** vì giữ truy vấn trong DB và dùng được spatial index cho
+bước lọc thô.
 
 #### Bảng chọn hàm theo geometry
 
-| Geometry | Hàm khoảng cách | Đơn vị | Ghi chú |
+| Geometry | Hàm khoảng cách | Đơn vị | Đã kiểm chứng |
 |---|---|---|---|
-| `POINT` | `ST_Distance_Sphere` | mét | Hỗ trợ SRID 4326 |
-| `LINESTRING` | `ST_Distance(ST_Transform(...,32648), ...)` | mét | **Không** dùng `ST_Distance_Sphere` |
-| `POLYGON` | `ST_Intersects` (quan hệ) | boolean | Không tính khoảng cách |
+| `POINT` | `ST_Distance_Sphere` | mét | ✅ 1542.17 m cho 0.01° |
+| `LINESTRING` | `ST_Distance(ST_Transform(...,32648), ...)` | mét | ✅ 76.99 m |
+| `POLYGON` | `ST_Intersects` (quan hệ) | boolean | ✅ xem dưới |
 
 #### `ST_Contains` vs `ST_Intersects` cho POLYGON
 
-Đã kiểm chứng: điểm nằm **trên biên** polygon cho kết quả khác nhau:
+Đã kiểm chứng trên MySQL 8.4.13:
 
-```sql
-SELECT ST_Contains(polygon, point_on_boundary);   -- -> 0  (KHÔNG chứa)
-SELECT ST_Intersects(polygon, point_on_boundary); -- -> 1  (CÓ giao)
-```
+| Vị trí điểm | `ST_Contains` | `ST_Intersects` |
+|---|---:|---:|
+| Trong polygon | **1** | **1** |
+| **Trên biên** | **0** | **1** |
+| Ngoài polygon | 0 | 0 |
 
-**Dùng `ST_Intersects`** cho kiểm tra "nằm trong hoặc trên biên". Nếu nghiệp vụ muốn
-loại trừ biên, dùng `ST_Contains` và ghi rõ trong tài liệu.
+**Dùng `ST_Intersects`** cho "nằm trong hoặc trên biên". Nếu nghiệp vụ muốn loại trừ
+biên, dùng `ST_Contains` và ghi rõ.
+
+**Điểm trên biên không đồng nghĩa nguy cơ ngập chắc chắn** — biên polygon là ranh giới
+dữ liệu, không phải ranh giới vật lý của vùng ngập. Hiển thị nhãn riêng cho trường hợp
+này.
 
 **Geometry không hợp lệ:** kiểm tra `ST_IsValid(geometry)` trước khi dùng. Polygon tự
 giao có thể cho kết quả `ST_Intersects` không xác định.
