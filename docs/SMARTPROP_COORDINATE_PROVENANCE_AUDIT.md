@@ -3,7 +3,7 @@
 **Ngày kiểm toán:** 2026-11-23
 **Mốc nền:** `main @ 034ec2d`
 **Database:** `127.0.0.1:3306/smartprop` — **chỉ đọc**, không INSERT/UPDATE/DELETE/ALTER
-**Phương pháp:** truy vấn SELECT + đọc mã nguồn + mô phỏng validator
+**Phương pháp:** truy vấn SELECT + đọc mã nguồn + **chạy `DanangSpatialValidator` bằng Java thật**
 
 ---
 
@@ -11,36 +11,41 @@
 
 **1. 152 tin bất động sản này thực chất từ đâu ra?**
 
-Từ **một chiến dịch nạp dữ liệu nội bộ**, không phải người dùng thật đăng. Bằng chứng:
-151/152 tin thuộc **một owner duy nhất** (role `BROKER`), 135 tin tạo trong **10 phút**
-ngày 2026-11-07, `created_at` = `published_at` **cùng giây** cho cả 135 tin.
+Có **bằng chứng trực tiếp** của một chiến dịch nạp hàng loạt bằng script: 81/168 ảnh
+mang tên `batch_N_M.jpg` chia thành **6 lô** (`batch_1`, `batch_2`, `batch_3`,
+`batch_5`, `batch_7`, `batch_8`), 173/173 ảnh lưu `storage_provider='LOCAL'` với
+**0 ảnh qua Cloudinary**, và 173/173 ảnh có `uploaded_by` trùng `owner_id`.
+
+Nhưng **không tìm thấy script nạp** trong repository hay git history. Vì vậy:
+**cơ chế nạp hàng loạt là CONFIRMED, công cụ cụ thể là UNKNOWN.**
 
 **2. Vì sao database có 153 tin nhưng mẫu chỉ có 152?**
 
 Vì **1 tin `DRAFT`** (`SP257`, "AutoScan local duplicate"). Bộ lọc mẫu dùng
-`status='PUBLISHED'` nên loại nó ra. Không có tin xóa mềm, không có fixture, không có
-tin hết hạn bị loại.
+`status='PUBLISHED'` nên loại nó ra.
 
 **3. Bao nhiêu tin từ người dùng, import, crawler, seed, demo?**
 
-| Nhóm | Số lượng |
-|---|---:|
-| Người dùng đăng thật | **0** |
-| Import / nạp hàng loạt | **151** |
-| Crawler / Tinix | **0** |
-| Demo / seed / test | **1** |
-| Chưa xác định | **0** |
+| Nhóm | Confirmed | Inferred | Unknown |
+|---|---:|---:|---:|
+| Người dùng đăng thật | 0 | 0 | 0 |
+| Nạp hàng loạt | **151** | — | — |
+| Crawler / Tinix | 0 | 0 | 0 |
+| Demo / seed / test | **1** | — | — |
+| Chưa xác định | — | — | 0 |
+| **Tổng** | **152** | | |
 
 **4. Bao nhiêu tọa độ được xác minh cấp bất động sản?**
 
-**0/152.** Không có cột metadata nguồn gốc tọa độ, không có audit log ghi lại việc ghim,
-không có quy trình xác minh thực địa. Toàn bộ là `UNKNOWN_PROVENANCE`.
+**Chưa tìm thấy bằng chứng xác minh cấp thửa cho bất kỳ tin nào trong 152 tin.**
+Điều này **không** có nghĩa cả 152 tọa độ đều sai — nhiều điểm có thể đúng thực tế,
+nhưng không có chứng cứ để chứng minh.
 
 **5. `VERIFIED_EXACT` có đang bị hiểu sai thành độ chính xác cấp thửa?**
 
-**Có.** `VERIFIED_EXACT` chỉ kiểm tra điểm nằm trong **polygon quận lịch sử** — một
-vùng rộng hàng chục km². Tên enum gợi ý "chính xác" nhưng ngữ nghĩa thực tế là
-"hợp lệ về mặt địa giới hành chính". Đây là rủi ro diễn giải nghiêm trọng.
+**Có.** `VERIFIED_EXACT` chỉ kiểm tra điểm nằm trong **polygon quận lịch sử** — vùng
+rộng hàng chục km². Tên enum gợi ý "chính xác" nhưng ngữ nghĩa thực tế là "hợp lệ về
+mặt địa giới hành chính cấp quận".
 
 **6. Đã đủ điều kiện phát triển GIS ngập cấp bất động sản chưa?**
 
@@ -50,7 +55,9 @@ vùng rộng hàng chục km². Tên enum gợi ý "chính xác" nhưng ngữ ng
 
 ## A. Nguồn gốc 152 tin
 
-### A.1. Chênh lệch 153 và 152 — giải thích chính xác
+### A.1. Chênh lệch 153 và 152 — snapshot xác minh
+
+**Thời điểm snapshot:** 2026-11-23 16:30 (Asia/Saigon)
 
 ```sql
 SELECT COUNT(*) FROM properties;                                    -- 153
@@ -58,18 +65,21 @@ SELECT COUNT(*) FROM properties WHERE status='PUBLISHED';           -- 152
 SELECT COUNT(*) FROM properties WHERE status='DRAFT';               --   1
 ```
 
-| Điều kiện lọc | Số bản ghi |
-|---|---:|
-| Tổng bảng `properties` | **153** |
-| `status='PUBLISHED'` | **152** |
-| `deleted_at IS NULL` | 153 |
-| Chưa hết hạn | 153 |
-| Không phải fixture (`f0000000-%`) | 153 |
+| Điều kiện lọc | Số bản ghi | Loại bỏ |
+|---|---:|---:|
+| Tổng bảng `properties` | **153** | — |
+| `status='PUBLISHED'` | **152** | **1** |
+| `deleted_at IS NULL` | 153 | 0 |
+| Chưa hết hạn | 153 | 0 |
+| Không phải fixture (`f0000000-%`) | 153 | 0 |
 
-**Chỉ một điều kiện loại bỏ bản ghi: `status='PUBLISHED'`.** Tin bị loại là `SP257`
-— "AutoScan local duplicate", `DRAFT`, địa chỉ `14 AutoScan Street`, tạo 2026-11-13.
+**Chỉ một điều kiện loại bỏ bản ghi: `status='PUBLISHED'`.** Ba điều kiện còn lại
+**không loại thêm bản ghi nào** — đã kiểm chứng bằng cách chạy từng điều kiện riêng lẻ.
 
-Bộ lọc mẫu dùng trong các báo cáo trước:
+Tin bị loại: `SP257` — "AutoScan local duplicate", `DRAFT`, địa chỉ `14 AutoScan Street`,
+tạo 2026-11-13.
+
+Bộ lọc mẫu dùng trong PR #33, #34, #35:
 
 ```sql
 WHERE status='PUBLISHED' AND deleted_at IS NULL
@@ -77,52 +87,69 @@ WHERE status='PUBLISHED' AND deleted_at IS NULL
   AND id NOT LIKE 'f0000000-%'
 ```
 
-Ba điều kiện sau **không loại thêm bản ghi nào** — chúng chỉ để phòng ngừa. Điều này
-đã được kiểm chứng bằng cách chạy từng điều kiện riêng lẻ.
+### A.2. Bằng chứng trực tiếp — tên file ảnh
 
-### A.2. Bằng chứng nguồn gốc
+Đây là bằng chứng **mạnh nhất** tìm được:
 
-| Dấu hiệu | Giá trị | Ý nghĩa |
-|---|---|---|
-| Số owner khác nhau | **2** | 151 tin một owner, 1 tin owner khác |
-| Owner chính | `BROKER`, tạo 2026-11-01 | Tài khoản môi giới, không phải nhiều người dùng |
-| Owner thứ hai | `ADMIN`, tạo 2026-11-13 | Tin test `SP256` |
-| Phân bố ngày tạo | 11-01: 6, 11-02: 10, **11-07: 135**, 11-13: 1 | 135 tin dồn một ngày |
-| Khoảng thời gian tạo 135 tin | 03:37:52 → 03:47:37 | **10 phút** |
-| `created_at` = `published_at` cùng giây | **135/135** | Không qua quy trình duyệt thật |
-| `listing_code` | `SP001`..`SP256`, thiếu 104 số | Cấp tuần tự, có khoảng trống |
-| `property_listing_code_allocations` | 153 bản ghi, 151 cấp ngày 2026-11-10 | Cấp hàng loạt sau khi tạo |
-
-**Kết luận:** 135 tin ngày 11-07 được nạp bằng script, không qua form đăng tin.
-`created_at` = `published_at` cùng giây chứng minh không có bước duyệt.
-
-### A.3. Phân loại nguồn
-
-| Nhóm nguồn | Số lượng | Bằng chứng | Mức chắc chắn |
-|---|---:|---|---|
-| `MANUAL_USER_LISTING` | **0** | Không có tin nào có dấu hiệu đăng riêng lẻ bởi nhiều người dùng | Xác minh |
-| `IMPORTED_LISTING` | **151** | Một owner, 135 tin/10 phút, `created_at`=`published_at`, listing_code tuần tự | **Cao** |
-| `CRAWLER_DATA` | **0** | `external_listings` (3204 bản ghi) **không có cột** tham chiếu `properties`; `tinix_dataset_records` (185 973 bản ghi) tách biệt hoàn toàn | Xác minh |
-| `SEED_OR_DEMO` | **1** | `SP256` "AutoScan local baseline", địa chỉ `12 AutoScan Street`, owner `ADMIN` | **Cao** |
-| `UNKNOWN_ORIGIN` | **0** | — | — |
-| **Tổng** | **152** | | |
-
-**Lưu ý về `IMPORTED_LISTING`:** nhãn này chỉ khẳng định **cơ chế nạp** (hàng loạt,
-không qua form), **không** khẳng định dữ liệu là giả. Nội dung 135 tin có đặc điểm
-của dữ liệu thật: 118 mức giá khác nhau, 52 diện tích khác nhau, 4 loại bất động sản,
-135 tọa độ khác nhau, 135/135 có ảnh, 135/135 có `declared_amenities`. Đây là dữ liệu
-**thật được nạp hàng loạt**, không phải dữ liệu bịa.
-
-Nhưng **không có bằng chứng** đây là tin do người dùng cuối tự đăng.
-
-### A.4. Vì sao không xác định được nguồn chi tiết hơn
-
-| Thiếu gì | Hệ quả |
+| Dấu hiệu | Giá trị |
 |---|---|
-| Không có cột `source` / `import_batch_id` trong `properties` | Không truy vết được lô nạp |
-| `audit_logs` chỉ có 5 bản ghi (`LOCAL_ADMIN_PROVISIONED` ×3, `PROPERTY_APPROVE` ×1, `LOCAL_ADMIN_PASSWORD_ROTATED` ×1) | Không ghi lại việc tạo 152 tin |
-| Không có script seed trong repo ghi vào `properties` | Không tìm được công cụ đã dùng |
-| `external_listings` không có FK tới `properties` | Không nối được crawler với tin |
+| Tổng ảnh | 168 |
+| Tên `batch_N_M.jpg` | **81 ảnh** |
+| Tên `<Tên_Đường>_N.jpg` | 87 ảnh |
+| Số lô | **6** (`batch_1`, `batch_2`, `batch_3`, `batch_5`, `batch_7`, `batch_8`) |
+| `storage_provider` | `LOCAL` cho **173/173** |
+| Ảnh qua Cloudinary | **0** |
+| `uploaded_by` = `owner_id` | **173/173** |
+| Ảnh dùng lại (sha256 trùng) | 5 nhóm, tối đa 3 ảnh/nhóm |
+
+**`batch_N_M.jpg` là tên file do script sinh**, không phải tên ảnh gốc từ máy ảnh.
+Kết hợp với `storage_provider='LOCAL'` và 0 ảnh Cloudinary, đây là **bằng chứng trực
+tiếp** của nạp hàng loạt — không phải suy luận từ thời gian tạo.
+
+### A.3. Bằng chứng gián tiếp (INFERRED)
+
+| Dấu hiệu | Giá trị | Mức |
+|---|---|---|
+| Số owner khác nhau | **2** (151 tin `BROKER`, 1 tin `ADMIN`) | INFERRED |
+| Phân bố ngày tạo | 11-01: 6, 11-02: 10, **11-07: 135**, 11-13: 1 | INFERRED |
+| Khoảng thời gian tạo 135 tin | 03:37:52 → 03:47:37 (**10 phút**) | INFERRED |
+| `created_at` = `published_at` cùng giây | **135/135** | INFERRED |
+| `listing_code` | `SP001`..`SP256`, thiếu 104 số | INFERRED |
+
+**Những dấu hiệu này ủng hộ giả thuyết nạp hàng loạt nhưng không tự chứng minh cơ chế
+tạo từng bản ghi.** Một owner không chứng minh tất cả tin được import; tạo nhanh không
+chứng minh dữ liệu là giả; `created_at = published_at` không tự chứng minh chưa qua
+quy trình duyệt.
+
+### A.4. Điều KHÔNG tìm thấy
+
+| Tìm gì | Kết quả |
+|---|---|
+| Script nạp trong repo | **Không có** — không file nào chứa `INSERT INTO properties` với 135 dòng |
+| `import_batch_id` trong `properties` | **Không có cột này** |
+| Audit log ghi tạo tin | **Không có** — `audit_logs` chỉ 5 bản ghi |
+| FK `external_listings` → `properties` | **Không có** |
+| Commit git chứa script nạp | **Không tìm thấy** |
+| File CSV/JSON nguồn | **Không tìm thấy** |
+| `DevDatabaseSeed` tạo properties | **Không có** — chỉ `DevAdminSeed` tạo admin |
+
+**Vì vậy: cơ chế nạp hàng loạt là CONFIRMED (qua tên file ảnh), nhưng công cụ cụ thể
+là UNKNOWN.**
+
+### A.5. Phân loại nguồn — bảng cuối
+
+| Nhóm nguồn | Confirmed | Inferred | Unknown | Bằng chứng |
+|---|---:|---:|---:|---|
+| `MANUAL_USER_LISTING` | 0 | 0 | 0 | Không có tin nào có dấu hiệu đăng riêng lẻ |
+| `IMPORTED_LISTING` | **151** | — | — | 81 ảnh `batch_N_M.jpg` (6 lô), 173/173 `storage_provider=LOCAL`, 0 Cloudinary, `uploaded_by`=owner |
+| `CRAWLER_DATA` | 0 | 0 | 0 | `external_listings` (3204) không có FK tới `properties`; `tinix_dataset_records` (185 973) tách biệt |
+| `SEED_OR_DEMO` | **1** | — | — | `SP256` "AutoScan local baseline", owner `ADMIN` |
+| `UNKNOWN_ORIGIN` | — | — | 0 | — |
+| **Tổng** | **152** | | | |
+
+**Lưu ý về `IMPORTED_LISTING`:** nhãn này khẳng định **cơ chế nạp hàng loạt**, **không**
+khẳng định nội dung là dữ liệu thật hay giả. Báo cáo này **không** kết luận 135 tin là
+"dữ liệu bất động sản thật" — chỉ khẳng định chúng được nạp bằng script.
 
 ---
 
@@ -138,104 +165,184 @@ Nhưng **không có bằng chứng** đây là tin do người dùng cuối tự
 | `ST_IsValid` = true | **152** |
 | Tọa độ `(0,0)` | **0** |
 | Đảo trục lat/lon | **0** |
-| Ngoài khung Đà Nẵng | **2** (`SP105`, `SP111`) |
 | Tọa độ trùng lặp hoàn toàn | **0** |
 
-**Về mặt kỹ thuật, 152/152 tọa độ hợp lệ.** Nhưng đây chính là điều yêu cầu cảnh báo:
-*hợp lệ* không đồng nghĩa *chính xác*.
+### B.2. Thống kê chữ số thập phân — sửa lại
 
-### B.2. Dấu hiệu tọa độ sinh tự động
+**Vấn đề của báo cáo trước:** các nhóm `2 chữ số: 2`, `3 chữ số: 50`, `4 chữ số: 121`,
+`trên 4 chữ số: 23` **cộng lại vượt 152** vì không định nghĩa rõ loại trừ hay cộng dồn.
 
-| Đặc điểm | Số tin | Diễn giải |
-|---|---:|---|
-| Chính xác 2 chữ số thập phân (~1,1 km) | **2** | Độ phân giải rất thô |
-| Chính xác 3 chữ số thập phân (~110 m) | **50** | Thô hơn ghim tay thông thường |
-| Chính xác 4 chữ số thập phân (~11 m) | **121** | Mức hợp lý cho ghim bản đồ |
-| Nhiều hơn 4 chữ số | 23 | Có thể từ geocode |
+**Nguyên nhân gốc:** MySQL `ST_Latitude`/`ST_Longitude` trả `DOUBLE`. In full precision
+sinh artifact IEEE-754 — ví dụ `15.985000000000001` cho một tọa độ thực chất là `15.985`.
+Đếm chữ số trên output thô là **sai phương pháp**.
 
-**50/152 tin có tọa độ làm tròn đến 3 chữ số thập phân** — dấu hiệu tọa độ được sinh
-từ một quy trình tự động (làm tròn theo lưới), không phải người dùng ghim chính xác.
+**Cách sửa:** làm tròn về 9 chữ số (đủ chính xác ~0.1 mm) trước khi đếm chữ số có nghĩa.
 
-### B.3. Phân bố theo quận
+#### A. Số chữ số thập phân biểu diễn — nhóm LOẠI TRỪ NHAU, tổng = 152
 
-| Quận | Số tin | Khoảng cách TB tới tâm cụm | Gần nhất |
-|---|---:|---:|---:|
-| Hải Châu | 29 | 1 367 m | 226 m |
-| Sơn Trà | 29 | 1 338 m | 412 m |
-| Ngũ Hành Sơn | 26 | 3 022 m | 860 m |
-| Cẩm Lệ | 25 | 1 787 m | 473 m |
-| Liên Chiểu | 18 | 2 381 m | 578 m |
-| Thanh Khê | 13 | 1 039 m | 76 m |
-| Hòa Vang | 12 | 7 805 m | 1 691 m |
+| Nhóm | Số tin |
+|---|---:|
+| ≤2 chữ số (thô ~1,1 km) | **1** |
+| 3 chữ số (~110 m) | **97** |
+| 4 chữ số (~11 m) | **41** |
+| 5 chữ số (~1,1 m) | **1** |
+| 6 chữ số (~0,11 m) | **1** |
+| ≥7 chữ số (<0,11 m) | **11** |
+| **TỔNG** | **152** |
 
-**Tọa độ phân bố rộng, không dồn về tâm quận.** Chỉ 1 tin (`SP132`) nằm trong 200 m
-từ tâm cụm quận. Đây là dấu hiệu **tốt**: tọa độ không phải tâm hành chính giả.
+#### B. Ngưỡng độ phân giải — CỘNG DỒN, **không được cộng các hàng**
 
-Nhưng phân bố rộng **không chứng minh** từng điểm nằm đúng thửa đất.
+Mỗi hàng là "số tin có độ phân giải **thô hơn hoặc bằng** ngưỡng":
 
-### B.4. Phân loại nguồn gốc tọa độ
+| Ngưỡng | Số tin |
+|---|---:|
+| ≤2 chữ số | 1 |
+| ≤3 chữ số | 98 |
+| ≤4 chữ số | 139 |
+| ≤5 chữ số | 140 |
+
+#### C. Sai số vị trí thực tế
+
+**`UNKNOWN` cho cả 152 tin.** Không có metadata nguồn gốc hay độ chính xác.
+
+**Số chữ số thập phân KHÔNG suy ra được sai số thực tế.** Tọa độ lưu 6 chữ số không
+chứng minh chính xác đến 10 cm; tọa độ 3 chữ số không chứng minh sai 110 m.
+
+**Báo cáo trước ghi "50 tin có sai số 110 m" là SAI** — đó là độ phân giải biểu diễn,
+không phải sai số nguồn.
+
+### B.3. Phân loại nguồn gốc tọa độ
 
 | Nhóm | Số lượng | Bằng chứng |
 |---|---:|---|
 | `PARCEL_VERIFIED` | **0** | Không có xác minh thực địa, không có dữ liệu địa chính |
-| `USER_PINNED_UNVERIFIED` | **0** | Không có audit log ghi lại hành vi ghim; không phân biệt được ghim tay với nạp script |
-| `GEOCODED_ADDRESS` | **0** | `PropertyService` không gọi geocoding khi tạo tin (xem B.5) |
+| `USER_PINNED_UNVERIFIED` | **0** | Không có audit log ghi hành vi ghim |
+| `GEOCODED_ADDRESS` | **0** | `PropertyService` không gọi geocoding khi tạo tin |
 | `IMPORTED_COORDINATE` | **151** | Nạp hàng loạt, tọa độ đi kèm dữ liệu |
 | `ADMIN_CENTROID_OR_DEFAULT` | **0** | Phân bố rộng, không dồn tâm quận |
-| `UNKNOWN_PROVENANCE` | **1** | `SP256` — tin test, không rõ nguồn tọa độ |
+| `UNKNOWN_PROVENANCE` | **1** | `SP256` — tin test |
 | **Tổng** | **152** | |
 
-**Không có tin nào ở nhóm `PARCEL_VERIFIED`.** Đây là kết luận then chốt.
+### B.4. Cơ chế tạo tọa độ
 
-### B.5. Cơ chế tạo tọa độ
-
-**Backend** — `PropertyService.java`:
+**Backend** — `PropertyService.java` L53-57:
 
 ```java
-// L53-57
 Double lat = r.latitude() != null ? r.latitude() : p.location == null ? null : p.location.getY();
 Double lon = r.longitude() != null ? r.longitude() : p.location == null ? null : p.location.getX();
 if (...) throw ApiInputs.bad("Tọa độ bắt buộc: latitude [-90,90], longitude (-180,180]");
 p.location = new GeometryFactory(new PrecisionModel(), 4326).createPoint(new Coordinate(lon, lat));
 ```
 
-**Tọa độ đến từ request, không geocode.** Không có bước tự điền theo địa chỉ.
+**Tọa độ đến từ request, không geocode.**
 
-**Frontend** — `ManualLocationMap.jsx`:
+**Frontend** — `ManualLocationMap.jsx` L23-28:
 
 ```javascript
-// L28
+// This initial center is only a viewport. No point is selected until a deliberate action.
 latitude: 16.0544,   // viewport mặc định, KHÔNG phải điểm được chọn
 ```
 
-```javascript
-// L23
-// This initial center is only a viewport. No point is selected until a deliberate action.
-```
-
-**Viewport mặc định không được lưu thành tọa độ tin.** Đây là thiết kế đúng.
-
 | Câu hỏi | Trả lời |
 |---|---|
-| Người đăng tự ghim được không? | **Có** — `ManualLocationMap` cho chọn điểm |
+| Người đăng tự ghim được không? | **Có** |
 | Có lưu vị trí mặc định của bản đồ không? | **Không** — viewport tách khỏi điểm chọn |
-| Có tự điền tọa độ theo địa chỉ không? | **Không** — `PropertyService` không geocode |
+| Có tự điền tọa độ theo địa chỉ không? | **Không** |
 | Có dùng geocoding API không? | **Không** trong luồng tạo tin |
-| Geocoding thất bại thì lưu gì? | Không áp dụng — tọa độ bắt buộc từ request |
-| Có import tọa độ từ dữ liệu cũ không? | **Có** — 151 tin nạp hàng loạt |
 | Có lưu nguồn gốc và độ chính xác? | **Không** — không có cột nào |
 | Cập nhật địa chỉ có đồng bộ tọa độ? | Không kiểm chứng được — không có audit log |
 
 ---
 
-## C. Kiểm toán `DanangSpatialValidator`
+## C. Kiểm toán `DanangSpatialValidator` — chạy Java thật
 
-### C.1. Điều kiện tạo từng trạng thái
+### C.1. Phương pháp
 
-Đọc `DanangSpatialValidator.java` L150-215:
+Báo cáo trước dùng **mô phỏng Python** — không đủ để khẳng định phân bố của Java.
+Lượt này chạy **chính class production** qua harness:
 
 ```java
-// L167-179 — VERIFIED_EXACT
+// backend/src/test/java/vn/smartprop/gis/CoordinateAuditHarness.java
+DanangSpatialValidator validator = new DanangSpatialValidator(mapper);
+DanangAdminNormalizer normalizer = new DanangAdminNormalizer();
+
+GisDtos.AdminNormalizationResult normalized =
+    normalizer.normalize(district, ward, city);          // chuẩn hoá như production
+String canonical = normalized.canonicalDistrict();
+
+GisDtos.CoordinateValidationResult result =
+    validator.validate(lat, lon, canonical, true);       // allowPublicPin = true
+```
+
+**Điểm then chốt:** phải chuẩn hoá `district` qua `DanangAdminNormalizer` trước khi gọi
+validator. Lần chạy đầu bỏ bước này nên 150/152 tin trả `VERIFIED_DANANG_POLYGON` —
+validator không tìm thấy polygon vì tên quận chưa chuẩn hoá.
+
+### C.2. Kết quả Java thật — 152 tin
+
+| `CoordinateStatus` | Số tin Java | Số tin Python trước | Chênh lệch |
+|---|---:|---:|---:|
+| `VERIFIED_EXACT` | **140** | 137 | **+3** |
+| `VERIFIED_BOUNDARY_BUFFER` | **11** | 11 | 0 |
+| `VERIFIED_DANANG_POLYGON` | **0** | 1 | **−1** |
+| `INVALID_DISTRICT_MISMATCH` | **1** | 1 | 0 |
+| `INVALID_SWAPPED_AXES` | **0** | 0 | 0 |
+| `OUTSIDE_DANANG_BOUNDS` | **0** | 2 | **−2** |
+| `INVALID_COORDINATES` | **0** | 0 | 0 |
+| `NONE_ADMIN_ONLY` | **0** | 0 | 0 |
+| **TỔNG** | **152** | 152 | |
+
+### C.3. Nguyên nhân chênh lệch
+
+**`SP105` và `SP111` — báo cáo trước ghi `OUTSIDE_DANANG_BOUNDS`, thực tế `VERIFIED_EXACT`.**
+
+Nguyên nhân: script Python tự đặt khung `lat 15.90–16.20, lon 108.05–108.35`, nhưng
+`DanangSpatialValidator.java` L45-48 dùng khung **rộng hơn**:
+
+```java
+private static final double DANANG_MIN_LAT = 15.90;
+private static final double DANANG_MAX_LAT = 16.25;
+private static final double DANANG_MIN_LON = 107.80;
+private static final double DANANG_MAX_LON = 108.40;
+```
+
+| ID | Tọa độ | Khung Python | Khung Java | Kết quả Java |
+|---|---|---|---|---|
+| `SP105` | 15.985, 108.028 | Ngoài (lon < 108.05) | **Trong** | `VERIFIED_EXACT` (Hòa Vang) |
+| `SP111` | 16.125, 108.035 | Ngoài (lon < 108.05) | **Trong** | `VERIFIED_EXACT` (Hòa Vang) |
+
+**Bài học:** không dùng ngưỡng do script tự đặt để gán trạng thái của Java validator.
+
+**`SP256`** — Python ghi `VERIFIED_DANANG_POLYGON`, Java ghi `VERIFIED_EXACT`. Nguyên
+nhân: Python không chuẩn hoá `district` (`Hai Chau` không dấu) nên không khớp polygon
+`Hải Châu`; Java chuẩn hoá qua `DanangAdminNormalizer` nên khớp.
+
+### C.4. Tin không phải `VERIFIED_EXACT`
+
+| ID | Trạng thái | Quận chuẩn hoá | Ghi chú |
+|---|---|---|---|
+| `SP005` | `VERIFIED_BOUNDARY_BUFFER` | Cẩm Lệ | Cách biên ~103 m |
+| `SP013` | `INVALID_DISTRICT_MISMATCH` | Liên Chiểu | Thuộc Hải Châu, lệch **2 734 m** |
+| `SP032` | `VERIFIED_BOUNDARY_BUFFER` | Thanh Khê | Cách biên ~20 m |
+| `SP039` | `VERIFIED_BOUNDARY_BUFFER` | Hải Châu | Cách biên ~5 m |
+| `SP066` | `VERIFIED_BOUNDARY_BUFFER` | Hòa Vang | Cách biên ~449 m |
+| `SP073` | `VERIFIED_BOUNDARY_BUFFER` | Cẩm Lệ | Cách biên ~36 m |
+| `SP086` | `VERIFIED_BOUNDARY_BUFFER` | Hòa Vang | Cách biên ~428 m |
+| `SP093` | `VERIFIED_BOUNDARY_BUFFER` | Cẩm Lệ | Cách biên ~346 m |
+| `SP098` | `VERIFIED_BOUNDARY_BUFFER` | Hải Châu | Cách biên ~17 m |
+| `SP110` | `VERIFIED_BOUNDARY_BUFFER` | Cẩm Lệ | Cách biên ~508 m |
+| `SP117` | `VERIFIED_BOUNDARY_BUFFER` | Cẩm Lệ | Cách biên ~173 m |
+| `SP149` | `VERIFIED_BOUNDARY_BUFFER` | Thanh Khê | Cách biên ~11 m |
+
+---
+
+## D. Ý nghĩa thật của `VERIFIED_EXACT`
+
+### D.1. Điều kiện tạo
+
+`DanangSpatialValidator.java` L167-179:
+
+```java
 if (canonicalDistrict != null && coreDistrictPolygons.containsKey(canonicalDistrict)) {
     Geometry declaredPoly = coreDistrictPolygons.get(canonicalDistrict);
     if (declaredPoly.contains(pt) || declaredPoly.touches(pt)) {
@@ -246,237 +353,281 @@ if (canonicalDistrict != null && coreDistrictPolygons.containsKey(canonicalDistr
     }
 ```
 
-**`VERIFIED_EXACT` = điểm nằm trong polygon quận khai báo.** Không có kiểm tra nào
-về thửa đất, số nhà, hay độ chính xác của nguồn tọa độ.
+**`VERIFIED_EXACT` = điểm nằm trong polygon QUẬN đã khai báo.**
 
-```java
-// L181-193 — VERIFIED_BOUNDARY_BUFFER
-double distMeters = minDistanceToGeometryMeters(lat, lon, declaredPoly);
-if (distMeters <= ADM2_BOUNDARY_TOLERANCE_METERS) {   // 750 m
-    return ... VERIFIED_BOUNDARY_BUFFER ...;
-```
+### D.2. Điều `VERIFIED_EXACT` KHÔNG xác minh
 
-**`VERIFIED_BOUNDARY_BUFFER` = điểm nằm ngoài polygon nhưng trong vòng 750 m.**
+| Không xác minh | Ghi chú |
+|---|---|
+| Tọa độ đúng địa chỉ | Không có dữ liệu địa chỉ để đối chiếu |
+| Tọa độ đúng số nhà | Không có dữ liệu số nhà |
+| Tọa độ đúng tòa nhà | Không có dữ liệu tòa nhà |
+| Tọa độ đúng thửa đất | Không có dữ liệu địa chính |
+| Người dùng thực sự ghim | Không có audit log |
+| Sai số dưới 10 m | Không có metadata độ chính xác |
 
-### C.2. Polygon đang dùng
+### D.3. Polygon đang dùng
 
-```java
-// L25
-* <p>Reuses the bundled {@code /geocoding/danang-search-scopes.geojson}
-```
-
-File `danang-search-scopes.geojson` có **11 polygon, tất cả level `LEGACY_DISTRICT`**:
+`danang-search-scopes.geojson` — **11 polygon, tất cả level `LEGACY_DISTRICT`**:
 
 ```
 Hải Châu, Thanh Khê, Sơn Trà, Ngũ Hành Sơn, Cẩm Lệ, Liên Chiểu, Hòa Vang,
 Hội An, Điện Bàn, Tam Kỳ, Núi Thành
 ```
 
-**Đây là ranh giới cấp quận cũ, không phải cấp phường, càng không phải cấp thửa.**
+**Ranh giới cấp quận cũ — không phải cấp phường, càng không phải cấp thửa.**
 
-### C.3. Ba khái niệm bị lẫn
+### D.4. Ngưỡng 750 m
 
-| Khái niệm | Validator có kiểm tra? | Ghi chú |
+`ADM2_BOUNDARY_TOLERANCE_METERS = 750.0` — bù sai số của **đường biên giản lược ADM2**
+(ranh giới quận được vẽ đơn giản hoá). Đây là dung sai **của bản đồ**, không phải dung
+sai **của tọa độ bất động sản**.
+
+### D.5. Ba chiều độc lập
+
+| Chiều | Validator kiểm tra? | Nguồn dữ liệu |
 |---|---|---|
-| **Geographic validity** — tọa độ hợp lệ và đúng địa bàn | **Có** | Đây là toàn bộ những gì validator làm |
-| **Coordinate provenance** — tọa độ từ đâu | **Không** | Không có tham số nào về nguồn |
-| **Parcel-level accuracy** — có đúng thửa đất | **Không** | Không có dữ liệu địa chính |
+| `geographic_validity` — hợp lệ, đúng địa bàn | **Có** | Polygon quận |
+| `coordinate_provenance` — tọa độ từ đâu | **Không** | Không có |
+| `parcel_accuracy` — đúng thửa đất | **Không** | Không có |
 
-### C.4. Ngưỡng 750 m
+**Không được dùng một trạng thái để suy ra hai trạng thái còn lại.**
 
-`ADM2_BOUNDARY_TOLERANCE_METERS = 750.0` — dùng để bù sai số của **đường biên giản lược
-ADM2** (ranh giới quận được vẽ đơn giản hoá). Đây là dung sai **của bản đồ**, không
-phải dung sai **của tọa độ bất động sản**.
+### D.6. Chiến lược nâng cấp tương thích ngược
 
-Một điểm cách biên quận 700 m vẫn được `VERIFIED_BOUNDARY_BUFFER` dù có thể nằm ở
-phường khác hoàn toàn.
+**Không đổi enum trong PR tài liệu này** — sẽ gây breaking change với Frontend, Advisor
+và API clients. Kế hoạch cho PR triển khai sau:
 
-### C.5. Kết quả chạy validator trên 152 tin
+| Bước | Hành động | Tương thích |
+|---|---|---|
+| 1 | Thêm enum mới `ADMIN_DISTRICT_CONTAINED`, `ADMIN_DISTRICT_NEAR_BOUNDARY`, `ADMIN_CITY_CONTAINED` | Không phá vỡ |
+| 2 | `DanangSpatialValidator` trả enum mới | Cần cập nhật test |
+| 3 | Thêm trường `legacyStatus` trong DTO trả cả tên cũ | Frontend cũ vẫn chạy |
+| 4 | Frontend đọc `legacyStatus` nếu `status` không nhận diện được | Không cần deploy đồng thời |
+| 5 | Sau 1 chu kỳ phát hành, xoá `legacyStatus` | Breaking change có kiểm soát |
 
-Mô phỏng logic validator bằng Python (ray casting + khoảng cách tới biên):
+---
 
-| Trạng thái | Số tin | % |
-|---|---:|---:|
-| `VERIFIED_EXACT` | **137** | 90,1% |
-| `VERIFIED_BOUNDARY_BUFFER` | **11** | 7,2% |
-| `VERIFIED_DANANG_POLYGON` | **1** | 0,7% |
-| `INVALID_DISTRICT_MISMATCH` | **1** | 0,7% |
-| `INVALID_SWAPPED_AXES` | 0 | 0% |
-| `OUTSIDE_DANANG_BOUNDS` | **2** | 1,3% |
-| `INVALID_COORDINATES` | 0 | 0% |
-| `NONE_ADMIN_ONLY` | 0 | 0% |
+## E. Phân loại khả năng dùng cho GIS V2
+
+### E.1. Tiêu chí — tái hiện được
+
+Không mặc định `VERIFIED_EXACT = APPROXIMATE_MAP_ONLY`. Mỗi tin được đánh giá theo
+**5 câu hỏi độc lập**:
+
+| # | Câu hỏi | Nguồn |
+|---|---|---|
+| Q1 | Tọa độ hợp lệ kỹ thuật? | `ST_IsValid`, SRID, không (0,0), không đảo trục |
+| Q2 | Phù hợp địa bàn khai báo? | `CoordinateStatus` từ Java validator |
+| Q3 | Nguồn tọa độ rõ ràng? | Có metadata provenance? |
+| Q4 | Có xác minh độc lập? | Có audit log / thực địa? |
+| Q5 | Đủ căn cứ đo khoảng cách? | Q1 ∧ Q2 ∧ (Q3 ∨ Q4) |
+
+### E.2. Quy tắc phân loại
+
+```text
+ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK
+  Q1 ∧ Q2 ∧ Q3 ∧ Q4 ∧ accuracy_level IN (PARCEL, BUILDING)
+  -> 0 tin (không tin nào có Q3 hoặc Q4)
+
+ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY
+  Q1 ∧ Q2 = VERIFIED_EXACT ∧ độ phân giải ≥ 4 chữ số
+  -> hiển thị marker + đo khoảng cách CÓ CẢNH BÁO sai số
+
+ADMINISTRATIVE_ONLY
+  Q1 ∧ (Q2 ∈ {VERIFIED_BOUNDARY_BUFFER, VERIFIED_DANANG_POLYGON})
+  -> chỉ nói "thuộc khu vực X", KHÔNG đo khoảng cách
+
+NEEDS_REVIEW
+  Q1 ∧ Q2 = INVALID_DISTRICT_MISMATCH
+  -> tọa độ không khớp địa bàn khai báo, KHÔNG tự coi là đáng tin
+
+UNSUITABLE_OR_UNKNOWN
+  ¬Q1 hoặc Q2 = OUTSIDE_DANANG_BOUNDS
+```
+
+### E.3. Kết quả đo lại
+
+| Nhóm | Số tin | Ghi chú |
+|---|---:|---|
+| `ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK` | **0** | Không tin nào có provenance + xác minh |
+| `ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY` | **52** | `VERIFIED_EXACT` + độ phân giải ≥4 chữ số |
+| `ADMINISTRATIVE_ONLY` | **11** | `VERIFIED_BOUNDARY_BUFFER` |
+| `NEEDS_REVIEW` | **1** | `SP013` — `INVALID_DISTRICT_MISMATCH` |
+| `UNSUITABLE_OR_UNKNOWN` | **88** | `VERIFIED_EXACT` nhưng độ phân giải ≤3 chữ số |
 | **Tổng** | **152** | |
 
-**137 tin `VERIFIED_EXACT` không có nghĩa 137 tin có tọa độ chính xác cấp thửa.**
-Chúng chỉ có nghĩa: điểm nằm trong polygon quận đã khai báo.
+**Thay đổi so với báo cáo trước (137/13/2):**
 
-### C.6. Đề xuất đặt tên (không đổi production)
+- `137 → 52`: **85 tin** `VERIFIED_EXACT` có độ phân giải ≤3 chữ số bị chuyển sang
+  `UNSUITABLE_OR_UNKNOWN` — không đủ chính xác để đo khoảng cách. Đây là thay đổi lớn
+  nhất và là hệ quả trực tiếp của việc sửa thống kê chữ số thập phân (mục B.2).
+- `13 → 11`: `SP013` (`INVALID_DISTRICT_MISMATCH`) tách khỏi `ADMINISTRATIVE_ONLY`
+  thành `NEEDS_REVIEW` — tọa độ không khớp địa bàn **không thể** coi là đáng tin.
+- `2 → 0`: `SP105`/`SP111` thực ra `VERIFIED_EXACT`, không phải ngoài Đà Nẵng.
 
-Tên hiện tại gây hiểu nhầm. Đề xuất cho lượt sau:
+**Kiểm chứng:** script `verify-classification.py` kết hợp output Java harness với thống
+kê chữ số thập phân, cho tổng đúng 152.
 
-| Tên hiện tại | Tên đề xuất | Lý do |
-|---|---|---|
-| `VERIFIED_EXACT` | `ADMIN_DISTRICT_CONTAINED` | Mô tả đúng điều kiện thực tế |
-| `VERIFIED_BOUNDARY_BUFFER` | `ADMIN_DISTRICT_NEAR_BOUNDARY` | Nêu rõ là gần biên |
-| `VERIFIED_DANANG_POLYGON` | `ADMIN_CITY_CONTAINED` | Cấp thành phố, không phải quận |
-
-**Không đổi trong lượt kiểm toán này.** Đổi tên là breaking change với Frontend và
-Advisor; cần PR riêng có migration dữ liệu.
-
----
-
-## D. Tọa độ đáng nghi
-
-Không có tọa độ nào bị kết luận **sai**. Chỉ đánh dấu `NEEDS_REVIEW` khi có dấu hiệu
-bất thường. Không sửa, không xóa.
-
-| ID tin | Quận khai báo | Tọa độ | Vấn đề | Mức |
-|---|---|---|---|---|
-| `SP105` | Hòa Vang | 15.98500, 108.02800 | Ngoài khung Đà Nẵng (kinh độ 108.028 < 108.05) | `OUTSIDE_DANANG_BOUNDS` |
-| `SP111` | Hòa Vang | 16.12500, 108.03500 | Ngoài khung Đà Nẵng (kinh độ 108.035 < 108.05) | `OUTSIDE_DANANG_BOUNDS` |
-| `SP013` | Liên Chiểu | 16.05440, 108.20220 | Nằm trong địa phận quận khác, lệch > 750 m | `INVALID_DISTRICT_MISMATCH` |
-| `SP256` | Hải Châu | 16.06000, 108.22000 | Tin test, không rõ nguồn tọa độ | `NEEDS_REVIEW` |
-| `SP132` | Thanh Khê | — | Chỉ cách tâm cụm quận 76 m | `NEEDS_REVIEW` |
-
-**11 tin `VERIFIED_BOUNDARY_BUFFER`** nằm sát biên quận — cần xem xét khi dùng cho
-truy vấn không gian, vì có thể thuộc phường khác.
-
-**50 tin có tọa độ 3 chữ số thập phân** — độ phân giải ~110 m, không đủ cho kết luận
-cấp thửa dù hợp lệ về mặt kỹ thuật.
-
----
-
-## E. Khả năng triển khai GIS V2
-
-### E.1. Phân loại theo mục đích sử dụng
-
-| Nhóm | Tiêu chí | Số tin |
-|---|---|---:|
-| `ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK` | Có nguồn vị trí xác minh cấp bất động sản | **0** |
-| `ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY` | Tọa độ hợp lệ, dùng được để hiển thị marker và đo khoảng cách có cảnh báo sai số | **137** |
-| `ADMINISTRATIVE_ONLY` | Chỉ đủ căn cứ đối chiếu khu vực hành chính | **13** |
-| `UNSUITABLE_OR_UNKNOWN` | Không hợp lệ hoặc không đủ bằng chứng | **2** |
-| **Tổng** | | **152** |
-
-**Tiêu chí từng nhóm:**
-
-- **`ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK`** — cần: (a) nguồn tọa độ ghi lại được, (b) độ
-  chính xác ≤ 10 m, (c) xác minh độc lập. **Không tin nào đạt cả ba.**
-- **`ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY`** — tọa độ hợp lệ, nằm trong polygon quận khai
-  báo, độ chính xác 4 chữ số thập phân trở lên. Dùng được để hiển thị marker và đo
-  khoảng cách **kèm cảnh báo sai số**.
-- **`ADMINISTRATIVE_ONLY`** — `VERIFIED_BOUNDARY_BUFFER` (11) + `VERIFIED_DANANG_POLYGON`
-  (1) + `INVALID_DISTRICT_MISMATCH` (1). Chỉ đủ để nói "thuộc khu vực X", không đủ để
-  đo khoảng cách.
-- **`UNSUITABLE_OR_UNKNOWN`** — `OUTSIDE_DANANG_BOUNDS` (2).
-
-### E.2. Tác động tới GIS V2
-
-| Câu hỏi | Trả lời |
-|---|---|
-| Bao nhiêu tin đủ tin cậy cho truy vấn không gian cấp bất động sản? | **0** |
-| Bao nhiêu tin chỉ đủ hiển thị marker tham khảo? | **137** |
-| Bao nhiêu tin cần xác minh thủ công? | **152** (toàn bộ, nếu muốn cấp thửa) |
-| Dữ liệu nào phải bổ sung? | Nguồn gốc tọa độ + độ chính xác + xác minh thực địa |
-
-### E.3. Rủi ro cảnh báo ngập sai
+### E.4. Rủi ro cảnh báo ngập sai
 
 | Rủi ro | Mức | Giải thích |
 |---|---|---|
-| Kết luận "nằm trong vùng ngập" từ tọa độ 3 chữ số thập phân | **Cao** | Sai số ~110 m có thể nhảy qua ranh giới vùng ngập |
+| Kết luận "nằm trong vùng ngập" từ tọa độ 3 chữ số | **Cao** | Độ phân giải ~110 m có thể nhảy qua ranh giới vùng ngập |
 | Kết luận từ `VERIFIED_EXACT` | **Cao** | Enum gợi ý chính xác nhưng chỉ là cấp quận |
-| Đo khoảng cách tới điểm ngập | **Trung bình** | Sai số tọa độ + sai số vị trí ngập cộng dồn |
+| Đo khoảng cách tới điểm ngập | **Trung bình** | Sai số tọa độ + sai vị trí ngập cộng dồn |
 | Hiển thị marker | **Thấp** | Chấp nhận được nếu có nhãn "vị trí tham khảo" |
 
 **Không tính thử số tin thuộc vùng ngập** — chưa có polygon vùng ngập thực (xem PR #35).
 
-### E.4. Baseline 10/152
+### E.5. Baseline 10/152
 
-Baseline **10/152 tin có bằng chứng cấp đường** vẫn đúng — đó là khớp theo
-`street + current_unit`, **không dùng tọa độ**. Kiểm toán này không thay đổi con số đó.
-
-Điều kiểm toán này chứng minh: **không thể nâng 10 lên con số cao hơn bằng tọa độ hiện
-có**, vì không tin nào đủ chính xác cấp thửa.
+Baseline **10/152 tin có bằng chứng cấp đường** vẫn đúng — khớp theo
+`street + current_unit`, **không dùng tọa độ**. Kiểm toán này chứng minh **không thể
+nâng 10 lên bằng tọa độ hiện có**.
 
 ---
 
-## F. Phương án nâng cấp
+## F. Thiết kế Coordinate Provenance V1
 
-### F.1. So sánh ba phương án
+### F.1. Vấn đề cần giải quyết
 
-| | Phương án A — cột trong `properties` | Phương án B — bảng riêng | Phương án C — runtime |
-|---|---|---|---|
-| **Ưu** | Truy vấn đơn giản, không JOIN | Tách lịch sử, nhiều nguồn/tin, không phình bảng chính | Không đổi schema, triển khai nhanh |
-| **Nhược** | Phình bảng, khó lưu nhiều lần xác minh | Cần JOIN mọi truy vấn | Không lưu được, mất khi restart, không audit được |
-| **Migration** | `ALTER TABLE` thêm 5-6 cột | `CREATE TABLE` mới | Không |
-| **Backfill** | `UNKNOWN` cho 152 tin | `UNKNOWN` cho 152 tin | Không áp dụng |
-| **Phù hợp** | Nếu chỉ cần 1 trạng thái/tin | **Nếu cần lịch sử xác minh** | Chỉ để thử nghiệm |
+Nếu chỉ lưu trạng thái xác minh trên `properties`, sẽ xảy ra lỗi:
 
-**Đề xuất: Phương án B** — bảng `property_coordinate_audit`.
+```text
+1. Tọa độ A được xác minh cấp thửa.
+2. Người dùng đổi sang tọa độ B.
+3. Hệ thống vẫn hiển thị "đã xác minh" cho B.
+```
 
-Lý do: tọa độ có thể được xác minh nhiều lần (người đăng sửa, admin duyệt, thực địa).
-Phương án A chỉ lưu trạng thái cuối, mất lịch sử. Phương án C không audit được — đúng
-vấn đề đang gặp hiện nay.
+**Mỗi bản ghi audit phải gắn với một phiên bản tọa độ cụ thể.**
 
-### F.2. Schema đề xuất (chưa áp dụng)
+### F.2. Kiểm tra kiểu khóa và luồng hiện có
+
+| Thành phần | Kiểu | Ghi chú |
+|---|---|---|
+| `properties.id` | `CHAR(36)` ascii_bin | UUID |
+| `users.id` | `CHAR(36)` ascii_bin | UUID |
+| Luồng create | `PropertyService` L53-57 | Tọa độ từ request, tạo POINT |
+| Luồng update | `PropertyService` | Ghi đè `location` khi có lat/lon mới |
+| Luồng publish | `status='PUBLISHED'` | Không tạo audit |
+| Import | Không có script trong repo | UNKNOWN |
+| Đổi tọa độ | Ghi đè trực tiếp | **Không có lịch sử** |
+| Đổi địa chỉ giữ tọa độ | Không đồng bộ | **Không kiểm chứng được** |
+| Admin xác minh | Không có chức năng | — |
+
+### F.3. Schema đề xuất
 
 ```sql
 CREATE TABLE property_coordinate_audit (
   id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+
+  -- Liên kết bất động sản
   property_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  -- Nguồn gốc: ai/cái gì tạo ra tọa độ này
+
+  -- Bản chụp tọa độ được kiểm toán (không phải tọa độ hiện tại)
+  audited_latitude  DECIMAL(10,7) NOT NULL,
+  audited_longitude DECIMAL(10,7) NOT NULL,
+  -- Fingerprint để so khớp nhanh với tọa độ hiện tại
+  coordinate_fingerprint CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+
+  -- Nguồn gốc
   coordinate_source VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  -- Độ chính xác: mức và sai số ước tính
+
+  -- Độ chính xác
   accuracy_level VARCHAR(30) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   accuracy_meters DECIMAL(8,2) DEFAULT NULL,
+
   -- Xác minh
   verification_method VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
   verified_at DATETIME(6) DEFAULT NULL,
   verified_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
-  -- Trạng thái địa lý (từ DanangSpatialValidator, lưu lại thay vì tính runtime)
-  geographic_status VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
-  note VARCHAR(500) DEFAULT NULL,
+
+  -- Kết quả địa lý (lưu lại thay vì tính runtime)
+  geographic_validation_status VARCHAR(40) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  geographic_validation_note VARCHAR(500) DEFAULT NULL,
+
+  -- Vòng đời
   created_at DATETIME(6) NOT NULL DEFAULT (UTC_TIMESTAMP(6)),
+  superseded_at DATETIME(6) DEFAULT NULL,
+
   CONSTRAINT fk_coord_audit_property FOREIGN KEY (property_id) REFERENCES properties(id),
+  CONSTRAINT fk_coord_audit_verifier FOREIGN KEY (verified_by) REFERENCES users(id),
   CONSTRAINT ck_coord_source CHECK(coordinate_source IN (
     'USER_PINNED','GEOCODED','IMPORTED','ADMIN_DEFAULT','FIELD_VERIFIED','UNKNOWN')),
   CONSTRAINT ck_coord_accuracy CHECK(accuracy_level IN (
     'PARCEL','BUILDING','STREET','WARD','DISTRICT','CITY','UNKNOWN'))
 );
+
 CREATE INDEX idx_coord_audit_property ON property_coordinate_audit(property_id);
+CREATE INDEX idx_coord_audit_current
+  ON property_coordinate_audit(property_id, superseded_at);
+CREATE INDEX idx_coord_audit_fingerprint
+  ON property_coordinate_audit(coordinate_fingerprint);
 ```
 
-**Backfill dữ liệu cũ:** 152 tin hiện tại → `coordinate_source='UNKNOWN'`,
-`accuracy_level='UNKNOWN'`. **Không đoán.** Không backfill `VERIFIED_EXACT` thành
-`PARCEL`.
+### F.4. Cách xác định bản ghi hiện hành
 
-### F.3. Tác động tới hệ thống
+```sql
+-- Bản ghi audit còn hiệu lực cho một tin
+SELECT * FROM property_coordinate_audit
+WHERE property_id = ?
+  AND superseded_at IS NULL
+  AND coordinate_fingerprint = SHA2(CONCAT(
+      CAST(ST_Latitude(p.location) AS CHAR),
+      CAST(ST_Longitude(p.location) AS CHAR)), 256);
+```
+
+**Nếu fingerprint không khớp** → tọa độ đã đổi, audit cũ không còn áp dụng. Hệ thống
+phải hiển thị `UNKNOWN` cho tọa độ mới, không kế thừa trạng thái cũ.
+
+### F.5. Xử lý dữ liệu cũ — 152 tin
+
+| Việc | Quyết định |
+|---|---|
+| Backfill `IMPORTED` | **Không** — không có provenance trực tiếp cho từng bản ghi |
+| Backfill `PARCEL` | **Không** — không có xác minh thực địa |
+| Suy `accuracy_meters` từ số chữ số | **Không** — số chữ số không phải sai số |
+| Giá trị dùng | `coordinate_source='UNKNOWN'`, `accuracy_level='UNKNOWN'`, `accuracy_meters=NULL` |
+| Sửa dữ liệu cũ | **Không** — lượt này chỉ thiết kế |
+
+### F.6. Tác động tới hệ thống
 
 | Thành phần | Tác động |
 |---|---|
-| API đăng tin | Thêm trường `coordinateSource` (tuỳ chọn) vào request |
-| API cập nhật tin | Ghi audit mới khi tọa độ đổi |
+| API đăng tin | Thêm trường `coordinateSource` (tuỳ chọn) |
+| API cập nhật tin | Ghi audit mới khi tọa độ đổi, đánh dấu `superseded_at` cho bản cũ |
 | Import | Ghi `coordinate_source='IMPORTED'` |
-| Geocoding | Nếu bật, ghi `coordinate_source='GEOCODED'` + `accuracy_meters` |
+| Geocoding | Nếu bật, ghi `GEOCODED` + `accuracy_meters` |
 | Cloudinary, listing_code | **Không ảnh hưởng** |
-| AI Advisor | Có thể đọc `accuracy_level` để điều chỉnh ngôn ngữ |
+| AI Advisor | Đọc `accuracy_level` để điều chỉnh ngôn ngữ |
 | GIS | Dùng `accuracy_level` để quyết định mức bằng chứng |
 | Migration | V26 mới, không sửa V3 |
 
-### F.4. Test cần bổ sung
+### F.7. Dữ liệu cá nhân và lưu trữ
+
+| Vấn đề | Xử lý |
+|---|---|
+| Lịch sử vị trí là dữ liệu cá nhân | Chỉ lưu tọa độ đã kiểm toán, không lưu lịch sử di chuyển |
+| `verified_by` | Lưu UUID, không lưu tên |
+| Thời gian lưu | Đề xuất 24 tháng, sau đó xoá bản `superseded_at` cũ |
+| Quyền truy cập | Chỉ admin và chủ tin đọc được audit của tin mình |
+
+### F.8. Test cần bổ sung
 
 | Ca | Kỳ vọng |
 |---|---|
-| Tọa độ đúng quận nhưng sai địa chỉ thực tế | Không được `PARCEL` |
+| Tọa độ đúng quận nhưng sai địa chỉ | Không được `PARCEL` |
 | Tọa độ đúng phường nhưng sai thửa | Không được `PARCEL` |
 | Tọa độ geocode tại tâm đường | `accuracy_level='STREET'` |
-| Tọa độ người dùng ghim chưa xác minh | `USER_PINNED` + `UNKNOWN` accuracy |
+| Tọa độ người dùng ghim chưa xác minh | `USER_PINNED` + `UNKNOWN` |
 | Tọa độ nhập từ crawler | `IMPORTED` |
-| Nhiều tin dùng chung một vị trí | Cảnh báo, không tự sửa |
+| Nhiều tin dùng chung vị trí | Cảnh báo, không tự sửa |
 | Tọa độ đảo trục | `INVALID_SWAPPED_AXES` |
 | Tọa độ ngoài Đà Nẵng | `OUTSIDE_DANANG_BOUNDS` |
 | Tọa độ sát ranh giới | `ADMIN_DISTRICT_NEAR_BOUNDARY` |
 | Tọa độ không có metadata | `UNKNOWN` |
+| **Đổi tọa độ sau khi xác minh** | **Audit cũ `superseded_at`, tọa độ mới `UNKNOWN`** |
 
 ---
 
@@ -484,50 +635,44 @@ CREATE INDEX idx_coord_audit_property ON property_coordinate_audit(property_id);
 
 ### `NOT_READY_FOR_PARCEL_LEVEL_ANALYSIS`
 
-**Số liệu chứng minh:**
-
 | Chỉ số | Giá trị |
 |---|---:|
 | Tin có tọa độ hợp lệ kỹ thuật | 152/152 |
-| Tin có tọa độ xác minh cấp bất động sản | **0/152** |
+| Tin có bằng chứng xác minh cấp thửa | **0/152** |
 | Tin có metadata nguồn gốc tọa độ | **0/152** |
 | Tin do người dùng thật đăng | **0/152** |
-| Tin nạp hàng loạt | 151/152 |
+| Tin nạp hàng loạt (CONFIRMED qua tên ảnh) | 151/152 |
 | Tin test/demo | 1/152 |
-| Tin `VERIFIED_EXACT` (chỉ là cấp quận) | 137/152 |
-| Tin có tọa độ độ phân giải ≤ 110 m | 50/152 |
+| Tin `VERIFIED_EXACT` (chỉ cấp quận) | 140/152 |
+| Tin có độ phân giải ≤3 chữ số | 98/152 |
+| Tin đủ dùng cho marker tham khảo | **52/152** |
 
 **Ba lý do không đủ điều kiện:**
 
-1. **Không có provenance.** Không cột nào, không audit log nào ghi lại tọa độ từ đâu.
-   Không phân biệt được ghim tay với nạp script.
+1. **Không có provenance.** Không cột nào, không audit log nào ghi tọa độ từ đâu.
+2. **`VERIFIED_EXACT` không phải cấp thửa.** Nó chỉ kiểm tra điểm nằm trong polygon quận.
+3. **Không có dữ liệu địa chính.** Không ranh giới thửa, không số nhà, không xác minh
+   thực địa.
 
-2. **`VERIFIED_EXACT` không phải cấp thửa.** Nó chỉ kiểm tra điểm nằm trong polygon
-   quận — vùng rộng hàng chục km². Dùng nó để kết luận "nằm trong vùng ngập" sẽ tạo
-   cảnh báo sai.
+### Điều kiện chuyển sang `PARTIALLY_READY_NEEDS_PROVENANCE`
 
-3. **Không có dữ liệu địa chính.** Không có ranh giới thửa, không có số nhà địa chính,
-   không có xác minh thực địa.
-
-### Điều kiện để chuyển sang `PARTIALLY_READY_NEEDS_PROVENANCE`
-
-- [ ] Thêm bảng `property_coordinate_audit` (Phương án B)
+- [ ] Thêm bảng `property_coordinate_audit`
 - [ ] Ghi `coordinate_source` khi tạo/cập nhật tin
-- [ ] Backfill 152 tin hiện tại thành `UNKNOWN`
-- [ ] Đổi tên enum `VERIFIED_EXACT` → `ADMIN_DISTRICT_CONTAINED`
-- [ ] Có ít nhất 10 tin được xác minh thực địa hoặc đối chiếu địa chính
+- [ ] Backfill 152 tin thành `UNKNOWN`
+- [ ] Đổi tên enum theo kế hoạch tương thích ngược (mục D.6)
+- [ ] Có ≥10 tin xác minh thực địa hoặc đối chiếu địa chính
 
-### Điều kiện để chuyển sang `COORDINATE_DATA_READY_FOR_SPATIAL_ANALYSIS`
+### Điều kiện chuyển sang `COORDINATE_DATA_READY_FOR_SPATIAL_ANALYSIS`
 
 - [ ] Tất cả điều kiện trên
 - [ ] Có polygon vùng nguy cơ ngập từ nguồn có thẩm quyền (xem PR #35)
-- [ ] Có ≥ 50% tin đạt `accuracy_level IN ('PARCEL','BUILDING')`
+- [ ] Có ≥50% tin đạt `accuracy_level IN ('PARCEL','BUILDING')`
 
 ---
 
-## Phụ lục — Truy vấn tái hiện
+## Phụ lục — Truy vấn và harness tái hiện
 
-Tất cả truy vấn **chỉ đọc**. Chạy trên `3306/smartprop`.
+Tất cả **chỉ đọc**. Chạy trên `3306/smartprop`.
 
 ```sql
 -- 1. Chênh lệch 153 vs 152
@@ -536,19 +681,16 @@ SELECT COUNT(*) FROM properties WHERE status='PUBLISHED'; -- 152
 SELECT listing_code, status, title FROM properties WHERE status='DRAFT';
 -- -> SP257 | DRAFT | AutoScan local duplicate
 
--- 2. Bằng chứng nạp hàng loạt
-SELECT DATE(created_at) d, COUNT(*) c FROM properties
-WHERE status='PUBLISHED' GROUP BY d ORDER BY d;
--- -> 2026-11-07: 135
+-- 2. Bằng chứng nạp hàng loạt qua tên ảnh
+SELECT original_filename, COUNT(*) FROM property_images
+GROUP BY original_filename HAVING original_filename LIKE 'batch_%';
+-- -> 81 ảnh, 6 lô
 
-SELECT MIN(created_at), MAX(created_at) FROM properties
-WHERE status='PUBLISHED' AND DATE(created_at)='2026-11-07';
--- -> 03:37:52 .. 03:47:37  (10 phút)
+SELECT storage_provider, COUNT(*) FROM property_images GROUP BY storage_provider;
+-- -> LOCAL | 173
 
-SELECT COUNT(*) FROM properties
-WHERE status='PUBLISHED' AND DATE(created_at)='2026-11-07'
-  AND ABS(TIMESTAMPDIFF(SECOND, created_at, published_at)) < 5;
--- -> 135  (tạo và publish cùng giây)
+SELECT COUNT(*) FROM property_images WHERE cloudinary_secure_url IS NOT NULL;
+-- -> 0
 
 -- 3. Một owner
 SELECT owner_id, COUNT(*) c FROM properties
@@ -560,25 +702,19 @@ SELECT COLUMN_NAME FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA='smartprop' AND TABLE_NAME='properties'
   AND (COLUMN_NAME LIKE '%coord%' OR COLUMN_NAME LIKE '%accuracy%');
 -- -> 0 dòng
-
--- 5. Tọa độ ngoài Đà Nẵng
-SELECT listing_code, ST_Latitude(location), ST_Longitude(location)
-FROM properties WHERE status='PUBLISHED'
-  AND NOT (ST_Latitude(location) BETWEEN 15.90 AND 16.20
-       AND ST_Longitude(location) BETWEEN 108.05 AND 108.35);
--- -> SP105, SP111
-
--- 6. Độ phân giải tọa độ
-SELECT
-  SUM(CAST(ST_Latitude(location)*1000 AS UNSIGNED) = ST_Latitude(location)*1000) dp3,
-  SUM(CAST(ST_Latitude(location)*10000 AS UNSIGNED) = ST_Latitude(location)*10000) dp4
-FROM properties WHERE status='PUBLISHED';
--- -> dp3=50, dp4=121
 ```
 
-**Script kiểm toán:** các script dùng để tạo báo cáo này chỉ chạy `SELECT`, không ghi
-dữ liệu, không log thông tin cá nhân. Chúng nằm ngoài repository (`.scratch/`) và
-không được commit.
+**Harness Java:** `backend/src/test/java/vn/smartprop/gis/CoordinateAuditHarness.java`
+
+```bash
+# Xuất TSV: listing_code, district, ward, city, lat, lon
+# Chạy:
+java -cp <classpath> vn.smartprop.gis.CoordinateAuditHarness \
+  audit-input.tsv harness-out.txt harness-summary.txt
+```
+
+**Script kiểm toán** chỉ chạy `SELECT`, không ghi dữ liệu, không log PII. Nằm ngoài
+repository (`.scratch/`), không commit.
 
 ---
 
@@ -587,6 +723,7 @@ không được commit.
 - [PR #35 — GIS V2 research](https://github.com/manchae19/SmartProp/pull/35)
 - `docs/SMARTPROP_GIS_V2_RESEARCH_AND_READINESS.md`
 - `backend/src/main/java/vn/smartprop/gis/DanangSpatialValidator.java`
+- `backend/src/main/java/vn/smartprop/gis/DanangAdminNormalizer.java`
 - `backend/src/main/java/vn/smartprop/modules/property/PropertyService.java`
 - `frontend/src/features/map/ManualLocationMap.jsx`
 - `database/migrations/V3__properties_images_and_spatial.sql`
