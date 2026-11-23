@@ -132,15 +132,6 @@ public class PrePurchaseService {
         return matcher.find() ? matcher.group(1) : null;
     }
 
-    /** The street named in the listing address, or null when it cannot be read. */
-    /**
-     * The street named in the listing address, or null when it cannot be read.
-     *
-     * <p>Listings write the street two ways: "Đường Trần Cao Vân, …" and
-     * "Kiệt Trần Cao Vân, …" or "Kiệt 350 Điện Biên Phủ, …". The alley form names the
-     * same street, so it is read the same way; the alley number itself is dropped
-     * because the catalogue records a street, not a house.
-     */
     /**
      * The street named in the listing address, or null when it cannot be read.
      *
