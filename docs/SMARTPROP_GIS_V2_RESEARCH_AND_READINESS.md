@@ -34,7 +34,7 @@ chưa xác minh được nguồn geometry nguy cơ ngập có quyền sử dụn
 > thửa. Hai tài liệu dùng chung thuật ngữ `geographic_validity`,
 > `coordinate_provenance`, `parcel_accuracy`.
 >
-> **Phân loại khả năng dùng (PR #36 mục E):** `REFERENCE_MAP_ELIGIBLE` 152/152,
+> **Phân loại khả năng dùng (PR #36 mục E):** `REFERENCE_MAP_ELIGIBLE` **151/152**,
 > `DISTANCE_ANALYSIS_ELIGIBLE` **0/152**, `PARCEL_ANALYSIS_ELIGIBLE` **0/152**.
 > Số chữ số thập phân **không** phải độ chính xác — đã bỏ khỏi tiêu chí phân loại.
 | Polygon vùng nguy cơ ngập | **Không** — nguồn chính thức chưa công khai |
@@ -643,7 +643,7 @@ Ba khả năng **độc lập**, không suy ra lẫn nhau (chi tiết ở
 
 | Khả năng | Số tin | Điều kiện |
 |---|---:|---|
-| `REFERENCE_MAP_ELIGIBLE` — hiển thị marker tham khảo | **152** | Geometry hợp lệ + phù hợp địa bàn |
+| `REFERENCE_MAP_ELIGIBLE` — hiển thị marker tham khảo | **151** | `VERIFIED_EXACT` (140) + `VERIFIED_BOUNDARY_BUFFER` (11) |
 | `DISTANCE_ANALYSIS_ELIGIBLE` — đo khoảng cách đáng tin | **0** | Cần provenance + `accuracy_meters` |
 | `PARCEL_ANALYSIS_ELIGIBLE` — phân tích cấp thửa | **0** | Cần xác minh độc lập |
 
@@ -652,9 +652,13 @@ Ba khả năng **độc lập**, không suy ra lẫn nhau (chi tiết ở
 | Nhóm | Số tin |
 |---|---:|
 | `REFERENCE_MAP_ONLY` | **150** |
-| `NEEDS_REVIEW` (`SP013`) | **1** |
+| `NEEDS_LOCATION_REVIEW` (`SP013`) | **1** |
 | `DEMO_OR_TEST` (`SP256`) | **1** |
 | **Tổng** | **152** |
+
+**Quan hệ:** `REFERENCE_MAP_ELIGIBLE (151) = REFERENCE_MAP_ONLY (150) + SP256 (1)`.
+`SP256` đạt điều kiện kỹ thuật **và** là dữ liệu demo — hai nhãn độc lập, không trừ
+hai lần. `SP013` (`INVALID_DISTRICT_MISMATCH`, lệch 2 734 m) **không** đạt điều kiện.
 
 **Vì sao `DISTANCE_ANALYSIS_ELIGIBLE = 0`:** không tin nào có `coordinate_source` hay
 `accuracy_meters`. **Số chữ số thập phân không phải độ chính xác** — đã bỏ tiêu chí
