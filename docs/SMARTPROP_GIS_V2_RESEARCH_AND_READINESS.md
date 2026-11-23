@@ -32,6 +32,10 @@ chưa xác minh được nguồn geometry nguy cơ ngập có quyền sử dụn
 > và `VERIFIED_EXACT` chỉ xác nhận điểm nằm trong polygon **quận**, không phải cấp
 > thửa. Hai tài liệu dùng chung thuật ngữ `geographic_validity`,
 > `coordinate_provenance`, `parcel_accuracy`.
+>
+> **Phân loại khả năng dùng (PR #36 mục E):** `REFERENCE_MAP_ELIGIBLE` 152/152,
+> `DISTANCE_ANALYSIS_ELIGIBLE` **0/152**, `PARCEL_ANALYSIS_ELIGIBLE` **0/152**.
+> Số chữ số thập phân **không** phải độ chính xác — đã bỏ khỏi tiêu chí phân loại.
 | Polygon vùng nguy cơ ngập | **Không** — nguồn chính thức chưa công khai |
 
 Xây GIS V2 lúc này sẽ buộc phải bịa geometry từ mô tả chữ — đúng điều cấm trong
@@ -622,18 +626,31 @@ xác cấp thửa".
 
 ### Phân loại khả năng dùng cho GIS V2
 
+Ba khả năng **độc lập**, không suy ra lẫn nhau (chi tiết ở
+`SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md` mục E):
+
+| Khả năng | Số tin | Điều kiện |
+|---|---:|---|
+| `REFERENCE_MAP_ELIGIBLE` — hiển thị marker tham khảo | **152** | Geometry hợp lệ + phù hợp địa bàn |
+| `DISTANCE_ANALYSIS_ELIGIBLE` — đo khoảng cách đáng tin | **0** | Cần provenance + `accuracy_meters` |
+| `PARCEL_ANALYSIS_ELIGIBLE` — phân tích cấp thửa | **0** | Cần xác minh độc lập |
+
+**Phân nhóm loại trừ nhau (tổng = 152):**
+
 | Nhóm | Số tin |
 |---|---:|
-| `ELIGIBLE_FOR_PARCEL_SPATIAL_CHECK` | **0** |
-| `ELIGIBLE_FOR_APPROXIMATE_MAP_ONLY` | **52** |
-| `ADMINISTRATIVE_ONLY` | **11** |
-| `NEEDS_REVIEW` | **1** |
-| `UNSUITABLE_OR_UNKNOWN` | **88** |
+| `REFERENCE_MAP_ONLY` | **150** |
+| `NEEDS_REVIEW` (`SP013`) | **1** |
+| `DEMO_OR_TEST` (`SP256`) | **1** |
 | **Tổng** | **152** |
 
-**Vì sao 88 tin `UNSUITABLE_OR_UNKNOWN`:** `VERIFIED_EXACT` nhưng độ phân giải tọa độ
-≤3 chữ số thập phân (~110 m) — không đủ chính xác để đo khoảng cách tới vị trí ngập.
-Chi tiết tiêu chí ở `SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md` mục E.
+**Vì sao `DISTANCE_ANALYSIS_ELIGIBLE = 0`:** không tin nào có `coordinate_source` hay
+`accuracy_meters`. **Số chữ số thập phân không phải độ chính xác** — đã bỏ tiêu chí
+này khỏi phân loại (báo cáo trước phân loại 88 tin là "không dùng được" chỉ vì tọa độ
+có ≤3 chữ số, đó là suy luận sai).
+
+**Tọa độ chưa được chứng minh chính xác không đồng nghĩa với tọa độ không thể sử dụng.**
+Marker tham khảo vẫn hiển thị được với nhãn "vị trí tham khảo, chưa xác minh".
 
 ---
 
