@@ -3,6 +3,13 @@ import React, { useRef, useState } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { useAppNavigation } from "../../app/navigation.jsx";
 import { DISTRICT_PROFILES } from "./marketData.js";
+const HOME_AREA_IMAGES = {
+  "Sơn Trà": { src: "/media/areas/son-tra.webp", position: "50% 56%" },
+  "Hải Châu": { src: "/media/areas/hai-chau.webp", position: "50% 50%" },
+  "Ngũ Hành Sơn": { src: "/media/areas/ngu-hanh-son.webp", position: "50% 54%" },
+  "Liên Chiểu": { src: "/media/areas/lien-chieu.webp", position: "50% 50%" },
+  "Cẩm Lệ": { src: "/media/areas/cam-le.webp", position: "50% 56%" }
+};
 function useTopSearchedAreasState(inputProps, forwardedRef) {
   inputProps = {
     currentSlug: "",
@@ -68,10 +75,11 @@ export default React.forwardRef(function TopSearchedAreas(props, ref) {
   const view = useTopSearchedAreasState(props, ref);
   const [failedImages, setFailedImages] = useState(() => new Set());
   function districtImage(district) {
+    const homeImage = view.homeAreaImages ? HOME_AREA_IMAGES[district.shortName] : null;
     if (view.mode === "market" && failedImages.has(district.id)) return <div className="district-image-fallback" role="img" aria-label={"Chưa có ảnh khu vực " + district.name}>
       <svg aria-hidden="true" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M8 16 24 8l16 8 16-8v40l-16 8-16-8-16 8V16Z M24 8v40M40 16v40" /></svg>
     </div>;
-    return <img src={district.image} alt={district.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" onError={view.mode === "market" ? () => setFailedImages(previous => new Set(previous).add(district.id)) : undefined} />;
+    return <img src={homeImage?.src || district.image} alt={district.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" style={homeImage ? { objectPosition: homeImage.position } : undefined} onError={view.mode === "market" ? () => setFailedImages(previous => new Set(previous).add(district.id)) : undefined} />;
   }
   return <><div {...view.rootAttributes} className={classNames(["top-searched-areas", view.rootAttributes.className])}>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
