@@ -366,24 +366,38 @@ if (-not $normalized.EndsWith("/mysql-isolated/data/")) {
 # 4. Đường dẫn phải tuyệt đối
 if (-not [IO.Path]::IsPathRooted($DATADIR)) { throw "Datadir phải là đường dẫn tuyệt đối." }
 
-# 5. Nếu instance 3306 đang chạy, đọc datadir THẬT của nó để chắc chắn khác biệt
+# 5. Datadir phải nằm ngoài mọi thư mục MySQL hệ thống
+#    KHÔNG dùng "3306 đang tắt" làm bằng chứng — instance có thể tắt lúc kiểm tra
+#    và bật lại sau, hoặc datadir 3306 nằm ở đường dẫn khác.
+$forbidden = @('C:\ProgramData\MySQL', 'C:\Program Files\MySQL', 'C:\MySQL')
+foreach ($p in $forbidden) {
+    if ($DATADIR.StartsWith($p, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Datadir $DATADIR nằm trong thư mục MySQL hệ thống ($p). Dừng lại."
+    }
+}
+
+# 6. Nếu instance 3306 đang chạy, đọc datadir THẬT của nó để so sánh
 $localBusy = Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue
 if ($localBusy) {
     Write-Output "Instance 3306 đang chạy (PID $($localBusy.OwningProcess))."
-    Write-Output "Kiểm tra thủ công: datadir staging ($DATADIR) phải KHÁC datadir 3306."
-    Write-Output "Chạy lệnh sau trên 3306 để xem datadir thật:"
+    Write-Output "Đọc datadir thật của 3306 rồi so sánh thủ công với $DATADIR:"
     Write-Output "  mysql --no-defaults -h 127.0.0.1 -P 3306 -u <user> -p -e `"SELECT @@datadir;`""
+    Write-Output "Nếu hai đường dẫn trùng hoặc lồng nhau -> DỪNG."
 } else {
-    Write-Output "Instance 3306 không chạy — không có nguy cơ trùng datadir."
+    Write-Output "Instance 3306 không chạy. KHÔNG coi đây là bằng chứng datadir độc lập."
+    Write-Output "Vẫn phải kiểm tra thủ công rằng $DATADIR không phải datadir của 3306."
 }
 
-Write-Output "OK: port 3307 trống, datadir $DATADIR khớp guard"
+Write-Output "OK: port 3307 trống, datadir $DATADIR khớp guard và ngoài thư mục MySQL hệ thống"
 ```
 
 > **Không dùng đường dẫn 3306 giả làm điều kiện bảo vệ.** Kiểm tra `$DATADIR -eq $localDatadir`
 > với một biến hardcode chỉ tạo cảm giác an toàn — nó không đọc datadir thật của 3306.
-> Cách đúng: đọc `@@datadir` từ instance 3306 đang chạy (nếu có) và so sánh thủ công,
-> hoặc đảm bảo đường dẫn staging nằm ngoài mọi thư mục MySQL khác.
+>
+> **3306 đang tắt không chứng minh datadir độc lập.** Instance có thể tắt lúc bạn kiểm tra
+> rồi bật lại sau; datadir của nó vẫn có thể trùng đường dẫn bạn chọn. Bằng chứng thật là:
+> đường dẫn staging nằm ngoài mọi thư mục MySQL hệ thống, và nếu 3306 đang chạy thì
+> `@@datadir` của nó khác biệt rõ ràng.
 
 ### 6.4. Khởi tạo datadir
 
@@ -451,8 +465,11 @@ Write-Output "MySQL 3307 đã sẵn sàng (PID $($proc.Id), khớp listener)"
 
 **Đây là bước kiểm tra identity đầu tiên — trước mọi thao tác ghi.**
 
+Sau `--initialize-insecure`, root **chưa có mật khẩu**. Vì vậy bước xác minh identity
+phải kết nối **không kèm mật khẩu**:
+
 ```powershell
-# Xác minh instance mới đúng là cái mình vừa tạo
+# Root chưa có mật khẩu ở bước này — KHÔNG đặt MYSQL_PWD
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
 SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid, @@hostname AS host;
 "@
@@ -470,85 +487,123 @@ if ($LASTEXITCODE -ne 0) { throw "Không kết nối được MySQL 3307 (exit $
 
 **Nếu bất kỳ trường nào sai → dừng, không đặt mật khẩu, không tạo schema.**
 
-Chỉ khi identity đúng:
+Chỉ khi identity đúng, đặt mật khẩu root:
 
 ```powershell
-# Đặt mật khẩu root — nhập trực tiếp, không lưu vào file
+# Nhập mật khẩu — không lưu vào file, không echo ra màn hình
 $ROOT_PW = Read-Host "Mật khẩu root cho staging 3307" -AsSecureString
 $ROOT_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
     [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ROOT_PW))
 
-# Mật khẩu đi qua biến môi trường, KHÔNG qua đối số command line
-# (đối số hiện trong process list và có thể bị ghi vào log)
+# Escape cho MySQL string literal: \ -> \\ , ' -> ''
+$ROOT_PW_SQL = $ROOT_PW_PLAIN.Replace('\', '\\').Replace("'", "''")
+
+# SQL đi qua STDIN, KHÔNG qua -e (đối số hiện trong process list và log)
+$sql = "ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PW_SQL'; FLUSH PRIVILEGES;"
+$sql | & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root
+$alterExit = $LASTEXITCODE
+
+Remove-Variable sql, ROOT_PW_SQL -ErrorAction SilentlyContinue
+
+if ($alterExit -ne 0) {
+    Remove-Variable ROOT_PW_PLAIN, ROOT_PW -ErrorAction SilentlyContinue
+    throw "Đặt mật khẩu root thất bại (exit $alterExit)"
+}
+
+# BÂY GIỜ mới dùng mật khẩu để xác thực lại
 $env:MYSQL_PWD = $ROOT_PW_PLAIN
-
-& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
-ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PW_PLAIN';
-FLUSH PRIVILEGES;
-"@
-if ($LASTEXITCODE -ne 0) { Remove-Item Env:MYSQL_PWD; throw "Đặt mật khẩu root thất bại (exit $LASTEXITCODE)" }
-
-# Xác minh mật khẩu đã có hiệu lực
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e "SELECT 'root auth OK' AS status;"
-if ($LASTEXITCODE -ne 0) { Remove-Item Env:MYSQL_PWD; throw "Xác thực root thất bại (exit $LASTEXITCODE)" }
-
+$authExit = $LASTEXITCODE
 Remove-Item Env:MYSQL_PWD
+
+if ($authExit -ne 0) {
+    Remove-Variable ROOT_PW_PLAIN, ROOT_PW -ErrorAction SilentlyContinue
+    throw "Xác thực root bằng mật khẩu mới thất bại (exit $authExit)"
+}
+
+Remove-Variable ROOT_PW -ErrorAction SilentlyContinue
 Write-Output "Root password đã đặt và xác minh OK"
 ```
 
-> **Mật khẩu không bao giờ đi qua đối số command line.** `mysql -p<password>` và
-> `--password=<password>` đều hiện trong process list. Dùng `$env:MYSQL_PWD` (biến môi
-> trường của process con) rồi xoá ngay.
+> **Trình tự bắt buộc:** kết nối không mật khẩu → `ALTER USER` → **sau đó** mới đặt
+> `MYSQL_PWD` để xác thực lại. Đặt `MYSQL_PWD` trước `ALTER USER` sẽ bị từ chối vì root
+> chưa có mật khẩu.
+>
+> **Mật khẩu không đi qua đối số command line.** `mysql -p<password>` và
+> `--password=<password>` đều hiện trong process list. SQL cũng không đi qua `-e` khi
+> chứa mật khẩu — dùng STDIN.
+>
+> **Ký tự đặc biệt:** escape `\` → `\\` và `'` → `''` trước khi nhúng vào string literal.
+> Không escape sẽ làm câu lệnh sai hoặc tạo mật khẩu khác với ý muốn.
 >
 > **Từ đây, mọi lệnh `mysql.exe` phải có xác thực.** Không còn `-u root` trần.
 > Không ghi mật khẩu vào script, file `.env` commit, hay log.
-
 ### 6.7. Tạo schema và tài khoản staging
 
-Hai tài khoản riêng biệt, quyền khác nhau:
+Ba tài khoản riêng biệt, quyền khác nhau. Mật khẩu nhập qua `Read-Host`, escape trước
+khi nhúng vào SQL, và SQL đi qua STDIN — không qua `-e`.
 
 ```powershell
+# Root đã có mật khẩu từ mục 6.6
 $env:MYSQL_PWD = $ROOT_PW_PLAIN
 
 # Mật khẩu riêng cho từng tài khoản — không dùng chung với root
-$APP_PW     = Read-Host "Mật khẩu cho smartprop_app (backend)" -AsSecureString
+$APP_PW = Read-Host "Mật khẩu cho smartprop_app (backend)" -AsSecureString
 $APP_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
     [Runtime.InteropServices.Marshal]::SecureStringToBSTR($APP_PW))
 
-$FLYWAY_PW  = Read-Host "Mật khẩu cho smartprop_flyway (migration)" -AsSecureString
+$FLYWAY_PW = Read-Host "Mật khẩu cho smartprop_flyway (migration)" -AsSecureString
 $FLYWAY_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
     [Runtime.InteropServices.Marshal]::SecureStringToBSTR($FLYWAY_PW))
 
-& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
+# Escape cho MySQL string literal: \ -> \\ , ' -> ''
+$APP_PW_SQL    = $APP_PW_PLAIN.Replace('\', '\\').Replace("'", "''")
+$FLYWAY_PW_SQL = $FLYWAY_PW_PLAIN.Replace('\', '\\').Replace("'", "''")
+
+# SQL đi qua STDIN, KHÔNG qua -e
+$sql = @"
 CREATE DATABASE IF NOT EXISTS smartprop
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Tài khoản migration: cần DDL để tạo bảng, nhưng không cần SUPER
-CREATE USER IF NOT EXISTS 'smartprop_flyway'@'localhost' IDENTIFIED BY '$FLYWAY_PW_PLAIN';
+CREATE USER IF NOT EXISTS 'smartprop_flyway'@'localhost' IDENTIFIED BY '$FLYWAY_PW_SQL';
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES,
       DROP, CREATE VIEW, SHOW VIEW
   ON smartprop.* TO 'smartprop_flyway'@'localhost';
 
 -- Tài khoản backend: chỉ DML, không DDL
-CREATE USER IF NOT EXISTS 'smartprop_app'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+CREATE USER IF NOT EXISTS 'smartprop_app'@'localhost' IDENTIFIED BY '$APP_PW_SQL';
 GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop_app'@'localhost';
 
 -- VIEW trong dump có DEFINER='smartprop'@'localhost' — tạo user này để import không lỗi
-CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_SQL';
 GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop'@'localhost';
 
 FLUSH PRIVILEGES;
 "@
+
+$sql | & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root
 $createExit = $LASTEXITCODE
 
+# Dọn mọi biến chứa mật khẩu dạng plaintext và SQL đã dựng
+Remove-Variable sql, APP_PW_SQL, FLYWAY_PW_SQL, APP_PW, FLYWAY_PW -ErrorAction SilentlyContinue
 Remove-Item Env:MYSQL_PWD
 
-if ($createExit -ne 0) { throw "Tạo schema/user thất bại (exit $createExit)" }
+if ($createExit -ne 0) {
+    Remove-Variable APP_PW_PLAIN, FLYWAY_PW_PLAIN, ROOT_PW_PLAIN -ErrorAction SilentlyContinue
+    throw "Tạo schema/user thất bại (exit $createExit)"
+}
 
-# Xoá biến plaintext khỏi session — chỉ giữ $ROOT_PW_PLAIN cho các bước sau
-Remove-Variable APP_PW, FLYWAY_PW -ErrorAction SilentlyContinue
 Write-Output "Schema + 3 tài khoản đã tạo"
 ```
+
+> **`$APP_PW_PLAIN` và `$FLYWAY_PW_PLAIN` được giữ lại** vì mục 9 và 10 cần chúng để đặt
+> `DB_PASSWORD`. Xoá chúng khi kết thúc phiên làm việc:
+>
+> ```powershell
+> Remove-Variable APP_PW_PLAIN, FLYWAY_PW_PLAIN, ROOT_PW_PLAIN -ErrorAction SilentlyContinue
+> Remove-Item Env:MYSQL_PWD, Env:DB_PASSWORD -ErrorAction SilentlyContinue
+> ```
 
 **Phân biệt quyền:**
 
@@ -556,9 +611,8 @@ Write-Output "Schema + 3 tài khoản đã tạo"
 |---|---|---|
 | `root` | Quản trị instance, tạo schema/user, restore | Toàn quyền — chỉ dùng khi cần |
 | `smartprop_flyway` | `flyway:migrate`, `flyway:validate` | DDL + DML trên `smartprop.*` |
-| `smartprop_app` | Backend runtime, integration test | Chỉ DML |
+| `smartprop_app` | Backend runtime | Chỉ DML |
 | `smartprop` | VIEW DEFINER trong dump | DML (để import không lỗi 1449) |
-
 ### 6.8. Kiểm tra identity lần hai trước khi restore
 
 Trước khi import baseline, xác minh lại:
@@ -673,13 +727,22 @@ ERROR 1449 (HY000): The user specified as a definer ('smartprop'@'localhost') do
 ```powershell
 $env:MYSQL_PWD = $ROOT_PW_PLAIN
 
-& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
-CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+# Escape như mục 6.7 — SQL đi qua STDIN, không qua -e
+$APP_PW_SQL = $APP_PW_PLAIN.Replace('\', '\\').Replace("'", "''")
+
+$sql = @"
+CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_SQL';
 GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop'@'localhost';
 FLUSH PRIVILEGES;
 "@
 
+$sql | & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root
+$definerExit = $LASTEXITCODE
+
+Remove-Variable sql, APP_PW_SQL -ErrorAction SilentlyContinue
 Remove-Item Env:MYSQL_PWD
+
+if ($definerExit -ne 0) { throw "Tạo user cho VIEW DEFINER thất bại (exit $definerExit)" }
 ```
 
 Rồi import lại. **Không** sửa `DEFINER` trong file SQL — đó là thay đổi schema.
@@ -907,14 +970,13 @@ if ($LASTEXITCODE -ne 0) { throw "flyway:migrate thất bại (exit $LASTEXITCOD
 **Kỳ vọng:** V22 → V23 → V24 → V25 áp dụng tuần tự.
 
 ### 9.5. Validate — chỉ PASS khi không còn pending
-
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:validate
 $validateExit = $LASTEXITCODE
 
 if ($validateExit -ne 0) {
-    Write-Output "flyway:validate FAIL (exit $validateExit) — còn migration pending hoặc checksum sai"
-    Write-Output "Chạy flyway:info để xem version nào pending, rồi flyway:migrate."
+    Write-Output "flyway:validate FAIL (exit $validateExit). DỪNG — không tự chạy migrate."
+    Write-Output "Chạy flyway:info để xem nguyên nhân, rồi xử lý theo bảng dưới."
 } else {
     Write-Output "flyway:validate PASS"
 }
@@ -922,14 +984,19 @@ if ($validateExit -ne 0) {
 
 **Điều kiện PASS:** `$LASTEXITCODE -eq 0` **và** output có `Successfully validated N migrations`.
 
-**Nếu command trả lỗi** như:
+**Khi validate thất bại, phân biệt nguyên nhân trước khi làm gì tiếp:**
 
-```
-Detected resolved migration not applied to database: 22
-```
+| Thông báo | Nguyên nhân | Hành động đúng |
+|---|---|---|
+| `Detected resolved migration not applied to database: N` | Còn migration pending | Chạy `flyway:migrate` — đây là trường hợp duy nhất được migrate |
+| `Migration checksum mismatch for migration version N` | File migration bị sửa sau khi áp dụng | **DỪNG.** Khôi phục file gốc. **Không** chạy `migrate`, **không** chạy `repair` |
+| `Detected applied migration not resolved locally: N` | DB có migration mà branch không có | **DỪNG.** Kiểm tra đúng branch/worktree. Không xoá history |
+| `Detected failed migration to version N` | Migration trước đó thất bại | **DỪNG.** Kiểm tra log, sửa nguyên nhân gốc. Không `repair` mù |
 
-thì đó là **FAIL**, không phải PASS. Nghĩa là còn migration pending — chạy
-`flyway:migrate` trước.
+> **Không tự đề xuất `flyway:migrate` khi nguyên nhân là checksum mismatch.** Migrate không
+> sửa được checksum sai — nó sẽ tiếp tục thất bại hoặc làm hỏng thêm. Checksum mismatch
+> nghĩa là file migration đã bị sửa sau khi áp dụng; cách đúng là khôi phục file gốc,
+> không phải chạy thêm migration.
 
 > **Đã kiểm chứng:** trên baseline V21 (chưa migrate), `flyway:validate` trả lỗi
 > `Detected resolved migration not applied to database: 22`. Đây là trạng thái **dự kiến
@@ -1206,8 +1273,8 @@ Các hướng dẫn sau **chưa được thực thi end-to-end** trong quá trì
 | Hạng mục | Trạng thái | Ghi chú |
 |---|---|---|
 | Dựng MySQL từ đầu theo mục 6 | **DOCUMENTED_ONLY** | Viết dựa trên môi trường đã có sẵn, chưa chạy lại từ datadir trống |
-| `--initialize-insecure` + đặt mật khẩu root | **DOCUMENTED_ONLY** | Chưa chạy chuỗi lệnh này |
-| Tạo `smartprop_flyway` / `smartprop_app` | **DOCUMENTED_ONLY** | Phân quyền theo least-privilege, chưa kiểm chứng từng GRANT |
+| `--initialize-insecure` + đặt mật khẩu root | **DOCUMENTED_ONLY** | Chưa chạy chuỗi lệnh này; trình tự no-password → ALTER USER → auth lại viết theo tài liệu MySQL, chưa thực thi |
+| Tạo `smartprop_flyway` / `smartprop_app` | **DOCUMENTED_ONLY** | Phân quyền least-privilege + escape mật khẩu, chưa kiểm chứng từng GRANT |
 | Readiness loop + PID check (mục 6.5) | **DOCUMENTED_ONLY** | Chưa chạy trên máy sạch |
 | Áp dụng V26 (PR #38) | **NOT_RUN** | Thuộc PR #38, chưa merge |
 | Áp dụng V27 (PR #41) | **NOT_RUN** | Thuộc PR #41, chưa merge |
