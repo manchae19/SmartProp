@@ -25,8 +25,23 @@ CREATE TABLE news_sources (
   rights_checked_at DATETIME(6) DEFAULT NULL,
   usage_restrictions VARCHAR(1000) DEFAULT NULL,
 
+  -- Quyền theo từng loại nội dung. Mặc định: cho phép summary, KHÔNG cho ảnh.
+  allow_summary TINYINT(1) NOT NULL DEFAULT 1,
+  allow_images TINYINT(1) NOT NULL DEFAULT 0,
+
   enabled TINYINT(1) NOT NULL DEFAULT 0,
   fetch_interval_minutes SMALLINT UNSIGNED NOT NULL DEFAULT 30,
+
+  -- Lease chống hai job fetch cùng nguồn. Token do job giữ; hết hạn thì job khác claim.
+  sync_lease_token CHAR(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+  sync_lease_until DATETIME(6) DEFAULT NULL,
+
+  -- Thời điểm được phép fetch tiếp. Thực thi Retry-After và backoff.
+  next_fetch_at DATETIME(6) DEFAULT NULL,
+
+  -- Tăng mỗi lần admin sửa nguồn. Job đang chạy phát hiện thay đổi và bỏ kết quả.
+  source_revision INT NOT NULL DEFAULT 1,
+  consecutive_failures SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 
   last_attempt_at DATETIME(6) DEFAULT NULL,
   last_success_at DATETIME(6) DEFAULT NULL,
@@ -43,6 +58,8 @@ CREATE TABLE news_sources (
   UNIQUE KEY uq_news_sources_code (source_code),
   UNIQUE KEY uq_news_sources_feed (feed_url),
   KEY idx_news_sources_schedule (enabled, rights_review_status, last_attempt_at),
+  KEY idx_news_sources_due (enabled, rights_review_status, next_fetch_at),
+  KEY idx_news_sources_lease (sync_lease_until),
 
   CONSTRAINT ck_news_sources_rights CHECK (
     rights_review_status IN ('PENDING_REVIEW','APPROVED','REJECTED')),

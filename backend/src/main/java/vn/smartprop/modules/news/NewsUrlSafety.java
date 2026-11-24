@@ -159,6 +159,78 @@ public final class NewsUrlSafety {
         return Result.ok();
     }
 
+    /**
+     * CHỈ DÙNG CHO TEST: kiểm tra URL, cho phép loopback.
+     *
+     * <p>Tách khỏi {@link #check} để không có cờ nào trong production path có thể bật
+     * nhầm. Chỉ {@code NewsFeedFetcher} gọi khi {@code allowLoopbackForTests=true},
+     * và giá trị đó chỉ được đặt trong test.
+     */
+    static Result checkAllowingLoopback(String rawUrl, boolean allowHttp) {
+        Result base = check(rawUrl, allowHttp, false);
+        if (base.allowed()) return base;
+        // Chỉ nới đúng trường hợp loopback; private/link-local/metadata vẫn bị chặn.
+        if (base.reason() != null && base.reason().contains("Loopback")) {
+            try {
+                URI uri = new URI(rawUrl.strip());
+                String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+                if (host.equals("127.0.0.1") || host.equals("localhost") || host.equals("::1")) {
+                    return Result.ok();
+                }
+            } catch (URISyntaxException ignored) {
+                // rơi xuống deny
+            }
+        }
+        return base;
+    }
+
+    /**
+     * Kiểm tra host có nằm trong allowlist không.
+     *
+     * <p>Khớp chính xác hostname hoặc subdomain của một mục trong allowlist. Không
+     * dùng {@code contains} — {@code evil-example.com} không được khớp với
+     * {@code example.com}.
+     *
+     * @param host     hostname đã lowercase, không có dấu chấm cuối
+     * @param allowed  danh sách host được phép
+     * @return true nếu được phép
+     */
+    static boolean hostAllowed(String host, java.util.List<String> allowed) {
+        if (allowed == null || allowed.isEmpty()) return false;
+        for (String entry : allowed) {
+            if (entry == null) continue;
+            String candidate = entry.strip().toLowerCase(Locale.ROOT);
+            if (candidate.startsWith(".")) candidate = candidate.substring(1);
+            if (candidate.isEmpty()) continue;
+            if (host.equals(candidate) || host.endsWith("." + candidate)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra đầy đủ: URL safety + host allowlist.
+     *
+     * @param enforceAllowlist khi true, host phải nằm trong {@code allowed}
+     */
+    public static Result check(String rawUrl, boolean allowHttp, boolean resolveDns,
+                               boolean enforceAllowlist, java.util.List<String> allowed) {
+        Result base = check(rawUrl, allowHttp, resolveDns);
+        if (!base.allowed()) return base;
+        if (!enforceAllowlist) return base;
+
+        try {
+            URI uri = new URI(rawUrl.strip());
+            String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
+            if (host.endsWith(".")) host = host.substring(0, host.length() - 1);
+            if (!hostAllowed(host, allowed)) {
+                return Result.deny("Host không nằm trong allowlist: " + host);
+            }
+        } catch (URISyntaxException e) {
+            return Result.deny("URL không hợp lệ");
+        }
+        return base;
+    }
+
     private static boolean isIpLiteral(String host) {
         // IPv4 thuần số và chấm.
         if (host.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")) return true;

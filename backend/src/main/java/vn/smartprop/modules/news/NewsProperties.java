@@ -35,6 +35,27 @@ public class NewsProperties {
     /** User-Agent gửi kèm — nêu rõ danh tính và cách liên hệ. */
     private String userAgent = "SmartPropNewsBot/1.0 (+https://smartprop.vn/bot)";
 
+    /**
+     * Host allowlist. Rỗng = cho phép mọi host công khai (chỉ dựa vào kiểm tra IP).
+     * Đặt danh sách này ở production để giới hạn nguồn tin được phép fetch.
+     *
+     * <p>Khớp chính xác hostname hoặc subdomain của mục đó — không dùng substring.
+     */
+    private java.util.List<String> allowedHosts = new java.util.ArrayList<>();
+
+    /** Bật kiểm tra allowlist. Khi bật và danh sách rỗng, mọi fetch bị từ chối. */
+    private boolean enforceHostAllowlist = false;
+
+    /**
+     * CHỈ DÙNG CHO TEST. Cho phép fetch loopback để kiểm thử fetcher với HTTP server
+     * cục bộ.
+     *
+     * <p>Không được đặt {@code true} ở production. {@code NewsFeedFetcher} chỉ đọc cờ
+     * này khi {@code app.news.enabled} cũng bật và profile không phải production;
+     * xem {@link NewsFeedFetcher#isLoopbackAllowedForTests()}.
+     */
+    private boolean allowLoopbackForTests = false;
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
@@ -64,4 +85,19 @@ public class NewsProperties {
 
     public String getUserAgent() { return userAgent; }
     public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
+
+    public java.util.List<String> getAllowedHosts() { return allowedHosts; }
+    public void setAllowedHosts(java.util.List<String> allowedHosts) {
+        this.allowedHosts = allowedHosts == null ? new java.util.ArrayList<>() : allowedHosts;
+    }
+
+    public boolean isEnforceHostAllowlist() { return enforceHostAllowlist; }
+    public void setEnforceHostAllowlist(boolean enforceHostAllowlist) {
+        this.enforceHostAllowlist = enforceHostAllowlist;
+    }
+
+    public boolean isAllowLoopbackForTests() { return allowLoopbackForTests; }
+    public void setAllowLoopbackForTests(boolean allowLoopbackForTests) {
+        this.allowLoopbackForTests = allowLoopbackForTests;
+    }
 }

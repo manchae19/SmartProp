@@ -38,8 +38,16 @@ public class NewsController {
         return service.featured();
     }
 
+    /**
+     * Metadata nguồn tin.
+     *
+     * <p>Trả <b>mảng trực tiếp</b>, không bọc trong object: Frontend PR #37 gọi
+     * {@code sources.some(...)} trên kết quả ({@code hasNewNewsSnapshot} trong
+     * {@code newsPresentation.js}). Bọc trong {@code {sources: [...]}} sẽ làm
+     * {@code .some} undefined và ném TypeError.
+     */
     @GetMapping("/sources")
-    public NewsDtos.Sources sources() {
-        return service.sources();
+    public java.util.List<NewsDtos.Source> sources() {
+        return service.sources().sources();
     }
 }

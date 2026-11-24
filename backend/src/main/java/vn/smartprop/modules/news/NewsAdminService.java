@@ -77,8 +77,15 @@ public class NewsAdminService {
     public NewsDtos.AdminSource update(String id, NewsDtos.UpdateSource input) {
         NewsSource source = sources.findById(id).orElseThrow(() -> ApiInputs.missing());
 
-        if (input.name() != null) source.name = input.name();
-        if (input.publisher() != null) source.publisher = input.publisher();
+        // Thay đổi định danh nguồn (feed URL hoặc publisher) làm approval cũ không
+        // còn áp dụng: quyền sử dụng đã được xét cho một nguồn cụ thể. Đưa về
+        // PENDING_REVIEW + tắt ingestion, buộc admin duyệt lại có căn cứ mới.
+        boolean identityChanged = false;
+
+        if (input.publisher() != null && !input.publisher().equals(source.publisher)) {
+            source.publisher = input.publisher();
+            identityChanged = true;
+        }
         if (input.websiteUrl() != null) source.websiteUrl = input.websiteUrl();
         if (input.feedUrl() != null && !input.feedUrl().equals(source.feedUrl)) {
             NewsUrlSafety.Result safety = NewsUrlSafety.check(input.feedUrl(), false, false);
@@ -92,12 +99,23 @@ public class NewsAdminService {
             // Đổi URL thì bỏ cache conditional GET.
             source.httpEtag = null;
             source.httpLastModified = null;
+            identityChanged = true;
         }
+        if (input.name() != null) source.name = input.name();
         if (input.defaultCategory() != null) source.defaultCategory = input.defaultCategory();
         if (input.defaultRegion() != null) source.defaultRegion = input.defaultRegion();
         if (input.usageRestrictions() != null) source.usageRestrictions = input.usageRestrictions();
+        if (input.allowSummary() != null) source.allowSummary = input.allowSummary();
+        if (input.allowImages() != null) source.allowImages = input.allowImages();
         if (input.fetchIntervalMinutes() != null) {
             source.fetchIntervalMinutes = input.fetchIntervalMinutes().shortValue();
+        }
+
+        if (identityChanged && source.rightsReviewStatus == NewsSource.RightsStatus.APPROVED) {
+            source.rightsReviewStatus = NewsSource.RightsStatus.PENDING_REVIEW;
+            source.rightsCheckedAt = null;
+            source.enabled = false;
+            source.nextFetchAt = null;
         }
 
         if (input.rightsReviewStatus() != null
@@ -113,11 +131,17 @@ public class NewsAdminService {
                 source.rightsCheckedAt = Instant.now();
             }
             source.rightsReviewStatus = input.rightsReviewStatus();
-            // Thu hồi quyền thì tắt luôn ingestion.
+            // Thu hồi quyền thì tắt luôn ingestion và xoá cooldown cũ.
             if (input.rightsReviewStatus() == NewsSource.RightsStatus.REJECTED) {
                 source.enabled = false;
+                source.nextFetchAt = null;
             }
         } else if (input.rightsReference() != null) {
+            if (input.rightsReference().isBlank()
+                    && source.rightsReviewStatus == NewsSource.RightsStatus.APPROVED) {
+                throw ApiInputs.bad(
+                    "Không thể xoá rightsReference khi nguồn đang APPROVED; thu hồi quyền trước");
+            }
             source.rightsReference = input.rightsReference();
         }
 
@@ -127,6 +151,9 @@ public class NewsAdminService {
             }
             source.enabled = input.enabled();
         }
+
+        // Tăng revision để job đang chạy phát hiện thay đổi và bỏ kết quả.
+        source.sourceRevision = source.sourceRevision + 1;
 
         source.updatedAt = Instant.now();
         sources.save(source);

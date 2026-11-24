@@ -59,11 +59,27 @@ public class MigrationLineageConfiguration {
         boolean legacy=history.stream().anyMatch(r->"14".equals(r.get("version"))&&Objects.equals(r.get("checksum"),-1382804267));
         if(!local){if(legacy)throw new IllegalStateException("Crawler14 history requires explicit hybrid-local-existing-v13 profile.");return;}
         if(history.size()<2||!"13".equals(history.get(0).get("version"))||!"BASELINE".equals(history.get(0).get("type"))||!legacy)throw new IllegalStateException("Expected Local BASELINE13/original crawler14 history.");
-        // V26 (coordinate provenance) and V27 (news) are independent branches. A database
-        // may legitimately carry V27 without V26 when the news branch lands first, so the
-        // check is "every applied version is known and in ascending order", not "history
-        // matches this exact list position by position".
-        var allowed=List.of("13","14","17","18","19","20","21","22","23","24","25","26","27");
+
+        // Strict lineage. Every applied version must be known, successful, unique and
+        // strictly ascending. V13/V14 are the baseline; V17/V18 are the local-only pair
+        // the project has always allowed to be pending. V19-V27 are applied progressively
+        // by the migration CLI, so a database may legitimately stop at any of them - but
+        // whatever IS applied must be valid. V26 (coordinate provenance, PR #38) and V27
+        // (news, PR #41) are independent branches: V27 may be present without V26, and
+        // once both merge Flyway applies V26 before V27 and the ascending check enforces
+        // the order. Unknown version, failed row, duplicate, out-of-order, or a missing
+        // required version is rejected without repair.
+        // V13/V14 are the baseline and always required. V17/V18 are the local-only pair
+        // the project has always allowed to be pending (see the require-complete flag).
+        // V19-V27 are applied progressively by the migration CLI. Whatever IS applied
+        // must be known, successful, unique and ascending; V26 (coordinate provenance)
+        // and V27 (news) are independent branches, so V27 may appear without V26.
+        var required=List.of("13","14");
+        var optional=List.of("17","18","19","20","21","22","23","24","25","26","27");
+        var allowed=new java.util.ArrayList<String>(required);
+        allowed.addAll(optional);
+
+        java.util.Set<String> seen=new java.util.HashSet<>();
         String previous=null;
         for(int i=0;i<history.size();i++){
             var row=history.get(i);Object success=row.get("success");
@@ -71,10 +87,19 @@ public class MigrationLineageConfiguration {
             if(!allowed.contains(version)
                 ||!(Boolean.TRUE.equals(success)||Integer.valueOf(1).equals(success))
                 ||i>0&&!"SQL".equals(row.get("type"))
+                ||!seen.add(version)
                 ||previous!=null&&compareVersion(previous,version)>=0)
                 throw new IllegalStateException("Unexpected/failed Local migration history; stop without repair.");
             previous=version;
         }
+
+        // Every required version must actually be present.
+        for(String version:required){
+            if(!seen.contains(version))
+                throw new IllegalStateException(
+                    "Missing required Local migration V"+version+"; stop without repair.");
+        }
+
         if(complete&&history.size()<4)throw new IllegalStateException("Local V17/V18 pending. Review and approve the dedicated completion script before enabling full Backend.");
     }
 

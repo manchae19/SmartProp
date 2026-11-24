@@ -142,13 +142,16 @@ public final class NewsClassifier {
     private record RegionResult(NewsSource.Region region, String tags) {}
 
     static RegionResult detectRegion(String foldedText, NewsSource.Region fallback) {
+        // locationTags phải là nhãn hiển thị có dấu: Frontend PR #37 kiểm tra
+        // article.locationTags?.includes('Đà Nẵng'). Trả dạng không dấu sẽ làm
+        // badge Đà Nẵng không bao giờ hiện.
         StringBuilder tags = new StringBuilder();
         boolean daNang = false;
         for (String place : DA_NANG) {
             if (foldedText.contains(place)) {
                 daNang = true;
                 if (tags.length() > 0) tags.append(',');
-                tags.append(place);
+                tags.append(displayPlace(place));
             }
         }
         if (daNang) {
@@ -162,6 +165,33 @@ public final class NewsClassifier {
         }
         // Không nhận diện được địa danh: dùng mặc định của nguồn, không đoán.
         return new RegionResult(fallback, null);
+    }
+
+    /**
+     * Nhãn hiển thị có dấu cho một địa danh đã chuẩn hoá không dấu.
+     *
+     * <p>Dùng cho {@code locationTags} — Frontend so khớp chuỗi có dấu.
+     */
+    static String displayPlace(String folded) {
+        return switch (folded) {
+            case "da nang" -> "Đà Nẵng";
+            case "hai chau" -> "Hải Châu";
+            case "thanh khe" -> "Thanh Khê";
+            case "son tra" -> "Sơn Trà";
+            case "ngu hanh son" -> "Ngũ Hành Sơn";
+            case "lien chieu" -> "Liên Chiểu";
+            case "cam le" -> "Cẩm Lệ";
+            case "hoa vang" -> "Hòa Vang";
+            case "hoang sa" -> "Hoàng Sa";
+            case "cau rong" -> "Cầu Rồng";
+            case "cau song han" -> "Cầu Sông Hàn";
+            case "bien my khe" -> "Biển Mỹ Khê";
+            case "ban dao son tra" -> "Bán đảo Sơn Trà";
+            case "khu cong nghe cao da nang" -> "Khu công nghệ cao Đà Nẵng";
+            case "san bay da nang" -> "Sân bay Đà Nẵng";
+            case "cang tien sa" -> "Cảng Tiên Sa";
+            default -> folded;
+        };
     }
 
     /** Nhãn tiếng Việt cho chuyên mục — Frontend PR #37 dùng các nhãn này. */
@@ -186,6 +216,45 @@ public final class NewsClassifier {
             case VIETNAM -> "Việt Nam";
             case UNKNOWN -> "Không xác định";
         };
+    }
+
+    /**
+     * Nhóm chuyên mục cho một nhãn Frontend.
+     *
+     * <p>Frontend PR #37 dùng 5 nhãn, nhưng backend có 8 enum. "Quy hoạch & hạ tầng"
+     * phải gồm cả PLANNING và INFRASTRUCTURE — nếu chỉ lọc PLANNING sẽ mất toàn bộ
+     * bài hạ tầng. "Thị trường BĐS" gồm MARKET, RESIDENTIAL, COMMERCIAL.
+     *
+     * @return danh sách enum cần lọc, hoặc {@code null} nghĩa là không lọc chuyên mục
+     */
+    public static java.util.List<NewsSource.Category> parseCategoryGroup(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        String value = raw.strip();
+        if (value.equalsIgnoreCase("Tất cả") || value.equalsIgnoreCase("all")) return null;
+        String folded = NewsText.foldForMatch(value);
+
+        if (folded.contains("quy hoach") || folded.contains("ha tang")) {
+            return java.util.List.of(NewsSource.Category.PLANNING,
+                NewsSource.Category.INFRASTRUCTURE);
+        }
+        if (folded.contains("chinh sach") || folded.contains("phap ly")) {
+            return java.util.List.of(NewsSource.Category.LEGAL);
+        }
+        if (folded.contains("du an")) {
+            return java.util.List.of(NewsSource.Category.PROJECTS);
+        }
+        if (folded.contains("thi truong")) {
+            return java.util.List.of(NewsSource.Category.MARKET,
+                NewsSource.Category.RESIDENTIAL, NewsSource.Category.COMMERCIAL);
+        }
+        // "Tin tức Đà Nẵng" là bộ lọc khu vực, không phải chuyên mục.
+        if (folded.contains("da nang")) return null;
+
+        try {
+            return java.util.List.of(NewsSource.Category.valueOf(value.toUpperCase(Locale.ROOT)));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /** Chuẩn hoá category từ query param của Frontend (nhãn tiếng Việt → enum). */

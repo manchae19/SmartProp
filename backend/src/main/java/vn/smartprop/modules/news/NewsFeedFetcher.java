@@ -37,13 +37,32 @@ public class NewsFeedFetcher {
             .build();
     }
 
+    /**
+     * Cờ test-only. Chỉ true khi cấu hình bật rõ ràng — mặc định false, và không có
+     * profile production nào đặt giá trị này.
+     */
+    boolean isLoopbackAllowedForTests() {
+        return properties.isAllowLoopbackForTests();
+    }
+
     /** Kết quả một lần fetch. */
     public record FetchResult(int status, byte[] body, String etag, String lastModified,
-                              String finalUrl, String errorCode, String errorMessage) {
+                              String finalUrl, String errorCode, String errorMessage,
+                              String retryAfter) {
+        /** Constructor tiện dụng cho các trường hợp không có Retry-After. */
+        public FetchResult(int status, byte[] body, String etag, String lastModified,
+                           String finalUrl, String errorCode, String errorMessage) {
+            this(status, body, etag, lastModified, finalUrl, errorCode, errorMessage, null);
+        }
         public boolean notModified() { return status == 304; }
         public boolean ok() { return status >= 200 && status < 300; }
         public boolean failed() { return errorCode != null; }
+        public boolean rateLimited() { return status == 429; }
     }
+
+    /** Chỉ những status này mới được theo như redirect. */
+    private static final java.util.Set<Integer> REDIRECT_STATUSES =
+        java.util.Set.of(301, 302, 303, 307, 308);
 
     /**
      * Tải feed.
@@ -57,8 +76,10 @@ public class NewsFeedFetcher {
         int redirects = 0;
 
         while (true) {
-            NewsUrlSafety.Result safety =
-                NewsUrlSafety.check(currentUrl, properties.isAllowHttp(), true);
+            NewsUrlSafety.Result safety = isLoopbackAllowedForTests()
+                ? NewsUrlSafety.checkAllowingLoopback(currentUrl, properties.isAllowHttp())
+                : NewsUrlSafety.check(currentUrl, properties.isAllowHttp(), true,
+                    properties.isEnforceHostAllowlist(), properties.getAllowedHosts());
             if (!safety.allowed()) {
                 return new FetchResult(0, null, null, null, currentUrl,
                     "URL_BLOCKED", safety.reason());
@@ -97,11 +118,20 @@ public class NewsFeedFetcher {
 
             int status = response.statusCode();
 
-            // Theo redirect thủ công để kiểm tra SSRF ở từng bước.
-            if (status >= 300 && status < 400) {
+            // 304 KHÔNG phải redirect. Phải kiểm tra trước khối 3xx, nếu không
+            // conditional GET sẽ bị coi là "redirect thiếu Location" và báo lỗi.
+            if (status == 304) {
+                closeQuietly(response.body());
+                // Giữ ETag/Last-Modified đã gửi đi: nguồn xác nhận chúng vẫn đúng.
+                return new FetchResult(304, null, etag, lastModified, currentUrl, null, null);
+            }
+
+            // Chỉ 301/302/303/307/308 là redirect thật. 300/305/306 và các 3xx khác
+            // không được theo tự động.
+            if (REDIRECT_STATUSES.contains(status)) {
                 Optional<String> location = response.headers().firstValue("location");
                 closeQuietly(response.body());
-                if (location.isEmpty()) {
+                if (location.isEmpty() || location.get().isBlank()) {
                     return new FetchResult(status, null, null, null, currentUrl,
                         "BAD_REDIRECT", "Redirect thiếu Location");
                 }
@@ -109,13 +139,13 @@ public class NewsFeedFetcher {
                     return new FetchResult(status, null, null, null, currentUrl,
                         "TOO_MANY_REDIRECTS", "Vượt quá số redirect cho phép");
                 }
-                currentUrl = URI.create(currentUrl).resolve(location.get()).toString();
+                try {
+                    currentUrl = URI.create(currentUrl).resolve(location.get().strip()).toString();
+                } catch (IllegalArgumentException e) {
+                    return new FetchResult(status, null, null, null, currentUrl,
+                        "BAD_REDIRECT", "Location không hợp lệ");
+                }
                 continue;
-            }
-
-            if (status == 304) {
-                closeQuietly(response.body());
-                return new FetchResult(304, null, etag, lastModified, currentUrl, null, null);
             }
 
             if (status == 429) {
@@ -123,7 +153,8 @@ public class NewsFeedFetcher {
                 String retryAfter = response.headers().firstValue("retry-after").orElse(null);
                 return new FetchResult(429, null, null, null, currentUrl,
                     "RATE_LIMITED", "Nguồn yêu cầu giảm tần suất" +
-                        (retryAfter == null ? "" : " (Retry-After: " + retryAfter + ")"));
+                        (retryAfter == null ? "" : " (Retry-After: " + retryAfter + ")"),
+                    retryAfter);
             }
 
             if (status < 200 || status >= 300) {
@@ -151,14 +182,27 @@ public class NewsFeedFetcher {
         }
     }
 
-    /** Đọc tối đa {@code limit} byte; trả null nếu vượt. */
-    private static byte[] readLimited(InputStream input, int limit) throws IOException {
+    /**
+     * Đọc tối đa {@code limit} byte, có deadline tổng.
+     *
+     * <p>{@code HttpRequest.timeout} chỉ bao phủ tới khi nhận header. Một nguồn gửi
+     * body rất chậm có thể giữ worker vô thời hạn, nên đọc body cũng phải có hạn.
+     *
+     * @return body, hoặc {@code null} nếu vượt {@code limit} byte
+     * @throws IOException khi hết deadline hoặc lỗi đọc
+     */
+    private byte[] readLimited(InputStream input, int limit) throws IOException {
+        long deadline = System.nanoTime()
+            + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(properties.getReadTimeoutMs());
         try (InputStream in = input) {
             ByteArrayOutputStream out = new ByteArrayOutputStream(Math.min(limit, 64 * 1024));
             byte[] buffer = new byte[8192];
             int total = 0;
             int read;
             while ((read = in.read(buffer)) != -1) {
+                if (System.nanoTime() > deadline) {
+                    throw new IOException("Hết thời gian đọc body");
+                }
                 total += read;
                 if (total > limit) return null;
                 out.write(buffer, 0, read);

@@ -399,6 +399,129 @@ app:
 
 ---
 
+## 13b. Hardening sau review PR #41
+
+Chín lỗi phát hiện khi review đã được sửa và kiểm chứng.
+
+### 1. HTTP 304 bị xử lý như redirect
+
+**Nguyên nhân:** khối `if (status >= 300 && status < 400)` đứng trước `if (status == 304)`,
+nên conditional GET bị coi là "redirect thiếu Location" và trả `BAD_REDIRECT`.
+
+**Sửa:** kiểm tra 304 trước; chỉ 301/302/303/307/308 mới là redirect thật
+(`REDIRECT_STATUSES`). 304 giữ nguyên ETag/Last-Modified đã gửi.
+
+**Test:** `NewsFeedFetcherIT.http304IsNotTreatedAsRedirect` — HTTP server thật trả 304,
+xác nhận `notModified() == true` và `errorCode == null`.
+
+### 2. Transaction không có hiệu lực
+
+**Nguyên nhân:** `persist()` được gọi từ method khác trong **cùng bean** — Spring AOP
+proxy không can thiệp, `@Transactional(REQUIRES_NEW)` bị bỏ qua.
+
+**Sửa:** tách sang `NewsIngestionPersistenceService` (bean riêng). Transaction chỉ bao
+quanh phần ghi DB, không bao gồm network fetch.
+
+**Luồng:** claim lease → tạo run → fetch (ngoài transaction) → parse (ngoài transaction)
+→ persist (transaction riêng) → markSuccess (transaction riêng) → release lease.
+
+### 3. Không chống ingestion job overlap
+
+**Nguyên nhân:** scheduler và manual sync đều gọi `ingest(sourceId)`; unique constraint
+chỉ chặn bài trùng, không chặn hai job fetch cùng nguồn.
+
+**Sửa:** lease ở tầng DB.
+
+```sql
+UPDATE news_sources
+SET sync_lease_token = :token, sync_lease_until = :until, last_attempt_at = :now
+WHERE id = :id AND enabled = 1 AND rights_review_status = 'APPROVED'
+  AND (next_fetch_at IS NULL OR next_fetch_at <= :now)
+  AND (sync_lease_token IS NULL OR sync_lease_until IS NULL OR sync_lease_until <= :now)
+```
+
+Compare-and-set: hai job đồng thời chỉ một job nhận `rows == 1`. Lease sống 5 phút.
+Chỉ job giữ token mới release/renew được — job cũ không xoá lease của job mới.
+
+**Test:** `NewsConcurrencyIT.concurrentIngestAllowsOnlyOneWinner` — 4 thread qua
+`CountDownLatch`, đúng 1 claim thành công.
+
+### 4. Source rights không được bảo vệ khi đổi định danh
+
+**Nguyên nhân:** đổi `feedUrl` chỉ reset ETag, giữ nguyên `APPROVED` + `enabled`.
+
+**Sửa:** đổi `feedUrl` hoặc `publisher` → `PENDING_REVIEW` + `enabled=false` +
+`rightsCheckedAt=null` + `nextFetchAt=null`. Admin phải duyệt lại có căn cứ mới.
+Không cho xoá `rightsReference` khi đang `APPROVED`.
+
+Thêm `allowSummary` / `allowImages` — quyền theo từng loại nội dung. Mặc định:
+summary có, ảnh không.
+
+### 5. SSRF chưa có host allowlist
+
+**Sửa:** thêm `app.news.allowed-hosts` + `enforce-host-allowlist`. Khớp chính xác
+hostname hoặc subdomain — `evil-vnexpress.net` không khớp `vnexpress.net`.
+Allowlist không vô hiệu hoá kiểm tra IP.
+
+Thêm body read deadline: `HttpRequest.timeout` chỉ phủ tới header, body chậm vẫn phải
+có hạn.
+
+**Giới hạn đã biết:** DNS rebinding vẫn có thể xảy ra (kiểm tra DNS và kết nối là hai
+thời điểm). Lớp phòng thủ: chỉ fetch URL đã lưu trong `news_sources`, không có endpoint
+nhận URL tùy ý, và allowlist khi bật.
+
+### 6. Retry-After chỉ được log
+
+**Sửa:** thêm `next_fetch_at`. 429 → tôn trọng `Retry-After` (không bao giờ sớm hơn).
+Lỗi khác → backoff luỹ thừa theo `consecutive_failures`, trần 6 giờ. Scheduler và
+manual sync đều kiểm tra `next_fetch_at` — admin nhấn Sync cũng không bypass cooldown.
+
+### 7. Sorting sai qua nhiều trang
+
+**Nguyên nhân:** `sort=oldest` đảo danh sách của trang đã lấy theo newest — sai khi có
+nhiều trang.
+
+**Sửa:** `findPublicOldest` sắp xếp tại DB trước pagination:
+`ORDER BY publishedAt ASC NULLS LAST, firstSeenAt ASC, id ASC`. Bài không rõ ngày luôn
+xuống cuối ở cả hai chiều. Tie-breaker `id` giữ thứ tự ổn định.
+
+**Category mapping:** "Quy hoạch & hạ tầng" → `PLANNING + INFRASTRUCTURE` (nếu chỉ lọc
+PLANNING sẽ mất toàn bộ bài hạ tầng). "Thị trường BĐS" → `MARKET + RESIDENTIAL +
+COMMERCIAL`. "Tin tức Đà Nẵng" là bộ lọc **region**, không phải category.
+
+**Test:** `NewsConcurrencyIT.oldestSortingIsDoneInDatabase` — 25 bài, kiểm tra page 0/1
+không trùng, oldest page 1 nối tiếp page 0.
+
+### 8. Frontend contract không khớp
+
+**Hai lỗi:**
+
+| Lỗi | Frontend | Backend cũ | Sửa |
+|---|---|---|---|
+| `/news/sources` | `sources.some(...)` | `{sources: [...], lastUpdatedAt}` | Trả **array** trực tiếp |
+| `locationTags` | `.includes('Đà Nẵng')` | `"da nang"` (không dấu) | Trả nhãn có dấu |
+
+`hasNewNewsSnapshot(sources, lastUpdatedAt)` gọi `sources.some(...)` — object không có
+`.some` → TypeError. Đã sửa backend trả array, không đụng Frontend.
+
+### 9. Migration lineage bị nới lỏng
+
+**Nguyên nhân:** PR #41 đổi guard sang "mọi version đã biết + tăng dần", chấp nhận
+lịch sử thiếu migration trung gian.
+
+**Sửa:** khôi phục kiểm tra nghiêm ngặt:
+- V13/V14 bắt buộc (baseline).
+- V17/V18 optional (đúng bản chất "pending" của chúng).
+- V19–V27 optional nhưng **mọi version đã áp dụng** phải: đã biết, success, không trùng,
+  tăng dần.
+- Thiếu version bắt buộc → từ chối.
+
+**Test:** `MigrationLineageConfigurationTest` 21/21 PASS.
+
+**V26 + V27 cùng nhau:** đã kiểm chứng trên `smartprop_v26v27` — cả
+`property_coordinate_audit` và 3 bảng news cùng tồn tại, không xung đột.
+
+---
 ## 14. Quyết định thiết kế
 
 | Quyết định | Lý do |

@@ -224,9 +224,10 @@ class NewsApiIT {
     void sourcesEndpointReturnsPublicMetadataOnly() throws Exception {
         approvedSource("it-sources");
 
+        // Frontend PR #37 gọi sources.some(...) trực tiếp, nên response phải là mảng.
         String body = mvc.perform(get("/api/v1/news/sources"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.sources").isArray())
+            .andExpect(jsonPath("$").isArray())
             .andReturn().getResponse().getContentAsString();
 
         assertThat(body).contains("\"name\"");

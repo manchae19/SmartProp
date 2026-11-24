@@ -82,11 +82,15 @@ public final class NewsDtos {
         String rightsReference,
         Instant rightsCheckedAt,
         String usageRestrictions,
+        boolean allowSummary,
+        boolean allowImages,
         boolean enabled,
         int fetchIntervalMinutes,
         Instant lastAttemptAt,
         Instant lastSuccessAt,
         String lastError,
+        Instant nextFetchAt,
+        int sourceRevision,
         long articleCount
     ) {}
 
@@ -167,6 +171,8 @@ public final class NewsDtos {
         NewsSource.RightsStatus rightsReviewStatus,
         @Size(max = 500) String rightsReference,
         @Size(max = 1000) String usageRestrictions,
+        Boolean allowSummary,
+        Boolean allowImages,
         Boolean enabled,
         @Min(5) @Max(1440) Integer fetchIntervalMinutes
     ) {}

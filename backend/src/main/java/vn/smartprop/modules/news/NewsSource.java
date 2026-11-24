@@ -36,8 +36,23 @@ public class NewsSource {
     @Column(name = "rights_checked_at") public Instant rightsCheckedAt;
     @Column(name = "usage_restrictions", length = 1000) public String usageRestrictions;
 
+    /** Quyền theo từng loại nội dung. Mặc định: summary có, ảnh không. */
+    @Column(name = "allow_summary", nullable = false) public boolean allowSummary;
+    @Column(name = "allow_images", nullable = false) public boolean allowImages;
+
     @Column(name = "enabled", nullable = false) public boolean enabled;
     @Column(name = "fetch_interval_minutes", nullable = false) public short fetchIntervalMinutes;
+
+    /** Lease chống hai job fetch cùng nguồn. Token do job đang giữ. */
+    @JdbcTypeCode(SqlTypes.CHAR) @Column(name = "sync_lease_token", length = 36) public String syncLeaseToken;
+    @Column(name = "sync_lease_until") public Instant syncLeaseUntil;
+
+    /** Thời điểm được phép fetch tiếp — thực thi Retry-After và backoff. */
+    @Column(name = "next_fetch_at") public Instant nextFetchAt;
+
+    /** Tăng mỗi lần admin sửa nguồn; job đang chạy phát hiện thay đổi. */
+    @Column(name = "source_revision", nullable = false) public int sourceRevision;
+    @Column(name = "consecutive_failures", nullable = false) public short consecutiveFailures;
 
     @Column(name = "last_attempt_at") public Instant lastAttemptAt;
     @Column(name = "last_success_at") public Instant lastSuccessAt;
@@ -52,5 +67,15 @@ public class NewsSource {
     /** Nguồn chỉ được thu thập khi đã duyệt quyền VÀ được bật. */
     public boolean ingestible() {
         return enabled && rightsReviewStatus == RightsStatus.APPROVED;
+    }
+
+    /** Lease còn hiệu lực tại thời điểm {@code now}. */
+    public boolean leaseActive(Instant now) {
+        return syncLeaseToken != null && syncLeaseUntil != null && syncLeaseUntil.isAfter(now);
+    }
+
+    /** Đã đến hạn fetch tại thời điểm {@code now}. */
+    public boolean due(Instant now) {
+        return nextFetchAt == null || !nextFetchAt.isAfter(now);
     }
 }

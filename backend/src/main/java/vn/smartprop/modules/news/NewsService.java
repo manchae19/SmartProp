@@ -1,7 +1,6 @@
 package vn.smartprop.modules.news;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +14,8 @@ import vn.smartprop.common.ApiInputs;
  *
  * <p>Public chỉ trả bài từ nguồn {@code APPROVED} + {@code enabled}, bài
  * {@code VISIBLE}. Không trả metadata nội bộ.
+ *
+ * <p>Sắp xếp thực hiện tại DB trước pagination — không đảo danh sách trong Java.
  */
 @Service
 public class NewsService {
@@ -45,11 +46,17 @@ public class NewsService {
         int safeSize = clampSize(size);
         int safePage = Math.max(page, 0);
 
-        NewsSource.Category parsedCategory = NewsClassifier.parseCategory(category);
-        NewsSource.Region region = null;
+        // Nhóm chuyên mục: "Quy hoạch & hạ tầng" gồm cả PLANNING và INFRASTRUCTURE.
+        List<NewsSource.Category> categories = NewsClassifier.parseCategoryGroup(category);
+        NewsSource.Category single = categories != null && categories.size() == 1
+            ? categories.get(0) : null;
+
         // "Tin tức Đà Nẵng" là bộ lọc khu vực, không phải chuyên mục.
+        NewsSource.Region region = null;
         if (category != null && NewsText.foldForMatch(category).contains("da nang")) {
             region = NewsSource.Region.DA_NANG;
+            categories = null;
+            single = null;
         }
 
         String keyword = null;
@@ -60,19 +67,18 @@ public class NewsService {
         }
 
         Pageable pageable = PageRequest.of(safePage, safeSize);
-        Page<NewsArticle> result = articles.findPublic(parsedCategory, region, keyword, pageable);
+        boolean oldest = "oldest".equalsIgnoreCase(sort);
+        if (sort != null && !sort.isBlank() && !oldest && !"newest".equalsIgnoreCase(sort)) {
+            throw ApiInputs.bad("sort chỉ nhận 'newest' hoặc 'oldest'");
+        }
+
+        Page<NewsArticle> result = oldest
+            ? articles.findPublicOldest(single, categories, region, keyword, pageable)
+            : articles.findPublic(single, categories, region, keyword, pageable);
 
         List<NewsDtos.Article> items = result.getContent().stream()
             .map(this::toArticle)
             .toList();
-
-        // sort=oldest: đảo thứ tự trong trang hiện tại là chưa đủ đúng; dùng lại query
-        // với thứ tự ngược sẽ cần thêm method. V1 giữ newest cho ổn định và ghi rõ.
-        if ("oldest".equalsIgnoreCase(sort) && items.size() > 1) {
-            List<NewsDtos.Article> reversed = new ArrayList<>(items);
-            java.util.Collections.reverse(reversed);
-            items = reversed;
-        }
 
         return new NewsDtos.Page(items, result.getNumber(), result.getSize(),
             result.getTotalElements(), result.getTotalPages(),
@@ -99,7 +105,7 @@ public class NewsService {
 
     private List<NewsDtos.Source> publicSources() {
         List<NewsSource> ingestible = sources.findIngestible();
-        List<NewsDtos.Source> result = new ArrayList<>(ingestible.size());
+        List<NewsDtos.Source> result = new java.util.ArrayList<>(ingestible.size());
         for (NewsSource source : ingestible) {
             result.add(new NewsDtos.Source(
                 source.id,
@@ -109,10 +115,28 @@ public class NewsService {
                 source.feedUrl,
                 articles.countPublicBySource(source.id),
                 source.lastSuccessAt,
-                source.lastSuccessAt == null ? "NEVER_SYNCED" : "AVAILABLE"
+                sourceStatus(source)
             ));
         }
         return result;
+    }
+
+    /**
+     * Trạng thái nguồn theo nghĩa freshness.
+     *
+     * <p>{@code AVAILABLE} chỉ khi lần sync gần nhất thành công và còn trong ngưỡng.
+     * {@code STALE} khi quá ngưỡng. {@code FAILED} khi lần thử gần nhất lỗi.
+     * {@code NEVER_SYNCED} khi chưa từng sync.
+     */
+    static String sourceStatus(NewsSource source) {
+        if (source.lastSuccessAt == null) return "NEVER_SYNCED";
+        if (source.lastError != null
+                && (source.lastAttemptAt == null
+                    || source.lastAttemptAt.isAfter(source.lastSuccessAt))) {
+            return "FAILED";
+        }
+        Instant threshold = Instant.now().minusSeconds(90 * 60);
+        return source.lastSuccessAt.isBefore(threshold) ? "STALE" : "AVAILABLE";
     }
 
     private NewsDtos.Article toArticle(NewsArticle article) {
@@ -169,29 +193,20 @@ public class NewsService {
         return runs.findAllByOrderByStartedAtDesc(pageable).map(this::toAdminRun);
     }
 
+    /** Thống kê bằng aggregate query — không load toàn bảng vào RAM. */
     @Transactional(readOnly = true)
     public NewsDtos.Stats stats() {
-        List<NewsSource> all = sources.findAll();
-        long enabled = all.stream().filter(s -> s.enabled).count();
-        long approved = all.stream()
-            .filter(s -> s.rightsReviewStatus == NewsSource.RightsStatus.APPROVED).count();
-        long pending = all.stream()
-            .filter(s -> s.rightsReviewStatus == NewsSource.RightsStatus.PENDING_REVIEW).count();
+        long totalSources = sources.count();
+        long enabled = sources.countEnabled();
+        long approved = sources.countByRightsStatus(NewsSource.RightsStatus.APPROVED);
+        long pending = sources.countByRightsStatus(NewsSource.RightsStatus.PENDING_REVIEW);
 
         long total = articles.count();
-        long visible = articles.findAll().stream()
-            .filter(a -> a.publicationStatus == NewsArticle.PublicationStatus.VISIBLE).count();
-        long daNang = articles.findAll().stream()
-            .filter(a -> a.region == NewsSource.Region.DA_NANG).count();
+        long visible = articles.countByPublicationStatus(NewsArticle.PublicationStatus.VISIBLE);
+        long daNang = articles.countByRegion(NewsSource.Region.DA_NANG);
 
-        Instant lastSuccess = all.stream()
-            .map(s -> s.lastSuccessAt)
-            .filter(java.util.Objects::nonNull)
-            .max(Instant::compareTo)
-            .orElse(null);
-
-        return new NewsDtos.Stats(all.size(), enabled, approved, pending,
-            total, visible, total - visible, daNang, lastSuccess);
+        return new NewsDtos.Stats(totalSources, enabled, approved, pending,
+            total, visible, total - visible, daNang, sources.lastSuccessAcrossSources());
     }
 
     private NewsDtos.AdminSource toAdminSource(NewsSource source) {
@@ -201,8 +216,10 @@ public class NewsService {
             source.defaultCategory.name(), source.defaultRegion.name(),
             source.rightsReviewStatus.name(), source.rightsReference,
             source.rightsCheckedAt, source.usageRestrictions,
+            source.allowSummary, source.allowImages,
             source.enabled, source.fetchIntervalMinutes,
             source.lastAttemptAt, source.lastSuccessAt, source.lastError,
+            source.nextFetchAt, source.sourceRevision,
             articles.countPublicBySource(source.id)
         );
     }
