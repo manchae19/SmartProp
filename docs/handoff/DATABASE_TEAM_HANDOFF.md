@@ -320,17 +320,27 @@ Get-FileHash .\handoff\smartprop_v21_schema.sql -Algorithm SHA256
 Không hardcode ổ đĩa. Chọn thư mục trên máy bạn:
 
 ```powershell
-# Đổi theo máy bạn — không bắt buộc ổ F
+# Đổi $MYSQL_HOME theo máy bạn — không bắt buộc ổ F
 $MYSQL_HOME = "C:\tools\mysql-8.4.13-winx64"
 $STAGING    = "C:\smartprop-staging"
 
 $MYSQLD  = Join-Path $MYSQL_HOME "bin\mysqld.exe"
 $MYSQL   = Join-Path $MYSQL_HOME "bin\mysql.exe"
-$DATADIR = Join-Path $STAGING "data"
 $LOGDIR  = Join-Path $STAGING "logs"
+
+# QUAN TRỌNG: datadir PHẢI kết thúc bằng /mysql-isolated/data/
+# Backend guard kiểm tra @@datadir.endsWith("/mysql-isolated/data/") — đường dẫn
+# khác sẽ bị từ chối khi chạy profile staging.
+$DATADIR = Join-Path $STAGING "mysql-isolated\data"
 
 New-Item -ItemType Directory -Path $STAGING, $LOGDIR -Force | Out-Null
 ```
+
+> **Vì sao `mysql-isolated\data`?** `MigrationProfileEnvironmentGuard` khai báo
+> `STAGING_DATADIR_SUFFIX = "/mysql-isolated/data/"` và kiểm tra
+> `@@datadir.replace('\\','/').endsWith(...)`. Nếu datadir là `C:\smartprop-staging\data`,
+> guard từ chối với `Staging must use the isolated datadir`. Đặt đúng thư mục con ngay
+> từ đầu.
 
 ### 6.3. Kiểm tra trước khi khởi tạo
 
@@ -347,20 +357,45 @@ if (Test-Path $DATADIR) {
     if ($existing) { throw "Datadir $DATADIR đã có dữ liệu. Không ghi đè." }
 }
 
-# 3. Datadir không được trùng datadir 3306
-$localDatadir = "C:\path\to\3306\data"   # đổi theo máy bạn
-if ($DATADIR -eq $localDatadir) { throw "Datadir trùng database nhóm. Dừng lại." }
+# 3. Datadir phải khớp suffix mà Backend guard yêu cầu
+$normalized = $DATADIR.Replace('\', '/').TrimEnd('/') + '/'
+if (-not $normalized.EndsWith("/mysql-isolated/data/")) {
+    throw "Datadir phải kết thúc bằng /mysql-isolated/data/ (guard yêu cầu). Hiện tại: $DATADIR"
+}
 
 # 4. Đường dẫn phải tuyệt đối
 if (-not [IO.Path]::IsPathRooted($DATADIR)) { throw "Datadir phải là đường dẫn tuyệt đối." }
 
-Write-Output "OK: port 3307 trống, datadir $DATADIR sẵn sàng"
+# 5. Nếu instance 3306 đang chạy, đọc datadir THẬT của nó để chắc chắn khác biệt
+$localBusy = Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue
+if ($localBusy) {
+    Write-Output "Instance 3306 đang chạy (PID $($localBusy.OwningProcess))."
+    Write-Output "Kiểm tra thủ công: datadir staging ($DATADIR) phải KHÁC datadir 3306."
+    Write-Output "Chạy lệnh sau trên 3306 để xem datadir thật:"
+    Write-Output "  mysql --no-defaults -h 127.0.0.1 -P 3306 -u <user> -p -e `"SELECT @@datadir;`""
+} else {
+    Write-Output "Instance 3306 không chạy — không có nguy cơ trùng datadir."
+}
+
+Write-Output "OK: port 3307 trống, datadir $DATADIR khớp guard"
 ```
+
+> **Không dùng đường dẫn 3306 giả làm điều kiện bảo vệ.** Kiểm tra `$DATADIR -eq $localDatadir`
+> với một biến hardcode chỉ tạo cảm giác an toàn — nó không đọc datadir thật của 3306.
+> Cách đúng: đọc `@@datadir` từ instance 3306 đang chạy (nếu có) và so sánh thủ công,
+> hoặc đảm bảo đường dẫn staging nằm ngoài mọi thư mục MySQL khác.
 
 ### 6.4. Khởi tạo datadir
 
 ```powershell
 & $MYSQLD --no-defaults --initialize-insecure --datadir=$DATADIR
+if ($LASTEXITCODE -ne 0) { throw "Initialize thất bại (exit $LASTEXITCODE). Đọc log trong $DATADIR" }
+
+# Xác nhận datadir đã được tạo đúng
+if (-not (Test-Path (Join-Path $DATADIR "mysql"))) {
+    throw "Initialize báo OK nhưng không thấy thư mục mysql/. Kiểm tra lại $DATADIR"
+}
+Write-Output "Initialize OK: $DATADIR"
 ```
 
 > **`--initialize-insecure` chỉ là bước tạm thời.** Nó tạo user `root` **không có mật
@@ -385,23 +420,32 @@ $proc = Start-Process -FilePath $MYSQLD `
   -WindowStyle Hidden -PassThru
 
 # Chờ tối đa 60s cho tới khi port mở
-$ready = $false
+$listener = $null
 for ($i = 0; $i -lt 60; $i++) {
     Start-Sleep -Seconds 1
-    if (Get-NetTCPConnection -LocalPort 3307 -State Listen -ErrorAction SilentlyContinue) {
-        $ready = $true; break
-    }
+    $listener = Get-NetTCPConnection -LocalPort 3307 -State Listen -ErrorAction SilentlyContinue |
+                Select-Object -First 1
+    if ($listener) { break }
     if ($proc.HasExited) { break }
 }
 
-if (-not $ready) {
+if (-not $listener) {
     Write-Output "--- mysqld.err.log ---"
     Get-Content (Join-Path $LOGDIR "mysqld.err.log") -Tail 30 -ErrorAction SilentlyContinue
     throw "MySQL không khởi động được trên 3307. Đọc log trên."
 }
 
-Write-Output "MySQL 3307 đã sẵn sàng (PID $($proc.Id))"
+# Xác nhận listener là CHÍNH process vừa khởi động, không phải instance khác
+if ($listener.OwningProcess -ne $proc.Id) {
+    throw "Port 3307 do PID $($listener.OwningProcess) giữ, không phải PID $($proc.Id) vừa khởi động. Dừng lại."
+}
+
+Write-Output "MySQL 3307 đã sẵn sàng (PID $($proc.Id), khớp listener)"
 ```
+
+> **Kiểm tra PID là bắt buộc.** Nếu port 3307 đã có instance khác từ trước, vòng chờ sẽ
+> thấy port mở ngay và bạn tưởng MySQL của mình đã lên — nhưng thực tế đang nói chuyện
+> với instance của người khác. So sánh `OwningProcess` với `$proc.Id` ngăn điều đó.
 
 ### 6.6. Xác minh identity và đặt mật khẩu root
 
@@ -412,6 +456,7 @@ Write-Output "MySQL 3307 đã sẵn sàng (PID $($proc.Id))"
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
 SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid, @@hostname AS host;
 "@
+if ($LASTEXITCODE -ne 0) { throw "Không kết nối được MySQL 3307 (exit $LASTEXITCODE)" }
 ```
 
 **Kiểm tra thủ công từng dòng:**
@@ -419,7 +464,7 @@ SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid, @@hostname A
 | Trường | Kỳ vọng |
 |---|---|
 | `port` | `3307` |
-| `datadir` | đúng `$DATADIR` bạn vừa tạo |
+| `datadir` | đúng `$DATADIR` bạn vừa tạo, kết thúc `/mysql-isolated/data/` |
 | `uuid` | **mới**, khác UUID của 3306 |
 | `host` | máy bạn |
 
@@ -433,20 +478,30 @@ $ROOT_PW = Read-Host "Mật khẩu root cho staging 3307" -AsSecureString
 $ROOT_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
     [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ROOT_PW))
 
+# Mật khẩu đi qua biến môi trường, KHÔNG qua đối số command line
+# (đối số hiện trong process list và có thể bị ghi vào log)
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
 ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PW_PLAIN';
 FLUSH PRIVILEGES;
 "@
+if ($LASTEXITCODE -ne 0) { Remove-Item Env:MYSQL_PWD; throw "Đặt mật khẩu root thất bại (exit $LASTEXITCODE)" }
 
 # Xác minh mật khẩu đã có hiệu lực
-$env:MYSQL_PWD = $ROOT_PW_PLAIN
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e "SELECT 'root auth OK' AS status;"
+if ($LASTEXITCODE -ne 0) { Remove-Item Env:MYSQL_PWD; throw "Xác thực root thất bại (exit $LASTEXITCODE)" }
+
 Remove-Item Env:MYSQL_PWD
+Write-Output "Root password đã đặt và xác minh OK"
 ```
 
+> **Mật khẩu không bao giờ đi qua đối số command line.** `mysql -p<password>` và
+> `--password=<password>` đều hiện trong process list. Dùng `$env:MYSQL_PWD` (biến môi
+> trường của process con) rồi xoá ngay.
+>
 > **Từ đây, mọi lệnh `mysql.exe` phải có xác thực.** Không còn `-u root` trần.
-> Dùng `$env:MYSQL_PWD` trong session, xoá ngay sau khi dùng. Không ghi mật khẩu vào
-> script, file `.env` commit, hay log.
+> Không ghi mật khẩu vào script, file `.env` commit, hay log.
 
 ### 6.7. Tạo schema và tài khoản staging
 
@@ -484,8 +539,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop'@'localhost';
 
 FLUSH PRIVILEGES;
 "@
+$createExit = $LASTEXITCODE
 
 Remove-Item Env:MYSQL_PWD
+
+if ($createExit -ne 0) { throw "Tạo schema/user thất bại (exit $createExit)" }
+
+# Xoá biến plaintext khỏi session — chỉ giữ $ROOT_PW_PLAIN cho các bước sau
+Remove-Variable APP_PW, FLYWAY_PW -ErrorAction SilentlyContinue
+Write-Output "Schema + 3 tài khoản đã tạo"
 ```
 
 **Phân biệt quyền:**
@@ -517,17 +579,23 @@ Remove-Item Env:MYSQL_PWD
 
 ### 6.9. Vì sao guard trong code không bảo vệ được mọi lệnh
 
-`MigrationProfileEnvironmentGuard` chỉ chạy khi **Spring Boot khởi động** hoặc khi
-**Maven Flyway plugin** chạy qua profile. Nó **không** bảo vệ:
+`MigrationProfileEnvironmentGuard` là một `EnvironmentPostProcessor` — nó chỉ chạy khi
+**Spring Boot khởi động**. Nó **không** chạy khi bạn gọi `mysql.exe`, `mysqldump`, hay
+**Maven Flyway CLI**.
 
-| Lệnh | Guard có chạy? |
-|---|---|
-| `mysql.exe ... -e "DROP DATABASE ..."` | **KHÔNG** |
-| `mysql.exe ... < dump.sql` | **KHÔNG** |
-| `mysqldump` | **KHÔNG** |
-| `mvnw flyway:migrate` (không `-P`) | **KHÔNG** — dùng `pom.xml` mặc định |
-| `mvnw flyway:migrate -P hybrid-local-existing-v13` | **KHÔNG** — profile chỉ set `locations`/`target`, không kiểm tra URL |
-| Spring Boot với profile staging | **CÓ** — kiểm tra URL + datadir |
+| Lệnh | Guard có chạy? | Lý do |
+|---|---|---|
+| `mysql.exe ... -e "DROP DATABASE ..."` | **KHÔNG** | Không qua Spring |
+| `mysql.exe ... < dump.sql` | **KHÔNG** | Không qua Spring |
+| `mysqldump` | **KHÔNG** | Không qua Spring |
+| `mvnw flyway:migrate` (không `-P`) | **KHÔNG** | Flyway Maven plugin không khởi động Spring |
+| `mvnw flyway:migrate -P hybrid-local-existing-v13` | **KHÔNG** | Profile Maven chỉ set `locations`/`target`; không kiểm tra URL |
+| `mvnw flyway:validate -P ...` | **KHÔNG** | Như trên |
+| Spring Boot với profile staging | **CÓ** | `EnvironmentPostProcessor` chạy, kiểm tra URL + datadir |
+
+**Điểm dễ hiểu nhầm:** profile Maven `hybrid-local-existing-v13` và profile Spring
+`hybrid-local-existing-v13-staging` là **hai thứ khác nhau**. Profile Maven chỉ cấu hình
+`locations` và `target` cho Flyway plugin — nó không kiểm tra `DB_URL` trỏ đi đâu.
 
 **Kết luận:** kiểm tra `@@port` và `@@datadir` bằng tay là **bắt buộc** trước mọi thao
 tác ghi. Không được dựa vào guard của ứng dụng để bảo vệ lệnh CLI.
@@ -569,13 +637,19 @@ $SQL_FILE = Join-Path $STAGING "smartprop_v21_schema.sql"
 # Xác minh file trước khi import
 $expected = "824332B219F301F3824B177F10E7892002F7E0C2B7BACCEBD9C1455528664442"
 $actual = (Get-FileHash $SQL_FILE -Algorithm SHA256).Hash
-if ($actual -ne $expected) { throw "SHA256 không khớp. Không import." }
+if ($actual -ne $expected) { Remove-Item Env:MYSQL_PWD; throw "SHA256 không khớp. Không import." }
 
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root smartprop `
   --default-character-set=utf8mb4 `
   -e "source $SQL_FILE"
+$importExit = $LASTEXITCODE
 
 Remove-Item Env:MYSQL_PWD
+
+if ($importExit -ne 0) {
+    throw "Import thất bại (exit $importExit). Kiểm tra trạng thái trước khi dựng lại."
+}
+Write-Output "Import OK"
 ```
 
 **Nếu import thất bại giữa chừng:** dừng, kiểm tra trạng thái (bảng nào đã tạo, view
@@ -748,27 +822,48 @@ Không seed sau khi đã migrate — sẽ không test được logic backfill.
 
 ### 9.1. Kiểm tra branch và target trước khi chạy
 
-Migration location phụ thuộc **profile** trong `pom.xml`, không phụ thuộc branch. Nhưng
-file migration có thể khác nhau giữa các branch.
+**Target phụ thuộc `pom.xml` của branch bạn đang checkout** — không phụ thuộc PR đã merge
+hay chưa. Cùng một profile có thể có `target` khác nhau giữa các branch.
 
 ```powershell
 cd <đường-dẫn>\backend
 
-# Xác nhận branch và migration có sẵn
+# 1. Branch hiện tại
 git branch --show-current
+
+# 2. Target THỰC TẾ trong pom.xml của branch này
+Select-String -Path pom.xml -Pattern '<id>|<target>' | ForEach-Object { $_.Line.Trim() }
+
+# 3. Migration có sẵn trong branch này
 Get-ChildItem ..\database\legacy-hybrid-local -Filter 'V*.sql' |
   Sort-Object Name | Select-Object -Last 3
 ```
 
-**Đối chiếu với target của profile:**
+**Đối chiếu target với migration có sẵn:**
 
-| Profile | Target | Locations |
+| Branch | Profile `hybrid-local-existing-v13` | Ghi chú |
 |---|---:|---|
-| `hybrid-local-existing-v13` | **25** | `legacy-hybrid-local` + `research-migrations` |
-| `standard-migrations` | **23** | `migrations` + `research-migrations/poi` |
+| `main` | **25** | V14–V25 (+ V19/V20 từ `research-migrations/`) |
+| PR #38 (Coordinate Provenance) | **dự kiến 26** | Thêm V26 — kiểm tra `pom.xml` thực tế |
+| PR #41 (News Backend) | **dự kiến 27** | Thêm V27 — kiểm tra `pom.xml` thực tế |
 
-Nếu bạn đang ở branch PR #38 hoặc #41, sẽ thấy V26/V27 — nhưng `target` trong `pom.xml`
-vẫn là 25 cho tới khi PR đó merge và cập nhật pom.
+**Không giả định.** Luôn đọc `<target>` trong `pom.xml` của branch đang checkout. Nếu
+`target` nhỏ hơn version cao nhất trong `database/legacy-hybrid-local/`, Flyway sẽ bỏ qua
+migration đó — dấu hiệu pom chưa được cập nhật cho branch.
+
+**Kiểm tra chéo:**
+
+```powershell
+$target = (Select-String -Path pom.xml -Pattern '<target>(\d+)</target>' |
+           Select-Object -First 1).Matches.Groups[1].Value
+$highest = (Get-ChildItem ..\database\legacy-hybrid-local -Filter 'V*.sql' |
+            ForEach-Object { [int]($_.Name -replace '^V(\d+)__.*$','$1') } |
+            Measure-Object -Maximum).Maximum
+Write-Output "pom target = $target | migration cao nhất = $highest"
+if ([int]$target -lt $highest) {
+    Write-Output "CẢNH BÁO: pom target thấp hơn migration có sẵn — kiểm tra lại branch"
+}
+```
 
 ### 9.2. Cấu hình môi trường — dùng tài khoản migration
 
@@ -806,6 +901,7 @@ Schema version: 21
 
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:migrate
+if ($LASTEXITCODE -ne 0) { throw "flyway:migrate thất bại (exit $LASTEXITCODE)" }
 ```
 
 **Kỳ vọng:** V22 → V23 → V24 → V25 áp dụng tuần tự.
@@ -814,9 +910,17 @@ Schema version: 21
 
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:validate
+$validateExit = $LASTEXITCODE
+
+if ($validateExit -ne 0) {
+    Write-Output "flyway:validate FAIL (exit $validateExit) — còn migration pending hoặc checksum sai"
+    Write-Output "Chạy flyway:info để xem version nào pending, rồi flyway:migrate."
+} else {
+    Write-Output "flyway:validate PASS"
+}
 ```
 
-**Điều kiện PASS:** command trả exit code 0 và in `Successfully validated N migrations`.
+**Điều kiện PASS:** `$LASTEXITCODE -eq 0` **và** output có `Successfully validated N migrations`.
 
 **Nếu command trả lỗi** như:
 
@@ -1093,7 +1197,7 @@ tiếp — nhưng phải dựng lại DB test từ baseline.
 | Guard từ chối URL khác | `MigrationLineageConfigurationTest` 21 test |
 | Guard từ chối gap/duplicate/order | `MigrationLineageStrictTest` 18 test — **thuộc PR #41, chưa merge** |
 | Test ghi dữ liệu tự kiểm tra port | `assertThat(port).isEqualTo(3307)` trong IT |
-| `pom.xml` target | standard = **23**, legacy-hybrid-local = **25** |
+| `pom.xml` target | standard = **23**, legacy-hybrid-local = **25** trên `main` |
 
 ### DOCUMENTED_ONLY — chưa chạy thử
 
@@ -1104,7 +1208,7 @@ Các hướng dẫn sau **chưa được thực thi end-to-end** trong quá trì
 | Dựng MySQL từ đầu theo mục 6 | **DOCUMENTED_ONLY** | Viết dựa trên môi trường đã có sẵn, chưa chạy lại từ datadir trống |
 | `--initialize-insecure` + đặt mật khẩu root | **DOCUMENTED_ONLY** | Chưa chạy chuỗi lệnh này |
 | Tạo `smartprop_flyway` / `smartprop_app` | **DOCUMENTED_ONLY** | Phân quyền theo least-privilege, chưa kiểm chứng từng GRANT |
-| Readiness loop (mục 6.5) | **DOCUMENTED_ONLY** | Chưa chạy trên máy sạch |
+| Readiness loop + PID check (mục 6.5) | **DOCUMENTED_ONLY** | Chưa chạy trên máy sạch |
 | Áp dụng V26 (PR #38) | **NOT_RUN** | Thuộc PR #38, chưa merge |
 | Áp dụng V27 (PR #41) | **NOT_RUN** | Thuộc PR #41, chưa merge |
 | Triển khai lên 3306 | **NOT_RUN** | Không thực hiện — database nhóm chỉ đọc |
