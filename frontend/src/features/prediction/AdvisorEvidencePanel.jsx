@@ -8,7 +8,7 @@ const exactMoney = (value) => new Intl.NumberFormat('vi-VN').format(Number(value
 const SOURCE_LABEL = { SMARTPROP: 'SmartProp', EXTERNAL_LISTING: 'Tin đăng ngoài', TINIX_RESEARCH: 'TiniX · nghiên cứu' }
 
 /**
- * Independent evidence for one property: XGBoost V6 valuation with TreeSHAP
+ * Independent evidence for one property: XGBoost V1.3 valuation with TreeSHAP
  * explanation, plus comparable-listing evidence when present. Renders only
  * fields the API actually returned.
  */

@@ -49,7 +49,7 @@ import vn.smartprop.modules.recommendation.RecommendationDtos.Source;
  *       with V1.1 amenity catalog evidence, deduplication, and strict protected-holdout exclusion.</li>
  *   <li>{@link ComparableRankingService} — Step 21.2 comparable market/research evidence anchored
  *       solely to source attributes and asking price (never to V6 model estimates).</li>
- *   <li>{@link AdvisorValuationAdapter} — Independent XGBoost V6 + TreeSHAP valuation for active
+ *   <li>{@link AdvisorValuationAdapter} — Independent XGBoost V1.3 + TreeSHAP valuation for active
  *       listings that satisfy all mandatory model feature constraints, degrading cleanly to partial
  *       results whenever the Python AI service is offline.</li>
  * </ol>
@@ -59,7 +59,7 @@ public class AdvisorOrchestrationService {
     public static final String ADVISOR_VERSION = "ADVISOR_ORCHESTRATOR_V1";
     public static final String SCORE_DISCLAIMER =
         "Điểm phù hợp (0–100) và độ tương đồng (0–1) là thước đo quy tắc tham khảo chưa hiệu chuẩn xác suất; "
-        + "giá ước tính XGBoost V6 là tham chiếu độc lập trên dữ liệu giá rao, không dùng để tự chứng minh độ chính xác.";
+        + "giá ước tính XGBoost V1.3 là tham chiếu độc lập trên dữ liệu giá rao, không dùng để tự chứng minh độ chính xác.";
 
     private static final BigDecimal MAX_CONTRACT_BUDGET = new BigDecimal("999999999999999");
     private static final int DEFAULT_LIMIT = 5;
@@ -180,7 +180,7 @@ public class AdvisorOrchestrationService {
             supportedV6Locations = valuationAdapter.probeSupportedLocations();
             if (supportedV6Locations == null) {
                 valuationStatus = "UNAVAILABLE";
-                warnings.add("VALUATION_SERVICE_UNAVAILABLE: Dịch vụ định giá AI (XGBoost V6) hiện không khả dụng; "
+                warnings.add("VALUATION_SERVICE_UNAVAILABLE: Dịch vụ định giá AI (XGBoost V1.3) hiện không khả dụng; "
                     + "hệ thống trả kết quả tư vấn một phần (khu vực, bất động sản phù hợp và bằng chứng tương đồng vẫn đầy đủ).");
             } else {
                 valuationStatus = "AVAILABLE";
@@ -221,7 +221,7 @@ public class AdvisorOrchestrationService {
             // Sanitize listing source URL & enforce null URL for research observations
             Source safeSource = sanitizeSource(prop.source(), researchRef);
 
-            // Comparable evidence (anchored strictly to source property attributes, NEVER V6 output)
+            // Comparable evidence (anchored strictly to source property attributes, NEVER V1.3 output)
             ComparableEvidence compEvidence;
             if (!criteria.includeComparables()) {
                 compEvidence = new ComparableEvidence("SKIPPED_BY_REQUEST", 0, "NONE", List.of(), List.of());

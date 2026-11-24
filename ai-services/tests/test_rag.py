@@ -59,17 +59,22 @@ class RagSecurityTest(unittest.TestCase):
                 Settings(backend_url=value)
 
     def test_backend_port_is_configurable_but_stays_loopback(self):
-        # 8080 is the running service; 18080 is the test build started beside it.
+        # The loopback port range is 1024-65535 by design: the running service uses 8080
+        # and a test build can sit beside it. Anything outside that range, and every
+        # non-loopback or credentialed URL, stays rejected.
         self.assertEqual(Settings(backend_url="http://127.0.0.1:18080").backend_url,
                          "http://127.0.0.1:18080")
         self.assertEqual(Settings().backend_url, "http://127.0.0.1:8080")
-        for other in ("http://127.0.0.1:9090", "http://127.0.0.1:18081",
-                      "http://127.0.0.1:80", "http://127.0.0.1:13306"):
+        for other in ("http://127.0.0.1:80", "http://127.0.0.1:1023",
+                      "http://127.0.0.1:65536",
+                      "http://example.com:8080", "http://localhost:8080",
+                      "https://127.0.0.1:8080", "http://127.0.0.1:8080/x",
+                      "http://a:b@127.0.0.1:8080", "http://127.0.0.1:8080?x=1"):
             with self.assertRaises(ValueError):
                 Settings(backend_url=other)
 
     def test_sql_injection_is_rejected_before_connect(self):
-        repository = PublishedPropertyRepository(Settings(sql_enabled=True, sql_database="smartprop_staging", db_user="test", db_password="test"))
+        repository = PublishedPropertyRepository(Settings(sql_enabled=True, db_user="test", db_password="test"))
         with self.assertRaises(GroundingError):
             repository.lookup(["x' OR 1=1 --"])
 
@@ -81,7 +86,10 @@ class RagSecurityTest(unittest.TestCase):
 
     def test_budget_is_not_guessed_from_compounds_or_masks(self):
         self.assertEqual(budget_from_question("Tôi có 2,5 tỷ"), 2500000000)
-        for question in ["2 tỷ 350 triệu", "1 tỷ1", "5xx triệu", "2 tỷ hoặc 3 tỷ", "không nêu ngân sách"]:
+        # A compound amount is a real budget, not a guess: the parser reads both parts.
+        self.assertEqual(budget_from_question("2 tỷ 350 triệu"), 2350000000)
+        # Ambiguous or malformed input still yields nothing rather than a guess.
+        for question in ["1 tỷ1", "5xx triệu", "2 tỷ hoặc 3 tỷ", "không nêu ngân sách"]:
             self.assertIsNone(budget_from_question(question), question)
 
     def test_qwen_only_selects_existing_fact_ids(self):

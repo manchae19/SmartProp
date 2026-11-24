@@ -367,7 +367,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                 {" CHỌN QUẬN / KHU VỰC PHÂN TÍCH CHUYÊN SÂU "}
               </p>
               <span className="text-xs text-[var(--ui-ink)]/90 font-medium" data-sp-f9d979a0="">
-                {" 6 quận trọng điểm · Dữ liệu chuẩn hóa & AI Valuation V6 "}
+                {" 6 quận trọng điểm · Dữ liệu chuẩn hóa & AI Valuation V1.3 "}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5" data-sp-f9d979a0="">
@@ -735,7 +735,7 @@ export default React.forwardRef(function MarketInsightsView(props, ref) {
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-card/10 text-[var(--ui-ink)] text-[11px] font-bold border border-[var(--ui-border)]/30 tracking-wider uppercase mb-3" data-sp-f9d979a0="">
                     <span className="w-2 h-2 rounded-full bg-[var(--ui-success-bg)] animate-pulse" data-sp-f9d979a0="" />
                     <span data-sp-f9d979a0="">
-                      {"SMARTPROP AI MARKET INTELLIGENCE · MODEL V6"}
+                      {"SMARTPROP AI MARKET INTELLIGENCE · MODEL V1.3"}
                     </span>
                   </div>
                   <h3 className="text-xl sm:text-2xl font-semibold text-brand-navy tracking-tight" data-sp-f9d979a0="">

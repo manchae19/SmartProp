@@ -16,7 +16,15 @@ public final class GeocodingDtos {
     public record Search(@NotBlank @Size(max=4000) String address,
                          @NotBlank @Size(max=100) String city,
                          @Size(max=100) String district, @Size(max=100) String ward,
-                         @AssertTrue(message="Cần đồng ý gửi địa chỉ tới dịch vụ tìm vị trí") boolean shareAddress) {}
+                         @AssertTrue(message="Cần đồng ý gửi địa chỉ tới dịch vụ tìm vị trí") boolean shareAddress,
+                         // Set only when the user explicitly widens the search to the whole
+                         // selected district: the ward named in the address is then ignored.
+                         Boolean districtOnly) {
+        public Search(String address, String city, String district, String ward, boolean shareAddress) {
+            this(address, city, district, ward, shareAddress, null);
+        }
+        public boolean districtScopeOnly() { return Boolean.TRUE.equals(districtOnly); }
+    }
     public record Candidate(String id, String formattedAddress, double latitude, double longitude,
                             Provider provider, Accuracy accuracy, Level locationLevel,
                             Double confidence, boolean addressMatched, boolean storageAllowed,
@@ -26,5 +34,9 @@ public final class GeocodingDtos {
                 addressMatched&&value.localityMatched(),storageAllowed,mapProvider,attribution,value);
         }
     }
-    public record Result(String status, Provider provider, List<Candidate> candidates) {}
+    public record Result(String status, Provider provider, List<Candidate> candidates, String scope) {
+        public Result(String status, Provider provider, List<Candidate> candidates) {
+            this(status, provider, candidates, null);
+        }
+    }
 }

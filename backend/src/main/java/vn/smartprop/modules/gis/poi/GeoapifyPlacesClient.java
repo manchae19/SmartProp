@@ -51,24 +51,35 @@ public class GeoapifyPlacesClient {
     }
     /** Walking or driving route between two validated points. */
     public JsonNode route(double fromLat,double fromLon,double toLat,double toLon,String mode){
+        return route(fromLat,fromLon,toLat,toLon,mode,System.nanoTime()+TimeUnit.SECONDS.toNanos(8));
+    }
+    /**
+     * Same route, bounded by the caller's deadline instead of a fixed eight seconds.
+     *
+     * The caller may already have spent part of its window waiting for a lock, so the
+     * request and the body read must both fit in what is left. A call that cannot finish
+     * in time is reported as a timeout, never as a missing route.
+     */
+    public JsonNode route(double fromLat,double fromLon,double toLat,double toLon,String mode,long deadline){
         if(!NearbyService.valid(fromLat,fromLon)||!NearbyService.valid(toLat,toLon)
             ||!java.util.Set.of("walk","drive").contains(mode))
             throw new ApiException(400,"VALIDATION_ERROR","Điểm hoặc phương tiện không hợp lệ.");
         String waypoints=fromLat+","+fromLon+"|"+toLat+","+toLon;
         return request("https://api.geoapify.com/v1/routing?waypoints="+encode(waypoints)
-            +"&mode="+encode(mode)+"&units=metric&format=geojson&apiKey="+encode(key));
+            +"&mode="+encode(mode)+"&units=metric&format=geojson&apiKey="+encode(key),deadline);
     }
-    private JsonNode request(String url){
+    private JsonNode request(String url){return request(url,System.nanoTime()+TimeUnit.SECONDS.toNanos(8));}
+    private JsonNode request(String url,long deadline){
         if(!enabled||key==null||key.isBlank())throw new ApiException(503,"NEARBY_NOT_CONFIGURED","Nguồn tiện ích chưa được cấu hình.");
         // Share the existing application's outbound request budget with geocoding.
-        limits.check("geo:egress",1,1);limits.check("geo:daily",250,86400);
+        limits.check("geo:egress",1,1,"geo:egress");limits.check("geo:daily",250,86400,"geo:daily");
         CompletableFuture<HttpResponse<InputStream>> pending=null;
         try{
-            var request=HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(8))
+            long remaining=Math.max(1,deadline-System.nanoTime());
+            var request=HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofNanos(remaining))
                 .header("Accept","application/json").header("User-Agent","SmartProp/1.0 nearby-places").GET().build();
-            long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(8);
             pending=client.sendAsync(request,HttpResponse.BodyHandlers.ofInputStream());
-            var response=pending.get(8,TimeUnit.SECONDS);
+            var response=pending.get(remaining,TimeUnit.NANOSECONDS);
             try(var input=response.body()){
                 int code=response.statusCode();
                 if(code==429)throw new ApiException(503,"NEARBY_QUOTA_EXCEEDED","Nguồn tiện ích đang giới hạn truy cập. Vui lòng thử lại sau.");

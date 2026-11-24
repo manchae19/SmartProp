@@ -42,7 +42,7 @@ class Base(unittest.TestCase):
         sid = first.evidence["session"]["id"]
         s.chat(ChatRequest(question="Toàn Đà Nẵng", sessionId=sid, requireGeneration=False))
         s.chat(ChatRequest(question="Nhập địa điểm khác", sessionId=sid, requireGeneration=False))
-        return sid, s.chat(ChatRequest(question="123 Nguyễn Văn Linh", sessionId=sid,
+        return sid, s.chat(ChatRequest(question="123 Nguyễn Văn Linh, Hải Châu, Đà Nẵng", sessionId=sid,
                                        requireGeneration=False))
 
 
@@ -68,9 +68,12 @@ class HardCapTests(Base):
 
     def test_empty_hard_cap_offers_a_way_to_widen(self):
         _, _, _, reply = self.three_minute([cell("a", 400.0), cell("b", 500.0)])
-        self.assertEqual(reply.evidence.get("clarification"), "COMMUTE_LIMIT_EXCEEDED")
-        replies = reply.evidence.get("quickReplies") or []
-        self.assertIn("Bỏ mốc thời gian", replies)
+        # A hard cap that empties the list is reported as NO_MATCHES with the scope spelled
+        # out, plus a way to widen the search.
+        self.assertEqual(reply.evidence.get("responseKind"), "NO_MATCHES")
+        notes = " ".join(reply.dataLimitations)
+        self.assertIn("đều vượt mốc", notes)
+        self.assertTrue(reply.evidence.get("quickReplies"))
 
     def test_exactly_at_the_cap_is_kept(self):
         _, _, _, reply = self.three_minute([cell("a", 180.0)])

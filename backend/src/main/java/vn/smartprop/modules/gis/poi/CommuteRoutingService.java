@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vn.smartprop.common.ApiException;
+import vn.smartprop.common.RequestLimits;
 
 /**
  * Computes the trip to work, with the routing vendor chosen by configuration.
@@ -36,8 +37,17 @@ public class CommuteRoutingService {
 
     /** One measured trip. {@code geometry} is null when only a summary was requested. */
     public record Measured(double distanceMeters, double durationSeconds, JsonNode geometry, String provider) {}
+    /**
+     * Wall-clock budget for one Geoapify matrix batch. RAG abandons the call after ten
+     * seconds, so measuring must finish inside that window and return partial results.
+     */
+    static final long GEOAPIFY_MATRIX_BUDGET_SECONDS = 8;
     /** One cell of a matrix result; a missing cell means the vendor had no route. */
-    public record Cell(String propertyId, Double distanceMeters, Double durationSeconds) {}
+    public record Cell(String propertyId, Double distanceMeters, Double durationSeconds, boolean measured) {
+        public Cell(String propertyId, Double distanceMeters, Double durationSeconds) {
+            this(propertyId, distanceMeters, durationSeconds, true);
+        }
+    }
     public record Origin(String propertyId, double latitude, double longitude) {}
 
     private final ObjectMapper json;
@@ -106,9 +116,18 @@ public class CommuteRoutingService {
         String vendor = provider();
         if (vendor == null)
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
-        return OPENROUTESERVICE.equals(vendor)
-            ? orsDirections(fromLat, fromLon, toLat, toLon, mode)
-            : geoapifyDirections(fromLat, fromLon, toLat, toLon, mode);
+        if (OPENROUTESERVICE.equals(vendor))
+            return orsDirections(fromLat, fromLon, toLat, toLon, mode);
+        try {
+            return geoapifyDirections(fromLat, fromLon, toLat, toLon, mode,
+                System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(GEOAPIFY_MATRIX_BUDGET_SECONDS));
+        } catch (ApiException error) {
+            // ROUTE_ABSENT is a signal for the matrix, which records NO_ROUTE for that one
+            // listing. A single route has no such cell, so it stays the endpoint's own
+            // failure instead of escaping as a 200 carrying an error body.
+            if (isVendorNoRoute(error)) throw unavailable();
+            throw error;
+        }
     }
 
     /**
@@ -116,6 +135,16 @@ public class CommuteRoutingService {
      * vendor supports it, otherwise one call per origin. Result order matches input.
      */
     public List<Cell> matrix(List<Origin> origins, double destLat, double destLon, String mode) {
+        return matrix(origins, destLat, destLon, mode,
+            System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(GEOAPIFY_MATRIX_BUDGET_SECONDS));
+    }
+
+    /**
+     * Same batch, with a deadline the caller already started. The caller's clock is the
+     * one that matters: time spent waiting for a concurrent batch is time it also waits.
+     */
+    public List<Cell> matrix(List<Origin> origins, double destLat, double destLon, String mode,
+                             long deadline) {
         if (origins == null || origins.isEmpty()) return List.of();
         if (!NearbyService.valid(destLat, destLon) || !Set.of("walk", "drive").contains(mode))
             throw new ApiException(400, "VALIDATION_ERROR", "Điểm hoặc phương tiện không hợp lệ.");
@@ -127,7 +156,7 @@ public class CommuteRoutingService {
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
         return OPENROUTESERVICE.equals(vendor)
             ? orsMatrix(origins, destLat, destLon, mode)
-            : geoapifyMatrix(origins, destLat, destLon, mode);
+            : geoapifyMatrix(origins, destLat, destLon, mode, deadline);
     }
 
     // ---------------------------------------------------------------- openrouteservice
@@ -234,30 +263,122 @@ public class CommuteRoutingService {
 
     // ---------------------------------------------------------------------- geoapify
 
-    private List<Cell> geoapifyMatrix(List<Origin> origins, double destLat, double destLon, String mode) {
+    private List<Cell> geoapifyMatrix(List<Origin> origins, double destLat, double destLon, String mode,
+                                      long deadline) {
         List<Cell> cells = new ArrayList<>();
         for (Origin origin : origins) {
-            try {
-                Measured measured = geoapifyDirections(origin.latitude(), origin.longitude(), destLat, destLon, mode);
+            Measured measured = null;
+            // Three outcomes must stay distinct: a route, a vendor-confirmed absence of a
+            // route, and a listing the batch never reached because the budget ran out.
+            boolean noRoute = false;
+            // The shared egress bucket allows one provider call per second, so a batch of
+            // pairs must be paced. Without this the second listing always trips our own
+            // limiter and the whole matrix is reported as rate limited.
+            for (int attempt = 0; attempt < 3 && measured == null; attempt++) {
+                if (System.nanoTime() > deadline) break;
+                try {
+                    measured = geoapifyDirections(origin.latitude(), origin.longitude(), destLat, destLon, mode, deadline);
+                } catch (ApiException error) {
+                    if (isEgressThrottle(error)) {
+                        // Only the one-second egress window clears by itself. The daily quota
+                        // and the per-IP endpoint cap cannot, so the batch stops and the caller
+                        // reports the limit instead of sleeping through it.
+                        if (attempt == 2) throw error;
+                        // Waiting must fit in what is left, otherwise the retry itself would
+                        // push the batch past the caller's window.
+                        if (System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(1100L) > deadline) break;
+                        try {
+                            Thread.sleep(1100L);
+                        } catch (InterruptedException interrupted) {
+                            Thread.currentThread().interrupt();
+                            throw new ApiException(503, "ROUTE_INTERRUPTED", "Yêu cầu tính tuyến đã bị gián đoạn.");
+                        }
+                    } else if (isRateLimited(error)) {
+                        // A limit we cannot wait out, or one we cannot attribute.
+                        throw error;
+                    } else if (isVendorNoRoute(error)) {
+                        // The vendor answered and has no route for this listing.
+                        noRoute = true;
+                        break;
+                    } else if (isTimeout(error)) {
+                        // The call ran out of time: this listing was not measured, and
+                        // neither were the ones after it. Never reported as unroutable.
+                        break;
+                    } else {
+                        // A 5xx, a connection failure or a malformed body is a technical
+                        // failure, not an absence of route: keep the endpoint contract.
+                        throw error;
+                    }
+                }
+            }
+            if (measured != null) {
                 cells.add(new Cell(origin.propertyId(), measured.distanceMeters(), measured.durationSeconds()));
-            } catch (ApiException error) {
-                // Our own budget tripping stops the batch; a single missing route only empties that cell.
-                if ("RATE_LIMITED".equals(error.code) || 429 == error.status) throw error;
-                cells.add(new Cell(origin.propertyId(), null, null));
+            } else if (noRoute) {
+                cells.add(new Cell(origin.propertyId(), null, null, true));
+            } else {
+                // Never reached: the budget ran out. Reported as unmeasured, not as absent.
+                cells.add(new Cell(origin.propertyId(), null, null, false));
             }
         }
         return cells;
+    }
+
+    /** True when the failure is our own budget or the provider throttling us. */
+    private static boolean isRateLimited(ApiException error) {
+        return "RATE_LIMITED".equals(error.code) || 429 == error.status;
+    }
+
+    /**
+     * True when the vendor answered and has no route for this pair.
+     *
+     * Only a 200 with an empty feature list is an absence of route. A 5xx, a connection
+     * failure or a malformed body is a technical failure and keeps the endpoint contract.
+     */
+    private static boolean isVendorNoRoute(ApiException error) {
+        return "ROUTE_ABSENT".equals(error.code);
+    }
+
+    /**
+     * True when the call ran out of time, so the pair was never measured.
+     *
+     * A timeout is not an absence of route: the vendor never answered. It must leave the
+     * listing unmeasured and must not be cached as a result.
+     */
+    private static boolean isTimeout(ApiException error) {
+        return "NEARBY_TIMEOUT".equals(error.code) || "ROUTE_TIMEOUT".equals(error.code)
+            || 504 == error.status;
+    }
+
+    /**
+     * True only for the one-second egress bucket, which clears on its own.
+     *
+     * The decision uses the counter that refused, not Retry-After: that header is the time
+     * left in the current window, so the daily quota also reports 1 second just before its
+     * window rolls over. An unattributed 429 is never retried.
+     */
+    static boolean isEgressThrottle(ApiException error) {
+        return isRateLimited(error)
+            && error instanceof RequestLimits.Exceeded limited
+            && "geo:egress".equals(limited.bucket);
     }
 
     /**
      * Delegates to the existing provider client so the shared egress/daily budget keeps
      * applying exactly as before this change.
      */
-    private Measured geoapifyDirections(double fromLat, double fromLon, double toLat, double toLon, String mode) {
+    private Measured geoapifyDirections(double fromLat, double fromLon, double toLat, double toLon, String mode,
+                                        long deadline) {
         if (!geoapifyUsable())
             throw new ApiException(503, "ROUTE_NOT_CONFIGURED", "Dịch vụ tính tuyến chưa được cấu hình.");
-        JsonNode body = geoapify.route(fromLat, fromLon, toLat, toLon, mode);
-        JsonNode feature = body.path("features").path(0);
+        JsonNode body = geoapify.route(fromLat, fromLon, toLat, toLon, mode, deadline);
+        JsonNode features = body.path("features");
+        if (!features.isArray())
+            // A 200 without a feature list is a malformed body, not an absence of route.
+            throw unavailable();
+        if (features.isEmpty())
+            // The vendor answered and has no route for this pair.
+            throw new ApiException(200, "ROUTE_ABSENT", "Nhà cung cấp không có tuyến cho cặp điểm này.");
+        JsonNode feature = features.path(0);
         JsonNode properties = feature.path("properties");
         double meters = properties.path("distance").asDouble(Double.NaN);
         double seconds = properties.path("time").asDouble(Double.NaN);

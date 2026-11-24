@@ -63,7 +63,7 @@ final class GeocodingAddress {
         var districts=explicit(request.address(),"quận|q\\.?|huyện|district");
         String ward=wards.isEmpty()?(districts.isEmpty()?request.ward():null):wards.size()==1?wards.getFirst():null;
         String district=districts.isEmpty()?(wards.isEmpty()?request.district():null):districts.size()==1?districts.getFirst():null;
-        return new Search(request.address(),request.city(),district,ward,request.shareAddress());
+        return new Search(request.address(),request.city(),district,ward,request.shareAddress(),request.districtOnly());
     }
     static Optional<Candidate> review(Candidate candidate,Search request) {
         request=effective(request);

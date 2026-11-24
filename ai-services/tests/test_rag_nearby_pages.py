@@ -21,6 +21,10 @@ def listing(pid, meters, price=2000000000, status="PUBLISHED"):
     item = fixtures.prop(pid, price, 80)
     # The list API names the field "price"; the recommendation payload uses "priceVnd".
     item["price"] = price
+    item["title"] = "Nhà thử"
+    item["transactionType"] = "SALE"
+    item["priceUnit"] = "TOTAL"
+    item["currency"] = "VND"
     item["latitude"] = ORIGIN["latitude"] + meters / 111_194.9
     item["longitude"] = ORIGIN["longitude"]
     item["status"] = status
@@ -109,26 +113,39 @@ class NearestAcrossPagesTests(unittest.TestCase):
     def ask(self, s, q, sid=None):
         return s.chat(ChatRequest(question=q, sessionId=sid, requireGeneration=False))
 
+    def nearby(self, s, question="Tìm nhà gần 300 Dũng Sĩ Thanh Khê"):
+        """Walk the consent and candidate steps the advisor now requires."""
+        first = self.ask(s, question)
+        sid = first.evidence["session"]["id"]
+        if first.evidence.get("clarification") == "NEAR_ADDRESS_CONSENT":
+            second = self.ask(s, "Đồng ý tìm vị trí", sid)
+            if second.evidence.get("clarification") == "NEAR_ADDRESS_PICK":
+                pick = (second.evidence.get("quickReplies") or [None])[0]
+                if pick:
+                    return self.ask(s, pick, sid)
+            return second
+        return first
+
     def test_nearest_on_a_later_page_wins(self):
         far = [listing(f"property:far{i}", 800 + i) for i in range(50)]
         s, b = self.service([page(far, 2, 0),
                              page([listing("property:nearest", 120),
                                    listing("property:second", 400)], 2, 1)])
-        reply = self.ask(s, "Tìm nhà gần 300 Dũng Sĩ Thanh Khê")
+        reply = self.nearby(s)
         ids = [p["id"] for p in reply.recommendedProperties]
         self.assertEqual(ids, ["property:nearest", "property:second", "property:far0"])
 
     def test_a_listing_outside_the_radius_is_dropped_even_if_it_is_on_page_one(self):
         s, b = self.service([page([listing("property:outside", 1500),
                                    listing("property:inside", 900)], 1, 0)])
-        reply = self.ask(s, "Tìm nhà gần 300 Dũng Sĩ Thanh Khê")
+        reply = self.nearby(s)
         self.assertEqual([p["id"] for p in reply.recommendedProperties], ["property:inside"])
 
     def test_an_incomplete_read_is_not_called_the_nearest(self):
         pages = [page([listing(f"property:{i}", 100 + i)], 999, i)
                  for i in range(tools_module.NEARBY_MAX_PAGES)]
         s, b = self.service(pages)
-        reply = self.ask(s, "Tìm nhà gần 300 Dũng Sĩ Thanh Khê")
+        reply = self.nearby(s)
         notes = " ".join(reply.dataLimitations)
         self.assertIn("Chưa đọc hết danh sách tin", notes)
         self.assertIn("chưa phải toàn bộ khu vực", notes)

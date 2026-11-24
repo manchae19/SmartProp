@@ -30,23 +30,23 @@ import vn.smartprop.modules.property.PropertyRepository;
 import vn.smartprop.modules.recommendation.RecommendationDtos.PropertyType;
 
 /**
- * Safe loopback adapter to FastAPI XGBoost V6 + TreeSHAP for the AI Advisor.
+ * Safe loopback adapter to FastAPI XGBoost V1.3 + TreeSHAP for the AI Advisor.
  *
  * <p>Enforces strict pre-call feature validation:
  * <ul>
  *   <li>Never invokes XGBoost when mandatory features ({@code category}, {@code area_sqm} in 20..1000,
  *       supported {@code location_feature}) are missing or out of range.</li>
  *   <li>Never fabricates fallback prices or SHAP explanations when the AI service is offline.</li>
- *   <li>Pins {@code model_version="v6"} and {@code model_run="b4b1339d3f35857e"}.</li>
+ *   <li>Pins {@code model_version="v1.3"}.</li>
  *   <li>Never transmits or returns PII (phone, email, owner identity, raw street address).</li>
  * </ul>
  */
 @Component
 public class AdvisorValuationAdapter {
-    public static final String EXPECTED_VERSION = "v6";
-    public static final String EXPECTED_RUN = "b4b1339d3f35857e";
+    public static final String EXPECTED_VERSION = "v1.3";
+    public static final String EXPECTED_RUN = "tinix_xgboost_v1_3_integrated";
     public static final String PRICE_BASIS =
-        "Giá rao ước tính độc lập từ mô hình XGBoost V6 (dữ liệu tin đăng); không phải giá giao dịch thực tế và không dùng để tự chứng minh độ chính xác.";
+        "Giá rao ước tính độc lập từ mô hình XGBoost V1.3 (dữ liệu tin đăng); không phải giá giao dịch thực tế và không dùng để tự chứng minh độ chính xác.";
 
     private static final BigDecimal MIN_AREA = new BigDecimal("20");
     private static final BigDecimal MAX_AREA = new BigDecimal("1000");
@@ -88,7 +88,7 @@ public class AdvisorValuationAdapter {
     }
 
     /**
-     * Fast per-consultation readiness probe that returns supported locations by V6 category,
+     * Fast per-consultation readiness probe that returns supported locations by V1.3 category,
      * or {@code null} if disabled or FastAPI is offline/unhealthy.
      */
     public Map<String, Set<String>> probeSupportedLocations() {
@@ -105,7 +105,10 @@ public class AdvisorValuationAdapter {
             java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
             for (JsonNode loc : locs) {
                 if (loc.isTextual() && !loc.asText().isBlank()) {
-                    set.add(loc.asText().strip());
+                    // V1.3 lists districts in lower case; the advisor compares against the
+                    // display form, so normalise here.
+                    String name = normalizeDistrict(loc.asText());
+                    if (name != null) set.add(name);
                 }
             }
             if (!set.isEmpty()) {
@@ -116,7 +119,7 @@ public class AdvisorValuationAdapter {
     }
 
     /**
-     * Evaluates a single candidate property against V6 + TreeSHAP if and only if mandatory
+     * Evaluates a single candidate property against V1.3 + TreeSHAP if and only if mandatory
      * features are valid and the model service is online.
      */
     public ValuationEvidence evaluate(
@@ -132,30 +135,30 @@ public class AdvisorValuationAdapter {
         String category = mapCategory(propertyType);
         if (category == null) {
             return skipped("SKIPPED_UNSUPPORTED_TYPE",
-                "Loại bất động sản (" + propertyType + ") chưa nằm trong phạm vi hỗ trợ của mô hình XGBoost V6.");
+                "Loại bất động sản (" + propertyType + ") chưa nằm trong phạm vi hỗ trợ của mô hình XGBoost V1.3.");
         }
         if (areaSqm == null) {
             return skipped("SKIPPED_MISSING_FEATURES",
-                "Thiếu diện tích bắt buộc nên không gọi mô hình XGBoost V6.");
+                "Thiếu diện tích bắt buộc nên không gọi mô hình XGBoost V1.3.");
         }
         if (areaSqm.compareTo(MIN_AREA) < 0 || areaSqm.compareTo(MAX_AREA) > 0) {
             return skipped("SKIPPED_OUT_OF_RANGE_AREA",
                 "Diện tích " + areaSqm.stripTrailingZeros().toPlainString()
-                + " m² nằm ngoài miền huấn luyện 20–1.000 m² của mô hình XGBoost V6.");
+                + " m² nằm ngoài miền huấn luyện 20–1.000 m² của mô hình XGBoost V1.3.");
         }
         String normalizedDistrict = normalizeDistrict(district);
         if (normalizedDistrict == null) {
             return skipped("SKIPPED_MISSING_FEATURES",
-                "Thiếu quận/huyện chuẩn hóa bắt buộc nên không gọi mô hình XGBoost V6.");
+                "Thiếu quận/huyện chuẩn hóa bắt buộc nên không gọi mô hình XGBoost V1.3.");
         }
         if (supportedLocations == null) {
             return skipped("SERVICE_UNAVAILABLE",
-                "Dịch vụ định giá AI (XGBoost V6) hiện không khả dụng; hệ thống giữ nguyên kết quả tư vấn còn lại.");
+                "Dịch vụ định giá AI (XGBoost V1.3) hiện không khả dụng; hệ thống giữ nguyên kết quả tư vấn còn lại.");
         }
         Set<String> catLocations = supportedLocations.get(category);
         if (catLocations == null || !catLocations.contains(normalizedDistrict)) {
             return skipped("SKIPPED_UNSUPPORTED_LOCATION",
-                "Địa bàn '" + normalizedDistrict + "' chưa thuộc từ điển khu vực được mô hình V6 hỗ trợ cho phân khúc " + category + ".");
+                "Địa bàn '" + normalizedDistrict + "' chưa thuộc từ điển khu vực được mô hình V1.3 hỗ trợ cho phân khúc " + category + ".");
         }
 
         Map<String, Object> payload = new LinkedHashMap<>();
@@ -188,11 +191,11 @@ public class AdvisorValuationAdapter {
         JsonNode res = exchange("/predict", payload, 4000);
         if (res == null || !validPin(res)) {
             return skipped("SERVICE_UNAVAILABLE",
-                "Không nhận được phản hồi hợp lệ từ mô hình XGBoost V6.");
+                "Không nhận được phản hồi hợp lệ từ mô hình XGBoost V1.3.");
         }
         JsonNode priceNode = res.path("predicted_asking_price_vnd");
         if (!priceNode.isIntegralNumber() || priceNode.bigIntegerValue().signum() <= 0) {
-            return skipped("SERVICE_UNAVAILABLE", "Giá dự đoán từ mô hình V6 không hợp lệ.");
+            return skipped("SERVICE_UNAVAILABLE", "Giá dự đoán từ mô hình V1.3 không hợp lệ.");
         }
         BigDecimal predictedVnd = new BigDecimal(priceNode.bigIntegerValue());
         BigDecimal deltaPct = null;
@@ -205,7 +208,10 @@ public class AdvisorValuationAdapter {
         Map<String, Object> featuresUsed = parseFeaturesUsed(res.path("features_used"));
         List<String> missingFeatures = parseStringList(res.path("missing_features"), 20);
         List<String> warnings = new ArrayList<>(parseStringList(res.path("warnings"), 20));
-        warnings.add("Giá V6 là ước tính giá rao bán độc lập từ mô hình học máy, không phải kết luận thẩm định giá.");
+        // V1.3 answers with a price band instead of a warnings list.
+        String band = res.path("price_band").asText("");
+        if (!band.isBlank()) warnings.add("Khoảng giá tham khảo: " + band + ".");
+        warnings.add("Giá V1.3 là ước tính giá rao bán độc lập từ mô hình học máy, không phải kết luận thẩm định giá.");
         ShapSummary shap = parseShap(res.path("shap_explanation"));
 
         return new ValuationEvidence(
@@ -241,29 +247,39 @@ public class AdvisorValuationAdapter {
     static String normalizeDistrict(String district) {
         if (district == null || district.isBlank()) return null;
         String clean = district.strip();
-        if ("Hoà Vang".equalsIgnoreCase(clean) || "Hòa Vang".equalsIgnoreCase(clean)) return "Hòa Vang";
-        if ("Hải Châu".equalsIgnoreCase(clean)) return "Hải Châu";
-        if ("Thanh Khê".equalsIgnoreCase(clean)) return "Thanh Khê";
-        if ("Sơn Trà".equalsIgnoreCase(clean)) return "Sơn Trà";
-        if ("Ngũ Hành Sơn".equalsIgnoreCase(clean)) return "Ngũ Hành Sơn";
-        if ("Cẩm Lệ".equalsIgnoreCase(clean)) return "Cẩm Lệ";
-        if ("Liên Chiểu".equalsIgnoreCase(clean)) return "Liên Chiểu";
+        // Listings store the district without diacritics, so both spellings must map to
+        // the same display name.
+        if ("Hoà Vang".equalsIgnoreCase(clean) || "Hòa Vang".equalsIgnoreCase(clean)
+            || "Hoa Vang".equalsIgnoreCase(clean)) return "Hòa Vang";
+        if ("Hải Châu".equalsIgnoreCase(clean) || "Hai Chau".equalsIgnoreCase(clean)) return "Hải Châu";
+        if ("Thanh Khê".equalsIgnoreCase(clean) || "Thanh Khe".equalsIgnoreCase(clean)) return "Thanh Khê";
+        if ("Sơn Trà".equalsIgnoreCase(clean) || "Son Tra".equalsIgnoreCase(clean)) return "Sơn Trà";
+        if ("Ngũ Hành Sơn".equalsIgnoreCase(clean) || "Ngu Hanh Son".equalsIgnoreCase(clean)) return "Ngũ Hành Sơn";
+        if ("Cẩm Lệ".equalsIgnoreCase(clean) || "Cam Le".equalsIgnoreCase(clean)) return "Cẩm Lệ";
+        if ("Liên Chiểu".equalsIgnoreCase(clean) || "Lien Chieu".equalsIgnoreCase(clean)) return "Liên Chiểu";
         return clean;
     }
 
     private static boolean validPin(JsonNode node) {
-        return EXPECTED_VERSION.equals(node.path("model_version").asText())
-            && EXPECTED_RUN.equals(node.path("model_run").asText());
+        // V1.3 identifies itself by version; its run identifier is informational.
+        return EXPECTED_VERSION.equals(node.path("model_version").asText());
     }
 
     private static Map<String, Object> parseFeaturesUsed(JsonNode f) {
         if (!f.isObject()) return Map.of();
         Map<String, Object> out = new LinkedHashMap<>();
-        if (f.path("area_sqm").isNumber()) out.put("areaSqm", f.path("area_sqm").doubleValue());
-        if (f.path("location_feature").isTextual()) out.put("locationFeature", f.path("location_feature").asText());
+        // V1.3 names the same inputs differently from V6; accept both so an older
+        // stored response still renders.
+        if (f.path("area").isNumber()) out.put("areaSqm", f.path("area").doubleValue());
+        else if (f.path("area_sqm").isNumber()) out.put("areaSqm", f.path("area_sqm").doubleValue());
+        if (f.path("district").isTextual()) out.put("locationFeature", f.path("district").asText());
+        else if (f.path("location_feature").isTextual()) out.put("locationFeature", f.path("location_feature").asText());
         if (f.path("ward_source").isTextual()) out.put("wardSource", f.path("ward_source").asText());
-        if (f.path("rooms").isNumber()) out.put("rooms", f.path("rooms").intValue());
-        if (f.path("floors").isNumber()) out.put("floors", f.path("floors").doubleValue());
+        if (f.path("bedroom_count").isNumber()) out.put("rooms", f.path("bedroom_count").intValue());
+        else if (f.path("rooms").isNumber()) out.put("rooms", f.path("rooms").intValue());
+        if (f.path("bathroom_count").isNumber()) out.put("bathrooms", f.path("bathroom_count").intValue());
+        if (f.path("floor_count").isNumber()) out.put("floors", f.path("floor_count").doubleValue());
+        else if (f.path("floors").isNumber()) out.put("floors", f.path("floors").doubleValue());
         if (f.path("access_type").isTextual()) out.put("accessType", f.path("access_type").asText());
         if (f.path("house_subtype").isTextual()) out.put("houseSubtype", f.path("house_subtype").asText());
         return Map.copyOf(out);

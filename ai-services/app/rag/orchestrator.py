@@ -44,6 +44,9 @@ def budget_from_question(question):
 
 
 from .account_preferences import fingerprint, seed
+
+# Districts the public catalog covers; used to seed a saved profile before any branch returns.
+SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "Ngũ Hành Sơn", "Liên Chiểu", "Hòa Vang"]
 from .tools import UpstreamError
 
 class ChatOrchestrator(AdvisorDiscoveryMixin):
@@ -167,11 +170,19 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         context.needs["unsupportedPopularityFilter"]=turn["unsupportedPopularityFilter"]
         event("intent_decision", intent=turn["intent"], budgetMentioned=turn["budgetMentioned"],
               tool="KNOWLEDGE_MARKET" if turn["intent"]=="MARKET_ANALYSIS" else "MARKET_SUMMARY" if turn["intent"] in ("MARKET_PRICE","MARKET_TREND") else "PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
+        # The saved profile must be seeded before any branch can return, otherwise a
+        # focused or commute turn runs without the account context it needs.
+        if account and not resumed:
+            seed(context,account,SUPPORTED_DISTRICTS)
         planning=self.planning_advisor.reply(request.question,context)
         if planning is not None:
             context.needs["turnIntent"]="PLANNING_LOOKUP"
             return self._reply(request,session_id,context,context.criteria(),research=research,**planning)
-        outside=domain_reply(request.question,turn)
+        # While the session waits for a commute destination, the three official replies
+        # belong to that flow and must reach the state machine, not the scope filter.
+        pending = ("COMMUTE_DESTINATION_REQUIRED"
+                   if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
+        outside=domain_reply(request.question,turn,pending=pending)
         if outside:
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
@@ -250,8 +261,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             raise GroundingError("PUBLIC_CORPUS_VERSION_DRIFT")
         documents = corpus["documents"]
         names = sorted({d["metadata"].get("district", "") for d in documents} | ({"Hải Châu","Sơn Trà","Thanh Khê","Cẩm Lệ","Ngũ Hành Sơn","Liên Chiểu","Hòa Vang"} if turn["intent"]=="AREA_AMENITIES" else set()), key=len, reverse=True)
-        if account and not resumed:
-            seed(context,account,names)
+        # The profile was already seeded before any early-return branch; seeding again
+        # here would only repeat the same work.
         explicit_district = request.district or detect_district(request.question, names)
         # A follow-up that only refines one criterion keeps every other stored criterion.
         prior = context.criteria()
@@ -408,8 +419,25 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             expected_id=previous_ids[asked_index-1]
             current={p["id"]:p for p in result_properties}
             if expected_id not in current:
-                return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
-                    answer="Căn ở thứ tự đó không còn trong kết quả công khai phù hợp. Tôi không thay bằng một căn khác.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+                # Absence from this turn's recommendation set says nothing about whether the
+                # listing is still public: a follow-up question runs no search. Ask the public
+                # detail route, which is the only authority on publication state.
+                try:
+                    detail=self.backend.property_detail(expected_id.split(":",1)[-1])
+                except GroundingError as error:
+                    if "PROPERTY_NOT_PUBLIC" in str(error):
+                        return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                            answer="Căn ở thứ tự đó không còn được công khai. Tôi không thay bằng một căn khác và không dùng giá cũ.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+                    return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                        answer="Chưa tra cứu được tin ở thứ tự đó nên tôi chưa thể trả lời. Bạn thử lại sau ít phút.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+                except UpstreamError:
+                    return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
+                        answer="Chưa tra cứu được tin ở thứ tự đó nên tôi chưa thể trả lời. Bạn thử lại sau ít phút.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+                # Keep the position the user saw; never slide to a neighbouring card.
+                # The detail route already carries the public source record key. A listing
+                # fetched this way has no recommendation score, so the card omits it.
+                current[expected_id]={**detail,"score":0,"explanations":[],"warnings":[]}
+                result_properties=list(current.values())
             ordered=[current[i] for i in previous_ids if i in current]
             result_properties=ordered+[p for p in result_properties if p["id"] not in previous_ids]
             # Resolve by identity even if an earlier result disappeared.

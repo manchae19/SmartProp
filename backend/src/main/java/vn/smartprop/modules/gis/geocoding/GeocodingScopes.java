@@ -93,6 +93,14 @@ public final class GeocodingScopes {
             else if(!adminPart(part)&&street.isBlank())street=streetKey(part);
         }
         if(explicitDistricts.size()>1||explicitWards.size()>1)return empty("NO_MATCHING_LOCALITY");
+        // The user asked for the whole district: the ward named in the address must not
+        // narrow the search, and the selected district is the only boundary.
+        if(request.districtScopeOnly()){
+            if(selectedDistrict.isBlank())return empty("DISTRICT_REQUIRED");
+            var region=district(selectedDistrict);
+            if(region.isEmpty())return empty("SCOPE_UNAVAILABLE");
+            return new Scope(version+":"+region.get().id()+":district","READY",List.of(region.get()),street);
+        }
         // User-selected filters cannot be replaced or widened by free text.
         if(!selectedDistrict.isBlank()&&!explicitDistricts.isEmpty()&&!explicitDistricts.contains(selectedDistrict))return empty("NO_MATCHING_LOCALITY");
         if(!selectedWard.isBlank()&&!explicitWards.isEmpty()&&!explicitWards.contains(selectedWard))return empty("NO_MATCHING_LOCALITY");

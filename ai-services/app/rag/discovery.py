@@ -241,6 +241,7 @@ class AdvisorDiscoveryMixin:
         pool is bounded so one question cannot drain the routing budget.
         """
         ids = [str(property.get("id", "")).split(":", 1)[-1] for property in properties]
+        batch_failed = False
         provider = ""
         try:
             result = traced("commute_matrix", lambda: self.backend.commute_matrix(
@@ -264,7 +265,11 @@ class AdvisorDiscoveryMixin:
             limitations.append("Chưa xác minh được thời gian đi làm cho các tin này; "
                                "không suy ra từ khoảng cách đường chim bay.")
             cells = []
+            batch_failed = True
         by_id = {cell.get("propertyId"): cell for cell in cells if isinstance(cell, dict)}
+        # When the batch itself failed there are no cells at all. That is not "no route":
+        # nothing was measured, so every listing is unmeasured rather than unroutable.
+        batch_failed = batch_failed or not cells
         entries = []
         for property, listing_id in zip(properties, ids):
             cell = by_id.get(listing_id) or {}
@@ -276,9 +281,14 @@ class AdvisorDiscoveryMixin:
             if route:
                 property["commute"]={**route,"mode":destination.get("mode","drive"),"estimated":True}
             entries.append({"property": property, "route": route,
-                            "status": cell.get("status") or "NO_ROUTE"})
+                            "status": "NOT_MEASURED" if batch_failed
+                            else (cell.get("status") or "NO_ROUTE")})
         ordered = commute_ranking.rank(entries, limit_minutes, kind, SUGGESTION_LIMIT)
         measured = [row for row in entries if row["route"]]
+        # A listing the vendor could not route and one the batch never reached are
+        # different facts: the first has no route, the second was not measured at all.
+        no_route = [row for row in entries if row["status"] == "NO_ROUTE"]
+        not_measured = [row for row in entries if row["status"] == "NOT_MEASURED"]
         vendor = focused_property.VENDOR_LABELS.get(provider, "dịch vụ tính tuyến")
         if kind == "HARD" and not ordered:
             if measured:
@@ -289,9 +299,14 @@ class AdvisorDiscoveryMixin:
                     f"nhưng đều vượt mốc {limit_minutes} phút (nhanh nhất {fastest / 60:.0f} phút). "
                     f"Đây là phạm vi đã kiểm tra, không phải kết luận về toàn thị trường.")
             else:
+                detail = ""
+                if no_route:
+                    detail += f" {len(no_route)} tin chưa có tuyến."
+                if not_measured:
+                    detail += f" {len(not_measured)} tin chưa đo được thời gian đi làm trong lượt này."
                 limitations.append(
                     f"Trong {len(properties)} tin đã lọc theo ngân sách, chưa tính được tuyến cho tin nào "
-                    f"nên chưa xác minh được mốc {limit_minutes} phút. "
+                    f"nên chưa xác minh được mốc {limit_minutes} phút.{detail} "
                     f"Đây là phạm vi đã kiểm tra, không phải kết luận về toàn thị trường.")
         elif measured:
             # Describe the listings actually kept, not every route that was measured.
@@ -303,8 +318,10 @@ class AdvisorDiscoveryMixin:
             if len(kept) < len(measured):
                 scope += (f" {len(measured) - len(kept)} tin có tuyến nhưng vượt mốc "
                           f"{limit_minutes} phút nên bị loại.")
-            if len(measured) < len(properties):
-                scope += f" {len(properties) - len(measured)} tin chưa có tuyến nên không được xếp theo thời gian."
+            if no_route:
+                scope += f" {len(no_route)} tin chưa có tuyến nên không được xếp theo thời gian."
+            if not_measured:
+                scope += f" {len(not_measured)} tin chưa đo được thời gian đi làm trong lượt này."
             limitations.append(scope)
         return [row["property"] for row in ordered]
 

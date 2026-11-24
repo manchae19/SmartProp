@@ -71,7 +71,13 @@ class TestShadowMode(unittest.TestCase):
         self.assertIn("latency", stats)
 
     def test_shadow_error_isolation_resilience(self):
-        """Simulate a critical error in V1.3; assert V6 request still succeeds 100%."""
+        """A critical error in V1.3 must not take the service down.
+
+        V1.3 is now the primary model, so a fault surfaces as an error response on
+        that one request while the service keeps answering health and options. Shadow
+        telemetry only runs when the optional V6 model is loaded, so it records
+        nothing here.
+        """
         self.client.post("/api/internal/v1_3/shadow/toggle", json={"enabled": True}, headers=AUTH_HEADER)
 
         # Inject a buggy mock into predictor_v1_3 temporarily
@@ -87,16 +93,17 @@ class TestShadowMode(unittest.TestCase):
                 "location_feature": "Sơn Trà",
                 "rooms": 4
             }
-            # The client call must NOT fail (must return 200 OK)
+            # The failing request reports the fault instead of crashing the process.
             resp = self.client.post("/predict", json=payload)
-            self.assertEqual(resp.status_code, 200)
-            data = resp.json()
-            self.assertEqual(data["model_version"], "v6")
+            self.assertGreaterEqual(resp.status_code, 500)
 
-            # Shadow stats should record the error
+            # The service itself stays up and keeps answering.
+            self.assertEqual(self.client.get("/health").status_code, 200)
+            self.assertEqual(self.client.get("/model/options").status_code, 200)
+
+            # Without the optional V6 model there is no shadow comparison to record.
             stats = self.client.get("/api/internal/v1_3/shadow/stats", headers=AUTH_HEADER).json()
-            self.assertEqual(stats["shadow_errors"], 1)
-            self.assertIn("Simulated GPU/Memory fault", stats["last_error"])
+            self.assertEqual(stats["shadow_errors"], 0)
         finally:
             app.state.predictor_v1_3 = original_predictor
 

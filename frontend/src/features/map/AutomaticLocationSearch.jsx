@@ -77,7 +77,8 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
     if (!getCanSearch()) return;
     const current = ++_revisionRef.current;
     busy.set(true);
-    districtScope.set(districtOnly);
+    // The banner is only shown once the Backend confirms it searched the district.
+    districtScope.set(false);
     scopeUnavailable.set(false);
     error.set("");
     status.set("");
@@ -93,6 +94,8 @@ function useAutomaticLocationSearchState(inputProps, forwardedRef) {
       if (current !== _revisionRef.current) return;
       candidates.set(result.candidates);
       scopeUnavailable.set(result.status === "SCOPE_UNAVAILABLE");
+      // The Backend echoes the scope it actually used; trust that, not the request.
+      districtScope.set(districtOnly && result.scope === "DISTRICT");
       status.set(result.candidates.length ? "Chọn một kết quả trong khu vực đã chọn để xem ghim đề xuất; chưa lưu hoặc xác nhận vị trí." : (result.status === "SCOPE_UNAVAILABLE" ? "Chưa có ranh giới phường đủ điều kiện để tìm theo lựa chọn hiện tại. Bạn có thể chủ động tìm trong quận bên dưới hoặc đặt ghim thủ công." : "Không tìm thấy địa điểm phù hợp trong phạm vi đang tìm. Thử địa chỉ số nhà/tên đường hoặc đặt ghim thủ công nếu đây là tên thương mại của dự án."));
       if (result.candidates.length === 1) {
         preview(result.candidates[0]);
