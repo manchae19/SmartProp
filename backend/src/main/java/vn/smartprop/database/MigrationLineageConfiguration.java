@@ -108,6 +108,14 @@ public class MigrationLineageConfiguration {
                     throw new IllegalStateException("Local V"+version+" pending. Review and approve the dedicated completion script before enabling full Backend.");
             }
         }
+
+        // V27 (news) phụ thuộc V26 (coordinate provenance). Flyway chạy outOfOrder=false,
+        // nên V27 không bao giờ được áp dụng trước V26 trên đường triển khai thật. Một
+        // database có V27 mà thiếu V26 là dấu hiệu history bị sửa tay hoặc migration bị
+        // bỏ qua — từ chối thay vì chấp nhận. V26 đơn lẻ (PR #38 chưa merge) vẫn hợp lệ.
+        if(seen.contains("27")&&!seen.contains("26"))
+            throw new IllegalStateException(
+                "V27 requires V26; stop without repair.");
     }
 
     /** So sánh version dạng số; trả về âm nếu {@code a} nhỏ hơn {@code b}. */

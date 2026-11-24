@@ -97,11 +97,13 @@ class NewsBodyTimeoutIT {
 
         properties = new NewsProperties();
         properties.setAllowHttp(true);
-        properties.setAllowLoopbackForTests(true);
+
         properties.setReadTimeoutMs(1500);
         properties.setConnectTimeoutMs(1000);
         properties.setMaxFeedBytes(1024 * 1024);
-        fetcher = new NewsFeedFetcher(properties);
+        // Test-only transport: cho phép loopback để chạy HTTP fixture. Nằm trong
+        // src/test, không tồn tại trong artifact production.
+        fetcher = new TestNewsFeedFetcher(properties);
     }
 
     @AfterEach

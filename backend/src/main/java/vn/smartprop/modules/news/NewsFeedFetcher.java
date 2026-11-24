@@ -38,11 +38,12 @@ public class NewsFeedFetcher {
     }
 
     /**
-     * Cờ test-only. Chỉ true khi cấu hình bật rõ ràng — mặc định false, và không có
-     * profile production nào đặt giá trị này.
+     * Kiểm tra destination trước khi kết nối. Tách ra để test có thể override đúng
+     * một hành vi (loopback) mà không nới lỏng phần còn lại.
      */
-    boolean isLoopbackAllowedForTests() {
-        return properties.isAllowLoopbackForTests();
+    NewsUrlSafety.Result checkDestination(String url) {
+        return NewsUrlSafety.check(url, properties.isAllowHttp(), true,
+            properties.isEnforceHostAllowlist(), properties.getAllowedHosts());
     }
 
     /** Kết quả một lần fetch. */
@@ -83,14 +84,27 @@ public class NewsFeedFetcher {
      * @param lastModified Last-Modified lần trước, có thể null
      */
     public FetchResult fetch(String feedUrl, String etag, String lastModified) {
+        // Defense in depth: kể cả khi có ai gọi thẳng fetcher, release capability vẫn
+        // chặn. Không có outbound request nào được tạo trong V1.
+        if (!NewsReleaseCapability.liveIngestionPermitted()) {
+            return new FetchResult(0, null, null, null, feedUrl,
+                NewsReleaseCapability.LOCK_CODE, NewsReleaseCapability.LOCK_REASON);
+        }
+        return fetchUnlocked(feedUrl, etag, lastModified);
+    }
+
+    /**
+     * Thân fetch thật, không qua release gate.
+     *
+     * <p>Package-private để test transport gọi được. Production chỉ tới đây qua
+     * {@link #fetch}, nơi release gate đã chặn.
+     */
+    FetchResult fetchUnlocked(String feedUrl, String etag, String lastModified) {
         String currentUrl = feedUrl;
         int redirects = 0;
 
         while (true) {
-            NewsUrlSafety.Result safety = isLoopbackAllowedForTests()
-                ? NewsUrlSafety.checkAllowingLoopback(currentUrl, properties.isAllowHttp())
-                : NewsUrlSafety.check(currentUrl, properties.isAllowHttp(), true,
-                    properties.isEnforceHostAllowlist(), properties.getAllowedHosts());
+            NewsUrlSafety.Result safety = checkDestination(currentUrl);
             if (!safety.allowed()) {
                 return new FetchResult(0, null, null, null, currentUrl,
                     "URL_BLOCKED", safety.reason());

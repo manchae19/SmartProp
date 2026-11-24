@@ -160,31 +160,6 @@ public final class NewsUrlSafety {
     }
 
     /**
-     * CHỈ DÙNG CHO TEST: kiểm tra URL, cho phép loopback.
-     *
-     * <p>Tách khỏi {@link #check} để không có cờ nào trong production path có thể bật
-     * nhầm. Chỉ {@code NewsFeedFetcher} gọi khi {@code allowLoopbackForTests=true},
-     * và giá trị đó chỉ được đặt trong test.
-     */
-    static Result checkAllowingLoopback(String rawUrl, boolean allowHttp) {
-        Result base = check(rawUrl, allowHttp, false);
-        if (base.allowed()) return base;
-        // Chỉ nới đúng trường hợp loopback; private/link-local/metadata vẫn bị chặn.
-        if (base.reason() != null && base.reason().contains("Loopback")) {
-            try {
-                URI uri = new URI(rawUrl.strip());
-                String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase(Locale.ROOT);
-                if (host.equals("127.0.0.1") || host.equals("localhost") || host.equals("::1")) {
-                    return Result.ok();
-                }
-            } catch (URISyntaxException ignored) {
-                // rơi xuống deny
-            }
-        }
-        return base;
-    }
-
-    /**
      * Kiểm tra host có nằm trong allowlist không.
      *
      * <p>Khớp chính xác hostname hoặc subdomain của một mục trong allowlist. Không

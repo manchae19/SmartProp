@@ -137,9 +137,19 @@ class MigrationLineageStrictTest {
     // ---------- V26 / V27 ----------
 
     @Test
-    void v27WithoutV26IsAccepted() {
-        // PR #38 (V26) và PR #41 (V27) là nhánh độc lập. V27 đơn lẻ hợp lệ.
+    void v27WithoutV26IsRejected() {
+        // V27 (news) phụ thuộc V26 (coordinate provenance). Database có V27 mà thiếu
+        // V26 là dấu hiệu history bị sửa tay hoặc migration bị bỏ qua.
         var history = with(baseline(), "17", "18", "19", "20", "21", "22", "23", "24", "25", "27");
+        assertThrows(IllegalStateException.class, () ->
+            MigrationLineageConfiguration.checkHistory(history, true, true),
+            "V27 thiếu V26 phải bị từ chối");
+    }
+
+    @Test
+    void v26AloneIsAccepted() {
+        // PR #38 chưa merge: database dừng ở V26 vẫn hợp lệ.
+        var history = with(baseline(), "17", "18", "19", "20", "21", "22", "23", "24", "25", "26");
         assertDoesNotThrow(() ->
             MigrationLineageConfiguration.checkHistory(history, true, true));
     }

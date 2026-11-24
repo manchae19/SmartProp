@@ -71,6 +71,14 @@ public class NewsIngestionService {
      * nào bypass được.
      */
     public Outcome ingest(String sourceId) {
+        // Gate 0: release capability. Đây là hằng số biên dịch — không cấu hình nào
+        // mở được. V1 là read-only release vì DNS rebinding chưa xử lý đầy đủ.
+        if (!NewsReleaseCapability.liveIngestionPermitted()) {
+            log.info("news.ingest blocked source={} reason={}", sourceId,
+                NewsReleaseCapability.LOCK_CODE);
+            return new Outcome(null, NewsIngestionRun.Status.SKIPPED, 0, 0, 0, 0, 0,
+                NewsReleaseCapability.LOCK_CODE, NewsReleaseCapability.LOCK_REASON);
+        }
         // Gate 1: global ingestion policy. Mặc định tắt.
         if (!properties.isIngestionEnabled()) {
             log.info("news.ingest blocked source={} reason=INGESTION_DISABLED", sourceId);

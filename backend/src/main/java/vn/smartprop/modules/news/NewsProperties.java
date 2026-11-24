@@ -52,16 +52,6 @@ public class NewsProperties {
      */
     private boolean enforceHostAllowlist = true;
 
-    /**
-     * CHỈ DÙNG CHO TEST. Cho phép fetch loopback để kiểm thử fetcher với HTTP server
-     * cục bộ.
-     *
-     * <p>Không được đặt {@code true} ở production. {@code NewsFeedFetcher} chỉ đọc cờ
-     * này khi {@code app.news.enabled} cũng bật và profile không phải production;
-     * xem {@link NewsFeedFetcher#isLoopbackAllowedForTests()}.
-     */
-    private boolean allowLoopbackForTests = false;
-
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
@@ -102,8 +92,4 @@ public class NewsProperties {
         this.enforceHostAllowlist = enforceHostAllowlist;
     }
 
-    public boolean isAllowLoopbackForTests() { return allowLoopbackForTests; }
-    public void setAllowLoopbackForTests(boolean allowLoopbackForTests) {
-        this.allowLoopbackForTests = allowLoopbackForTests;
-    }
 }

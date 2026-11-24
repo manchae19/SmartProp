@@ -107,14 +107,14 @@ class NewsFeedFetcherIT {
 
         properties = new NewsProperties();
         properties.setAllowHttp(true);
-        // Test-only: cho phép loopback để dùng HTTP server cục bộ. Production không
-        // đặt cờ này; SSRF guard vẫn chặn loopback ở đường mặc định.
-        properties.setAllowLoopbackForTests(true);
+
         properties.setReadTimeoutMs(2000);
         properties.setConnectTimeoutMs(1000);
         properties.setMaxFeedBytes(1024 * 1024);
         properties.setMaxRedirects(2);
-        fetcher = new NewsFeedFetcher(properties);
+        // Test-only transport: cho phép loopback để chạy HTTP fixture. Nằm trong
+        // src/test, không tồn tại trong artifact production.
+        fetcher = new TestNewsFeedFetcher(properties);
     }
 
     @AfterEach
@@ -212,12 +212,30 @@ class NewsFeedFetcherIT {
 
     @Test
     void allowlistBlocksUnlistedHost() {
-        // Tắt cờ loopback để đi đúng đường production: guard đầy đủ + allowlist.
-        properties.setAllowLoopbackForTests(false);
+        // Dùng fetcher PRODUCTION (không phải test transport) để chứng minh allowlist
+        // thật sự chặn. Release gate trả LIVE_INGESTION_LOCKED trước, nên kiểm tra
+        // trực tiếp checkDestination — đó là lớp allowlist thật.
         properties.setEnforceHostAllowlist(true);
         properties.setAllowedHosts(java.util.List.of("vnexpress.net"));
-        var result = fetcher.fetch(baseUrl + "/feed", null, null);
+        var production = new NewsFeedFetcher(properties);
+
+        // Loopback bị chặn TRƯỚC allowlist — đúng thứ tự phòng thủ.
+        var loopback = production.checkDestination(baseUrl + "/feed");
+        assertFalse(loopback.allowed());
+        assertTrue(loopback.reason().contains("Loopback"), loopback.reason());
+
+        // Allowlist kiểm tra riêng bằng host công khai không nằm trong danh sách.
+        var publicHost = production.checkDestination("https://example.com/feed");
+        assertFalse(publicHost.allowed());
+        assertTrue(publicHost.reason().contains("allowlist"), publicHost.reason());
+    }
+
+    @Test
+    void productionFetcherIsLockedByReleaseCapability() {
+        // Production fetcher không bao giờ tạo outbound request trong V1.
+        var production = new NewsFeedFetcher(properties);
+        var result = production.fetch(baseUrl + "/feed", null, null);
         assertTrue(result.failed());
-        assertEquals("URL_BLOCKED", result.errorCode());
+        assertEquals("LIVE_INGESTION_LOCKED", result.errorCode());
     }
 }

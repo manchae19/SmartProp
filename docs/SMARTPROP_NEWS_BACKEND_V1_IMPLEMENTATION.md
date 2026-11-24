@@ -617,6 +617,64 @@ V27 trước V26 bị từ chối, V27 đơn lẻ hợp lệ.
 | Duplicate identity không nhận ra | `findBySourceIdAndExternalId` đọc trước khi flush | `articles.flush()` trước lookup |
 
 ---
+## 13d. Read-only release gate (V1 chốt)
+
+News Backend V1 phát hành ở chế độ **READ-ONLY**. Live network ingestion bị khóa
+bằng hằng số biên dịch, không phải cấu hình.
+
+### Hard lock
+
+`NewsReleaseCapability.LIVE_INGESTION_PERMITTED = false` — `static final`, không có
+property, biến môi trường, profile, admin request hay allowlist nào thay đổi được ở
+runtime. Mở lại yêu cầu sửa source + security review + build lại.
+
+Hai lớp chặn:
+1. `NewsIngestionService.ingest()` — trước claim lease, trước tạo run, trước DNS, trước HTTP.
+2. `NewsFeedFetcher.fetch()` — defense in depth nếu ai gọi thẳng fetcher.
+
+Trả `SKIPPED` + `LIVE_INGESTION_LOCKED`.
+
+### Loại bỏ test bypass khỏi production
+
+`NewsProperties.allowLoopbackForTests` đã **xóa hoàn toàn**. Test dùng
+`TestNewsFeedFetcher` trong `src/test` — subclass override `checkDestination` (chỉ nới
+loopback) và `fetch` (bỏ release gate). Không tồn tại trong artifact production.
+
+`NewsFeedFetcher.fetchUnlocked()` là package-private, chỉ test transport gọi được.
+
+### Migration lineage nghiêm ngặt
+
+Thêm kiểm tra: **V27 yêu cầu V26**. Database có V27 mà thiếu V26 bị từ chối — dấu hiệu
+history bị sửa tay hoặc migration bị bỏ qua. V26 đơn lẻ (PR #38 chưa merge) vẫn hợp lệ.
+
+### Frontend integration — đã kiểm thử thật
+
+`frontend/e2e/news-real-backend.e2e.mjs` — 30 check PASS với:
+- Spring Boot thật trên `127.0.0.1:18080`
+- MySQL cô lập `127.0.0.1:3307/smartprop` (V26 + V27)
+- React PR #37 trên `127.0.0.1:5173`
+- Fixture 40 bài tự tạo (5 sources: approved/enabled, no-summary, disabled, pending)
+
+Kiểm chứng: contract 14 field, sources là array, featured, category grouping
+(PLANNING+INFRASTRUCTURE = 13 bài), sorting newest/oldest, summary permission
+(null + search không khớp), hidden/disabled/pending không lộ, badge Đà Nẵng, responsive.
+
+### News V1.1 backlog
+
+| Task | V1 status | Điều kiện mở V1.1 |
+|---|---|---|
+| DNS rebinding | **INCOMPLETE** | Controlled resolver hoặc egress verification |
+| Live network ingestion | **HARD_LOCKED** | Security review + transport mới |
+| Worker pool | Chưa giới hạn đầy đủ | Bounded concurrency |
+| Lease expiration | Cần hoàn thiện | Fencing theo thời điểm thực tế |
+| markSuccess/markFailure | Cần hoàn thiện | Atomic conditional finalization |
+| Run recovery | Chưa chứng minh crash recovery | Recovery integration test |
+| Full ingestion concurrency | Chưa đầy đủ | Controlled transport + concurrent test |
+| Real sources | **BLOCKED** | Quyền sử dụng được xác minh |
+
+**Không mục nào ở trên là FIXED.** Chúng deferred vì mọi đường thực thi đã bị khóa.
+
+---
 ## 14. Quyết định thiết kế
 
 | Quyết định | Lý do |
