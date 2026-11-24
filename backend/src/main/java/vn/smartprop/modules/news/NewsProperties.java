@@ -43,8 +43,14 @@ public class NewsProperties {
      */
     private java.util.List<String> allowedHosts = new java.util.ArrayList<>();
 
-    /** Bật kiểm tra allowlist. Khi bật và danh sách rỗng, mọi fetch bị từ chối. */
-    private boolean enforceHostAllowlist = false;
+    /**
+     * Bắt buộc host allowlist. MẶC ĐỊNH BẬT — fail-closed.
+     *
+     * <p>Khi bật và danh sách rỗng, mọi fetch bị từ chối. Đây là lựa chọn an toàn:
+     * một cấu hình thiếu sót không thể âm thầm mở network ingestion tới host bất kỳ.
+     * Muốn fetch, phải khai báo host cụ thể trong {@code allowed-hosts}.
+     */
+    private boolean enforceHostAllowlist = true;
 
     /**
      * CHỈ DÙNG CHO TEST. Cho phép fetch loopback để kiểm thử fetcher với HTTP server

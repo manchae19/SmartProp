@@ -64,8 +64,29 @@ public class NewsIngestionService {
      *
      * <p>Không {@code @Transactional}: network fetch không được giữ transaction.
      * Mỗi bước ghi dùng transaction riêng.
+     *
+     * <p><b>Safety gate:</b> kiểm tra global policy TRƯỚC mọi thứ khác — trước claim
+     * lease, trước tạo run, trước DNS lookup, trước HTTP request. Mọi đường vào
+     * (scheduler, manual sync, gọi service trực tiếp) đều đi qua đây nên không đường
+     * nào bypass được.
      */
     public Outcome ingest(String sourceId) {
+        // Gate 1: global ingestion policy. Mặc định tắt.
+        if (!properties.isIngestionEnabled()) {
+            log.info("news.ingest blocked source={} reason=INGESTION_DISABLED", sourceId);
+            return new Outcome(null, NewsIngestionRun.Status.SKIPPED, 0, 0, 0, 0, 0,
+                "INGESTION_DISABLED",
+                "Thu thập tin tức đang bị tắt trên máy chủ này");
+        }
+        // Gate 2: network fetching policy. Khi bật ingestion nhưng chưa có allowlist
+        // được cấu hình, từ chối thay vì fetch tới host bất kỳ.
+        if (properties.isEnforceHostAllowlist() && properties.getAllowedHosts().isEmpty()) {
+            log.warn("news.ingest blocked source={} reason=ALLOWLIST_EMPTY", sourceId);
+            return new Outcome(null, NewsIngestionRun.Status.SKIPPED, 0, 0, 0, 0, 0,
+                "ALLOWLIST_EMPTY",
+                "Chưa cấu hình host allowlist; từ chối fetch");
+        }
+
         Instant now = Instant.now();
         String leaseToken = UUID.randomUUID().toString();
         Instant leaseUntil = now.plus(LEASE_DURATION);
@@ -105,8 +126,8 @@ public class NewsIngestionService {
                 // 304: nguồn liên hệ thành công, nội dung không đổi.
                 // Không tạo article, không đụng lastSeenAt của bài cũ.
                 Instant nextFetch = now.plusSeconds(source.fetchIntervalMinutes * 60L);
-                persistence.markSuccess(sourceId, leaseToken, fetched.etag(),
-                    fetched.lastModified(), nextFetch, now);
+                persistence.markSuccess(sourceId, leaseToken, expectedRevision,
+                    fetched.etag(), fetched.lastModified(), nextFetch, now);
                 return finishRun(runId, sourceId, leaseToken, startedAt, begin,
                     NewsIngestionRun.Status.NOT_MODIFIED, (short) 304, 0, 0, 0, 0, 0,
                     null, null);
@@ -132,8 +153,8 @@ public class NewsIngestionService {
             }
 
             Instant nextFetch = now.plusSeconds(source.fetchIntervalMinutes * 60L);
-            persistence.markSuccess(sourceId, leaseToken, fetched.etag(),
-                fetched.lastModified(), nextFetch, now);
+            persistence.markSuccess(sourceId, leaseToken, expectedRevision,
+                fetched.etag(), fetched.lastModified(), nextFetch, now);
 
             NewsIngestionRun.Status status = result.rejected() > 0
                 && result.inserted() == 0 && result.updated() == 0

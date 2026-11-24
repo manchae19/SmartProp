@@ -60,6 +60,17 @@ public class NewsFeedFetcher {
         public boolean rateLimited() { return status == 429; }
     }
 
+    /**
+     * Executor cho việc đọc body. Có giới hạn để một nguồn xấu không tạo thread vô hạn.
+     * Thread là daemon và bị hủy khi hết deadline.
+     */
+    private static final java.util.concurrent.ExecutorService BODY_READER =
+        java.util.concurrent.Executors.newCachedThreadPool(runnable -> {
+            Thread thread = new Thread(runnable, "news-body-reader");
+            thread.setDaemon(true);
+            return thread;
+        });
+
     /** Chỉ những status này mới được theo như redirect. */
     private static final java.util.Set<Integer> REDIRECT_STATUSES =
         java.util.Set.of(301, 302, 303, 307, 308);
@@ -183,26 +194,49 @@ public class NewsFeedFetcher {
     }
 
     /**
-     * Đọc tối đa {@code limit} byte, có deadline tổng.
+     * Đọc tối đa {@code limit} byte, có deadline tổng THẬT.
      *
      * <p>{@code HttpRequest.timeout} chỉ bao phủ tới khi nhận header. Một nguồn gửi
-     * body rất chậm có thể giữ worker vô thời hạn, nên đọc body cũng phải có hạn.
+     * header rồi im lặng khiến {@code in.read()} block vô thời hạn — kiểm tra
+     * {@code System.nanoTime()} giữa các lần read không bao giờ chạy tới.
+     *
+     * <p>Cách sửa: đọc trong một task riêng, chờ tối đa {@code readTimeoutMs}. Hết hạn
+     * thì {@code cancel(true)} + đóng stream, giải phóng worker và connection.
      *
      * @return body, hoặc {@code null} nếu vượt {@code limit} byte
      * @throws IOException khi hết deadline hoặc lỗi đọc
      */
     private byte[] readLimited(InputStream input, int limit) throws IOException {
-        long deadline = System.nanoTime()
-            + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(properties.getReadTimeoutMs());
+        java.util.concurrent.Future<byte[]> task =
+            BODY_READER.submit(() -> readAll(input, limit));
+        try {
+            return task.get(properties.getReadTimeoutMs(), java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (java.util.concurrent.TimeoutException e) {
+            task.cancel(true);
+            closeQuietly(input);
+            throw new IOException("Hết thời gian đọc body");
+        } catch (java.util.concurrent.ExecutionException e) {
+            closeQuietly(input);
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException io) throw io;
+            throw new IOException("Lỗi đọc body: " + safeMessage(
+                cause instanceof Exception ex ? ex : new IOException(String.valueOf(cause))));
+        } catch (InterruptedException e) {
+            task.cancel(true);
+            closeQuietly(input);
+            Thread.currentThread().interrupt();
+            throw new IOException("Bị ngắt khi đọc body");
+        }
+    }
+
+    /** Đọc toàn bộ stream tới {@code limit}. Chạy trong task riêng để hủy được. */
+    private static byte[] readAll(InputStream input, int limit) throws IOException {
         try (InputStream in = input) {
             ByteArrayOutputStream out = new ByteArrayOutputStream(Math.min(limit, 64 * 1024));
             byte[] buffer = new byte[8192];
             int total = 0;
             int read;
             while ((read = in.read(buffer)) != -1) {
-                if (System.nanoTime() > deadline) {
-                    throw new IOException("Hết thời gian đọc body");
-                }
                 total += read;
                 if (total > limit) return null;
                 out.write(buffer, 0, read);

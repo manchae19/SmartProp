@@ -32,7 +32,8 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
           and (:region is null or a.region = :region)
           and (:keyword is null
                or lower(a.title) like :keyword escape '\\'
-               or lower(a.summary) like :keyword escape '\\')
+               or (s.allowSummary = true
+                   and lower(a.summary) like :keyword escape '\\'))
         order by a.publishedAt desc nulls last, a.firstSeenAt desc, a.id desc
         """)
     Page<NewsArticle> findPublic(@Param("category") NewsSource.Category category,
@@ -59,7 +60,8 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
           and (:region is null or a.region = :region)
           and (:keyword is null
                or lower(a.title) like :keyword escape '\\'
-               or lower(a.summary) like :keyword escape '\\')
+               or (s.allowSummary = true
+                   and lower(a.summary) like :keyword escape '\\'))
         order by a.publishedAt asc nulls last, a.firstSeenAt asc, a.id asc
         """)
     Page<NewsArticle> findPublicOldest(@Param("category") NewsSource.Category category,
@@ -103,6 +105,32 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
     List<NewsArticle> findBySourceId(String sourceId);
 
     Page<NewsArticle> findAllByOrderByFirstSeenAtDesc(Pageable pageable);
+
+    /**
+     * Cập nhật metadata ingestion được phép sửa — targeted UPDATE.
+     *
+     * <p>Chỉ đụng {@code last_seen_at}, {@code fetched_at}, {@code updated_at}, và
+     * tuỳ chọn {@code published_at} (khi trước đó NULL) và {@code summary} (khi quyền
+     * cho phép). KHÔNG đụng {@code publication_status} hay {@code featured} — đó là
+     * quyết định của admin, và một entity save toàn phần sẽ ghi đè chúng bằng snapshot
+     * cũ.
+     *
+     * @return số dòng cập nhật
+     */
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true)
+    @org.springframework.transaction.annotation.Transactional
+    @Query("""
+        update NewsArticle a
+        set a.lastSeenAt = :now,
+            a.fetchedAt = :now,
+            a.updatedAt = :now,
+            a.publishedAt = coalesce(a.publishedAt, :publishedAt),
+            a.summary = coalesce(:summary, a.summary)
+        where a.id = :id
+        """)
+    int touchSeen(@Param("id") String id, @Param("now") Instant now,
+                  @Param("publishedAt") Instant publishedAt,
+                  @Param("summary") String summary);
 
     /** Đếm theo trạng thái hiển thị — aggregate, không load bảng. */
     long countByPublicationStatus(NewsArticle.PublicationStatus status);

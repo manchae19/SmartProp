@@ -63,7 +63,10 @@ public class NewsService {
         if (q != null && !q.isBlank()) {
             String trimmed = q.strip();
             if (trimmed.length() > 200) throw ApiInputs.bad("Từ khoá tối đa 200 ký tự");
-            keyword = "%" + escapeLike(NewsText.foldForMatch(trimmed)) + "%";
+            // KHÔNG fold keyword: title/summary trong DB giữ dấu tiếng Việt, nên
+            // LIKE với chuỗi bỏ dấu sẽ không khớp. MySQL collation utf8mb4_unicode_ci
+            // đã xử lý case-insensitive; chỉ cần escape wildcard.
+            keyword = "%" + escapeLike(trimmed.toLowerCase(java.util.Locale.ROOT)) + "%";
         }
 
         Pageable pageable = PageRequest.of(safePage, safeSize);
@@ -141,10 +144,13 @@ public class NewsService {
 
     private NewsDtos.Article toArticle(NewsArticle article) {
         NewsSource source = sources.findById(article.sourceId).orElse(null);
+        // Thực thi quyền summary ở tầng đọc: nếu nguồn không cho phép, không trả
+        // summary kể cả khi đã lưu từ trước. Không xoá dữ liệu, chỉ không công bố.
+        String summary = source != null && source.allowSummary ? article.summary : null;
         return new NewsDtos.Article(
             article.id,
             article.title,
-            article.summary,
+            summary,
             NewsClassifier.categoryLabel(article.category),
             NewsClassifier.regionLabel(article.region),
             article.canonicalUrl,

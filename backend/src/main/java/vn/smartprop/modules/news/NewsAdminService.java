@@ -111,11 +111,22 @@ public class NewsAdminService {
             source.fetchIntervalMinutes = input.fetchIntervalMinutes().shortValue();
         }
 
-        if (identityChanged && source.rightsReviewStatus == NewsSource.RightsStatus.APPROVED) {
+        if (identityChanged) {
+            // Đổi định danh làm approval cũ không còn áp dụng. Đưa về PENDING và
+            // từ chối mọi nỗ lực approve/enable trong CÙNG request — approval mới
+            // phải là hành động riêng, có căn cứ cho nguồn mới.
             source.rightsReviewStatus = NewsSource.RightsStatus.PENDING_REVIEW;
             source.rightsCheckedAt = null;
             source.enabled = false;
             source.nextFetchAt = null;
+            if (input.rightsReviewStatus() == NewsSource.RightsStatus.APPROVED) {
+                throw ApiInputs.bad(
+                    "Đổi feed URL hoặc publisher cần duyệt lại quyền ở request riêng");
+            }
+            if (Boolean.TRUE.equals(input.enabled())) {
+                throw ApiInputs.bad(
+                    "Đổi feed URL hoặc publisher cần duyệt lại quyền trước khi bật");
+            }
         }
 
         if (input.rightsReviewStatus() != null

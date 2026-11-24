@@ -100,7 +100,14 @@ public class MigrationLineageConfiguration {
                     "Missing required Local migration V"+version+"; stop without repair.");
         }
 
-        if(complete&&history.size()<4)throw new IllegalStateException("Local V17/V18 pending. Review and approve the dedicated completion script before enabling full Backend.");
+        // require-complete: kiểm tra V17/V18 TRỰC TIẾP, không dùng history.size() —
+        // bốn dòng history có thể là 13,14,19,20 và vẫn thiếu V17/V18.
+        if(complete){
+            for(String version:List.of("17","18")){
+                if(!seen.contains(version))
+                    throw new IllegalStateException("Local V"+version+" pending. Review and approve the dedicated completion script before enabling full Backend.");
+            }
+        }
     }
 
     /** So sánh version dạng số; trả về âm nếu {@code a} nhỏ hơn {@code b}. */

@@ -8,12 +8,16 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Ghi kết quả ingestion trong transaction riêng.
+ * Ghi kết quả ingestion trong transaction riêng, có fencing.
  *
  * <p>Tách khỏi {@link NewsIngestionService} để lời gọi đi qua Spring AOP proxy —
  * {@code @Transactional} trên method gọi nội bộ trong cùng bean không có hiệu lực.
  *
- * <p>Transaction ở đây chỉ bao quanh phần ghi DB, không bao gồm network fetch.
+ * <p><b>Fencing:</b> mỗi lần ghi đều khoá dòng nguồn bằng {@code SELECT ... FOR UPDATE}
+ * rồi kiểm tra lease token, lease expiry, {@code sourceRevision} và eligibility trên
+ * trạng thái mới nhất. Đây là linearization point: hoặc job ghi xong trước khi admin
+ * thu hồi quyền, hoặc admin thu hồi trước và job thấy trạng thái mới rồi bỏ kết quả.
+ * Không có cửa sổ nào để job cũ ghi đè quyết định của admin.
  */
 @Service
 public class NewsIngestionPersistenceService {
@@ -33,29 +37,26 @@ public class NewsIngestionPersistenceService {
     /**
      * Ghi các item đã parse vào DB.
      *
-     * <p>Trước khi ghi, kiểm tra lại nguồn: lease còn giữ, quyền chưa bị thu hồi,
-     * nguồn chưa bị tắt, {@code sourceRevision} chưa đổi. Nếu bất kỳ điều kiện nào
-     * sai, không ghi gì và trả cờ tương ứng — không ghi đè quyết định của admin.
-     *
-     * @param leaseToken token job đang giữ
+     * @param leaseToken       token job đang giữ
      * @param expectedRevision revision nguồn tại lúc claim lease
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Persisted persist(String sourceId, String leaseToken, int expectedRevision,
                              NewsFeedParser.Result parsed, Instant now) {
-        NewsSource source = sources.findById(sourceId).orElse(null);
+        // Fencing point: khoá dòng nguồn. Mọi kiểm tra dưới đây đọc trạng thái mới nhất.
+        NewsSource source = sources.lockById(sourceId).orElse(null);
         if (source == null) {
             return new Persisted(0, 0, 0, 0, true, false);
         }
-        // Lease đã mất (job khác claim, hoặc admin can thiệp) → không ghi.
         if (!leaseToken.equals(source.syncLeaseToken)) {
             return new Persisted(0, 0, 0, 0, true, false);
         }
-        // Admin đã sửa nguồn trong lúc fetch → bỏ kết quả.
+        if (source.syncLeaseUntil == null || !source.syncLeaseUntil.isAfter(now)) {
+            return new Persisted(0, 0, 0, 0, true, false);
+        }
         if (source.sourceRevision != expectedRevision) {
             return new Persisted(0, 0, 0, 0, false, true);
         }
-        // Quyền bị thu hồi hoặc nguồn bị tắt trong lúc fetch → không ghi.
         if (!source.ingestible()) {
             return new Persisted(0, 0, 0, 0, false, true);
         }
@@ -72,36 +73,47 @@ public class NewsIngestionPersistenceService {
             // Chỉ lưu summary khi nguồn cho phép.
             String summary = source.allowSummary ? NewsText.clean(item.summary(), 2000) : null;
             String hash = NewsText.sha256(canonical);
+            String externalId = truncate(item.externalId(), 500);
 
             NewsClassifier.Classification classification = NewsClassifier.classify(
                 title, summary, source.defaultCategory, source.defaultRegion);
             if (!classification.relevant()) { rejected++; continue; }
 
-            Optional<NewsArticle> existing =
+            // Flush trước khi lookup để thấy bản ghi vừa chèn trong cùng transaction.
+            articles.flush();
+
+            // Kiểm tra cả hai identity: canonical URL và external GUID.
+            Optional<NewsArticle> byUrl =
                 articles.findBySourceIdAndCanonicalUrlHash(source.id, hash);
+            Optional<NewsArticle> byGuid = externalId == null
+                ? Optional.empty()
+                : articles.findBySourceIdAndExternalId(source.id, externalId);
+
+            if (byUrl.isPresent() && byGuid.isPresent()
+                    && !byUrl.get().id.equals(byGuid.get().id)) {
+                // URL trỏ bài A, GUID trỏ bài B — hai identity xung đột. Không tự hợp
+                // nhất vì có thể là hai bài khác nhau. Bỏ item, ghi nhận rejected.
+                rejected++;
+                continue;
+            }
+
+            Optional<NewsArticle> existing = byUrl.isPresent() ? byUrl : byGuid;
 
             if (existing.isPresent()) {
                 NewsArticle article = existing.get();
-                // Chỉ cập nhật metadata ingestion được phép sửa.
-                // KHÔNG đụng publicationStatus / featured — đó là quyết định của admin.
-                article.lastSeenAt = now;
-                article.fetchedAt = now;
-                if (article.publishedAt == null && item.publishedAt() != null) {
-                    article.publishedAt = item.publishedAt();
-                }
-                if (summary != null && !summary.equals(article.summary)) {
-                    article.summary = summary;
-                }
-                article.updatedAt = now;
-                articles.save(article);
-                updated++;
+                // Targeted update: chỉ những cột ingestion được phép sửa.
+                // publicationStatus và featured là quyết định của admin — không đụng.
+                int rows = articles.touchSeen(article.id, now,
+                    article.publishedAt == null ? item.publishedAt() : null,
+                    summary != null && !summary.equals(article.summary) ? summary : null);
+                if (rows == 1) updated++;
                 continue;
             }
 
             NewsArticle article = new NewsArticle();
             article.id = UUID.randomUUID().toString();
             article.sourceId = source.id;
-            article.externalId = truncate(item.externalId(), 500);
+            article.externalId = externalId;
             article.canonicalUrl = truncate(canonical, 1000);
             article.canonicalUrlHash = hash;
             article.title = title;
@@ -137,14 +149,20 @@ public class NewsIngestionPersistenceService {
     /**
      * Cập nhật metadata nguồn sau khi ghi bài thành công.
      *
-     * <p>Chỉ job đang giữ lease mới cập nhật được — job cũ không ghi đè trạng thái
-     * của job mới.
+     * <p>Khoá dòng + kiểm tra lease/revision trước khi ghi. Chỉ job đang giữ lease mới
+     * cập nhật được — job cũ không ghi đè trạng thái của job mới, và không ghi đè
+     * publisher/feedUrl/rights mà admin vừa sửa.
+     *
+     * @return true nếu ghi thành công
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean markSuccess(String sourceId, String leaseToken, String etag,
-                               String lastModified, Instant nextFetchAt, Instant now) {
-        NewsSource source = sources.findById(sourceId).orElse(null);
-        if (source == null || !leaseToken.equals(source.syncLeaseToken)) return false;
+    public boolean markSuccess(String sourceId, String leaseToken, int expectedRevision,
+                               String etag, String lastModified, Instant nextFetchAt,
+                               Instant now) {
+        NewsSource source = sources.lockById(sourceId).orElse(null);
+        if (source == null) return false;
+        if (!leaseToken.equals(source.syncLeaseToken)) return false;
+        if (source.sourceRevision != expectedRevision) return false;
 
         source.httpEtag = truncate(etag, 200);
         source.httpLastModified = truncate(lastModified, 100);
@@ -160,13 +178,14 @@ public class NewsIngestionPersistenceService {
     /**
      * Ghi trạng thái thất bại và tính backoff.
      *
-     * <p>Không ghi đè nếu job đã mất lease.
+     * <p>Khoá dòng + kiểm tra lease trước khi ghi.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean markFailure(String sourceId, String leaseToken, String errorCode,
                                String errorMessage, Instant nextFetchAt, Instant now) {
-        NewsSource source = sources.findById(sourceId).orElse(null);
-        if (source == null || !leaseToken.equals(source.syncLeaseToken)) return false;
+        NewsSource source = sources.lockById(sourceId).orElse(null);
+        if (source == null) return false;
+        if (!leaseToken.equals(source.syncLeaseToken)) return false;
 
         source.lastError = truncate(errorCode + ": "
             + (errorMessage == null ? "" : errorMessage), 500);

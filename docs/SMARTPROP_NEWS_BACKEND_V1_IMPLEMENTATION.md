@@ -522,6 +522,101 @@ lịch sử thiếu migration trung gian.
 `property_coordinate_audit` và 3 bảng news cùng tồn tại, không xung đột.
 
 ---
+## 13c. Safety gate sau review lần hai
+
+Bảy vấn đề còn tồn tại đã được sửa.
+
+### 1. Global ingestion safety gate
+
+**Nguyên nhân:** `NewsAdminService.sync()` gọi `ingestion.ingest(id)` trực tiếp; `ingest()`
+không kiểm tra `ingestionEnabled`. Manual sync bypass được global policy.
+
+**Sửa:** gate đặt ở **đầu `ingest()`** — trước claim lease, trước tạo run, trước DNS,
+trước HTTP. Mọi đường vào (scheduler, manual sync, gọi service trực tiếp) đều đi qua.
+
+```java
+if (!properties.isIngestionEnabled()) return SKIPPED("INGESTION_DISABLED");
+if (properties.isEnforceHostAllowlist() && properties.getAllowedHosts().isEmpty())
+    return SKIPPED("ALLOWLIST_EMPTY");
+```
+
+**Test:** `NewsSafetyGateIT` 9/9 — không lease, không run, không article, không
+`lastAttemptAt`, public read vẫn hoạt động.
+
+### 2. SSRF fail-closed
+
+**Sửa:** `enforceHostAllowlist` mặc định **`true`**. Allowlist rỗng → từ chối mọi fetch.
+Không thể vô tình mở network ingestion tới host bất kỳ bằng cấu hình thiếu sót.
+
+**Trạng thái:** `SSRF_FULL_PROTECTION: PARTIAL` — DNS rebinding vẫn có thể xảy ra
+(kiểm tra DNS và kết nối là hai thời điểm). Giảm thiểu: allowlist bắt buộc + chỉ fetch
+URL đã lưu trong `news_sources` + không endpoint nhận URL tùy ý.
+
+### 3. HTTP body timeout thật
+
+**Nguyên nhân:** kiểm tra `System.nanoTime()` giữa các lần `read()` không bao giờ chạy
+tới khi `read()` block — nguồn gửi header rồi im lặng giữ worker vô thời hạn.
+
+**Sửa:** đọc body trong task riêng, `Future.get(readTimeoutMs)`. Hết hạn →
+`cancel(true)` + đóng stream, giải phóng worker và connection.
+
+**Test:** `NewsBodyTimeoutIT` 5/5 — body im lặng, body một phần, slow drip đều bị cắt
+trong <10s; fetcher vẫn dùng được sau timeout; không rò rỉ thread.
+
+### 4. Transaction fencing
+
+**Nguyên nhân:** `findById` không lock; kiểm tra lease/revision trên snapshot có thể
+đã cũ.
+
+**Sửa:** `lockById` với `PESSIMISTIC_WRITE` (`SELECT ... FOR UPDATE`) trong
+`persist`/`markSuccess`/`markFailure`. Sau khi lock, mọi kiểm tra đọc trạng thái mới
+nhất. Đây là linearization point.
+
+Kiểm tra đầy đủ: lease token, lease expiry, `sourceRevision`, `ingestible()`.
+
+**Test:** `NewsFencingIT` 16/16 — stale worker không persist/markSuccess/markFailure,
+lease hết hạn bị chặn, quyền thu hồi bị chặn.
+
+### 5. Admin decision integrity
+
+**Nguyên nhân:** `articles.save(article)` ghi toàn entity — có thể ghi đè
+`publicationStatus`/`featured` bằng snapshot cũ.
+
+**Sửa:** targeted JPQL update `touchSeen` chỉ sửa `last_seen_at`, `fetched_at`,
+`updated_at`, và tuỳ chọn `published_at`/`summary`. Không đụng cột admin.
+
+**Test:** `ingestionDoesNotOverwriteAdminHidden`, `ingestionDoesNotOverwriteAdminFeatured`,
+`ingestionDoesNotOverwriteSourceRights`.
+
+### 6. Source rights lifecycle
+
+**Sửa:** đổi `feedUrl` hoặc `publisher` → `PENDING_REVIEW` + `disabled` +
+`rightsCheckedAt=null` + `nextFetchAt=null`. **Từ chối** APPROVED hoặc `enabled=true`
+trong cùng request — approval mới phải là hành động riêng.
+
+**Summary permission thực thi ở tầng đọc:** `toArticle` trả `null` khi
+`allowSummary=false`, kể cả khi đã lưu. Search loại summary bị cấm khỏi điều kiện LIKE.
+
+**Test:** `NewsSourceRightsIT` 14/14.
+
+### 7. Migration lineage nghiêm ngặt
+
+**Nguyên nhân:** `require-complete` dùng `history.size() < 4` — bốn dòng có thể là
+13,14,19,20 và vẫn thiếu V17/V18.
+
+**Sửa:** kiểm tra **trực tiếp** `seen.contains("17")` và `seen.contains("18")`.
+
+**Test:** `MigrationLineageStrictTest` 17/17 — bao gồm ca "bốn dòng nhưng thiếu V17/V18",
+V27 trước V26 bị từ chối, V27 đơn lẻ hợp lệ.
+
+### Lỗi thật phát hiện thêm trong quá trình test
+
+| Lỗi | Nguyên nhân | Sửa |
+|---|---|---|
+| Search không khớp tiếng Việt có dấu | keyword bị `foldForMatch` (bỏ dấu) nhưng title trong DB giữ dấu | Dùng keyword gốc, chỉ escape wildcard |
+| Duplicate identity không nhận ra | `findBySourceIdAndExternalId` đọc trước khi flush | `articles.flush()` trước lookup |
+
+---
 ## 14. Quyết định thiết kế
 
 | Quyết định | Lý do |

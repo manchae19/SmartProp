@@ -91,6 +91,18 @@ public interface NewsSourceRepository extends JpaRepository<NewsSource, String> 
         """, nativeQuery = true)
     int releaseLease(@Param("id") String id, @Param("token") String token);
 
+    /**
+     * Khoá dòng nguồn trong transaction hiện tại — fencing point của ingestion.
+     *
+     * <p>Sau khi lấy lock, mọi kiểm tra lease/revision/eligibility đều đọc trạng thái
+     * mới nhất, và không transaction nào khác sửa được dòng này cho tới khi commit.
+     * Đây là linearization point: hoặc job ghi xong trước khi admin thu hồi quyền,
+     * hoặc admin thu hồi trước và job thấy trạng thái mới rồi bỏ kết quả.
+     */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select s from NewsSource s where s.id = :id")
+    Optional<NewsSource> lockById(@Param("id") String id);
+
     Page<NewsSource> findAllByOrderByNameAsc(Pageable pageable);
 
     /** Đếm theo trạng thái quyền — dùng cho stats, không load toàn bảng. */
