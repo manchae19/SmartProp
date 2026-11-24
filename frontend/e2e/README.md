@@ -71,3 +71,22 @@ address/pin hydration without losing coordinates.
 - The private-mode test toggles the chat profile mode off/on and inspects request headers: off must have no `Authorization`, on must have Bearer.
 - Chat is public by default; profile/personalization requires an authenticated staging user with consent enabled.
 - Tests are sequential because the RAG service is single-runtime (keep-alive 0).
+## News UI and page smoke (no backend required)
+
+`news-ui.e2e.mjs` and `pages-smoke.e2e.mjs` run against the Vite dev server only.
+They intercept `/api/v1/**` in the browser, so no Spring Boot, no database and no
+account are needed. Nothing is written anywhere.
+
+```powershell
+cd F:\SmartProp\.worktrees\news-ui-refresh\frontend
+$env:PLAYWRIGHT_PATH="F:\SmartProp\frontend\vue.ui\node_modules\playwright"
+$env:PLAYWRIGHT_CHROMIUM="<path to chrome.exe>"   # only if the bundled build is missing
+node e2e\news-ui.e2e.mjs
+node e2e\pages-smoke.e2e.mjs
+```
+
+`news-ui.e2e.mjs` proves the News page degrades gracefully when the News backend is
+absent: it shows an unavailable-source message and a retry button, renders no article
+cards, and raises no page error. `pages-smoke.e2e.mjs` loads Home, Listings, Market,
+Market Analytics, News, Projects, Map and Valuation with every API call failing, then
+checks horizontal overflow at mobile, tablet and desktop widths.
