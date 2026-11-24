@@ -52,16 +52,47 @@ SmartProp có **hai lineage song song**. Không trộn lẫn.
 
 ### 2.1. Standard lineage — `database/migrations/`
 
-Dùng cho database dựng mới từ đầu. Chạy V1 → V13 tuần tự.
+Dùng cho database dựng mới từ đầu. Chạy V1 → V23 tuần tự.
 
 ```
-V1__accounts_and_sessions.sql
-V2__extend_accounts_and_roles.sql
-...
-V13__broker_applications.sql
+database/migrations/
+  V1__accounts_and_sessions.sql
+  V2__extend_accounts_and_roles.sql
+  ...
+  V13__broker_applications.sql
+  V14__valuation_history.sql
+  V15__profile_avatar_and_google_identity.sql
+  V16__immutable_property_listing_codes.sql
+  V17__cloudinary_property_images.sql
+  V18__external_listing_support.sql
+  V19__account_advisor_preferences.sql
+  V21__property_image_scan.sql
+  V22__property_image_analysis.sql
+  V23__advisor_chat_checkpoints.sql
+
+database/research-migrations/poi/
+  V20__poi_taxonomy_enrichment.sql
 ```
 
 Profile: `standard-migrations`
+
+**Cấu hình thực tế trong `backend/pom.xml`:**
+
+```xml
+<id>standard-migrations</id>
+<locations>
+  <location>filesystem:${project.basedir}/../database/migrations</location>
+  <location>filesystem:${project.basedir}/../database/research-migrations/poi</location>
+</locations>
+<target>23</target>
+```
+
+**Target = V23**, không phải V13. Đây là điểm dễ nhầm: V13 chỉ là baseline của
+legacy lineage, còn standard lineage chạy tới V23.
+
+**V20 nằm ở `research-migrations/poi/`**, không nằm trong `migrations/`. Profile
+`standard-migrations` khai báo cả hai location nên V20 được nhận đúng thứ tự giữa
+V19 và V21.
 
 ### 2.2. Legacy-hybrid-local lineage — `database/legacy-hybrid-local/`
 
@@ -81,8 +112,19 @@ V25__flood_planned_risk_catalog.sql
 
 Profile: `hybrid-local-existing-v13` (3306) và `hybrid-local-existing-v13-staging` (3307)
 
-**Trạng thái trên `main` (2026-11-24):** V14, V17, V18, V21, V22, V23, V24, V25.
-`pom.xml` đặt `<target>25</target>` cho profile này.
+**Cấu hình thực tế trong `backend/pom.xml`:**
+
+```xml
+<id>hybrid-local-existing-v13</id>
+<locations>
+  <location>filesystem:${project.basedir}/../database/legacy-hybrid-local</location>
+  <location>filesystem:${project.basedir}/../database/research-migrations</location>
+</locations>
+<target>25</target>
+```
+
+**Target = V25.** Trạng thái trên `main` (2026-11-24): V14, V17, V18, V21, V22, V23,
+V24, V25 — cộng V19/V20 từ `research-migrations/`.
 
 **Chưa có trên `main`:**
 
@@ -93,6 +135,25 @@ Profile: `hybrid-local-existing-v13` (3306) và `hybrid-local-existing-v13-stagi
 
 Nếu bạn thấy V26/V27 trong worktree của mình, đó là do bạn đang ở branch của PR tương
 ứng — không phải `main`. Đừng giả định `main` có chúng.
+
+### 2.5. Quan hệ V26 → V27
+
+V26 và V27 là **hai migration của hai PR độc lập**, nhưng bản tích hợp yêu cầu thứ tự:
+
+```
+V25 → V26 (PR #38) → V27 (PR #41)
+```
+
+**Chính sách:**
+
+- Flyway chạy `outOfOrder=false`, nên V27 không thể áp dụng trước V26 trên đường triển
+  khai thật.
+- `MigrationLineageConfiguration` (PR #41) **từ chối** database có V27 mà thiếu V26 —
+  dấu hiệu history bị sửa tay hoặc migration bị bỏ qua.
+- V26 đơn lẻ (PR #38 chưa merge) vẫn hợp lệ.
+- PR #41 **không** nới guard để chạy độc lập; nó ghi rõ dependency vào PR #38.
+
+Đây là lý do thứ tự merge phải là **#38 trước, #41 sau**.
 
 ### 2.3. Research migrations — `database/research-migrations/`
 
@@ -250,83 +311,277 @@ Get-FileHash .\handoff\smartprop_v21_schema.sql -Algorithm SHA256
 ### 6.1. Yêu cầu
 
 - MySQL **8.0+** (đã kiểm chứng trên 8.4.13)
-- Datadir **riêng**, không dùng datadir của 3306
+- Datadir **riêng**, tuyệt đối không dùng datadir của 3306
 - Port **3307**
+- Bind **127.0.0.1** (không lộ ra mạng)
 
-### 6.2. Khởi tạo datadir
+### 6.2. Khai báo biến đường dẫn
 
-Chỉ chạy lần đầu:
+Không hardcode ổ đĩa. Chọn thư mục trên máy bạn:
 
 ```powershell
-$MYSQLD  = "F:\SmartProp\.scratch\devtools\mysql-8.4.13-winx64\bin\mysqld.exe"
-$DATADIR = "F:\SmartProp\.scratch\mysql-isolated\data"
+# Đổi theo máy bạn — không bắt buộc ổ F
+$MYSQL_HOME = "C:\tools\mysql-8.4.13-winx64"
+$STAGING    = "C:\smartprop-staging"
 
-& $MYSQLD --initialize-insecure --datadir=$DATADIR
+$MYSQLD  = Join-Path $MYSQL_HOME "bin\mysqld.exe"
+$MYSQL   = Join-Path $MYSQL_HOME "bin\mysql.exe"
+$DATADIR = Join-Path $STAGING "data"
+$LOGDIR  = Join-Path $STAGING "logs"
+
+New-Item -ItemType Directory -Path $STAGING, $LOGDIR -Force | Out-Null
+```
+
+### 6.3. Kiểm tra trước khi khởi tạo
+
+**Bắt buộc chạy trước mọi thao tác ghi.**
+
+```powershell
+# 1. Port 3307 phải trống
+$busy = Get-NetTCPConnection -LocalPort 3307 -State Listen -ErrorAction SilentlyContinue
+if ($busy) { throw "Port 3307 đang bị chiếm bởi PID $($busy.OwningProcess). Dừng lại." }
+
+# 2. Datadir phải trống hoặc chưa tồn tại
+if (Test-Path $DATADIR) {
+    $existing = Get-ChildItem $DATADIR -ErrorAction SilentlyContinue
+    if ($existing) { throw "Datadir $DATADIR đã có dữ liệu. Không ghi đè." }
+}
+
+# 3. Datadir không được trùng datadir 3306
+$localDatadir = "C:\path\to\3306\data"   # đổi theo máy bạn
+if ($DATADIR -eq $localDatadir) { throw "Datadir trùng database nhóm. Dừng lại." }
+
+# 4. Đường dẫn phải tuyệt đối
+if (-not [IO.Path]::IsPathRooted($DATADIR)) { throw "Datadir phải là đường dẫn tuyệt đối." }
+
+Write-Output "OK: port 3307 trống, datadir $DATADIR sẵn sàng"
+```
+
+### 6.4. Khởi tạo datadir
+
+```powershell
+& $MYSQLD --no-defaults --initialize-insecure --datadir=$DATADIR
 ```
 
 > **`--initialize-insecure` chỉ là bước tạm thời.** Nó tạo user `root` **không có mật
-> khẩu**. Chỉ chấp nhận được vì instance này:
-> - Bind `127.0.0.1` (không lộ ra mạng)
-> - Port 3307 (không phải database nhóm)
-> - Datadir riêng, xoá được
+> khẩu**. Chỉ chấp nhận được vì instance này bind loopback, port 3307, datadir riêng.
 >
-> **Phải đặt mật khẩu root ngay sau lần khởi động đầu tiên**, trước khi dùng cho bất cứ
-> việc gì khác:
+> **Phải đặt mật khẩu root ngay sau khi xác minh instance mới** (mục 6.6), trước khi
+> dùng cho bất cứ việc gì khác.
 >
-> ```powershell
-> & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
-> ALTER USER 'root'@'localhost' IDENTIFIED BY '<mật-khẩu-riêng>';
-> FLUSH PRIVILEGES;
-> "@
-> ```
->
-> Sau đó mọi lệnh phải dùng `-p` hoặc `MYSQL_PWD`. **Không** dùng `--initialize-insecure`
-> cho bất kỳ instance nào bind ra ngoài loopback hoặc dùng datadir của database nhóm.
+> **Không** dùng `--initialize-insecure` cho instance bind ra ngoài loopback hoặc dùng
+> datadir của database nhóm.
 
-### 6.3. Khởi động
+### 6.5. Khởi động và chờ readiness
+
+Không dùng `Start-Sleep` cố định — chờ thực sự:
 
 ```powershell
-Start-Process -FilePath $MYSQLD `
-  -ArgumentList @("--datadir=$DATADIR", "--port=3307",
+$proc = Start-Process -FilePath $MYSQLD `
+  -ArgumentList @("--no-defaults", "--datadir=$DATADIR", "--port=3307",
                   "--bind-address=127.0.0.1", "--console") `
-  -RedirectStandardOutput "F:\SmartProp\.scratch\mysql-3307.log" `
-  -RedirectStandardError  "F:\SmartProp\.scratch\mysql-3307.err.log" `
-  -WindowStyle Hidden
+  -RedirectStandardOutput (Join-Path $LOGDIR "mysqld.out.log") `
+  -RedirectStandardError  (Join-Path $LOGDIR "mysqld.err.log") `
+  -WindowStyle Hidden -PassThru
 
-Start-Sleep -Seconds 25
+# Chờ tối đa 60s cho tới khi port mở
+$ready = $false
+for ($i = 0; $i -lt 60; $i++) {
+    Start-Sleep -Seconds 1
+    if (Get-NetTCPConnection -LocalPort 3307 -State Listen -ErrorAction SilentlyContinue) {
+        $ready = $true; break
+    }
+    if ($proc.HasExited) { break }
+}
+
+if (-not $ready) {
+    Write-Output "--- mysqld.err.log ---"
+    Get-Content (Join-Path $LOGDIR "mysqld.err.log") -Tail 30 -ErrorAction SilentlyContinue
+    throw "MySQL không khởi động được trên 3307. Đọc log trên."
+}
+
+Write-Output "MySQL 3307 đã sẵn sàng (PID $($proc.Id))"
 ```
 
-### 6.4. Tạo database và user
+### 6.6. Xác minh identity và đặt mật khẩu root
+
+**Đây là bước kiểm tra identity đầu tiên — trước mọi thao tác ghi.**
 
 ```powershell
-$MYSQL = "F:\SmartProp\.scratch\devtools\mysql-8.4.13-winx64\bin\mysql.exe"
+# Xác minh instance mới đúng là cái mình vừa tạo
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
+SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid, @@hostname AS host;
+"@
+```
+
+**Kiểm tra thủ công từng dòng:**
+
+| Trường | Kỳ vọng |
+|---|---|
+| `port` | `3307` |
+| `datadir` | đúng `$DATADIR` bạn vừa tạo |
+| `uuid` | **mới**, khác UUID của 3306 |
+| `host` | máy bạn |
+
+**Nếu bất kỳ trường nào sai → dừng, không đặt mật khẩu, không tạo schema.**
+
+Chỉ khi identity đúng:
+
+```powershell
+# Đặt mật khẩu root — nhập trực tiếp, không lưu vào file
+$ROOT_PW = Read-Host "Mật khẩu root cho staging 3307" -AsSecureString
+$ROOT_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ROOT_PW))
+
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
+ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_PW_PLAIN';
+FLUSH PRIVILEGES;
+"@
+
+# Xác minh mật khẩu đã có hiệu lực
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e "SELECT 'root auth OK' AS status;"
+Remove-Item Env:MYSQL_PWD
+```
+
+> **Từ đây, mọi lệnh `mysql.exe` phải có xác thực.** Không còn `-u root` trần.
+> Dùng `$env:MYSQL_PWD` trong session, xoá ngay sau khi dùng. Không ghi mật khẩu vào
+> script, file `.env` commit, hay log.
+
+### 6.7. Tạo schema và tài khoản staging
+
+Hai tài khoản riêng biệt, quyền khác nhau:
+
+```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
+# Mật khẩu riêng cho từng tài khoản — không dùng chung với root
+$APP_PW     = Read-Host "Mật khẩu cho smartprop_app (backend)" -AsSecureString
+$APP_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($APP_PW))
+
+$FLYWAY_PW  = Read-Host "Mật khẩu cho smartprop_flyway (migration)" -AsSecureString
+$FLYWAY_PW_PLAIN = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+    [Runtime.InteropServices.Marshal]::SecureStringToBSTR($FLYWAY_PW))
 
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
 CREATE DATABASE IF NOT EXISTS smartprop
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '<mật-khẩu-riêng>';
-GRANT ALL PRIVILEGES ON smartprop.* TO 'smartprop'@'localhost';
+
+-- Tài khoản migration: cần DDL để tạo bảng, nhưng không cần SUPER
+CREATE USER IF NOT EXISTS 'smartprop_flyway'@'localhost' IDENTIFIED BY '$FLYWAY_PW_PLAIN';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES,
+      DROP, CREATE VIEW, SHOW VIEW
+  ON smartprop.* TO 'smartprop_flyway'@'localhost';
+
+-- Tài khoản backend: chỉ DML, không DDL
+CREATE USER IF NOT EXISTS 'smartprop_app'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop_app'@'localhost';
+
+-- VIEW trong dump có DEFINER='smartprop'@'localhost' — tạo user này để import không lỗi
+CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop'@'localhost';
+
 FLUSH PRIVILEGES;
 "@
+
+Remove-Item Env:MYSQL_PWD
 ```
 
-> **Bắt buộc tạo user `smartprop`@`localhost` trước khi import.** Bốn VIEW trong dump có
-> `DEFINER='smartprop'@'localhost'`. Thiếu user này, import báo `ERROR 1449` ở các VIEW
-> (bảng vẫn tạo đủ nhưng thiếu view).
+**Phân biệt quyền:**
 
----
+| Tài khoản | Dùng cho | Quyền |
+|---|---|---|
+| `root` | Quản trị instance, tạo schema/user, restore | Toàn quyền — chỉ dùng khi cần |
+| `smartprop_flyway` | `flyway:migrate`, `flyway:validate` | DDL + DML trên `smartprop.*` |
+| `smartprop_app` | Backend runtime, integration test | Chỉ DML |
+| `smartprop` | VIEW DEFINER trong dump | DML (để import không lỗi 1449) |
+
+### 6.8. Kiểm tra identity lần hai trước khi restore
+
+Trước khi import baseline, xác minh lại:
+
+```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
+SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid;
+SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='smartprop';
+"@
+Remove-Item Env:MYSQL_PWD
+```
+
+**Kỳ vọng:** `port=3307`, `datadir` đúng, `uuid` khớp lần kiểm tra trước, schema
+`smartprop` tồn tại.
+
+**Nếu `datadir` hoặc `uuid` khác lần trước → dừng.** Có thể bạn đang trỏ nhầm instance.
+
+### 6.9. Vì sao guard trong code không bảo vệ được mọi lệnh
+
+`MigrationProfileEnvironmentGuard` chỉ chạy khi **Spring Boot khởi động** hoặc khi
+**Maven Flyway plugin** chạy qua profile. Nó **không** bảo vệ:
+
+| Lệnh | Guard có chạy? |
+|---|---|
+| `mysql.exe ... -e "DROP DATABASE ..."` | **KHÔNG** |
+| `mysql.exe ... < dump.sql` | **KHÔNG** |
+| `mysqldump` | **KHÔNG** |
+| `mvnw flyway:migrate` (không `-P`) | **KHÔNG** — dùng `pom.xml` mặc định |
+| `mvnw flyway:migrate -P hybrid-local-existing-v13` | **KHÔNG** — profile chỉ set `locations`/`target`, không kiểm tra URL |
+| Spring Boot với profile staging | **CÓ** — kiểm tra URL + datadir |
+
+**Kết luận:** kiểm tra `@@port` và `@@datadir` bằng tay là **bắt buộc** trước mọi thao
+tác ghi. Không được dựa vào guard của ứng dụng để bảo vệ lệnh CLI.
 
 ## 7. Restore, VIEW DEFINER và kiểm tra identity
 
-### 7.1. Import
+### 7.1. Kiểm tra identity TRƯỚC khi restore
+
+**Bắt buộc. Không bỏ qua.**
 
 ```powershell
-& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root smartprop `
-  --default-character-set=utf8mb4 `
-  -e "source <đường-dẫn>\smartprop_v21_schema.sql"
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
+SELECT @@port AS port, @@datadir AS datadir, @@server_uuid AS uuid;
+SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='smartprop';
+"@
 ```
 
-### 7.2. Xử lý VIEW DEFINER
+**Kiểm tra từng dòng:**
+
+| Trường | Kỳ vọng | Nếu sai |
+|---|---|---|
+| `port` | `3307` | Dừng — đang trỏ nhầm instance |
+| `datadir` | đúng `$DATADIR` ở mục 6.2 | Dừng — có thể là datadir 3306 |
+| `uuid` | khớp lần kiểm tra mục 6.6 | Dừng — instance đã đổi |
+| schema `smartprop` | tồn tại | Tạo lại theo mục 6.7 |
+
+**Chỉ tiếp tục khi cả bốn dòng đúng.** Đây là bước duy nhất ngăn bạn ghi vào database
+nhóm — guard trong code không chạy cho `mysql.exe` (xem mục 6.9).
+
+### 7.2. Import baseline
+
+```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
+$SQL_FILE = Join-Path $STAGING "smartprop_v21_schema.sql"
+
+# Xác minh file trước khi import
+$expected = "824332B219F301F3824B177F10E7892002F7E0C2B7BACCEBD9C1455528664442"
+$actual = (Get-FileHash $SQL_FILE -Algorithm SHA256).Hash
+if ($actual -ne $expected) { throw "SHA256 không khớp. Không import." }
+
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root smartprop `
+  --default-character-set=utf8mb4 `
+  -e "source $SQL_FILE"
+
+Remove-Item Env:MYSQL_PWD
+```
+
+**Nếu import thất bại giữa chừng:** dừng, kiểm tra trạng thái (bảng nào đã tạo, view
+nào lỗi) trước khi quyết định dựng lại. Không drop ngay.
+
+### 7.3. Xử lý VIEW DEFINER
 
 Nếu gặp:
 
@@ -338,42 +593,28 @@ ERROR 1449 (HY000): The user specified as a definer ('smartprop'@'localhost') do
 `rag_public_properties`, `rag_public_property_images`) có `DEFINER` trỏ tới user
 `smartprop`@`localhost`.
 
-**Cách xử lý an toàn:**
+**Cách xử lý:** user `smartprop`@`localhost` đã được tạo ở mục 6.7. Nếu chưa, tạo lại
+**với mật khẩu riêng** (không dùng chung root):
 
 ```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
-CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '<mật-khẩu-riêng>';
-GRANT ALL PRIVILEGES ON smartprop.* TO 'smartprop'@'localhost';
+CREATE USER IF NOT EXISTS 'smartprop'@'localhost' IDENTIFIED BY '$APP_PW_PLAIN';
+GRANT SELECT, INSERT, UPDATE, DELETE ON smartprop.* TO 'smartprop'@'localhost';
 FLUSH PRIVILEGES;
 "@
+
+Remove-Item Env:MYSQL_PWD
 ```
 
 Rồi import lại. **Không** sửa `DEFINER` trong file SQL — đó là thay đổi schema.
 
-### 7.3. Kiểm tra database identity
-
-**Trước khi ghi bất cứ thứ gì**, xác minh đúng môi trường:
-
-```powershell
-& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e @"
-SELECT @@port AS port, @@datadir AS datadir, DATABASE() AS schema;
-"@
-```
-
-**Kỳ vọng:**
-
-```
-port    : 3307
-datadir : ...\mysql-isolated\data\
-schema  : (rỗng nếu chưa chọn DB)
-```
-
-**Fail closed:** nếu port không phải 3307, hoặc datadir không chứa `mysql-isolated`,
-**dừng lại**. Không tiếp tục ghi.
-
 ### 7.4. Xác minh sau import
 
 ```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
 & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root smartprop -e @"
 SELECT COUNT(*) AS base_tables FROM information_schema.TABLES
   WHERE TABLE_SCHEMA='smartprop' AND TABLE_TYPE='BASE TABLE';
@@ -381,6 +622,8 @@ SELECT COUNT(*) AS views FROM information_schema.VIEWS
   WHERE TABLE_SCHEMA='smartprop';
 SELECT version, checksum FROM flyway_schema_history ORDER BY installed_rank;
 "@
+
+Remove-Item Env:MYSQL_PWD
 ```
 
 **Kỳ vọng:**
@@ -393,7 +636,25 @@ SELECT version, checksum FROM flyway_schema_history ORDER BY installed_rank;
 
 > **Đã kiểm chứng:** import thực tế trên MySQL 8.4.13 cho đúng 52/4/7.
 
----
+### 7.5. Thao tác phá huỷ — chỉ trên instance disposable
+
+Mọi lệnh `DROP DATABASE`, `TRUNCATE`, reset hay restore lại **chỉ** áp dụng khi:
+
+- Instance đã xác minh là **disposable** (mục 7.1 pass)
+- **Người sở hữu môi trường cho phép** — nếu là máy dùng chung, hỏi trước
+- Không có PR khác đang dùng database đó
+
+```powershell
+# CHỈ chạy khi đã thoả cả ba điều kiện trên
+# & $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root -e "DROP DATABASE smartprop;"
+```
+
+**Không bao giờ:**
+
+- Drop database trên 3306
+- Sửa `flyway_schema_history` bằng SQL tay
+- Chạy `flyway:repair` để "sửa" lỗi chưa hiểu nguyên nhân
+- Dựng lại database khi PR khác đang dùng
 
 ## 8. Tạo fixture (baseline chỉ có schema)
 
@@ -402,58 +663,146 @@ Baseline **không có dữ liệu nghiệp vụ**. Để test tính năng, tự 
 ### 8.1. Nguyên tắc
 
 - Fixture chỉ seed vào **3307 hoặc 3308**, không bao giờ 3306.
-- Đánh dấu rõ là dữ liệu test (ví dụ prefix `fixture-` trong `source_code`).
+- Đánh dấu rõ là dữ liệu test (prefix `fixture-` trong `source_code`, domain `.invalid`).
 - Không commit fixture chứa dữ liệu thật vào repo.
 - Không dùng fixture để tuyên bố "đã có dữ liệu production".
+- **Kiểm tra identity trước khi seed** (mục 7.1) — seed là thao tác ghi.
 
-### 8.2. Ví dụ tối thiểu
+### 8.2. Kiểm tra schema trước khi seed
+
+Fixture phải khớp schema thật. Kiểm tra cột và constraint trước:
+
+```powershell
+$env:MYSQL_PWD = $ROOT_PW_PLAIN
+
+& $MYSQL --no-defaults -h 127.0.0.1 -P 3307 -u root smartprop -e @"
+SHOW COLUMNS FROM users;
+SHOW COLUMNS FROM news_sources;
+"@
+
+Remove-Item Env:MYSQL_PWD
+```
+
+Đối chiếu với `database/docs/schema-reference.sql` trước khi viết INSERT. Cột `NOT NULL`
+không có default sẽ làm INSERT thất bại.
+
+### 8.3. Fixture cho test KHÔNG cần đăng nhập
+
+Nếu test chỉ đọc dữ liệu và không login, `password_hash` có thể là giá trị giả:
 
 ```sql
--- Chỉ chạy trên 3307/3308
+-- CHỈ dùng khi test không đăng nhập bằng tài khoản này
 INSERT INTO users (email, password_hash, full_name, role, status, created_at, updated_at)
 VALUES ('fixture-admin@example.invalid', 'x', 'Fixture Admin', 'ADMIN', 'ACTIVE',
         UTC_TIMESTAMP(6), UTC_TIMESTAMP(6));
 ```
 
-Dùng domain `.invalid` cho email fixture — không thể nhầm với email thật.
+> **`password_hash='x'` không phải bcrypt hợp lệ.** Đăng nhập bằng tài khoản này sẽ
+> **luôn thất bại**. Chỉ dùng cho test đọc dữ liệu, không dùng cho test auth.
 
-### 8.3. Fixture cho module News
+### 8.4. Fixture cho test CẦN đăng nhập
+
+Nếu integration test cần login thật, phải tạo bcrypt hash hợp lệ. Dùng test helper của
+backend thay vì hardcode hash:
+
+```java
+// Trong test source — dùng PasswordEncoder của ứng dụng
+String hash = passwordEncoder.encode("fixture-password");
+jdbc.update("INSERT INTO users (email, password_hash, ...) VALUES (?, ?, ...)",
+    "fixture-admin@example.invalid", hash);
+```
+
+Hoặc tạo hash bằng công cụ có sẵn của dự án, rồi dùng giá trị đó trong fixture SQL.
+**Không** copy hash từ database thật.
+
+### 8.5. Fixture cho module News
 
 Module News cần `news_sources` + `news_articles`. Xem
 `backend/src/test/java/vn/smartprop/modules/news/NewsSourceRightsIT.java` (thuộc PR #41,
 chưa merge) để biết cấu trúc fixture đã dùng trong test.
 
+Các trạng thái cần có để test đầy đủ:
+
+| Trạng thái nguồn | Mục đích test |
+|---|---|
+| `APPROVED` + `enabled=1` + `allow_summary=1` | Bài hiện công khai, có summary |
+| `APPROVED` + `enabled=1` + `allow_summary=0` | Summary phải bị ẩn |
+| `APPROVED` + `enabled=0` | Bài không được hiện |
+| `PENDING_REVIEW` | Bài không được hiện |
+
+### 8.6. Fixture cho test backfill
+
+Nếu test kiểm tra backfill migration, **tạo fixture trước bước backfill** theo đúng
+scenario:
+
+1. Migrate tới version **trước** migration backfill
+2. Seed dữ liệu ở trạng thái cũ
+3. Chạy migration backfill
+4. Kiểm tra dữ liệu sau backfill
+
+Không seed sau khi đã migrate — sẽ không test được logic backfill.
+
 ---
 
 ## 9. Flyway migrate và validate trên staging
 
-### 9.1. Cấu hình môi trường
+### 9.1. Kiểm tra branch và target trước khi chạy
+
+Migration location phụ thuộc **profile** trong `pom.xml`, không phụ thuộc branch. Nhưng
+file migration có thể khác nhau giữa các branch.
 
 ```powershell
-cd F:\SmartProp\backend
+cd <đường-dẫn>\backend
 
-$env:DB_URL      = 'jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC'
-$env:DB_USER     = 'root'
-$env:DB_PASSWORD = ''
+# Xác nhận branch và migration có sẵn
+git branch --show-current
+Get-ChildItem ..\database\legacy-hybrid-local -Filter 'V*.sql' |
+  Sort-Object Name | Select-Object -Last 3
 ```
 
-### 9.2. Kiểm tra trạng thái
+**Đối chiếu với target của profile:**
+
+| Profile | Target | Locations |
+|---|---:|---|
+| `hybrid-local-existing-v13` | **25** | `legacy-hybrid-local` + `research-migrations` |
+| `standard-migrations` | **23** | `migrations` + `research-migrations/poi` |
+
+Nếu bạn đang ở branch PR #38 hoặc #41, sẽ thấy V26/V27 — nhưng `target` trong `pom.xml`
+vẫn là 25 cho tới khi PR đó merge và cập nhật pom.
+
+### 9.2. Cấu hình môi trường — dùng tài khoản migration
+
+**Không dùng `root` cho Flyway.** Dùng `smartprop_flyway` đã tạo ở mục 6.7:
+
+```powershell
+$env:DB_URL      = 'jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC'
+$env:DB_USER     = 'smartprop_flyway'
+$env:DB_PASSWORD = $FLYWAY_PW_PLAIN   # biến từ mục 6.7, không hardcode
+```
+
+> **Không đặt `DB_PASSWORD = ''`.** Sau mục 6.6, root đã có mật khẩu; `smartprop_flyway`
+> luôn có mật khẩu. Mật khẩu rỗng sẽ bị từ chối.
+
+### 9.3. Kiểm tra trạng thái
 
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:info
 ```
 
+> **`-o` (offline) chỉ dùng khi dependencies đã có trong `~/.m2`.** Nếu chưa từng build,
+> bỏ `-o` để Maven tải dependencies.
+
 **Kỳ vọng sau khi import baseline V21:**
 
 ```
 Schema version: 21
-| 22 | property image analysis  | Pending |
-| 23 | advisor chat checkpoints | Pending |
+| 22 | property image analysis      | Pending |
+| 23 | advisor chat checkpoints     | Pending |
 | 24 | public pre purchase evidence | Pending |
-| 25 | flood planned risk catalog | Pending |
+| 25 | flood planned risk catalog   | Pending |
 ```
 
-### 9.3. Áp dụng migration
+### 9.4. Áp dụng migration
 
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:migrate
@@ -461,26 +810,35 @@ Schema version: 21
 
 **Kỳ vọng:** V22 → V23 → V24 → V25 áp dụng tuần tự.
 
-### 9.4. Validate
+### 9.5. Validate — chỉ PASS khi không còn pending
 
 ```powershell
 .\mvnw.cmd -o -B -P hybrid-local-existing-v13 flyway:validate
 ```
 
-**Kỳ vọng:** `Successfully validated N migrations`.
+**Điều kiện PASS:** command trả exit code 0 và in `Successfully validated N migrations`.
 
-> **Đã kiểm chứng:** trên baseline V21, `flyway:validate` báo
-> `Detected resolved migration not applied to database: 22` — **đây là kết quả đúng**,
-> vì DB ở V21 và còn migration pending. Không phải lỗi.
+**Nếu command trả lỗi** như:
 
-### 9.5. Quy tắc
+```
+Detected resolved migration not applied to database: 22
+```
+
+thì đó là **FAIL**, không phải PASS. Nghĩa là còn migration pending — chạy
+`flyway:migrate` trước.
+
+> **Đã kiểm chứng:** trên baseline V21 (chưa migrate), `flyway:validate` trả lỗi
+> `Detected resolved migration not applied to database: 22`. Đây là trạng thái **dự kiến
+> trước khi migrate**, không phải PASS. Chỉ sau khi migrate đủ V22–V25 thì validate mới
+> PASS.
+
+### 9.6. Quy tắc
 
 - **Không** bật `outOfOrder=true`.
 - **Không** chạy `flyway:repair` khi chưa hiểu nguyên nhân.
 - **Không** sửa `flyway_schema_history` bằng SQL tay.
 - **Không** tắt checksum validation.
-
----
+- **Không** đánh dấu validate PASS nếu command trả lỗi.
 
 ## 10. Cấu hình Backend kết nối staging
 
@@ -492,29 +850,43 @@ Schema version: 21
 | `hybrid-local-existing-v13-staging` | 3307 | Test migration, integration test |
 | `standard-migrations` | — | Database dựng mới từ V1 |
 
-### 10.2. Chạy với staging
+### 10.2. Chạy với staging — tài khoản backend
+
+**Không dùng `root`.** Dùng `smartprop_app` đã tạo ở mục 6.7 (chỉ DML, không DDL):
 
 ```powershell
 $env:SPRING_PROFILES_ACTIVE = 'hybrid-local-existing-v13-staging'
-$env:DB_USER     = 'root'
-$env:DB_PASSWORD = ''
+$env:DB_URL      = 'jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC'
+$env:DB_USER     = 'smartprop_app'
+$env:DB_PASSWORD = $APP_PW_PLAIN   # biến từ mục 6.7, không hardcode
 $env:JWT_SECRET  = '<chuỗi-ngẫu-nhiên-32-byte>'
 
-cd F:\SmartProp\backend
+cd <đường-dẫn>\backend
 .\mvnw.cmd -o -B spring-boot:run
 ```
 
+> **`DB_PASSWORD` không được rỗng.** Sau mục 6.6, mọi tài khoản đều có mật khẩu.
+> Nếu bạn thấy hướng dẫn nào dùng `DB_PASSWORD = ''`, đó là trước khi đặt mật khẩu —
+> không áp dụng sau bước 6.6.
+
 ### 10.3. Chạy integration test
+
+Integration test cần **quyền DDL** (tạo/xoá bảng test, cleanup), nên dùng tài khoản
+migration thay vì `smartprop_app`:
 
 ```powershell
 $env:DB_URL      = 'jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC'
-$env:DB_USER     = 'root'
-$env:DB_PASSWORD = ''
+$env:DB_USER     = 'smartprop_flyway'
+$env:DB_PASSWORD = $FLYWAY_PW_PLAIN
 $env:SPRING_PROFILES_ACTIVE = 'hybrid-local-existing-v13-staging'
 $env:JWT_SECRET  = '<chuỗi-ngẫu-nhiên-32-byte>'
 
 .\mvnw.cmd -o -B test
 ```
+
+> **`-o` (offline) chỉ dùng khi dependencies đã có.** Nếu chưa build lần nào, bỏ `-o`.
+
+### 10.4. Guard trong test
 
 Test có ghi dữ liệu **tự kiểm tra port** trước khi chạy:
 
@@ -525,7 +897,23 @@ assertThat(port).isEqualTo(3307);
 
 Đây là guard fail-closed — test từ chối chạy nếu không phải 3307.
 
----
+**Giới hạn:** guard này chỉ kiểm tra **port**, không kiểm tra `datadir` hay `server_uuid`.
+Nếu bạn chạy một instance khác cũng trên 3307, guard sẽ không phát hiện. Vì vậy vẫn phải
+kiểm tra identity bằng tay (mục 7.1) trước khi chạy test có ghi dữ liệu.
+
+### 10.5. Guard của Spring không bảo vệ lệnh CLI
+
+`MigrationProfileEnvironmentGuard` chạy khi Spring Boot khởi động với profile staging —
+nó kiểm tra `DB_URL` phải là `127.0.0.1:3307/smartprop` và `@@datadir` phải chứa
+`mysql-isolated`.
+
+Nhưng guard **không chạy** cho:
+
+- `mysql.exe` (mọi lệnh trực tiếp)
+- `mysqldump`
+- `mvnw flyway:*` (profile Maven chỉ set `locations`/`target`, không kiểm tra URL)
+
+Xem mục 6.9 để biết bảng đầy đủ.
 
 ## 11. Quản lý migration mới và phối hợp giữa các PR
 
@@ -583,7 +971,7 @@ tiếp — nhưng phải dựng lại DB test từ baseline.
 | `Migration checksum mismatch for version N` | File migration bị sửa sau khi áp dụng | Khôi phục file gốc. Không chạy `repair` mù |
 | `Expected Local BASELINE13/original crawler14 history` | Sai database hoặc history bị sửa | Kiểm tra `@@port`, `@@datadir`. Dùng đúng DB |
 | `Wrong Local database identity` | Port/schema không khớp profile | Kiểm tra `DB_URL`. Không sửa guard |
-| `Staging must use the isolated datadir` | Datadir không phải `mysql-isolated` | Dựng lại datadir đúng, hoặc dùng profile local |
+| `Staging must use the isolated datadir` | Datadir không phải `mysql-isolated` | **Dừng thực thi.** Kiểm tra và dựng lại staging datadir đúng. **Không** dùng profile local để bỏ qua staging guard |
 | `V27 requires V26` | Migration phụ thuộc chưa áp dụng | Áp V26 trước. Không nới guard |
 | `Access denied for user` | Sai credential | Kiểm tra `DB_USER`/`DB_PASSWORD`. Không hardcode |
 | `Table already exists` khi import | Import hai lần | Drop database rồi import lại từ baseline |
@@ -701,20 +1089,29 @@ tiếp — nhưng phải dựng lại DB test từ baseline.
 | Flyway history nguyên vẹn | Checksum V14 = `-1382804267` khớp guard |
 | Không dữ liệu nhạy cảm | Chỉ 1 dòng INSERT (`flyway_schema_history`) |
 | VIEW DEFINER cần user `smartprop` | Gặp `ERROR 1449` khi thiếu, hết lỗi sau khi tạo user |
-| `flyway:validate` trên V21 | Báo pending V22 — đúng trạng thái |
+| `flyway:validate` trên V21 | Trả lỗi `Detected resolved migration not applied: 22` — **đây là FAIL, không phải PASS** |
 | Guard từ chối URL khác | `MigrationLineageConfigurationTest` 21 test |
 | Guard từ chối gap/duplicate/order | `MigrationLineageStrictTest` 18 test — **thuộc PR #41, chưa merge** |
 | Test ghi dữ liệu tự kiểm tra port | `assertThat(port).isEqualTo(3307)` trong IT |
+| `pom.xml` target | standard = **23**, legacy-hybrid-local = **25** |
 
-### Chưa kiểm chứng trong tài liệu này
+### DOCUMENTED_ONLY — chưa chạy thử
 
-| Hạng mục | Ghi chú |
-|---|---|
-| Dựng MySQL từ đầu theo mục 6 | Hướng dẫn dựa trên môi trường đã có sẵn |
-| Áp dụng V26 (PR #38) | Thuộc PR #38, chưa merge |
-| Áp dụng V27 (PR #41) | Thuộc PR #41, chưa merge |
-| Triển khai lên 3306 | Không thực hiện — database nhóm chỉ đọc |
-| Fixture cho mọi module | Chỉ ví dụ tối thiểu |
+Các hướng dẫn sau **chưa được thực thi end-to-end** trong quá trình soạn tài liệu:
+
+| Hạng mục | Trạng thái | Ghi chú |
+|---|---|---|
+| Dựng MySQL từ đầu theo mục 6 | **DOCUMENTED_ONLY** | Viết dựa trên môi trường đã có sẵn, chưa chạy lại từ datadir trống |
+| `--initialize-insecure` + đặt mật khẩu root | **DOCUMENTED_ONLY** | Chưa chạy chuỗi lệnh này |
+| Tạo `smartprop_flyway` / `smartprop_app` | **DOCUMENTED_ONLY** | Phân quyền theo least-privilege, chưa kiểm chứng từng GRANT |
+| Readiness loop (mục 6.5) | **DOCUMENTED_ONLY** | Chưa chạy trên máy sạch |
+| Áp dụng V26 (PR #38) | **NOT_RUN** | Thuộc PR #38, chưa merge |
+| Áp dụng V27 (PR #41) | **NOT_RUN** | Thuộc PR #41, chưa merge |
+| Triển khai lên 3306 | **NOT_RUN** | Không thực hiện — database nhóm chỉ đọc |
+| Fixture cho mọi module | **DOCUMENTED_ONLY** | Chỉ ví dụ tối thiểu, chưa seed thật |
+| Fixture có bcrypt hash hợp lệ | **DOCUMENTED_ONLY** | Chưa tạo hash thật để test login |
+
+**Không đánh dấu VERIFIED cho bất kỳ mục nào ở bảng trên.**
 
 ---
 
