@@ -16,6 +16,11 @@ export const publicFiles=[
  "images/news/credits.json",
  ...['villa','apartments','legal','planning','infrastructure','market','projects','commercial'].map(topic=>`images/news/editorial-${topic}.webp`),
  "images/news/editorial-provenance.json",
+ // District hero images for TopSearchedAreas. Attribution and licence status are
+ // recorded in public/media/areas/ATTRIBUTION.md; they are not yet cleared for
+ // public redistribution, so keep that file next to them.
+ "media/areas/ATTRIBUTION.md",
+ ...['son-tra','hai-chau','ngu-hanh-son','lien-chieu','cam-le'].map(area=>`media/areas/${area}.webp`),
  "media/projects/sun-ponte.jpg",
  "media/projects/the-filmore.jpg",
  "media/projects/fpt-plaza-3.jpg",
