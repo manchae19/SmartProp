@@ -150,6 +150,10 @@ Giữ `VITE_ENABLE_REFRESH` đồng bộ với Backend. Dùng thống nhất **1
 | Google Login | Root `.env`: `GOOGLE_LOGIN_ENABLED=true`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_FRONTEND_ORIGIN`, `GOOGLE_REDIRECT_URI`; cần refresh session và schema V15+ |
 | Email SMTP | Cần cấu hình SMTP, payload key và cờ email/worker; mặc định đang tắt, không chỉ điền SMTP là tự bật |
 
+Google Account Linking dùng chung OAuth Web Client và callback; cần bật refresh session ở Backend/Frontend, phiên SmartProp hợp lệ và xác nhận mật khẩu. Không tự gộp tài khoản theo email trùng.
+
+Các endpoint bắt đầu/hoàn tất linking bị giới hạn 5 lần mỗi jti trong 300 giây; OAuth authorize cũng có giới hạn theo IP. Linking flow store hiện nằm trong bộ nhớ của một tiến trình, với TTL 5 phút: restart Backend sẽ làm mất flow đang chờ và triển khai nhiều instance cần store dùng chung trước khi bật.
+
 Google OAuth Client phải là **Web application**, đăng ký chính xác callback local:
 
 ```text

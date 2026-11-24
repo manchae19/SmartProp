@@ -73,12 +73,7 @@ public class SecurityConfig {
         if(refreshEnabled){
             var csrfRepository=new org.springframework.security.web.csrf.CookieCsrfTokenRepository();csrfRepository.setHeaderName("X-CSRF-TOKEN");
             csrfRepository.setCookieCustomizer(c->c.httpOnly(true).secure(secureCookie).sameSite("Lax").path("/api/v1/auth"));
-            http.csrf(c->c.csrfTokenRepository(csrfRepository).csrfTokenRequestHandler(new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler()).requireCsrfProtectionMatcher(req->{
-                if(!"POST".equals(req.getMethod()))return false;String path=req.getServletPath();if(path.isEmpty())path=req.getRequestURI();
-                if(path.equals("/api/v1/auth/refresh")||path.equals("/api/v1/auth/oauth2/complete"))return true;
-                if(path.equals("/api/v1/auth/logout")&&req.getCookies()!=null)for(var cookie:req.getCookies())if(cookie.getName().equals("SMARTPROP_REFRESH"))return true;
-                return false;
-            }));
+            http.csrf(c->c.csrfTokenRepository(csrfRepository).csrfTokenRequestHandler(new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler()).requireCsrfProtectionMatcher(SecurityConfig::requiresCsrf));
         }else http.csrf(c->c.disable());
         var googleLogin=google.getIfAvailable();if(googleLogin!=null)googleLogin.configure(http);
         http.cors(c -> c.configurationSource(source))
@@ -86,6 +81,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(c -> c
                 .requestMatchers("/api/v1/auth/csrf","/api/v1/auth/refresh","/api/v1/auth/email-verification/confirm","/api/v1/auth/password/forgot","/api/v1/auth/password/reset").permitAll()
                 .requestMatchers("/api/v1/auth/google/config","/api/v1/auth/oauth2/authorize/google","/api/v1/auth/oauth2/callback/google","/api/v1/auth/oauth2/complete").permitAll()
+                .requestMatchers("/api/v1/auth/oauth2/link/authorize/google").permitAll()
+                .requestMatchers("/api/v1/auth/google/link/status","/api/v1/auth/google/link/start","/api/v1/auth/google/link/complete").authenticated()
                 .requestMatchers("/api/v1/auth/register","/api/v1/auth/login","/actuator/health","/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/auth/logout").access((authentication,context)->new org.springframework.security.authorization.AuthorizationDecision(refreshEnabled || authentication.get()!=null && authentication.get().isAuthenticated() && !(authentication.get() instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)))
                 .requestMatchers("/api/v1/users/me/sessions","/api/v1/users/me/sessions/*","/api/v1/auth/email-verification/request").authenticated()
@@ -143,5 +140,12 @@ public class SecurityConfig {
     static void error(HttpServletResponse response,ObjectMapper mapper,int status,String code,String message) throws java.io.IOException {
         response.setStatus(status); response.setContentType("application/json"); response.setCharacterEncoding("UTF-8");
         mapper.writeValue(response.getWriter(),Errors.body(code,message));
+    }
+    static boolean requiresCsrf(HttpServletRequest request) {
+        if(!"POST".equals(request.getMethod()))return false;
+        String path=request.getServletPath();if(path.isEmpty())path=request.getRequestURI();
+        if(path.equals("/api/v1/auth/refresh")||path.equals("/api/v1/auth/oauth2/complete")||path.equals("/api/v1/auth/google/link/start")||path.equals("/api/v1/auth/google/link/complete"))return true;
+        if(path.equals("/api/v1/auth/logout")&&request.getCookies()!=null)for(var cookie:request.getCookies())if(cookie.getName().equals("SMARTPROP_REFRESH"))return true;
+        return false;
     }
 }

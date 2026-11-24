@@ -87,3 +87,24 @@ export async function completeGoogleLogin() {
   const result = await client.google();
   return result.user;
 }
+export const googleLinkStatus = () => api('/auth/google/link/status');
+export async function startGoogleLink(currentPassword) {
+  if (!refreshEnabled) throw Object.assign(Error('Phiên làm mới đăng nhập chưa được bật ở frontend. Vui lòng cấu hình VITE_ENABLE_REFRESH=true rồi tải lại trang.'), { code: 'FEATURE_DISABLED' });
+  const csrf = await api('/auth/csrf', { authenticated: false });
+  return api('/auth/google/link/start', {
+    method: 'POST',
+    body: { currentPassword },
+    headers: { [csrf.headerName]: csrf.token }
+  });
+}
+export async function completeGoogleLink() {
+  await initializeAuth({ force: true });
+  if (session.getSnapshot().status !== 'AUTHENTICATED' || !session.getSnapshot().token) {
+    throw Object.assign(Error('Phiên SmartProp đã hết hạn. Vui lòng đăng nhập lại trước khi hoàn tất liên kết.'), { code: 'UNAUTHENTICATED' });
+  }
+  const csrf = await api('/auth/csrf', { authenticated: false });
+  return api('/auth/google/link/complete', {
+    method: 'POST',
+    headers: { [csrf.headerName]: csrf.token }
+  });
+}
