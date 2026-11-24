@@ -30,15 +30,15 @@ public class MigrationLineageConfiguration {
             boolean complete=env.getProperty("app.local-lineage.require-complete",Boolean.class,true);
             Flyway flyway=Flyway.configure().dataSource(source)
                 .locations("classpath:database/"+(local?"legacy-hybrid-local":"migrations"),"classpath:database/research-migrations"+(local?"":"/poi"))
-                .target("25").createSchemas(false).baselineOnMigrate(false).cleanDisabled(true)
+                .target("27").createSchemas(false).baselineOnMigrate(false).cleanDisabled(true)
                 // Only the explicit read-only Advisor can acknowledge known pending V17/V18.
                 // Checksum/missing/failed validation errors are never ignored.
                 .ignoreMigrationPatterns(local?new String[]{"*:pending"}:new String[]{})
                 .validateMigrationNaming(true).load();
             if(local)for(var pending:flyway.info().pending()){
                 String version=pending.getVersion().getVersion();
-                if(!Set.of("17","18","19","20","21","22","23","24","25").contains(version)
-                    ||complete&&!Set.of("19","20","21","22","23","24","25").contains(version)
+                if(!Set.of("17","18","19","20","21","22","23","24","25","26","27").contains(version)
+                    ||complete&&!Set.of("19","20","21","22","23","24","25","26","27").contains(version)
                     ||"19".equals(version)&&env.getProperty("app.recommendation.tinix-enabled",Boolean.class,false))throw new IllegalStateException("Unexpected pending Local migration; review the location.");
             }
             flyway.validate();
@@ -59,11 +59,28 @@ public class MigrationLineageConfiguration {
         boolean legacy=history.stream().anyMatch(r->"14".equals(r.get("version"))&&Objects.equals(r.get("checksum"),-1382804267));
         if(!local){if(legacy)throw new IllegalStateException("Crawler14 history requires explicit hybrid-local-existing-v13 profile.");return;}
         if(history.size()<2||!"13".equals(history.get(0).get("version"))||!"BASELINE".equals(history.get(0).get("type"))||!legacy)throw new IllegalStateException("Expected Local BASELINE13/original crawler14 history.");
-        var allowed=List.of("13","14","17","18","19","20","21","22","23","24","25");
+        // V26 (coordinate provenance) and V27 (news) are independent branches. A database
+        // may legitimately carry V27 without V26 when the news branch lands first, so the
+        // check is "every applied version is known and in ascending order", not "history
+        // matches this exact list position by position".
+        var allowed=List.of("13","14","17","18","19","20","21","22","23","24","25","26","27");
+        String previous=null;
         for(int i=0;i<history.size();i++){
             var row=history.get(i);Object success=row.get("success");
-            if(i>=allowed.size()||!allowed.get(i).equals(row.get("version"))||!(Boolean.TRUE.equals(success)||Integer.valueOf(1).equals(success))||i>0&&!"SQL".equals(row.get("type")))throw new IllegalStateException("Unexpected/failed Local migration history; stop without repair.");
+            String version=String.valueOf(row.get("version"));
+            if(!allowed.contains(version)
+                ||!(Boolean.TRUE.equals(success)||Integer.valueOf(1).equals(success))
+                ||i>0&&!"SQL".equals(row.get("type"))
+                ||previous!=null&&compareVersion(previous,version)>=0)
+                throw new IllegalStateException("Unexpected/failed Local migration history; stop without repair.");
+            previous=version;
         }
         if(complete&&history.size()<4)throw new IllegalStateException("Local V17/V18 pending. Review and approve the dedicated completion script before enabling full Backend.");
+    }
+
+    /** So sánh version dạng số; trả về âm nếu {@code a} nhỏ hơn {@code b}. */
+    private static int compareVersion(String a,String b){
+        try{return Integer.compare(Integer.parseInt(a),Integer.parseInt(b));}
+        catch(NumberFormatException e){return a.compareTo(b);}
     }
 }
