@@ -3,6 +3,23 @@
 // Tách khỏi component React để test bằng node --test không cần bundler.
 // Chỉ những field model V1.3 thực sự nhận mới được map ở đây.
 
+/**
+ * Empty defaults for every advanced valuation field.
+ *
+ * reset() and initialize() use Object.assign(draft, initialDraft()), which only
+ * overwrites keys that already exist. Listing the keys here is what makes a property
+ * switch clear them.
+ */
+export const ADVANCED_DRAFT_DEFAULTS = {
+  streetName: '',
+  projectName: '',
+  roadWidthM: '',
+  frontageWidthM: '',
+  floors: '',
+  houseSubtype: '',
+  balconyDirection: '',
+};
+
 export const NUMERIC_LIMITS = {
   roadWidthM: { min: 0.1, max: 100 },
   frontageWidthM: { min: 0.1, max: 500 },

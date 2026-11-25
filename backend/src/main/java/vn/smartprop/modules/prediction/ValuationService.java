@@ -70,7 +70,11 @@ public class ValuationService {
         Map<String,Object> input=new LinkedHashMap<>();input.put("category",category);input.put("area_sqm",r.areaSqm().doubleValue());input.put("location_feature",location);
         if(r.ward()!=null&&!r.ward().isBlank())input.put("ward",r.ward().strip());
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>0)input.put("rooms",r.bedrooms());
+        // VILLA always implies villa subtype; otherwise an explicit valid subtype wins.
         if(r.propertyType()==Property.Type.VILLA)input.put("house_subtype","villa");
+        else if(r.propertyType()==Property.Type.HOUSE&&r.houseSubtype()!=null&&!r.houseSubtype().isBlank())input.put("house_subtype",r.houseSubtype().strip());
+        // Floors describe the whole house; apartments and land carry no such notion.
+        if((r.propertyType()==Property.Type.HOUSE||r.propertyType()==Property.Type.VILLA)&&r.floors()!=null)input.put("floors",r.floors());
         // Optional real measurements; omitted fields remain absent, never defaulted.
         if(r.roadWidthM()!=null)input.put("road_width_m",r.roadWidthM());
         if(r.frontageWidthM()!=null)input.put("frontage_width_m",r.frontageWidthM());
