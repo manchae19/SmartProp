@@ -48,8 +48,16 @@ def resolve_district(location_feature: str, ward: str | None = None) -> str:
 
 
 def real_feature_input_enabled() -> bool:
-    """Staging/rollout switch; production defaults to legacy adapter behaviour."""
-    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
+    """Real measurements are the default; legacy synthesis must be opted into.
+
+    The legacy adapter invented road_width/frontage_width from access_type
+    (frontage -> 10m/5m, alley -> 3m/4m). Those numbers were never measured, so
+    serving them as model input misrepresents the property. Production now keeps
+    unknown dimensions missing and lets the model's has_* indicators carry the
+    absence. Set SMARTPROP_V1_3_REAL_FEATURES=false only to reproduce historical
+    research runs.
+    """
+    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = None) -> Dict[str, Any]:

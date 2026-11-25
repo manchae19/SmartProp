@@ -30,6 +30,13 @@ export function valuationInput(draft, location) {
   const bathrooms = Number(draft.bathrooms ?? 0);
   const hasBathrooms = propertyType !== 'LAND' && Number.isInteger(bathrooms)
     && bathrooms >= 1 && bathrooms <= 30;
+  // Optional fields the posting form already collects. Each is omitted when blank so
+  // the model keeps it as missing data instead of receiving an invented value.
+  const ward = String(draft.ward || '').trim();
+  const houseDirection = String(draft.direction || '').trim();
+  const optional = {};
+  if (ward) optional.ward = ward.slice(0, 100);
+  if (houseDirection) optional.houseDirection = houseDirection.slice(0, 50);
   return {
     body: {
       propertyType,
@@ -38,6 +45,7 @@ export function valuationInput(draft, location) {
       locationFeature: location,
       bedrooms: propertyType === 'LAND' ? null : Number(rooms),
       ...(hasBathrooms ? { bathrooms } : {}),
+      ...optional,
       title: String(draft.title || ''),
       description: String(draft.description || '')
     }
