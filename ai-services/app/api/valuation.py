@@ -1,10 +1,10 @@
 """Valuation endpoints; models live in application state, not request state."""
-import os
 import time
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from app.api.schemas import PredictionResponse, ValuationRequest, V1_3PreviewResponse
+from app.models.xgboost.adapter_v1_3 import real_feature_input_enabled
 
 router = APIRouter()
 
@@ -33,7 +33,12 @@ def health(request: Request):
 
 
 def real_features_enabled() -> bool:
-    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
+    """Single source of truth: the adapter decides, so /model/options cannot drift.
+
+    Keeping a second default here meant the API advertised legacy mode while the
+    adapter already served real measurements (or the reverse). Delegate instead.
+    """
+    return real_feature_input_enabled()
 
 
 OPTIONAL_INPUTS = [

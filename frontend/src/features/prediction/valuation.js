@@ -1,4 +1,5 @@
 import { areaInput, typeCodes } from '../property/postForm.js';
+import { advancedValuationPayload } from './advancedValuation.js';
 export const categoryFor = type => ({
   HOUSE: 'Nhà ở',
   VILLA: 'Nhà ở',
@@ -37,6 +38,9 @@ export function valuationInput(draft, location) {
   const optional = {};
   if (ward) optional.ward = ward.slice(0, 100);
   if (houseDirection) optional.houseDirection = houseDirection.slice(0, 50);
+  // Advanced valuation-only fields. They live in the draft but are never part of the
+  // posting payload, so they cannot change the asking price the user typed.
+  Object.assign(optional, advancedValuationPayload(draft, draft.propertyType));
   return {
     body: {
       propertyType,
