@@ -117,12 +117,15 @@ public final class PropertyCoordinateAudit {
             || "VERIFIED_BOUNDARY_BUFFER".equals(geographicStatus);
         boolean hasProvenance = coordinateSource != null
             && !"UNKNOWN".equals(coordinateSource);
-        boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel);
+        boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel)
+            && accuracyMeters != null && Double.isFinite(accuracyMeters) && accuracyMeters > 0;
         boolean verified = "VERIFIED".equals(verificationStatus);
         boolean hasEvidence = verificationMethod != null && verifiedAt != null;
+        boolean verificationAllowsSpatialUse = "UNVERIFIED".equals(verificationStatus)
+            || "PENDING_REVIEW".equals(verificationStatus) || verified;
 
-        boolean referenceMap = geoOk;
-        boolean distance = geoOk && hasProvenance && hasAccuracy;
+        boolean referenceMap = geoOk && verificationAllowsSpatialUse;
+        boolean distance = referenceMap && hasProvenance && hasAccuracy;
         // Cấp thửa cần đủ bốn điều kiện — không chỉ PARCEL + VERIFIED.
         boolean parcel = geoOk && hasProvenance && hasAccuracy && verified && hasEvidence
             && "PARCEL".equals(accuracyLevel);

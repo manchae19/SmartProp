@@ -47,6 +47,14 @@ public class PropertyCoordinateAuditService {
     }
 
     @Transactional(readOnly = true)
+    public java.util.Map<String, PropertyCoordinateAudit.Status> statuses(List<String> propertyIds) {
+        var found = repository.currentForProperties(propertyIds);
+        var result = new java.util.LinkedHashMap<String, PropertyCoordinateAudit.Status>();
+        for (String id : propertyIds) result.put(id, found.getOrDefault(id, PropertyCoordinateAudit.Status.absent()));
+        return java.util.Map.copyOf(result);
+    }
+
+    @Transactional(readOnly = true)
     public List<PropertyCoordinateAuditRepository.HistoryRow> history(String propertyId) {
         return repository.history(propertyId);
     }
@@ -156,10 +164,14 @@ public class PropertyCoordinateAuditService {
             throw vn.smartprop.common.ApiInputs.bad(
                 "accuracyLevel PARCEL chỉ hợp lệ khi verificationStatus VERIFIED");
         }
-        if (accuracy == PropertyCoordinateAudit.Accuracy.PARCEL
-                && (accuracyMeters == null || accuracyMeters <= 0)) {
+        if (accuracy == PropertyCoordinateAudit.Accuracy.UNKNOWN && accuracyMeters != null) {
             throw vn.smartprop.common.ApiInputs.bad(
-                "accuracyLevel PARCEL cần accuracyMeters dương");
+                "accuracyLevel UNKNOWN phải có accuracyMeters NULL");
+        }
+        if (accuracy != PropertyCoordinateAudit.Accuracy.UNKNOWN
+                && (accuracyMeters == null || !Double.isFinite(accuracyMeters) || accuracyMeters <= 0)) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyLevel đã biết cần accuracyMeters hữu hạn và dương");
         }
         int updated = repository.verifyCurrent(propertyId, expectedRevision, status, method,
             verifiedBy, evidenceReference, accuracy, accuracyMeters, accuracyMethod);

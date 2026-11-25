@@ -104,6 +104,37 @@ public class PropertyCoordinateAuditRepository {
         return rows.stream().findFirst();
     }
 
+    /** Current eligibility metadata for one public property-search page. */
+    public java.util.Map<String, PropertyCoordinateAudit.Status> currentForProperties(List<String> propertyIds) {
+        if (propertyIds == null || propertyIds.isEmpty()) return java.util.Map.of();
+        String placeholders = String.join(",", java.util.Collections.nCopies(propertyIds.size(), "?"));
+        return jdbc.query("""
+            SELECT property_id, coordinate_source, accuracy_level, accuracy_meters, verification_status,
+                   verification_method, verified_at, geographic_validation_status,
+                   geographic_validation_note, revision, created_at
+            FROM property_coordinate_audit
+            WHERE property_id IN (""" + placeholders + ") AND superseded_at IS NULL",
+            rs -> {
+                var result = new java.util.LinkedHashMap<String, PropertyCoordinateAudit.Status>();
+                while (rs.next()) result.put(rs.getString("property_id"), status(rs));
+                return java.util.Map.copyOf(result);
+            }, propertyIds.toArray());
+    }
+
+    private static PropertyCoordinateAudit.Status status(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return PropertyCoordinateAudit.derive(
+            rs.getString("coordinate_source"),
+            rs.getString("accuracy_level"),
+            rs.getBigDecimal("accuracy_meters") == null ? null : rs.getBigDecimal("accuracy_meters").doubleValue(),
+            rs.getString("verification_status"),
+            rs.getString("verification_method"),
+            rs.getTimestamp("verified_at") == null ? null : rs.getTimestamp("verified_at").toInstant(),
+            rs.getString("geographic_validation_status"),
+            rs.getString("geographic_validation_note"),
+            rs.getInt("revision"),
+            rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toInstant());
+    }
+
     /** Fingerprint của bản ghi hiện hành — dùng để phát hiện tọa độ đã đổi. */
     public Optional<String> currentFingerprint(String propertyId) {
         List<String> rows = jdbc.queryForList("""

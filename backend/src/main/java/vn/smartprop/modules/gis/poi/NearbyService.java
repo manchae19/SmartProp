@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 import org.springframework.stereotype.Service;
 import vn.smartprop.common.ApiException;
 import vn.smartprop.modules.property.Property;
+import vn.smartprop.modules.property.PropertyCoordinateAuditService;
 import vn.smartprop.modules.property.PropertyService;
 import static vn.smartprop.modules.gis.poi.NearbyDtos.*;
 
@@ -30,15 +31,21 @@ public class NearbyService {
     private final Semaphore slots=new Semaphore(8);
     private final PropertyLocationEvidence locationEvidence;
     private final PropertyService properties;
+    private final PropertyCoordinateAuditService coordinateAudit;
     private final PointOfInterestRepository pois;
     private final GeoapifyPlacesClient provider;
     @org.springframework.beans.factory.annotation.Autowired
-    public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider,PropertyLocationEvidence locationEvidence){
-        this.locationEvidence=locationEvidence;this.properties=properties;this.pois=pois;this.provider=provider;
+    public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider,PropertyLocationEvidence locationEvidence,PropertyCoordinateAuditService coordinateAudit){
+        this.locationEvidence=locationEvidence;this.properties=properties;this.coordinateAudit=coordinateAudit;this.pois=pois;this.provider=provider;
     }
     /** Kept for tests and callers that do not need advisor-grade location evidence. */
     public NearbyService(PropertyService properties,PointOfInterestRepository pois,GeoapifyPlacesClient provider){
-        this(properties,pois,provider,new PropertyLocationEvidence(new com.fasterxml.jackson.databind.ObjectMapper(),""));
+        this(properties,pois,provider,new PropertyLocationEvidence(new com.fasterxml.jackson.databind.ObjectMapper(),""),null);
+    }
+    private boolean distanceEligible(String propertyId){
+        if(coordinateAudit==null)return false;
+        var status=coordinateAudit.status(propertyId);
+        return status!=null&&status.distanceAnalysisEligible();
     }
     public static List<String> categories(String raw){
         if(raw==null||raw.isBlank())throw bad("Chọn ít nhất một nhóm tiện ích.");
@@ -58,6 +65,7 @@ public class NearbyService {
      */
     public Location advisorOrigin(String id){
         var property=properties.publicProperty(id);
+        if(!distanceEligible(id))return null;
         if(property==null||property.location==null
             ||!valid(property.location.getY(),property.location.getX())) return null;
         var evidence=locationEvidence.resolve(property);
@@ -70,6 +78,8 @@ public class NearbyService {
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính không hợp lệ.");
         var selected=categories(input);
         var property=properties.publicProperty(id);
+        if(!distanceEligible(id))
+            return new Result(id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
         if(property.location==null||!valid(property.location.getY(),property.location.getX()))
             return new Result(id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNAVAILABLE",CREDITS);
         var evidence=locationEvidence.resolve(property);
@@ -86,6 +96,8 @@ public class NearbyService {
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính hỗ trợ: 500, 1000, 2000 hoặc 5000 mét.");
         var selected=categories(input);
         Property property=properties.publicProperty(id); // Always recheck visibility, including cache hits.
+        if(!distanceEligible(id))
+            return new Result(property.id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
         if(property.location==null||!valid(property.location.getY(),property.location.getX()))
             return new Result(property.id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNAVAILABLE",CREDITS);
         double lat=property.location.getY(),lon=property.location.getX();

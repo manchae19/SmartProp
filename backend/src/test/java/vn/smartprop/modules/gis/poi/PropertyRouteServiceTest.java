@@ -14,14 +14,16 @@ class PropertyRouteServiceTest {
     final PointOfInterestRepository repository=mock(PointOfInterestRepository.class);
     final GeoapifyPlacesClient provider=mock(GeoapifyPlacesClient.class);
     final CommuteRoutingService routing=mock(CommuteRoutingService.class);
+    final PropertyCoordinateAuditService coordinateAudit=mock(PropertyCoordinateAuditService.class);
     final ObjectMapper json=new ObjectMapper();
     NearbyService nearby;PropertyRouteService service;Property property;
     @BeforeEach void setup(){
-        nearby=new NearbyService(properties,repository,provider);
+        nearby=new NearbyService(properties,repository,provider,new PropertyLocationEvidence(new ObjectMapper(),""),coordinateAudit);
         service=new PropertyRouteService(nearby,provider,routing);
         property=new Property();property.id="test-property";property.contentVersion=1;
         property.location=new GeometryFactory(new PrecisionModel(),4326).createPoint(new Coordinate(108.23,16.06));
         when(properties.publicProperty(property.id)).thenReturn(property);
+        when(coordinateAudit.status(property.id)).thenReturn(new PropertyCoordinateAudit.Status("USER_PINNED","STREET",10.0,"UNVERIFIED",null,null,"VERIFIED_EXACT",null,true,true,false,1,java.time.Instant.now()));
         when(repository.nearby(anyString(),isNull(),anyDouble(),anyInt())).thenReturn(List.of());
         try{when(provider.search(anyDouble(),anyDouble(),anyInt(),anyList())).thenReturn(json.readTree("{\"features\":[]}"));}catch(Exception e){throw new IllegalStateException(e);}
         when(routing.provider()).thenReturn(CommuteRoutingService.GEOAPIFY);
@@ -40,6 +42,7 @@ class PropertyRouteServiceTest {
         var located=new Property();located.id="located";located.contentVersion=1;
         located.location=new GeometryFactory(new PrecisionModel(),4326).createPoint(new Coordinate(108.24,16.07));
         when(properties.publicProperty("located")).thenReturn(located);
+        when(coordinateAudit.status("located")).thenReturn(new PropertyCoordinateAudit.Status("USER_PINNED","STREET",10.0,"UNVERIFIED",null,null,"VERIFIED_EXACT",null,true,true,false,1,java.time.Instant.now()));
         // First batch: one listing measured, one never reached.
         when(routing.matrix(anyList(),anyDouble(),anyDouble(),eq("drive"),anyLong()))
             .thenReturn(List.of(new CommuteRoutingService.Cell("test-property",4200.0,900.0),
@@ -88,6 +91,13 @@ class PropertyRouteServiceTest {
         assertEquals("ROUTE_LOCATION_UNAVAILABLE",error.code);
         verifyNoInteractions(routing);
     }
+    @Test void commuteRefusesAnOriginWithoutCoordinateEligibility(){
+        when(coordinateAudit.status(property.id)).thenReturn(PropertyCoordinateAudit.Status.absent());
+        var error=assertThrows(ApiException.class,()->service.commute(property.id,16.07,108.24,"x","drive"));
+        assertEquals(422,error.status);
+        assertEquals("ROUTE_LOCATION_UNAVAILABLE",error.code);
+        verifyNoInteractions(routing,provider,repository);
+    }
     @Test void cachesRepeatedCommuteLookups()throws Exception{
         when(routing.directions(anyDouble(),anyDouble(),anyDouble(),anyDouble(),eq("drive")))
             .thenReturn(new CommuteRoutingService.Measured(4200,900,json.readTree("{}"),"GEOAPIFY"));
@@ -99,6 +109,7 @@ class PropertyRouteServiceTest {
         Property located=new Property();located.id="located";located.contentVersion=1;
         located.location=new GeometryFactory(new PrecisionModel(),4326).createPoint(new Coordinate(108.24,16.07));
         when(properties.publicProperty("located")).thenReturn(located);
+        when(coordinateAudit.status("located")).thenReturn(new PropertyCoordinateAudit.Status("USER_PINNED","STREET",10.0,"UNVERIFIED",null,null,"VERIFIED_EXACT",null,true,true,false,1,java.time.Instant.now()));
         when(routing.matrix(anyList(),anyDouble(),anyDouble(),anyString(),anyLong()))
             .thenReturn(List.of(new CommuteRoutingService.Cell("located",1500.0,300.0)));
         var result=service.commuteMatrix(List.of("missing","located"),16.07,108.24,"Cty","drive");

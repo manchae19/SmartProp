@@ -45,6 +45,31 @@ class PropertyCoordinateAuditTest {
     }
 
     @Test
+    void accuracyMetersPolicyRequiresUnknownNullAndKnownPositiveFinite() {
+        for (Double invalid : new Double[] { null, 0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY }) {
+            var status = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "STREET", invalid, "UNVERIFIED", null, null,
+                "VERIFIED_EXACT", null, 1, null);
+            assertFalse(status.distanceAnalysisEligible(), "invalid meters=" + invalid);
+        }
+        var unknownWithMeters = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "UNKNOWN", 1.0, "UNVERIFIED", null, null,
+            "VERIFIED_EXACT", null, 1, null);
+        assertFalse(unknownWithMeters.distanceAnalysisEligible());
+    }
+
+    @Test
+    void unverifiedAndPendingCanMapButRequireKnownPositiveAccuracyForDistance() {
+        for (String verification : java.util.List.of("UNVERIFIED", "PENDING_REVIEW")) {
+            var status = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "STREET", 0.5, verification, null, null,
+                "VERIFIED_EXACT", null, 1, null);
+            assertTrue(status.referenceMapEligible(), verification);
+            assertTrue(status.distanceAnalysisEligible(), verification);
+        }
+    }
+
+    @Test
     void parcelAnalysisNeedsParcelAccuracyAndVerification() {
         var verified = PropertyCoordinateAudit.derive(
             "USER_PINNED", "PARCEL", 3.0, "VERIFIED",
@@ -82,6 +107,18 @@ class PropertyCoordinateAuditTest {
             "tọa độ lệch địa bàn không được hiển thị marker");
         assertFalse(status.distanceAnalysisEligible());
         assertFalse(status.parcelAnalysisEligible());
+    }
+
+    @Test
+    void rejectedOrStaleCoordinatesAreNotEligibleForSpatialUse() {
+        for (String verification : java.util.List.of("REJECTED", "STALE")) {
+            var status = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "STREET", 15.0, verification, null, null,
+                "VERIFIED_EXACT", null, 1, null);
+            assertFalse(status.referenceMapEligible(), verification);
+            assertFalse(status.distanceAnalysisEligible(), verification);
+            assertFalse(status.parcelAnalysisEligible(), verification);
+        }
     }
 
     @Test

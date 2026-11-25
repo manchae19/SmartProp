@@ -137,4 +137,11 @@ public class PropertyService {
         if(coordinateAudit==null) return PropertyDtos.Coordinate.absent();
         return PropertyDtos.Coordinate.of(coordinateAudit.status(propertyId));
     }
+    public Map<String,PropertyDtos.Coordinate> coordinates(List<String> propertyIds) {
+        if(coordinateAudit==null) return Map.of();
+        var statuses=coordinateAudit.statuses(propertyIds);
+        var result=new HashMap<String,PropertyDtos.Coordinate>();
+        statuses.forEach((id,status)->result.put(id,PropertyDtos.Coordinate.of(status)));
+        return Map.copyOf(result);
+    }
 }

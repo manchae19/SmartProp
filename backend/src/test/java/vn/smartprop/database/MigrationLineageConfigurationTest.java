@@ -22,6 +22,11 @@ class MigrationLineageConfigurationTest {
         var r=new HashMap<String,Object>();r.put("version",version);r.put("type",type);r.put("checksum",checksum);r.put("success",true);return r;
     }
     List<Map<String,Object>> before(){return List.of(row("13","BASELINE",null),row("14","SQL",-1382804267));}
+    List<Map<String,Object>> through(int version){
+        var history=new ArrayList<>(before());
+        for(int v=17;v<=version;v++)history.add(row(Integer.toString(v),"SQL",v));
+        return history;
+    }
     @Test void explicitLocalProfileHasNoAutoMigration(){assertDoesNotThrow(()->MigrationProfileEnvironmentGuard.check(local()));}
     @Test void mutuallyExclusiveProfiles(){var e=local();e.setActiveProfiles(MigrationProfileEnvironmentGuard.LOCAL,MigrationProfileEnvironmentGuard.STANDARD);assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(e));}
     @Test void rejectsAutoMigrate(){assertThrows(IllegalStateException.class,()->MigrationProfileEnvironmentGuard.check(local().withProperty("spring.flyway.enabled","true")));}
@@ -35,6 +40,38 @@ class MigrationLineageConfigurationTest {
     @Test void rejectsWrongCrawlerChecksum(){assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(List.of(row("13","BASELINE",null),row("14","SQL",679419338)),true,false));}
     @Test void acceptsCompletedHistoryForValidation(){var r=new ArrayList<>(before());r.add(row("17","SQL",12));r.add(row("18","SQL",34));assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(r,true,true));}
     @Test void rejectsUnexpectedOrFailedHistory(){var r=new ArrayList<>(before());r.add(row("15","SQL",12));assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(r,true,false));var fail=new ArrayList<>(before());fail.get(1).put("success",false);assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(fail,true,false));}
+
+    @Test void acceptsLocalHistoryThroughV25(){assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(25),true,true));}
+    @Test void acceptsLocalHistoryThroughV26(){assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(26),true,true));}
+    @Test void acceptsV26PendingWhenDatabaseHistoryEndsAtV25(){
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(25),true,true));
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("26"),true,false));
+    }
+    @Test void acceptsPendingV22ThroughV26FromV21History(){
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(21),true,false));
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("22","23","24","25","26"),false,false));
+    }
+    @Test void rejectsMigrationOutsideLocalLineage(){
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(through(21),false,true));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(through(26),false,true));
+    }
+    @Test void rejectsV27AndNonSequentialLocalHistory(){
+        var v27=new ArrayList<>(through(26));v27.add(row("27","SQL",27));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(v27,true,true));
+        var skipped=new ArrayList<>(before());skipped.add(row("22","SQL",22));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(skipped,true,false));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("27"),false,false));
+    }
+    @Test void pendingMigrationMustBeInLocalLineageAndPreservesTinixGuard(){
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("16"),false,false));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("19"),false,true));
+    }
+    @Test void standardLineageRemainsSeparateAndRejectsLegacyHistory(){
+        assertEquals("23",MigrationLineageConfiguration.target(false));
+        assertEquals("26",MigrationLineageConfiguration.target(true));
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(List.of(row("1","SQL",1)),false,true));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(through(26),false,true));
+    }
 
     // Staging is the same lineage on a fixed literal URL; nothing else may reach it.
     @Test void stagingProfileAcceptsOnlyTheFixedStagingUrl(){assertDoesNotThrow(()->MigrationProfileEnvironmentGuard.check(staging()));}
