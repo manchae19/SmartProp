@@ -40,14 +40,23 @@ public class PropertyCoordinateAuditService {
         this.normalizer = normalizer;
     }
 
+    /** Standard V1..V23 lineage has no V26 audit table; dependent features fail closed. */
+    public boolean available() { return repository.schemaAvailable(); }
+
     /** Trạng thái tọa độ hiện hành, hoặc {@code absent()} nếu tin chưa có audit. */
     @Transactional(readOnly = true)
     public PropertyCoordinateAudit.Status status(String propertyId) {
+        requireAvailable();
         return repository.current(propertyId).orElseGet(PropertyCoordinateAudit.Status::absent);
     }
 
     @Transactional(readOnly = true)
     public java.util.Map<String, PropertyCoordinateAudit.Status> statuses(List<String> propertyIds) {
+        if (!available()) {
+            var absent = new java.util.LinkedHashMap<String, PropertyCoordinateAudit.Status>();
+            for (String id : propertyIds) absent.put(id, PropertyCoordinateAudit.Status.absent());
+            return java.util.Map.copyOf(absent);
+        }
         var found = repository.currentForProperties(propertyIds);
         var result = new java.util.LinkedHashMap<String, PropertyCoordinateAudit.Status>();
         for (String id : propertyIds) result.put(id, found.getOrDefault(id, PropertyCoordinateAudit.Status.absent()));
@@ -56,12 +65,19 @@ public class PropertyCoordinateAuditService {
 
     @Transactional(readOnly = true)
     public List<PropertyCoordinateAuditRepository.HistoryRow> history(String propertyId) {
+        requireAvailable();
         return repository.history(propertyId);
     }
 
     @Transactional(readOnly = true)
     public List<PropertyCoordinateAuditRepository.PendingRow> pending(int limit) {
+        requireAvailable();
         return repository.pending(Math.min(Math.max(limit, 1), 200));
+    }
+
+    private void requireAvailable() {
+        if (!available()) throw new vn.smartprop.common.ApiException(503,
+            "COORDINATE_AUDIT_UNAVAILABLE", "Coordinate audit is unavailable for this database lineage.");
     }
 
     /**
@@ -83,6 +99,7 @@ public class PropertyCoordinateAuditService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void record(Property property, PropertyCoordinateAudit.Source source,
                        String sourceReference, Long actor) {
+        if (!available()) return;
         if (property.location == null) return;
 
         double latitude = property.location.getY();
@@ -154,6 +171,7 @@ public class PropertyCoordinateAuditService {
                           Long verifiedBy, String evidenceReference,
                           PropertyCoordinateAudit.Accuracy accuracy, Double accuracyMeters,
                           String accuracyMethod) {
+        requireAvailable();
         if (status == PropertyCoordinateAudit.Verification.VERIFIED
                 && (method == null || evidenceReference == null || evidenceReference.isBlank())) {
             throw vn.smartprop.common.ApiInputs.bad(
@@ -168,10 +186,27 @@ public class PropertyCoordinateAuditService {
             throw vn.smartprop.common.ApiInputs.bad(
                 "accuracyLevel UNKNOWN phải có accuracyMeters NULL");
         }
+        if (accuracy == PropertyCoordinateAudit.Accuracy.STREET && accuracyMeters != null
+                && (!Double.isFinite(accuracyMeters) || accuracyMeters <= 0)) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyMeters của STREET phải hữu hạn và dương khi được cung cấp");
+        }
+        if (accuracy == PropertyCoordinateAudit.Accuracy.PARCEL
+                && (accuracyMeters == null || !Double.isFinite(accuracyMeters) || accuracyMeters <= 0)) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyLevel PARCEL cần accuracyMeters hữu hạn và dương");
+        }
         if (accuracy != PropertyCoordinateAudit.Accuracy.UNKNOWN
+                && accuracy != PropertyCoordinateAudit.Accuracy.STREET
+                && accuracy != PropertyCoordinateAudit.Accuracy.PARCEL
                 && (accuracyMeters == null || !Double.isFinite(accuracyMeters) || accuracyMeters <= 0)) {
             throw vn.smartprop.common.ApiInputs.bad(
                 "accuracyLevel đã biết cần accuracyMeters hữu hạn và dương");
+        }
+        if (accuracy == PropertyCoordinateAudit.Accuracy.PARCEL
+                && (method == null || evidenceReference == null || evidenceReference.isBlank())) {
+            throw vn.smartprop.common.ApiInputs.bad(
+                "accuracyLevel PARCEL cần phương pháp xác minh và bằng chứng");
         }
         int updated = repository.verifyCurrent(propertyId, expectedRevision, status, method,
             verifiedBy, evidenceReference, accuracy, accuracyMeters, accuracyMethod);

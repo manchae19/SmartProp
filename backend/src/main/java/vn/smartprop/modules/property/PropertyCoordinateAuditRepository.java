@@ -20,8 +20,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PropertyCoordinateAuditRepository {
     private final JdbcTemplate jdbc;
+    private final boolean schemaAvailable;
 
-    public PropertyCoordinateAuditRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public PropertyCoordinateAuditRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+        Integer tables = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM information_schema.tables
+            WHERE table_schema = DATABASE() AND table_name = 'property_coordinate_audit'
+            """, Integer.class);
+        this.schemaAvailable = Integer.valueOf(1).equals(tables);
+        if (!schemaAvailable) {
+            System.getLogger(PropertyCoordinateAuditRepository.class.getName()).log(
+                System.Logger.Level.WARNING,
+                "Coordinate provenance is disabled: property_coordinate_audit is absent in schema {0}.",
+                jdbc.queryForObject("SELECT DATABASE()", String.class));
+        }
+    }
+
+    public boolean schemaAvailable() { return schemaAvailable; }
 
     /**
      * Fingerprint của snapshot tọa độ + địa chỉ.

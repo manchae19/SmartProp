@@ -46,6 +46,12 @@ class MigrationLineageConfigurationTest {
     @Test void acceptsV26PendingWhenDatabaseHistoryEndsAtV25(){
         assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(25),true,true));
         assertDoesNotThrow(()->MigrationLineageConfiguration.checkPendingLocalMigrations(List.of("26"),true,false));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkRuntimePendingLocalMigrations(List.of("26"),true));
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkRuntimePendingLocalMigrations(List.of("26"),false));
+    }
+    @Test void runtimeAllowsV26OnlyAfterItIsApplied(){
+        assertDoesNotThrow(()->MigrationLineageConfiguration.checkRuntimePendingLocalMigrations(List.of(),true));
+        assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkRuntimePendingLocalMigrations(List.of("26"),true));
     }
     @Test void acceptsPendingV22ThroughV26FromV21History(){
         assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(through(21),true,false));

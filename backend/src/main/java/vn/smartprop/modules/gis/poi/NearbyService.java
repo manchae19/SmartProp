@@ -43,7 +43,7 @@ public class NearbyService {
         this(properties,pois,provider,new PropertyLocationEvidence(new com.fasterxml.jackson.databind.ObjectMapper(),""),null);
     }
     private boolean distanceEligible(String propertyId){
-        if(coordinateAudit==null)return false;
+        if(coordinateAudit==null||!coordinateAudit.available())return false;
         var status=coordinateAudit.status(propertyId);
         return status!=null&&status.distanceAnalysisEligible();
     }

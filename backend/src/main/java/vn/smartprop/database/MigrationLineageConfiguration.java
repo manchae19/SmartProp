@@ -38,6 +38,7 @@ public class MigrationLineageConfiguration {
             if(local){
                 var pendingVersions=Arrays.stream(flyway.info().pending()).map(p->p.getVersion().getVersion()).toList();
                 checkPendingLocalMigrations(pendingVersions,complete,env.getProperty("app.recommendation.tinix-enabled",Boolean.class,false));
+                checkRuntimePendingLocalMigrations(pendingVersions,complete);
             }
             flyway.validate();
         };
@@ -70,6 +71,10 @@ public class MigrationLineageConfiguration {
         if(pending.stream().anyMatch(version->!allowed.contains(version)
             ||complete&&!allowedWhenComplete.contains(version)
             ||"19".equals(version)&&tinixEnabled))throw new IllegalStateException("Unexpected pending Local migration; review the location.");
+    }
+    static void checkRuntimePendingLocalMigrations(List<String> pending,boolean requireComplete){
+        if(requireComplete&&pending.contains("26"))throw new IllegalStateException(
+            "Local V26 coordinate provenance is pending; stop Backend and run the separately reviewed Flyway migration workflow.");
     }
     static String target(boolean local){return local?"26":"23";}
 }

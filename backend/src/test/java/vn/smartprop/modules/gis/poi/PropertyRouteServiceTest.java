@@ -18,6 +18,7 @@ class PropertyRouteServiceTest {
     final ObjectMapper json=new ObjectMapper();
     NearbyService nearby;PropertyRouteService service;Property property;
     @BeforeEach void setup(){
+        when(coordinateAudit.available()).thenReturn(true);
         nearby=new NearbyService(properties,repository,provider,new PropertyLocationEvidence(new ObjectMapper(),""),coordinateAudit);
         service=new PropertyRouteService(nearby,provider,routing);
         property=new Property();property.id="test-property";property.contentVersion=1;

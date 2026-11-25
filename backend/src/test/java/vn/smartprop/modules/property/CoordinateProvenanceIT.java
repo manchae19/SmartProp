@@ -1,6 +1,7 @@
 package vn.smartprop.modules.property;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -55,6 +56,7 @@ class CoordinateProvenanceIT {
 
     private Long brokerId;
     private Long adminId;
+    private Long activeNonOwnerId;
     private final List<String> createdProperties = new java.util.ArrayList<>();
 
     @BeforeEach
@@ -70,6 +72,10 @@ class CoordinateProvenanceIT {
             .filter(u -> u.role == User.Role.ADMIN)
             .map(u -> u.id).findFirst()
             .orElseThrow(() -> new IllegalStateException("cần một ADMIN đang hoạt động"));
+        activeNonOwnerId = staff.stream()
+            .filter(u -> u.role == User.Role.BUYER && u.status == User.Status.ACTIVE)
+            .map(u -> u.id).findFirst()
+            .orElseThrow(() -> new IllegalStateException("cần một subject active khác chủ tin"));
     }
 
     @AfterEach
@@ -237,6 +243,68 @@ class CoordinateProvenanceIT {
     }
 
     @Test
+    void streetWithNullMetersIsAcceptedOverHttpButCannotEnableDistanceAnalysis() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                     "verificationMethod":"CADASTRAL_RECORD","evidenceReference":"STREET-NULL-EVIDENCE",
+                     "accuracyLevel":"STREET","accuracyMeters":null}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.accuracyLevel").value("STREET"))
+            .andExpect(jsonPath("$.accuracyMeters").value(nullValue()))
+            .andExpect(jsonPath("$.referenceMapEligible").value(true))
+            .andExpect(jsonPath("$.distanceAnalysisEligible").value(false))
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(false));
+    }
+
+    @Test
+    void httpAccuracyPolicyRejectsUnknownMetersInvalidStreetAndInvalidParcel() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        for (String accuracy : List.of(
+                "\"accuracyLevel\":\"UNKNOWN\",\"accuracyMeters\":1.0",
+                "\"accuracyLevel\":\"STREET\",\"accuracyMeters\":0",
+                "\"accuracyLevel\":\"STREET\",\"accuracyMeters\":-1",
+                "\"accuracyLevel\":\"STREET\",\"accuracyMeters\":1e309",
+                "\"accuracyLevel\":\"PARCEL\",\"accuracyMeters\":null",
+                "\"accuracyLevel\":\"PARCEL\",\"accuracyMeters\":0",
+                "\"accuracyLevel\":\"PARCEL\",\"accuracyMeters\":-1")) {
+            mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                         "verificationMethod":"FIELD_SURVEY","evidenceReference":"HTTP-EVIDENCE",
+                         %s}
+                        """.formatted(accuracy)))
+                .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
+    void parcelWithPositiveMetersAndEvidenceIsAcceptedOverHttp() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        // Test-only provenance evidence: this fixture models an actual user pin.
+        assertThat(jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET coordinate_source='USER_PINNED', source_reference='IT_USER_PINNED_FIXTURE'
+            WHERE property_id=? AND superseded_at IS NULL AND coordinate_source='UNKNOWN'
+            """, id)).isEqualTo(1);
+
+        mvc.perform(post("/api/v1/properties/" + id + "/coordinate/verify").with(asAdmin(adminId))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"expectedRevision":1,"verificationStatus":"VERIFIED",
+                     "verificationMethod":"FIELD_SURVEY","evidenceReference":"PARCEL-EVIDENCE",
+                     "accuracyLevel":"PARCEL","accuracyMeters":1.0}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(true));
+    }
+
+    @Test
     void nonAdminCannotVerify() throws Exception {
         String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
 
@@ -322,6 +390,13 @@ class CoordinateProvenanceIT {
             .andExpect(jsonPath("$.coordinate.coordinateSource").value("UNKNOWN"))
             .andExpect(jsonPath("$.coordinate.revision").value(1))
             .andExpect(jsonPath("$.coordinate.parcelAnalysisEligible").value(false));
+    }
+
+    @Test
+    void v26RuntimeReadinessIsUpAfterHibernateAndFlywayValidation() throws Exception {
+        mvc.perform(get("/actuator/health/readiness"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("UP"));
     }
 
     @Test
@@ -504,8 +579,8 @@ class CoordinateProvenanceIT {
     void nonOwnerBrokerCannotReadCoordinateHistory() throws Exception {
         String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
 
-        // 9003 là BROKER khác, không phải owner.
-        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history").with(as(9003L)))
+        // JWT principal có ROLE_BROKER và active subject khác chủ tin.
+        mvc.perform(get("/api/v1/properties/" + id + "/coordinate/history").with(as(activeNonOwnerId)))
             .andExpect(status().isForbidden());
     }
 

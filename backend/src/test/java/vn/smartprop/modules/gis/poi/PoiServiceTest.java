@@ -16,6 +16,7 @@ class PoiServiceTest {
         var pois=mock(PointOfInterestRepository.class);
         var properties=mock(PropertyService.class);
         var audit=mock(PropertyCoordinateAuditService.class);
+        when(audit.available()).thenReturn(true);
         when(properties.publicProperty("p1")).thenReturn(new Property());
         when(audit.status("p1")).thenReturn(PropertyCoordinateAudit.Status.absent());
         var service=new PoiService(pois,properties,audit);
@@ -32,6 +33,7 @@ class PoiServiceTest {
         var pois=mock(PointOfInterestRepository.class);
         var properties=mock(PropertyService.class);
         var audit=mock(PropertyCoordinateAuditService.class);
+        when(audit.available()).thenReturn(true);
         var property=new Property();
         property.location=null;
         when(properties.publicProperty("p1")).thenReturn(property);
@@ -45,6 +47,20 @@ class PoiServiceTest {
         assertEquals(422,error.status);
         assertEquals("LOCATION_UNAVAILABLE",error.code);
         assertEquals("Tin chưa có tọa độ hợp lệ.",error.getMessage());
+        verifyNoInteractions(pois);
+    }
+
+    @Test void pointsOfInterestFailsClosedWhenCoordinateAuditSchemaIsUnavailable() {
+        var pois=mock(PointOfInterestRepository.class);
+        var properties=mock(PropertyService.class);
+        var audit=mock(PropertyCoordinateAuditService.class);
+        when(audit.available()).thenReturn(false);
+        var service=new PoiService(pois,properties,audit);
+
+        var error=assertThrows(ApiException.class,()->service.nearby("p1",1000,20,null));
+
+        assertEquals(422,error.status);
+        assertEquals("LOCATION_UNVERIFIED",error.code);
         verifyNoInteractions(pois);
     }
 }

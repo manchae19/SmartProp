@@ -59,6 +59,30 @@ class PropertyCoordinateAuditTest {
     }
 
     @Test
+    void streetNullIsAcceptedAsMetadataButNeverEnablesDistance() {
+        var status = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "STREET", null, "UNVERIFIED", null, null,
+            "VERIFIED_EXACT", null, 1, null);
+        assertTrue(status.referenceMapEligible());
+        assertFalse(status.distanceAnalysisEligible());
+        assertFalse(status.parcelAnalysisEligible());
+    }
+
+    @Test
+    void unknownNullAndStreetPositiveFiniteFollowAccuracyEligibilityPolicy() {
+        var unknown = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "UNKNOWN", null, "UNVERIFIED", null, null,
+            "VERIFIED_EXACT", null, 1, null);
+        assertFalse(unknown.distanceAnalysisEligible());
+
+        var street = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "STREET", 0.01, "PENDING_REVIEW", null, null,
+            "VERIFIED_EXACT", null, 1, null);
+        assertTrue(street.referenceMapEligible());
+        assertTrue(street.distanceAnalysisEligible());
+    }
+
+    @Test
     void unverifiedAndPendingCanMapButRequireKnownPositiveAccuracyForDistance() {
         for (String verification : java.util.List.of("UNVERIFIED", "PENDING_REVIEW")) {
             var status = PropertyCoordinateAudit.derive(
@@ -87,6 +111,24 @@ class PropertyCoordinateAuditTest {
             "ADMIN_REVIEW", java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
         assertFalse(verifiedStreet.parcelAnalysisEligible(),
             "xác minh cấp đường không phải cấp thửa");
+    }
+
+    @Test
+    void parcelRequiresPositiveFiniteMetersAndVerificationEvidenceFields() {
+        for (Double invalid : new Double[] {null, 0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY}) {
+            var status = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "PARCEL", invalid, "VERIFIED",
+                "FIELD_SURVEY", java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+            assertFalse(status.parcelAnalysisEligible(), "meters=" + invalid);
+        }
+        var missingMethod = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "PARCEL", 1.0, "VERIFIED", null,
+            java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+        assertFalse(missingMethod.parcelAnalysisEligible());
+        var valid = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
+            java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+        assertTrue(valid.parcelAnalysisEligible());
     }
 
     @Test

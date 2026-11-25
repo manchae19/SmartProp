@@ -98,7 +98,8 @@ public final class PropertyCoordinateAudit {
      *   <li>{@code referenceMapEligible} — geometry hợp lệ và điểm phù hợp địa bàn
      *       (validator trả {@code VERIFIED_EXACT} hoặc {@code VERIFIED_BOUNDARY_BUFFER}).</li>
      *   <li>{@code distanceAnalysisEligible} — cần provenance xác định VÀ accuracy
-     *       được chứng minh. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
+     *       phù hợp policy. STREET cần meters dương hữu hạn; NULL vẫn được ghi nhận
+     *       nhưng không bật distance. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
      *   <li>{@code parcelAnalysisEligible} — cần ĐỒNG THỜI: geographic validity,
      *       provenance xác định, {@code accuracyLevel = PARCEL}, và
      *       {@code verificationStatus = VERIFIED}.</li>
