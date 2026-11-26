@@ -425,6 +425,42 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                     </option>)}
                 </select>
               </label> : null}
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Tên tuyến đường "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input maxLength="200" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-street-name" value={view.form.street_name ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.street_name = $value);
+            })(event.target.value)} />
+              </label>
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Tên dự án "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input maxLength="200" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-project-name" value={view.form.project_name ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.project_name = $value);
+            })(event.target.value)} />
+              </label>
+            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Chiều rộng đường "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="0.1" max="100" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-road-width" value={view.form.road_width_m ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.road_width_m = $value);
+            })(event.target.value)} />
+              </label> : null}
+            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Chiều rộng mặt tiền "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="0.1" max="500" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-frontage-width" value={view.form.frontage_width_m ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.frontage_width_m = $value);
+            })(event.target.value)} />
+              </label> : null}
           </div>
           <button type="submit" disabled={view.predicting} className="mt-6 rounded-full bg-brand-card px-6 py-3 text-sm font-semibold text-[var(--ui-accent)] hover:bg-[var(--ui-surface)] disabled:opacity-60 disabled:cursor-wait transition" data-sp-018bbc28="">
             {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.predicting ? "Đang ước tính…" : "Ước tính giá rao")}
