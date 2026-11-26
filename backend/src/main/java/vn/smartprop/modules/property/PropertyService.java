@@ -134,7 +134,14 @@ public class PropertyService {
     public static PropertyDtos.Managed managed(Property p,List<PropertyImage> images,PropertyDtos.Coordinate coordinate) {return new PropertyDtos.Managed(view(p,images,coordinate),p.ownerId,p.contactName,p.contactPhone,p.contactEmail);}
     /** Coordinate status cho một tin, an toàn khi audit service chưa được cấu hình. */
     public PropertyDtos.Coordinate coordinate(String propertyId) {
-        if(coordinateAudit==null) return PropertyDtos.Coordinate.absent();
+        if(coordinateAudit==null || !coordinateAudit.available()) return PropertyDtos.Coordinate.absent();
         return PropertyDtos.Coordinate.of(coordinateAudit.status(propertyId));
+    }
+    public Map<String,PropertyDtos.Coordinate> coordinates(List<String> propertyIds) {
+        if(coordinateAudit==null || !coordinateAudit.available()) return Map.of();
+        var statuses=coordinateAudit.statuses(propertyIds);
+        var result=new HashMap<String,PropertyDtos.Coordinate>();
+        statuses.forEach((id,status)->result.put(id,PropertyDtos.Coordinate.of(status)));
+        return Map.copyOf(result);
     }
 }

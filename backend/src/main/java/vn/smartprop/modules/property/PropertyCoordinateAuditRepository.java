@@ -20,8 +20,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PropertyCoordinateAuditRepository {
     private final JdbcTemplate jdbc;
+    private final boolean schemaAvailable;
 
-    public PropertyCoordinateAuditRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
+    public PropertyCoordinateAuditRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+        Integer tables = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM information_schema.tables
+            WHERE table_schema = DATABASE() AND table_name = 'property_coordinate_audit'
+            """, Integer.class);
+        this.schemaAvailable = Integer.valueOf(1).equals(tables);
+        if (!schemaAvailable) {
+            System.getLogger(PropertyCoordinateAuditRepository.class.getName()).log(
+                System.Logger.Level.WARNING,
+                "Coordinate provenance is disabled: property_coordinate_audit is absent in schema {0}.",
+                jdbc.queryForObject("SELECT DATABASE()", String.class));
+        }
+    }
+
+    public boolean schemaAvailable() { return schemaAvailable; }
 
     /**
      * Fingerprint của snapshot tọa độ + địa chỉ.
@@ -102,6 +118,37 @@ public class PropertyCoordinateAuditRepository {
                     : rs.getTimestamp("created_at").toInstant()),
             propertyId);
         return rows.stream().findFirst();
+    }
+
+    /** Current eligibility metadata for one public property-search page. */
+    public java.util.Map<String, PropertyCoordinateAudit.Status> currentForProperties(List<String> propertyIds) {
+        if (propertyIds == null || propertyIds.isEmpty()) return java.util.Map.of();
+        String placeholders = String.join(",", java.util.Collections.nCopies(propertyIds.size(), "?"));
+        return jdbc.query("""
+            SELECT property_id, coordinate_source, accuracy_level, accuracy_meters, verification_status,
+                   verification_method, verified_at, geographic_validation_status,
+                   geographic_validation_note, revision, created_at
+            FROM property_coordinate_audit
+            WHERE property_id IN (""" + placeholders + ") AND superseded_at IS NULL",
+            rs -> {
+                var result = new java.util.LinkedHashMap<String, PropertyCoordinateAudit.Status>();
+                while (rs.next()) result.put(rs.getString("property_id"), status(rs));
+                return java.util.Map.copyOf(result);
+            }, propertyIds.toArray());
+    }
+
+    private static PropertyCoordinateAudit.Status status(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return PropertyCoordinateAudit.derive(
+            rs.getString("coordinate_source"),
+            rs.getString("accuracy_level"),
+            rs.getBigDecimal("accuracy_meters") == null ? null : rs.getBigDecimal("accuracy_meters").doubleValue(),
+            rs.getString("verification_status"),
+            rs.getString("verification_method"),
+            rs.getTimestamp("verified_at") == null ? null : rs.getTimestamp("verified_at").toInstant(),
+            rs.getString("geographic_validation_status"),
+            rs.getString("geographic_validation_note"),
+            rs.getInt("revision"),
+            rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toInstant());
     }
 
     /** Fingerprint của bản ghi hiện hành — dùng để phát hiện tọa độ đã đổi. */

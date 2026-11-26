@@ -1,5 +1,6 @@
 import React from "react";
 import "./CoordinateStatusPanel.css";
+import { coordinateHeadline, coordinateSourceLabel, coordinateTone } from "./coordinateStatus.js";
 
 /**
  * Coordinate Provenance V1 — hiển thị trạng thái vị trí của tin đăng.
@@ -10,14 +11,6 @@ import "./CoordinateStatusPanel.css";
  *
  * Ba cờ eligibility do backend tính sẵn — component không tự suy luận.
  */
-
-const SOURCE_LABEL = {
-  USER_PINNED: "Người đăng chọn trên bản đồ",
-  GEOCODED: "Hệ thống tạo từ địa chỉ",
-  IMPORTED: "Dữ liệu nhập từ nguồn ngoài",
-  ADMIN_DEFAULT: "Vị trí do quản trị viên đặt",
-  UNKNOWN: "Chưa xác định nguồn",
-};
 
 const ACCURACY_LABEL = {
   UNKNOWN: "Chưa xác định",
@@ -44,33 +37,7 @@ const METHOD_LABEL = {
   ADMIN_REVIEW: "Quản trị viên duyệt",
 };
 
-/** Nhãn tổng hợp cho người mua — không khẳng định quá mức bằng chứng. */
-export function coordinateHeadline(coordinate) {
-  if (!coordinate) return "Chưa có thông tin vị trí";
-  if (coordinate.parcelAnalysisEligible) {
-    return "Vị trí đã xác minh cấp thửa đất";
-  }
-  if (coordinate.verificationStatus === "VERIFIED") {
-    return "Vị trí đã được xác minh";
-  }
-  if (coordinate.geographicValidationStatus === "INVALID_DISTRICT_MISMATCH") {
-    return "Vị trí không khớp địa bàn khai báo";
-  }
-  if (coordinate.referenceMapEligible) {
-    return "Vị trí tham khảo, chưa xác minh cấp thửa";
-  }
-  return "Chưa đủ dữ liệu để đánh giá vị trí";
-}
-
-/** Mức độ cảnh báo để chọn màu hiển thị. */
-export function coordinateTone(coordinate) {
-  if (!coordinate) return "neutral";
-  if (coordinate.geographicValidationStatus === "INVALID_DISTRICT_MISMATCH") return "warning";
-  if (coordinate.parcelAnalysisEligible) return "verified";
-  if (coordinate.verificationStatus === "VERIFIED") return "verified";
-  if (coordinate.referenceMapEligible) return "reference";
-  return "neutral";
-}
+export { coordinateHeadline, coordinateTone } from "./coordinateStatus.js";
 
 export default function CoordinateStatusPanel({ coordinate, compact = false }) {
   if (!coordinate) return null;
@@ -97,7 +64,7 @@ export default function CoordinateStatusPanel({ coordinate, compact = false }) {
         <dl className="coordinate-status__details">
           <div>
             <dt>Nguồn vị trí</dt>
-            <dd>{SOURCE_LABEL[coordinate.coordinateSource] || "Chưa xác định nguồn"}</dd>
+            <dd>{coordinateSourceLabel(coordinate.coordinateSource)}</dd>
           </div>
           <div>
             <dt>Độ chính xác</dt>
@@ -120,10 +87,10 @@ export default function CoordinateStatusPanel({ coordinate, compact = false }) {
         </dl>
       )}
 
-      {coordinate.referenceMapEligible && !coordinate.parcelAnalysisEligible && (
+      {coordinate.referenceMapEligible === true && coordinate.parcelAnalysisEligible !== true && (
         <p className="coordinate-status__note">
-          Vị trí được cung cấp khi đăng tin, chưa được xác minh chính xác đến
-          từng thửa đất.
+          Bản đồ chỉ dùng làm vị trí tham khảo; thông tin này không xác nhận ranh giới
+          hoặc danh tính thửa đất.
         </p>
       )}
     </section>

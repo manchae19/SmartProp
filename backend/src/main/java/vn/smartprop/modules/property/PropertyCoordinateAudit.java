@@ -98,7 +98,8 @@ public final class PropertyCoordinateAudit {
      *   <li>{@code referenceMapEligible} — geometry hợp lệ và điểm phù hợp địa bàn
      *       (validator trả {@code VERIFIED_EXACT} hoặc {@code VERIFIED_BOUNDARY_BUFFER}).</li>
      *   <li>{@code distanceAnalysisEligible} — cần provenance xác định VÀ accuracy
-     *       được chứng minh. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
+     *       phù hợp policy. STREET cần meters dương hữu hạn; NULL vẫn được ghi nhận
+     *       nhưng không bật distance. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
      *   <li>{@code parcelAnalysisEligible} — cần ĐỒNG THỜI: geographic validity,
      *       provenance xác định, {@code accuracyLevel = PARCEL}, và
      *       {@code verificationStatus = VERIFIED}.</li>
@@ -117,12 +118,15 @@ public final class PropertyCoordinateAudit {
             || "VERIFIED_BOUNDARY_BUFFER".equals(geographicStatus);
         boolean hasProvenance = coordinateSource != null
             && !"UNKNOWN".equals(coordinateSource);
-        boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel);
+        boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel)
+            && accuracyMeters != null && Double.isFinite(accuracyMeters) && accuracyMeters > 0;
         boolean verified = "VERIFIED".equals(verificationStatus);
         boolean hasEvidence = verificationMethod != null && verifiedAt != null;
+        boolean verificationAllowsSpatialUse = "UNVERIFIED".equals(verificationStatus)
+            || "PENDING_REVIEW".equals(verificationStatus) || verified;
 
-        boolean referenceMap = geoOk;
-        boolean distance = geoOk && hasProvenance && hasAccuracy;
+        boolean referenceMap = geoOk && verificationAllowsSpatialUse;
+        boolean distance = referenceMap && hasProvenance && hasAccuracy;
         // Cấp thửa cần đủ bốn điều kiện — không chỉ PARCEL + VERIFIED.
         boolean parcel = geoOk && hasProvenance && hasAccuracy && verified && hasEvidence
             && "PARCEL".equals(accuracyLevel);
