@@ -102,7 +102,7 @@ public final class PropertyCoordinateAudit {
      *       nhưng không bật distance. Không đủ nếu chỉ có {@code VERIFIED_EXACT}.</li>
      *   <li>{@code parcelAnalysisEligible} — cần ĐỒNG THỜI: geographic validity,
      *       provenance xác định, {@code accuracyLevel = PARCEL}, và
-     *       {@code verificationStatus = VERIFIED}.</li>
+     *       {@code verificationStatus = VERIFIED}, verification method/time and non-blank evidence reference.</li>
      * </ul>
      *
      * <p>Ràng buộc DB ({@code ck_coord_audit_parcel_requires_verification}) chỉ chặn
@@ -111,7 +111,7 @@ public final class PropertyCoordinateAudit {
      */
     public static Status derive(String coordinateSource, String accuracyLevel,
                                 Double accuracyMeters, String verificationStatus,
-                                String verificationMethod, Instant verifiedAt,
+                                String verificationMethod, Instant verifiedAt, String evidenceReference,
                                 String geographicStatus, String geographicNote,
                                 int revision, Instant auditedAt) {
         boolean geoOk = "VERIFIED_EXACT".equals(geographicStatus)
@@ -121,7 +121,8 @@ public final class PropertyCoordinateAudit {
         boolean hasAccuracy = accuracyLevel != null && !"UNKNOWN".equals(accuracyLevel)
             && accuracyMeters != null && Double.isFinite(accuracyMeters) && accuracyMeters > 0;
         boolean verified = "VERIFIED".equals(verificationStatus);
-        boolean hasEvidence = verificationMethod != null && verifiedAt != null;
+        boolean hasEvidence = verificationMethod != null && verifiedAt != null
+            && evidenceReference != null && !evidenceReference.isBlank();
         boolean verificationAllowsSpatialUse = "UNVERIFIED".equals(verificationStatus)
             || "PENDING_REVIEW".equals(verificationStatus) || verified;
 

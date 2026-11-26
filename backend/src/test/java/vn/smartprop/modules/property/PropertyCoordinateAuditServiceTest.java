@@ -90,4 +90,18 @@ class PropertyCoordinateAuditServiceTest {
         assertThrows(org.springframework.jdbc.BadSqlGrammarException.class,
             () -> new PropertyCoordinateAuditRepository(unavailableMetadata));
     }
+
+    @Test
+    void pendingPageClampsBoundsAndCountsTheSameFilters() {
+        when(repository.pending(200, "UNVERIFIED", "listing", 0)).thenReturn(java.util.List.of());
+        when(repository.pendingCount("UNVERIFIED", "listing")).thenReturn(241L);
+
+        var page = service.pendingPage(500, -10, "UNVERIFIED", "listing");
+
+        assertEquals(241L, page.total());
+        assertEquals(0, page.offset());
+        assertEquals(200, page.limit());
+        org.mockito.Mockito.verify(repository).pending(200, "UNVERIFIED", "listing", 0);
+        org.mockito.Mockito.verify(repository).pendingCount("UNVERIFIED", "listing");
+    }
 }
