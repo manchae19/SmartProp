@@ -105,6 +105,16 @@ export default function AdminCoordinateReviewView() {
       if (detailResult.status === 'rejected') throw detailResult.reason;
       const loadedDetail = detailResult.value;
       setDetail(loadedDetail);
+      const latestConflicts = new Map(conflictsRef.current);
+      for (const [key, conflict] of latestConflicts) {
+        if (conflict.propertyId === propertyId && loadedDetail.revision > conflict.revision) {
+          latestConflicts.delete(key);
+        }
+      }
+      if (latestConflicts.size !== conflictsRef.current.size) {
+        conflictsRef.current = latestConflicts;
+        setConflicts(latestConflicts);
+      }
       if (historyResult.status === 'fulfilled') setHistory(historyResult.value || []);
       else setHistoryError(errorText(historyResult.reason));
     } catch (e) {
