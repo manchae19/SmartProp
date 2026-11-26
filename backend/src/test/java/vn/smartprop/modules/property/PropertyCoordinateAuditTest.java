@@ -111,6 +111,13 @@ class PropertyCoordinateAuditTest {
             "ADMIN_REVIEW", java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
         assertFalse(verifiedStreet.parcelAnalysisEligible(),
             "xác minh cấp đường không phải cấp thửa");
+
+        for (String statusValue : java.util.List.of("UNVERIFIED", "STALE")) {
+            var notCurrentlyVerified = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "PARCEL", 3.0, statusValue,
+                "FIELD_SURVEY", java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
+            assertFalse(notCurrentlyVerified.parcelAnalysisEligible(), statusValue);
+        }
     }
 
     @Test

@@ -849,8 +849,8 @@ class CoordinateProvenanceIT {
             new LegacyCase("invalid accuracy", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", null, false),
             new LegacyCase("street accuracy", "STREET", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false),
             new LegacyCase("unknown accuracy", "UNKNOWN", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", null, false),
-            new LegacyCase("unverified status", "PARCEL", "UNVERIFIED", null, false, null, 1.0, false),
-            new LegacyCase("stale status", "PARCEL", "STALE", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false)
+            new LegacyCase("unverified status", "STREET", "UNVERIFIED", null, false, null, 1.0, false),
+            new LegacyCase("stale status", "STREET", "STALE", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false)
         );
 
         // V26 CHECK ck_coord_audit_verified_fields disallows persisted VERIFIED rows
