@@ -509,3 +509,120 @@ stop-3307.ps1   → exit 0, 6,0 s
 MySQL **khởi động được**, nhưng **guard từ chối lineage** vì datadir có **V27** ngoài
 danh sách 12 mục `V13..V26` (§C). Cần quyết định A/B/C trước khi chạy Flow B.
 Việc dựng lại môi trường MySQL **không** gỡ được blocker này.
+
+---
+
+## V. Phương án B — dựng database test sạch (thực hiện theo phê duyệt)
+
+### V.1. Baseline artifact — tìm được, có provenance
+
+| Mục | Giá trị |
+|---|---|
+| File | `.scratch\flyway-local-forward\smartprop-before-local-completion-20261102T060122419637Z.sql` |
+| SHA256 | `e698558e8ad91451117dc700b954cfb91231c235ca7fad375ed55e699176b3c4` |
+| Kích thước / bảng | 3,04 MB · **45 CREATE TABLE** |
+| Nguồn | MySQL dump 10.13 từ **8.0.46**, ghi 2026-11-02, DB `smartprop` |
+| Flyway history trong dump | `V13 BASELINE` (desc `SmartProp_existing_V13_reviewed_2026-11-01`) + `V14` checksum **`-1382804267`** |
+| Dữ liệu người dùng | Có (users/auth_sessions/user_roles) → **đã xoá** sau import |
+
+**Checksum V14 khớp đúng giá trị guard yêu cầu** (`-1382804267`) ⇒ đây là baseline chính thức
+của lineage legacy, không phải snapshot đặt tên tùy ý.
+
+### V.2. Dựng môi trường (đã làm)
+
+| Bước | Kết quả |
+|---|---|
+| Datadir mới | `.scratch\mysql-isolated\clean-v26\data` — `--initialize-insecure`, **không** dùng `--initialize` trên datadir cũ |
+| MySQL Portable | 8.4.13, port **3307**, bind **127.0.0.1** (tái sử dụng binary đã tải) |
+| Restore dump | **PASS** — history V13 BASELINE + V14 |
+| Xoá user data fixture | `users = 0` ✅ (không còn dữ liệu người dùng) |
+| Flyway CLI chính thức | profile **`hybrid-local-existing-v13`** (legacy + research, target 26) |
+| **`flyway:migrate`** | **BUILD SUCCESS** — `Successfully applied 10 migrations, now at version v26` |
+
+**History cuối — đúng 12 mục như guard yêu cầu:**
+
+```
+1  13  BASELINE      7  21  SQL
+2  14  SQL           8  22  SQL
+3  17  SQL           9  23  SQL
+4  18  SQL          10  24  SQL
+5  19  SQL          11  25  SQL
+6  20  SQL          12  26  SQL
+```
+
+**V26 thực sự áp dụng:** bảng `property_coordinate_audit` **tồn tại** trong schema.
+
+Không sửa Flyway history thủ công · không nới guard · không baseline tùy tiện ·
+không sửa migration SQL · không đụng 3306.
+
+---
+
+## W. Blocker thật sự: lineage legacy thiếu V16
+
+### W.1. Spring Boot khởi động thất bại
+
+```
+SchemaManagementException: Schema-validation: missing column [listing_code] in table [properties]
+```
+
+### W.2. Nguyên nhân — `VERIFIED`
+
+| Sự kiện | Bằng chứng |
+|---|---|
+| Cột `listing_code` do `V16__immutable_property_listing_codes.sql` tạo | file chỉ tồn tại trong `database/legacy…`? **KHÔNG** — chỉ có ở `database/migrations/V16__immutable_property_listing_codes.sql` |
+| Legacy channel có V16? | **KHÔNG** (`Get-ChildItem database\legacy-hybrid-local -Filter V16*` → rỗng) |
+| Guard có cho V16? | **KHÔNG** — allowed list chỉ `13,14,17,18,19,20,21,22,23,24,25,26` |
+| Legacy V21 có dùng `listing_code`? | **CÓ** — `V21__property_image_scan.sql:12` |
+| Schema sau migrate V26 | properties 33 cột · **`listing_code` = 0** |
+
+**Mâu thuẫn nội tại của repository:** lineage legacy vừa *không* được phép có V16, vừa
+*cần* cột do V16 tạo (V21 dùng nó), trong khi Hibernate của main bắt buộc cột đó.
+
+### W.3. Vì sao không tự vá
+
+| Phương án | Bị chặn bởi |
+|---|---|
+| Thêm V16 vào legacy channel | **Không sửa migration SQL** |
+| Thêm V15/V16 vào allowed list của guard | **Không nới lỏng migration guard** |
+| Chạy standard V1..V23 rồi legacy V24..V26 | V14/V17/V18 trùng **version number** nhưng khác checksum ⇒ Flyway validate fail. Đã thử bước đầu ở `clean-v26` trước khi dùng dump: `V17__local_broker_applications` xung đột vì standard `V13__broker_applications` đã tạo bảng |
+| Dùng `database/docs/schema-reference.sql` | File tự ghi *"reference only, NOT an additional Flyway migration"*, 0 dòng `flyway_schema_history` ⇒ **không phải baseline có provenance** |
+| Datadir 8.4.13 có sẵn (V13..V27) | Có **V27** ngoài allowed list (đã báo ở §C) |
+
+**Kết luận: repository thiếu đường migrate hợp lệ để tới schema V26 tương thích main.**
+Đúng trường hợp §4 của yêu cầu → **dừng bước migration**, không tự tạo SQL.
+
+---
+
+## X. Trạng thái sau phiên
+
+| Hạng mục | Trạng thái |
+|---|---|
+| MySQL Portable 8.4.13 | **GIỮ** — `.scratch\mysql-8.4\` (1205 MB) |
+| Fixture `clean-v26` | **GIỮ** — `.scratch\mysql-isolated\clean-v26\data` (208 MB), schema V26 + history 12 mục hợp lệ |
+| Datadir gốc (V27) | **GIỮ nguyên**, không sửa |
+| Work copy V27 | **GIỮ nguyên** |
+| Port 3307 | **FREE** (shutdown graceful) |
+| Port 3306 | **BUSY pid 6556** — service nhóm, không đụng |
+| App ports | 8000/8080/5173/4173 **free** |
+
+### X.1. Danh sách có thể dọn **sau khi được duyệt**
+
+| Thư mục | Kích thước | Ghi chú |
+|---|---|---|
+| `.scratch\mysql-isolated\clean-v26\` | 208 MB | Fixture V26 — **chưa tương thích main**, giữ để điều tra |
+| `.scratch\mysql-isolated\work-3307\` | 216 MB | Work copy V27 |
+| `.scratch\vf`, `wp01-be`, `wp01-full` | ~vài trăm MB | Build dir tạm |
+
+**Không xoá gì trong phiên này.**
+
+### X.2. Điều cần quyết định để gỡ blocker Flow B
+
+| # | Phương án | Cần bạn duyệt |
+|---|---|---|
+| **V-a** | Thêm `V16` (và nếu cần `V15`) vào **legacy channel** + allowed list của guard, kèm review | **sửa migration + guard** — ngoài quyền WP-01 |
+| **V-b** | Tạo **V27__listing_code_for_legacy** trong legacy channel | **thêm migration mới** — cần review riêng |
+| **V-c** | Cung cấp **V13 BASELINE handoff đã bao gồm `listing_code`** | cần artifact từ team DB |
+| **V-d** | Chấp nhận Flow B dùng **MySQL 8.4 datadir có V27** và cho phép loại V27 khỏi bản copy | trước đây bạn đã từ chối (phương án C cũ) |
+
+Cả bốn đều vượt ranh giới "không sửa migration / không nới guard" mà bạn đặt ra, nên
+**tôi dừng và chờ quyết định**.
