@@ -14,7 +14,7 @@ export default defineConfig(({mode}) => {
   const visionTarget=process.env.SMARTPROP_DEV_VISION_TARGET||env.VISION_API_TARGET||'http://127.0.0.1:18002'
   for(const target of [apiTarget,aiTarget,visionTarget])if(!new RegExp('^http://127[.]0[.]0[.]1:[0-9]{4,5}$').test(target))throw Error('Dev API proxy must target a loopback HTTP port')
   const proxy={
-    '^/api/chat(?:\\?|$)':publicChatProxy(chatTarget),
+    '^/api/chat(?:/health)?(?:\\?|$)':publicChatProxy(chatTarget),
     '/api/image-duplicates':{target:chatTarget,changeOrigin:false,proxyTimeout:60000,
       rewrite:value=>value.replace(/^\/api\/image-duplicates(?=\/|$)/,'/image-duplicates')},
     '/api/image-analysis':{target:visionTarget,changeOrigin:false,proxyTimeout:60000,
@@ -29,6 +29,8 @@ export default defineConfig(({mode}) => {
         if(process.env.SMARTPROP_INTERNAL_DEMO_KEY)request.setHeader('X-SmartProp-Demo-Key',process.env.SMARTPROP_INTERNAL_DEMO_KEY)
       })
     }},
+    // Hòa Xuân land demo map/detail routes live on the chat service (read-only GET).
+    '/api/land':{target:chatTarget,changeOrigin:false,proxyTimeout:30000,rewrite:value=>value.replace(/^\/api\/land(?=\/|$)/,'/land')},
     '/api/ai':{target:aiTarget,changeOrigin:true,rewrite:value=>value.replace(/^\/api\/ai(?=\/|$)/,''),proxyTimeout:15000},
     '/api':{target:apiTarget,changeOrigin:false,proxyTimeout:15000},
   }

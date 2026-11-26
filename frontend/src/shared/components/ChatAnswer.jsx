@@ -6,6 +6,9 @@ import { chatPresentation } from "../../features/prediction/chatPresentation.js"
 import { amenityIntent, loadAmenityMap, amenitySummary } from "../../features/prediction/chatAmenities.js";
 import PropertyNearbyPanel from "../../features/prediction/PropertyNearbyPanel.jsx";
 import ChatAmenityMap from "./ChatAmenityMap.jsx";
+import { chatSession, selectChatLand } from "../../features/prediction/chatRuntime.js";
+import BuyerSearchResults from "../../features/prediction/BuyerSearchResults.jsx";
+import LandResults from "../../features/land/LandResults.jsx";
 import AppIcon from "./AppIcon.jsx";
 import "./ChatAnswer.css";
 function ListingAnalysisBasis({ analysis }) {
@@ -104,11 +107,17 @@ function useChatAnswerState(inputProps, forwardedRef) {
     rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["historical", "result", "messageId", "question", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key))))
   };
 }
+function ResultNextPage({messageId,sessionId,command}) {
+ const {state}=useSyncExternalStore(chatSession.subscribe,chatSession.getSnapshot);
+ const latest=state.messages.findLast(message=>message.role==='assistant');
+ const current=latest?.id===messageId&&state.sessionId===sessionId;
+ return <div className="land-pagination"><button type="button" disabled={!current||state.busy||Date.now()<state.retryAt} onClick={()=>chatSession.getSnapshot().submit(command)}>Xem kết quả khác →</button>{!current&&<small>Tiếp tục từ kết quả mới nhất của hội thoại.</small>}</div>;
+}
 export default React.forwardRef(function ChatAnswer(props, ref) {
   const view = useChatAnswerState(props, ref);
-  return <><div data-chat-answer="" data-generation-mode={view.result.generationMode} data-sp-73584f77="" {...view.rootAttributes} className={classNames(["chat-answer", view.rootAttributes.className])}>
+  return <><div data-chat-answer="" data-generation-mode={view.result.generationMode} data-sp-73584f77="" {...view.rootAttributes} className={classNames(["chat-answer", view.result.evidence.land || view.result.evidence.buyerSearch ? "is-land-answer" : "", view.rootAttributes.className])}>
       <div className="ai-bubble" data-chat-empty={!view.view.cards.length && !view.view.clarification && view.result.evidence.criteria?.budgetVnd ? "" : undefined} data-sp-73584f77="">
-        <p className="ai-summary" data-chat-summary="" data-sp-73584f77="">
+        <p className="ai-summary" data-chat-summary="" data-sp-73584f77="" style={view.result.evidence.land ? { whiteSpace: "pre-line" } : undefined}>
           {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.summary)}
         </p>
         {view.view.clarification ? <p className="clarification-note" role="status" data-chat-clarification="" data-sp-73584f77="">
@@ -127,6 +136,8 @@ export default React.forwardRef(function ChatAnswer(props, ref) {
           {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.view.isListingSource ? "Phân tích từ tin đăng của người dùng · chưa có nguồn xác minh bên ngoài" : view.view.clarification ? "Cần bạn xác nhận trước khi tra cứu" : view.view.noMatches ? "Kết quả tra cứu dữ liệu công khai" : "Tổng hợp từ nguồn công khai · mở Nguồn để đối chiếu")}
         </p>
       </div>
+      {view.result.evidence.buyerSearch && <BuyerSearchResults search={view.result.evidence.buyerSearch} historical={props.historical} sessionId={view.result.evidence.session?.id} footer={view.result.evidence.quickReplies?.includes("Xem kết quả khác") ? <ResultNextPage messageId={props.messageId} sessionId={view.result.evidence.session?.id} command="Xem kết quả khác"/> : null} />}
+      {view.result.evidence.land ? <LandResults land={view.result.evidence.land} footer={view.result.evidence.land.kind==="LAND_SEARCH" && (view.result.evidence.land.start||1)+view.result.evidence.land.rows.length-1<view.result.evidence.land.total ? <ResultNextPage messageId={props.messageId} sessionId={view.result.evidence.session?.id} command="Xem thêm"/> : null} onSelect={row => {if (!props.historical) selectChatLand(row.landId, view.result.evidence.session?.id)}} /> : null}
       {view.intent.enabled || view.intent.requested ? <ChatAmenityMap data={view.mapData} status={view.mapStatus} message={view.intent.message} onRetry={$event => {
         return view.loadMap?.($event);
       }} onReading={$event => {

@@ -37,6 +37,13 @@ def parse_budget(question):
     # Shared unit in ranges: '2 den 3 ty' -> '2 ty den 3 ty'.
     text=re.sub(r"(?<![\w.,])("+NUM+r")\s*(den|toi|-)\s*("+NUM+r")\s*("+UNIT+r")(?!\w)",
                 lambda m:m[1]+" "+m[4]+" "+m[2]+" "+m[3]+" "+m[4],text)
+    # A price per square metre is not a purchase ceiling: "30 triệu/m2" must never become
+    # a 30 000 000 VND total budget.
+    if re.search(r"(?<![\w.,])"+NUM+r"\s*(?:"+UNIT+r")\s*(?:/|tren|moi|mot|1)\s*(?:m2|m²|met vuong|m vuong)(?!\w)",text):
+        return Budget("AMBIGUOUS",reason="UNIT_PRICE_NOT_TOTAL")
+    # Area figures are not money: "nhà 2 tỷ 100m2" is a 2 tỷ budget and a 100 m² area,
+    # not an unreadable "2 tỷ 100".
+    text=re.sub(r"(?<![\w.,])"+NUM+r"\s*(?:m2|m²|met vuong|m vuong)(?!\w)"," ; ",text)
     if re.search(r"\b(?:tang|giam|them|bot)\b.{0,25}\b(?:them|bot)\b|\b(?:them|bot)\s+\d",text):
         return Budget("AMBIGUOUS",reason="RELATIVE_CHANGE_REQUIRES_CONFIRMATION")
     text=text.replace("nho hon", "duoi")
@@ -53,7 +60,8 @@ def parse_budget(question):
                 return Budget("AMBIGUOUS",reason="INVALID_NUMBER")
         mentioned=bool(re.search(r"\d[^;!?]{0,15}\b(?:ty|ti|trieu|vnd|dong)\b",text))
         return Budget("AMBIGUOUS" if mentioned else "NOT_MENTIONED",reason="UNREADABLE_AMOUNT" if mentioned else None)
-    if re.search(r"(?:-|am)\s*$",text[:matches[0].start()]):
+    # "âm 2 tỷ" / "-2 tỷ" are negative; "tầm 2 tỷ", "năm nay 2 tỷ" or "làm 2 tỷ" are not.
+    if re.search(r"(?:-|(?<!\w)am)\s*$",text[:matches[0].start()]):
         return Budget("AMBIGUOUS",reason="NEGATIVE_AMOUNT")
     amounts=[]
     end=0
@@ -89,4 +97,10 @@ def parse_budget(question):
 
 
 def format_vnd(value):
-    return f"{int(Decimal(str(value))):,}".replace(",", ".")+" đồng"
+    """Vietnamese grouping without rounding: a non-zero fraction is kept, never dropped."""
+    amount=Decimal(str(value))
+    whole,_,fraction=format(amount,"f").partition(".")
+    sign="-" if whole.startswith("-") else ""
+    grouped=f"{int(whole.lstrip('-') or 0):,}".replace(",", ".")
+    fraction=fraction.rstrip("0")
+    return sign+grouped+(","+fraction if fraction else "")+" đồng"

@@ -1,5 +1,6 @@
 import { createStateStore, combineStateStores } from "../../shared/state/createStateStore.js";
 import { advisorListingUrl } from './advisor.js';
+import { LAND_KINDS, validLand } from '../land/landApi.js';
 export const CHAT_TIMEOUT_MS = 90000;
 const blocked = /TINIX_AI|tinix:|INTERNAL_RESEARCH|INTERNAL_DEMO|\bUNVERIFIED\b|HYBRID_ELIGIBLE_RESEARCH|sampleListingCount|raw_payload/i;
 const secretKeys = /"(?:password|dbPassword|db_password|authorization|demoKey|apiKey|accessToken|refreshToken|jwtSecret|jwt_secret|rawSql)"\s*:/i;
@@ -106,6 +107,17 @@ export function citationHref(citation, properties) {
 }
 export function publicChatResponse(data, { historical = false } = {}) {
   if (!data || data.mode !== 'SAFE' || blocked.test(JSON.stringify(data)) || secretKeys.test(JSON.stringify(data)) || !text(data.answer) || data.answer.length > 40000 || !['EVIDENCE_ONLY', 'QWEN_GROUNDED_ANSWER', 'QWEN_GROUNDED_PLAN'].includes(data.generationMode) || !['E5_FAISS', 'TOOL_EVIDENCE_ONLY'].includes(data.retrievalMode) || !Array.isArray(data.recommendedProperties) || data.recommendedProperties.length > 10 || !Array.isArray(data.citations) || data.citations.length > 100 || !strings(data.dataLimitations) || !data.evidence || typeof data.evidence !== 'object') throw invalid();
+  const buyer=data.evidence.buyerSearch;
+  if(buyer!==undefined){
+    if(data.evidence.responseKind!=='BUYER_SEARCH'||!Array.isArray(buyer.rows)||buyer.rows.length>5||!strings(buyer.summary))throw invalid();
+    const seen=new Set();
+    for(const row of buyer.rows){
+      if(!row||!['SMARTPROP','LAND_DATA'].includes(row.source)||!text(row.title)||!text(row.location)||!Number.isSafeInteger(row.price)||row.price<=0||!Number.isFinite(row.overBudgetVnd)||row.overBudgetVnd<0||!Number.isFinite(row.overBudgetPercent)||row.overBudgetPercent<0||row.overBudgetPercent>15||!/^([a-f0-9]{8}-[a-f0-9-]{27})$/i.test(row.id)||seen.has(row.key))throw invalid();
+      if(row.source==='LAND_DATA'&&!validLand({version:'LAND_V1',kind:'LAND_SEARCH',rows:[row.land],floodRecords:[],demoOnly:true}))throw invalid();
+      if(row.source==='SMARTPROP'&&(row.property?.id!=='property:'+row.id||row.property?.priceVnd!==row.price||row.property?.source?.kind!=='PROPERTY'))throw invalid();
+      seen.add(row.key);
+    }
+  }
   const needs = data.evidence.needs;
   if (needs !== undefined && (!needs || !strings(needs.summary) || needs.summary.length > 12 || !strings(needs.priorities) || needs.priorities.length > 4 || !strings(needs.limitations) || needs.summary.some(v => v.length > 300))) throw invalid();
   if (data.evidence.quickReplies !== undefined && (!strings(data.evidence.quickReplies) || data.evidence.quickReplies.length > 8 || data.evidence.quickReplies.some(v => v.length > 100))) throw invalid();
@@ -186,6 +198,11 @@ export function publicChatResponse(data, { historical = false } = {}) {
       const kindById = new Map(data.citations.map(c => [c.sourceId, c.kind]));
       if (generation?.sentences?.some(s => kindById.get(s.sourceId) !== 'POI_EVIDENCE')) throw invalid();
     }
+  }
+  // Hòa Xuân land tool: structured records only, never mixed with listings or citations.
+  const land = data.evidence.land;
+  if (land !== undefined || LAND_KINDS.includes(data.evidence.responseKind)) {
+    if (!validLand(land) || land.kind !== data.evidence.responseKind || data.recommendedProperties.length || data.citations.length || data.generationMode !== 'EVIDENCE_ONLY') throw invalid();
   }
   return data;
 }

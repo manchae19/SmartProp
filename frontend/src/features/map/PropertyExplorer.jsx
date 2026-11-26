@@ -7,7 +7,7 @@ import LeafletNearbyMap from "./LeafletNearbyMap.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import ContactPanel from "../property/ContactPanel.jsx";
 import { publicMapPoint, locationLabel } from "./locationDisplay.js";
-import { canAnalyzeDistance } from "./coordinateEligibility.js";
+import { canExploreNearby } from "./coordinateEligibility.js";
 import { compactPrice, price, types, displayDecimal } from "../property/property.js";
 import { POI_GROUPS, DEFAULT_GROUPS, RADII, filteredPlaces, distanceLabel } from "./nearbyExplorer.js";
 import { useNearbyPlaces } from "./useNearbyPlaces.js";
@@ -45,7 +45,7 @@ function usePropertyExplorerState(inputProps, forwardedRef) {
   useSyncExternalStore(radius.subscribe, radius.getSnapshot);
   const getProperty = () => _props.current.items.find(p => p.id === _props.current.selectedId) || null;
   const getOrigin = () => publicMapPoint(getProperty()) ? getProperty() : null;
-  const nearby = useNearbyPlaces(() => getOrigin(), () => radius.getSnapshot(), () => groups.getSnapshot(), () => _props.current.allowNearby && canAnalyzeDistance(getProperty()));
+  const nearby = useNearbyPlaces(() => getOrigin(), () => radius.getSnapshot(), () => groups.getSnapshot(), () => _props.current.allowNearby && canExploreNearby(getProperty()));
   const _nearbyLatest = useRef(nearby);
   _nearbyLatest.current = nearby;
   const getPlaces = () => filteredPlaces(_nearbyLatest.current.data?.items, getOrigin(), radius.getSnapshot(), groups.getSnapshot());
@@ -123,7 +123,7 @@ function usePropertyExplorerState(inputProps, forwardedRef) {
     expanded: expanded.getSnapshot(),
     property: getProperty(),
     origin: getOrigin(),
-    canAnalyzeDistance: canAnalyzeDistance(getProperty()),
+    canExploreNearby: canExploreNearby(getProperty()),
     nearby,
     places: getPlaces(),
     featuredPlaces: getFeaturedPlaces(),
@@ -226,11 +226,12 @@ export default React.forwardRef(function PropertyExplorer(props, ref) {
                 </p> : null}
               {!view.origin ? <p className="explorer-notice" data-sp-c46b683d="">
                   {"Tin chưa có vị trí công khai phù hợp. Không đặt ghim thay thế."}
-                </p> : !view.canAnalyzeDistance ? <p className="explorer-notice" data-sp-c46b683d="">
+                </p> : !view.canExploreNearby ? <p className="explorer-notice" data-sp-c46b683d="">
                   {"Bản đồ chỉ mang tính tham khảo; chưa đủ bằng chứng nguồn và độ chính xác để phân tích khoảng cách."}
                 </p> : !view.allowNearby ? <p className="explorer-notice" data-sp-c46b683d="">
                   {"Tiện ích chỉ được truy vấn cho tin đang công khai."}
                 </p> : null}
+              {view.origin && view.property?.coordinate?.revision === 0 ? <p className="explorer-location-note">Khoảng cách ước tính từ ghim tin đăng · chưa xác minh vị trí căn nhà.</p> : null}
               {view.nearby.busy ? <p role="status" className="explorer-notice" data-sp-c46b683d="">
                   {"Đang tìm tiện ích trong "}
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.distanceLabel(view.radius))}
@@ -243,7 +244,7 @@ export default React.forwardRef(function PropertyExplorer(props, ref) {
             }} data-sp-c46b683d="">
                     {"Thử lại"}
                   </button>
-                </div> : view.origin && view.canAnalyzeDistance && view.allowNearby && !view.nearby.busy && view.groups.length && view.nearby.data && !view.places.length ? <p className="explorer-notice" data-sp-c46b683d="">
+                </div> : view.origin && view.canExploreNearby && view.allowNearby && !view.nearby.busy && view.groups.length && view.nearby.data && !view.places.length ? <p className="explorer-notice" data-sp-c46b683d="">
                   {"Chưa tìm thấy tiện ích phù hợp trong phạm vi đã chọn."}
                 </p> : null}
               {!view.groups.length ? <p className="explorer-notice" data-sp-c46b683d="">

@@ -1,27 +1,16 @@
-param(
-    [string]$Root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
-    [string]$RunDirectory = $(
-        Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..')).Path '.local-run'
-    )
-)
-$ErrorActionPreference = 'Stop'
-$Root = (Resolve-Path $Root).Path
-
-# Only stop processes recorded by start-smartprop-local.ps1. MySQL/RAG Chat are not managed here.
-foreach ($name in @('frontend', 'backend', 'imagecheck', 'vision')) {
-    $pidFile = Join-Path $RunDirectory ($name + '.pid')
-    if (-not (Test-Path -LiteralPath $pidFile)) {
-        Write-Output ($name + ': no PID file (not started by this script)')
-        continue
-    }
-    $processId = [int](Get-Content -LiteralPath $pidFile -Raw).Trim()
-    $process = Get-Process -Id $processId -ErrorAction SilentlyContinue
-    if ($process) {
-        & taskkill.exe /PID $processId /T /F | Out-Null
-        Write-Output ($name + ': stopped PID ' + $processId)
-    } else {
-        Write-Output ($name + ': PID ' + $processId + ' is already gone')
-    }
-    Remove-Item -LiteralPath $pidFile -Force -ErrorAction SilentlyContinue
+param([string]$Root=(Join-Path $PSScriptRoot '..'))
+$ErrorActionPreference='Stop';$Root=(Resolve-Path -LiteralPath $Root).Path
+. (Join-Path $PSScriptRoot 'local-runtime.ps1')
+$run=Join-Path $Root '.local-run';$retained=@()
+foreach($entry in @(Read-SpRegistry $run)){
+ $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($entry.pid)" -ErrorAction SilentlyContinue
+ if(-not $process){Write-Host ($entry.name+': already stopped');continue}
+ if($entry.root -ne $Root -or $process.CreationDate.ToUniversalTime().ToString('o') -ne $entry.created -or $process.CommandLine -ne $entry.command){Write-Warning ($entry.name+': ownership/PID changed; not stopped');$retained+=$entry;continue}
+ $snapshot=@(Get-CimInstance Win32_Process);$tree=@($process);$queue=@($process.ProcessId)
+ while($queue.Count){$children=@($snapshot|Where-Object {$_.ParentProcessId -in $queue});$tree+=$children;$queue=@($children | ForEach-Object {$_.ProcessId})}
+ [array]::Reverse($tree)
+ foreach($child in $tree){$current=Get-CimInstance Win32_Process -Filter "ProcessId=$($child.ProcessId)" -ErrorAction SilentlyContinue;if($current -and $current.CreationDate -eq $child.CreationDate){Stop-Process -Id $current.ProcessId -ErrorAction SilentlyContinue}}
+ Write-Host ($entry.name+': stopped owned process tree')
 }
-Write-Output 'Stopped only services recorded by start-smartprop-local.ps1. MySQL and RAG Chat were not touched.'
+if(Test-Path -LiteralPath $run){ConvertTo-Json -InputObject @($retained) -Depth 4 | Set-Content -LiteralPath (Join-Path $run 'services.json') -Encoding UTF8}
+Write-Host 'Existing services not started by this launcher were left running. No data/cache was deleted.'

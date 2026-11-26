@@ -4,11 +4,16 @@ import { CHAT_TIMEOUT_MS, createChatSession, chatRequest, publicChatResponse } f
 const baseUrl = (import.meta.env?.VITE_CHAT_API_BASE_URL || '/api').replace(/\/$/, '');
 if (!/^\/[A-Za-z0-9/_-]*$/.test(baseUrl) || baseUrl.startsWith('//')) throw Error('Chat requires a same-origin API base path');
 
+let selectedLand = null;
+export function selectChatLand(landId, sessionId) {
+  selectedLand = {landId, sessionId};
+}
 async function send(request) {
   // Refresh through the existing auth client; no profile or user id is accepted from the browser.
   if (session.getSnapshot().user && !session.getSnapshot().token) await restoreSession();
   const current = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
   const body = chatRequest(request.question, request.sessionId, request.propertyId);
+  if (selectedLand?.sessionId && selectedLand.sessionId === request.sessionId && /^[a-f0-9-]{36}$/.test(selectedLand.landId)) body.landId = selectedLand.landId;
 
   const headers = {
     'Content-Type': 'application/json',
@@ -69,6 +74,7 @@ session.subscribe(() => {
   const nextOwner = session.getSnapshot().user?.id == null ? 'guest' : String(session.getSnapshot().user.id);
   if (nextOwner !== visibleOwner) {
     visibleOwner = nextOwner;
+    selectedLand = null;
     chatHistory.reset();
     chatSession.getSnapshot().reset();
     if (nextOwner !== "guest") chatHistory.refresh();

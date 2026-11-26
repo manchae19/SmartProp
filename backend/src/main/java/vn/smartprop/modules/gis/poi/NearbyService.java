@@ -92,11 +92,14 @@ public class NearbyService {
             result.items().stream().filter(p->"GEOAPIFY".equals(p.provider())).toList(),
             result.fetchedAt(),result.cacheHit(),result.truncated(),result.coverage(),result.status(),result.attribution());
     }
-    public Result nearby(String id,int radius,String input){
+    public Result nearby(String id,int radius,String input){return nearby(id,radius,input,false);}
+    public Result nearby(String id,int radius,String input,boolean allowEstimatedOrigin){
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính hỗ trợ: 500, 1000, 2000 hoặc 5000 mét.");
         var selected=categories(input);
         Property property=properties.publicProperty(id); // Always recheck visibility, including cache hits.
-        if(!distanceEligible(id))
+        var reference=allowEstimatedOrigin?properties.coordinate(id):null;
+        boolean estimated=reference!=null&&reference.revision()==0&&reference.referenceMapEligible();
+        if(!distanceEligible(id)&&!estimated)
             return new Result(property.id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
         if(property.location==null||!valid(property.location.getY(),property.location.getX()))
             return new Result(property.id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNAVAILABLE",CREDITS);
@@ -153,7 +156,10 @@ public class NearbyService {
         double a=Math.sin(x/2)*Math.sin(x/2)+Math.cos(Math.toRadians(lat1))*Math.cos(Math.toRadians(lat2))*Math.sin(y/2)*Math.sin(y/2);
         return 6371008.8*2*Math.atan2(Math.sqrt(Math.min(1,a)),Math.sqrt(Math.max(0,1-a)));
     }
-    static String legacyGroup(String category){return switch(category==null?"":category.toUpperCase(Locale.ROOT)){case "SCHOOL"->"education";case "HOSPITAL"->"health";case "SUPERMARKET"->"shopping";case "PARK"->"park";case "BANK"->"bank";default->"";};}
+    /** Stored POI category -> nearby group. Covers every category the POI import writes. */
+    static String legacyGroup(String category){return switch(category==null?"":category.toUpperCase(Locale.ROOT)){
+        case "SCHOOL"->"education";case "HOSPITAL","PHARMACY"->"health";case "SUPERMARKET","MARKET","MALL"->"shopping";
+        case "PARK"->"park";case "BANK"->"bank";case "BEACH"->"tourism";case "PUBLIC_TRANSPORT","TRANSPORT"->"transport";default->"";};}
     static String nullable(String value){return value.isBlank()?null:value;}
     static ApiException bad(String message){return new ApiException(400,"VALIDATION_ERROR",message);}
 }

@@ -1,4 +1,4 @@
-param([ValidateRange(1024,65535)][int]$Port=8001)
+param([ValidateRange(1024,65535)][int]$Port=8001,[switch]$RefreshData)
 $ErrorActionPreference='Stop'
 $ai=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $root=[IO.Path]::GetFullPath((Join-Path $ai '..'))
@@ -29,9 +29,9 @@ function Run-Python([Parameter(ValueFromRemainingArguments=$true)][string[]]$Arg
 }
 Push-Location -LiteralPath $root
 try{
-    # A fresh PUBLIC API snapshot expires after 24h. No crawl, import, SQL or database writes.
-    Run-Python -Arguments @('-X','utf8',(Join-Path $ai 'scripts/build_rag_corpus.py'),'--output',$corpus)
-    Run-Python -Arguments @('-X','utf8',(Join-Path $ai 'scripts/build_rag_index.py'),'--corpus',$corpus,'--e5-path',$e5,'--output',$index)
+    $prepareArgs=@('-X','utf8',(Join-Path $ai 'scripts/prepare_rag_local.py'))
+    if($RefreshData){$prepareArgs+='--force'}
+    Run-Python -Arguments $prepareArgs
     Write-Host "Starting public RAG on 127.0.0.1:$Port. Research and direct SQL are disabled."
     Set-Location -LiteralPath $ai
     Run-Python -Arguments @('-X','utf8','-m','uvicorn','rag_main:app','--host','127.0.0.1','--port',[string]$Port,'--no-proxy-headers')

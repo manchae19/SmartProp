@@ -59,6 +59,10 @@ class Context:
                 "budgetVnd": self.budget_vnd, "purpose": self.purpose,
                 "propertyType": self.property_type, "minAreaSqm": self.min_area_sqm,
                 "minPriceVnd": (self.last_criteria or {}).get("minPriceVnd"),
+                # The whole area bound, so a ceiling ("dưới 80 m²") is visible, not only a floor.
+                "maxAreaSqm": (self.last_criteria or {}).get("maxAreaSqm"),
+                "minAreaExclusive": (self.last_criteria or {}).get("minAreaExclusive") or None,
+                "maxAreaExclusive": (self.last_criteria or {}).get("maxAreaExclusive") or None,
                 "district": self.district, "ward": self.ward}.items() if v is not None},
             "lastPropertyIds": list(self.last_property_ids),
             "lastSearchEmpty": bool((self.last_criteria or {}).get("lastSearchEmpty")),

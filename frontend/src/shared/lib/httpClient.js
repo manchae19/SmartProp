@@ -1,5 +1,16 @@
 // Access tokens stay in memory. Refresh credentials are sent only as HttpOnly cookies.
+//
+// The refresh cookie is HttpOnly, so the page cannot see whether one exists. A plain flag
+// (no token, no user data) remembers that this browser signed in, so a reload restores the
+// session while a guest's page load does not fire a refresh that can only answer 401.
+const HINT_KEY = "smartprop:had-session";
+export const storageSessionHint = {
+  get: () => { try { return globalThis.localStorage?.getItem(HINT_KEY) === "1"; } catch { return false; } },
+  set: () => { try { globalThis.localStorage?.setItem(HINT_KEY, "1"); } catch { /* storage blocked: reload asks to sign in again */ } },
+  clear: () => { try { globalThis.localStorage?.removeItem(HINT_KEY); } catch { /* nothing to clear */ } }
+};
 export function createHttpClient({
+  sessionHint = storageSessionHint,
   baseUrl,
   session,
   refreshEnabled = false,
@@ -26,6 +37,7 @@ export function createHttpClient({
   }
   function expire(redirect = true) {
     invalidate();
+    sessionHint.clear();
     clear();
     session.edit(draft => draft.token = null);
     session.edit(draft => draft.user = null);
@@ -44,6 +56,7 @@ export function createHttpClient({
     session.edit(draft => draft.user = result.user);
     state("AUTHENTICATED");
     initialized = true;
+    if (refreshEnabled) sessionHint.set();
     return result;
   }
   async function send(path, {
@@ -177,7 +190,7 @@ export function createHttpClient({
             if (!terminal(e) || !refreshEnabled) throw e;
             await rotate();
           }
-        } else if (refreshEnabled) await rotate();else if (current === epoch) state("UNAUTHENTICATED");
+        } else if (refreshEnabled && sessionHint.get()) await rotate();else if (current === epoch) state("UNAUTHENTICATED");
       } catch (e) {
         if (current === epoch) {
           if (terminal(e)) expire(false);else if (e.code !== "SESSION_CHANGED") unavailable(e);

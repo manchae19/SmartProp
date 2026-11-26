@@ -91,6 +91,14 @@ class BackendTools:
             price, area = Decimal(str(p["priceVnd"])), Decimal(str(p["areaSqm"]))
             if not price.is_finite() or not area.is_finite() or not 0 < price <= Decimal(str(criteria["budgetVnd"])) or area <= 0 or price < Decimal(str(criteria.get("minPriceVnd") or 0)):
                 raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
+            if criteria.get("minAreaSqm") is not None:
+                low = Decimal(str(criteria["minAreaSqm"]))
+                if (area <= low) if criteria.get("minAreaExclusive") else (area < low):
+                    raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
+            if criteria.get("maxAreaSqm") is not None:
+                high = Decimal(str(criteria["maxAreaSqm"]))
+                if (area >= high) if criteria.get("maxAreaExclusive") else (area > high):
+                    raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
             if p["id"] in seen or p.get("qualityStatus") in ("REJECTED", "EXCLUDED") or p.get("isProtectedHoldout") or p.get("holdout") or p.get("groupHasHoldout"):
                 raise GroundingError("INELIGIBLE_RECOMMENDATION")
             seen.add(p["id"])
@@ -586,6 +594,17 @@ class BackendTools:
                 "items": results, "complete": complete, "pagesRead": page}
 
 
+def _public_text(value, max_length=1000):
+    """Owner-written text shown in chat: no markup, contact details or internal markers."""
+    text = re.sub(r"<[^>]*>", " ", str(value or ""))
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
+    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.-]?\d){8,10}(?!\d)", "[redacted-phone]", text)
+    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|sampleListingCount|raw_payload)\b",
+                  "[redacted]", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:max_length]
+
+
 class PublishedPropertyRepository:
     """Only the publication projection already used by Hybrid V1.1; no crawler table access."""
     def __init__(self, settings):
@@ -621,9 +640,13 @@ class PublishedPropertyRepository:
             return []
         if len(ids) > 10 or not all(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", i) for i in ids):
             raise GroundingError("INVALID_PROPERTY_IDS")
+        if self.settings.sql_use_views:
+            # The rag_public_* views of the pre-merge branch do not exist in the current schema.
+            raise RagUnavailable("SQL_PUBLIC_VIEWS_NOT_AVAILABLE")
+        target_db, target_port = self.settings.sql_database, self.settings.sql_port
         try:
             import pymysql
-            with pymysql.connect(host="127.0.0.1", port=3306, database="smartprop",
+            with pymysql.connect(host=self.settings.sql_host, port=target_port, database=target_db,
                     user=self.settings.db_user, password=self.settings.db_password, charset="utf8mb4",
                     autocommit=False, init_command="SET SESSION TRANSACTION READ ONLY",
                     connect_timeout=3, read_timeout=5, cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -631,7 +654,7 @@ class PublishedPropertyRepository:
                 with conn.cursor() as cur:
                     cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
                     identity = cur.fetchone()
-                    if identity != {"db": "smartprop", "port": 3306, "read_only": 1}:
+                    if identity != {"db": target_db, "port": target_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
                     cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"

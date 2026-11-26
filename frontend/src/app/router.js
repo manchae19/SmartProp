@@ -74,6 +74,10 @@ const routes = [
   path: '/listing/:id',
   component: () => import('../features/property/ListingDetailView.jsx')
 }, {
+  // Hòa Xuân land demo record (planning cell, Guland parcel or project lot); id = land UUID or source code.
+  path: '/land/:id',
+  component: () => import('../features/land/LandDetailView.jsx')
+}, {
   path: '/listing/:id/report',
   component: () => import('../features/report/ReportListingView.jsx')
 }, {

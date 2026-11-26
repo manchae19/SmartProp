@@ -4,12 +4,12 @@ const validAuth = value => typeof value === 'string' && value.length <= 8192 && 
 export function publicChatProxy(target) {
   if (!/^http:\/\/127[.]0[.]0[.]1:[0-9]{4,5}$/.test(target)) throw Error('Dev chat proxy must target a loopback HTTP port')
   return { target, changeOrigin: true, proxyTimeout: 90000, selfHandleResponse: true,
-    bypass: request => { request.url = validAuth(request.headers.authorization) ? '/api/chat/personalized' : '/api/chat' },
+    bypass: request => { if ((request.url || '').split('?')[0] !== '/api/chat/health') request.url = validAuth(request.headers.authorization) ? '/api/chat/personalized' : '/api/chat' },
     rewrite: path => path.replace(/^\/api\/chat/, '/chat'),
     configure: proxy => { proxy.on('proxyReq', request => {
       for (const name of ['Cookie', 'X-SmartProp-Demo-Key', 'X-Session-Activity']) request.removeHeader(name)
       request.setHeader('Accept-Encoding', 'identity')
-    }); proxy.on('proxyRes', (upstream, request, response) => relayChatResponse(upstream, response)) },
+    }); proxy.on('proxyRes', (upstream, request, response) => { if ((request.url || '').split('?')[0].endsWith('/health')) { response.statusCode = upstream.statusCode; response.setHeader('Content-Type', 'application/json'); response.setHeader('Cache-Control', 'no-store'); upstream.pipe(response) } else relayChatResponse(upstream, response) }) },
   }
 }
 export function publicChatBoundary() {
@@ -17,6 +17,7 @@ export function publicChatBoundary() {
     const path = (request.url || '').split('?')[0]
     if (!path.startsWith('/api/chat')) return next()
     const badAuth = request.headers.authorization != null && !validAuth(request.headers.authorization)
+    if (path === '/api/chat/health' && request.method === 'GET' && !badAuth) return next()
     if (path === '/api/chat' && request.method === 'POST' && !badAuth) return next()
     response.statusCode = badAuth ? 401 : 404
     response.setHeader('Content-Type', 'application/json')

@@ -32,21 +32,44 @@ def create_chat_app(settings=None, orchestrator=None):
         document_advisor=DocumentAdvisor(DocumentStore(settings.document_corpus_path),HybridRetriever(FaissRetriever(embedding)),llm)
         orchestrator = ChatOrchestrator(backend, PublishedPropertyRepository(settings), KnowledgeStore(settings.corpus_path),
                                         dense,llm,document_advisor=document_advisor)
+    import hashlib
+    runtime_files = [Path(__file__), Path(__file__).with_name("orchestrator.py"), Path(__file__).with_name("land_chat.py"), Path(__file__).parents[1] / "land" / "conversation_router.py", Path(__file__).with_name("buyer_search.py"), Path(__file__).parents[1] / "land" / "api.py", Path(__file__).parents[1] / "land" / "overview.py", Path(__file__).parents[1] / "land" / "query_rules.py"]
+    loaded_revision = hashlib.sha256(b"".join(p.read_bytes() for p in runtime_files)).hexdigest()[:16]
     slots = BoundedSemaphore(4)
 
     @asynccontextmanager
     async def lifespan(app):
+        import os, threading
+        if os.getenv("RAG_LAND_ENABLED", "true").lower() == "true":
+            # Load the Hòa Xuân land demo data (~5 s) off the request path.
+            threading.Thread(target=lambda: __import__("app.land.engine"), daemon=True).start()
         yield
         if backend:
             backend.close()
 
     app = FastAPI(title="SmartProp Grounded Chat", version="19.5.3", lifespan=lifespan)
+    from app.land.api import create_land_router
+    app.include_router(create_land_router())
 
     @app.middleware("http")
     async def no_store(request, call_next):
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-SmartProp-Chat-Revision"] = loaded_revision
         return response
+
+    @app.middleware("http")
+    async def check_chat_origin(request, call_next):
+        # No Origin means a server-to-server client; browser callers must use the
+        # explicitly configured frontend origins. Never trust a caller-supplied Host.
+        import os
+        from starlette.responses import JSONResponse
+        allowed = {value.strip() for value in os.getenv("RAG_ALLOWED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",") if value.strip()}
+        origin = request.headers.get("origin")
+        if request.url.path.startswith("/chat") and origin is not None and origin not in allowed:
+            return JSONResponse({"detail": "Chat origin is not allowed"}, status_code=403)
+        return await call_next(request)
 
     @app.get("/chat/health")
     def health():

@@ -1,5 +1,32 @@
 ﻿# SmartProp — Cài đặt, build và chạy dự án
 
+## Khởi động local thống nhất
+
+Sau khi đã cài dependency/model và cấu hình `.env` theo các mục bên dưới, chạy từ root repository:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\start-smartprop-local.ps1
+```
+
+- Dùng đường dẫn tương đối theo repository; không dùng launcher trong TEMP.
+- Kiểm tra MySQL/Ollama, sau đó Backend, định giá, RAG và React. Không migrate, seed, reset hoặc import dataset.
+- Tái sử dụng dịch vụ đang khỏe; nếu RAG khác revision source thì báo lỗi, không tự kill dịch vụ lạ.
+- Corpus còn hạn được dùng lại. Thiếu/quá hạn/đổi phiên bản mới lấy snapshot từ API công khai; FAISS chỉ dựng lại khi nội dung/index thay đổi. Không tắt kiểm tra hạn 24 giờ.
+- Cache tổng quan nằm trong `.local-run/cache/land-overviews/`, sống qua lần tắt/mở RAG. Cache hợp lệ theo mã lô + phiên bản dữ liệu + phiên bản mẫu + hash hồ sơ; bản dự phòng chỉ giữ 5 phút. Không chứa token/lịch sử chat, không đưa lên Git.
+- Các dịch vụ quét ảnh/YOLO là dịch vụ phụ: bộ lệnh này không tự bật SQL production hay cài weights của chúng.
+
+```powershell
+# Kiểm tra trạng thái và revision, không khởi động thêm
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\status-smartprop-local.ps1
+# Cập nhật corpus khi cần; thêm -Force để lấy lại snapshot dù còn hạn
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\update-rag-data.ps1
+# Chỉ dừng các tiến trình do launcher ghi nhận; không dừng MySQL/dịch vụ ngoài
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\stop-smartprop-local.ps1
+```
+
+Log và sổ tiến trình ở `.local-run/`. Khi báo thiếu dependency/model/data, hoàn tất phần cài đặt lần đầu; Git không cung cấp model, dataset, database hoặc secrets. Dataset hiện chưa được di chuyển/phân loại lại.
+
+
 SmartProp sử dụng **React + Vite**, **Java 21 / Spring Boot**, **MySQL Spatial**, dịch vụ định giá **XGBoost v6** và chatbot **RAG + Ollama/Qwen**.
 
 Hướng dẫn chính dành cho Windows/PowerShell; phần cuối mô tả triển khai máy chủ Linux/HTTPS. Thay đường dẫn ví dụ bằng thư mục clone trên máy của bạn. Chạy lệnh từ **root repository**, trừ khi có ghi khác.

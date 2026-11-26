@@ -134,14 +134,20 @@ public class PropertyService {
     public static PropertyDtos.Managed managed(Property p,List<PropertyImage> images,PropertyDtos.Coordinate coordinate) {return new PropertyDtos.Managed(view(p,images,coordinate),p.ownerId,p.contactName,p.contactPhone,p.contactEmail);}
     /** Coordinate status cho một tin, an toàn khi audit service chưa được cấu hình. */
     public PropertyDtos.Coordinate coordinate(String propertyId) {
-        if(coordinateAudit==null || !coordinateAudit.available()) return PropertyDtos.Coordinate.absent();
-        return PropertyDtos.Coordinate.of(coordinateAudit.status(propertyId));
+        if(coordinateAudit==null) return PropertyDtos.Coordinate.absent();
+        var status=coordinateAudit.available()?coordinateAudit.status(propertyId):PropertyCoordinateAudit.Status.absent();
+        if(status.revision()==0) return properties.findById(propertyId).map(p->PropertyDtos.Coordinate.of(coordinateAudit.legacyReference(p))).orElse(PropertyDtos.Coordinate.absent());
+        return PropertyDtos.Coordinate.of(status);
     }
     public Map<String,PropertyDtos.Coordinate> coordinates(List<String> propertyIds) {
-        if(coordinateAudit==null || !coordinateAudit.available()) return Map.of();
+        if(coordinateAudit==null) return Map.of();
         var statuses=coordinateAudit.statuses(propertyIds);
         var result=new HashMap<String,PropertyDtos.Coordinate>();
         statuses.forEach((id,status)->result.put(id,PropertyDtos.Coordinate.of(status)));
+        for(var p:properties.findAllById(propertyIds)) {
+            if(!result.containsKey(p.id)||result.get(p.id).revision()==0)
+                result.put(p.id,PropertyDtos.Coordinate.of(coordinateAudit.legacyReference(p)));
+        }
         return Map.copyOf(result);
     }
 }
