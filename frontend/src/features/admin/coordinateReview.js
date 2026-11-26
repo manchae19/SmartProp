@@ -72,7 +72,7 @@ export function isDistrictMismatch(status) {
  */
 export function reviewHeadline(detail) {
   if (!detail) return 'Chưa có dữ liệu';
-  if (detail.parcelAnalysisEligible) return 'Đã xác minh cấp thửa đất';
+  if (detail.parcelAnalysisEligible === true) return 'Đã xác minh cấp thửa đất';
   if (detail.verificationStatus === 'VERIFIED') return 'Đã xác minh (chưa đủ cấp thửa)';
   if (detail.verificationStatus === 'REJECTED') return 'Đã từ chối';
   if (isDistrictMismatch(detail.geographicValidationStatus)) {

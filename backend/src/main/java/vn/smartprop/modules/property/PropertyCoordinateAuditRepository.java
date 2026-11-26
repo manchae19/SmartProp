@@ -366,7 +366,9 @@ public class PropertyCoordinateAuditRepository {
             args.add(like);
             args.add(like);
         }
-        sql.append(" ORDER BY a.created_at DESC LIMIT ? OFFSET ?");
+        // id is the V26 primary key. Keep the existing newest-first order while
+        // making equal timestamps deterministic across LIMIT/OFFSET pages.
+        sql.append(" ORDER BY a.created_at DESC, a.id DESC LIMIT ? OFFSET ?");
         args.add(limit);
         args.add(offset);
 
@@ -459,32 +461,42 @@ public class PropertyCoordinateAuditRepository {
             JOIN properties p ON p.id = a.property_id
             WHERE a.property_id = ? AND a.superseded_at IS NULL
             """,
-            (rs, i) -> new ReviewDetail(
-                rs.getString("property_id"), rs.getString("listing_code"),
-                rs.getString("title"), rs.getString("address"), rs.getString("city"),
-                rs.getString("district"), rs.getString("ward"), rs.getString("status"),
-                rs.getDouble("latitude"), rs.getDouble("longitude"),
-                rs.getInt("revision"), rs.getString("coordinate_source"),
-                rs.getString("source_reference"),
-                rs.getTimestamp("source_recorded_at") == null ? null
-                    : rs.getTimestamp("source_recorded_at").toInstant(),
-                rs.getObject("source_recorded_by", Long.class),
-                rs.getString("accuracy_level"),
-                rs.getBigDecimal("accuracy_meters") == null ? null
-                    : rs.getBigDecimal("accuracy_meters").doubleValue(),
-                rs.getString("accuracy_method"),
-                rs.getString("verification_status"), rs.getString("verification_method"),
-                rs.getTimestamp("verified_at") == null ? null
-                    : rs.getTimestamp("verified_at").toInstant(),
-                rs.getObject("verified_by", Long.class),
-                rs.getString("evidence_reference"),
-                rs.getString("geographic_validation_status"),
-                rs.getString("geographic_validation_note"),
-                rs.getString("validator_scope_version"),
-                rs.getTimestamp("validated_at") == null ? null
-                    : rs.getTimestamp("validated_at").toInstant(),
-                rs.getTimestamp("created_at") == null ? null
-                    : rs.getTimestamp("created_at").toInstant()),
+            (rs, i) -> {
+                String coordinateSource = rs.getString("coordinate_source");
+                String accuracyLevel = rs.getString("accuracy_level");
+                Double accuracyMeters = rs.getBigDecimal("accuracy_meters") == null ? null
+                    : rs.getBigDecimal("accuracy_meters").doubleValue();
+                String verificationStatus = rs.getString("verification_status");
+                String verificationMethod = rs.getString("verification_method");
+                Instant verifiedAt = rs.getTimestamp("verified_at") == null ? null
+                    : rs.getTimestamp("verified_at").toInstant();
+                String geographicStatus = rs.getString("geographic_validation_status");
+                String geographicNote = rs.getString("geographic_validation_note");
+                int revision = rs.getInt("revision");
+                Instant createdAt = rs.getTimestamp("created_at") == null ? null
+                    : rs.getTimestamp("created_at").toInstant();
+                boolean parcelEligible = PropertyCoordinateAudit.derive(
+                    coordinateSource, accuracyLevel, accuracyMeters, verificationStatus,
+                    verificationMethod, verifiedAt, geographicStatus, geographicNote,
+                    revision, createdAt).parcelAnalysisEligible();
+
+                return new ReviewDetail(
+                    rs.getString("property_id"), rs.getString("listing_code"),
+                    rs.getString("title"), rs.getString("address"), rs.getString("city"),
+                    rs.getString("district"), rs.getString("ward"), rs.getString("status"),
+                    rs.getDouble("latitude"), rs.getDouble("longitude"),
+                    revision, coordinateSource, rs.getString("source_reference"),
+                    rs.getTimestamp("source_recorded_at") == null ? null
+                        : rs.getTimestamp("source_recorded_at").toInstant(),
+                    rs.getObject("source_recorded_by", Long.class),
+                    accuracyLevel, accuracyMeters, rs.getString("accuracy_method"),
+                    verificationStatus, verificationMethod, verifiedAt,
+                    rs.getObject("verified_by", Long.class), rs.getString("evidence_reference"),
+                    geographicStatus, geographicNote, rs.getString("validator_scope_version"),
+                    rs.getTimestamp("validated_at") == null ? null
+                        : rs.getTimestamp("validated_at").toInstant(),
+                    createdAt, parcelEligible);
+            },
             propertyId);
         return rows.stream().findFirst();
     }
@@ -499,7 +511,7 @@ public class PropertyCoordinateAuditRepository {
                                Instant verifiedAt, Long verifiedBy, String evidenceReference,
                                String geographicValidationStatus, String geographicValidationNote,
                                String validatorScopeVersion, Instant validatedAt,
-                               Instant createdAt) {}
+                               Instant createdAt, boolean parcelAnalysisEligible) {}
 
     public record PendingRow(String propertyId, String listingCode, String title,
                              String address, String district, String ward, int revision,

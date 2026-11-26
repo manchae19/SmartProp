@@ -90,6 +90,18 @@ test('VERIFIED nhưng chưa đủ cấp thửa phải nói rõ', () => {
   assert.ok(headline.includes('chưa đủ cấp thửa'), headline)
 })
 
+test('eligibility thiếu hoặc sai kiểu luôn fail closed trong headline', () => {
+  for (const parcelAnalysisEligible of [undefined, null, 'true', 1]) {
+    const headline = reviewHeadline({
+      verificationStatus: 'VERIFIED',
+      geographicValidationStatus: 'VERIFIED_EXACT',
+      parcelAnalysisEligible,
+    })
+    assert.match(headline, /chưa đủ cấp thửa/)
+    assert.doesNotMatch(headline, /xác minh cấp thửa đất/)
+  }
+})
+
 test('sai địa bàn được ưu tiên cảnh báo trong headline', () => {
   const detail = {
     verificationStatus: 'UNVERIFIED',

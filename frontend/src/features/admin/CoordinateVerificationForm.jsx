@@ -11,7 +11,7 @@ import './CoordinateVerificationForm.css';
  * - Không điền sẵn `PARCEL`, không tự đặt `accuracyMeters`.
  * - Không coi việc admin nhấn nút là bằng chứng độc lập.
  */
-export default function CoordinateVerificationForm({ detail, busy, onSubmit }) {
+export default function CoordinateVerificationForm({ detail, busy, locked = false, onSubmit }) {
   const [verificationStatus, setVerificationStatus] = useState('VERIFIED');
   const [verificationMethod, setVerificationMethod] = useState('');
   const [evidenceReference, setEvidenceReference] = useState('');
@@ -26,6 +26,7 @@ export default function CoordinateVerificationForm({ detail, busy, onSubmit }) {
 
   function submit(event) {
     event.preventDefault();
+    if (busy || locked) return;
     const form = {
       expectedRevision: detail.revision,
       verificationStatus,
@@ -64,6 +65,12 @@ export default function CoordinateVerificationForm({ detail, busy, onSubmit }) {
           Nếu người đăng sửa tọa độ trong lúc bạn xem, hệ thống sẽ từ chối và báo xung đột.
         </span>
       </div>
+
+      {locked && (
+        <p className="verify-form__hint" role="alert">
+          Revision này đang bị khóa sau xung đột. Hãy tải lại chi tiết trước khi gửi quyết định.
+        </p>
+      )}
 
       <fieldset>
         <legend>Quyết định</legend>
@@ -175,8 +182,8 @@ export default function CoordinateVerificationForm({ detail, busy, onSubmit }) {
         </ul>
       )}
 
-      <button type="submit" className="verify-form__submit" disabled={busy}>
-        {busy ? 'Đang gửi…' : 'Ghi nhận quyết định'}
+      <button type="submit" className="verify-form__submit" disabled={busy || locked}>
+        {busy ? 'Đang gửi…' : locked ? 'Cần tải lại chi tiết' : 'Ghi nhận quyết định'}
       </button>
     </form>
   );

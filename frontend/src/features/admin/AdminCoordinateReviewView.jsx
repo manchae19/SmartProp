@@ -38,6 +38,7 @@ export default function AdminCoordinateReviewView() {
   const [total, setTotal] = useState(0);
 
   const [detail, setDetail] = useState(null);
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const [detailBusy, setDetailBusy] = useState(false);
   const [detailError, setDetailError] = useState('');
   const [history, setHistory] = useState([]);
@@ -45,10 +46,13 @@ export default function AdminCoordinateReviewView() {
 
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [notice, setNotice] = useState('');
-  const [conflict, setConflict] = useState('');
+  const [conflict, setConflict] = useState(null);
 
   const listSeq = useRef(0);
   const detailSeq = useRef(0);
+  const loadListRef = useRef(null);
+  const loadStatsRef = useRef(null);
+  const loadDetailRef = useRef(null);
   const pageRange = pendingPageRange(page, total);
 
   const loadStats = useCallback(async () => {
@@ -76,14 +80,16 @@ export default function AdminCoordinateReviewView() {
       if (run === listSeq.current) setListBusy(false);
     }
   }, [statusFilter, search, page]);
+  loadListRef.current = loadList;
+  loadStatsRef.current = loadStats;
 
   const loadDetail = useCallback(async propertyId => {
     const run = ++detailSeq.current;
+    setSelectedPropertyId(propertyId);
     setDetailBusy(true);
     setDetailError('');
     setHistoryError('');
     setNotice('');
-    setConflict('');
     setDetail(null);
     setHistory([]);
     try {
@@ -93,7 +99,10 @@ export default function AdminCoordinateReviewView() {
       ]);
       if (run !== detailSeq.current) return;
       if (detailResult.status === 'rejected') throw detailResult.reason;
-      setDetail(detailResult.value);
+      const loadedDetail = detailResult.value;
+      setDetail(loadedDetail);
+      setConflict(current => current?.propertyId === propertyId
+          && loadedDetail.revision > current.revision ? null : current);
       if (historyResult.status === 'fulfilled') setHistory(historyResult.value || []);
       else setHistoryError(errorText(historyResult.reason));
     } catch (e) {
@@ -107,6 +116,7 @@ export default function AdminCoordinateReviewView() {
       if (run === detailSeq.current) setDetailBusy(false);
     }
   }, []);
+  loadDetailRef.current = loadDetail;
 
   useEffect(() => {
     loadStats();
@@ -122,6 +132,7 @@ export default function AdminCoordinateReviewView() {
   async function submitVerification(form) {
     if (!detail) return;
     const selectedPropertyId = detail.propertyId;
+    const selectedRevision = detail.revision;
     const selectedRequest = detailSeq.current;
     setVerifyBusy(true);
     setNotice('');
@@ -131,17 +142,25 @@ export default function AdminCoordinateReviewView() {
         method: 'POST',
         body: form,
       });
-      if (selectedRequest !== detailSeq.current) return;
-      setNotice('Đã ghi nhận quyết định xác minh.');
-      await Promise.all([loadDetail(selectedPropertyId), loadStats(), loadList()]);
+      if (selectedRequest === detailSeq.current) setNotice('Đã ghi nhận quyết định xác minh.');
+      // The query may have changed while the POST was pending. Read the latest callback
+      // so an old filter/page snapshot cannot become the newest list request.
+      await Promise.all([
+        loadListRef.current?.(),
+        loadStatsRef.current?.(),
+        selectedRequest === detailSeq.current
+          ? loadDetailRef.current?.(selectedPropertyId)
+          : Promise.resolve(),
+      ]);
     } catch (e) {
       if (selectedRequest !== detailSeq.current) return;
       if (e.status === 409) {
         // Không tự gửi lại: revision đã đổi, admin phải xem dữ liệu mới trước.
         setConflict(
-          'Dữ liệu tọa độ đã thay đổi kể từ khi bạn mở tin này. '
-          + 'Quyết định chưa được ghi. Hãy tải lại để xem revision mới.',
+          { propertyId: selectedPropertyId, revision: selectedRevision },
         );
+        setNotice('');
+        setDetailError('');
       } else {
         setDetailError(errorText(e));
       }
@@ -162,7 +181,7 @@ export default function AdminCoordinateReviewView() {
         <button type="button" className="coord-review__refresh" onClick={() => {
           loadStats();
           loadList();
-          if (detail) loadDetail(detail.propertyId);
+          if (selectedPropertyId) loadDetail(selectedPropertyId);
         }}>
           Làm mới
         </button>
@@ -256,10 +275,13 @@ export default function AdminCoordinateReviewView() {
 
           {notice && <p className="coord-review__notice" role="status">{notice}</p>}
 
-          {conflict && (
+          {conflict?.propertyId === selectedPropertyId && (
             <div className="coord-review__conflict" role="alert">
-              <p>{conflict}</p>
-              <button type="button" onClick={() => loadDetail(detail.propertyId)}>
+              <p>
+                Dữ liệu tọa độ đã thay đổi kể từ khi bạn mở tin này. Quyết định chưa được ghi.
+                Tải lại chi tiết để xem revision mới trước khi xác minh.
+              </p>
+              <button type="button" onClick={() => loadDetail(selectedPropertyId)}>
                 Tải lại dữ liệu mới
               </button>
             </div>
@@ -331,6 +353,8 @@ export default function AdminCoordinateReviewView() {
                 key={`${detail.propertyId}:${detail.revision}`}
                 detail={detail}
                 busy={verifyBusy}
+                locked={conflict?.propertyId === detail.propertyId
+                  && conflict.revision === detail.revision}
                 onSubmit={submitVerification}
               />
 

@@ -439,6 +439,101 @@ class CoordinateProvenanceIT {
             .andExpect(jsonPath("$.parcelAnalysisEligible").value(false));
     }
 
+    @Test
+    void adminReviewDetailReturnsSharedParcelEligibilityPolicy() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET coordinate_source='USER_PINNED', accuracy_level='PARCEL', accuracy_meters=3.0,
+                accuracy_method='CADASTRAL_COMPARISON', verification_status='VERIFIED',
+                verification_method='CADASTRAL_RECORD', verified_at=UTC_TIMESTAMP(6),
+                verified_by=?, evidence_reference='IT-SYNTHETIC-EVIDENCE',
+                geographic_validation_status='VERIFIED_EXACT'
+            WHERE property_id=? AND superseded_at IS NULL
+            """, adminId, id);
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(true));
+
+        // Keep one policy source: provenance, accuracy, geographic validity and a
+        // completed verification are all required for the detail headline.
+        jdbc.update("UPDATE property_coordinate_audit SET coordinate_source='UNKNOWN' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET coordinate_source='USER_PINNED', accuracy_level='STREET' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='DISTRICT' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='WARD' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='UNKNOWN', accuracy_meters=NULL WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='PARCEL', accuracy_meters=3.0, geographic_validation_status='INVALID_DISTRICT_MISMATCH' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET geographic_validation_status='VERIFIED_EXACT' WHERE property_id=?", id);
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET accuracy_level='STREET', accuracy_meters=3.0, verification_status='UNVERIFIED',
+                verification_method=NULL, verified_at=NULL, verified_by=NULL
+            WHERE property_id=?
+            """, id);
+        assertReviewEligibility(id, false);
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET verification_status='STALE', verification_method=NULL, verified_at=NULL, verified_by=NULL
+            WHERE property_id=?
+            """, id);
+        assertReviewEligibility(id, false);
+    }
+
+    private void assertReviewEligibility(String propertyId, boolean expected) throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/" + propertyId).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(expected));
+    }
+
+    @Test
+    void pendingPaginationIsStableWhenCreatedAtTiesAcrossPages() throws Exception {
+        String marker = "Coordinate tie " + UUID.randomUUID();
+        List<String> ids = new java.util.ArrayList<>();
+        for (int index = 0; index < 4; index++) {
+            String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+            ids.add(id);
+            jdbc.update("UPDATE properties SET title=? WHERE id=?", marker, id);
+        }
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET created_at='2026-11-25 12:00:00.000000'
+            WHERE property_id IN (?, ?, ?, ?)
+            """, ids.toArray());
+        List<String> expected = jdbc.queryForList("""
+            SELECT a.property_id FROM property_coordinate_audit a
+            JOIN properties p ON p.id=a.property_id
+            WHERE a.superseded_at IS NULL AND p.deleted_at IS NULL AND p.title=?
+            ORDER BY a.created_at DESC, a.id DESC
+            """, String.class, marker);
+
+        List<String> first = pendingIds(marker, 2, 0, 4);
+        List<String> second = pendingIds(marker, 2, 2, 4);
+        List<String> firstAgain = pendingIds(marker, 2, 0, 4);
+        List<String> empty = pendingIds(marker, 2, 4, 4);
+        assertThat(first).containsExactlyElementsOf(expected.subList(0, 2));
+        assertThat(second).containsExactlyElementsOf(expected.subList(2, 4));
+        assertThat(firstAgain).isEqualTo(first);
+        assertThat(java.util.stream.Stream.concat(first.stream(), second.stream()).distinct().count()).isEqualTo(4);
+        assertThat(empty).isEmpty();
+    }
+
+    private List<String> pendingIds(String marker, int limit, int offset, int expectedTotal) throws Exception {
+        String body = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("limit", String.valueOf(limit)).param("offset", String.valueOf(offset))
+                .param("q", marker).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(expectedTotal))
+            .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(body, "$.items[*].propertyId");
+    }
+
     // ---------- F. Backfill identity (blocker A) ----------
 
     @Test
