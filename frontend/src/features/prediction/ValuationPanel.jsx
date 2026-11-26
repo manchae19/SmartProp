@@ -452,6 +452,43 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
               view.updateForm(draftValue => draftValue.road_width_m = $value);
             })(event.target.value)} />
               </label> : null}
+            {view.hasRooms ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Số phòng tắm "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-bathrooms" value={view.form.bathrooms ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.bathrooms = $value);
+            })(event.target.value)} />
+              </label> : null}
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Hướng nhà "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <select className="valuation-input mt-2" data-sp-018bbc28="" data-testid="valuation-house-direction" value={view.form.house_direction ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.house_direction = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
+                    {"Chưa rõ"}
+                  </option>
+                  {["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"].map(d => <option key={d} value={d} data-sp-018bbc28="">{d}</option>)}
+                </select>
+              </label>
+            {view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Hướng ban công "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <select className="valuation-input mt-2" data-sp-018bbc28="" data-testid="valuation-balcony-direction" value={view.form.balcony_direction ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.balcony_direction = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
+                    {"Chưa rõ"}
+                  </option>
+                  {["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"].map(d => <option key={d} value={d} data-sp-018bbc28="">{d}</option>)}
+                </select>
+              </label> : null}
             {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
                 {"Chiều rộng mặt tiền "}
                 <span className="text-brand-navy/70" data-sp-018bbc28="">

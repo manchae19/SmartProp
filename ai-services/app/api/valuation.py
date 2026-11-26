@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
 
 from app.api.schemas import PredictionResponse, ValuationRequest, V1_3PreviewResponse
 from app.models.xgboost.adapter_v1_3 import real_feature_input_enabled
+from app.models.xgboost.features_v1_3 import clean_category
 
 router = APIRouter()
 
@@ -105,9 +106,29 @@ def model_options(request: Request):
     }
 
 
+def _supported_locations(predictor) -> set:
+    """Districts the loaded V1.3 schema actually knows, straight from the artifact.
+
+    The schema vocabulary is already NFC-casefolded, so the request value is normalised
+    the same way before comparison. Comparison is exact after normalisation: no fuzzy or
+    alias matching, and the caller's own spelling is never rewritten.
+    """
+    info = predictor.info() if hasattr(predictor, "info") else {}
+    return {clean_category(v) for v in (info.get("supported_districts") or [])}
+
+
 @router.post("/predict", response_model=V1_3PreviewResponse)
 def predict(payload: ValuationRequest, request: Request, background_tasks: BackgroundTasks):
     predictor = predictor_for(request)
+    # The model has no way to price a district it never trained on, so an unknown
+    # district is a client error rather than a silent extrapolation.
+    locations = _supported_locations(predictor)
+    if locations and clean_category(payload.location_feature) not in locations:
+        raise HTTPException(
+            status_code=422,
+            detail="unsupported_location: địa bàn không được mô hình hỗ trợ: "
+                   + payload.location_feature,
+        )
     t0 = time.perf_counter()
     try:
         response = predictor.predict_from_v6_payload(payload.model_dump())
