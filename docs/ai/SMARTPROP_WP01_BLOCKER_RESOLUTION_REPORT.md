@@ -453,3 +453,59 @@ NOT_READY_TO_MERGE
 | D | Chấp nhận `VALIDATION_PARTIAL` và merge sau khi review thủ công phần Flow B | Không khuyến nghị |
 
 **Tôi không tự chọn A/B/C** vì cả ba đều chạm vào vùng bạn đã đặt ranh giới.
+
+---
+
+## U. MySQL Portable — vận hành và bàn giao (WP-02..WP-08)
+
+### U.1. Tài sản được giữ lại trên ổ F
+
+| Tài sản | Đường dẫn | Trạng thái |
+|---|---|---|
+| **Binary MySQL 8.4.13** | `.scratch\mysql-8.4\mysql-8.4.13-winx64\` (1205 MB) | **GIỮ** |
+| `mysqld.exe` / `mysql.exe` / `mysqladmin.exe` | trong `bin\` | **GIỮ** |
+| **Datadir gốc** (chuẩn bị sẵn, chỉ đọc) | `.scratch\mysql-isolated\data\` (209 MB) | **GIỮ — KHÔNG SỬA** |
+| **Work copy** datadir cho 3307 | `.scratch\mysql-isolated\work-3307\data\` (216 MB) | **GIỮ** |
+| `mysql-8.4.13-winx64.zip` (268 MB) | — | **ĐÃ XOÁ** (đã giải nén + xác minh) |
+| MySQL 8.0.46 | `F:\MySQL\Server8.0` | **GIỮ nguyên**, không sửa |
+
+### U.2. Script vận hành tái sử dụng
+
+| Script | Tác dụng |
+|---|---|
+| `.scratch\mysql-8.4\start-3307.ps1` | Khởi động MySQL 8.4 trên `127.0.0.1:3307` với **work copy** datadir. Detached (`cmd /c start /B`) nên **không giữ pipe** khi bị capture. In ra `VERSION()`, `@@port`, `@@datadir`. |
+| `.scratch\mysql-8.4\stop-3307.ps1` | `mysqladmin shutdown` graceful, chờ port free, không đụng 3306. |
+
+**Đã kiểm chứng round-trip (`FRESH_PASS`):**
+
+```
+start-3307.ps1  → exit 0, 13,6 s
+                  8.4.13   3307   F:\SmartProp\.scratch\mysql-isolated\work-3307\data\
+stop-3307.ps1   → exit 0, 6,0 s
+                  "MySQL 8.4 on 3307 shut down cleanly. Port free."
+```
+
+### U.3. Trạng thái sau khi dọn
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Port 3307 | **FREE** |
+| Port 3306 | **BUSY pid 6556** — service của nhóm, **không đụng** |
+| Process `mysqld` từ `mysql-8.4` | **không còn** |
+| Port app 8000/8080/5173/4173 | **free** |
+| Datadir gốc | **nguyên vẹn** |
+| Binary 8.4 | **nguyên vẹn** |
+
+### U.4. Quy tắc dùng lại cho WP-02..WP-08
+
+1. `start-3307.ps1` trước mỗi phiên cần DB.
+2. Làm việc **chỉ** trên work copy; datadir gốc là nguồn chỉ đọc.
+3. `stop-3307.ps1` sau khi xong — giải phóng 3307.
+4. **Không** xoá datadir gốc, work copy hay binary khi chưa được phê duyệt.
+5. **Không** đụng 3306 dưới bất kỳ hình thức nào.
+
+### U.5. Blocker Flow B vẫn nguyên
+
+MySQL **khởi động được**, nhưng **guard từ chối lineage** vì datadir có **V27** ngoài
+danh sách 12 mục `V13..V26` (§C). Cần quyết định A/B/C trước khi chạy Flow B.
+Việc dựng lại môi trường MySQL **không** gỡ được blocker này.
