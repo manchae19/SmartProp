@@ -125,6 +125,10 @@ class PropertyCoordinateAuditTest {
             "USER_PINNED", "PARCEL", 1.0, "VERIFIED", null,
             java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
         assertFalse(missingMethod.parcelAnalysisEligible());
+        var missingVerifiedAt = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
+            null, "evidence", "VERIFIED_EXACT", null, 1, null);
+        assertFalse(missingVerifiedAt.parcelAnalysisEligible());
         var valid = PropertyCoordinateAudit.derive(
             "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
             java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
