@@ -7,7 +7,7 @@ import LeafletNearbyMap from "./LeafletNearbyMap.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import ContactPanel from "../property/ContactPanel.jsx";
 import { publicMapPoint, locationLabel } from "./locationDisplay.js";
-import { canExploreNearby } from "./coordinateEligibility.js";
+import { canExploreNearby, canAnalyzeDistance } from "./coordinateEligibility.js";
 import { compactPrice, price, types, displayDecimal } from "../property/property.js";
 import { POI_GROUPS, DEFAULT_GROUPS, RADII, filteredPlaces, distanceLabel } from "./nearbyExplorer.js";
 import { useNearbyPlaces } from "./useNearbyPlaces.js";
@@ -231,7 +231,7 @@ export default React.forwardRef(function PropertyExplorer(props, ref) {
                 </p> : !view.allowNearby ? <p className="explorer-notice" data-sp-c46b683d="">
                   {"Tiện ích chỉ được truy vấn cho tin đang công khai."}
                 </p> : null}
-              {view.origin && view.property?.coordinate?.revision === 0 ? <p className="explorer-location-note">Khoảng cách ước tính từ ghim tin đăng · chưa xác minh vị trí căn nhà.</p> : null}
+              {view.origin && !canAnalyzeDistance(view.property) ? <p className="explorer-location-note">Khoảng cách ước tính từ ghim tin đăng · chưa xác minh vị trí căn nhà.</p> : null}
               {view.nearby.busy ? <p role="status" className="explorer-notice" data-sp-c46b683d="">
                   {"Đang tìm tiện ích trong "}
                   {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.distanceLabel(view.radius))}

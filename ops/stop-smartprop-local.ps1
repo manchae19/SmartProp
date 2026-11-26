@@ -1,6 +1,8 @@
 param([string]$Root=(Join-Path $PSScriptRoot '..'))
 $ErrorActionPreference='Stop';$Root=(Resolve-Path -LiteralPath $Root).Path
 . (Join-Path $PSScriptRoot 'local-runtime.ps1')
+$runtimeLock=Enter-SpRuntimeLock $Root
+try {
 $run=Join-Path $Root '.local-run';$retained=@()
 foreach($entry in @(Read-SpRegistry $run)){
  $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($entry.pid)" -ErrorAction SilentlyContinue
@@ -14,3 +16,4 @@ foreach($entry in @(Read-SpRegistry $run)){
 }
 if(Test-Path -LiteralPath $run){ConvertTo-Json -InputObject @($retained) -Depth 4 | Set-Content -LiteralPath (Join-Path $run 'services.json') -Encoding UTF8}
 Write-Host 'Existing services not started by this launcher were left running. No data/cache was deleted.'
+} finally {$runtimeLock.ReleaseMutex();$runtimeLock.Dispose()}

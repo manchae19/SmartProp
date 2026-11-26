@@ -5,6 +5,25 @@
         Referrer-Policy strict-origin-when-cross-origin
         -Server
     }
+    @chatHealth {
+        path /api/chat/health
+        method GET
+    }
+    handle @chatHealth {
+        uri strip_prefix /api
+        reverse_proxy 127.0.0.1:8001
+    }
+    handle /api/chat {
+        reverse_proxy 127.0.0.1:8082
+    }
+    @landRead {
+        path /api/land/*
+        method GET
+    }
+    handle @landRead {
+        uri strip_prefix /api
+        reverse_proxy 127.0.0.1:8001
+    }
     handle /api/* {
         reverse_proxy 127.0.0.1:8080
     }

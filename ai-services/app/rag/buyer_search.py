@@ -4,12 +4,12 @@ import base64,zlib
 from decimal import Decimal
 from urllib.parse import urlencode
 from .land_chat import fold
-from .tools import UpstreamError
+from .tools import UpstreamError, _public_text
 from ..land.budget_rules import budget_band
 from ..land.query_rules import area_filter,requested_location
 
-TYPES={'dat o':'RESIDENTIAL','dat nong nghiep':'AGRICULTURE','nha':'HOUSE','can ho':'APARTMENT','tat ca':'ALL'}
-LABELS={'RESIDENTIAL':'Đất ở','AGRICULTURE':'Đất nông nghiệp','HOUSE':'Nhà','APARTMENT':'Căn hộ','ALL':'Tất cả'}
+TYPES={'dat o':'RESIDENTIAL','dat nong nghiep':'AGRICULTURE','nha':'HOUSE','can ho':'APARTMENT','tat ca':'ALL','dat':'LAND'}
+LABELS={'RESIDENTIAL':'Đất ở','AGRICULTURE':'Đất nông nghiệp','HOUSE':'Nhà','APARTMENT':'Căn hộ','ALL':'Tất cả','LAND':'Đất'}
 DISTRICTS=['Hải Châu','Sơn Trà','Thanh Khê','Cẩm Lệ','Ngũ Hành Sơn','Liên Chiểu','Hòa Vang']
 MORE=re.compile(r'^(?:xem ket qua khac|xem them|tiep|con nua|con khong)[ ?.]*$')
 
@@ -22,6 +22,7 @@ def _public(backend, filters, ceiling):
  """Read every public page within a fixed bound; never label a truncated scan complete."""
  params={'transactionType':'SALE','city':'Đà Nẵng','maxPrice':ceiling,'sort':'priceAsc','size':50}
  if filters['type'] in ('HOUSE','APARTMENT'):params['propertyType']=filters['type']
+ elif filters['type'] in ('LAND','RESIDENTIAL','AGRICULTURE'):params['propertyType']='LAND'
  if filters.get('minPrice'):params['minPrice']=filters['minPrice']
  if filters.get('district'):params['district']=filters['district']
  if filters.get('location')=='Hòa Xuân':params['ward']='Hòa Xuân'
@@ -35,13 +36,14 @@ def _public(backend, filters, ceiling):
    value=_price(p.get('price'))
    if p.get('status')!='PUBLISHED' or p.get('transactionType')!='SALE' or p.get('priceUnit')!='TOTAL' or p.get('currency')!='VND' or value is None:continue
    if not re.fullmatch(r'[a-fA-F0-9-]{36}',str(p.get('id',''))) or not p.get('title'):continue
-   if filters['type'] in ('HOUSE','APARTMENT') and p.get('propertyType')!=filters['type']:continue
+   if params.get('propertyType') and p.get('propertyType')!=params['propertyType']:continue
+   if filters['type'] in ('RESIDENTIAL','AGRICULTURE') and p.get('landUseType')!=filters['type']:continue
    if filters.get('district') and p.get('district')!=filters['district']:continue
    if filters.get('location')=='Hòa Xuân' and fold(p.get('ward') or '')!='hoa xuan':continue
    area=p.get('areaSqm');bounds=filters.get('area') or {}
    if not _price(area) and not (isinstance(area,(float,Decimal)) and area>0):continue
    if not bounds.get('minArea',0)<=float(area)<=bounds.get('maxArea',float('inf')):continue
-   result.append({'key':'PROPERTY:'+p['id'],'source':'SMARTPROP','price':value,'id':p['id'],'title':p['title'],'area':area,'location':', '.join(x for x in [p.get('ward'),p.get('district')] if x),'priceType':'Giá chào tin đăng','property':{**p,'id':'property:'+p['id'],'priceVnd':value,'score':None,'explanations':[],'warnings':[],'source':{'kind':'PROPERTY','recordKey':p['id'],'name':'SmartProp'},'verificationStatus':'PLATFORM_PUBLISHED','qualityStatus':'PLATFORM_PUBLISHED'}})
+   result.append({'key':'PROPERTY:'+p['id'],'source':'SMARTPROP','price':value,'id':p['id'],'title':_public_text(p['title'],300),'area':area,'location':', '.join(x for x in [p.get('ward'),p.get('district')] if x),'priceType':'Giá chào tin đăng','property':{**{k:p[k] for k in ('title','district','ward','propertyType','areaSqm','bedrooms','bathrooms','contentVersion') if k in p},'title':_public_text(p['title'],300),'id':'property:'+p['id'],'priceVnd':value,'score':0,'explanations':[],'warnings':[],'source':{'kind':'PROPERTY','recordKey':p['id'],'name':'SmartProp'},'verificationStatus':'PLATFORM_PUBLISHED','qualityStatus':'PLATFORM_PUBLISHED'}})
   total_pages=body.get('totalPages')
   if isinstance(total_pages,int) and page+1>=total_pages:return result
   if not body['items']:return result
@@ -89,9 +91,9 @@ def respond(bot,request,context,turn):
   state['mode']='EXACT' if re.search(r'\bdung\b',n) else 'APPROXIMATE' if re.search(r'\b(khoang|tam|quanh|xap xi)\b',n) else 'MAXIMUM'
   if state['maxPrice'] is not None:context.budget_vnd=str(state['maxPrice'])
  if chosen:state['type']=chosen
- elif re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='RESIDENTIAL'
+ elif re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='LAND'
  elif not state.get('type'):
-  if re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='RESIDENTIAL'
+  if re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='LAND'
   elif context.property_type in ('HOUSE','APARTMENT'):state['type']=context.property_type
  if 'hoa xuan' in n:state.update(location='Hòa Xuân',district=None)
  else:
@@ -126,21 +128,21 @@ def respond(bot,request,context,turn):
  state.update(pending=False,pagingActive=True)
  ceiling=state['maxPrice'];reference_ceiling=ceiling*115//100 if state.get('mode','MAXIMUM')=='MAXIMUM' else ceiling
  pool=[];warnings=[]
- if state['type'] in ('RESIDENTIAL','AGRICULTURE','ALL') and state['location'] in ('Hòa Xuân','Đà Nẵng','Cẩm Lệ'):
+ if getattr(bot.land_advisor,"enabled",False) and state['type'] in ('LAND','RESIDENTIAL','AGRICULTURE','ALL') and state['location'] in ('Hòa Xuân','Đà Nẵng','Cẩm Lệ'):
   e=bot.land_advisor.engine;group='agriculture' if state['type']=='AGRICULTURE' else 'housing'
   candidates=[dict(e.imported.enrich(e.pricedbyid.get(r['id'],r)),purposeGroup=e.purpose(r)) for r in e.original if r['id'] in e.activeids]
   candidates+=list(e.imported.SOURCE_ROWS.values())+[e.unified_summary(r) for r in e.unified_lots.values()]+list(e.imported.EXTRAS.values())
   for r in candidates:
    value=e.imported.value(r);purpose=r.get('purposeGroup') or (e.purpose(r) if r.get('planningCode') and r.get('planningCategory') else None)
    if purpose not in ('housing','agriculture'):continue
-   if state['type']!='ALL' and purpose!=group:continue
+   if state['type'] not in ('LAND','ALL') and purpose!=group:continue
    bounds=state.get('area') or {};size=r.get('computedAreaSqm')
    if size is None or not bounds.get('minArea',0)<=size<=bounds.get('maxArea',float('inf')):continue
    if value is None or not (state.get('minPrice') or 0)<=value<=reference_ceiling:continue
    raw=e.summary(r) if r['id'] in e.byid else r
    payload=bot.land_advisor._payload('',{'rows':[raw]},'LAND_SEARCH',None)['extra']['land']['rows'][0]
    pool.append({'key':'LAND:'+r['id'],'source':'LAND_DATA','price':int(value),'id':payload['landId'],'title':payload['displayName'],'area':size,'location':payload['location'],'priceType':payload['priceType'],'land':payload})
- if state['type'] in ('HOUSE','APARTMENT','ALL'):
+ if state['type'] in ('HOUSE','APARTMENT','LAND','RESIDENTIAL','AGRICULTURE','ALL'):
   try:pool+=_public(bot.backend,state,reference_ceiling)
   except UpstreamError:
    warnings.append('Chưa tải được tin đăng SmartProp; không coi lỗi nguồn là không có tin phù hợp.')

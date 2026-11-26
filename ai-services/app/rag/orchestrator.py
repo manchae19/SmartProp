@@ -78,7 +78,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         import os
         from .land_chat import LandAdvisor
         # Hòa Xuân land demo tool (planning cells, Guland parcels, Euro Village 2, flood catalog).
-        self.land_advisor=LandAdvisor(settings,enabled=os.getenv("RAG_LAND_ENABLED","true").lower()=="true")
+        from app.land.paths import land_enabled
+        self.land_advisor=LandAdvisor(settings,enabled=land_enabled())
 
     def _enrich(self, properties):
         """Attach real image + straight-line POI evidence to visible platform properties.
@@ -229,11 +230,13 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if account and not resumed:
             seed(context,account,SUPPORTED_DISTRICTS)
         from .buyer_search import respond as buyer_search
-        buyer = None if research else buyer_search(self, request, context, turn)
+        buyer_domain = bool(context.needs.get('buyerSearch')) or bool(re.search(r'\b(lo dat|tim dat|mua dat|dat o|dat nong nghiep|tat ca)\b', land_fold(request.question)))
+        buyer_domain = buyer_domain or not context.budget_vnd and bool(re.fullmatch(r'(?:toi co)\s+[0-9.,\s]+(?:ty|ti|trieu)(?:\s+[0-9.,]+\s+trieu)?[.!? ]*', land_fold(request.question)))
+        buyer = None if research or not buyer_domain else buyer_search(self, request, context, turn)
         if buyer is not None:
             context.needs["turnIntent"] = "BUYER_SEARCH"
             state=context.needs["buyerSearch"]
-            criteria={"budgetVnd":state.get("maxPrice"),"propertyType":state.get("type") if state.get("type") in ("HOUSE","APARTMENT") else "LAND" if state.get("type") in ("RESIDENTIAL","AGRICULTURE") else "ALL","purpose":context.purpose or "LIVING"}
+            criteria={"budgetVnd":state.get("maxPrice"),"propertyType":state.get("type") if state.get("type") in ("HOUSE","APARTMENT") else "LAND" if state.get("type") in ("LAND","RESIDENTIAL","AGRICULTURE") else "ALL","purpose":context.purpose or "LIVING"}
             if state.get("district"):criteria["district"]=state["district"]
             return self._reply(request,session_id,context,criteria,research=research,**buyer)
         planning=self.planning_advisor.reply(request.question,context)
@@ -245,7 +248,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 request.question, land_state, focused=bool(request.propertyId or context.needs.get("focusedPropertyId"))):
             land_state.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
             context.needs["listOwner"] = "AMENITIES" if turn["intent"] == "AREA_AMENITIES" else "PROPERTY"
-        if request.landId and isinstance(land_state, dict) and context.needs.get("listOwner") in ("LAND","BUYER"):
+        if self.land_advisor.enabled and request.landId and isinstance(land_state, dict) and context.needs.get("listOwner") in ("LAND","BUYER"):
             selected_code = self.land_advisor.engine.code_for(request.landId)
             visible = land_state.get("visibleIds", land_state.get("seen", []))
             if selected_code in visible:

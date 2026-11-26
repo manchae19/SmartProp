@@ -78,7 +78,9 @@ public class NearbyService {
         if(!Set.of(500,1000,2000,5000).contains(radius))throw bad("Bán kính không hợp lệ.");
         var selected=categories(input);
         var property=properties.publicProperty(id);
-        if(!distanceEligible(id))
+        var reference=allowEstimatedOrigin?properties.coordinate(id):null;
+        boolean estimated=reference!=null&&reference.referenceMapEligible();
+        if(!distanceEligible(id)&&!estimated)
             return new Result(id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
         if(property.location==null||!valid(property.location.getY(),property.location.getX()))
             return new Result(id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNAVAILABLE",CREDITS);
@@ -87,7 +89,7 @@ public class NearbyService {
         var location=new Location(property.location.getY(),property.location.getX(),accuracy,evidence.source(),evidence.reference(),evidence.verifiedAt());
         if(!Set.of("EXACT_PROPERTY","BUILDING_ONLY","USER_PROVIDED").contains(accuracy))
             return new Result(id,location,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
-        var result=nearby(id,radius,input);
+        var result=nearby(id,radius,input,allowEstimatedOrigin);
         return new Result(id,location,radius,selected,result.distanceType(),
             result.items().stream().filter(p->"GEOAPIFY".equals(p.provider())).toList(),
             result.fetchedAt(),result.cacheHit(),result.truncated(),result.coverage(),result.status(),result.attribution());
@@ -98,7 +100,7 @@ public class NearbyService {
         var selected=categories(input);
         Property property=properties.publicProperty(id); // Always recheck visibility, including cache hits.
         var reference=allowEstimatedOrigin?properties.coordinate(id):null;
-        boolean estimated=reference!=null&&reference.revision()==0&&reference.referenceMapEligible();
+        boolean estimated=reference!=null&&reference.referenceMapEligible();
         if(!distanceEligible(id)&&!estimated)
             return new Result(property.id,null,radius,selected,"STRAIGHT_LINE",List.of(),Instant.now(),false,false,"UNKNOWN","LOCATION_UNVERIFIED",CREDITS);
         if(property.location==null||!valid(property.location.getY(),property.location.getX()))

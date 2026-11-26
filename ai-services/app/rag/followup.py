@@ -200,7 +200,7 @@ def classification(question, context):
     elif not explicit_search and not reference and ((market and not re.search(r"\bla gi\b",value)) or market_followup):intent="MARKET_TREND" if trend else "MARKET_PRICE"
     elif knowledge:intent="KNOWLEDGE"
     elif place_question:intent="AREA_AMENITIES"
-    elif explicit_search or pending_search or refinement:intent="REFINE_SEARCH" if has_history else "SEARCH"
+    elif explicit_search or pending_search or refinement or (has_history and change_phrase and (budget_edit or district_edit or area_edit)):intent="REFINE_SEARCH" if has_history else "SEARCH"
     elif reference or (is_analytic(question) and has_history):intent="PROPERTY_FOLLOWUP"
     elif budget_edit or kind is not None or purpose is not None or district_edit or area_edit:intent="UPDATE_CRITERIA"
     else:intent="CLARIFY"

@@ -44,8 +44,11 @@ def requested_location(question):
  if match:
   # A known project alias is not an unsupported administrative locality.
   # Resolve from the same source catalogue used by project lookup, never fuzzy-match a new place.
-  from .project_lookup import PROJECTS
   place=match[1].strip(' .!?')
+  if any(x in place for x in ('hoa xuan','da nang','day','nay')):return None
+  from .paths import land_enabled
+  if not land_enabled():return place
+  from .project_lookup import PROJECTS
   if any(place==fold(alias).strip(' .!?') for project in PROJECTS for alias in project['aliases']):return None
   if not any(x in match[1] for x in ('hoa xuan','da nang','day','nay')):return match[1]
  return None

@@ -20,5 +20,5 @@ export function canAnalyzeDistance(property) {
 
 // Legacy listing pins are reference points, never verified property positions.
 export function canExploreNearby(property) {
-  return canAnalyzeDistance(property) || (canShowReferenceMap(property) && property.coordinate.revision === 0);
+  return canShowReferenceMap(property);
 }
