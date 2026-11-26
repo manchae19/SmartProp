@@ -97,7 +97,7 @@ public class PropertyCoordinateAuditRepository {
     public Optional<PropertyCoordinateAudit.Status> current(String propertyId) {
         List<PropertyCoordinateAudit.Status> rows = jdbc.query("""
             SELECT coordinate_source, accuracy_level, accuracy_meters, verification_status,
-                   verification_method, verified_at, geographic_validation_status,
+                   verification_method, verified_at, evidence_reference, geographic_validation_status,
                    geographic_validation_note, revision, created_at
             FROM property_coordinate_audit
             WHERE property_id = ? AND superseded_at IS NULL
@@ -111,6 +111,7 @@ public class PropertyCoordinateAuditRepository {
                 rs.getString("verification_method"),
                 rs.getObject("verified_at", java.time.LocalDateTime.class) == null ? null
                     : rs.getTimestamp("verified_at").toInstant(),
+                rs.getString("evidence_reference"),
                 rs.getString("geographic_validation_status"),
                 rs.getString("geographic_validation_note"),
                 rs.getInt("revision"),
@@ -126,7 +127,7 @@ public class PropertyCoordinateAuditRepository {
         String placeholders = String.join(",", java.util.Collections.nCopies(propertyIds.size(), "?"));
         return jdbc.query("""
             SELECT property_id, coordinate_source, accuracy_level, accuracy_meters, verification_status,
-                   verification_method, verified_at, geographic_validation_status,
+                   verification_method, verified_at, evidence_reference, geographic_validation_status,
                    geographic_validation_note, revision, created_at
             FROM property_coordinate_audit
             WHERE property_id IN (""" + placeholders + ") AND superseded_at IS NULL",
@@ -145,6 +146,7 @@ public class PropertyCoordinateAuditRepository {
             rs.getString("verification_status"),
             rs.getString("verification_method"),
             rs.getTimestamp("verified_at") == null ? null : rs.getTimestamp("verified_at").toInstant(),
+            rs.getString("evidence_reference"),
             rs.getString("geographic_validation_status"),
             rs.getString("geographic_validation_note"),
             rs.getInt("revision"),
@@ -477,7 +479,7 @@ public class PropertyCoordinateAuditRepository {
                     : rs.getTimestamp("created_at").toInstant();
                 boolean parcelEligible = PropertyCoordinateAudit.derive(
                     coordinateSource, accuracyLevel, accuracyMeters, verificationStatus,
-                    verificationMethod, verifiedAt, geographicStatus, geographicNote,
+                    verificationMethod, verifiedAt, rs.getString("evidence_reference"), geographicStatus, geographicNote,
                     revision, createdAt).parcelAnalysisEligible();
 
                 return new ReviewDetail(

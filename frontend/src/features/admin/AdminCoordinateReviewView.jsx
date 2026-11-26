@@ -44,12 +44,15 @@ export default function AdminCoordinateReviewView() {
   const [history, setHistory] = useState([]);
   const [historyError, setHistoryError] = useState('');
 
-  const [verifyBusy, setVerifyBusy] = useState(false);
+  const [pendingSubmissions, setPendingSubmissions] = useState(() => new Set());
   const [notice, setNotice] = useState('');
-  const [conflict, setConflict] = useState(null);
+  const [conflicts, setConflicts] = useState(() => new Map());
 
   const listSeq = useRef(0);
   const detailSeq = useRef(0);
+  const selectedPropertyRef = useRef(null);
+  const pendingSubmissionsRef = useRef(new Set());
+  const conflictsRef = useRef(new Map());
   const loadListRef = useRef(null);
   const loadStatsRef = useRef(null);
   const loadDetailRef = useRef(null);
@@ -85,6 +88,7 @@ export default function AdminCoordinateReviewView() {
 
   const loadDetail = useCallback(async propertyId => {
     const run = ++detailSeq.current;
+    selectedPropertyRef.current = propertyId;
     setSelectedPropertyId(propertyId);
     setDetailBusy(true);
     setDetailError('');
@@ -101,8 +105,6 @@ export default function AdminCoordinateReviewView() {
       if (detailResult.status === 'rejected') throw detailResult.reason;
       const loadedDetail = detailResult.value;
       setDetail(loadedDetail);
-      setConflict(current => current?.propertyId === propertyId
-          && loadedDetail.revision > current.revision ? null : current);
       if (historyResult.status === 'fulfilled') setHistory(historyResult.value || []);
       else setHistoryError(errorText(historyResult.reason));
     } catch (e) {
@@ -130,42 +132,53 @@ export default function AdminCoordinateReviewView() {
   }, [listBusy, page, total]);
 
   async function submitVerification(form) {
-    if (!detail) return;
+    if (!detail || selectedPropertyRef.current !== detail.propertyId) return;
     const selectedPropertyId = detail.propertyId;
-    const selectedRevision = detail.revision;
-    const selectedRequest = detailSeq.current;
-    setVerifyBusy(true);
+    const selectedRevision = Number(form.expectedRevision);
+    const requestSequence = detailSeq.current;
+    const key = `${selectedPropertyId}:${selectedRevision}`;
+    if (selectedRevision !== detail.revision
+      || conflictsRef.current.has(key)
+      || pendingSubmissionsRef.current.has(key)) return;
+    pendingSubmissionsRef.current.add(key);
+    setPendingSubmissions(new Set(pendingSubmissionsRef.current));
     setNotice('');
-    setConflict('');
     try {
       await api(`/properties/${selectedPropertyId}/coordinate/verify`, {
         method: 'POST',
         body: form,
       });
-      if (selectedRequest === detailSeq.current) setNotice('Đã ghi nhận quyết định xác minh.');
+      if (selectedPropertyRef.current === selectedPropertyId
+        && detailSeq.current === requestSequence) setNotice('Đã ghi nhận quyết định xác minh.');
       // The query may have changed while the POST was pending. Read the latest callback
       // so an old filter/page snapshot cannot become the newest list request.
       await Promise.all([
         loadListRef.current?.(),
         loadStatsRef.current?.(),
-        selectedRequest === detailSeq.current
+        selectedPropertyRef.current === selectedPropertyId && detailSeq.current === requestSequence
           ? loadDetailRef.current?.(selectedPropertyId)
           : Promise.resolve(),
       ]);
     } catch (e) {
-      if (selectedRequest !== detailSeq.current) return;
       if (e.status === 409) {
         // Không tự gửi lại: revision đã đổi, admin phải xem dữ liệu mới trước.
-        setConflict(
-          { propertyId: selectedPropertyId, revision: selectedRevision },
-        );
-        setNotice('');
-        setDetailError('');
-      } else {
+        const next = new Map(conflictsRef.current);
+        next.set(key, { propertyId: selectedPropertyId, revision: selectedRevision });
+        conflictsRef.current = next;
+        setConflicts(next);
+        if (selectedPropertyRef.current === selectedPropertyId) {
+          setNotice('');
+          setDetailError('');
+        }
+      } else if (selectedPropertyRef.current === selectedPropertyId
+        && detailSeq.current === requestSequence) {
         setDetailError(errorText(e));
       }
     } finally {
-      setVerifyBusy(false);
+      const next = new Set(pendingSubmissionsRef.current);
+      next.delete(key);
+      pendingSubmissionsRef.current = next;
+      setPendingSubmissions(next);
     }
   }
 
@@ -275,7 +288,8 @@ export default function AdminCoordinateReviewView() {
 
           {notice && <p className="coord-review__notice" role="status">{notice}</p>}
 
-          {conflict?.propertyId === selectedPropertyId && (
+          {[...conflicts.values()].some(value => value.propertyId === selectedPropertyId
+            && (!detail || value.revision === detail.revision)) && (
             <div className="coord-review__conflict" role="alert">
               <p>
                 Dữ liệu tọa độ đã thay đổi kể từ khi bạn mở tin này. Quyết định chưa được ghi.
@@ -352,9 +366,8 @@ export default function AdminCoordinateReviewView() {
               <CoordinateVerificationForm
                 key={`${detail.propertyId}:${detail.revision}`}
                 detail={detail}
-                busy={verifyBusy}
-                locked={conflict?.propertyId === detail.propertyId
-                  && conflict.revision === detail.revision}
+                busy={pendingSubmissions.has(`${detail.propertyId}:${detail.revision}`)}
+                locked={conflicts.has(`${detail.propertyId}:${detail.revision}`)}
                 onSubmit={submitVerification}
               />
 

@@ -15,7 +15,7 @@ class PropertyCoordinateAuditTest {
     void verifiedExactAloneDoesNotEnableDistanceAnalysis() {
         // Có geographic validity nhưng không có provenance và accuracy.
         var status = PropertyCoordinateAudit.derive(
-            "UNKNOWN", "UNKNOWN", null, "UNVERIFIED", null, null,
+            "UNKNOWN", "UNKNOWN", null, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", "Tọa độ nằm trong ranh giới quận", 1, null);
 
         assertTrue(status.referenceMapEligible(), "marker tham khảo được phép");
@@ -27,18 +27,18 @@ class PropertyCoordinateAuditTest {
     @Test
     void distanceAnalysisNeedsProvenanceAndAccuracy() {
         var withBoth = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "STREET", 15.0, "UNVERIFIED", null, null,
+            "USER_PINNED", "STREET", 15.0, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertTrue(withBoth.distanceAnalysisEligible());
 
         var noAccuracy = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "UNKNOWN", null, "UNVERIFIED", null, null,
+            "USER_PINNED", "UNKNOWN", null, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertFalse(noAccuracy.distanceAnalysisEligible(),
             "thiếu accuracy thì không đo khoảng cách");
 
         var noProvenance = PropertyCoordinateAudit.derive(
-            "UNKNOWN", "STREET", 15.0, "UNVERIFIED", null, null,
+            "UNKNOWN", "STREET", 15.0, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertFalse(noProvenance.distanceAnalysisEligible(),
             "thiếu provenance thì không đo khoảng cách");
@@ -48,12 +48,12 @@ class PropertyCoordinateAuditTest {
     void accuracyMetersPolicyRequiresUnknownNullAndKnownPositiveFinite() {
         for (Double invalid : new Double[] { null, 0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY }) {
             var status = PropertyCoordinateAudit.derive(
-                "USER_PINNED", "STREET", invalid, "UNVERIFIED", null, null,
+                "USER_PINNED", "STREET", invalid, "UNVERIFIED", null, null, null,
                 "VERIFIED_EXACT", null, 1, null);
             assertFalse(status.distanceAnalysisEligible(), "invalid meters=" + invalid);
         }
         var unknownWithMeters = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "UNKNOWN", 1.0, "UNVERIFIED", null, null,
+            "USER_PINNED", "UNKNOWN", 1.0, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertFalse(unknownWithMeters.distanceAnalysisEligible());
     }
@@ -61,7 +61,7 @@ class PropertyCoordinateAuditTest {
     @Test
     void streetNullIsAcceptedAsMetadataButNeverEnablesDistance() {
         var status = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "STREET", null, "UNVERIFIED", null, null,
+            "USER_PINNED", "STREET", null, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertTrue(status.referenceMapEligible());
         assertFalse(status.distanceAnalysisEligible());
@@ -71,12 +71,12 @@ class PropertyCoordinateAuditTest {
     @Test
     void unknownNullAndStreetPositiveFiniteFollowAccuracyEligibilityPolicy() {
         var unknown = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "UNKNOWN", null, "UNVERIFIED", null, null,
+            "USER_PINNED", "UNKNOWN", null, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertFalse(unknown.distanceAnalysisEligible());
 
         var street = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "STREET", 0.01, "PENDING_REVIEW", null, null,
+            "USER_PINNED", "STREET", 0.01, "PENDING_REVIEW", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertTrue(street.referenceMapEligible());
         assertTrue(street.distanceAnalysisEligible());
@@ -86,7 +86,7 @@ class PropertyCoordinateAuditTest {
     void unverifiedAndPendingCanMapButRequireKnownPositiveAccuracyForDistance() {
         for (String verification : java.util.List.of("UNVERIFIED", "PENDING_REVIEW")) {
             var status = PropertyCoordinateAudit.derive(
-                "USER_PINNED", "STREET", 0.5, verification, null, null,
+                "USER_PINNED", "STREET", 0.5, verification, null, null, null,
                 "VERIFIED_EXACT", null, 1, null);
             assertTrue(status.referenceMapEligible(), verification);
             assertTrue(status.distanceAnalysisEligible(), verification);
@@ -97,18 +97,18 @@ class PropertyCoordinateAuditTest {
     void parcelAnalysisNeedsParcelAccuracyAndVerification() {
         var verified = PropertyCoordinateAudit.derive(
             "USER_PINNED", "PARCEL", 3.0, "VERIFIED",
-            "FIELD_SURVEY", java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+            "FIELD_SURVEY", java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
         assertTrue(verified.parcelAnalysisEligible());
 
         var parcelUnverified = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "PARCEL", 3.0, "UNVERIFIED", null, null,
+            "USER_PINNED", "PARCEL", 3.0, "UNVERIFIED", null, null, null,
             "VERIFIED_EXACT", null, 1, null);
         assertFalse(parcelUnverified.parcelAnalysisEligible(),
             "PARCEL chưa xác minh không đủ điều kiện phân tích cấp thửa");
 
         var verifiedStreet = PropertyCoordinateAudit.derive(
             "USER_PINNED", "STREET", 15.0, "VERIFIED",
-            "ADMIN_REVIEW", java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+            "ADMIN_REVIEW", java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
         assertFalse(verifiedStreet.parcelAnalysisEligible(),
             "xác minh cấp đường không phải cấp thửa");
     }
@@ -118,23 +118,37 @@ class PropertyCoordinateAuditTest {
         for (Double invalid : new Double[] {null, 0.0, -1.0, Double.NaN, Double.POSITIVE_INFINITY}) {
             var status = PropertyCoordinateAudit.derive(
                 "USER_PINNED", "PARCEL", invalid, "VERIFIED",
-                "FIELD_SURVEY", java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+                "FIELD_SURVEY", java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
             assertFalse(status.parcelAnalysisEligible(), "meters=" + invalid);
         }
         var missingMethod = PropertyCoordinateAudit.derive(
             "USER_PINNED", "PARCEL", 1.0, "VERIFIED", null,
-            java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+            java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
         assertFalse(missingMethod.parcelAnalysisEligible());
         var valid = PropertyCoordinateAudit.derive(
             "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
-            java.time.Instant.now(), "VERIFIED_EXACT", null, 1, null);
+            java.time.Instant.now(), "evidence", "VERIFIED_EXACT", null, 1, null);
+        assertTrue(valid.parcelAnalysisEligible());
+    }
+
+    @Test
+    void parcelEligibilityRequiresNonBlankEvidenceReference() {
+        for (String evidence : new String[] { null, "", "   " }) {
+            var status = PropertyCoordinateAudit.derive(
+                "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
+                java.time.Instant.now(), evidence, "VERIFIED_EXACT", null, 1, null);
+            assertFalse(status.parcelAnalysisEligible(), "evidence=" + evidence);
+        }
+        var valid = PropertyCoordinateAudit.derive(
+            "USER_PINNED", "PARCEL", 1.0, "VERIFIED", "FIELD_SURVEY",
+            java.time.Instant.now(), "legacy-reference", "VERIFIED_EXACT", null, 1, null);
         assertTrue(valid.parcelAnalysisEligible());
     }
 
     @Test
     void boundaryBufferStillAllowsReferenceMap() {
         var status = PropertyCoordinateAudit.derive(
-            "UNKNOWN", "UNKNOWN", null, "UNVERIFIED", null, null,
+            "UNKNOWN", "UNKNOWN", null, "UNVERIFIED", null, null, null,
             "VERIFIED_BOUNDARY_BUFFER", "cách biên 20 m", 1, null);
         assertTrue(status.referenceMapEligible());
         assertFalse(status.distanceAnalysisEligible());
@@ -143,7 +157,7 @@ class PropertyCoordinateAuditTest {
     @Test
     void invalidDistrictMismatchDisablesEverything() {
         var status = PropertyCoordinateAudit.derive(
-            "USER_PINNED", "STREET", 15.0, "UNVERIFIED", null, null,
+            "USER_PINNED", "STREET", 15.0, "UNVERIFIED", null, null, null,
             "INVALID_DISTRICT_MISMATCH", "lệch 2734 m", 1, null);
         assertFalse(status.referenceMapEligible(),
             "tọa độ lệch địa bàn không được hiển thị marker");
@@ -155,7 +169,7 @@ class PropertyCoordinateAuditTest {
     void rejectedOrStaleCoordinatesAreNotEligibleForSpatialUse() {
         for (String verification : java.util.List.of("REJECTED", "STALE")) {
             var status = PropertyCoordinateAudit.derive(
-                "USER_PINNED", "STREET", 15.0, verification, null, null,
+                "USER_PINNED", "STREET", 15.0, verification, null, null, null,
                 "VERIFIED_EXACT", null, 1, null);
             assertFalse(status.referenceMapEligible(), verification);
             assertFalse(status.distanceAnalysisEligible(), verification);

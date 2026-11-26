@@ -837,6 +837,44 @@ class CoordinateProvenanceIT {
     }
 
     @Test
+    void adminDetailFailsClosedForLegacyParcelAuditsWithoutEvidence() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Legacy parcel fixture", "Cẩm Lệ", "Hòa An");
+        record LegacyCase(String name, String accuracy, String verification, String method,
+                          boolean verifiedAt, String evidence, Double meters, boolean expected) {}
+        List<LegacyCase> cases = List.of(
+            new LegacyCase("complete legacy record", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, true),
+            new LegacyCase("null evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, null, 1.0, false),
+            new LegacyCase("empty evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "", 1.0, false),
+            new LegacyCase("blank evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "   ", 1.0, false),
+            new LegacyCase("missing method", "PARCEL", "VERIFIED", null, true, "legacy-evidence", 1.0, false),
+            new LegacyCase("missing verified timestamp", "PARCEL", "VERIFIED", "FIELD_SURVEY", false, "legacy-evidence", 1.0, false),
+            new LegacyCase("invalid accuracy", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", null, false),
+            new LegacyCase("street accuracy", "STREET", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false),
+            new LegacyCase("unknown accuracy", "UNKNOWN", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false),
+            new LegacyCase("unverified status", "PARCEL", "UNVERIFIED", null, false, null, 1.0, false),
+            new LegacyCase("stale status", "PARCEL", "STALE", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false)
+        );
+
+        for (LegacyCase item : cases) {
+            jdbc.update("""
+                UPDATE property_coordinate_audit
+                SET coordinate_source='USER_PINNED', accuracy_level=?, accuracy_meters=?,
+                    verification_status=?, verification_method=?,
+                    verified_at=CASE WHEN ? THEN UTC_TIMESTAMP(6) ELSE NULL END,
+                    evidence_reference=?, geographic_validation_status='VERIFIED_EXACT'
+                WHERE property_id=? AND superseded_at IS NULL
+                """, item.accuracy(), item.meters(), item.verification(), item.method(),
+                item.verifiedAt(), item.evidence(), id);
+
+            mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.parcelAnalysisEligible").value(item.expected()))
+                .andDo(result -> assertThat(result.getResponse().getContentAsString())
+                    .as("legacy fixture case %s", item.name()).isNotBlank());
+        }
+    }
+
+    @Test
     void nonAdminCannotReadReviewDetail() throws Exception {
         String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
 
