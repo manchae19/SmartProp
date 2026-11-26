@@ -6,7 +6,7 @@ import CoordinateVerificationForm from './CoordinateVerificationForm.jsx';
 import {
   SOURCE_LABEL, ACCURACY_LABEL, VERIFICATION_LABEL, METHOD_LABEL,
   GEOGRAPHIC_LABEL, verificationTone, isDistrictMismatch, reviewHeadline,
-  accuracyText, timeText,
+  accuracyText, timeText, pendingQueueParams, pendingPageRange,
 } from './coordinateReview.js';
 import './AdminCoordinateReviewView.css';
 
@@ -34,11 +34,14 @@ export default function AdminCoordinateReviewView() {
   const [listError, setListError] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const [detail, setDetail] = useState(null);
   const [detailBusy, setDetailBusy] = useState(false);
   const [detailError, setDetailError] = useState('');
   const [history, setHistory] = useState([]);
+  const [historyError, setHistoryError] = useState('');
 
   const [verifyBusy, setVerifyBusy] = useState(false);
   const [notice, setNotice] = useState('');
@@ -46,6 +49,7 @@ export default function AdminCoordinateReviewView() {
 
   const listSeq = useRef(0);
   const detailSeq = useRef(0);
+  const pageRange = pendingPageRange(page, total);
 
   const loadStats = useCallback(async () => {
     try {
@@ -60,36 +64,43 @@ export default function AdminCoordinateReviewView() {
     setListBusy(true);
     setListError('');
     try {
-      const params = new URLSearchParams({ limit: '50' });
-      if (statusFilter) params.set('verificationStatus', statusFilter);
-      if (search.trim()) params.set('q', search.trim());
+      const params = pendingQueueParams({ page, statusFilter, search });
       const result = await api(`/admin/coordinates/pending?${params}`);
-      if (run === listSeq.current) setItems(result || []);
+      if (run === listSeq.current) {
+        setItems(result?.items || []);
+        setTotal(result?.total || 0);
+      }
     } catch (e) {
       if (run === listSeq.current) setListError(errorText(e));
     } finally {
       if (run === listSeq.current) setListBusy(false);
     }
-  }, [statusFilter, search]);
+  }, [statusFilter, search, page]);
 
   const loadDetail = useCallback(async propertyId => {
     const run = ++detailSeq.current;
     setDetailBusy(true);
     setDetailError('');
+    setHistoryError('');
     setNotice('');
     setConflict('');
+    setDetail(null);
+    setHistory([]);
     try {
-      const [next, rows] = await Promise.all([
+      const [detailResult, historyResult] = await Promise.allSettled([
         api(`/admin/coordinates/${propertyId}`),
-        api(`/properties/${propertyId}/coordinate/history`).catch(() => []),
+        api(`/properties/${propertyId}/coordinate/history`),
       ]);
       if (run !== detailSeq.current) return;
-      setDetail(next);
-      setHistory(rows || []);
+      if (detailResult.status === 'rejected') throw detailResult.reason;
+      setDetail(detailResult.value);
+      if (historyResult.status === 'fulfilled') setHistory(historyResult.value || []);
+      else setHistoryError(errorText(historyResult.reason));
     } catch (e) {
       if (run === detailSeq.current) {
         setDetail(null);
         setHistory([]);
+        setHistoryError('');
         setDetailError(errorText(e));
       }
     } finally {
@@ -102,19 +113,29 @@ export default function AdminCoordinateReviewView() {
     loadList();
   }, [loadStats, loadList]);
 
+  useEffect(() => {
+    if (!listBusy && page > 0 && page * 50 >= total) {
+      setPage(Math.max(0, Math.ceil(total / 50) - 1));
+    }
+  }, [listBusy, page, total]);
+
   async function submitVerification(form) {
     if (!detail) return;
+    const selectedPropertyId = detail.propertyId;
+    const selectedRequest = detailSeq.current;
     setVerifyBusy(true);
     setNotice('');
     setConflict('');
     try {
-      await api(`/properties/${detail.propertyId}/coordinate/verify`, {
+      await api(`/properties/${selectedPropertyId}/coordinate/verify`, {
         method: 'POST',
         body: form,
       });
+      if (selectedRequest !== detailSeq.current) return;
       setNotice('Đã ghi nhận quyết định xác minh.');
-      await Promise.all([loadDetail(detail.propertyId), loadStats(), loadList()]);
+      await Promise.all([loadDetail(selectedPropertyId), loadStats(), loadList()]);
     } catch (e) {
+      if (selectedRequest !== detailSeq.current) return;
       if (e.status === 409) {
         // Không tự gửi lại: revision đã đổi, admin phải xem dữ liệu mới trước.
         setConflict(
@@ -164,7 +185,7 @@ export default function AdminCoordinateReviewView() {
           <div className="coord-review__filters">
             <label>
               <span>Trạng thái</span>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <select value={statusFilter} onChange={e => { setPage(0); setStatusFilter(e.target.value); }}>
                 {STATUS_FILTERS.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
@@ -175,7 +196,7 @@ export default function AdminCoordinateReviewView() {
               <input
                 type="search"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => { setPage(0); setSearch(e.target.value); }}
                 placeholder="Mã tin, tiêu đề, địa chỉ"
               />
             </label>
@@ -190,7 +211,7 @@ export default function AdminCoordinateReviewView() {
           )}
 
           <ul className="coord-review__items">
-            {items.map(item => (
+            {!listBusy && !listError && items.map(item => (
               <li key={item.propertyId}>
                 <button
                   type="button"
@@ -217,6 +238,11 @@ export default function AdminCoordinateReviewView() {
               </li>
             ))}
           </ul>
+          <nav className="coord-review__pagination" aria-label="Phân trang hàng đợi">
+            <button type="button" disabled={listBusy || page === 0} onClick={() => setPage(value => value - 1)}>Trước</button>
+            <span aria-live="polite">{pageRange.total === 0 ? '0 kết quả' : `${pageRange.start}-${pageRange.end} / ${pageRange.total}`}</span>
+            <button type="button" disabled={listBusy || (page + 1) * 50 >= total} onClick={() => setPage(value => value + 1)}>Sau</button>
+          </nav>
         </section>
 
         <section className="coord-review__detail" aria-label="Chi tiết tin đang chọn">
@@ -302,6 +328,7 @@ export default function AdminCoordinateReviewView() {
               </div>
 
               <CoordinateVerificationForm
+                key={`${detail.propertyId}:${detail.revision}`}
                 detail={detail}
                 busy={verifyBusy}
                 onSubmit={submitVerification}
@@ -309,9 +336,10 @@ export default function AdminCoordinateReviewView() {
 
               <section className="coord-review__history" aria-label="Lịch sử tọa độ">
                 <h3>Lịch sử thay đổi</h3>
-                {history.length === 0
+                {historyError && <p role="alert" className="coord-review__error">{historyError}</p>}
+                {!historyError && history.length === 0
                   ? <p className="coord-review__muted">Chưa có lịch sử.</p>
-                  : (
+                  : !historyError && (
                     <ol>
                       {history.map(row => (
                         <li key={row.revision}>

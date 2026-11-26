@@ -72,13 +72,14 @@ public class PropertyCoordinateController {
 
     /** Danh sách tin chờ xác minh — chỉ admin. */
     @GetMapping("/admin/coordinates/pending")
-    public List<PropertyCoordinateAuditRepository.PendingRow> pending(
+    public PropertyCoordinateAuditService.PendingPage pending(
             @AuthenticationPrincipal Jwt jwt,
             @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(defaultValue = "0") int offset,
             @RequestParam(required = false) String verificationStatus,
             @RequestParam(required = false) String q) {
         access.admin(actor(jwt));
-        return audit.pending(limit, verificationStatus, q);
+        return audit.pendingPage(limit, offset, verificationStatus, q);
     }
 
     /** Thống kê hàng đợi xác minh — chỉ admin. Đếm toàn bộ, không suy từ trang. */

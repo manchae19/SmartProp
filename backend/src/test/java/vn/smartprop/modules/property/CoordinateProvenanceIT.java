@@ -765,6 +765,9 @@ class CoordinateProvenanceIT {
                 .param("verificationStatus", "UNVERIFIED")
                 .with(asAdmin(adminId)))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].propertyId").value(id))
+            .andExpect(jsonPath("$.total").isNumber())
+            .andExpect(jsonPath("$.offset").value(0))
             .andReturn().getResponse().getContentAsString();
         assertThat(unverified).contains(id);
 
@@ -785,6 +788,12 @@ class CoordinateProvenanceIT {
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
         assertThat(searched).contains(id);
+
+        mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("q", code).param("offset", "1").with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items").isEmpty());
     }
 
     @Test

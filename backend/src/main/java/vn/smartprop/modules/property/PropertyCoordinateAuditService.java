@@ -85,6 +85,18 @@ public class PropertyCoordinateAuditService {
             verificationStatus, query);
     }
 
+    @Transactional(readOnly = true)
+    public PendingPage pendingPage(int limit, int offset, String verificationStatus, String query) {
+        requireAvailable();
+        int safeLimit = Math.min(Math.max(limit, 1), 200);
+        int safeOffset = Math.max(offset, 0);
+        return new PendingPage(repository.pending(safeLimit, verificationStatus, query, safeOffset),
+            repository.pendingCount(verificationStatus, query), safeOffset, safeLimit);
+    }
+
+    public record PendingPage(List<PropertyCoordinateAuditRepository.PendingRow> items,
+                              long total, int offset, int limit) {}
+
     /** Thống kê hàng đợi — đếm toàn bộ, không suy từ trang đã phân trang. */
     @Transactional(readOnly = true)
     public PropertyCoordinateAuditRepository.Stats stats() {

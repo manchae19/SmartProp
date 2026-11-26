@@ -337,6 +337,10 @@ public class PropertyCoordinateAuditRepository {
      * @param query              tìm theo mã tin, tiêu đề hoặc địa chỉ, {@code null} = không lọc
      */
     public List<PendingRow> pending(int limit, String verificationStatus, String query) {
+        return pending(limit, verificationStatus, query, 0);
+    }
+
+    public List<PendingRow> pending(int limit, String verificationStatus, String query, int offset) {
         StringBuilder sql = new StringBuilder("""
             SELECT a.property_id, p.listing_code, p.title, p.address, p.district, p.ward,
                    a.revision, a.coordinate_source, a.accuracy_level,
@@ -362,8 +366,9 @@ public class PropertyCoordinateAuditRepository {
             args.add(like);
             args.add(like);
         }
-        sql.append(" ORDER BY a.created_at DESC LIMIT ?");
+        sql.append(" ORDER BY a.created_at DESC LIMIT ? OFFSET ?");
         args.add(limit);
+        args.add(offset);
 
         return jdbc.query(sql.toString(),
             (rs, i) -> new PendingRow(
@@ -377,6 +382,31 @@ public class PropertyCoordinateAuditRepository {
                 rs.getTimestamp("created_at") == null ? null
                     : rs.getTimestamp("created_at").toInstant()),
             args.toArray());
+    }
+
+    public long pendingCount(String verificationStatus, String query) {
+        StringBuilder sql = new StringBuilder("""
+            SELECT COUNT(*)
+            FROM property_coordinate_audit a
+            JOIN properties p ON p.id = a.property_id
+            WHERE a.superseded_at IS NULL AND p.deleted_at IS NULL
+            """);
+        List<Object> args = new java.util.ArrayList<>();
+        if (verificationStatus != null && !verificationStatus.isBlank()) {
+            sql.append(" AND a.verification_status = ?");
+            args.add(verificationStatus);
+        } else {
+            sql.append(" AND a.verification_status IN ('UNVERIFIED','PENDING_REVIEW')");
+        }
+        if (query != null && !query.isBlank()) {
+            sql.append(" AND (p.listing_code LIKE ? OR p.title LIKE ? OR p.address LIKE ?)");
+            String like = "%" + query.strip() + "%";
+            args.add(like);
+            args.add(like);
+            args.add(like);
+        }
+        Long count = jdbc.queryForObject(sql.toString(), Long.class, args.toArray());
+        return count == null ? 0 : count;
     }
 
     /**

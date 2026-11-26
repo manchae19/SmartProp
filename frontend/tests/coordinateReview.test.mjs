@@ -11,6 +11,8 @@ import {
   accuracyText,
   timeText,
   validateVerification,
+  pendingQueueParams,
+  pendingPageRange,
 } from '../src/features/admin/coordinateReview.js'
 
 // ---------- Nhãn ----------
@@ -198,4 +200,18 @@ test('từ chối không bắt buộc bằng chứng', () => {
     accuracyLevel: 'UNKNOWN',
   })
   assert.deepEqual(errors, [])
+})
+
+
+test('pending queue query carries page offset, status and trimmed search', () => {
+  const params = pendingQueueParams({ page: 2, limit: 50, statusFilter: 'STALE', search: '  Da Nang  ' })
+  assert.equal(params.get('limit'), '50')
+  assert.equal(params.get('offset'), '100')
+  assert.equal(params.get('verificationStatus'), 'STALE')
+  assert.equal(params.get('q'), 'Da Nang')
+})
+
+test('pending page range reports bounded and empty results', () => {
+  assert.deepEqual(pendingPageRange(2, 101), { start: 101, end: 101, total: 101 })
+  assert.deepEqual(pendingPageRange(0, 0), { start: 0, end: 0, total: 0 })
 })

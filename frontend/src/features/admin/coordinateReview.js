@@ -134,3 +134,23 @@ export function validateVerification(form) {
   }
   return errors;
 }
+
+export function pendingQueueParams({ page = 0, limit = 50, statusFilter = '', search = '' } = {}) {
+  const safePage = Math.max(0, Math.floor(Number(page) || 0));
+  const safeLimit = Math.max(1, Math.floor(Number(limit) || 50));
+  const params = new URLSearchParams({ limit: String(safeLimit), offset: String(safePage * safeLimit) });
+  if (statusFilter) params.set('verificationStatus', statusFilter);
+  if (search.trim()) params.set('q', search.trim());
+  return params;
+}
+
+export function pendingPageRange(page, total, limit = 50) {
+  const safePage = Math.max(0, Math.floor(Number(page) || 0));
+  const safeLimit = Math.max(1, Math.floor(Number(limit) || 50));
+  const safeTotal = Number.isFinite(Number(total)) ? Math.max(0, Number(total)) : 0;
+  return {
+    start: safeTotal === 0 ? 0 : safePage * safeLimit + 1,
+    end: safeTotal === 0 ? 0 : Math.min((safePage + 1) * safeLimit, safeTotal),
+    total: safeTotal,
+  };
+}
