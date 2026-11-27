@@ -133,7 +133,8 @@ DEFAULTED_FEATURES: set = set()           # replaced per call when adapter repor
 
 def validate_explanation(*, features: Sequence[str], contributions: Sequence[float],
                          base_log: float, margin_log: float, calibration_factor: float,
-                         groups: Dict[str, float], ordered: Sequence[str]) -> List[str]:
+                         groups: Dict[str, float], ordered: Sequence[str],
+                         schema_features: Optional[Sequence[str]] = None) -> List[str]:
     """Return the list of problems. Empty list means the explanation is trustworthy."""
     problems: List[str] = []
     if len(contributions) != len(features):
@@ -141,8 +142,11 @@ def validate_explanation(*, features: Sequence[str], contributions: Sequence[flo
         return problems
     if len(set(features)) != len(features):
         problems.append("duplicate feature names")
+    active = list(schema_features) if schema_features is not None else list(ordered)
+    if list(features) != active:
+        problems.append("feature vector does not match the active schema order")
     if list(ordered) != list(features):
-        problems.append("feature order differs from active schema")
+        problems.append("encoded row order differs from the feature vector")
     for value in contributions:
         if not is_finite_number(value):
             problems.append("non-finite contribution")
@@ -156,8 +160,12 @@ def validate_explanation(*, features: Sequence[str], contributions: Sequence[flo
         problems.append(f"missing group mapping: {missing_groups}")
     if abs(sum(groups.values()) - sum(contributions)) > 1e-6 * max(1.0, abs(sum(contributions))):
         problems.append("group totals do not reproduce the contribution sum")
-    expected = margin_log - base_log
-    if abs(sum(contributions) - expected) > ADDITIVITY_REL_TOL * max(1.0, abs(expected)):
+    # Normalisation follows the reviewed Phase A benchmark and is NOT arbitrary:
+    # residual is measured against |margin|, the magnitude of the log-space output. Dividing by
+    # |margin - base| (the *attribution* magnitude) inflates float32 noise by orders of
+    # magnitude whenever the base is large relative to the total contribution (e.g. LAND).
+    residual = abs(margin_log - (base_log + math.fsum(contributions)))
+    if residual > ADDITIVITY_REL_TOL * max(1.0, abs(margin_log)):
         problems.append("base + contributions do not reproduce the margin")
     return problems
 
@@ -169,6 +177,8 @@ def build_explanation(*, features: Sequence[str], contributions: Sequence[float]
                       provided: Sequence[str], model_type: str,
                       defaulted: Sequence[str] = (),
                       raw_invalid: Sequence[str] = (),
+                      schema_features: Optional[Sequence[str]] = None,
+                      prediction_margin_log: Optional[float] = None,
                       warnings: Optional[List[str]] = None) -> Dict[str, Any]:
     values = [float(c) for c in contributions]
     pairs = list(zip(features, values))
@@ -184,7 +194,13 @@ def build_explanation(*, features: Sequence[str], contributions: Sequence[float]
     problems = validate_explanation(
         features=list(features), contributions=values, base_log=base_log,
         margin_log=margin_log, calibration_factor=calibration_factor,
-        groups=groups, ordered=list(encoded_row.keys()))
+        groups=groups, ordered=list(encoded_row.keys()),
+        schema_features=schema_features)
+    # The margin that produced the price must be the margin the SHAP values explain.
+    if prediction_margin_log is not None and is_finite_number(prediction_margin_log):
+        if abs(float(prediction_margin_log) - float(margin_log)) > 1e-9 * max(
+                1.0, abs(float(margin_log))):
+            problems.append("SHAP margin differs from the prediction margin")
     if problems:
         return unavailable_explanation("Không thể xác thực giải thích: " + "; ".join(problems[:3]))
 

@@ -292,6 +292,8 @@ class PredictorV1_3:
                     contributions=[float(c) for c in contribs[:-1]],
                     base_log=base_log,
                     margin_log=margin_shap if margin_shap is not None else log_pred,
+                    prediction_margin_log=log_pred,
+                    schema_features=list(self.schema["features"]),
                     naive_price_vnd=int(round(naive_vnd)),
                     calibration_policy=method,
                     calibration_factor=float(factor),
@@ -351,7 +353,7 @@ class PredictorV1_3:
                     f"{round(factor, 4)}x." if shap_ok else
                     "Không tạo được giải thích SHAP cho lần định giá này; "
                     "giá dự đoán và hệ số hiệu chỉnh vẫn được áp dụng bình thường."),
-            },
+            } if shap_ok else None,
             "explanation": explanation,
         }
 
