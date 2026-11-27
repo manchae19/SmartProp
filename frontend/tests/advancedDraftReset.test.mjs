@@ -48,7 +48,7 @@ test('switching to an apartment drops dimensions the old draft still holds', () 
   assert.equal(payload.projectName, 'FPT Plaza 2')
 })
 
-test('switching to land drops floors and directions', () => {
+test('switching to land drops floors and balcony direction', () => {
   const draft = {
     ...ADVANCED_DRAFT_DEFAULTS,
     floors: '3', balconyDirection: 'Đông', streetName: 'Trường Sa',
@@ -61,7 +61,7 @@ test('switching to land drops floors and directions', () => {
 
 test('defaults cover every field any property type can allow', () => {
   const allowedKeys = new Set()
-  const map = { street: 'streetName', project: 'projectName', road: 'roadWidthM', frontage: 'frontageWidthM', floors: 'floors', directions: 'balconyDirection', subtype: 'houseSubtype' }
+  const map = { street: 'streetName', project: 'projectName', road: 'roadWidthM', frontage: 'frontageWidthM', floors: 'floors', balconyDirection: 'balconyDirection', subtype: 'houseSubtype' }
   for (const type of ['Đất nền', 'Căn hộ chung cư', 'Nhà phố', 'Biệt thự']) {
     const allowed = advancedFieldsFor(type)
     for (const [flag, key] of Object.entries(map)) {
@@ -71,4 +71,36 @@ test('defaults cover every field any property type can allow', () => {
   for (const key of allowedKeys) {
     assert.ok(key in ADVANCED_DRAFT_DEFAULTS, `${key} phải có trong ADVANCED_DRAFT_DEFAULTS`)
   }
+})
+
+// ---------------------------------------------------------------
+// Ghi chú: initialDraft() nằm trong usePostEditor.js, module này import file .jsx nên
+// node test runner thuần không nạp được (ERR_UNKNOWN_FILE_EXTENSION). Vì vậy reset được
+// kiểm qua production payload builder bên dưới - hàm mà editor thật sự gọi - thay vì
+// mô phỏng lại bằng Object.assign.
+// ---------------------------------------------------------------
+// Chuyển loại BĐS: payload production tự lọc field không còn áp dụng,
+// kể cả khi draft còn giữ giá trị cũ (stale hidden value).
+test('chuyển loại BĐS: payload production lọc đúng field stale', async () => {
+  const { advancedValuationPayload } = await import('../src/features/prediction/advancedValuation.js')
+  const stale = {
+    streetName: 'Trường Sa', projectName: 'Dự án A',
+    roadWidthM: '12', frontageWidthM: '6',
+    floors: '3', houseSubtype: 'villa', balconyDirection: 'Đông',
+  }
+  const land = advancedValuationPayload(stale, 'Đất nền')
+  assert.equal('floors' in land, false)
+  assert.equal('houseSubtype' in land, false)
+  assert.equal('balconyDirection' in land, false)
+  assert.equal(land.roadWidthM, 12)
+
+  const house = advancedValuationPayload(stale, 'Nhà phố')
+  assert.equal('balconyDirection' in house, false)
+  assert.equal(house.floors, 3)
+
+  const apartment = advancedValuationPayload(stale, 'Căn hộ chung cư')
+  assert.equal('roadWidthM' in apartment, false)
+  assert.equal('frontageWidthM' in apartment, false)
+  assert.equal('floors' in apartment, false)
+  assert.equal(apartment.balconyDirection, 'Đông')
 })

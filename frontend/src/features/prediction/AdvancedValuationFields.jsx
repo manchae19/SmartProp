@@ -143,7 +143,7 @@ export default function AdvancedValuationFields({ draft, propertyType, onChange,
             </Field>
           ) : null}
 
-          {allowed.directions ? (
+          {allowed.balconyDirection ? (
             <Field label="Hướng ban công">
               <select
                 data-testid="valuation-balcony-direction"

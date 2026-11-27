@@ -7,7 +7,8 @@ test('land listings allow dimensions but not floors or directions', () => {
   assert.equal(allowed.road, true)
   assert.equal(allowed.frontage, true)
   assert.equal(allowed.floors, false)
-  assert.equal(allowed.directions, false)
+  assert.equal(allowed.balconyDirection, false)
+  assert.equal(allowed.houseDirection, true)
   assert.equal(allowed.subtype, false)
 })
 
@@ -17,7 +18,8 @@ test('apartments allow project and directions but never road or frontage', () =>
   assert.equal(allowed.road, false)
   assert.equal(allowed.frontage, false)
   assert.equal(allowed.floors, false)
-  assert.equal(allowed.directions, true)
+  assert.equal(allowed.balconyDirection, true)
+  assert.equal(allowed.houseDirection, true)
 })
 
 test('houses allow the full set including floors and subtype', () => {
@@ -26,7 +28,9 @@ test('houses allow the full set including floors and subtype', () => {
   assert.equal(allowed.frontage, true)
   assert.equal(allowed.floors, true)
   assert.equal(allowed.subtype, true)
-  assert.equal(allowed.directions, true)
+  assert.equal(allowed.houseDirection, true)
+  // Nhà phố không có ban công theo contract của model, nên không được gửi.
+  assert.equal(allowed.balconyDirection, false)
 })
 
 test('villas do not offer a subtype because the type already implies it', () => {
@@ -53,7 +57,8 @@ test('only explicitly entered values are forwarded', () => {
   assert.equal(payload.frontageWidthM, 4.2)
   assert.equal(payload.floors, 3)
   assert.equal(payload.houseSubtype, 'house_c4')
-  assert.equal(payload.balconyDirection, 'Đông Nam')
+  // Nhà phố không nhận hướng ban công, kể cả khi draft còn giá trị cũ.
+  assert.equal('balconyDirection' in payload, false)
 })
 
 test('out-of-range dimensions are dropped, not clamped', () => {
@@ -88,7 +93,43 @@ test('unknown subtype is dropped', () => {
 test('text is truncated to the API limits', () => {
   const payload = advancedValuationPayload({
     streetName: 'a'.repeat(300), balconyDirection: 'b'.repeat(80),
-  }, 'Nhà phố')
+  }, 'Căn hộ chung cư')
   assert.equal(payload.streetName.length, 200)
   assert.equal(payload.balconyDirection.length, 50)
+})
+
+// ---------------------------------------------------------------
+// Balcony direction chỉ áp dụng căn hộ chung cư. FastAPI từ chối
+// balconyDirection cho loại khác, nên payload builder phải tự lọc.
+// ---------------------------------------------------------------
+for (const type of ['Nhà phố', 'Biệt thự', 'Đất nền']) {
+  test(`không gửi balconyDirection cho ${type}`, () => {
+    const payload = advancedValuationPayload({ balconyDirection: 'Đông' }, type)
+    assert.equal('balconyDirection' in payload, false)
+  })
+}
+
+test('vẫn gửi balconyDirection cho căn hộ', () => {
+  const payload = advancedValuationPayload({ balconyDirection: 'Đông' }, 'Căn hộ chung cư')
+  assert.equal(payload.balconyDirection, 'Đông')
+})
+
+test('applicability tách riêng house direction và balcony direction', () => {
+  assert.equal(advancedFieldsFor('Nhà phố').houseDirection, true)
+  assert.equal(advancedFieldsFor('Nhà phố').balconyDirection, false)
+  assert.equal(advancedFieldsFor('Biệt thự').balconyDirection, false)
+  assert.equal(advancedFieldsFor('Đất nền').balconyDirection, false)
+  assert.equal(advancedFieldsFor('Căn hộ chung cư').balconyDirection, true)
+  // Không còn cờ gộp `directions`.
+  for (const type of ['Nhà phố', 'Biệt thự', 'Đất nền', 'Căn hộ chung cư']) {
+    assert.equal('directions' in advancedFieldsFor(type), false)
+  }
+})
+
+test('chuyển căn hộ -> nhà phố thì balcony bị loại khỏi payload', () => {
+  const draft = { balconyDirection: 'Đông', direction: 'Nam' }
+  assert.equal(advancedValuationPayload(draft, 'Căn hộ chung cư').balconyDirection, 'Đông')
+  assert.equal('balconyDirection' in advancedValuationPayload(draft, 'Nhà phố'), false)
+  // house direction thuộc input lõi (valuationInput), không thuộc advanced payload.
+  assert.equal('houseDirection' in advancedValuationPayload(draft, 'Nhà phố'), false)
 })

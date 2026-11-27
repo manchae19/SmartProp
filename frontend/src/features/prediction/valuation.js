@@ -138,7 +138,10 @@ export function buildValuationPayload(form, options) {
   if (ward.length > 100) throw new ValuationError('Tên phường/xã tối đa 100 ký tự.');
   if (ward) payload.ward = ward;
   if (form.category !== 'Đất nền' && !isBlank(form.rooms)) {
-    payload.rooms = numeric(form.rooms, 'Số phòng ngủ', 1, 30, true);
+    const rooms = numeric(form.rooms, 'Số phòng ngủ', 0, 30, true);
+    // 0 nghĩa là "chưa khai báo" trên toàn hệ thống, nên nó được chuẩn hoá thành
+    // missing và KHÔNG gửi đi, thay vì trở thành một số phòng ngủ giả.
+    if (rooms !== 0) payload.rooms = rooms;
   }
   if (form.category === 'Nhà ở') {
     if (!isBlank(form.floors)) payload.floors = numeric(form.floors, 'Số tầng nhà', 1, 20);
@@ -169,9 +172,11 @@ export function buildValuationPayload(form, options) {
   const houseDirection = String(form.house_direction ?? '').trim();
   if (houseDirection.length > 50) throw new ValuationError('Hướng nhà tối đa 50 ký tự.');
   if (houseDirection) payload.house_direction = houseDirection;
+  // Hướng ban công chỉ có nghĩa với căn hộ chung cư. Field bị ẩn khi đổi loại BĐS, nhưng
+  // payload vẫn phải tự lọc: giá trị cũ còn sót lại không được đi vào model.
   const balconyDirection = String(form.balcony_direction ?? '').trim();
   if (balconyDirection.length > 50) throw new ValuationError('Hướng ban công tối đa 50 ký tự.');
-  if (balconyDirection) payload.balcony_direction = balconyDirection;
+  if (form.category === 'Căn hộ chung cư' && balconyDirection) payload.balcony_direction = balconyDirection;
   return payload;
 }
 export function formatPrice(vnd) {

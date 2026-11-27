@@ -376,7 +376,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
+                <input type="number" min="0" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
               view.updateForm(draftValue => draftValue.rooms = $value);
             })(event.target.value)} />
               </label> : null}
@@ -457,7 +457,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-bathrooms" value={view.form.bathrooms ?? ""} onChange={event => ($value => {
+                <input type="number" min="0" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-bathrooms" value={view.form.bathrooms ?? ""} onChange={event => ($value => {
               view.updateForm(draftValue => draftValue.bathrooms = $value);
             })(event.target.value)} />
               </label> : null}

@@ -36,15 +36,15 @@ export const TEXT_LIMITS = {
 export function advancedFieldsFor(propertyType) {
   const type = String(propertyType || "");
   if (type === "Đất nền") {
-    return { street: true, project: true, road: true, frontage: true, floors: false, directions: false, subtype: false };
+    return { street: true, project: true, road: true, frontage: true, floors: false, houseDirection: true, balconyDirection: false, subtype: false };
   }
   if (type === "Căn hộ chung cư" || type === "Căn hộ") {
-    return { street: true, project: true, road: false, frontage: false, floors: false, directions: true, subtype: false };
+    return { street: true, project: true, road: false, frontage: false, floors: false, houseDirection: true, balconyDirection: true, subtype: false };
   }
   // Nhà phố / Biệt thự. access_type is not a model feature, so it is not collected.
   return {
     street: true, project: true, road: true, frontage: true,
-    floors: true, directions: true,
+    floors: true, houseDirection: true, balconyDirection: false,
     subtype: type !== "Biệt thự",
   };
 }
@@ -94,7 +94,7 @@ export function advancedValuationPayload(draft, propertyType) {
     const subtype = String(draft.houseSubtype ?? "").trim();
     if (subtype === "villa" || subtype === "house_c4") payload.houseSubtype = subtype;
   }
-  if (allowed.directions) {
+  if (allowed.balconyDirection) {
     const balcony = String(draft.balconyDirection ?? "").trim();
     if (balcony) payload.balconyDirection = balcony.slice(0, TEXT_LIMITS.direction);
   }
