@@ -19,7 +19,7 @@ from .property_context import focused_reply
 from .scope import domain_reply
 from .discovery import AdvisorDiscoveryMixin
 from . import commute_destination, commute_ranking
-from .personalization import AREA_KEYS, describe_area, intake, invalid_area_text, matches_area, merge_area, projection
+from .personalization import AREA_KEYS, describe_area, intake, invalid_area_text, merge_area, projection
 
 
 LIMITATIONS = [
@@ -112,39 +112,23 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
-        address_search_completed = bool(extra and extra.get("addressQuery"))
-        if properties and address_search_completed:
+        address_search = bool(extra and extra.get("addressQuery"))
+        if properties and address_search:
             for p in properties:
                 uid=p["id"].split(":")[-1]
                 p.setdefault("source",{"kind":"PROPERTY","recordKey":uid,"name":"SmartProp"})
                 p.setdefault("qualityStatus","PLATFORM_PUBLISHED");p.setdefault("verificationStatus","PLATFORM_PUBLISHED")
                 p.setdefault("score",0);p.setdefault("explanations",[]);p.setdefault("warnings",[])
                 p["matchBasis"]="ADDRESS"
-        if properties and address_search_completed:
-            before_filter = len(properties)
-            properties = [
-                p for p in properties
-                if (not criteria.get("budgetVnd") or Decimal(str(p["priceVnd"])) <= Decimal(str(criteria["budgetVnd"])))
-                and (not criteria.get("minPriceVnd") or Decimal(str(p["priceVnd"])) >= Decimal(str(criteria["minPriceVnd"])))
-                and (criteria.get("propertyType", "ALL") == "ALL" or p.get("propertyType") == criteria["propertyType"])
-                and all(not criteria.get(key) or norm(criteria[key]).split() == norm(p.get(key) or "").split()
-                        for key in ("district", "ward"))
-                and matches_area(p.get("areaSqm"), criteria)
-            ]
-            if not properties:
-                answer = "Không có tin phù hợp với địa chỉ và các bộ lọc bắt buộc hiện tại. Tôi không tự tăng ngân sách."
-                responseKind = "ADDRESS_NO_RESULTS"
-            elif len(properties) != before_filter:
-                answer = f"Có {len(properties)} tin khớp địa chỉ và các bộ lọc hiện tại."
             citations=[Citation(sourceId="property:"+p["source"]["recordKey"],url="/api/v1/properties/"+p["source"]["recordKey"],version=str(p.get("contentVersion") or "1"),contentHash=digest(p),scope="PUBLIC",kind="PROPERTY_DETAIL",title=p["title"]) for p in properties]
         if properties:
             self._enrich(properties)
         # Only a completed search replaces result references; POI/clarification replies preserve them.
         if result_properties is None and not properties and (response or {}).get("topProperties") is not None:
             result_properties = response["topProperties"]
-        if address_search_completed:
-            criteria = {**criteria, "lastSearchEmpty": not properties}
-        preserve_references = response is None and not properties and not address_search_completed
+        if address_search:
+            criteria = {**criteria, "lastSearchEmpty": not properties and extra["addressSearchComplete"]}
+        preserve_references = response is None and not properties and not address_search
         full = list(result_properties if result_properties is not None else properties)
         property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
         self.sessions.record(context,

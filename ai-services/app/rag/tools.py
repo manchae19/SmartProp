@@ -13,6 +13,24 @@ from .personalization import matches_area
 from .intent import CATEGORY_LABELS, fold
 
 
+def _property_search_params(criteria):
+    criteria = criteria or {}
+    params = {"transactionType": "SALE"}
+    for key, param in (("budgetVnd", "maxPrice"), ("minPriceVnd", "minPrice"),
+                       ("minAreaSqm", "minArea"), ("maxAreaSqm", "maxArea")):
+        if criteria.get(key) is not None:
+            params[param] = str(criteria[key])
+    # The Java route rejects crossed price bounds. The caller still checks both bounds.
+    if "minPrice" in params and "maxPrice" in params:
+        if Decimal(params["minPrice"]) > Decimal(params["maxPrice"]):
+            params.pop("minPrice")
+    if criteria.get("propertyType", "ALL") != "ALL":
+        params["propertyType"] = criteria["propertyType"]
+    # Java compares district and ward by equality. Keep the RAG whitespace and
+    # accent normalization locally so the upstream filter cannot drop valid rows.
+    return params
+
+
 def _is_number(value):
     """json.loads(parse_float=Decimal) yields Decimal, so accept any finite real."""
     return isinstance(value, (int, float, Decimal)) and not isinstance(value, bool) and Decimal(str(value)).is_finite()
@@ -561,59 +579,16 @@ class BackendTools:
                 "durationSeconds": float(seconds) if _is_number(seconds) else None,
             })
         return {"provider": body.get("provider") or "", "mode": body.get("mode") or mode, "cells": cells}
-    def search_by_address(self, address, limit=5):
-        """Public listings whose address column matches the given street address.
-
-        The backend filters the address column itself, so prose that merely mentions
-        the street in a title or description is not returned as a match.
-        """
+    def search_by_address(self, address, *, criteria=None):
+        """Fetch a bounded set of public candidates in newest-first order."""
         text = str(address or "").strip()
         if len(text) < 3 or len(text) > 200:
             raise GroundingError("INVALID_ADDRESS")
-        try:
-            response = self.client.get("/api/v1/properties",
-                                       params={"address": text, "size": max(1, min(int(limit), 10)),
-                                               "sort": "newest"})
-            if response.status_code == 429:
-                raise OutboundRateLimited()
-            if response.status_code in (400, 422):
-                raise GroundingError("INVALID_ADDRESS")
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content, parse_float=Decimal)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        items = body.get("items") if isinstance(body, dict) else None
-        if not isinstance(items, list):
-            raise GroundingError("INVALID_PROPERTY_SEARCH")
-        results = []
-        for item in items:
-            if not _published_record(item) or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
-                continue
-            price = item.get("price")
-            if not _is_number(price) or price <= 0:
-                continue
-            results.append({
-                "id": str(item.get("id") or ""),
-                "title": _public_text(item.get("title"), 255),
-                "priceVnd": float(price),
-                "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
-                "address": _public_text(item.get("address"), 500),
-                "district": str(item.get("district") or "").strip(),
-                "ward": str(item.get("ward") or "").strip(),
-                "propertyType": str(item.get("propertyType") or ""),
-                "transactionType": str(item.get("transactionType") or ""),
-                "listingCode": str(item.get("listingCode") or ""),
-                "contentVersion": int(item.get("contentVersion") or 1),
-            })
-        return {"address": text, "total": int(body.get("totalElements") or 0), "items": results}
-    def search_nearby(self, latitude, longitude, radius_meters=1000, limit=10, max_price=None):
-        """Every public listing inside a bounding box around a point, with coordinates.
+        found = self._public_search({"address": text, **_property_search_params(criteria)}, "INVALID_ADDRESS")
+        return {"address": text, **found}
 
-        The list endpoint sorts by creation time, not by distance, so one page is not
-        enough: the nearest listing can sit on any page. All pages are read (bounded) and
-        the caller still computes the real distance before filtering.
-        """
+    def search_nearby(self, latitude, longitude, radius_meters=1000, max_price=None, *, criteria=None):
+        """Fetch bounded bbox candidates for exact distance filtering and ranking."""
         if not _is_number(latitude) or not _is_number(longitude):
             raise GroundingError("INVALID_COORDINATES")
         if not _is_number(radius_meters) or not 50 <= float(radius_meters) <= 50000:
@@ -624,21 +599,28 @@ class BackendTools:
         dlat = float(radius_meters) / 111_000.0
         dlon = float(radius_meters) / (111_000.0 * max(0.2, math.cos(math.radians(lat))))
         bbox = f"{lon - dlon:.6f},{lat - dlat:.6f},{lon + dlon:.6f},{lat + dlat:.6f}"
-        page_size = 50
+        if max_price is not None:
+            criteria = {**(criteria or {}), "budgetVnd": max_price}
+        params = {"bbox": bbox, **_property_search_params(criteria)}
+        found = self._public_search(params, "INVALID_BBOX")
+        return {"bbox": bbox, "radiusMeters": float(radius_meters), **found}
+
+    def _public_search(self, params, invalid_reason):
+        # Both routes use the same bounded, stable newest-first public API.
+        params = {**params, "size": 50, "sort": "newest"}
+        needs_coordinates = "bbox" in params
         results = []
         seen = set()
         page = 0
+        total = 0
         complete = False
         while page < NEARBY_MAX_PAGES:
-            params = {"bbox": bbox, "size": page_size, "page": page, "sort": "newest"}
-            if max_price is not None:
-                params["maxPrice"] = str(max_price)
             try:
-                response = self.client.get("/api/v1/properties", params=params)
+                response = self.client.get("/api/v1/properties", params={**params, "page": page})
                 if response.status_code == 429:
                     raise OutboundRateLimited()
                 if response.status_code in (400, 422):
-                    raise GroundingError("INVALID_BBOX")
+                    raise GroundingError(invalid_reason)
                 if response.status_code != 200:
                     raise UpstreamError(response.status_code)
                 body = json.loads(response.content, parse_float=Decimal)
@@ -647,6 +629,8 @@ class BackendTools:
             items = body.get("items") if isinstance(body, dict) else None
             if not isinstance(items, list):
                 raise GroundingError("INVALID_PROPERTY_SEARCH")
+            if type(body.get("totalElements")) is int:
+                total = body["totalElements"]
             for item in items:
                 if not _published_record(item) or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
                     continue
@@ -654,14 +638,14 @@ class BackendTools:
                 if not _is_number(price) or price <= 0:
                     continue
                 item_lat, item_lon = item.get("latitude"), item.get("longitude")
-                if not _is_number(item_lat) or not _is_number(item_lon):
+                if needs_coordinates and (not _is_number(item_lat) or not _is_number(item_lon)):
                     continue
                 listing_id = str(item.get("id") or "")
                 # The API can repeat a row across pages if the data shifts mid-read.
                 if not listing_id or listing_id in seen:
                     continue
                 seen.add(listing_id)
-                results.append({
+                projected = {
                     "id": listing_id,
                     "title": _public_text(item.get("title"), 255),
                     "priceVnd": float(price),
@@ -669,20 +653,22 @@ class BackendTools:
                     "address": _public_text(item.get("address"), 500),
                     "district": str(item.get("district") or "").strip(),
                     "ward": str(item.get("ward") or "").strip(),
-                    "latitude": float(item_lat),
-                    "longitude": float(item_lon),
                     "propertyType": str(item.get("propertyType") or ""),
                     "transactionType": str(item.get("transactionType") or ""),
                     "listingCode": str(item.get("listingCode") or ""),
                     "contentVersion": int(item.get("contentVersion") or 1),
-                })
+                }
+                if needs_coordinates:
+                    projected.update(latitude=float(item_lat), longitude=float(item_lon))
+                results.append(projected)
             total_pages = body.get("totalPages")
             page += 1
-            if not items or (isinstance(total_pages, int) and page >= total_pages):
+            if type(total_pages) is int and page >= total_pages:
                 complete = True
                 break
-        return {"bbox": bbox, "radiusMeters": float(radius_meters),
-                "items": results, "complete": complete, "pagesRead": page}
+            if not items and type(total_pages) is not int:
+                break
+        return {"items": results, "total": total, "complete": complete, "pagesRead": page}
 
 
 class PublishedPropertyRepository:
