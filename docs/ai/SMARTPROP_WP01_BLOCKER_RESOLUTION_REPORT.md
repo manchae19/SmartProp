@@ -626,3 +626,175 @@ SchemaManagementException: Schema-validation: missing column [listing_code] in t
 
 Cả bốn đều vượt ranh giới "không sửa migration / không nới guard" mà bạn đặt ra, nên
 **tôi dừng và chờ quyết định**.
+
+---
+
+## Y. V-c — PR38 Handoff Recovery: FLOW B UNBLOCKED
+
+### Y.1. Handoff artifact (nguồn chính thức, có SHA256)
+
+| Artifact | SHA256 | Nội dung |
+|---|---|---|
+| `C:\Users\manchae\Desktop\SmartProp_PR38_Database_Handoff.zip` | `0d55168e8b44347f3058187eb60ad1f3222ec1f4a5a74ab5bcac293a4b9e80a1` | `smartprop_v21_schema.sql` (103,3 KB), `README.md`, `VERIFY.md` |
+| `C:\Users\manchae\Desktop\SmartProp_PR38_Listing_Code_Handoff.zip` | `d4dfd864c268bd0aaa927ee59a8afb3bbcf99a445fb0e004ae1255f33e16cef5` | `listing_code_triggers.sql` (2,4 KB), `README.md`, `VERIFY.md` |
+
+Giải nén (chỉ đọc) tại `.scratch\handoff-artifacts\`. **Không truy cập 3306.**
+
+### Y.2. Giải thích mâu thuẫn V16 (đóng câu hỏi §4 của yêu cầu)
+
+Handoff README ghi rõ nguyên nhân:
+
+> Baseline V21 **không chứa trigger**. Đây là lỗi của file dump gốc… Dump gốc dùng
+> `mysqldump --no-data` — **không có `--triggers`**.
+
+**Baseline V21 CÓ `properties.listing_code`** (varchar(32) NOT NULL), **UNIQUE
+`uq_properties_listing_code`**, và bảng `property_listing_code_allocations` — chỉ **thiếu
+2 trigger**.
+
+Điều này giải thích trọn vẹn: `listing_code` tồn tại **trong schema tại thời điểm baseline**
+(không phải do V16 tạo trong quá trình migrate). Vì vậy:
+- `V21__property_image_scan.sql` migrate thành công dù `V16` không có trong Flyway history —
+  nó chỉ cần **cột đã tồn tại**, không cần bản thân migration V16.
+- Kết luận trước đây của tôi ("legacy lineage không thể có listing_code") là **sai** vì đã
+  dùng baseline từ `flyway-local-forward` (dump ngày 2026-11-02, chỉ tới V14, **trước khi**
+  V16 có hiệu lực). Baseline V21 đúng đã có cột này.
+
+### Y.3. Dựng môi trường (đã làm, đúng isolation guard)
+
+| Bước | Kết quả |
+|---|---|
+| Datadir mới | `.scratch\pr38-handoff\mysql-isolated\data` — **kết thúc `/mysql-isolated/data/`** theo `STAGING_DATADIR_SUFFIX` |
+| Identity check | `@@port = 3307` · `@@datadir = F:/SmartProp/.scratch/pr38-handoff/mysql-isolated/data/` · `@@server_uuid = 5a69ab6f-…` (**khác** 3306) ✅ |
+| User cho view DEFINER | Tạo `smartprop@localhost` (view trong dump có `DEFINER='smartprop'@'localhost'`) — **không sửa SQL** |
+| Restore V21 | **PASS** |
+| Triggers | `listing_code_triggers.sql` — không khai báo DEFINER, dùng user hiện tại (Cách 1 trong README) |
+| **Migrate V22..V26** | **BUILD SUCCESS** — `applied 5 migrations, now at version v26` |
+
+### Y.4. Verify schema sau restore (`VERIFIED`)
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Tổng bảng | **56** |
+| `properties.listing_code` | **1** ✅ |
+| `uq_properties_listing_code` | **1** ✅ |
+| `property_listing_code_allocations` | **1** ✅ |
+| **Triggers trên `properties`** | **2** ✅ (`_insert`, `_update`) |
+| `users` (dữ liệu người dùng) | **0** ✅ không có PII |
+| Flyway history | **7** → sau migrate **12** |
+| Coordinate provenance | `property_coordinate_audit` **tồn tại** |
+
+**Flyway history cuối — đúng 12 mục guard yêu cầu:**
+
+```
+13 BASELINE · 14 (-1382804267) · 17 · 18 · 19 · 20 · 21 · 22 · 23 · 24 · 25 · 26
+```
+
+Không có V27. Không sửa history. Không nới guard. Không sửa migration SQL.
+
+### Y.5. Spring Boot readiness — **PASS**
+
+```
+8080 READY
+```
+
+Hibernate `ddl-auto: validate` **PASS** — không thiếu column nào (đối lập với baseline
+V13 trước đó thiếu `listing_code`).
+
+Cần set thêm khi chạy: `APP_VALUATION_ENABLED=true` (YAML để `app.valuation.enabled: false`,
+nên `ValuationClient` trả 503 `VALUATION_UNAVAILABLE` nếu không bật).
+
+### Y.6. Flow B real E2E — **PASS (14/15)**
+
+Test account: `wp01.test@example.invalid`, role nâng `BUYER → BROKER` trong DB cô lập
+(đúng yêu cầu BROKER của `SecurityConfig`, fixture hợp lệ, không dùng tài khoản thật).
+
+| # | Kiểm tra | Kết quả |
+|---|---|---|
+| 1 | Login (JWT) | **PASS** — status 200 |
+| 2 | HOUSE basic | **PASS** — `5,365 tỷ` · v1.3 |
+| 3 | HOUSE enriched (road/frontage/street/floors/subtype/bathrooms/direction) | **PASS** — `8,946 tỷ` |
+| 4 | LAND | **PASS** — `4,059 tỷ` |
+| 5 | APARTMENT (balcony direction) | **PASS** — `4,545 tỷ` |
+| 6 | VILLA (subtype villa) | **PASS** — `16,775 tỷ` |
+| 7 | Không token | **PASS** — **401** |
+| 8 | `area = 0` | **PASS** — 400 |
+| 9 | `floors = 99` | **PASS** — 400 |
+| 10 | `houseSubtype = penthouse` | **PASS** — 400 |
+| 11 | Street chuẩn `Nguyễn Phước Lan` | **PASS** — 8.4254 tỷ |
+| 12 | Street có tiền tố `Đường …` | **PASS** — 8.4254 tỷ |
+| 13 | Street lowercase + khoảng trắng | **PASS** — 8.4254 tỷ |
+| 14 | **3 biến thể street cùng giá** | **PASS** — `8425395955` ×3 |
+| 15 | **Location không hỗ trợ (`Hà Nội`)** | **FAIL** — trả **200** thay vì 4xx |
+
+### Y.7. Lệch còn lại giữa hai luồng
+
+**Flow A** (FastAPI trực tiếp): `location_feature = "Hà Nội"` → **422** ✅
+**Flow B** (qua Spring Boot): cùng input → **200** (có giá)
+
+⇒ Spring Boot **không chuyển nguyên văn** địa bàn không hợp lệ xuống FastAPI — nó map/normalize
+trước khi gọi. Kết quả: chính sách location **chưa đồng nhất giữa hai luồng**.
+
+Đây là lỗi thật, phạm vi hẹp, nằm trong `ValuationService`/`ValuationClient` — **chưa sửa**
+vì cần quyết định mapping nào là chuẩn (không được tự đổi địa bàn người dùng nhập).
+
+### Y.8. Database integrity sau E2E
+
+| Bảng | Số dòng | Ý nghĩa |
+|---|---|---|
+| `properties` | **0** | Preview **không tự publish listing** ✅ |
+| `valuation_history` | **0** | Preview **không ghi history** ngoài contract ✅ |
+| `property_listing_code_allocations` | **0** | Không insert property → trigger chưa cấp mã, nhất quán ✅ |
+| triggers | **2** | Nguyên vẹn ✅ |
+| flyway_history | **12** | Không đổi trong E2E ✅ |
+
+Không ghi đè asking price · không tạo dữ liệu vật lý giả · không sửa coordinate/legal.
+
+### Y.9. Trạng thái môi trường sau phiên
+
+| Hạng mục | Trạng thái |
+|---|---|
+| MySQL Portable 8.4.13 | **GIỮ** |
+| **Fixture V26 mới** `.scratch\pr38-handoff\mysql-isolated\data` | **GIỮ** — schema đầy đủ, dùng lại được |
+| Fixture `clean-v26` (thiếu listing_code) | GIỮ — không xoá |
+| Datadir gốc V27 / work-3307 | GIỮ nguyên |
+| Port 3307 | **FREE** |
+| Port 3306 | BUSY pid 6556 — không đụng |
+| 8080 / 8000 | free |
+
+### Y.10. Khởi động lại môi trường (cho các phiên sau)
+
+```powershell
+# 1. MySQL 8.4.13 trên 3307 với fixture PR38
+& F:\SmartProp\.scratch\mysql-8.4\mysql-8.4.13-winx64\bin\mysqld.exe `
+  --datadir=F:\SmartProp\.scratch\pr38-handoff\mysql-isolated\data `
+  --port=3307 --bind-address=127.0.0.1 --skip-log-bin --mysqlx=0
+
+# 2. FastAPI
+uvicorn main:app --host 127.0.0.1 --port 8000   # trong ai-services
+
+# 3. Spring Boot
+SPRING_PROFILES_ACTIVE=hybrid-local-existing-v13-staging
+DB_USER=wp01test  DB_PASSWORD=<test>  JWT_SECRET=<test>
+APP_VALUATION_ENABLED=true  PORT=8080
+```
+
+### Y.11. Còn lại của WP-01
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Flow A real E2E | **PASS** |
+| **Flow B real E2E** | **PASS** (14/15; 1 case location) |
+| Cross-flow prediction parity | **PARTIAL** — street 3 biến thể cho cùng giá ở cả hai luồng; encoded-vector parity chưa so |
+| **Location validation đồng nhất** | **FAIL** — Flow B chấp nhận địa bàn không hỗ trợ |
+| Street consistency | `UNKNOWN_MAPPING` — chưa có cảnh báo UI |
+| Production routing | **PARTIAL** — chưa có reverse proxy thật |
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+FLOW_A_REAL_E2E_PASS
+FLOW_B_REAL_E2E_PASS (với 1 lệch location)
+V1_3_ARTIFACT_INTEGRITY_PASS
+LOCATION_VALIDATION_PASS (Flow A) / FAIL (Flow B)
+VALIDATION_PARTIAL
+NOT_READY_TO_MERGE
+```
