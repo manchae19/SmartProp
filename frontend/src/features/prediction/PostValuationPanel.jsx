@@ -3,6 +3,7 @@ import { createStateStore, stateKey } from "../../shared/state/createStateStore.
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api } from "../auth/api.js";
 import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
+import AdvancedValuationFields from "./AdvancedValuationFields.jsx";
 function usePostValuationPanelState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
@@ -22,6 +23,9 @@ function usePostValuationPanelState(inputProps, forwardedRef) {
     result: null,
     error: ""
   }));
+  // Advanced valuation fields start collapsed: they are optional and must never block
+  // the posting flow.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   useSyncExternalStore(state.subscribe, state.getSnapshot);
   const [preview] = useState(() => createPreviewState(body => api("/properties/valuation-preview", {
     method: "POST",
@@ -117,6 +121,8 @@ function usePostValuationPanelState(inputProps, forwardedRef) {
     locations: getLocations(),
     location: getLocation(),
     input: getInput(),
+    advancedOpen,
+    setAdvancedOpen,
     loadOptions,
     featureLabels,
     missingLabel,
@@ -157,6 +163,13 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       <p className="text-xs text-brand-navy/60 mt-2">
         {"Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế."}
       </p>
+      <AdvancedValuationFields
+        draft={view.draft}
+        propertyType={view.draft?.propertyType}
+        onChange={view.onDraftChange}
+        open={view.advancedOpen}
+        onToggle={view.setAdvancedOpen}
+      />
       {view.optionsError ? <p role="status" className="mt-3 text-xs text-[var(--ui-warning-text)]">
           {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.optionsError)}{" "}
           <button type="button" className="underline" onClick={$event => {
