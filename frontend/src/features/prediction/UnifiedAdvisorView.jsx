@@ -45,18 +45,27 @@ export default function UnifiedAdvisorView() {
   const [researchAvailable, setResearchAvailable] = useState(false)
   const sequence = useRef(0)
 
-  const consult = useMemo(() => createAdvisorConsultClient(api), [])
+  const consult = useMemo(() => createAdvisorConsultClient(api, () => session.getSnapshot?.() ?? session), [])
 
   useEffect(() => {
     let active = true
     setResearchAvailable(false)
     if (session.user?.role === 'ADMIN' && session.status === 'AUTHENTICATED') {
       api('/recommendations/research/config')
-        .then((config) => { if (active) setResearchAvailable(config?.enabled === true) })
-        .catch(() => { /* Public advisor works without admin research config. */ })
+        .then((config) => {
+          if (!active) return
+          const enabled = config?.enabled === true
+          setResearchAvailable(enabled)
+          if (!enabled) setForm((current) => (current.includeResearch ? { ...current, includeResearch: false } : current))
+        })
+        .catch(() => {
+          if (active) setForm((current) => (current.includeResearch ? { ...current, includeResearch: false } : current))
+        })
+    } else {
+      setForm((current) => (current.includeResearch ? { ...current, includeResearch: false } : current))
     }
     return () => { active = false }
-  }, [form.includeResearch === false, session.user?.role, session.status])
+  }, [session.user?.role, session.status])
 
   const patch = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -146,7 +155,7 @@ export default function UnifiedAdvisorView() {
           <p>
             {form.includeResearch
               ? 'Bao gồm quan sát lịch sử TiniX AI đã lọc holdout — chỉ phục vụ nghiên cứu phi thương mại, không xem là tin đang bán.'
-              : 'Danh sách đề xuất chỉ lấy từ bất động sản đang công khai hợp lệ; dòng so sánh nghiên cứu (nếu có) được gắn nhãn tách biệt rõ ràng.'}
+              : 'Chỉ sử dụng bất động sản và bằng chứng đối chiếu công khai hợp lệ; không truy xuất hoặc hiển thị dữ liệu nghiên cứu TiniX.'}
           </p>
         </div>
       </div>
@@ -311,7 +320,12 @@ export default function UnifiedAdvisorView() {
             <h2 tabIndex={-1}>Báo cáo tư vấn theo nhu cầu</h2>
             <p>{submittedSummary}</p>
           </div>
-          <AdvisorResults result={result} selectedPoiId={selectedPoiId} onFocusPoi={({ poiId }) => setSelectedPoiId(poiId)} />
+          <AdvisorResults
+            result={result}
+            selectedPoiId={selectedPoiId}
+            onFocusPoi={({ poiId }) => setSelectedPoiId(poiId)}
+            canViewResearch={researchAvailable && session.user?.role === 'ADMIN' && session.status === 'AUTHENTICATED'}
+          />
         </>
       ) : null}
 

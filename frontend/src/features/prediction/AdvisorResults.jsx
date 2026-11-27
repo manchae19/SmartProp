@@ -10,9 +10,11 @@ const score = (value) => (Number.isFinite(Number(value)) ? Math.round(Number(val
 const area = (value) => (Number.isFinite(Number(value)) ? `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} m²` : '—')
 
 /** Results of one Unified Advisor consultation: areas + ranked properties with evidence. */
-export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi }) {
-  const properties = result?.recommendedProperties || []
-  const isResearch = result?.mode === 'INTERNAL_RESEARCH'
+export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi, canViewResearch = false }) {
+  const isResearch = result?.mode === 'INTERNAL_RESEARCH' && canViewResearch === true
+  const properties = (result?.recommendedProperties || []).filter(
+    (p) => isResearch || (!p?.researchReference && p?.source?.kind !== 'TINIX_AI')
+  )
   const isPartial = Boolean(result?.serviceStatus?.partialResult)
 
   return (
@@ -105,7 +107,12 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
                     </dl>
                   ) : null}
 
-                  <AdvisorEvidencePanel valuation={property.valuationEvidence} comparable={property.comparableEvidence} />
+                  <AdvisorEvidencePanel
+                    valuation={property.valuationEvidence}
+                    comparable={property.comparableEvidence}
+                    mode={isResearch ? 'INTERNAL_RESEARCH' : 'SAFE'}
+                    allowResearch={isResearch}
+                  />
 
                   {property.amenityEvidence ? <AmenityEvidence evidence={property.amenityEvidence} compact /> : null}
 

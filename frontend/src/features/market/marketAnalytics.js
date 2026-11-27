@@ -18,14 +18,23 @@ export const PROPERTY_TYPES = {
   VILLA: 'Biệt thự',
 }
 
+export function requestsMarketResearch(filters = {}) {
+  return filters?.includeResearch === true
+    || String(filters?.source ?? '').trim().toUpperCase() === 'TINIX_RESEARCH'
+}
+
 /** Builds the query string for GET /properties/market-analytics. */
-export function buildAnalyticsQuery(filters = {}) {
+export function buildAnalyticsQuery(filters = {}, options = {}) {
+  const allowResearch = options.allowResearch !== false
   const params = new URLSearchParams()
   if (filters.district) params.set('district', String(filters.district).trim())
   if (filters.ward) params.set('ward', String(filters.ward).trim())
   if (filters.propertyType) params.set('propertyType', String(filters.propertyType))
-  if (filters.source && filters.source !== 'ALL') params.set('source', String(filters.source))
-  params.set('includeResearch', filters.includeResearch === true ? 'true' : 'false')
+  const source = filters.source ? String(filters.source).trim() : ''
+  if (source && source !== 'ALL' && (allowResearch || source.toUpperCase() !== 'TINIX_RESEARCH')) {
+    params.set('source', source)
+  }
+  params.set('includeResearch', allowResearch && filters.includeResearch === true ? 'true' : 'false')
   return params.toString()
 }
 
@@ -33,7 +42,7 @@ const FORBIDDEN_KEYS = ['contactPhone', 'contactEmail', 'address_raw', 'ownerId'
 const FORBIDDEN_TERMS = ['"forecast"', '"growthRate"', '"cagr"']
 
 /** Rejects malformed / unsafe payloads instead of rendering half a report. */
-export function validateMarketAnalytics(data) {
+export function validateMarketAnalytics(data, options = {}) {
   if (!data || typeof data !== 'object' || !data.meta || !data.overall) {
     throw new Error('Dữ liệu thị trường không đúng định dạng hợp đồng.')
   }
@@ -43,6 +52,22 @@ export function validateMarketAnalytics(data) {
   if (!Array.isArray(data.meta.dataQualityWarnings)) throw new Error('Thiếu cảnh báo chất lượng dữ liệu.')
   if (typeof data.meta.disclaimer !== 'string' || !data.meta.disclaimer) throw new Error('Thiếu tuyên bố miễn trừ (disclaimer).')
   if (data.meta.priceBasis !== 'ASKING_SALE_VND_TOTAL') throw new Error('Cơ sở giá không phải giá rao bán tổng.')
+
+  const allowResearch = options.allowResearch !== undefined
+    ? options.allowResearch === true
+    : data.meta.researchIncluded === true
+
+  if (!allowResearch && data.meta.researchIncluded === true) {
+    throw new Error('Phản hồi chứa dữ liệu nghiên cứu không được phép ở chế độ công khai.')
+  }
+  if (!data.meta.researchIncluded) {
+    if (data.meta.researchLicense != null
+        || data.monthly.length > 0
+        || data.bySource.some((s) => s?.source === 'TINIX_RESEARCH' || s?.researchReference === true)
+        || data.meta.dataQualityWarnings.some((w) => typeof w === 'string' && (w.includes('TINIX') || w.includes('CC BY-NC')))) {
+      throw new Error('Phản hồi chế độ công khai chứa siêu dữ liệu nghiên cứu TiniX không hợp lệ.')
+    }
+  }
 
   const raw = JSON.stringify(data)
   if (FORBIDDEN_KEYS.some((k) => raw.includes(k))) {
@@ -57,10 +82,11 @@ export function validateMarketAnalytics(data) {
   return data
 }
 
-export async function loadMarketAnalytics(filters = {}) {
-  const query = buildAnalyticsQuery(filters)
-  const data = await api('/properties/market-analytics?' + query, { authenticated: false })
-  return validateMarketAnalytics(data)
+export async function loadMarketAnalytics(filters = {}, client = api) {
+  const wantsResearch = requestsMarketResearch(filters)
+  const query = buildAnalyticsQuery(filters, { allowResearch: wantsResearch })
+  const data = await client('/properties/market-analytics?' + query, { authenticated: wantsResearch })
+  return validateMarketAnalytics(data, { allowResearch: wantsResearch })
 }
 
 export function isInsufficient(stat) {

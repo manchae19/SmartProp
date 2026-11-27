@@ -57,6 +57,10 @@ public class ComparableRankingService {
     public enum Stage { WARD, DISTRICT, ADJACENT, NONE }
 
     public ComparableDtos.Response rank(ComparableDtos.Request request) {
+        return rank(request, true);
+    }
+
+    public ComparableDtos.Response rank(ComparableDtos.Request request, boolean includeResearch) {
         int limit = limit(request.limit());
         ComparableDtos.Reference reference = reference(request);
         String type = normalizeType(reference.propertyType());
@@ -77,7 +81,9 @@ public class ComparableRankingService {
             : reference.priceVnd().multiply(new BigDecimal("2.5"));
 
         Scored scored = new Scored();
-        collectTinix(reference, type, districts, minPrice, maxPrice, scored);
+        if (includeResearch) {
+            collectTinix(reference, type, districts, minPrice, maxPrice, scored);
+        }
         collectExternal(reference, type, districts, minPrice, maxPrice, scored);
         collectSmartProp(reference, type, districts, minPrice, maxPrice, scored);
 
@@ -89,7 +95,9 @@ public class ComparableRankingService {
         if (scored.items.size() < limit && reference.priceVnd() != null) {
             BigDecimal wideMin = reference.priceVnd().multiply(new BigDecimal("0.1"));
             BigDecimal wideMax = reference.priceVnd().multiply(new BigDecimal("10"));
-            collectTinix(reference, type, districts, wideMin, wideMax, scored, true);
+            if (includeResearch) {
+                collectTinix(reference, type, districts, wideMin, wideMax, scored, true);
+            }
             collectExternal(reference, type, districts, wideMin, wideMax, scored, true);
             collectSmartProp(reference, type, districts, wideMin, wideMax, scored, true);
         }
@@ -109,7 +117,8 @@ public class ComparableRankingService {
 
         return new ComparableDtos.Response(
             reference, ranked.size(), deepest.name(), ranked,
-            warnings(ranked, type), candidates.eligibleCounts());
+            warnings(ranked, type),
+            includeResearch ? candidates.eligibleCounts() : candidates.publicEligibleCounts());
     }
 
     // ---------------------------------------------------------------- sources

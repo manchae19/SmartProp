@@ -3,6 +3,8 @@ package vn.smartprop.advisor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -87,7 +89,7 @@ class AdvisorOrchestrationServiceTest {
         );
 
         ArgumentCaptor<ComparableDtos.Request> compCaptor = ArgumentCaptor.forClass(ComparableDtos.Request.class);
-        when(compService.rank(compCaptor.capture())).thenReturn(new ComparableDtos.Response(
+        when(compService.rank(compCaptor.capture(), eq(false))).thenReturn(new ComparableDtos.Response(
             new ComparableDtos.Reference("hc-01", "HOUSE", "Hải Châu", "Hòa Cường Bắc", new BigDecimal("85"), new BigDecimal("4400000000"), null, null),
             2,
             "WARD",
@@ -104,8 +106,8 @@ class AdvisorOrchestrationServiceTest {
                     "CC BY-NC 4.0", "TiniX — CC BY-NC 4.0"
                 )
             ),
-            List.of(),
-            Map.of("SMARTPROP", 10, "TINIX_RESEARCH", 100)
+            List.of("TiniX — CC BY-NC 4.0"),
+            Map.of("SMARTPROP", 10)
         ));
 
         AdvisorResponse response = orchestrator.consult(new AdvisorRequest(
@@ -127,7 +129,8 @@ class AdvisorOrchestrationServiceTest {
         assertThat(recCaptor.getValue().district()).isNull();
         assertThat(recCaptor.getValue().propertyType()).isEqualTo(PropertyType.ALL);
 
-        // 2. Anti-circularity check: ComparableRankingService anchored to 4.4B source asking price & self-exclusion ID
+        // 2. Anti-circularity & SAFE isolation check: rank called with includeResearch=false
+        verify(compService).rank(any(), eq(false));
         assertThat(compCaptor.getValue().priceVnd()).isEqualByComparingTo("4400000000");
         assertThat(compCaptor.getValue().propertyId()).isEqualTo("hc-01");
 
@@ -141,13 +144,12 @@ class AdvisorOrchestrationServiceTest {
         assertThat(item.researchReference()).isFalse();
         assertThat(item.source().detailUrl()).isEqualTo("/listing/hc-01");
 
-        // 4. Comparable SMARTPROP route rewritten to /listing/{id}; TINIX_RESEARCH stripped of any URL
-        assertThat(item.comparableEvidence().comparables()).hasSize(2);
+        // 4. SAFE mode defense-in-depth: TINIX_RESEARCH (tnx-99) and research warnings are strictly excluded
+        assertThat(item.comparableEvidence().comparables()).hasSize(1);
+        assertThat(item.comparableEvidence().comparables().get(0).candidateId()).isEqualTo("hc-02");
         assertThat(item.comparableEvidence().comparables().get(0).listingUrl()).isEqualTo("/listing/hc-02");
-        assertThat(item.comparableEvidence().comparables().get(1).researchReference()).isTrue();
-        assertThat(item.comparableEvidence().comparables().get(1).liveListing()).isFalse();
-        assertThat(item.comparableEvidence().comparables().get(1).listingUrl()).isNull();
-        assertThat(item.comparableEvidence().comparables().get(1).datasetLicense()).isEqualTo("CC BY-NC 4.0");
+        assertThat(item.comparableEvidence().warnings()).isEmpty();
+        assertThat(response.warnings()).noneMatch(w -> w.contains("TiniX") || w.contains("CC BY-NC") || w.startsWith("RESEARCH_COMPARABLES_LABEL:"));
     }
 
     @Test
@@ -168,7 +170,7 @@ class AdvisorOrchestrationServiceTest {
         when(valAdapter.probeSupportedLocations()).thenReturn(null); // FastAPI offline!
         when(valAdapter.evaluate(any(), any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(AdvisorValuationAdapter.skipped("SERVICE_UNAVAILABLE", "AI offline"));
-        when(compService.rank(any())).thenReturn(new ComparableDtos.Response(
+        when(compService.rank(any(), anyBoolean())).thenReturn(new ComparableDtos.Response(
             null, 0, "NONE", List.of(), List.of(), Map.of()
         ));
 
@@ -187,6 +189,7 @@ class AdvisorOrchestrationServiceTest {
     @Test
     void researchRecordsSkipXGBoostValuationAndCarryStrictResearchLabels() {
         AdvisorOrchestrationService orchestrator = newOrchestrator(true);
+        when(recService.tinixEnabled()).thenReturn(true);
 
         PropertyResult tinixProp = new PropertyResult(
             "tinix:tnx-500", "Quan sát lịch sử Thanh Khê", PropertyType.HOUSE,
@@ -201,8 +204,15 @@ class AdvisorOrchestrationServiceTest {
             1, List.of(), List.of(tinixProp), List.of(), Map.of()
         ));
         when(valAdapter.probeSupportedLocations()).thenReturn(Map.of("Nhà ở", Set.of("Thanh Khê")));
-        when(compService.rank(any())).thenReturn(new ComparableDtos.Response(
-            null, 0, "NONE", List.of(), List.of(), Map.of()
+        when(compService.rank(any(), eq(true))).thenReturn(new ComparableDtos.Response(
+            null, 1, "WARD", List.of(
+                new ComparableDtos.Candidate(
+                    "tnx-99", ComparableDtos.SourceKind.TINIX_RESEARCH, "TiniX", "HOUSE", "Thanh Khê", "Chính Gián",
+                    new BigDecimal("72"), new BigDecimal("3300000000"), new BigDecimal("3.1"), 3, 3, null, null,
+                    0.88, Map.of("location", "Cùng phường/xã"), "HYBRID_ELIGIBLE_RESEARCH", "https://must-be-stripped",
+                    "CC BY-NC 4.0", "TiniX — CC BY-NC 4.0"
+                )
+            ), List.of(), Map.of()
         ));
 
         AdvisorResponse res = orchestrator.consult(new AdvisorRequest(
@@ -217,6 +227,10 @@ class AdvisorOrchestrationServiceTest {
         assertThat(item.source().detailUrl()).isNull();
         assertThat(item.valuationEvidence().status()).isEqualTo("SKIPPED_RESEARCH_RECORD");
         assertThat(item.warnings()).anyMatch(w -> w.contains("CC BY-NC 4.0"));
+        assertThat(item.comparableEvidence().comparables()).hasSize(1);
+        assertThat(item.comparableEvidence().comparables().get(0).researchReference()).isTrue();
+        assertThat(item.comparableEvidence().comparables().get(0).listingUrl()).isNull();
+        assertThat(item.comparableEvidence().comparables().get(0).datasetLicense()).isEqualTo("CC BY-NC 4.0");
     }
 
     @Test

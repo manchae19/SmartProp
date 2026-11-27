@@ -72,7 +72,9 @@ app:
   advisor:
     valuation-enabled: ${APP_ADVISOR_VALUATION_ENABLED:true}
     valuation-base-url: ${APP_ADVISOR_VALUATION_BASE_URL:http://127.0.0.1:8000}
-    allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:true}
+    allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:false}
+  market:
+    research-enabled: ${APP_MARKET_RESEARCH_ENABLED:false}
   image-scan:
     base-url: ${APP_IMAGE_SCAN_BASE_URL:http://127.0.0.1:18001}
     stale-after-seconds: ${APP_IMAGE_SCAN_STALE_AFTER_SECONDS:180}

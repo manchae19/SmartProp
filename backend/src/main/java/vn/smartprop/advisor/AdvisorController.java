@@ -51,16 +51,17 @@ public class AdvisorController {
 
         limits.check("advisor:ip:" + httpRequest.getRemoteAddr(), 30, 60);
 
+        boolean wantsResearch = Boolean.TRUE.equals(request.includeResearch());
         if (authentication instanceof JwtAuthenticationToken jwtAuth && jwtAuth.isAuthenticated()) {
-            Long userId = Long.valueOf(jwtAuth.getToken().getSubject());
+            Long userId = parseUserId(jwtAuth);
             limits.check("advisor:user:" + userId, 20, 60);
-            if (Boolean.TRUE.equals(request.includeResearch())) {
+            if (wantsResearch) {
+                access.admin(userId);
                 if (!service.isResearchEnabled()) {
                     throw ApiInputs.forbidden();
                 }
-                access.admin(userId);
             }
-        } else if (Boolean.TRUE.equals(request.includeResearch())) {
+        } else if (wantsResearch) {
             throw ApiInputs.forbidden();
         }
 
@@ -68,5 +69,13 @@ public class AdvisorController {
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
             .body(response);
+    }
+
+    private static Long parseUserId(JwtAuthenticationToken jwtAuth) {
+        try {
+            return Long.valueOf(jwtAuth.getToken().getSubject());
+        } catch (NumberFormatException | NullPointerException ex) {
+            throw new vn.smartprop.common.ApiException(401, "UNAUTHENTICATED", "Phiên không hợp lệ");
+        }
     }
 }
