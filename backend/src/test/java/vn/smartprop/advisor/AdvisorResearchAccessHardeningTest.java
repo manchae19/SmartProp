@@ -164,7 +164,7 @@ class AdvisorResearchAccessHardeningTest {
     }
 
     private void stubPublicRecommendationWithData() {
-        when(recService.recommend(any())).thenReturn(new RecommendationDtos.Response(
+        when(recService.recommendPublic(any())).thenReturn(new RecommendationDtos.Response(
             "HEURISTIC_V1_1", "SAFE", "ASKING_SALE_VND_TOTAL",
             new RecommendationDtos.Request(new BigDecimal("5000000000"), Purpose.LIVING, PropertyType.HOUSE, null, "Hải Châu", null, 5),
             1,
@@ -228,6 +228,7 @@ class AdvisorResearchAccessHardeningTest {
         verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
         verify(compRepo, never()).tinixDetails(anyList());
         verify(compRepo, never()).eligibleCounts();
+        verify(recService, never()).recommend(any());
         verify(recService, never()).recommendResearch(any());
     }
 

@@ -2,13 +2,14 @@ package vn.smartprop.advisor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import vn.smartprop.advisor.AdvisorDtos.AdvisorRequest;
 import vn.smartprop.advisor.AdvisorDtos.AdvisorResponse;
@@ -28,7 +29,6 @@ import vn.smartprop.common.RequestLimits;
  * </ul>
  */
 @RestController
-@RequestMapping("/api/v1/advisor")
 public class AdvisorController {
     private final AdvisorOrchestrationService service;
     private final AccountAccess access;
@@ -43,7 +43,25 @@ public class AdvisorController {
         this.limits = limits;
     }
 
-    @PostMapping("/consult")
+    @GetMapping("/api/v1/admin/advisor/research-config")
+    public ResponseEntity<Map<String, Boolean>> researchConfig(
+            HttpServletRequest httpRequest,
+            Authentication authentication) {
+        limits.check("advisor:config:ip:" + httpRequest.getRemoteAddr(), 60, 60);
+        if (!(authentication instanceof JwtAuthenticationToken jwtAuth) || !jwtAuth.isAuthenticated()) {
+            throw ApiInputs.forbidden();
+        }
+        Long userId = parseUserId(jwtAuth);
+        access.admin(userId);
+        if (jwtAuth.getAuthorities().stream().noneMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
+            throw ApiInputs.forbidden();
+        }
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore().cachePrivate())
+            .body(Map.of("enabled", service.isResearchEnabled()));
+    }
+
+    @PostMapping("/api/v1/advisor/consult")
     public ResponseEntity<AdvisorResponse> consult(
             @Valid @RequestBody AdvisorRequest request,
             HttpServletRequest httpRequest,

@@ -42,7 +42,7 @@ public class RecommendationController {
             verifyInternalAdminDemo(http, authentication);
             return ResponseEntity.ok().cacheControl(CacheControl.noStore().cachePrivate()).body(service.recommend(request));
         }
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.recommend(request));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.recommendPublic(request));
     }
 
     @PostMapping("/research")

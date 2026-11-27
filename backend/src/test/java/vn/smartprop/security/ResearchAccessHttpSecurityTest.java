@@ -367,4 +367,97 @@ class ResearchAccessHttpSecurityTest {
             .andReturn().getResponse().getHeader("Cache-Control");
         assertThat(amenityCache).contains("private").contains("no-store");
     }
+
+    @Test
+    @DisplayName("Advisor research-config capability endpoint enforces active ADMIN and leaks zero keys or research data")
+    void advisorResearchConfigCapabilityEndpointSecurity() throws Exception {
+        // Anonymous & invalid/revoked/locked/deleted tokens -> 401
+        mvc.perform(get("/api/v1/admin/advisor/research-config"))
+            .andExpect(status().isUnauthorized());
+        for (String badToken : List.of("forged.jwt.token", suspendedAdminToken, deletedAdminToken, revokedAdminToken)) {
+            mvc.perform(get("/api/v1/admin/advisor/research-config")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + badToken))
+                .andExpect(status().isUnauthorized());
+        }
+
+        // BUYER & BROKER -> 403
+        mvc.perform(get("/api/v1/admin/advisor/research-config")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken))
+            .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/advisor/research-config")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + brokerToken))
+            .andExpect(status().isForbidden());
+
+        // Active ADMIN when disabled -> 200 {"enabled":false} + private, no-store
+        when(advisorService.isResearchEnabled()).thenReturn(false);
+        var disabledRes = mvc.perform(get("/api/v1/admin/advisor/research-config")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+            .andExpect(status().isOk())
+            .andReturn().getResponse();
+        assertThat(disabledRes.getHeader("Cache-Control")).contains("private").contains("no-store");
+        assertThat(disabledRes.getContentAsString()).isEqualTo("{\"enabled\":false}");
+
+        // Active ADMIN when enabled -> 200 {"enabled":true} + private, no-store (no demoKey or research data)
+        when(advisorService.isResearchEnabled()).thenReturn(true);
+        var enabledRes = mvc.perform(get("/api/v1/admin/advisor/research-config")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
+            .andExpect(status().isOk())
+            .andReturn().getResponse();
+        assertThat(enabledRes.getHeader("Cache-Control")).contains("private").contains("no-store");
+        assertThat(enabledRes.getContentAsString()).isEqualTo("{\"enabled\":true}");
+    }
+
+    @Test
+    @DisplayName("Loopback-only routes reject non-loopback ADMIN, forged X-Forwarded-For, bad demo key, and disabled research")
+    void loopbackOnlyRoutesEnforceDefenseInDepthGuards() throws Exception {
+        when(recommendationService.tinixEnabled()).thenReturn(true);
+
+        // Non-loopback ADMIN even WITH valid JWT, demo key, and forged X-Forwarded-For: 127.0.0.1 -> 403
+        for (String path : List.of("/api/v1/recommendations/research/config", "/api/v1/amenities/research/hai-chau", "/api/v1/amenities/research/areas")) {
+            mvc.perform(get(path)
+                    .with(r -> { r.setRemoteAddr("203.0.113.42"); return r; })
+                    .header("X-Forwarded-For", "127.0.0.1")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                    .header("X-SmartProp-Demo-Key", "test-demo-key-secret"))
+                .andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/v1/recommendations/research")
+                .with(r -> { r.setRemoteAddr("203.0.113.42"); return r; })
+                .header("X-Forwarded-For", "127.0.0.1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                .header("X-SmartProp-Demo-Key", "test-demo-key-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"budgetVnd\":3000000000,\"purpose\":\"LIVING\",\"propertyType\":\"HOUSE\"}"))
+            .andExpect(status().isForbidden());
+
+        // Loopback ADMIN with missing or wrong demo key -> 403
+        mvc.perform(post("/api/v1/recommendations/research")
+                .with(r -> { r.setRemoteAddr("127.0.0.1"); return r; })
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"budgetVnd\":3000000000,\"purpose\":\"LIVING\",\"propertyType\":\"HOUSE\"}"))
+            .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/recommendations/research")
+                .with(r -> { r.setRemoteAddr("127.0.0.1"); return r; })
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                .header("X-SmartProp-Demo-Key", "wrong-demo-key")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"budgetVnd\":3000000000,\"purpose\":\"LIVING\",\"propertyType\":\"HOUSE\"}"))
+            .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/amenities/research/hai-chau")
+                .with(r -> { r.setRemoteAddr("127.0.0.1"); return r; })
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                .header("X-SmartProp-Demo-Key", "wrong-demo-key"))
+            .andExpect(status().isForbidden());
+
+        // Loopback ADMIN with valid demo key when research flag is disabled -> 403
+        when(recommendationService.tinixEnabled()).thenReturn(false);
+        mvc.perform(post("/api/v1/recommendations/research")
+                .with(r -> { r.setRemoteAddr("127.0.0.1"); return r; })
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken)
+                .header("X-SmartProp-Demo-Key", "test-demo-key-secret")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"budgetVnd\":3000000000,\"purpose\":\"LIVING\",\"propertyType\":\"HOUSE\"}"))
+            .andExpect(status().isForbidden());
+    }
 }

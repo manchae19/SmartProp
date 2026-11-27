@@ -142,3 +142,10 @@ test('createAdvisorConsultClient blocks non-admin includeResearch before calling
   )
   assert.equal(called, false)
 })
+
+test('validateAdvisorResponse rejects non-live UNVERIFIED or NEEDS_REVIEW items in SAFE mode', () => {
+  const unverifiedInSafe = sampleSafePayload()
+  unverifiedInSafe.recommendedProperties[0].liveListing = false
+  unverifiedInSafe.recommendedProperties[0].source = { kind: 'EXTERNAL', name: 'crawler', recordKey: 'ext-9', detailUrl: 'https://example.com/9' }
+  assert.throws(() => validateAdvisorResponse(unverifiedInSafe, { allowResearch: false }), /SAFE/)
+})

@@ -276,21 +276,67 @@ export function validateAdvisorResponse(data, options = {}) {
   return data
 }
 
-export const createAdvisorConsultClient = (request, getSession = null) => async form => {
+export function advisorResearchActorKey(snap) {
+  if (!snap || snap.status !== 'AUTHENTICATED' || snap.user?.role !== 'ADMIN') return ''
+  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? snap.token ?? ''
+  const normalized = String(identity).trim()
+  return normalized ? `ADMIN:${normalized}` : ''
+}
+
+export function advisorDistrictSuggestions(baseDistricts, result, canViewResearch = false) {
+  const base = Array.isArray(baseDistricts) ? baseDistricts.filter(d => d && d !== 'Tất cả') : []
+  if (!result || (result.mode === 'INTERNAL_RESEARCH' && canViewResearch !== true)) {
+    return [...new Set(base)]
+  }
+  const fromResult = (result.topAreas || [])
+    .map(a => a?.district)
+    .filter(d => typeof d === 'string' && d.trim() !== '')
+  return [...new Set([...base, ...fromResult])]
+}
+
+export function resolveAdvisorResultsView(result, canViewResearch = false) {
+  if (!result || typeof result !== 'object') return null
+  if (result.mode === 'INTERNAL_RESEARCH' && canViewResearch !== true) {
+    return null
+  }
+  const isResearch = result.mode === 'INTERNAL_RESEARCH' && canViewResearch === true
+  const properties = (result.recommendedProperties || []).filter(
+    p => isResearch || (p?.liveListing === true && !p?.researchReference && p?.source?.kind !== 'TINIX_AI')
+  )
+  const topAreas = (result.topAreas || []).filter(
+    a => isResearch || ((a?.unverifiedCount ?? 0) === 0 && (a?.needsReviewCount ?? 0) === 0)
+  )
+  const warnings = (result.warnings || []).filter(
+    w => isResearch || !hasResearchLeakText([w])
+  )
+  return {
+    isResearch,
+    isPartial: Boolean(result.serviceStatus?.partialResult),
+    topAreas,
+    properties,
+    warnings,
+  }
+}
+
+export const createAdvisorConsultClient = (request, getSession = null) => async (form, requestOptions = {}) => {
   const body = advisorConsultRequest(form)
   if (body.includeResearch === true && typeof getSession === 'function') {
     const snap = getSession()
-    if (snap?.status !== 'AUTHENTICATED' || snap?.user?.role !== 'ADMIN') {
+    if (!advisorResearchActorKey(snap)) {
       const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ.')
       err.status = 403
       throw err
     }
   }
-  const data = await request('/advisor/consult', {
+  const options = {
     method: 'POST',
     authenticated: body.includeResearch === true,
     body,
-  })
+  }
+  if (requestOptions?.signal) {
+    options.signal = requestOptions.signal
+  }
+  const data = await request('/advisor/consult', options)
   return validateAdvisorResponse(data, { allowResearch: body.includeResearch === true })
 }
 

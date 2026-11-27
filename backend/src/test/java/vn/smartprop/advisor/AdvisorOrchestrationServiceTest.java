@@ -67,7 +67,7 @@ class AdvisorOrchestrationServiceTest {
         );
 
         ArgumentCaptor<RecommendationDtos.Request> recCaptor = ArgumentCaptor.forClass(RecommendationDtos.Request.class);
-        when(recService.recommend(recCaptor.capture())).thenReturn(new RecommendationDtos.Response(
+        when(recService.recommendPublic(recCaptor.capture())).thenReturn(new RecommendationDtos.Response(
             "HEURISTIC_V1_1",
             "SAFE",
             "ASKING_SALE_VND_TOTAL",
@@ -162,7 +162,7 @@ class AdvisorOrchestrationServiceTest {
             88.0, Map.of("budgetFit", 90.0), List.of("Phù hợp đầu tư cho thuê"),
             new Source("PROPERTY", "SmartProp", "st-01", null), "PLATFORM_PUBLISHED", "VERIFIED", null, List.of(), null
         );
-        when(recService.recommend(any())).thenReturn(new RecommendationDtos.Response(
+        when(recService.recommendPublic(any())).thenReturn(new RecommendationDtos.Response(
             "HEURISTIC_V1_1", "SAFE", "ASKING_SALE_VND_TOTAL",
             new RecommendationDtos.Request(new BigDecimal("3000000000"), Purpose.RENTAL, PropertyType.APARTMENT, null, "Sơn Trà", null, 5),
             1, List.of(), List.of(prop), List.of(), Map.of()
@@ -237,7 +237,7 @@ class AdvisorOrchestrationServiceTest {
     @Test
     void emptyCandidatesAndInvalidFlexibilityHandledCleanly() {
         AdvisorOrchestrationService orchestrator = newOrchestrator(true);
-        when(recService.recommend(any())).thenReturn(new RecommendationDtos.Response(
+        when(recService.recommendPublic(any())).thenReturn(new RecommendationDtos.Response(
             "HEURISTIC_V1_1", "SAFE", "ASKING_SALE_VND_TOTAL",
             new RecommendationDtos.Request(new BigDecimal("50000000"), Purpose.LIVING, PropertyType.HOUSE, null, null, null, 5),
             0, List.of(), List.of(), List.of(), Map.of()
