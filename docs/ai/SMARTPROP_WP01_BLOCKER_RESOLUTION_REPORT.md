@@ -1018,3 +1018,152 @@ PRODUCTION_LIKE_ROUTING_PARTIAL
 
 **Chỉ còn một mục chưa đạt:** `PRODUCTION_LIKE_ROUTING_PASS` — cần reverse proxy độc lập
 (nginx/IIS) cho static build, hiện repo chưa có cấu hình deploy. Đây là blocker **duy nhất**.
+
+---
+
+## AA. WP-01 FINAL ACCEPTANCE
+
+### AA.1. Production-like reverse proxy — `PRODUCTION_LIKE_ROUTING_PASS`
+
+| Mục | Giá trị |
+|---|---|
+| Web server | **nginx 1.29.3 Windows portable** (nginx.org, chính thức) |
+| Vị trí | `.scratch\nginx\nginx-1.29.3\` — **không** Windows Service, **không** PATH, **không** ghi đè phần mềm khác |
+| Listener | `127.0.0.1:8090` (loopback only, **không** phải production deployment) |
+| Static root | `frontend/dist` (React production build, **không** Vite dev/preview) |
+| Conf | `.scratch\nginx\nginx-1.29.3\conf\smartprop-test.conf` |
+
+Routing đã cấu hình và kiểm chứng:
+
+| Đường | Đích | Kiểm chứng |
+|---|---|---|
+| `/` (SPA fallback) | `try_files $uri $uri/ /index.html` | `/valuation` → **200**, có `div#app` |
+| `/api/ai/` → FastAPI | `proxy_pass http://127.0.0.1:8000/` (**strip prefix**) | `GET /api/ai/model/options` → **200**, `application/json`, **867 byte**, `model_version: v1.3` |
+| `/api/v1/` → Spring Boot | `proxy_pass http://127.0.0.1:8080` (giữ nguyên path) | `POST /api/v1/auth/login` → **200** |
+| Static assets | `/assets/*` | phục vụ từ `dist`, render đầy đủ |
+
+Header forward: `Host`, `X-Real-IP`, `Authorization`, `Cookie`, `X-Refresh-Session`, `X-CSRF-TOKEN`.
+Timeout `proxy_read_timeout 30s`. **Không** tạo proxy tùy ý tới endpoint nội bộ. FastAPI **không** lộ ra Internet.
+
+### AA.2. Browser E2E trên static production build — **PASS 13/13**
+
+Chạy Playwright thật trên `http://127.0.0.1:8090` (nginx, **không** Vite):
+
+| # | Kiểm tra | Kết quả |
+|---|---|---|
+| 1 | Deep link `/valuation` | **200** |
+| 2 | SPA render (title) | PASS |
+| 3 | SPA **refresh** vẫn render | PASS |
+| 4 | Model options qua nginx | PASS — `v1.3`, 3 category |
+| 5 | Flow A submit | PASS |
+| 6 | Flow A hiển thị giá | PASS — **7,69 tỷ** |
+| 7 | Có input street | PASS |
+| 8 | **Street warning hiển thị trên UI** | PASS |
+| 9 | Bỏ street → cảnh báo **biến mất** | PASS |
+| 10 | Responsive 390 px | PASS |
+| 11 | Deep link `/login` | **200** |
+| 12 | Form login render | PASS |
+| 13 | Không có page error | PASS |
+
+### AA.3. Encoded-vector parity — **PASS 5/5**
+
+Instrumentation **test-only**: `_capture_for_test()` trong FastAPI ghi payload nhận được ra file
+**chỉ khi** biến môi trường `SMARTPROP_TEST_CAPTURE` được đặt. Không có endpoint debug công khai,
+mặc định là no-op.
+
+Payload của **hai luồng** được capture, sau đó nạp vào `map_v6_to_v1_3()` + `transform()` để lấy
+ma trận encoded **thật** (22 feature theo `feature_schema.json`) và so từng ô.
+
+| Case | Payload giống nhau | **Encoded vector giống nhau** |
+|---|---|---|
+| HOUSE basic | ✅ | ✅ |
+| HOUSE enriched | ✅ | ✅ |
+| LAND | ✅ | ✅ |
+| APARTMENT | ✅ | ✅ |
+| VILLA | ✅ | ✅ |
+
+22 feature được đối chiếu nguyên vẹn: `area, floor_count, frontage_width, road_width,
+bedroom_count, bathroom_count, has_floor, has_frontage, has_road_width, has_bedroom,
+has_bathroom, has_project, has_street, has_ward, frontage_sqrt_area_ratio, normalized_type,
+district, ward, raw_street_name, raw_project_name, raw_house_direction, raw_balcony_direction`.
+
+⇒ Feature names, thứ tự, numeric, categorical, missing indicators và encoded values **giống hệt**
+giữa hai luồng. Kết hợp với delta giá = 0 ⇒ raw model output, calibration và final price giống hệt.
+
+### AA.4. Location contract — **PASS**
+
+| Luồng | HTTP | Business result | Giá |
+|---|---|---|---|
+| Flow A (`/predict`, `Hà Nội`) | **422** | reject, `detail="unsupported_location: …"` | **None** |
+| Flow B (`valuation-preview`, `Hà Nội`) | **200** | `available=false`, `modelVersion=null` | **None** |
+
+**Làm rõ báo cáo cũ:** HTTP 200 của Flow B **không** phải một định giá thật — đó là envelope
+"không đủ điều kiện định giá" của contract Spring (`available=false`) và **không có giá**.
+Phân biệt rõ **HTTP status** ≠ **business result**.
+
+Invalid location **không tới model inference**: Flow A chặn trước predictor; Flow B không gọi
+FastAPI (trả envelope ngay). Policy đã sửa giữ nguyên; không map địa danh ngoài Đà Nẵng.
+
+### AA.5. Street warning UI — Flow A **PASS**, Flow B **NOT_VERIFIED**
+
+| Luồng | API warnings | UI render |
+|---|---|---|
+| Flow A | PASS 9/9 | **PASS** (browser, nginx static build) |
+| Flow B | PASS 9/9 (Spring forward đúng) | **NOT_VERIFIED** — chưa chạy browser trên `/post` |
+
+Với case thật (Flow A): có street → cảnh báo hiển thị; bỏ street → cảnh báo biến mất (không stale).
+`UNKNOWN_MAPPING` giữ nguyên, không tạo mapping địa lý.
+
+### AA.6. Regression
+
+| Suite | Kết quả | Nhãn |
+|---|---|---|
+| **FastAPI** (sau instrumentation) | **222 passed**, 20 skipped, 84 subtests, **2 RAG collection error** | **FRESH_PASS** (trừ RAG) |
+| Backend full (merged HEAD, backend không đổi sau đó) | **230 / 230** | **FRESH_PASS** |
+| Frontend unit | **67 / 67** | **FRESH_PASS** |
+| Production build | `✓ built in 1,68 s` | **FRESH_PASS** |
+| Browser E2E (nginx + static) | **13 / 13** | **FRESH_PASS** |
+| Encoded-vector parity | **5 / 5** | **FRESH_PASS** |
+| Location contract | 2/2 luồng reject đúng | **FRESH_PASS** |
+
+2 lỗi RAG (`area_spec`) vẫn **có từ main** — không sửa (ngoài scope). Không gọi full suite PASS.
+
+### AA.7. Database + model integrity
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Flyway history | **12** (không đổi) |
+| `properties` | **0** |
+| `valuation_history` | **0** |
+| `property_listing_code_allocations` | **0** |
+| Triggers `listing_code` | **2** |
+| `model.json` | `3c56b693…` (không đổi) |
+| `calibration.json` | `17632bdf…` (không đổi) |
+| `feature_schema.json` | `84be275b…` (không đổi) |
+
+Không train · không đổi weights · không Shadow · không nới rate limit production.
+
+### AA.8. Trạng thái môi trường
+
+`3307 FREE` (shutdown qua `SHUTDOWN`) · `3306 BUSY` (service nhóm, **không đụng**) ·
+`8000/8080/8090 FREE` · MySQL Portable + fixture V26 + nginx portable **giữ lại** để tái sử dụng.
+
+### AA.9. Gate
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+MAIN_RECONCILIATION_PASS
+FLOW_A_REAL_E2E_PASS
+LOCATION_VALIDATION_PASS
+CROSS_FLOW_PRICE_PARITY_PASS
+ENCODED_VECTOR_PARITY_PASS
+PRODUCTION_LIKE_ROUTING_PASS
+V1_3_ARTIFACT_INTEGRITY_PASS
+FLOW_B_REAL_E2E_PASS (HTTP integration 15/15 — KHÔNG phải browser)
+STREET_WARNING_UI_PASS (Flow A browser; Flow B chỉ API)
+NOT_READY_FOR_FINAL_REVIEW
+```
+
+**Hai mục chưa đạt đúng nghĩa:**
+1. **Flow B browser E2E** — mới chạy HTTP integration 15/15, **chưa** drive `/post` multi-step trên browser.
+2. **Street warning UI ở Flow B** — API forward đúng nhưng **chưa** xác minh React render.
