@@ -2,6 +2,7 @@
 import re
 import unicodedata
 from decimal import Decimal
+from .money import recurring_amounts
 
 
 # Fixed, deterministic vocabulary. Every category the public map can publish.
@@ -53,37 +54,75 @@ _RENT_ACTION = re.compile(
     rf"|\b{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?\s+(?:de |cho )?thue\b"
     r"|\bgia (?:cho )?thue\s+(?:\d|[^.!?]*?\b(?:duoi|tren|toi da|tu)\s+\d)"
     r"|^thue\s+(?:de o\b|(?:duoi|tren|toi da|tu)\s+\d|\d)"
-    r"|\d\s*(?:trieu|ty|nghin|ngan|dong|vnd)\s*(?:/\s*|moi\s+|mot\s+|theo\s+)(?:thang|nam|ngay)\b"
 )
+_NEGATED_TRANSACTION = re.compile(r"\b(?:khong|chua)\s+(?:(?:tim|muon|can)\s+)?(mua|thue)\b")
+_LET_PURPOSE = re.compile(
+    rf"\b(?:de|roi)\s+(?:(?:dau tu|khai thac)\s+){{0,2}}cho thue\b"
+    rf"|\b(mua\s+{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?)\s+cho thue\b"
+)
+_RENTAL_INCOME = re.compile(r"\b(?:doanh thu|thu nhap|dong tien|loi nhuan)(?:\s+tu)?(?:\s+cho thue)?\b")
+_INCOME_LABEL = re.compile(r"\s*(?:(?:du kien|ky vong|uoc tinh|khoang|la|dat|tu)\s*)*[:=]?\s*$")
 
 
 def purchase_price_question(value):
-    """Recognize price inquiries phrased with a purchase verb in folded text."""
+    """Recognize purchase-price information requests in folded text."""
     value = " ".join(value.split())
-    return bool(
-        re.match(r"^(?:(?:toi|minh) )?(?:(?:muon|can) )?biet gia mua\b", value)
-        or re.match(r"^mua\b", value) and re.search(r"\bgia bao nhieu\b", value)
-    )
+    if not re.search(r"\bmua\b", value):
+        return False
+    if re.search(r"\b(?:tim mua|doi sang mua|chuyen sang mua)\b", value):
+        return False
+    return bool(re.search(
+        r"\bbiet gia mua\b|\bgia(?:\s+(?:la|khoang|tam))*\s+bao nhieu\b"
+        r"|\b(?:can|mat|ton)(?:\s+(?:la|khoang|tam))*\s+bao nhieu(?:\s+tien)?\b", value
+    ) or re.search(r"\bgia mua\b", value) and re.search(r"\bbao nhieu\b", value))
+
+
+def transaction_information(value):
+    if re.search(r"\bso sanh\b", value) and re.search(r"\b(?:mua|ban)\b", value) and re.search(r"\bthue\b", value):
+        return "PRICE_COMPARISON"
+    if purchase_price_question(value):
+        return "PURCHASE_PRICE"
+    if (_RENTAL_INCOME.search(value) and re.search(r"\b(?:thue|cho thue)\b", value)
+            and not _PURCHASE_ACTION.search(value)):
+        return "RENTAL_INCOME"
+    return None
+
+
+def buy_to_let(value):
+    return bool(_PURCHASE_ACTION.search(_NEGATED_TRANSACTION.sub(" ", value)) and _LET_PURPOSE.search(value))
 
 
 def listing_transaction(question):
     """Explicit listing action, excluding informational price questions."""
     text = re.sub(r"\bthuế\b", "tax", unicodedata.normalize("NFC", question.lower()))
     value = " ".join(fold(text).split())
-    if purchase_price_question(value):
+    if transaction_information(value):
         return None
-    value = re.sub(r"\b(?:khong|chua)\s+(?:(?:tim|muon|can)\s+)?(?:mua|thue)\b", " ", value)
+    if re.match(r"^(?:neu|gia su)\s+(?:(?:toi|minh)\s+)?(?:mua|thue)\b", value):
+        return "CONFLICT"
+    negated_purchase = any(match[1] == "mua" for match in _NEGATED_TRANSACTION.finditer(value))
+    value = _NEGATED_TRANSACTION.sub(" ", value).strip()
     buy = _PURCHASE_ACTION.search(value)
-    # Renting out a purchased property describes its use, not the acquisition.
-    rent_text = re.sub(r"\b(?:de|roi)\s+(?:(?:dau tu|khai thac)\s+){0,2}cho\s+thue\b", " ", value) if buy else value
-    rent = _RENT_ACTION.search(rent_text)
+    investment = buy and _LET_PURPOSE.search(value)
+    rent_text = _RENTAL_INCOME.sub(" ", _LET_PURPOSE.sub(r"\1 ", value)) if investment else value
+    periodic = list(recurring_amounts(value))
+    unlabeled_periodic = any(
+        not investment or not any(_INCOME_LABEL.fullmatch(value[label.end():amount.start()])
+                                  for label in _RENTAL_INCOME.finditer(value, 0, amount.start()))
+        for amount in periodic
+    )
+    rent = _RENT_ACTION.search(rent_text) or unlabeled_periodic
     if buy:
         return "CONFLICT" if rent else "SALE"
-    return "RENT" if rent else None
+    if rent:
+        return "RENT"
+    return "NEGATED" if negated_purchase else None
 
 
 def effective_listing_transaction(text, structured_purpose, saved_purpose):
     """Return the transaction and whether the caller selected it on this turn."""
+    if text == "NEGATED":
+        return text, False
     structured = None if structured_purpose is None else "RENT" if structured_purpose == "RENTAL" else "SALE"
     if text and structured and text != structured:
         return "CONFLICT", True

@@ -357,6 +357,13 @@ def assert_frontend_contract(packet, expected):
       const view = chatPresentation(packet);
       assert.equal(view.cards.length, expected.cards);
       assert.equal(view.noMatches, expected.empty);
+      if (expected.clarification) {
+        assert.equal(packet.evidence.clarification, expected.clarification);
+        assert.equal(view.clarification, packet.answer);
+        assert.equal(packet.evidence.session.context.criteria.purpose, expected.purpose);
+        assert.equal(packet.evidence.session.context.criteria.budgetVnd, expected.budget);
+        process.exit(0);
+      }
       if (expected.incomplete) assert.match(view.summary, /trang chưa kiểm tra|trong phần đã đọc/u);
       if (expected.address && !expected.cards && !expected.incomplete) {
         assert.equal(view.summary, packet.answer);

@@ -82,8 +82,12 @@ def test_purchase_can_switch_to_rental(search):
     assert len(audit["geocodes"]) <= 1 and not audit["recommendations"]
 
 
-@pytest.mark.parametrize("prefix", ["Tìm mua nhà", "Không thuê, tôi muốn mua nhà", "Mua nhà để cho thuê"])
-def test_explicit_purchase_overrides_rental_state(search, prefix):
+@pytest.mark.parametrize(("prefix", "purchase_purpose"), [
+    ("Tìm mua nhà", "LIVING"),
+    ("Không thuê, tôi muốn mua nhà", "LIVING"),
+    ("Mua nhà để cho thuê", "INVESTMENT"),
+])
+def test_explicit_purchase_overrides_rental_state(search, prefix, purchase_purpose):
     audit = {}
     row = listing(1, 79)
     packet, calls = search([row], prompt=f"{prefix} {{relation}} {ADDRESS}, dưới 3 tỷ",
@@ -91,7 +95,7 @@ def test_explicit_purchase_overrides_rental_state(search, prefix):
     assert packet["evidence"]["responseKind"] == "PROPERTY_LIST"
     assert property_ids(packet) == [row["id"]]
     assert len(calls) == 1 and calls[0]["transactionType"] == "SALE" and calls[0]["maxPrice"] == "3000000000"
-    assert packet["evidence"]["session"]["context"]["criteria"]["purpose"] == "LIVING"
+    assert packet["evidence"]["session"]["context"]["criteria"]["purpose"] == purchase_purpose
     assert not audit["recommendations"]
 
 

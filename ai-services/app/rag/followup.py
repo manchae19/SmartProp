@@ -6,7 +6,7 @@ No model is consulted, so a follow-up can never invent a budget or a property.
 import re
 from decimal import Decimal
 
-from .intent import fold, poi_categories, purchase_price_question
+from .intent import buy_to_let, fold, poi_categories, transaction_information
 from .money import parse_budget
 from .personalization import area_spec, invalid_area_text
 
@@ -120,7 +120,7 @@ def detect_property_type(question):
 
 def detect_purpose(question):
     value = fold(question)
-    if any(_has(value, t) for t in ("dau tu", "sinh loi", "tang gia")):
+    if buy_to_let(value) or any(_has(value, t) for t in ("dau tu", "sinh loi", "tang gia")):
         return "INVESTMENT"
     if any(_has(value, t) for t in ("cho thue", "thu nhap cho thue")):
         return "RENTAL"
@@ -140,6 +140,7 @@ def detect_district(question, known):
 def classification(question, context, *, districts=()):
     """Tool intent is explicit; a remembered budget never selects a tool."""
     value = fold(question)
+    information = transaction_information(value)
     categories = poi_categories(question)
     parsed = parse_budget(question)
     ordinal = ordinal_reference(question)
@@ -151,7 +152,7 @@ def classification(question, context, *, districts=()):
     housing = r"(?:nha|can ho|chung cu|bat dong san|bds|dat nen|biet thu|phong tro|mat bang)"
     housing_value=re.sub(r"\b(?:nha thuoc|nha hang|nha khoa|nha kho|nha may|nha sach|nha tre)\b"," ",value)
     explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|tu van theo ho gia dinh|huong dan tung buoc|bo qua)\b",housing_value))
-    if purchase_price_question(value) or (
+    if information or (
         re.search(r"\bgia (?:thue|mua)\b", value)
         and not re.search(r"\b(?:tim|muon|goi y|de xuat|co nha|co can ho)\b", value)
     ):
@@ -192,7 +193,8 @@ def classification(question, context, *, districts=()):
     market_analysis=analysis_request and not concrete_search
     market_followup=prior_intent in ("MARKET_PRICE","MARKET_TREND","MARKET_ANALYSIS") and parsed.status=="NOT_MENTIONED" and not explicit_search and not reference and not categories and not legal and not planning and not knowledge and bool(re.search(r"\b(?:con|the|vay|o|tai)\b",value) or state.get("marketScope",{}).get("transactionType")=="RENT" and re.fullmatch(r"(?:theo |moi )?(?:thang|nam|ngay)[.!? ]*",value))
     domain="PLANNING" if planning else "LEGAL" if legal else None
-    if not explicit_search and not reference and planning:intent="PLANNING_QA"
+    if information:intent="MARKET_PRICE"
+    elif not explicit_search and not reference and planning:intent="PLANNING_QA"
     elif not explicit_search and not reference and legal:intent="LEGAL_QA"
     elif market_analysis or market_followup and prior_intent=="MARKET_ANALYSIS" and not market:intent="MARKET_ANALYSIS"
     elif not explicit_search and not reference and ((market and not re.search(r"\bla gi\b",value)) or market_followup):intent="MARKET_TREND" if trend else "MARKET_PRICE"
@@ -209,6 +211,6 @@ def classification(question, context, *, districts=()):
             "clarify":is_clarification_needed(question),"searchChange":search_change,
             "propertyType":kind,"purpose":purpose,"hasHistory":has_history,
             "needsPropertyReference":bool(intent=="PROPERTY_FOLLOWUP" and ordinal is None and not (is_map_request(question) and any(_has(value,t) for t in ("chung","cac can","nhung can")))),
-            "intent":intent,"domain":domain,
+            "intent":intent,"domain":domain,"transactionInformation":information,
             "intentFamily":"MARKET_ANALYSIS" if intent in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND") else "PROPERTY_SEARCH" if search_change else intent,
             "unsupportedPopularityFilter":analysis_request and concrete_search}

@@ -12,7 +12,7 @@ from .intent import (asks_for_amenities, empty_search_answer, poi_categories, CA
                      insufficient_amenity_answer, listing_transaction, effective_listing_transaction)
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
-from .money import parse_budget, format_vnd
+from .money import parse_budget, format_vnd, recurring_amounts
 from .locality import amenity_locality, is_listing_location_edit
 from .tool_registry import ToolRegistry
 from .market import market_query, market_response
@@ -49,9 +49,9 @@ from .account_preferences import fingerprint, seed
 
 # Districts the public catalog covers; used to seed a saved profile before any branch returns.
 SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "Ngũ Hành Sơn", "Liên Chiểu", "Hòa Vang"]
-_LISTING_PENDING = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked", "commuteStage",
-                    "commutePoints", "commutePendingAddress", "commutePendingLimit", "commuteResumeSearch",
-                    "focusedPropertyId")
+_LISTING_LOCATION_STATE = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked",
+                           "commuteDestination", "commuteStage", "commutePoints", "commutePendingAddress",
+                           "commutePendingLimit", "commuteResumeSearch", "focusedPropertyId")
 from .tools import UpstreamError
 
 class ChatOrchestrator(AdvisorDiscoveryMixin):
@@ -170,11 +170,19 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             generationMode=generation_mode, retrievalMode=retrieval_mode, citations=list(citations),
             recommendedProperties=list(properties), evidence=payload, dataLimitations=list(limitations or []))
 
+    def _invalidate_listing_location(self, context, criteria):
+        for key in _LISTING_LOCATION_STATE:
+            context.needs.pop(key, None)
+        context.last_property_ids.clear()
+        context.area_ids.clear()
+        context.referenced_property_id = None
+        criteria.pop("lastSearchEmpty", None)
+
     def _rental_reply(self, request, session_id, context, *, research):
         criteria = context.criteria()
-        for key in (*_LISTING_PENDING, "purchaseBudgetRequired"):
-            context.needs.pop(key, None)
         if criteria.get("purpose") != "RENTAL":
+            self._invalidate_listing_location(context, criteria)
+            context.needs.pop("purchaseBudgetRequired", None)
             criteria.pop("budgetVnd", None)
             criteria.pop("minPriceVnd", None)
         criteria["purpose"] = "RENTAL"
@@ -186,17 +194,28 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                                      transaction, selected, text_transaction, structured_purpose, *, research):
         state, prior = context.needs, context.criteria()
         _, filter_text, mode = address_query
+        information = turn["transactionInformation"]
+        if information == "PRICE_COMPARISON":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Bạn muốn so sánh giá mua với giá thuê theo tháng, năm hay ngày, ở khu vực nào?",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "MARKET_SCOPE"})
+        if information == "RENTAL_INCOME":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Bạn muốn xem giá chào thuê để tham khảo hay ước tính doanh thu? Ước tính doanh thu cần thêm giá thuê và tỷ lệ lấp đầy.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "RENTAL_INCOME_INFORMATION"})
         informational = turn["intent"] in (
             "MARKET_ANALYSIS", "MARKET_TREND", "KNOWLEDGE", "LEGAL_QA", "PLANNING_QA", "AREA_AMENITIES"
         ) or (turn["intent"] == "MARKET_PRICE" and text_transaction is None)
+        if transaction == "CONFLICT":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Bạn muốn tìm tin mua hay tin thuê? Nếu tìm mua, hãy nêu ngân sách mua tổng bằng đồng.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "TRANSACTION_INTENT_CONFLICT"})
+        if transaction == "NEGATED":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Tôi đã ghi nhận bạn chưa muốn tìm mua. Bạn muốn tham khảo thông tin gì?",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PURCHASE_DECLINED"})
         if informational:
             return None
-        if transaction == "CONFLICT":
-            for key in _LISTING_PENDING:
-                state.pop(key, None)
-            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
-                answer="Bạn muốn tìm tin mua hay tin thuê? Tiêu chí giao dịch hiện chưa thống nhất.",
-                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "TRANSACTION_INTENT_CONFLICT"})
 
         listing_turn = (
             mode or request.propertyId or state.get("focusedPropertyId")
@@ -219,8 +238,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             elif turn["purpose"] == "RENTAL":
                 turn["purpose"] = "LIVING"
             if prior.get("purpose") == "RENTAL":
-                for key in _LISTING_PENDING:
-                    state.pop(key, None)
+                self._invalidate_listing_location(context, prior)
                 for key in ("budgetVnd", "minPriceVnd"):
                     prior.pop(key, None)
                 prior["purpose"] = turn["purpose"] = turn["purpose"] or "LIVING"
@@ -228,8 +246,10 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 self.sessions.record(context, criteria=prior, property_ids=[], area_ids=[],
                                      evidence_ids=[], question=request.question)
 
-        if transaction == "SALE" and state.get("purchaseBudgetRequired"):
-            parsed = parse_budget(filter_text if mode else request.question)
+        budget_text = filter_text if mode else request.question
+        recurring_income = text_transaction == "SALE" and any(recurring_amounts(budget_text))
+        if transaction == "SALE" and (state.get("purchaseBudgetRequired") or recurring_income):
+            parsed = parse_budget(budget_text)
             valid_budget = parsed.status != "AMBIGUOUS" and (request.budgetVnd is not None or parsed.status == "VALID")
             if not valid_budget and (selected or listing_turn):
                 return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
@@ -289,7 +309,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         )
         if transaction_reply is not None:
             return transaction_reply
-        purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL"
+        purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL" and not turn["transactionInformation"]
         if purchase_allowed:
             discovery_reply = self.dispatch_discovery(request, session_id, context, turn, address_query,
                 districts=SUPPORTED_DISTRICTS, research=research, token=token, account=account)
