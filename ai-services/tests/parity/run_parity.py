@@ -32,6 +32,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+STREET_WARNING_NEEDLE = "chưa được đối chiếu với khu vực"
 TOLERANCE_VND = 1  # identical model, identical vector: only rounding may differ
 
 
@@ -234,13 +235,23 @@ def main():
             same_ab = same_ac = False
         price_ok = all(p and abs(int(p) - int(prices["A"] or 0)) <= TOLERANCE_VND for p in prices.values())
 
-        ok = ok_status and model_ok and ok_count and same_ab and same_ac and price_ok
+        # Warnings phải nhất quán theo semantics: nếu A cảnh báo street thì C cũng phải
+        # cảnh báo, và B (Spring forward) cũng phải mang cùng cảnh báo đó.
+        warnings_ok = True
+        if "street" in name:
+            def has_warning(path):
+                body = responses[path][1]
+                return any(STREET_WARNING_NEEDLE in str(w) for w in (body.get("warnings") or []))
+            warnings_ok = has_warning("A") and has_warning("C") and has_warning("B")
+
+        ok = (ok_status and model_ok and ok_count and same_ab and same_ac and price_ok
+              and warnings_ok)
         positive_ok += 1 if ok else 0
         print(f"{name:18s} {responses['A'][0]:>4d} {responses['B'][0]:>4d} {responses['C'][0]:>4d}"
               f"  {str(prices['A']):>14s}  {str(same_ab and same_ac):>14s}")
         check(ok, f"positive {name}",
               f"status={ok_status} model={model_ok} records={len(records)}/{len(untagged)} "
-              f"A=B:{same_ab} A=C:{same_ac} price={price_ok}")
+              f"A=B:{same_ab} A=C:{same_ac} price={price_ok} warnings={warnings_ok}")
         if records:
             check(records[0]["input"].get("district") is not None, f"{name} district resolved",
                   records[0]["input"].get("district"))
