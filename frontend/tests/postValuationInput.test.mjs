@@ -70,3 +70,45 @@ test('rejects an area outside the model range', () => {
   assert.equal(input.body, undefined)
   assert.match(input.reason, /20 đến 1000/)
 })
+
+// Bedrooms là optional: chưa nhập là MISSING (gửi null), không phải 0 và không phải lỗi.
+// 0 là giá trị người dùng chủ động khai báo ("chưa khai báo" theo contract của model).
+for (const [label, value, expected] of [
+  ['chuỗi rỗng (chưa nhập)', '', null],
+  ['undefined (không có field)', undefined, null],
+  ['null', null, null],
+  ['khoảng trắng', '   ', null],
+  ['0', '0', 0],
+  ['1', '1', 1],
+  ['30 (biên trên)', '30', 30],
+]) {
+  test(`bedrooms ${label} → missing/value đúng, không báo lỗi`, () => {
+    const input = valuationInput(draft({ bedrooms: value }), 'Hải Châu')
+    assert.equal(input.reason, undefined)
+    assert.equal(input.body.bedrooms, expected)
+  })
+}
+
+for (const [label, value] of [
+  ['-1', '-1'],
+  ['31 (vượt biên)', '31'],
+  ['số thập phân', '2.5'],
+  ['chuỗi không hợp lệ', 'abc'],
+]) {
+  test(`bedrooms ${label} → báo ngoài phạm vi`, () => {
+    const input = valuationInput(draft({ bedrooms: value }), 'Hải Châu')
+    assert.match(input.reason, /phòng ngủ/i)
+  })
+}
+
+test('LAND không gửi bedrooms dù draft có giá trị', () => {
+  const input = valuationInput(draft({ propertyType: 'Đất nền', bedrooms: '5' }), 'Hải Châu')
+  assert.equal(input.reason, undefined)
+  assert.equal(input.body.bedrooms, null)
+})
+
+test('LAND với bedrooms trống vẫn không báo lỗi', () => {
+  const input = valuationInput(draft({ propertyType: 'Đất nền', bedrooms: '' }), 'Hải Châu')
+  assert.equal(input.reason, undefined)
+  assert.equal(input.body.bedrooms, null)
+})

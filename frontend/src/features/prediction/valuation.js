@@ -21,8 +21,12 @@ export function valuationInput(draft, location) {
   if (!location) return {
     reason: 'Chọn khu vực tham khảo phù hợp với địa chỉ của tin.'
   };
-  const rooms = String(draft.bedrooms ?? '0');
-  if (propertyType !== 'LAND' && (!/^\d+$/.test(rooms) || Number(rooms) > 30)) return {
+  // Bedrooms là optional. Chuỗi rỗng (người dùng chưa nhập) là MISSING, không phải 0 và
+  // cũng không phải lỗi: gửi null để model giữ nguyên missing-value handling của nó.
+  // Chỉ giá trị đã nhập nhưng vô lý (không phải số nguyên, hoặc > 30) mới là lỗi.
+  const roomsRaw = String(draft.bedrooms ?? '').trim();
+  const roomsProvided = roomsRaw !== '';
+  if (propertyType !== 'LAND' && roomsProvided && (!/^\d+$/.test(roomsRaw) || Number(roomsRaw) > 30)) return {
     reason: 'Số phòng ngủ nằm ngoài phạm vi model (0–30; 0 là chưa khai báo).'
   };
   // Bathrooms is the only optional field the posting form collects that the model also
@@ -47,7 +51,7 @@ export function valuationInput(draft, location) {
       transactionType: 'SALE',
       areaSqm: Number(area),
       locationFeature: location,
-      bedrooms: propertyType === 'LAND' ? null : Number(rooms),
+      bedrooms: propertyType === 'LAND' || !roomsProvided ? null : Number(roomsRaw),
       ...(hasBathrooms ? { bathrooms } : {}),
       ...optional,
       title: String(draft.title || ''),
