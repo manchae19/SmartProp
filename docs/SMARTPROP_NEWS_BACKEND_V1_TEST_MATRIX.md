@@ -4,7 +4,7 @@
 
 | Suite | Pass | Fail/error/skip | Evidence |
 |---|---:|---|---|
-| Advisor read-only Local V21/V26/V27 + strict Local/Staging + negative lineage/schema/guards |13|0/0/0|**FRESH_PASS** `AdvisorReadOnlyRuntimeIT`; real Spring Boot/Hibernate; JDBC allowlist only authorized port3311 fixture; before/after snapshots equal; an unexpected News view is refused |
+| Advisor read-only Local V21/V26/V27 + strict Local/Staging policy simulation + negative lineage/schema/guards |13|0/0/0|**FRESH_PASS** `AdvisorReadOnlyRuntimeIT`; real Spring Boot/Hibernate; JDBC allowlist only authorized port3311 fixture; before/after snapshots equal; an unexpected News view is refused |
 | Standard V23 Hibernate/API regression |2|0/0/0|**FRESH_PASS** `NewsStandardV23IT` on isolated Standard fixture at3311 |
 | Merged-main valuation regression |12|0/0/0|**FRESH_PASS** `ValuationServiceTest` |
 | Frontend PR41/PR37, Chrome E2E, production builds |93/65 + existing E2E/build|—|**REUSED_EVIDENCE** from reviewed PR41 result; this follow-up changes no frontend/API contract |
@@ -14,8 +14,10 @@
 The focused follow-up command was `AdvisorReadOnlyRuntimeIT` (13 tests), followed by
 `NewsStandardV23IT` (2 tests) and `ValuationServiceTest` (12 tests). The first two used the
 test-only independent fixture manifest and explicitly authorized guarded JDBC driver on port
-3311; Flyway migration and SQL initialization were disabled. These fresh runs replace no
-unrelated earlier evidence and do not imply live-ingestion or native shared-database testing.
+3311; Flyway migration and SQL initialization were disabled. Local/Staging guard behavior used
+the test-only profile simulation and actual guard implementation. Native shared-database
+profiles were not used. These fresh runs replace no unrelated earlier evidence and do not imply
+live-ingestion or native shared-database testing.
 
 Final SHA, commands, per-suite results and exit codes:
 `.scratch/evidence/targeted/final-validation.json`. Logs below must be freshly produced

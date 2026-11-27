@@ -11,11 +11,13 @@ constraint enables News API. Unknown Local versions and invalid histories/checks
 
 Fresh evidence on this follow-up: `AdvisorReadOnlyRuntimeIT` 13/13, Standard V23 runtime 2/2,
 and `ValuationServiceTest` 12/12. The Advisor suite verifies HTTP 200 for the read-only Advisor,
-News API 503 for V21/V26/V27, Local/Staging full-mode rejection while V27/V28 are pending,
+News API 503 for V21/V26/V27, strict Local/Staging policy-simulation rejection while V27/V28 are pending,
 Hibernate rejection of a broken V27 column, V28 availability, checksum/history/constraint
 refusal, read-only session behavior, and protected/fallback destination rejection before JDBC.
 Database snapshots matched before/after runtime. The test-only guarded driver recorded no
-physical destination outside the authorized 3311 fixture. Port 3306 and 3307 were not contacted.
+physical destination outside the authorized 3311 fixture. The Spring app booted with a test-only
+simulation profile that invokes the real Local/Staging guard against the explicit policy values;
+native shared profile endpoints 3306 and 3307 were not contacted.
 
 V13–V28 migration SQL and Flyway history were not changed; V27 checksum remains
 `-1622560226` and V28 remains `-1006687404`. This follow-up adds no migration. Frontend PR41
