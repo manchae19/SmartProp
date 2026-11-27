@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import re
 import importlib.util
 from pathlib import Path
-from threading import BoundedSemaphore
+from threading import BoundedSemaphore, Lock
 from fastapi import FastAPI, Header, HTTPException, Request
 from .config import GroundingError, RagUnavailable, Settings
 from .embedding import E5Embedding
@@ -33,6 +33,8 @@ def create_chat_app(settings=None, orchestrator=None):
         orchestrator = ChatOrchestrator(backend, PublishedPropertyRepository(settings), KnowledgeStore(settings.corpus_path),
                                         dense,llm,document_advisor=document_advisor)
     slots = BoundedSemaphore(4)
+    guest_turns = set()
+    guest_turns_lock = Lock()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -79,9 +81,19 @@ def create_chat_app(settings=None, orchestrator=None):
         if not slots.acquire(blocking=False):
             event("response", status=429, reason="CHAT_BUSY")
             raise HTTPException(429, "Chat đang bận; vui lòng thử lại.")
+        claimed_guest_session = None
         try:
             if account:
                 return durable_chat(orchestrator, payload, token, account)
+            if not research and payload.sessionId:
+                # A guest turn mutates in-memory state. A late geocoder result
+                # must finish before another turn can switch its transaction.
+                with guest_turns_lock:
+                    if payload.sessionId in guest_turns:
+                        event("response", status=429, reason="CHAT_BUSY")
+                        raise HTTPException(429, "Phiên chat đang xử lý câu trước; vui lòng thử lại.")
+                    guest_turns.add(payload.sessionId)
+                    claimed_guest_session = payload.sessionId
             return orchestrator.chat(payload, research=research, token=token)
         except UpstreamError as e:
             event("response", status=e.status, reason="BACKEND_UPSTREAM_ERROR")
@@ -93,6 +105,9 @@ def create_chat_app(settings=None, orchestrator=None):
             event("response", status=502, reason=reason(e))
             raise HTTPException(502, "Bằng chứng không khớp hoặc không đúng quyền; đã chặn câu trả lời.") from None
         finally:
+            if claimed_guest_session is not None:
+                with guest_turns_lock:
+                    guest_turns.remove(claimed_guest_session)
             slots.release()
 
     @app.post("/chat", response_model=ChatResponse)

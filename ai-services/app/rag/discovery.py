@@ -2,6 +2,7 @@ from decimal import Decimal
 import re
 import time
 from urllib.parse import quote
+from .personalization import AREA_KEYS, matches_area, merge_area
 from .config import GroundingError, RagUnavailable
 from .schemas import Citation
 from .knowledge import digest
@@ -13,15 +14,32 @@ from .focused_property import focused_intent
 from .geo import haversine_meters
 from .gis import gis_evidence
 from .money import parse_budget
+from .locality import (is_listing_location_edit, key as locality_key, listing_location,
+                       listing_location_mentions, listing_location_text)
 SUGGESTION_LIMIT=3
 RANKING_POOL=6
 NEARBY_RADIUS_METERS=1000
-NEARBY_CANDIDATES=40
+NEARBY_PENDING = ("nearbyPoints", "nearbyAddress", "nearConsentPending", "pendingNearbyAddress", "nearbySaleVerified")
+AREA_RANGE_PROMPT = "Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m²."
 def norm(text):
     from .orchestrator import norm as normalize
     return normalize(text)
 def number(value):
     return format(Decimal(str(value)),"f")
+
+
+def _matches_listing_filters(item, criteria):
+    price = Decimal(str(item["priceVnd"]))
+    return (
+        (not criteria.get("budgetVnd") or price <= Decimal(str(criteria["budgetVnd"])))
+        and (not criteria.get("minPriceVnd") or price >= Decimal(str(criteria["minPriceVnd"])))
+        and (criteria.get("propertyType", "ALL") == "ALL" or item.get("propertyType") == criteria["propertyType"])
+        and all(not criteria.get(key) or locality_key(criteria[key]) == locality_key(item.get(key))
+                for key in ("district", "ward"))
+        and matches_area(item.get("areaSqm"), criteria)
+    )
+
+
 class AdvisorDiscoveryMixin:
     def _focused_answer(self, request, session_id, context, criteria, focused, intent, *, limitations, research, token=None):
         """Answer a question about the one listing the user opened, from public data only."""
@@ -332,7 +350,7 @@ class AdvisorDiscoveryMixin:
             return None
         try:
             found = traced("search_by_address",
-                           lambda: self.backend.search_by_address(address, limit=SUGGESTION_LIMIT))
+                           lambda: self.backend.search_by_address(address, criteria=criteria))
         except OutboundRateLimited as limited:
             limitations.append(f"SmartProp đã chạm hạn mức tra cứu. Thử lại sau khoảng "
                                f"{limited.retry_after} giây.")
@@ -351,41 +369,47 @@ class AdvisorDiscoveryMixin:
                 extra={"clarification": "ADDRESS_SEARCH_UNAVAILABLE"})
 
         # The backend filter is a substring match; the house number must be exact.
+        context.needs["listingAddressScope"] = {"address": address}
         matched = [item for item in found.get("items", [])
                    if address_search.matches(item.get("address") or "", address)]
-        if not matched:
-            # This search completed with nothing; a later ordinal must not reach back
-            # into the list from before it.
-            context.needs["lastSearchEmpty"] = True
-            limitations.append(
-                f"Đã tra {found.get('total', 0)} tin có địa chỉ chứa chuỗi tìm kiếm; "
-                f"không tin nào đúng số nhà và tên đường của “{address}”.")
+        properties = [item for item in matched if _matches_listing_filters(item, criteria)][:SUGGESTION_LIMIT]
+        complete = found.get("complete", True)
+        extra = {"addressQuery": address, "addressSearchComplete": complete}
+        if not complete:
+            limitations.append(f"Chưa đọc hết danh sách tin theo địa chỉ ({found['pagesRead']} trang).")
+        if not properties:
+            if not complete:
+                answer = f"Chưa thấy tin phù hợp tại {address} trong các trang đã đọc. Vẫn còn trang chưa kiểm tra."
+                kind, clarification = "CLARIFICATION_REQUIRED", "ADDRESS_SEARCH_INCOMPLETE"
+            elif matched:
+                answer = "Không có tin phù hợp với địa chỉ và các bộ lọc bắt buộc hiện tại. Tôi không tự tăng ngân sách."
+                kind, clarification = "ADDRESS_NO_RESULTS", "ADDRESS_NO_MATCH"
+            else:
+                answer = f"Chưa tìm thấy tin nhà tại {address} theo bộ lọc hiện tại."
+                kind, clarification = "NO_MATCHES", "ADDRESS_NO_MATCH"
             return self._reply(request, session_id, context, criteria, properties=[], citations=[],
                 research=research,
-                answer=f"Chưa tìm thấy tin nhà tại {address}.",
-                responseKind="NO_MATCHES", limitations=limitations,
+                answer=answer, responseKind=kind, limitations=limitations,
                 evidence={"recommendationMethod": "ADDRESS_FILTER",
                           "criteria": criteria,
                           "recommendationSearch": {"performed": True, "resultCount": 0,
-                              "sourcePath": "/api/v1/recommendations",
+                              "sourcePath": "/api/v1/properties",
                               "criteriaHash": digest(criteria)},
-                          "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_EMPTY_SEARCH"},
+                          "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_EMPTY_SEARCH" if complete
+                                         else "NOT_NEEDED_FOR_INCOMPLETE_SEARCH"},
                           "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
                           "sql": {"status": "NO_PLATFORM_RESULTS", "matchedRows": 0},
                           "gis": gis_evidence([], [], [])},
-                extra={"clarification": "ADDRESS_NO_MATCH",
-                       "addressQuery": address,
+                extra={**extra, "clarification": clarification,
                        "quickReplies": [f"Xem nhà gần {address}", "Tìm theo ngân sách"]})
 
-        properties = matched[:SUGGESTION_LIMIT]
-        context.needs["addressQuery"] = address
-        context.needs["lastSearchEmpty"] = False
+        coverage = "" if complete else " trong phần đã đọc"
         return self._reply(request, session_id, context, criteria, properties=properties, citations=[],
             research=research,
-            answer=(f"Tìm thấy {len(properties)} tin nhà có địa chỉ khớp “{address}”. "
+            answer=(f"Tìm thấy {len(properties)} tin nhà có địa chỉ khớp “{address}”{coverage}. "
                     f"Giá là giá rao công khai của từng tin."),
             responseKind="PROPERTY_LIST", limitations=limitations,
-            extra={"addressQuery": address})
+            extra=extra)
 
 
     def _nearby_from(self, request, session_id, context, criteria, address, origin, *, limitations, research):
@@ -399,8 +423,7 @@ class AdvisorDiscoveryMixin:
         budget = criteria.get("budgetVnd")
         try:
             found = traced("search_nearby", lambda: self.backend.search_nearby(
-                origin["latitude"], origin["longitude"], radius, limit=NEARBY_CANDIDATES,
-                max_price=budget))
+                origin["latitude"], origin["longitude"], radius, max_price=budget, criteria=criteria))
         except OutboundRateLimited as limited:
             limitations.append(f"SmartProp đã chạm hạn mức tra cứu. Thử lại sau khoảng "
                                f"{limited.retry_after} giây.")
@@ -418,8 +441,9 @@ class AdvisorDiscoveryMixin:
                 extra={"clarification": "ADDRESS_SEARCH_UNAVAILABLE"})
 
         measured = []
+        context.needs["listingAddressScope"] = {"address": address, "origin": origin}
         for item in found.get("items", []):
-            if not isinstance(item.get("latitude"), (int, float)) \
+            if not _matches_listing_filters(item, criteria) or not isinstance(item.get("latitude"), (int, float)) \
                     or not isinstance(item.get("longitude"), (int, float)):
                 continue
             meters = haversine_meters(origin["latitude"], origin["longitude"],
@@ -431,118 +455,175 @@ class AdvisorDiscoveryMixin:
         # Ties are broken by id so the same data always yields the same order.
         measured.sort(key=lambda pair: (round(pair[0], 3), pair[1]["id"]))
         complete = bool(found.get("complete", True))
+        extra = {"addressQuery": address, "addressSearchComplete": complete,
+                 "nearAddress": True, "radiusMeters": radius}
+        if not complete:
+            limitations.append(
+                f"Chưa đọc hết danh sách tin trong hộp tra cứu ({found['pagesRead']} trang). "
+                "Kết quả chỉ tính trên phần đã đọc, chưa phải toàn bộ khu vực.")
         properties = []
         for meters, item in measured[:SUGGESTION_LIMIT]:
             item["distanceMeters"] = round(meters, 1)
             item["distanceType"] = "STRAIGHT_LINE"
-            # The card contract expects the same shape the recommendation path returns.
             item.setdefault("source", {"kind": "PROPERTY", "recordKey": item["id"],
                                        "name": item.get("title") or "Tin SmartProp"})
-            item.setdefault("qualityStatus", "PLATFORM_PUBLISHED")
-            item.setdefault("verificationStatus", "PLATFORM_PUBLISHED")
-            item.setdefault("score", 0)
-            item.setdefault("explanations", [])
-            item.setdefault("warnings", [])
             properties.append(item)
 
         if not properties:
-            limitations.append(
-                f"Đã đo {len(found.get('items', []))} tin trong hộp tra cứu quanh “{address}”; "
-                f"không tin nào nằm trong bán kính {radius // 1000} km. Đây là phạm vi đã kiểm tra.")
+            limitations.append(f"Phạm vi tra cứu là bán kính {radius // 1000} km quanh “{address}”.")
+            if complete:
+                answer = (f"Chưa tìm thấy tin nhà trong bán kính {radius // 1000} km "
+                          f"quanh vị trí đã xác nhận của “{address}” theo bộ lọc hiện tại.")
+                kind, clarification = "NO_MATCHES", "ADDRESS_NEARBY_EMPTY"
+            else:
+                answer = "Chưa thấy tin lân cận phù hợp trong các trang đã đọc. Vẫn còn trang chưa kiểm tra."
+                kind, clarification = "CLARIFICATION_REQUIRED", "ADDRESS_SEARCH_INCOMPLETE"
             return self._reply(request, session_id, context, criteria, properties=[], citations=[],
                 research=research,
-                answer=(f"Chưa tìm thấy tin nhà trong bán kính {radius // 1000} km "
-                        f"quanh vị trí đã xác nhận của “{address}”."),
-                responseKind="NO_MATCHES", limitations=limitations,
+                answer=answer, responseKind=kind, limitations=limitations,
                 evidence={"recommendationMethod": "NEARBY_DISTANCE",
                           "criteria": criteria,
                           "recommendationSearch": {"performed": True, "resultCount": 0,
-                              "sourcePath": "/api/v1/recommendations",
+                              "sourcePath": "/api/v1/properties",
                               "criteriaHash": digest(criteria)},
-                          "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_EMPTY_SEARCH"},
+                          "generation": {"accepted": False, "reason": "NOT_NEEDED_FOR_EMPTY_SEARCH" if complete
+                                         else "NOT_NEEDED_FOR_INCOMPLETE_SEARCH"},
                           "retrievedSourceIds": [], "semanticRetrieval": {"indexVersion": None, "hits": []},
                           "sql": {"status": "NO_PLATFORM_RESULTS", "matchedRows": 0},
                           "gis": gis_evidence([], [], [])},
-                extra={"clarification": "ADDRESS_NEARBY_EMPTY", "addressQuery": address,
-                       "nearAddress": True, "radiusMeters": radius,
+                extra={**extra, "clarification": clarification,
                        "quickReplies": ["Tìm theo ngân sách", "Mở rộng bán kính"]})
 
         limitations.append(
             f"Nhà trong bán kính {radius // 1000} km quanh “{address}”. "
             f"Khoảng cách là đường chim bay từ toạ độ tin đăng tới vị trí đã xác nhận, "
             f"không phải quãng đường đi thực tế.")
-        if not complete:
-            # The page walk stopped early, so this is not provably the nearest set.
-            limitations.append(
-                f"Chưa đọc hết danh sách tin trong hộp tra cứu ({found.get('pagesRead', 0)} trang), "
-                f"nên đây là các tin gần nhất trong phần đã đọc, chưa phải toàn bộ khu vực.")
-        # Each card needs its own PUBLIC citation, exactly like the recommendation path,
-        # so the client can verify the listing is grounded in a public record.
-        citations = [Citation(sourceId="recommendation:" + p["id"],
-                              url="/api/v1/recommendations",
-                              version=str(p.get("contentVersion") or "1"),
-                              kind="RECOMMENDATION", scope="PUBLIC",
-                              title=p.get("title") or "Tin SmartProp",
-                              contentHash=digest({"id": p["id"], "priceVnd": p["priceVnd"],
-                                                  "areaSqm": p.get("areaSqm"),
-                                                  "distanceMeters": p.get("distanceMeters")}))
-                     for p in properties]
-        return self._reply(request, session_id, context, criteria, properties=properties, citations=citations,
+        nearest = "gần nhất" if complete else "gần nhất trong phần đã đọc"
+        return self._reply(request, session_id, context, criteria, properties=properties, citations=[],
             research=research,
             answer=(f"Nhà trong bán kính {radius // 1000} km quanh “{address}”: "
-                    f"{len(properties)} tin, gần nhất {properties[0]['distanceMeters'] / 1000:.2f} km."),
+                    f"{len(properties)} tin, {nearest} {properties[0]['distanceMeters'] / 1000:.2f} km."),
             responseKind="PROPERTY_LIST", limitations=limitations,
-            extra={"addressQuery": address, "nearAddress": True, "radiusMeters": radius,
-                   "nearOrigin": origin})
+            extra={**extra, "nearOrigin": origin})
 
-    def dispatch_discovery(self, request, session_id, context, turn, *, research=False, token=None, account=None):
+    def dispatch_discovery(self, request, session_id, context, turn, address_query, *,
+                           districts=(), research=False, token=None, account=None, continuing=False):
         if research:return None
         state=context.needs
+        address, outside_address, mode = address_query
+        previous_search = state.get("listingAddressScope")
+        location_edit = bool(previous_search and not address and is_listing_location_edit(request.question)
+                             and not turn["categories"] and not turn["domain"])
+        prior = context.criteria()
+        pending_nearby = state.get("nearConsentPending") or state.get("nearbyPoints")
+        control = norm(request.question).strip().rstrip(".!?")
+        reply_to_nearby = (control == "dong y tim vi tri"
+                           or commute_destination.is_plain_consent(request.question)
+                           or commute_destination.candidate_index(request.question, 5))
+        if pending_nearby and reply_to_nearby and not mode and not state.get("nearbySaleVerified"):
+            # Checkpoints from before the transaction guard may have recorded a rental as LIVING.
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                answer="Bạn nhập lại địa chỉ cần tìm tin mua để xác nhận vị trí cho lượt tìm này nhé.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "NEAR_ADDRESS_RESTART"})
         minutes,fresh_kind=commute_ranking.limit_from(request.question)
         explicit_commute=minutes is not None or commute_ranking.wants_work_proximity(request.question) or focused_intent(request.question)=='COMMUTE'
-        if turn['intent'] in ('MARKET_PRICE','MARKET_TREND','MARKET_ANALYSIS','LEGAL_QA','PLANNING_QA','KNOWLEDGE','AREA_AMENITIES','UPDATE_CRITERIA') and not explicit_commute:
+        if turn['intent'] in ('MARKET_PRICE','MARKET_TREND','MARKET_ANALYSIS','LEGAL_QA','PLANNING_QA','KNOWLEDGE','AREA_AMENITIES') and not explicit_commute:
             return None
-        if turn.get('searchChange') and not explicit_commute and not address_search.intent(request.question):
+        if turn["intent"] == "UPDATE_CRITERIA" and not (mode or location_edit or explicit_commute):
+            return None
+        if turn.get('searchChange') and not (continuing or explicit_commute or mode or location_edit):
             for key in ('commuteStage','commutePoints','commutePendingAddress','commutePendingLimit'):
                 state.pop(key,None)
-        criteria={k:v for k,v in context.criteria().items() if not k.startswith('_')}
+            state.pop("listingAddressScope", None)
+        criteria={k:v for k,v in prior.items() if not k.startswith('_')}
         criteria.setdefault('purpose','LIVING');criteria.setdefault('propertyType','ALL')
-        if request.district:criteria['district']=request.district
-        parsed=parse_budget(request.question)
+        prior_area = {key: criteria.pop(key) for key in AREA_KEYS if key in criteria}
+        criteria.update(request.model_dump(include=set(AREA_KEYS), exclude_none=True))
+        filter_text = outside_address if mode else request.question
+        if not merge_area(criteria, prior_area, filter_text if mode or location_edit or turn["searchChange"] else "",
+                          allow_bare=state.get("pending") == "min_area"):
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                answer=AREA_RANGE_PROMPT, responseKind="CLARIFICATION_REQUIRED",
+                extra={"clarification": "AREA_RANGE_INVALID"})
+        location = {"district": request.district, "ward": request.ward}
+        if mode or location_edit:
+            place_text = listing_location_text(outside_address) if mode else outside_address
+            mentions = listing_location_mentions(place_text)
+            if mentions:
+                try:
+                    areas = self.backend.amenity_areas() if any(m["level"] in ("phuong", "xa") for m in mentions) else []
+                    resolved = listing_location(place_text, districts, areas if isinstance(areas, list) else [])
+                except (GroundingError, UpstreamError):
+                    resolved = None
+                if resolved is None or any(location[key] and locality_key(location[key]) != locality_key(label)
+                                           for key, label in resolved.items()):
+                    return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                        answer="Bạn xác nhận một quận hoặc một phường cần lọc nhé. Tôi chưa tìm khi địa bàn chưa rõ hoặc mâu thuẫn.",
+                        responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "LISTING_LOCALITY_UNRESOLVED"})
+                location.update(resolved)
+        if location["district"]:
+            if locality_key(criteria.get("district")) != locality_key(location["district"]):
+                criteria.pop("ward", None)
+            criteria["district"] = location["district"]
+        if location["ward"]:
+            criteria["ward"] = location["ward"]
+        parsed=parse_budget(filter_text)
+        if parsed.status == 'AMBIGUOUS' and (mode or location_edit):
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                answer="Tôi chưa xác định rõ ngân sách. Bạn nhập mức tối đa hoặc một khoảng bằng đồng nhé.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "BUDGET_AMBIGUOUS"})
         if parsed.status=='AMBIGUOUS' and turn.get('budgetMentioned'):return None
         if parsed.status=='VALID':
             criteria['budgetVnd']=str(parsed.maximum)
             if parsed.minimum is not None:criteria['minPriceVnd']=str(parsed.minimum)
             else:criteria.pop('minPriceVnd',None)
         if request.budgetVnd is not None:criteria['budgetVnd']=str(request.budgetVnd)
+        if request.minPriceVnd is not None:criteria['minPriceVnd']=str(request.minPriceVnd)
+        if 'propertyType' in request.model_fields_set:criteria['propertyType']=request.propertyType
         if turn.get('propertyType'):criteria['propertyType']=turn['propertyType']
         if turn.get('purpose'):criteria['purpose']=turn['purpose']
         limits=[]
-        address=address_search.address_in(request.question)
-        mode=address_search.intent(request.question)
+        if location_edit:
+            if previous_search.get("origin"):
+                return self._nearby_from(request, session_id, context, criteria, previous_search["address"],
+                                         previous_search["origin"], limitations=limits, research=False)
+            return self._address_answer(request, session_id, context, criteria, previous_search["address"],
+                                        limitations=limits, research=False)
+        if mode:
+            for key in ("listingAddressScope", *NEARBY_PENDING):
+                state.pop(key, None)
         if mode=='AT_ADDRESS':
             return self._address_answer(request,session_id,context,criteria,address,limitations=limits,research=False)
         if mode=='NEAR_ADDRESS':
             state['pendingNearbyAddress']=address
             state['nearConsentPending']=True
+            state["nearbySaleVerified"] = True
             self.sessions.record(context,criteria=criteria,property_ids=None,area_ids=None,evidence_ids=[],question=request.question)
             return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
                 answer='Để tìm nhà trong 1 km, bạn có đồng ý gửi địa chỉ này tới Geoapify không? Tôi chỉ dùng điểm trong phiên này.',
                 responseKind='CLARIFICATION_REQUIRED',extra={'clarification':'NEAR_ADDRESS_CONSENT','quickReplies':['Đồng ý tìm vị trí','Bỏ qua']})
+        if pending_nearby and control in ("bo qua", "huy"):
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=False,
+                answer="Đã bỏ qua tìm vị trí.", responseKind="CRITERIA_UPDATED")
         if state.get('nearConsentPending'):
-            if norm(request.question) in ('bo qua','huy'):
-                state.pop('nearConsentPending',None);state.pop('pendingNearbyAddress',None)
-                return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,answer='Đã bỏ qua tìm vị trí.',responseKind='CRITERIA_UPDATED')
-            if norm(request.question)=='dong y tim vi tri':
+            if control == "dong y tim vi tri":
                 state.pop('nearConsentPending',None)
                 address=state.pop('pendingNearbyAddress')
                 try:
                     points=self.backend.geocode_workplace(address)
                 except (UpstreamError,GroundingError):
+                    state.pop("nearbySaleVerified", None)
                     return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
                         answer="Dịch vụ tìm vị trí chưa sẵn sàng hoặc đã chạm hạn mức. Tôi chưa thể xác định vị trí để tìm trong 1 km; đây không phải kết luận là không có nhà. Bạn có thể thử lại sau hoặc tìm theo ngân sách.",
                         responseKind="DATA_SOURCE_ERROR",extra={"queryStatus":"GEOCODING_UNAVAILABLE","quickReplies":["Tìm theo ngân sách"]})
                 if not points:
+                    state.pop("nearbySaleVerified", None)
                     return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,answer='Chưa tìm được vị trí cho địa chỉ này. Bạn có thể nhập địa chỉ rõ hơn.',responseKind='CLARIFICATION_REQUIRED')
                 state['nearbyPoints']=points[:5];state['nearbyAddress']=address
                 return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
@@ -551,8 +632,11 @@ class AdvisorDiscoveryMixin:
         if state.get('nearbyPoints'):
             points=state['nearbyPoints'];index=commute_destination.candidate_index(request.question,len(points))
             if index:
-                origin=points[index-1];state.pop('nearbyPoints');state['nearOrigin']=origin
-                return self._nearby_from(request,session_id,context,criteria,state['nearbyAddress'],origin,limitations=limits,research=False)
+                origin = points[index - 1]
+                state.pop("nearbyPoints")
+                address = state.pop("nearbyAddress")
+                state.pop("nearbySaleVerified", None)
+                return self._nearby_from(request,session_id,context,criteria,address,origin,limitations=limits,research=False)
         minutes,kind=commute_ranking.limit_from(request.question)
         if minutes is not None or commute_ranking.wants_work_proximity(request.question):
             state['commutePendingLimit']={'minutes':minutes,'kind':kind or 'SOFT'}

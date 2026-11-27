@@ -58,7 +58,8 @@ class Context:
             "criteria": {k: v for k, v in {
                 "budgetVnd": self.budget_vnd, "purpose": self.purpose,
                 "propertyType": self.property_type, "minAreaSqm": self.min_area_sqm,
-                "minPriceVnd": (self.last_criteria or {}).get("minPriceVnd"),
+                **{key: (self.last_criteria or {}).get(key)
+                   for key in ("minPriceVnd", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive")},
                 "district": self.district, "ward": self.ward}.items() if v is not None},
             "lastPropertyIds": list(self.last_property_ids),
             "lastSearchEmpty": bool((self.last_criteria or {}).get("lastSearchEmpty")),
