@@ -134,7 +134,8 @@ DEFAULTED_FEATURES: set = set()           # replaced per call when adapter repor
 def validate_explanation(*, features: Sequence[str], contributions: Sequence[float],
                          base_log: float, margin_log: float, calibration_factor: float,
                          groups: Dict[str, float], ordered: Sequence[str],
-                         schema_features: Optional[Sequence[str]] = None) -> List[str]:
+                         schema_features: Optional[Sequence[str]] = None,
+                         prediction_margin_log: Optional[float] = None) -> List[str]:
     """Return the list of problems. Empty list means the explanation is trustworthy."""
     problems: List[str] = []
     if len(contributions) != len(features):
@@ -164,6 +165,14 @@ def validate_explanation(*, features: Sequence[str], contributions: Sequence[flo
     # residual is measured against |margin|, the magnitude of the log-space output. Dividing by
     # |margin - base| (the *attribution* magnitude) inflates float32 noise by orders of
     # magnitude whenever the base is large relative to the total contribution (e.g. LAND).
+    # The margin explained by SHAP must be the margin that produced the price.
+    if prediction_margin_log is not None:
+        if not is_finite_number(prediction_margin_log):
+            problems.append("non-finite prediction margin")
+        elif abs(float(prediction_margin_log) - float(margin_log)) > 1e-9 * max(
+                1.0, abs(float(margin_log))):
+            problems.append("SHAP margin differs from the prediction margin")
+
     residual = abs(margin_log - (base_log + math.fsum(contributions)))
     if residual > ADDITIVITY_REL_TOL * max(1.0, abs(margin_log)):
         problems.append("base + contributions do not reproduce the margin")
@@ -195,12 +204,8 @@ def build_explanation(*, features: Sequence[str], contributions: Sequence[float]
         features=list(features), contributions=values, base_log=base_log,
         margin_log=margin_log, calibration_factor=calibration_factor,
         groups=groups, ordered=list(encoded_row.keys()),
-        schema_features=schema_features)
-    # The margin that produced the price must be the margin the SHAP values explain.
-    if prediction_margin_log is not None and is_finite_number(prediction_margin_log):
-        if abs(float(prediction_margin_log) - float(margin_log)) > 1e-9 * max(
-                1.0, abs(float(margin_log))):
-            problems.append("SHAP margin differs from the prediction margin")
+        schema_features=schema_features,
+        prediction_margin_log=prediction_margin_log)
     if problems:
         return unavailable_explanation("Không thể xác thực giải thích: " + "; ".join(problems[:3]))
 

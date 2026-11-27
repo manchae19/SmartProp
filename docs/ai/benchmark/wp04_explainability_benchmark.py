@@ -494,9 +494,11 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
                 item.payload,
                 district_vocabulary=schema.get("vocabularies", {}).get("district"))
             row = {RENAME.get(k, k): v for k, v in mapped.items()}
-            row["ward"] = item.payload.get("ward")
+            # Same preparation as the matrix: ward comes from the canonical record, never
+            # from the raw payload.
+            row["ward"] = mapped.get("ward")
             transform(pd.DataFrame([row]), schema)
-        except (ValueError, KeyError, TypeError) as error:
+        except ValueError as error:
             extra_outcomes.append({"case_id": item.case_id,
                                    "expectation": item.expectation,
                                    "outcome": "REJECTED", "reject_source": "ADAPTER",
@@ -504,6 +506,14 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
                                    "detail": str(error)[:100]})
             if item.expectation != "REJECT":
                 failures.append(f"{item.case_id}: expected SUCCESS, adapter rejected input")
+            continue
+        except Exception as error:  # noqa: BLE001 - unexpected adapter/transform defect
+            extra_outcomes.append({"case_id": item.case_id,
+                                   "expectation": item.expectation,
+                                   "outcome": "INTERNAL_ERROR", "reject_source": None,
+                                   "ok": False,
+                                   "detail": f"{type(error).__name__}: {str(error)[:90]}"})
+            failures.append(f"{item.case_id}: unexpected adapter/transform error")
             continue
         # 3) full prediction. Any error here is INTERNAL and always fails, even ValueError.
         try:

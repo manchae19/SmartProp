@@ -293,7 +293,8 @@ class PredictorV1_3:
                     margin_log=(margin_shap if margin_shap is not None else log_pred),
                     calibration_factor=float(factor), groups=_groups,
                     ordered=list(X.columns),
-                    schema_features=list(self.schema["features"]))
+                    schema_features=list(self.schema["features"]),
+                    prediction_margin_log=log_pred)
             except Exception:  # noqa: BLE001
                 shap_valid = False
 
