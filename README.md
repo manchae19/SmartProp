@@ -106,6 +106,11 @@ BROKER_APPLICATIONS_ENABLED=true
 PROFILE_AVATAR_ENABLED=true
 ```
 
+> **Cần dựng database riêng để thử migration?** Xem
+> [Bàn giao Database cho nhóm](docs/handoff/DATABASE_TEAM_HANDOFF.md) — phân biệt môi trường
+> 3306/3307/3308, nhận baseline V21, dựng isolated staging, và quy tắc phối hợp migration
+> giữa các PR.
+
 Các dòng `<...>` là placeholder, phải thay trước khi chạy. Những cờ trên chỉ bật khi schema tương ứng đã sẵn sàng; bản source hiện tại yêu cầu lineage chuẩn đến V19. `REFRESH_SECURE_COOKIE=false` chỉ dành cho HTTP loopback local; HTTPS phải dùng `true`.
 
 Tạo JWT secret bằng bộ sinh ngẫu nhiên rồi lưu riêng; không dùng mật khẩu demo làm JWT secret. Có thể tạo bằng PowerShell:

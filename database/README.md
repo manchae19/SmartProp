@@ -16,3 +16,4 @@
 - [Schema tham chiếu](docs/schema-reference.sql).
 - [SHA-256 migration V1–V7](docs/migration-checksums.json).
 - [Hướng dẫn backup/restore và môi trường thử](../ops/OPERATIONS.md).
+- [Bàn giao Database cho nhóm](../docs/handoff/DATABASE_TEAM_HANDOFF.md) — baseline V21, isolated staging 3307, quy tắc migration.

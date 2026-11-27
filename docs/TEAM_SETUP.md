@@ -1,4 +1,4 @@
-# SmartProp — Hướng dẫn chạy cho thành viên nhóm
+﻿# SmartProp — Hướng dẫn chạy cho thành viên nhóm
 
 Tài liệu này bổ sung cho [README gốc](../README.md), tập trung vào **thiết lập từ đầu** và các dịch vụ AI (RAG, XGBoost, Auto-Scan, YOLOv8) mà README gốc chưa đề cập.
 
@@ -145,6 +145,11 @@ Dự án dùng nhiều database cho mục đích khác nhau. **Không nhầm l�
 Nếu chỉ muốn chạy app để xem giao diện, dùng 3306 với dữ liệu sẵn có — **không cần migrate gì thêm**.
 
 Nếu muốn test luồng đăng tin/upload ảnh, dùng 3308 để không làm bẩn dữ liệu thật.
+
+> **Chi tiết đầy đủ về database:** xem
+> [Bàn giao Database cho nhóm](handoff/DATABASE_TEAM_HANDOFF.md) — kiến trúc ba môi trường,
+> hai lineage migration, baseline V21 đã kiểm chứng, hướng dẫn restore và xử lý VIEW DEFINER,
+> quy tắc phối hợp migration giữa các PR, và checklist trước khi merge.
 
 ---
 
