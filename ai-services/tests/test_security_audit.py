@@ -147,11 +147,20 @@ class TestSecurityAudit(unittest.TestCase):
         resp = self.client.post("/predict", json=sensitive_payload)
         self.assertEqual(resp.status_code, 200)
 
+        # /predict no longer dispatches the legacy shadow task (V1.3 was comparing against
+        # itself), so drive the worker explicitly and then inspect the buffer.
+        mgr = app.state.shadow_manager
+        mgr.record_shadow_evaluation(
+            predictor_v1_3=app.state.predictor_v1_3,
+            v6_payload=sensitive_payload,
+            v6_response={"predicted_asking_price_vnd": 6_000_000_000.0},
+            v6_latency_ms=1.0,
+        )
+
         # Allow async worker thread to complete execution
-        time.sleep(0.15)
+        time.sleep(0.3)
 
         # Inspect events buffer directly
-        mgr = app.state.shadow_manager
         self.assertGreater(len(mgr.events_buffer), 0)
         last_event = mgr.events_buffer[-1]
 

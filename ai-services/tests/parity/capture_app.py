@@ -18,6 +18,7 @@ record, which is what the negative cases assert.
 """
 import json
 import os
+import threading
 import uuid
 from contextvars import ContextVar
 
@@ -35,7 +36,6 @@ _TAG: ContextVar[str] = ContextVar("parity_tag", default="")
 _COLLECTED: ContextVar[object] = ContextVar("parity_collected", default=None)
 # One record per HTTP request: /predict re-runs the predictor to build the SHAP explanation,
 # so the inference entry point can be hit twice for a single request. Parity is per request.
-_REQ: ContextVar[object] = ContextVar("parity_request", default=None)
 _REQID: ContextVar[str] = ContextVar("parity_request_id", default="")
 
 RECORD_INPUT_KEYS = (
@@ -86,15 +86,16 @@ def _capturing_predict(self, v6_payload):
         result = _production_predict(self, v6_payload)
     finally:
         _COLLECTED.reset(token)
-    state = _REQ.get()
-    already = isinstance(state, dict) and state.get("written")
-    if _TARGET and "encoded" in box and not already:
-        if isinstance(state, dict):
-            state["written"] = True
+    # One record per PREDICTOR INVOCATION, never per HTTP request: if the service runs the
+    # predictor twice for one request, both must be visible. Deduplication here would hide
+    # exactly the defect this harness exists to expose.
+    if _TARGET and "encoded" in box:
         try:
             record = {
                 "tag": box.get("tag", ""),
                 "request": _REQID.get(),
+                "thread": threading.current_thread().name,
+                "background": _REQID.get() == "",
                 "encoded": box["encoded"],
                 "features": box["features"],
                 "input": box["input"],
@@ -111,13 +112,11 @@ class _TagMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         tag = request.headers.get("x-parity-case", "")
         token = _TAG.set(tag)
-        state = _REQ.set({"tag": tag, "written": False})
         rid = _REQID.set(uuid.uuid4().hex)
         try:
             return await call_next(request)
         finally:
             _REQID.reset(rid)
-            _REQ.reset(state)
             _TAG.reset(token)
 
 

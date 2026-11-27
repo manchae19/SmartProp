@@ -150,7 +150,6 @@ def _supported_locations(predictor) -> set:
 def predict(payload: ValuationRequest, request: Request, background_tasks: BackgroundTasks):
     predictor = predictor_for(request)
     _validate_location(predictor, payload)
-    t0 = time.perf_counter()
     try:
         response = predictor.predict_from_v6_payload(payload.model_dump())
     except (ValueError, KeyError) as error:
@@ -158,19 +157,16 @@ def predict(payload: ValuationRequest, request: Request, background_tasks: Backg
     except Exception as error:
         # A model fault must surface as an error response, never take the service down.
         raise HTTPException(status_code=500, detail=f"Lỗi suy luận mô hình V1.3: {error}") from error
-    latency_ms = (time.perf_counter() - t0) * 1000.0
 
-    # Shadow comparison only exists when the optional V6 model is loaded.
-    shadow_manager = getattr(request.app.state, "shadow_manager", None)
-    predictor_v6 = getattr(request.app.state, "predictor", None)
-    if shadow_manager and shadow_manager.is_enabled() and predictor_v6:
-        background_tasks.add_task(
-            shadow_manager.record_shadow_evaluation,
-            predictor_v1_3=predictor,
-            v6_payload=payload.model_dump(),
-            v6_response=response,
-            v6_latency_ms=latency_ms,
-        )
+    # Shadow comparison is a leftover from the era when V6 was the primary model: the
+    # worker re-runs *this same* V1.3 predictor (shadow_manager._execute_shadow_worker calls
+    # predictor_v1_3.predict_from_v6_payload) and compares it against `response`, which is
+    # already the V1.3 answer. With V1.3 as the only model producing new valuations that is
+    # a self-comparison: it adds no signal and it makes the endpoint perform a second
+    # inference after the response, which WP-01 forbids.
+    #
+    # The manager and its admin API are untouched; only this dispatch is removed, so a stale
+    # persisted enabled flag can no longer trigger a background V1.3 inference either.
 
     return {
         "is_preview": False,

@@ -290,20 +290,23 @@ def evaluate(cases_positive: List[Case], cases_negative: List[Case],
             deltas[path] = delta
 
             report.check(status == 200, f"{case.name}/{path}: status {status} != 200")
-            requests = {rec.get("request") for rec in delta}
-            report.check(len(requests) == 1,
-                         f"{case.name}/{path}: expected exactly 1 inference request, got {len(requests)}")
-            if len(requests) == 1:
+            # Exactly one predictor invocation for this HTTP request. Extra records mean the
+            # service inferred twice; a record with an empty request id means a background
+            # invocation escaped the request context.
+            report.check(len(delta) == 1,
+                         f"{case.name}/{path}: expected exactly 1 predictor invocation, got {len(delta)}")
+            if len(delta) == 1:
                 first = delta[0]
-                report.check(all(rec.get("encoded") == first.get("encoded") for rec in delta),
-                             f"{case.name}/{path}: repeats of one inference disagree on the vector")
+                report.check(first.get("request"), f"{case.name}/{path}: capture has no request id")
+                report.check(first.get("background") is not True,
+                             f"{case.name}/{path}: inference ran as background work")
                 encoded = first.get("encoded") or []
                 report.check(len(encoded) == FEATURE_COUNT,
                              f"{case.name}/{path}: {len(encoded)} encoded features, expected {FEATURE_COUNT}")
                 if path in ("A", "C"):
                     report.check(first.get("tag") == tag,
                                  f"{case.name}/{path}: capture tag {first.get('tag')!r} != {tag!r}")
-            report.actual_positive_records += len(requests)
+            report.actual_positive_records += len(delta)
 
             price = _price(payload)
             if path == "B":
@@ -320,7 +323,7 @@ def evaluate(cases_positive: List[Case], cases_negative: List[Case],
 
         # A/B/C must come from three records of the SAME case and match exactly
         def _ok(path):
-            return len({rec.get("request") for rec in deltas[path]}) == 1
+            return len(deltas[path]) == 1
         vectors = {p: deltas[p][0]["encoded"] for p in ("A", "B", "C") if _ok(p)}
         orders = {p: deltas[p][0]["features"] for p in ("A", "B", "C") if _ok(p)}
         if len(vectors) == 3:
@@ -344,9 +347,7 @@ def evaluate(cases_positive: List[Case], cases_negative: List[Case],
         report.rows.append(
             f"{case.name:18s} {responses['A'][0]:>4d} {responses['B'][0]:>4d} {responses['C'][0]:>4d}"
             f"  {str(_price(responses['A'][1])):>14s}  "
-            f"{len({r.get('request') for r in deltas['A']})}/"
-            f"{len({r.get('request') for r in deltas['B']})}/"
-            f"{len({r.get('request') for r in deltas['C']})}")
+            f"{len(deltas['A'])}/{len(deltas['B'])}/{len(deltas['C'])}")
 
     # ---------------- negative
     for case in cases_negative:
@@ -355,9 +356,9 @@ def evaluate(cases_positive: List[Case], cases_negative: List[Case],
             report.check(status == 422, f"{case.name}/{path}: status {status} != 422")
             report.check(_price(payload) is None,
                          f"{case.name}/{path}: returned a price on rejection ({_price(payload)!r})")
-            report.check(len({rec.get("request") for rec in delta}) == 0,
+            report.check(len(delta) == 0,
                          f"{case.name}/{path}: produced {len(delta)} inference record(s), expected 0")
-            report.negative_records += len({rec.get("request") for rec in delta})
+            report.negative_records += len(delta)
 
         status, payload, delta = request("B", case.b_body, f"{case.name}:B")
         report.check(status in (200, 400) and status != 0,
@@ -374,9 +375,9 @@ def evaluate(cases_positive: List[Case], cases_negative: List[Case],
             report.fail(f"{case.name}/B: no rejection contract declared")
         report.check(_price(payload) is None,
                      f"{case.name}/B: returned a price on rejection ({_price(payload)!r})")
-        report.check(len({rec.get("request") for rec in delta}) == 0,
+        report.check(len(delta) == 0,
                      f"{case.name}/B: produced {len(delta)} inference record(s), expected 0")
-        report.negative_records += len({rec.get("request") for rec in delta})
+        report.negative_records += len(delta)
 
         ok = not any(label.startswith(f"{case.name}/") for label in report.failures)
         report.negatives_ok += 1 if ok else 0

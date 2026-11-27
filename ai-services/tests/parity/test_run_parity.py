@@ -48,7 +48,9 @@ def _key(body: Dict[str, Any]) -> float:
 def _record(tag: str, body: Dict[str, Any], request: Optional[str] = None) -> Dict[str, Any]:
     return {
         "tag": tag,
-        "request": request or uuid.uuid4().hex,
+        "request": request if request is not None else uuid.uuid4().hex,
+        "background": request == "",
+        "thread": "MainThread",
         "encoded": [_key(body)] + [0.0] * (rp.FEATURE_COUNT - 1),
         "features": list(FEATURES),
         "input": {"district": "cẩm lệ"},
@@ -149,7 +151,7 @@ def test_valid_three_path_capture_passes():
 def test_missing_b_capture_fails():
     sim = Sim({("house-basic", "B"): {"records": 0}})
     report = run(sim)
-    assert _contains(report, "house-basic/B: expected exactly 1 inference request"), report.failures
+    assert _contains(report, "house-basic/B: expected exactly 1 predictor invocation"), report.failures
     assert report.failures
 
 
@@ -159,7 +161,7 @@ def test_single_b_record_for_many_cases_fails():
     overrides = {(case.name, "B"): {"records": 0} for case in rp.POSITIVE}
     seed = [_record("", {"category": "Nhà ở", "area_sqm": 100.0, "location_feature": "Cẩm Lệ"})]
     report = run(Sim(overrides, seed=seed))
-    assert _contains(report, "/B: expected exactly 1 inference request"), report.failures
+    assert _contains(report, "/B: expected exactly 1 predictor invocation"), report.failures
     assert report.actual_positive_records < report.expected_positive_records
 
 
@@ -177,7 +179,7 @@ def test_stale_b_record_with_same_vector_fails():
 def test_extra_capture_fails():
     sim = Sim({("house-basic", "B"): {"records": 2}})
     report = run(sim)
-    assert _contains(report, "house-basic/B: expected exactly 1 inference request"), report.failures
+    assert _contains(report, "house-basic/B: expected exactly 1 predictor invocation"), report.failures
 
 
 # ---------------------------------------------------------------- 6. wrong case tag
