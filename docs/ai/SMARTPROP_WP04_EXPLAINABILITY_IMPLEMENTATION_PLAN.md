@@ -39,3 +39,13 @@ migration, không đổi model, nên rollback chỉ là revert source.
 - **WP-06**: metadata explanation availability / missingness / reconstruction / latency.
 - **WP-07**: Advisor hiển thị explanation tách khỏi comparable & recommendation.
 - **WP-08**: RAG chỉ diễn giải explanation đã cấp quyền, không tự tạo SHAP.
+
+
+---
+
+## 9. Bổ sung sau review
+
+- **B6** phải chạy: `--integrity-only`, `--self-test`, `--assertions`, và **hai lần** full
+  benchmark để so digest per-case.
+- Chấp nhận: benchmark fail phải trả exit 1 (cả `--json`), fixture rỗng phải fail.
+- Không đổi production trong Phase A; mọi kiểm chứng là offline + synthetic.

@@ -82,3 +82,37 @@ WP-04 = model explanation. WP-02 = comparable evidence (**không** dùng SHAP l�
 dùng prediction để chọn comparable). WP-05 = interval (không suy từ SHAP). WP-06 = dashboard
 (nhận metadata). WP-07 = Advisor hiển thị explanation như **một mục riêng**. WP-08 = RAG chỉ
 diễn giải explanation đã được cấp quyền.
+
+
+---
+
+## 7. Bổ sung sau review
+
+### 7.1 Schema trạng thái (nullability & hành vi)
+
+| `status` | `factors` | `other_contribution_log` | `predicted_margin_log` | Hành vi |
+|---|---|---|---|---|
+| `AVAILABLE` | đầy đủ | required (number) | required | hiển thị Level 1 + 2 |
+| `PARTIAL` | có thể thiếu vài factor | required | required | hiển thị + cảnh báo thiếu |
+| `UNAVAILABLE` | **null** | **null** | **null** | chỉ hiện giá + thông báo |
+| `NOT_SUPPORTED` | null | null | null | không hiện mục giải thích |
+
+Prediction **không** phụ thuộc `status`. `factors[]` khi `UNAVAILABLE` phải là `null`, không
+phải mảng rỗng (để phân biệt "không có" với "có nhưng rỗng").
+
+### 7.2 Level 1/2/3
+
+Thống nhất với Research Report §9.3: Level 1 = hướng + nhóm + missing; Level 2 = log-space
+waterfall chính xác + bridge naive→calibration→final; Level 3 = multiplicative/VNĐ waterfall có
+ghi rõ phụ thuộc thứ tự, **không** gọi là SHAP attribution VNĐ.
+
+### 7.3 `impact_pct` và các field legacy
+
+Không tái sử dụng `impact_pct` như "% giá tăng". Nếu cần, đặt tên mới
+(`relative_log_effect`) kèm đơn vị "log unit" và tooltip. Không suy ra VNĐ từ log-φ nếu chỉ có
+một feature (không tái lập được tổng).
+
+### 7.4 API compatibility
+
+Không đổi tên/xoá field hiện có. `shap_explanation` cũ **giữ nguyên**; nhánh `explanation` mới
+là additive, có `explanation_version` để client cũ bỏ qua an toàn.

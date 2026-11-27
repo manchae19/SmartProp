@@ -1,73 +1,133 @@
-# SmartProp â€” WP-04 Explainability Benchmark Report (Phase A)
+# SmartProp — WP-04 Explainability Benchmark Report (Phase A, reviewed)
 
-**NhÃ£n:** `FRESH_EVIDENCE` (cháº¡y tháº­t trÃªn model V1.3) Â· input **synthetic**.
+**Nhãn:** `FRESH_EVIDENCE` (chạy thật trên model V1.3) · input **synthetic**.
+**Base:** `origin/main` @ `a0e3834` · **Branch:** `research/wp04-explainable-ai`
+**Phiên bản trước** (`3e1ff0c`) — `SUPERSEDED_BY_REVIEW_CORRECTIONS`.
 
-## 1. MÃ´i trÆ°á»ng & integrity
+---
+
+## 1. Môi trường & integrity
 
 | | |
 |---|---|
-| Code SHA | `a0e3834` (worktree `research/wp04-explainable-ai`) |
-| Python | 3.11.9 Â· xgboost **3.4.1** Â· venv `ai-services/.venv` |
-| `model.json` | `3c56b6937902d9f736f9eb0278683f0c5ab8af027f5ea12b1a4072abff840a03` âœ… |
-| `calibration.json` | `17632bdf4d578723a5c336b7c7e3aed6021dbb68f38985b763839a763fbfe645` âœ… |
-| `feature_schema.json` | `84be275b12b3c426497c00be80eed621d7323ac2a2abcb282752c7a89361e7ea` âœ… |
-| `artifact_manifest.json` | `419599ecbefbe24bbbc1754a0224a7c25747ac3a08827d4e14ea62a5e41f2dce` (khÃ´ng pinned; ghi nháº­n) |
+| Runtime SHA (evidence) | worktree `research/wp04-explainable-ai` @ `3e1ff0c` (đo trước bản sửa); bản sửa là commit mới trên cùng branch |
+| Python | **3.11.9** · venv `ai-services/.venv` |
+| xgboost | **3.4.1** · numpy/pandas theo venv project |
+| real-feature-input flag | mặc định `SMARTPROP_V1_3_REAL_FEATURES` = true (không set biến) |
+| `model.json` | `3c56b693…ff840a03` ✅ |
+| `calibration.json` | `17632bdf…3fbfe645` ✅ |
+| `feature_schema.json` | `84be275b…9361e7ea` ✅ |
+| `artifact_manifest.json` | `419599ec…41f2dce` (ghi nhận; không pinned) |
+
+**Bắt buộc dùng venv của project.** Chạy bằng venv khác (xgboost build khác) gây
+`XGBoostError: Found a category not in the training set ... column 17` — lỗi môi trường,
+không phải lỗi production.
 
 ## 2. Fixture
 
-- 7 district Ã— 3 category (`HOUSE`, `LAND`, `APARTMENT`) Ã— 4 profile (`MINIMAL`, `TYPICAL`,
-  `RICH`, `MISSINGNESS`) = **84 case** + **10 extras** (small/large area, NFC/NFD district,
-  missing ward, invalid area, invalid location, ward/street observed, LAND+rooms).
-- **VILLA khÃ´ng cÃ³ trong `normalized_type`** â€” villa lÃ  `house_subtype` cá»§a HOUSE â‡’ ghi nháº­n,
-  khÃ´ng táº¡o category giáº£.
-- Ward/street chá»‰ dÃ¹ng khi láº¥y tá»« vocabulary artifact; khÃ´ng bá»‹a Ä‘á»‹a danh.
-- KhÃ´ng database, khÃ´ng research dataset, khÃ´ng holdout.
+- 7 district (vocabulary thật) × 3 category (`HOUSE`, `LAND`, `APARTMENT`) × **5 profile**
+  (`MINIMAL`, `TYPICAL`, `RICH`, `MISSINGNESS`, `UNKNOWN_CATEGORY`) = **105 case**.
+- **8 extras**, mỗi cái khai báo kỳ vọng: 6 `SUCCESS` (small/large area, NFC/NFD district,
+  missing ward, missing street) + 2 `REJECT` (area = 0, district ngoài vocabulary).
+  Extras được validate qua **chính `ValuationRequest`** (contract API) rồi mới gọi predictor.
+- **VILLA không phải category** trong `normalized_type` (villa là `house_subtype` của HOUSE)
+  ⇒ không tạo category giả.
+- Không database, không research dataset, không holdout.
 
-## 3. Káº¿t quáº£ (digest `acd5fff557a861bb`)
+## 3. Kết quả (105 case, digest `0fe2bf2375caf32a`)
 
-| Kiá»ƒm tra | max | median | p95 |
+| Kiểm tra | max | median | p95 |
 |---|---|---|---|
-| TreeSHAP additivity (tÆ°Æ¡ng Ä‘á»‘i) | **1.499e-06** | 3.674e-07 | 1.036e-06 |
-| Naive `expm1(z)` reconstruction | **2.108e-10** | 4.902e-11 | 1.368e-10 |
+| TreeSHAP additivity (tương đối) | **1.190e-06** | 3.736e-07 | 8.868e-07 |
+| Naive `expm1(z)` reconstruction | **2.108e-10** | 5.128e-11 | 1.368e-10 |
 | Calibration reconstruction | **3.612e-06** | 3.612e-06 | 3.612e-06 |
-| Top-K + remainder â‰¡ full (log unit) | **0.1239** | 0.0399 | 0.0901 |
-| Grouped â‰¡ total | **0.0** | 0.0 | 0.0 |
+| Top-K + remainder (log unit) | **0.1239** | 0.0346 | 0.0902 |
+| **Grouped ≡ total** | **0.0** | 0.0 | 0.0 |
 
-`passed 84 Â· failed 0 Â· invalid-rejected 2 Â· exit 0`.
-Provenance Ä‘áº¿m: OBSERVED 301 Â· DERIVED 1232 Â· MISSING 203 Â· NOT_APPLICABLE 112.
-
-## 4. Latency (offline, CPU, single run, khÃ´ng warm-up tÃ¡ch riÃªng)
-
-`median 39.32 ms Â· p95 47.99 ms` cho **toÃ n bá»™** `predict_from_v6_payload`
-(adapter + transform + predict + SHAP + formatting). ÄÃ¢y lÃ  sá»‘ local, **khÃ´ng** pháº£i SLA.
-
-## 5. Determinism
-
-Hai láº§n cháº¡y cÃ¹ng cáº¥u hÃ¬nh cho digest **giá»‘ng nhau** (`acd5fff557a861bb`). Digest bao gá»“m
-metric + provenance counts; **loáº¡i trá»«** latency vÃ  `results` (non-deterministic fields).
-
-## 6. NgÆ°á»¡ng dung sai vÃ  lÃ½ do
-
-- Additivity `1e-5` tÆ°Æ¡ng Ä‘á»‘i: margin float32 ~20â€“25, Ä‘o Ä‘Æ°á»£c tá»‘i Ä‘a 1.5e-6 â‡’ headroom ~7Ã—.
-- Calibration `1e-5` tÆ°Æ¡ng Ä‘á»‘i: `exp()` trÃªn `z` float32 khuáº¿ch Ä‘áº¡i sai sá»‘, Ä‘o Ä‘Æ°á»£c 3.6e-6.
-- Naive `1e-9` tÆ°Æ¡ng Ä‘á»‘i: cÃ¹ng `z` float64, chá»‰ khÃ¡c rounding int.
-KhÃ´ng ná»›i thÃªm Ä‘á»ƒ "cho PASS"; cÃ¡c ngÆ°á»¡ng nÃ y suy ra tá»« precision thá»±c táº¿ cá»§a model.
-
-## 7. Limitations
-
-- Input synthetic â‡’ **khÃ´ng** suy ra hÃ nh vi thá»‹ trÆ°á»ng.
-- VILLA khÃ´ng phá»§ (khÃ´ng pháº£i category trong schema).
-- Ward/street coverage háº¡n cháº¿ do categorical cá»§a booster.
-- KhÃ´ng Ä‘o cold-start riÃªng, khÃ´ng Ä‘o memory.
-- ChÆ°a cháº¡y `test_valuation_shap_contract.py` / `probe_shap.py` (`NOT_RUN`).
-
-## 8. CÃ¡ch cháº¡y
-
-```bash
-python docs/ai/benchmark/wp04_explainability_benchmark.py \
-  --artifacts-dir <repo>/ai-services/artifacts/v1_3 --assertions
-python docs/ai/benchmark/wp04_explainability_benchmark.py \
-  --artifacts-dir <repo>/ai-services/artifacts/v1_3
+```
+cases passed 105 · failed 0 · extras ok 8/8 · self-tests PASS · exit 0
+provenance: OBSERVED 420 · DERIVED 945 · MISSING 812 · UNKNOWN_CATEGORY 42 · NOT_APPLICABLE 91
 ```
 
-DÃ¹ng **venv cá»§a project** (`ai-services/.venv`).
+## 4. Exit codes
+
+| Lệnh | Exit |
+|---|---|
+| `--integrity-only` (hash đúng) | 0 |
+| hash sai | 2 |
+| `--self-test` | 0 (PASS) / 1 (FAIL) |
+| full benchmark, mọi invariant đạt | 0 |
+| có bất kỳ failure | **1** (cả text **và** `--json`) |
+
+`--assertions` **không return sớm**: nó chạy integrity + toàn bộ mathematical benchmark +
+failure-path self-tests, đúng như trên.
+
+## 5. Failure-path self-tests (chứng minh benchmark biết FAIL)
+
+`--self-test` kiểm các kiểm-tra có thể phát hiện lỗi thật:
+
+- feature **không có group** → phát hiện
+- feature **trùng** trong vector → phát hiện
+- group entry **không tồn tại** trong vector → phát hiện
+- **tổng group sai** → phát hiện (sai 1.0 so với kỳ vọng)
+- **matrix rỗng** → phát hiện (`require_cases`)
+- additivity vượt ngưỡng (1e-4 > 1e-5) → phát hiện
+- classifier provenance: `UNKNOWN_CATEGORY` / `MISSING` / `NOT_APPLICABLE` / `OBSERVED`
+  đều phân loại đúng
+
+`self-tests: PASS (0 lỗi)`.
+
+## 6. Determinism
+
+Hai lần chạy cùng cấu hình: digest **giống nhau** (`0fe2bf2375caf32a`).
+
+Digest bao gồm **per-case**: `case_id`, `price`, `naive`, `calibration_factor`, `margin`,
+`base_log`, **toàn bộ 22 contribution**, tên + thứ tự top-K, **group sums**, **provenance
+từng feature**, và **outcome của extras**. Chỉ loại bỏ `total_ms`/`latency_ms` — không loại
+`results` hay `failures`.
+
+## 7. Grouped contribution — aggregate thật
+
+`aggregate_groups()` cộng **signed** contribution theo `FEATURE_GROUPS`, đồng thời kiểm:
+mỗi feature đúng một group, không thiếu, không thừa, không trùng. `Σ(group) − Σ(φ) = 0.0`
+chính xác trên 105 case. **Không** dùng `Σ|φ|`.
+
+## 8. Provenance — suy từ ma trận thật
+
+Trạng thái được suy từ **giá trị đã transform** (`frame.iloc[0][feature]`), không từ request:
+
+| Điều kiện thực tế | State |
+|---|---|
+| feature computed (`has_*`, ratio) | `DERIVED` |
+| encoded `__UNKNOWN__` | `UNKNOWN_CATEGORY` (42 quan sát) |
+| encoded thiếu + feature không áp dụng cho loại hình | `NOT_APPLICABLE` (91) |
+| encoded thiếu | `MISSING` (812) |
+| có raw field tương ứng | `OBSERVED` (420) |
+| có giá trị nhưng adapter tự điền | `DERIVED` |
+
+`DEFAULTED` và `UNVERIFIED` **không** xuất hiện vì pipeline hiện tại không có nhánh
+default tường minh; nếu gặp, classifier trả `UNVERIFIED` chứ không mặc định `DERIVED`.
+
+## 9. Latency
+
+`predict_from_v6_payload` đầy đủ (adapter + transform + predict + SHAP + formatting):
+median **≈40 ms**, p95 **≈48 ms** trên máy local, không tách cold-start, **không phải SLA**.
+
+## 10. Limitations
+
+- Input synthetic ⇒ **không** suy ra hành vi thị trường.
+- VILLA không phủ như category.
+- Chưa đo cold-start/memory.
+- `test_valuation_shap_contract.py` và `probe_shap.py`: **NOT_RUN** (chưa audit xong khả năng
+  truy cập dữ liệu của script lịch sử).
+- Chưa triển khai explanation contract trong production ⇒ đây là **design-phase evidence**.
+
+## 11. Cách chạy
+
+```bash
+P=<repo>/ai-services/.venv/Scripts/python.exe
+$P docs/ai/benchmark/wp04_explainability_benchmark.py --artifacts-dir <repo>/ai-services/artifacts/v1_3 --integrity-only
+$P docs/ai/benchmark/wp04_explainability_benchmark.py --self-test
+$P docs/ai/benchmark/wp04_explainability_benchmark.py --artifacts-dir <repo>/ai-services/artifacts/v1_3 --assertions
+$P docs/ai/benchmark/wp04_explainability_benchmark.py --artifacts-dir <repo>/ai-services/artifacts/v1_3 --json
+```

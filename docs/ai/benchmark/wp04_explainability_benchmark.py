@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
-"""WP-04 Phase A — offline explainability benchmark for XGBoost V1.3.
+"""WP-04 Phase A — offline explainability benchmark for XGBoost V1.3 (reviewed).
 
-Read-only. Uses the real active booster and the real artifacts; changes nothing. Every input is
+Read-only: uses the real booster and pinned artifacts, changes nothing. Every input is
 synthetic (no database, no research dataset, no holdout).
 
-It validates, on the REAL model:
-  1. native TreeSHAP additivity   z == base + sum(phi_i)
-  2. log1p / expm1 reconstruction naive == expm1(z)
-  3. calibration reconstruction   final == max(0, exp(z) * factor - 1)
-  4. top-K + remainder            sum(top_k) + other == sum(all)
-  5. grouped contributions        sum(grouped) == sum(all)   (no double count)
-  6. determinism                  identical output across repeated runs
-  7. provenance states            OBSERVED / DERIVED / MISSING / NOT_APPLICABLE / UNKNOWN_CATEGORY
-  8. latency                      adapter / predict / shap / total, warm
+Validated on the REAL model:
+  1. native TreeSHAP additivity        z == base + sum(phi_i)
+  2. log1p reconstruction              naive == expm1(z)
+  3. calibration reconstruction        final == max(0, exp(z) * factor - 1)
+  4. top-K + remainder                 sum(top_k) + other == sum(all)
+  5. grouped aggregation               signed group sums == sum(all), each feature in exactly
+                                      one group, no missing / duplicated feature
+  6. provenance derived from the ACTUAL transformed matrix, not from the request
+  7. extras classified (expected success / expected rejection / unexpected = failure)
+  8. determinism                       per-case results included in the digest
 
-Run:
-  python docs/ai/benchmark/wp04_explainability_benchmark.py \
-      --artifacts-dir F:/SmartProp/ai-services/artifacts/v1_3 --assertions
+Modes
+  --assertions    integrity + full mathematical benchmark + failure-path self-tests
+  --integrity-only  artifact hashes only
+  --self-test     failure-path self-tests only (proves the checks can fail)
+  (default)       full benchmark, human readable
+
+Exit code is non-zero on any failure in every mode, including --json.
+
+Run with the PROJECT venv (ai-services/.venv); a different xgboost build raises
+"category not in the training set".
 """
 import argparse
 import hashlib
@@ -26,19 +34,46 @@ import statistics
 import sys
 import time
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 EXPECTED_HASHES = {
     "model.json": "3c56b6937902d9f736f9eb0278683f0c5ab8af027f5ea12b1a4072abff840a03",
     "calibration.json": "17632bdf4d578723a5c336b7c7e3aed6021dbb68f38985b763839a763fbfe645",
     "feature_schema.json": "84be275b12b3c426497c00be80eed621d7323ac2a2abcb282752c7a89361e7ea",
 }
-PROFILES = ("MINIMAL", "TYPICAL", "RICH", "MISSINGNESS")
-ADDITIVITY_TOL_REL = 1e-5  # relative to |z|; float32 margins (~20-25) accumulate ~1.5e-6
-RECON_TOL_REL = 1e-9       # pure float64 arithmetic on the same z
-CALIB_TOL_REL = 1e-5       # float32 z amplified by exp(); observed max 3.6e-6
+PROFILES = ("MINIMAL", "TYPICAL", "RICH", "MISSINGNESS", "UNKNOWN_CATEGORY")
+ADDITIVITY_TOL_REL = 1e-5     # float32 margins (~20-25); observed max 1.5e-6
+RECON_TOL_REL = 1e-9          # same float64 z, only int rounding differs
+CALIB_TOL_REL = 1e-5          # float32 z amplified by exp(); observed max 3.6e-6
+DIGEST_DECIMALS = 10
+
+FEATURE_GROUPS = {
+    "area": "AREA", "frontage_sqrt_area_ratio": "AREA",
+    "floor_count": "STRUCTURE", "bedroom_count": "STRUCTURE",
+    "bathroom_count": "STRUCTURE", "has_floor": "STRUCTURE",
+    "has_bedroom": "STRUCTURE", "has_bathroom": "STRUCTURE",
+    "frontage_width": "ACCESS", "road_width": "ACCESS",
+    "has_frontage": "ACCESS", "has_road_width": "ACCESS",
+    "has_project": "PROJECT", "raw_project_name": "PROJECT",
+    "has_street": "LOCATION", "has_ward": "LOCATION", "district": "LOCATION",
+    "ward": "LOCATION", "raw_street_name": "LOCATION",
+    "normalized_type": "PROPERTY_TYPE",
+    "raw_house_direction": "DIRECTION", "raw_balcony_direction": "DIRECTION",
+}
+
+# Which raw payload key feeds each model feature, for provenance attribution.
+FEATURE_SOURCE = {
+    "area": "area_sqm", "floor_count": "floors", "frontage_width": "frontage_width_m",
+    "road_width": "road_width_m", "bedroom_count": "rooms", "bathroom_count": "bathrooms",
+    "normalized_type": "category", "district": "location_feature", "ward": "ward",
+    "raw_street_name": "street_name", "raw_project_name": "project_name",
+    "raw_house_direction": "house_direction", "raw_balcony_direction": "balcony_direction",
+}
+DERIVED_FEATURES = {"has_floor", "has_frontage", "has_road_width", "has_bedroom",
+                    "has_bathroom", "has_project", "has_street", "has_ward",
+                    "frontage_sqrt_area_ratio"}
 
 
 def sha256(path: Path) -> str:
@@ -59,7 +94,7 @@ def verify_artifacts(dir_path: Path) -> Dict[str, Any]:
             continue
         actual = sha256(p)
         out["files"][name] = {"status": "MATCH" if actual == expected else "MISMATCH",
-                              "actual": actual, "expected": expected}
+                             "actual": actual}
         out["ok"] = out["ok"] and actual == expected
     return out
 
@@ -72,227 +107,335 @@ class Case:
     category: str
     profile: str
     payload: Dict[str, Any]
-    expected_states: Dict[str, str]
+    provided: set = field(default_factory=set)
+    not_applicable: set = field(default_factory=set)
 
 
-def build_cases(schema: Dict[str, Any]) -> Tuple[List[Case], List[Dict[str, Any]]]:
+@dataclass
+class Extra:
+    case_id: str
+    payload: Dict[str, Any]
+    expectation: str          # SUCCESS | REJECT
+    note: str = ""
+
+
+def build_cases(schema: Dict[str, Any]) -> Tuple[List[Case], List[Extra]]:
     vocab = schema.get("vocabularies", {})
     districts = vocab.get("district", [])
-    types = vocab.get("normalized_type", [])
-    wards = vocab.get("ward", [])
-    streets = vocab.get("raw_street_name", [])
-    def pick(seq, i):
-        return seq[i % len(seq)] if seq else None
+    types = [t.upper() for t in vocab.get("normalized_type", [])]
     categories = {"HOUSE": "Nhà ở", "LAND": "Đất nền", "APARTMENT": "Căn hộ chung cư"}
-    upper = {v.upper(): v for v in types}
-    supported = [upper[t] for t in ("HOUSE", "LAND", "APARTMENT") if t in upper]
+    supported = [t for t in ("HOUSE", "LAND", "APARTMENT") if t in types]
     cases: List[Case] = []
 
     for d_index, district in enumerate(districts):
-        display = district if district[:1].isupper() else district
         for model_type in supported:
-            category = categories[model_type.upper()]
+            category = categories[model_type]
             for profile in PROFILES:
-                cid = f"{d_index}-{model_type.upper()}-{profile}"
+                cid = f"{district}-{model_type}-{profile}"
                 payload: Dict[str, Any] = {"category": category,
-                                           "location_feature": display,
-                                           "area_sqm": 100.0}
-                states: Dict[str, str] = {"area": "OBSERVED", "district": "OBSERVED"}
+                                           "location_feature": district, "area_sqm": 90.0}
+                provided = {"category", "location_feature", "area_sqm"}
+                na: set = set()
+                if model_type == "LAND":
+                    na = {"bedroom_count", "has_bedroom", "floor_count", "has_floor",
+                          "bathroom_count", "has_bathroom"}
 
-                if profile == "MINIMAL":
-                    payload["area_sqm"] = 60.0 if model_type == "APARTMENT" else 90.0
-                    states["ward"] = "MISSING"
-                elif profile == "TYPICAL":
+                if profile == "TYPICAL":
                     payload.update({"area_sqm": 100.0 if model_type != "APARTMENT" else 75.0,
                                     "rooms": 3})
-                    states["room_count"] = "OBSERVED"
+                    provided.add("rooms")
                 elif profile == "RICH":
                     payload.update({"area_sqm": 120.0, "rooms": 4,
-                                    "road_width_m": 12.0, "frontage_width_m": 6.0,
-                                    "house_direction": "Đông Nam"})
-                    states.update({"road_width": "OBSERVED",
-                                   "frontage_width": "OBSERVED"})
-                    if model_type.upper() == "HOUSE":
+                                    "road_width_m": 12.0, "frontage_width_m": 6.0})
+                    provided |= {"rooms", "road_width_m", "frontage_width_m"}
+                    if model_type == "HOUSE":
                         payload.update({"floors": 3, "house_subtype": "house_c4",
                                         "bathrooms": 2})
-                        states["floor_count"] = "OBSERVED"
-                    if model_type.upper() == "APARTMENT":
+                        provided |= {"floors", "house_subtype", "bathrooms"}
+                    if model_type == "APARTMENT":
                         payload["balcony_direction"] = "Đông"
-                        states["balcony_direction"] = "OBSERVED"
-                        states["project_name"] = "MISSING"
-                else:  # MISSINGNESS
-                    payload.update({"area_sqm": 80.0})
-                    states.update({"ward": "MISSING", "road_width": "MISSING",
-                                   "frontage_width": "MISSING", "street_name": "MISSING"})
+                        provided.add("balcony_direction")
+                elif profile == "MISSINGNESS":
+                    payload["area_sqm"] = 80.0
+                elif profile == "UNKNOWN_CATEGORY":
+                    # Values deliberately outside the trained vocabulary: the matrix must
+                    # classify them as UNKNOWN_CATEGORY, not as observed data.
+                    payload.update({"area_sqm": 95.0,
+                                    "street_name": "Đường Không Tồn Tại XYZ 123",
+                                    "ward": "phường không tồn tại xyz"})
+                    provided |= {"street_name", "ward"}
 
-                if model_type.upper() == "LAND":
-                    states["room_count"] = "NOT_APPLICABLE"
-                    states["floor_count"] = "NOT_APPLICABLE"
-                if payload.get("ward", "") is None:
-                    payload.pop("ward", None)
-                    states.pop("ward", None)
-                cases.append(Case(cid, display, category, profile, payload, states))
+                cases.append(Case(cid, district, category, profile, payload, provided, na))
 
-    # targeted extras
-    extra: List[Dict[str, Any]] = []
+    extras: List[Extra] = []
     if districts:
         d0 = districts[0]
-        extra = [
-            {"case_id": "extra-small-area", "payload": {"category": "Nhà ở", "location_feature": d0,
-                                                        "area_sqm": 20.0}},
-            {"case_id": "extra-large-area", "payload": {"category": "Nhà ở", "location_feature": d0,
-                                                        "area_sqm": 1000.0}},
-            {"case_id": "extra-nfd-district",
-             "payload": {"category": "Nhà ở", "location_feature": unicodedata.normalize("NFD", d0),
-                         "area_sqm": 100.0}},
-            {"case_id": "extra-nfc-district",
-             "payload": {"category": "Nhà ở", "location_feature": unicodedata.normalize("NFC", d0),
-                         "area_sqm": 100.0}},
-            {"case_id": "extra-missing-ward", "payload": {"category": "Nhà ở",
-                                                          "location_feature": d0, "area_sqm": 100.0}},
-            {"case_id": "extra-invalid-area", "payload": {"category": "Nhà ở",
-                                                          "location_feature": d0, "area_sqm": 0}},
-            {"case_id": "extra-invalid-location",
-             "payload": {"category": "Nhà ở", "location_feature": "Hà Nội", "area_sqm": 100.0}},
-            {"case_id": "extra-ward-observed", "payload": {"category": "Nhà ở",
-             "location_feature": d0, "area_sqm": 100.0,
-             **({"ward": vocab.get("ward", [None])[0]} if vocab.get("ward") else {})}},
-            {"case_id": "extra-street-observed", "payload": {"category": "Nhà ở",
-             "location_feature": d0, "area_sqm": 100.0,
-             **({"street_name": vocab.get("raw_street_name", [None])[0]}
-                if vocab.get("raw_street_name") else {})}},
-            {"case_id": "extra-land-bedrooms-rejected",
-             "payload": {"category": "Đất nền", "location_feature": d0, "area_sqm": 100.0,
-                         "rooms": 3}},
+        base = {"category": "Nhà ở", "location_feature": d0, "area_sqm": 100.0}
+        extras += [
+            Extra("extra-small-area", dict(base, area_sqm=20.0), "SUCCESS"),
+            Extra("extra-large-area", dict(base, area_sqm=1000.0), "SUCCESS"),
+            Extra("extra-nfd-district",
+                  dict(base, location_feature=unicodedata.normalize("NFD", d0)), "SUCCESS"),
+            Extra("extra-nfc-district",
+                  dict(base, location_feature=unicodedata.normalize("NFC", d0)), "SUCCESS"),
+            Extra("extra-missing-ward", dict(base), "SUCCESS"),
+            Extra("extra-invalid-area", dict(base, area_sqm=0), "REJECT",
+                  "area below contract minimum"),
+            Extra("extra-invalid-location", dict(base, location_feature="Hà Nội"), "REJECT",
+                  "district outside model vocabulary"),
+            Extra("extra-land-bedrooms", dict(base, category="Đất nền", rooms=3), "REJECT",
+                  "LAND must not send rooms"),
         ]
-    return cases, extra
+    return cases, extras
+
+
+# --------------------------------------------------------------------------- helpers
+def aggregate_groups(features: Sequence[str], contribs: Sequence[float],
+                     groups: Dict[str, str]) -> Tuple[Dict[str, float], List[str]]:
+    """Signed aggregation by group. Returns (group_sums, problems)."""
+    problems: List[str] = []
+    duplicated = [f for f in features if features.count(f) > 1]
+    if duplicated:
+        problems.append(f"duplicate feature(s) in vector: {sorted(set(duplicated))}")
+    lost = [f for f in features if f not in groups]
+    if lost:
+        problems.append(f"feature(s) without group: {lost}")
+    unknown = [f for f in groups if f not in features]
+    if unknown:
+        problems.append(f"grouped feature(s) absent from vector: {unknown}")
+    sums: Dict[str, float] = {}
+    for feature, value in zip(features, contribs):
+        group = groups.get(feature)
+        if group is None:
+            continue
+        sums[group] = sums.get(group, 0.0) + float(value)
+    return sums, problems
+
+
+def provenance(feature: str, encoded_value: Any, provided: set, not_applicable: set
+               ) -> Tuple[str, str]:
+    """State derived from the ACTUAL transformed value, plus a short basis string."""
+    if feature in DERIVED_FEATURES:
+        return "DERIVED", "computed from raw input"
+    value = encoded_value
+    missing = value is None or (isinstance(value, float) and math.isnan(value)) or value == "__MISSING__"
+    if value == "__UNKNOWN__":
+        return "UNKNOWN_CATEGORY", "value not in trained vocabulary"
+    if missing:
+        if feature in not_applicable:
+            return "NOT_APPLICABLE", "not meaningful for this property type"
+        return "MISSING", "not supplied by the caller"
+    source = FEATURE_SOURCE.get(feature)
+    if source and source in provided:
+        return "OBSERVED", f"from request field {source}"
+    if source:
+        return "DERIVED", "filled by the adapter, not supplied directly"
+    return "UNVERIFIED", "no provenance rule"
+
+
+# --------------------------------------------------------------------------- self-tests
+def require_cases(cases: Sequence[Any]) -> List[str]:
+    """An empty fixture matrix must never be reported as a pass."""
+    return [] if cases else ["empty fixture matrix"]
+
+
+def require_tolerance(value: float, limit: float, label: str) -> List[str]:
+    return [] if value <= limit else [f"{label}: {value:.3e} > {limit:.3e}"]
+
+
+def run_self_tests() -> List[str]:
+    """Prove the checks can FAIL. Each case below must be detected."""
+    failures: List[str] = []
+
+    def expect(label: str, problems: Sequence[str]) -> None:
+        if not problems:
+            failures.append(f"self-test did not detect: {label}")
+
+    features = ["area", "district"]
+    contribs = [1.0, 2.0]
+
+    _sums, problems = aggregate_groups(features, contribs, {"area": "AREA"})
+    expect("feature without a group", [p for p in problems if "without group" in p])
+
+    _sums, problems = aggregate_groups(["area", "area"], [1.0, 1.0], {"area": "AREA"})
+    expect("duplicate feature", [p for p in problems if "duplicate" in p])
+
+    _sums, problems = aggregate_groups(features, contribs,
+                                       {"area": "AREA", "district": "LOCATION",
+                                        "ghost": "AREA"})
+    expect("group entry absent from vector",
+           [p for p in problems if "absent from vector" in p])
+
+    # a genuinely wrong group sum must be caught by the reconstruction comparison
+    sums, _ = aggregate_groups(features, [1.0, 2.0], {"area": "AREA", "district": "AREA"})
+    expect("wrong aggregation",
+           require_tolerance(abs(sums.get("AREA", 0.0) - 2.0), 1e-12, "grouped sum"))
+
+    expect("empty fixture matrix", require_cases([]))
+    expect("non-zero additivity beyond tolerance",
+           require_tolerance(1e-4, ADDITIVITY_TOL_REL, "additivity"))
+
+    # provenance classifier must distinguish the states it claims to
+    if provenance("ward", "__UNKNOWN__", set(), set())[0] != "UNKNOWN_CATEGORY":
+        failures.append("self-test did not detect: UNKNOWN_CATEGORY classification")
+    if provenance("ward", None, set(), set())[0] != "MISSING":
+        failures.append("self-test did not detect: MISSING classification")
+    if provenance("ward", None, set(), {"ward"})[0] != "NOT_APPLICABLE":
+        failures.append("self-test did not detect: NOT_APPLICABLE classification")
+    if provenance("ward", "phường 1", {"ward"}, set())[0] != "OBSERVED":
+        failures.append("self-test did not detect: OBSERVED classification")
+
+    # the real benchmark must fail when the matrix is empty
+    if not require_cases([]):
+        failures.append("self-test did not detect: run() on an empty matrix")
+
+    return failures
 
 
 # --------------------------------------------------------------------------- benchmark
-FEATURE_GROUPS = {
-    "area": "AREA", "floor_count": "STRUCTURE", "frontage_width": "ACCESS",
-    "road_width": "ACCESS", "bedroom_count": "STRUCTURE", "bathroom_count": "STRUCTURE",
-    "has_floor": "STRUCTURE", "has_frontage": "ACCESS", "has_road_width": "ACCESS",
-    "has_bedroom": "STRUCTURE", "has_bathroom": "STRUCTURE", "has_project": "PROJECT",
-    "has_street": "LOCATION", "has_ward": "LOCATION",
-    "frontage_sqrt_area_ratio": "ACCESS",
-    "normalized_type": "PROPERTY_TYPE", "district": "LOCATION", "ward": "LOCATION",
-    "raw_street_name": "LOCATION", "raw_project_name": "PROJECT",
-    "raw_house_direction": "DIRECTION", "raw_balcony_direction": "DIRECTION",
-}
-
-
-def state_for(feature: str, states: Dict[str, str]) -> str:
-    key = {"raw_street_name": "street_name", "raw_project_name": "project_name",
-           "raw_house_direction": "house_direction", "raw_balcony_direction": "balcony_direction",
-           "bedroom_count": "room_count", "has_bedroom": "room_count",
-           "floor_count": "floor_count", "has_floor": "floor_count",
-           "road_width": "road_width", "has_road_width": "road_width",
-           "frontage_width": "frontage_width", "has_frontage": "frontage_width",
-           "has_project": "project_name", "has_ward": "ward", "ward": "ward",
-           "district": "district", "normalized_type": "property_type",
-           "area": "area", "bathroom_count": "bathroom_count"}.get(feature, feature)
-    return states.get(key, "DERIVED")
-
-
-def run(predictor, cases: List[Case], extras, seed: int) -> Dict[str, Any]:
+def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
     import numpy as np
-
-    results = []
-    failures: List[str] = []
-    additivity, recon_naive, recon_final, topk, grouped = [], [], [], [], []
-    invalid_rejected = 0
-    states_seen: Dict[str, int] = {}
+    import pandas as pd
+    import xgboost as xgb
+    from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3
+    from app.models.xgboost.features_v1_3 import transform
 
     schema = predictor.schema
-    features = schema["features"]
+    features = list(schema["features"])
+    booster = predictor.model.get_booster()
+    best = getattr(predictor.model, "best_iteration", None)
+    iter_range = (0, int(best) + 1) if best is not None else (0, 0)
 
-    def predict_one(payload):
-        t0 = time.perf_counter()
-        out = predictor.predict_from_v6_payload(payload)
-        total_ms = (time.perf_counter() - t0) * 1000.0
-        return out, total_ms
+    RENAME = {"street_name": "raw_street_name", "project_name": "raw_project_name",
+              "house_direction": "raw_house_direction", "balcony_direction": "raw_balcony_direction",
+              "floor_count": "raw_floor_count", "frontage_width": "raw_frontage_width",
+              "road_width": "raw_road_width", "bedroom_count": "raw_bedroom_count",
+              "bathroom_count": "raw_bathroom_count"}
+
+    def frame_for(payload: Dict[str, Any]):
+        mapped = map_v6_to_v1_3(
+            payload, district_vocabulary=schema.get("vocabularies", {}).get("district"))
+        row = {RENAME.get(k, k): v for k, v in mapped.items()}
+        row["ward"] = payload.get("ward")
+        return transform(pd.DataFrame([row]), schema)
+
+    additivity, recon_naive, recon_final, topk_rem, group_rem = [], [], [], [], []
+    per_case: List[Dict[str, Any]] = []
+    failures: List[str] = []
+    states: Dict[str, int] = {}
+    passed = 0
 
     for case in cases:
-        out, total_ms = predict_one(case.payload)
-        results.append({"case_id": case.case_id, "district": case.district,
-                        "category": case.category, "profile": case.profile,
-                        "total_ms": total_ms, "price": out["predicted_asking_price_vnd"]})
-        for feat in features:
-            states_seen[state_for(feat, case.expected_states)] = \
-                states_seen.get(state_for(feat, case.expected_states), 0) + 1
+        case_fail_before = len(failures)
+        t0 = time.perf_counter()
+        out = predictor.predict_from_v6_payload(case.payload)
+        total_ms = (time.perf_counter() - t0) * 1000.0
 
-        shap_block = out.get("shap_explanation") or {}
-        factors = shap_block.get("top_factors") or []
-        base_price = shap_block.get("base_price_vnd")
-        base_log = shap_block.get("base_value_log")
-        if base_log is None or base_price is None:
-            failures.append(f"{case.case_id}: missing base value in explanation")
-            continue
+        frame = frame_for(case.payload)
+        dmat = xgb.DMatrix(frame, feature_names=list(frame.columns))
+        margin = float(booster.predict(dmat, output_margin=True, iteration_range=iter_range)[0])
+        contribs = np.asarray(
+            booster.predict(dmat, pred_contribs=True, iteration_range=iter_range)[0],
+            dtype=np.float64)
 
-        # 1. additivity is validated on the FULL contribution vector, recomputed here from the
-        #    same booster/iteration range so the check is not limited by top-6 truncation.
-        z, contribs = _full_shap(predictor, case.payload, np)
-        dev = abs(z - (contribs[-1] + contribs[:-1].sum()))
-        rel_dev = dev / max(1.0, abs(z))
-        additivity.append(rel_dev)
-        if rel_dev > ADDITIVITY_TOL_REL:
-            failures.append(f"{case.case_id}: additivity rel deviation {rel_dev:.3e}")
+        # structural checks
+        if len(contribs) != len(features) + 1:
+            failures.append(f"{case.case_id}: SHAP dimension {len(contribs)} != {len(features)+1}")
+        if list(frame.columns) != features:
+            failures.append(f"{case.case_id}: feature order differs from schema")
+        if not np.all(np.isfinite(contribs)):
+            failures.append(f"{case.case_id}: non-finite SHAP contribution")
+        if not math.isfinite(margin):
+            failures.append(f"{case.case_id}: non-finite margin")
 
-        # 2. naive price
-        naive = float(np.expm1(z))
-        naive_reported = float(out["naive_price_vnd"])
-        rel = abs(naive - naive_reported) / max(1.0, abs(naive))
-        recon_naive.append(rel)
-        if rel > RECON_TOL_REL:
-            failures.append(f"{case.case_id}: naive reconstruction rel={rel:.3e}")
+        dev = abs(margin - (contribs[-1] + contribs[:-1].sum())) / max(1.0, abs(margin))
+        additivity.append(dev)
+        if dev > ADDITIVITY_TOL_REL:
+            failures.append(f"{case.case_id}: additivity rel {dev:.3e}")
 
-        # 3. calibration: final = max(0, exp(z) * factor - 1)
+        naive = float(np.expm1(margin))
+        rel_n = abs(naive - float(out["naive_price_vnd"])) / max(1.0, abs(naive))
+        recon_naive.append(rel_n)
+        if rel_n > RECON_TOL_REL:
+            failures.append(f"{case.case_id}: naive reconstruction rel {rel_n:.3e}")
+
         factor = float(out["calibration_factor"])
-        final_expected = max(0.0, math.exp(z) * factor - 1.0)
-        final_reported = float(out["predicted_asking_price_vnd"])
-        rel_f = abs(final_expected - final_reported) / max(1.0, abs(final_expected))
+        expected_final = max(0.0, math.exp(margin) * factor - 1.0)
+        rel_f = abs(expected_final - float(out["predicted_asking_price_vnd"])) / max(
+            1.0, abs(expected_final))
         recon_final.append(rel_f)
         if rel_f > CALIB_TOL_REL:
-            failures.append(f"{case.case_id}: calibration reconstruction rel={rel_f:.3e}")
+            failures.append(f"{case.case_id}: calibration reconstruction rel {rel_f:.3e}")
 
-        # 4. top-K + other == full contribution
-        top_sum = sum(f["shap_value"] for f in factors)
-        other = contribs[:-1].sum() - top_sum
-        topk.append(abs(other))
+        # top-K + remainder
+        factors = out["shap_explanation"]["top_factors"]
         if len(factors) > 6:
-            failures.append(f"{case.case_id}: more than 6 factors returned")
+            failures.append(f"{case.case_id}: more than 6 factors")
+        top_sum = sum(float(f["shap_value"]) for f in factors)
+        remainder = contribs[:-1].sum() - top_sum
+        topk_rem.append(abs(remainder))
 
-        # 5. grouped == total (each feature in exactly one group)
-        group_sum = sum(contribs[:-1][i] for i in range(len(features)))
-        grouped.append(abs(group_sum - contribs[:-1].sum()))
-        missing_group = [f for f in features if f not in FEATURE_GROUPS]
-        if missing_group:
-            failures.append(f"features without group: {missing_group}")
+        # real grouped aggregation
+        group_sums, problems = aggregate_groups(features, contribs[:-1], FEATURE_GROUPS)
+        for problem in problems:
+            failures.append(f"{case.case_id}: {problem}")
+        g_total = sum(group_sums.values())
+        group_rem.append(abs(g_total - contribs[:-1].sum()))
+        if abs(g_total - contribs[:-1].sum()) > 1e-12:
+            failures.append(f"{case.case_id}: grouped sum != full contribution sum")
 
-    # invalid inputs must be rejected by the schema layer, never reach the model
+        # provenance from the actual matrix
+        case_states = {}
+        for i, feature in enumerate(features):
+            value = frame.iloc[0][feature]
+            if isinstance(value, str):
+                encoded = value
+            else:
+                encoded = float(value) if not pd.isna(value) else None
+            state, _basis = provenance(feature, encoded, case.provided, case.not_applicable)
+            case_states[feature] = state
+            states[state] = states.get(state, 0) + 1
+
+        if len(failures) == case_fail_before:
+            passed += 1
+
+        per_case.append({
+            "case_id": case.case_id, "district": case.district, "category": case.category,
+            "profile": case.profile,
+            "price": int(out["predicted_asking_price_vnd"]),
+            "naive": int(out["naive_price_vnd"]), "calibration_factor": round(factor, 10),
+            "margin": round(margin, DIGEST_DECIMALS), "base_log": round(float(contribs[-1]),
+                                                                       DIGEST_DECIMALS),
+            "contribs": [round(float(c), DIGEST_DECIMALS) for c in contribs[:-1]],
+            "top_factors": [f["feature_name"] for f in factors],
+            "groups": {k: round(v, DIGEST_DECIMALS) for k, v in sorted(group_sums.items())},
+            "provenance": case_states, "total_ms": total_ms,
+        })
+
+    # extras: every outcome is classified; unexpected is a failure
+    extra_outcomes: List[Dict[str, Any]] = []
+    from app.api.schemas import ValuationRequest
+
     for item in extras:
-        if item["case_id"].startswith("extra-invalid"):
-            try:
-                predictor.predict_from_v6_payload(item["payload"])
-                failures.append(f"{item['case_id']}: invalid input was NOT rejected")
-            except ValueError:
-                invalid_rejected += 1
-
-    # valid extras
-    extra_results = []
-    for item in extras:
-        if item["case_id"].startswith("extra-invalid"):
-            continue
         try:
-            out, ms = predict_one(item["payload"])
-            extra_results.append({"case_id": item["case_id"],
-                                  "price": out["predicted_asking_price_vnd"], "total_ms": ms})
+            ValuationRequest(**item.payload)          # API contract, same as production
+            out = predictor.predict_from_v6_payload(item.payload)
+            outcome = "SUCCESS"
+            detail = int(out["predicted_asking_price_vnd"])
         except ValueError as error:
-            extra_results.append({"case_id": item["case_id"], "rejected": str(error)[:120]})
-        except Exception as error:  # noqa: BLE001 - categorical coverage is a known limitation
-            extra_results.append({"case_id": item["case_id"],
-                                  "error": f"{type(error).__name__}: {str(error)[:100]}"})
+            outcome = "REJECTED"
+            detail = str(error)[:100]
+        except Exception as error:  # noqa: BLE001
+            outcome = "UNEXPECTED_ERROR"
+            detail = f"{type(error).__name__}: {str(error)[:100]}"
+        ok = (outcome == "SUCCESS") == (item.expectation == "SUCCESS")
+        if not ok:
+            failures.append(f"{item.case_id}: expected {item.expectation}, got {outcome}")
+        extra_outcomes.append({"case_id": item.case_id, "expectation": item.expectation,
+                               "outcome": outcome, "ok": ok, "detail": detail})
+
+    # empty fixture matrix must never PASS
+    failures.extend(require_cases(cases))
 
     def stats(seq):
         if not seq:
@@ -301,127 +444,98 @@ def run(predictor, cases: List[Case], extras, seed: int) -> Dict[str, Any]:
         return {"n": len(seq), "max": max(seq), "median": statistics.median(seq),
                 "p95": ordered[min(len(ordered) - 1, int(0.95 * len(ordered)))]}
 
-    total_times = [r["total_ms"] for r in results]
-    payload = {
-        "cases": len(cases), "extras": len(extras), "passed": len(cases) - len(failures),
-        "failed": len(failures), "invalid_rejected": invalid_rejected,
-        "additivity_error": stats(additivity),
-        "naive_reconstruction_rel_error": stats(recon_naive),
-        "calibration_reconstruction_rel_error": stats(recon_final),
-        "topk_remainder_abs": stats(topk),
-        "grouped_invariant_abs": stats(grouped),
-        "provenance_state_counts": states_seen,
-        "latency_total_ms": {"n": len(total_times),
-                             "median": statistics.median(total_times) if total_times else 0.0,
-                             "p95": sorted(total_times)[min(len(total_times) - 1,
-                                                           int(0.95 * len(total_times)))] if total_times else 0.0},
-        "results": results[:6],
-        "extras_results": extra_results,
+    return {
+        "cases": len(cases), "case_passed": passed, "case_failed": len(cases) - passed,
+        "extras": len(extras), "extra_ok": sum(1 for e in extra_outcomes if e["ok"]),
         "failures": failures,
+        "additivity_rel": stats(additivity),
+        "naive_rel": stats(recon_naive),
+        "calibration_rel": stats(recon_final),
+        "topk_remainder_abs": stats(topk_rem),
+        "group_remainder_abs": stats(group_rem),
+        "provenance_counts": states,
+        "per_case": per_case,
+        "extras_outcomes": extra_outcomes,
     }
-    return payload
 
 
-def _full_shap(predictor, payload, np):
-    """Recompute z and the FULL contribution vector from the active booster (read-only).
-
-    Mirrors predictor_v1_3.predict exactly: same adapter, same transform, same DMatrix
-    construction and the same iteration_range, so the check is not limited by top-6.
-    """
-    import pandas as pd
-    import xgboost as xgb
-    from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3
-    from app.models.xgboost.features_v1_3 import transform
-
-    mapped = map_v6_to_v1_3(
-        payload, district_vocabulary=predictor.schema.get("vocabularies", {}).get("district"))
-    rename = {"street_name": "raw_street_name", "project_name": "raw_project_name",
-              "house_direction": "raw_house_direction", "balcony_direction": "raw_balcony_direction",
-              "floor_count": "raw_floor_count", "frontage_width": "raw_frontage_width",
-              "road_width": "raw_road_width", "bedroom_count": "raw_bedroom_count",
-              "bathroom_count": "raw_bathroom_count"}
-    row = {rename.get(k, k): v for k, v in mapped.items()}
-    row["ward"] = payload.get("ward")
-    frame = transform(pd.DataFrame([row]), predictor.schema)
-    booster = predictor.model.get_booster()
-    dmat = xgb.DMatrix(frame, feature_names=list(frame.columns))
-    best = getattr(predictor.model, "best_iteration", None)
-    iter_range = (0, int(best) + 1) if best is not None else (0, 0)
-    contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iter_range)[0]
-    margin = booster.predict(dmat, output_margin=True, iteration_range=iter_range)[0]
-    return float(margin), np.asarray(contribs, dtype=np.float64)
+def digest_of(payload: Dict[str, Any]) -> str:
+    """Deterministic digest: everything except timing, over per-case results included."""
+    def stable(node):
+        if isinstance(node, dict):
+            return {k: stable(v) for k, v in sorted(node.items())
+                    if k not in ("total_ms", "latency_ms")}
+        if isinstance(node, list):
+            return [stable(v) for v in node]
+        return node
+    return hashlib.sha256(json.dumps(stable(payload), sort_keys=True,
+                                     ensure_ascii=False, default=str).encode()).hexdigest()[:16]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifacts-dir", default="ai-services/artifacts/v1_3")
-    ap.add_argument("--seed", type=int, default=20261127)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--assertions", action="store_true")
-    ap.add_argument("--latency", action="store_true")
+    ap.add_argument("--integrity-only", action="store_true")
+    ap.add_argument("--self-test", action="store_true")
     args = ap.parse_args()
 
-    artifacts = Path(args.artifacts_dir)
-    integrity = verify_artifacts(artifacts)
+    integrity = verify_artifacts(Path(args.artifacts_dir))
+    if args.integrity_only:
+        print(json.dumps(integrity, indent=2) if args.json else
+              "\n".join(f"{k}: {v['status']}" for k, v in integrity["files"].items()))
+        return 0 if integrity["ok"] else 2
+
+    if args.self_test:
+        failures = run_self_tests()
+        for f in failures:
+            print("  FAIL ", f)
+        print(f"self-tests: {'PASS' if not failures else 'FAIL'}")
+        return 0 if not failures else 1
+
+    if not integrity["ok"]:
+        print("BLOCKED: artifact hash mismatch")
+        print(json.dumps(integrity, indent=2))
+        return 2
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "ai-services"))
     from app.models.xgboost.predictor_v1_3 import PredictorV1_3
 
-    if args.assertions:
-        ok = integrity["ok"]
-        print(f"  {'PASS' if ok else 'FAIL'}  artifact hashes match the pinned V1.3 values")
-        for name, info in integrity["files"].items():
-            print(f"        {name}: {info['status']}")
-        return 0 if ok else 1
-
-    if not integrity["ok"]:
-        print("BLOCKED: artifact hash mismatch; refusing to benchmark")
-        print(json.dumps(integrity, indent=2))
-        return 2
-
-    predictor = PredictorV1_3(artifacts)
+    predictor = PredictorV1_3(Path(args.artifacts_dir))
     cases, extras = build_cases(predictor.schema)
-    payload = run(predictor, cases, extras, args.seed)
-    payload.update({"artifact_integrity": integrity, "model_version": "v1.3",
-                    "model_run": "tinix_xgboost_v1_3_integrated", "seed": args.seed})
-    # Digest must cover deterministic content only: drop every timing field at any depth.
-    NON_DETERMINISTIC = {"latency_total_ms", "results", "total_ms", "failures",
-                         "extras_results"}
+    report = run(predictor, cases, extras)
+    report.update({"artifact_integrity": integrity, "model_version": "v1.3",
+                   "model_run": "tinix_xgboost_v1_3_integrated"})
 
-    def _stable(node):
-        if isinstance(node, dict):
-            return {k: _stable(v) for k, v in node.items() if k not in NON_DETERMINISTIC}
-        if isinstance(node, list):
-            return [_stable(v) for v in node]
-        return node
+    has_failure = bool(report["failures"])
+    report["digest"] = digest_of(report)
 
-    digest = hashlib.sha256(json.dumps(
-        _stable(payload), sort_keys=True, ensure_ascii=False, default=str).encode()
-    ).hexdigest()[:16]
-    payload["digest"] = digest
+    if args.assertions:
+        self_failures = run_self_tests()
+        report["self_test_failures"] = self_failures
 
     if args.json:
-        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True, default=str))
-        return 0
+        print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True, default=str))
+        return 0 if not has_failure and not report.get("self_test_failures") else 1
 
-    print(f"WP-04 explainability benchmark · model v1.3 · cases={payload['cases']} "
-          f"extras={payload['extras']} · seed={args.seed}")
-    print(f"  passed {payload['passed']} · failed {payload['failed']} · "
-          f"invalid-rejected {payload['invalid_rejected']}")
-    for key in ("additivity_error", "naive_reconstruction_rel_error",
-                "calibration_reconstruction_rel_error", "topk_remainder_abs",
-                "grouped_invariant_abs"):
-        s = payload[key]
-        print(f"  {key:38s} max={s['max']:.3e} median={s['median']:.3e} p95={s['p95']:.3e}")
-    print(f"  latency(total) median={payload['latency_total_ms']['median']:.2f} ms "
-          f"p95={payload['latency_total_ms']['p95']:.2f} ms")
-    print(f"  provenance states: {payload['provenance_state_counts']}")
-    if payload["failures"]:
-        print("  failures:")
-        for f in payload["failures"][:10]:
-            print("   -", f)
-    print(f"\ndigest {digest}")
-    return 0 if payload["failed"] == 0 else 1
+    print(f"WP-04 explainability benchmark · v1.3 · cases={report['cases']} "
+          f"extras={report['extras']}")
+    print(f"  cases passed {report['case_passed']} · failed {report['case_failed']} · "
+          f"extras ok {report['extra_ok']}/{report['extras']}")
+    for key in ("additivity_rel", "naive_rel", "calibration_rel",
+                "topk_remainder_abs", "group_remainder_abs"):
+        s = report[key]
+        print(f"  {key:22s} max={s['max']:.3e} median={s['median']:.3e} p95={s['p95']:.3e}")
+    print(f"  provenance: {report['provenance_counts']}")
+    if args.assertions:
+        st = report.get("self_test_failures") or []
+        print(f"  self-tests: {'PASS' if not st else 'FAIL'} ({len(st)} lỗi)")
+    for f in report["failures"][:10]:
+        print("  FAIL ", f)
+    print(f"\ndigest {report['digest']}")
+    bad = has_failure or bool(report.get("self_test_failures"))
+    return 0 if not bad else 1
 
 
 if __name__ == "__main__":

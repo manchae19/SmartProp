@@ -82,3 +82,18 @@ trong Phase A ⇒ ghi `PREDICTOR_LEVEL_VERIFIED`, không `FULL_STACK_PARITY_VERI
 `ai-services/tests/test_valuation_shap_contract.py`, `probe_shap.py`,
 `run_20_sample_shap_audit.py` — **chưa chạy** trong Phase A (`NOT_RUN`), vì một số script lịch sử
 có thể đọc dữ liệu; benchmark mới thay thế an toàn cho mục đích Phase A.
+
+
+---
+
+## 8. Bổ sung sau review (execution correctness)
+
+- `--assertions` trước đây return sớm sau bước hash ⇒ **đã sửa**: giờ chạy full benchmark +
+  failure self-tests. Thêm `--integrity-only` cho nhu cầu chỉ kiểm hash.
+- Đếm **per-case** passed/failed (không dùng `len(cases) - len(failures)`).
+- Extras được phân loại `SUCCESS`/`REJECT` theo **contract `ValuationRequest`**;
+  `UNEXPECTED_ERROR` ⇒ failure.
+- Kiểm thêm: dimension SHAP, thứ tự feature so với schema, `isfinite`, NaN.
+- Grouped contribution: aggregate **thật** theo `FEATURE_GROUPS` (signed), có kiểm thiếu/trùng/thừa.
+- Provenance: suy từ **ma trận đã transform**, phân biệt `UNKNOWN_CATEGORY` (42 quan sát) và
+  `NOT_APPLICABLE` (91) thay vì mặc định `DERIVED`.
