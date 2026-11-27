@@ -49,3 +49,17 @@ migration, không đổi model, nên rollback chỉ là revert source.
   benchmark để so digest per-case.
 - Chấp nhận: benchmark fail phải trả exit 1 (cả `--json`), fixture rỗng phải fail.
 - Không đổi production trong Phase A; mọi kiểm chứng là offline + synthetic.
+
+
+---
+
+## 10. B0 readiness (final gate)
+
+| Hạng mục | Trạng thái |
+|---|---|
+| main đã sync (`ebfb230`, PR #46 merged) | ✅ merge commit thường, không amend/rebase/force |
+| Phase 0 security boundaries giữ nguyên | ✅ không truy cập TiniX/protected DB/holdout |
+| Không thay đổi prediction V1.3 | ✅ hash artifact không đổi |
+| Không retrain, không fallback V6 | ✅ |
+| Không thay đổi migration | ✅ |
+| B1–B7 | **NOT_STARTED** — chờ phê duyệt |

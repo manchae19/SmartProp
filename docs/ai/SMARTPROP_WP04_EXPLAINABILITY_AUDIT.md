@@ -97,3 +97,19 @@ có thể đọc dữ liệu; benchmark mới thay thế an toàn cho mục đí
 - Grouped contribution: aggregate **thật** theo `FEATURE_GROUPS` (signed), có kiểm thiếu/trùng/thừa.
 - Provenance: suy từ **ma trận đã transform**, phân biệt `UNKNOWN_CATEGORY` (42 quan sát) và
   `NOT_APPLICABLE` (91) thay vì mặc định `DERIVED`.
+
+
+---
+
+## 9. Final gate corrections
+
+- **Production matrix parity:** benchmark trước đây ghi đè `ward` bằng raw payload. Production
+  lấy ward từ **canonical record** (`PredictorV1_3.predict()` dựng `input_row` từ record, sau khi
+  adapter strip tiền tố `Phường/Xã/Thị trấn` và casefold). Đã sửa và assert ở đúng tầng
+  (`input_row` vs `__MISSING__/__UNKNOWN__` encoded), cộng thêm so `model.predict(frame)` với
+  booster margin để chứng minh cùng ma trận.
+- **Extras outcome:** `SUCCESS` chỉ pass khi actual SUCCESS; `REJECT` chỉ pass khi bị từ chối
+  đúng nguồn (schema/adapter); `UNEXPECTED_ERROR` **luôn fail**.
+- **Artifact count:** thư mục V1.3 chỉ có **4 file**; đã hash toàn bộ 4, không thể đáp ứng "8".
+- **PR #46:** đã merge vào main tại `ebfb230`; Phase 0 security handoff (`docs/handoff/…`) đã
+  nằm trong main sau merge.

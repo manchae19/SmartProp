@@ -185,6 +185,16 @@ def build_cases(schema: Dict[str, Any]) -> Tuple[List[Case], List[Extra]]:
                   "district outside model vocabulary"),
             Extra("extra-land-bedrooms", dict(base, category="Đất nền", rooms=3), "REJECT",
                   "LAND must not send rooms"),
+            Extra("extra-ward-prefixed", dict(base, ward="Phường 1"), "SUCCESS",
+                  "adapter strips the Phường prefix"),
+            Extra("extra-ward-bare", dict(base, ward="1"), "SUCCESS"),
+            Extra("extra-ward-missing", dict(base), "SUCCESS"),
+            Extra("extra-ward-unknown", dict(base, ward="phường không tồn tại xyz"), "SUCCESS"),
+            Extra("extra-street-unknown",
+                  dict(base, street_name="Đường Không Tồn Tại XYZ 123"), "SUCCESS"),
+            Extra("extra-invalid-numeric", dict(base, area_sqm=-5), "REJECT"),
+            Extra("extra-villa-subtype", dict(base, house_subtype="villa"), "SUCCESS",
+                  "villa is a HOUSE subtype, not a category"),
         ]
     return cases, extras
 
@@ -313,11 +323,32 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
               "bathroom_count": "raw_bathroom_count"}
 
     def frame_for(payload: Dict[str, Any]):
+        """Build the matrix exactly like PredictorV1_3.predict() does.
+
+        Production maps the payload to a canonical record, then assembles an explicit
+        `input_row` from the RECORD (not from the raw payload). The earlier version of this
+        benchmark overwrote `ward` with the raw payload value, which is not what production
+        sees (the adapter strips the "Phường/Xã" prefix and casefolds). That is fixed here and
+        asserted below.
+        """
         mapped = map_v6_to_v1_3(
             payload, district_vocabulary=schema.get("vocabularies", {}).get("district"))
-        row = {RENAME.get(k, k): v for k, v in mapped.items()}
-        row["ward"] = payload.get("ward")
-        return transform(pd.DataFrame([row]), schema)
+        input_row = {
+            "area": float(mapped["area"]),
+            "raw_floor_count": mapped.get("floor_count"),
+            "raw_frontage_width": mapped.get("frontage_width"),
+            "raw_road_width": mapped.get("road_width"),
+            "raw_bedroom_count": mapped.get("bedroom_count"),
+            "raw_bathroom_count": mapped.get("bathroom_count"),
+            "normalized_type": mapped["normalized_type"],
+            "district": mapped["district"],
+            "ward": mapped.get("ward"),
+            "raw_street_name": mapped.get("street_name"),
+            "raw_project_name": mapped.get("project_name"),
+            "raw_house_direction": mapped.get("house_direction"),
+            "raw_balcony_direction": mapped.get("balcony_direction"),
+        }
+        return transform(pd.DataFrame([input_row]), schema), mapped, input_row
 
     additivity, recon_naive, recon_final, topk_rem, group_rem = [], [], [], [], []
     per_case: List[Dict[str, Any]] = []
@@ -331,9 +362,28 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
         out = predictor.predict_from_v6_payload(case.payload)
         total_ms = (time.perf_counter() - t0) * 1000.0
 
-        frame = frame_for(case.payload)
+        frame, mapped, input_row = frame_for(case.payload)
         dmat = xgb.DMatrix(frame, feature_names=list(frame.columns))
         margin = float(booster.predict(dmat, output_margin=True, iteration_range=iter_range)[0])
+
+        # PRODUCTION PARITY: the matrix built here must be the matrix the production path uses.
+        # model.predict(X) goes through the same booster, so equality proves same feature order
+        # and same values. Ward is the field the review flagged.
+        if abs(float(predictor.model.predict(frame)[0]) - margin) > 1e-6:
+            failures.append(f"{case.case_id}: benchmark matrix differs from production predict()")
+        # ward: the INPUT ROW must carry the canonical mapped value (this is what production
+        # feeds transform); the ENCODED value must then be the documented sentinel.
+        if input_row["ward"] != mapped.get("ward"):
+            failures.append(f"{case.case_id}: input row ward != canonical mapped ward "
+                            f"({input_row['ward']!r} vs {mapped.get('ward')!r})")
+        ward_vocab = set(schema.get("vocabularies", {}).get("ward", []))
+        expected_encoded = ("__MISSING__" if mapped.get("ward") is None else
+                            (mapped["ward"] if mapped["ward"] in ward_vocab else "__UNKNOWN__"))
+        if frame.iloc[0]["ward"] != expected_encoded:
+            failures.append(f"{case.case_id}: encoded ward {frame.iloc[0]['ward']!r} != "
+                            f"{expected_encoded!r}")
+        if list(frame.columns) != features:
+            failures.append(f"{case.case_id}: feature order differs from schema")
         contribs = np.asarray(
             booster.predict(dmat, pred_contribs=True, iteration_range=iter_range)[0],
             dtype=np.float64)
@@ -412,27 +462,50 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
             "provenance": case_states, "total_ms": total_ms,
         })
 
-    # extras: every outcome is classified; unexpected is a failure
+    # extras: every outcome is classified; only an exact contract match passes
     extra_outcomes: List[Dict[str, Any]] = []
     from app.api.schemas import ValuationRequest
+    from pydantic import ValidationError
 
     for item in extras:
+        reject_source = None
         try:
-            ValuationRequest(**item.payload)          # API contract, same as production
+            ValuationRequest(**item.payload)                 # API contract first
+        except ValidationError as error:
+            extra_outcomes.append({
+                "case_id": item.case_id, "expectation": item.expectation,
+                "outcome": "REJECTED", "reject_source": "SCHEMA",
+                "ok": item.expectation == "REJECT", "detail": str(error)[:100]})
+            if item.expectation != "REJECT":
+                failures.append(f"{item.case_id}: expected SUCCESS, rejected by schema")
+            continue
+
+        try:
             out = predictor.predict_from_v6_payload(item.payload)
-            outcome = "SUCCESS"
-            detail = int(out["predicted_asking_price_vnd"])
+            extra_outcomes.append({
+                "case_id": item.case_id, "expectation": item.expectation,
+                "outcome": "SUCCESS", "reject_source": None,
+                "ok": item.expectation == "SUCCESS",
+                "detail": int(out["predicted_asking_price_vnd"])})
+            if item.expectation != "SUCCESS":
+                failures.append(f"{item.case_id}: expected REJECT, got SUCCESS")
         except ValueError as error:
-            outcome = "REJECTED"
-            detail = str(error)[:100]
-        except Exception as error:  # noqa: BLE001
-            outcome = "UNEXPECTED_ERROR"
-            detail = f"{type(error).__name__}: {str(error)[:100]}"
-        ok = (outcome == "SUCCESS") == (item.expectation == "SUCCESS")
-        if not ok:
-            failures.append(f"{item.case_id}: expected {item.expectation}, got {outcome}")
-        extra_outcomes.append({"case_id": item.case_id, "expectation": item.expectation,
-                               "outcome": outcome, "ok": ok, "detail": detail})
+            # A ValueError from the adapter is a documented rejection only for cases that
+            # declare it; otherwise it is indistinguishable from an internal defect.
+            reject_source = "ADAPTER"
+            ok = item.expectation == "REJECT"
+            extra_outcomes.append({
+                "case_id": item.case_id, "expectation": item.expectation,
+                "outcome": "REJECTED", "reject_source": reject_source, "ok": ok,
+                "detail": str(error)[:100]})
+            if not ok:
+                failures.append(f"{item.case_id}: expected SUCCESS, adapter raised ValueError")
+        except Exception as error:  # noqa: BLE001 - never a pass
+            extra_outcomes.append({
+                "case_id": item.case_id, "expectation": item.expectation,
+                "outcome": "UNEXPECTED_ERROR", "reject_source": None, "ok": False,
+                "detail": f"{type(error).__name__}: {str(error)[:100]}"})
+            failures.append(f"{item.case_id}: UNEXPECTED_ERROR always fails")
 
     # empty fixture matrix must never PASS
     failures.extend(require_cases(cases))
@@ -464,7 +537,7 @@ def digest_of(payload: Dict[str, Any]) -> str:
     def stable(node):
         if isinstance(node, dict):
             return {k: stable(v) for k, v in sorted(node.items())
-                    if k not in ("total_ms", "latency_ms")}
+                    if k not in ("total_ms", "latency_ms", "dir")}
         if isinstance(node, list):
             return [stable(v) for v in node]
         return node
