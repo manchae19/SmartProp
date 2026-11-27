@@ -1,31 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { SiteLink as RouterLink } from '../../app/navigation.jsx'
 import { api, session, errorText } from '../auth/api.js'
 import { districts } from '../map/districts.js'
 import {
-  advisorConsultRequest,
-  advisorError,
-  createAdvisorConsultClient,
+  advisorDistrictSuggestions,
+  advisorResearchActorKey,
   effectiveBudgetPreview,
   formatAdvisorBudget,
   parseAdvisorBudget,
 } from './advisorAnalysis.js'
+import { createUnifiedAdvisorController } from './unifiedAdvisorState.js'
 import AdvisorResults from './AdvisorResults.jsx'
 import './advisorAnalysis.css'
-
-const DEFAULT_FORM = {
-  budgetVnd: '3.500.000.000',
-  budgetFlexibilityPct: 10,
-  purpose: 'LIVING',
-  propertyType: 'ALL',
-  minAreaSqm: '',
-  district: '',
-  ward: '',
-  limit: 5,
-  includeComparables: true,
-  includeValuation: true,
-  includeResearch: false,
-}
 
 const PRESETS = [1000000000, 2000000000, 3500000000, 5000000000, 10000000000]
 const money = (value) =>
@@ -36,29 +22,15 @@ const money = (value) =>
  * flow. Separate route/API from the Messenger RAG chat (/advisor, /advisor/chat).
  */
 export default function UnifiedAdvisorView() {
-  const [form, setForm] = useState(DEFAULT_FORM)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [result, setResult] = useState(null)
-  const [submitted, setSubmitted] = useState(null)
-  const [selectedPoiId, setSelectedPoiId] = useState('')
-  const [researchAvailable, setResearchAvailable] = useState(false)
-  const sequence = useRef(0)
+  const [controller] = useState(() => createUnifiedAdvisorController({ api, session, errorText }))
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
+  const { form, busy, error, result, submitted, selectedPoiId, researchAvailable } = state
 
-  const consult = useMemo(() => createAdvisorConsultClient(api), [])
+  useEffect(() => controller.mount(), [controller])
 
-  useEffect(() => {
-    let active = true
-    setResearchAvailable(false)
-    if (session.user?.role === 'ADMIN' && session.status === 'AUTHENTICATED') {
-      api('/recommendations/research/config')
-        .then((config) => { if (active) setResearchAvailable(config?.enabled === true) })
-        .catch(() => { /* Public advisor works without admin research config. */ })
-    }
-    return () => { active = false }
-  }, [form.includeResearch === false, session.user?.role, session.status])
-
-  const patch = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+  const canViewResearch = researchAvailable === true && advisorResearchActorKey(auth) !== ''
+  const researchModeActive = canViewResearch && form.includeResearch === true
 
   const budgetHint = useMemo(() => {
     try {
@@ -70,46 +42,13 @@ export default function UnifiedAdvisorView() {
     }
   }, [form.budgetVnd, form.budgetFlexibilityPct])
 
-  const districtSuggestions = useMemo(() => {
-    const fromResult = (result?.topAreas || []).map((a) => a.district)
-    return [...new Set([...districts.filter((d) => d !== 'Tất cả'), ...fromResult])]
-  }, [result])
-
-  const reset = () => {
-    sequence.current++
-    setForm(DEFAULT_FORM)
-    setBusy(false)
-    setError('')
-    setResult(null)
-    setSubmitted(null)
-    setSelectedPoiId('')
-  }
-
-  const submit = useCallback(async (event) => {
-    if (event) event.preventDefault()
-    const run = ++sequence.current
-    setBusy(true)
-    setError('')
-    setResult(null)
-    setSubmitted(null)
-    setSelectedPoiId('')
-    const snapshot = { ...form }
-    try {
-      const payload = advisorConsultRequest(snapshot)
-      const response = await consult(snapshot)
-      if (run === sequence.current) {
-        setSubmitted(payload)
-        setResult(response)
-      }
-    } catch (failure) {
-      if (run === sequence.current) setError(advisorError(failure) || errorText(failure))
-    } finally {
-      if (run === sequence.current) setBusy(false)
-    }
-  }, [consult, form])
+  const districtSuggestions = useMemo(
+    () => advisorDistrictSuggestions(districts, result, canViewResearch),
+    [result, canViewResearch]
+  )
 
   const submittedSummary = useMemo(() => {
-    if (!submitted) return ''
+    if (!submitted || (submitted.includeResearch && !canViewResearch)) return ''
     const flex = submitted.budgetFlexibilityPct > 0 ? ` (+${submitted.budgetFlexibilityPct}% linh hoạt)` : ''
     const purpose = { LIVING: 'Mua để ở', INVESTMENT: 'Đầu tư', RENTAL: 'Mua khai thác cho thuê' }[submitted.purpose]
     return [
@@ -120,7 +59,9 @@ export default function UnifiedAdvisorView() {
       submitted.ward,
       submitted.minAreaSqm ? `Từ ${submitted.minAreaSqm} m²` : '',
     ].filter(Boolean).join(' · ')
-  }, [submitted])
+  }, [submitted, canViewResearch])
+
+  const visibleResult = result && (result.mode !== 'INTERNAL_RESEARCH' || canViewResearch) ? result : null
 
   return (
     <section className="advisor-page" aria-labelledby="advisor-title">
@@ -139,32 +80,32 @@ export default function UnifiedAdvisorView() {
         <RouterLink to="/advisor/chat" className="advisor-btn secondary">Trò chuyện trợ lý AI (RAG) ↗</RouterLink>
       </div>
 
-      <div className={`safe-note${form.includeResearch ? ' research-note' : ''}`}>
-        <span aria-hidden="true">{form.includeResearch ? '!' : '✓'}</span>
+      <div className={`safe-note${researchModeActive ? ' research-note' : ''}`}>
+        <span aria-hidden="true">{researchModeActive ? '!' : '✓'}</span>
         <div>
-          <strong>{form.includeResearch ? 'Chế độ nghiên cứu nội bộ (ADMIN · TiniX CC BY-NC 4.0)' : 'Chế độ công khai an toàn (SAFE)'}</strong>
+          <strong>{researchModeActive ? 'Chế độ nghiên cứu nội bộ (ADMIN · TiniX CC BY-NC 4.0)' : 'Chế độ công khai an toàn (SAFE)'}</strong>
           <p>
-            {form.includeResearch
+            {researchModeActive
               ? 'Bao gồm quan sát lịch sử TiniX AI đã lọc holdout — chỉ phục vụ nghiên cứu phi thương mại, không xem là tin đang bán.'
-              : 'Danh sách đề xuất chỉ lấy từ bất động sản đang công khai hợp lệ; dòng so sánh nghiên cứu (nếu có) được gắn nhãn tách biệt rõ ràng.'}
+              : 'Chỉ sử dụng bất động sản và bằng chứng đối chiếu công khai hợp lệ; không truy xuất hoặc hiển thị dữ liệu nghiên cứu TiniX.'}
           </p>
         </div>
       </div>
 
-      {researchAvailable ? (
+      {canViewResearch ? (
         <div className="research-controls">
           <button
             type="button"
             className="advisor-btn secondary"
-            aria-pressed={form.includeResearch}
-            onClick={() => { reset(); patch('includeResearch', !form.includeResearch) }}
+            aria-pressed={researchModeActive}
+            onClick={() => controller.toggleResearch()}
           >
-            {form.includeResearch ? 'Quay lại chế độ công khai SAFE' : 'Bật dữ liệu nghiên cứu TiniX (Chỉ ADMIN)'}
+            {researchModeActive ? 'Quay lại chế độ công khai SAFE' : 'Bật dữ liệu nghiên cứu TiniX (Chỉ ADMIN)'}
           </button>
         </div>
       ) : null}
 
-      <form className="advisor-form" aria-busy={busy} onSubmit={submit}>
+      <form className="advisor-form" aria-busy={busy} onSubmit={(e) => controller.submit(e)}>
         <div className="form-heading">
           <div>
             <h2>Tiêu chí tư vấn của bạn</h2>
@@ -184,8 +125,8 @@ export default function UnifiedAdvisorView() {
                 required
                 aria-describedby="budget-hint"
                 autoComplete="off"
-                onChange={(e) => patch('budgetVnd', e.target.value)}
-                onBlur={() => { try { patch('budgetVnd', formatAdvisorBudget(form.budgetVnd)) } catch { /* keep invalid input */ } }}
+                onChange={(e) => controller.patch('budgetVnd', e.target.value)}
+                onBlur={() => { try { controller.patch('budgetVnd', formatAdvisorBudget(form.budgetVnd)) } catch { /* keep invalid input */ } }}
               />
               <small id="budget-hint" data-budget-hint>{budgetHint}</small>
               <span className="budget-presets">
@@ -194,7 +135,7 @@ export default function UnifiedAdvisorView() {
                     key={preset}
                     type="button"
                     aria-pressed={(() => { try { return parseAdvisorBudget(form.budgetVnd) === preset } catch { return false } })()}
-                    onClick={() => patch('budgetVnd', formatAdvisorBudget(String(preset)))}
+                    onClick={() => controller.patch('budgetVnd', formatAdvisorBudget(String(preset)))}
                   >
                     {(preset / 1000000000).toString().replace('.', ',')} tỷ
                   </button>
@@ -204,7 +145,7 @@ export default function UnifiedAdvisorView() {
 
             <label>
               Biên ngân sách linh hoạt
-              <select value={form.budgetFlexibilityPct} onChange={(e) => patch('budgetFlexibilityPct', Number(e.target.value))}>
+              <select value={form.budgetFlexibilityPct} onChange={(e) => controller.patch('budgetFlexibilityPct', Number(e.target.value))}>
                 <option value={0}>0% — Không vượt ngân sách</option>
                 <option value={10}>+10% — Linh hoạt nhẹ</option>
                 <option value={15}>+15% — Linh hoạt vừa</option>
@@ -215,7 +156,7 @@ export default function UnifiedAdvisorView() {
 
             <label>
               Mục đích mua *
-              <select value={form.purpose} onChange={(e) => patch('purpose', e.target.value)}>
+              <select value={form.purpose} onChange={(e) => controller.patch('purpose', e.target.value)}>
                 <option value="LIVING">Mua để ở thực (LIVING)</option>
                 <option value="INVESTMENT">Mua đầu tư (INVESTMENT)</option>
                 <option value="RENTAL">Mua khai thác cho thuê (RENTAL)</option>
@@ -224,7 +165,7 @@ export default function UnifiedAdvisorView() {
 
             <label>
               Loại bất động sản *
-              <select value={form.propertyType} onChange={(e) => patch('propertyType', e.target.value)}>
+              <select value={form.propertyType} onChange={(e) => controller.patch('propertyType', e.target.value)}>
                 <option value="ALL">Tất cả loại hình</option>
                 <option value="HOUSE">Nhà ở / Nhà phố</option>
                 <option value="APARTMENT">Căn hộ chung cư</option>
@@ -237,23 +178,23 @@ export default function UnifiedAdvisorView() {
 
             <label>
               Quận / Huyện ưu tiên
-              <input list="advisor-districts" value={form.district} maxLength={100} placeholder="Tất cả khu vực" autoComplete="off" onChange={(e) => patch('district', e.target.value)} />
+              <input list="advisor-districts" value={form.district} maxLength={100} placeholder="Tất cả khu vực" autoComplete="off" onChange={(e) => controller.patch('district', e.target.value)} />
               <small>Để trống hoặc nhập “Tất cả” để quét toàn Đà Nẵng.</small>
             </label>
 
             <label>
               Phường / Xã
-              <input value={form.ward} maxLength={100} placeholder="Không bắt buộc" onChange={(e) => patch('ward', e.target.value)} />
+              <input value={form.ward} maxLength={100} placeholder="Không bắt buộc" onChange={(e) => controller.patch('ward', e.target.value)} />
             </label>
 
             <label>
               Diện tích tối thiểu (m²)
-              <input type="number" min="0.1" max="1000000" step="any" value={form.minAreaSqm} placeholder="Không giới hạn" onChange={(e) => patch('minAreaSqm', e.target.value)} />
+              <input type="number" min="0.1" max="1000000" step="any" value={form.minAreaSqm} placeholder="Không giới hạn" onChange={(e) => controller.patch('minAreaSqm', e.target.value)} />
             </label>
 
             <label>
               Số lượng đề xuất
-              <select value={form.limit} onChange={(e) => patch('limit', Number(e.target.value))}>
+              <select value={form.limit} onChange={(e) => controller.patch('limit', Number(e.target.value))}>
                 <option value={5}>Tối đa 5 bất động sản</option>
                 <option value={10}>Tối đa 10 bất động sản</option>
               </select>
@@ -262,11 +203,11 @@ export default function UnifiedAdvisorView() {
 
           <div className="evidence-options">
             <label className="check-pill">
-              <input type="checkbox" checked={form.includeValuation} onChange={(e) => patch('includeValuation', e.target.checked)} />
+              <input type="checkbox" checked={form.includeValuation} onChange={(e) => controller.patch('includeValuation', e.target.checked)} />
               <span>Định giá tham chiếu XGBoost V6 &amp; giải thích TreeSHAP</span>
             </label>
             <label className="check-pill">
-              <input type="checkbox" checked={form.includeComparables} onChange={(e) => patch('includeComparables', e.target.checked)} />
+              <input type="checkbox" checked={form.includeComparables} onChange={(e) => controller.patch('includeComparables', e.target.checked)} />
               <span>Đối chiếu bất động sản tương đồng (Comparable Evidence)</span>
             </label>
           </div>
@@ -278,7 +219,7 @@ export default function UnifiedAdvisorView() {
           <div className="form-footer">
             <p>Điểm phù hợp và định giá V6 là bằng chứng hỗ trợ quyết định độc lập; không thay thế thẩm định pháp lý hoặc khảo sát thực địa.</p>
             <div className="form-actions">
-              <button className="advisor-btn secondary" type="button" onClick={reset}>Đặt lại</button>
+              <button className="advisor-btn secondary" type="button" onClick={() => controller.reset()}>Đặt lại</button>
               <button className="advisor-btn primary" type="submit" data-advisor-submit>{busy ? 'Đang tổng hợp tư vấn…' : 'Nhận tư vấn AI'}</button>
             </div>
           </div>
@@ -291,7 +232,7 @@ export default function UnifiedAdvisorView() {
             <strong>Chưa thể tải kết quả tư vấn</strong>
             <p>{error}</p>
           </div>
-          <button type="button" className="advisor-btn secondary" onClick={() => submit()}>Thử lại</button>
+          <button type="button" className="advisor-btn secondary" onClick={() => controller.submit()}>Thử lại</button>
         </div>
       ) : null}
 
@@ -305,17 +246,22 @@ export default function UnifiedAdvisorView() {
         </div>
       ) : null}
 
-      {result ? (
+      {visibleResult ? (
         <>
           <div className="submitted-heading">
             <h2 tabIndex={-1}>Báo cáo tư vấn theo nhu cầu</h2>
             <p>{submittedSummary}</p>
           </div>
-          <AdvisorResults result={result} selectedPoiId={selectedPoiId} onFocusPoi={({ poiId }) => setSelectedPoiId(poiId)} />
+          <AdvisorResults
+            result={visibleResult}
+            selectedPoiId={selectedPoiId}
+            onFocusPoi={({ poiId }) => controller.setSelectedPoiId(poiId)}
+            canViewResearch={canViewResearch}
+          />
         </>
       ) : null}
 
-      {!result && !busy && !error ? (
+      {!visibleResult && !busy && !error ? (
         <div className="start-note">
           <strong>Quy trình tư vấn minh bạch &amp; không tự bịa số liệu</strong>
           <p>

@@ -5,12 +5,41 @@
         Referrer-Policy strict-origin-when-cross-origin
         -Server
     }
-    handle /api/* {
-        reverse_proxy 127.0.0.1:8080
-    }
-    handle {
-        root * /srv/smartprop/frontend
-        try_files {path} /index.html
-        file_server
+    route {
+        @loopbackOnly {
+            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/*
+        }
+        @loopbackVariant {
+            path_regexp loopback_norm (?i)^/+api/+(?:v1/+)?(?:recommendations/+research|amenities/+research)(?:[;/]|$)
+        }
+        @ambiguousApiPath {
+            expression {http.request.uri}.matches("(?i)^/+api(?:/|%2f|%5c|;)[^?]*(?:%2f|%5c|%2e%2e|\\.\\.|;|//)")
+        }
+        handle @loopbackOnly {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Route nội bộ chỉ cho phép truy cập trực tiếp trên loopback."}` 403
+        }
+        handle @loopbackVariant {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Route nội bộ chỉ cho phép truy cập trực tiếp trên loopback."}` 403
+        }
+        handle @ambiguousApiPath {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Đường dẫn API không hợp lệ."}` 403
+        }
+        handle /api/* {
+            reverse_proxy 127.0.0.1:8080 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
+        }
+        handle {
+            root * /srv/smartprop/frontend
+            try_files {path} /index.html
+            file_server
+        }
     }
 }

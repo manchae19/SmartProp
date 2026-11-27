@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { visibleAdvisorComparables } from './advisorAnalysis.js'
 
 const money = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value) || 0)
@@ -10,13 +11,14 @@ const SOURCE_LABEL = { SMARTPROP: 'SmartProp', EXTERNAL_LISTING: 'Tin đăng ngo
 /**
  * Independent evidence for one property: XGBoost V1.3 valuation with TreeSHAP
  * explanation, plus comparable-listing evidence when present. Renders only
- * fields the API actually returned.
+ * fields the API actually returned and blocks research items unless both mode
+ * and caller authorization explicitly permit research.
  */
-export default function AdvisorEvidencePanel({ valuation, comparable }) {
+export default function AdvisorEvidencePanel({ valuation, comparable, mode = 'SAFE', allowResearch = false }) {
   const [openShap, setOpenShap] = useState(false)
   const hasValuation = valuation?.available === true
   const shap = valuation?.shapExplanation
-  const comparables = comparable?.comparables || []
+  const comparables = visibleAdvisorComparables(comparable, mode, allowResearch)
   if (!hasValuation && comparables.length === 0) return null
 
   return (

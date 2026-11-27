@@ -132,6 +132,8 @@ public class ComparableCandidateRepository {
      *  ten minutes rather than recomputed per request. */
     private volatile Map<String,Integer> cachedCounts = Map.of();
     private volatile long cachedCountsAt;
+    private volatile Map<String,Integer> cachedPublicCounts = Map.of();
+    private volatile long cachedPublicCountsAt;
 
     public Map<String,Integer> eligibleCounts() {
         long now = System.currentTimeMillis();
@@ -147,9 +149,22 @@ public class ComparableCandidateRepository {
         }
     }
 
-    private Map<String,Integer> computeCounts() {
-        Integer tinix = jdbc.queryForObject(
-            "SELECT COUNT(*) FROM tinix_dataset_records WHERE " + TINIX_ELIGIBLE, new MapSqlParameterSource(), Integer.class);
+    /** Public-only counts: never queries tinix_dataset_records or exposes TINIX_RESEARCH metadata. */
+    public Map<String,Integer> publicEligibleCounts() {
+        long now = System.currentTimeMillis();
+        Map<String,Integer> cached = cachedPublicCounts;
+        if (now - cachedPublicCountsAt < 600_000 && !cached.isEmpty()) return cached;
+        synchronized (this) {
+            if (System.currentTimeMillis() - cachedPublicCountsAt < 600_000 && !cachedPublicCounts.isEmpty()) {
+                return cachedPublicCounts;
+            }
+            cachedPublicCounts = computePublicCounts();
+            cachedPublicCountsAt = System.currentTimeMillis();
+            return cachedPublicCounts;
+        }
+    }
+
+    private Map<String,Integer> computePublicCounts() {
         Integer ext = jdbc.queryForObject(
             "SELECT COUNT(*) FROM external_listings WHERE quality_status = 'VALID'"
           + " AND is_protected_holdout = 0 AND is_duplicate = 0 AND transaction_type = 'SALE'",
@@ -158,7 +173,15 @@ public class ComparableCandidateRepository {
             "SELECT COUNT(*) FROM properties WHERE status = 'PUBLISHED' AND deleted_at IS NULL"
           + " AND transaction_type = 'SALE'", new MapSqlParameterSource(), Integer.class);
         return Map.of("SMARTPROP", props == null ? 0 : props,
-                      "EXTERNAL_LISTING", ext == null ? 0 : ext,
+                      "EXTERNAL_LISTING", ext == null ? 0 : ext);
+    }
+
+    private Map<String,Integer> computeCounts() {
+        Map<String,Integer> pub = computePublicCounts();
+        Integer tinix = jdbc.queryForObject(
+            "SELECT COUNT(*) FROM tinix_dataset_records WHERE " + TINIX_ELIGIBLE, new MapSqlParameterSource(), Integer.class);
+        return Map.of("SMARTPROP", pub.get("SMARTPROP"),
+                      "EXTERNAL_LISTING", pub.get("EXTERNAL_LISTING"),
                       "TINIX_RESEARCH", tinix == null ? 0 : tinix);
     }
 
