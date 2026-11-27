@@ -194,3 +194,75 @@ Nhãn: `HIGH ≥ 0.75`, `MEDIUM ≥ 0.55`, `LOW ≥ 0.35`, còn lại `INSUFFICI
 5. Không hồi quy endpoint contract; DTO additive.
 6. Không hồi quy research access (test PR #46 vẫn xanh).
 7. Không migration trong bước 1–3; migration chỉ khi được duyệt riêng.
+
+---
+
+## 14. Bổ sung sau review methodology (Phase A revised)
+
+### 14.1. Baseline fidelity — surrogate, không phải production
+
+Surrogate mô phỏng đúng `ComparableSimilarityScorer` (location 1.00/0.82/**0.45**/0.15,
+`ratioScore` về 0 tại 3×, floors `/4`, frontage tuyệt đối `/10`, type mismatch `×0.5`) và cap
+theo nguồn (200/400/12×25, `MAX_RESULTS=5`). **Không** mô phỏng SQL/index/latency,
+price-envelope widening, `asOf` path. Nhãn bắt buộc: `SYNTHETIC_SURROGATE_BASELINE`.
+
+### 14.2. Identity: ba lớp, không trộn
+
+| Lớp | Dùng ở đâu |
+|---|---|
+| Ground-truth entity | **chỉ** đánh giá (`B_ORACLE`) |
+| Observable identity | record id theo nguồn, canonical URL, `duplicate_group` namespaced theo source |
+| Predicted duplicate grouping | kết quả dedupe thật (T1/T2 merge, T3 flag-only) |
+
+`external_listings` không có ward/street/bedrooms/floors/frontage ⇒ không được chấm như
+SmartProp. `duplicate_group` **không** chia sẻ namespace giữa hai nguồn.
+
+### 14.3. Comparable purpose — bắt buộc explicit
+
+`VALUATION_SUPPORT` · `BUYER_BUDGET_SEARCH` · `SIMILAR_LISTING`. Với `VALUATION_SUPPORT`:
+target price **không** được dùng cho band, nearest-price, price similarity, fallback hay nhãn
+relevance. Lưu ý `ComparableRankingService` có propertyId path tự load giá từ DB ⇒ phải trace
+**toàn bộ** caller; xoá `priceVnd` khỏi request là chưa đủ.
+
+### 14.4. Feature availability (verified, không suy đoán)
+
+| Feature | SMARTPROP | EXTERNAL_LISTING |
+|---|---|---|
+| district | ✅ projected | ✅ projected |
+| ward | ✅ | ❌ không có cột |
+| area | ✅ | ✅ |
+| asking price | ✅ | ✅ |
+| bedrooms | ✅ | ❌ |
+| floors | ✅ (cột `floor` dạng string, chưa project) | ❌ |
+| frontage / road width | ❌ không có cột tách rời | ❌ |
+| project_id | ✅ nullable, chưa project | ❌ |
+| detail URL / duplicate group | — | ✅ nếu có |
+
+⇒ Trọng số đề xuất **không** dùng frontage/road (chỉ TiniX mới có, ngoài phạm vi public).
+
+### 14.5. Missingness — sáu trạng thái phải phân biệt
+
+Không áp dụng cho loại hình · source không hỗ trợ · candidate thiếu · reference chưa cung cấp ·
+giá trị không hợp lệ · giá trị thật bằng 0. LAND **không** bị phạt vì thiếu bedrooms.
+Coverage shrinkage `0.5 + 0.5×coverage` chỉ là **proposal**, cần sensitivity test ở Phase B.
+
+### 14.6. Expiry & locality
+
+LIVE: `PUBLISHED` **và** `(expires_at IS NULL OR expires_at > UTC_TIMESTAMP(6))` **và**
+`deleted_at IS NULL` **và** transaction type khớp. `expires_at NULL` = không có hạn (theo schema)
+— ghi rõ, không tự suy diễn. HISTORICAL_AS_OF: **DEFERRED**. Locality: `SAME_WARD` →
+`SAME_DISTRICT` → `NEIGHBOURING_DISTRICT`, chỉ fallback khi được phép, luôn mang cờ và hạ
+confidence; strict locality **không** mở rộng; không hardcode Hòa Vang → Sơn Trà.
+
+### 14.7. Double-check trên `bookings`/`price` presence
+
+Presence của asking price chỉ quyết định candidate có dùng được cho **thống kê giá** hay không;
+nó **không** quyết định similarity vật lý và **không** được tham gia confidence gate (lý do
+D bị DEFERRED).
+
+### 14.8. Security contracts (Phase 0, từ PR #46)
+
+Public/SAFE: không truy vấn TiniX, không dòng TiniX, không count research, không fallback,
+public/research cache tách biệt, giữ role hiện có (BROKER/ADMIN theo contract đã duyệt — public
+mode **không** đồng nghĩa anonymous). Research: explicit opt-in + ADMIN ACTIVE + session sống +
+server flag + source eligibility + no-store. Advisor SAFE không được fallback TiniX.

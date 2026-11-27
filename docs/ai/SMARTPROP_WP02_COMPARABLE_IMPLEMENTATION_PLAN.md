@@ -67,3 +67,41 @@ Chạy benchmark synthetic, thêm test thật nếu được cấp dữ liệu. 
 - Nếu PR #46 đổi contract Comparable ⇒ **dừng**, cập nhật design trước khi code.
 - Nếu `EXPLAIN` cho thấy cần index ⇒ tách PR riêng, **không** gộp vào WP-02.
 - Nếu benchmark thật (khi có dữ liệu được phép) cho kết quả khác synthetic ⇒ ưu tiên dữ liệu thật.
+
+---
+
+## 17. Phase B stages (revised)
+
+| Stage | Nội dung | Phân loại |
+|---|---|---|
+| B1 | PR #46 merged → sync main → đọc lại diff Comparable/Advisor → xác nhận research policy | **REQUIRES_PR46_MERGE** |
+| B2 | Retrieval & eligibility: strict type, locality semantics, source eligibility, live expiry, stable ordering, cap correctness | IMPLEMENT_WITHOUT_MIGRATION |
+| B3 | Identity: exact self-match, source-qualified ids, trusted source-local duplicate ids, canonical URL, **T3 flag-only** | IMPLEMENT_WITHOUT_MIGRATION |
+| B4 | Purpose separation: BUYER_BUDGET / SIMILAR_LISTING / VALUATION_SUPPORT; trace mọi caller kể cả propertyId path | IMPLEMENT_WITHOUT_MIGRATION |
+| B5 | Type-aware scoring trên feature **đã xác minh**; missingness policy; breakdown giải thích được | IMPLEMENT_WITHOUT_MIGRATION |
+| B6 | Evidence presentation: count đã dedupe, thống kê asking-price, sample limitations, source provenance, insufficient evidence, DTO additive | IMPLEMENT_WITHOUT_MIGRATION |
+| B7 | Integration: direct Comparable, property detail, valuation flow, posting preview, Advisor, FE liên quan | IMPLEMENT_WITHOUT_MIGRATION |
+| B8 | Regression: backend unit, query tests, FE contract, Advisor compat, public/research isolation | IMPLEMENT_WITHOUT_MIGRATION |
+
+**Deferred:** confidence gate D (**DEFERRED**, không phải yêu cầu Phase B), HISTORICAL_AS_OF
+(**DEFERRED**), T3 auto-merge (**REQUIRES_DATA_APPROVAL**), index mới
+(**REQUIRES_SCHEMA_CHANGE**, tách PR riêng), migration (**không** thực hiện trong WP-02).
+Segmentation: nếu C chưa đủ evidence, triển khai **B trước**, C theo stage tăng dần.
+
+## 18. Acceptance invariants (evidence-based, không target tuỳ ý)
+
+1. Exact self-match bị loại khi identity xác minh được.
+2. Known duplicate không xuất hiện nhiều lần khi identifier hỗ trợ xác định cùng thực thể.
+3. Không auto-merge nghi trùng chưa đủ bằng chứng.
+4. Strict property-type không trả sai loại hình.
+5. Strict locality không mở rộng trái yêu cầu.
+6. `VALUATION_SUPPORT` bất biến theo target price.
+7. `BUYER_BUDGET_SEARCH` giữ ngân sách đúng contract.
+8. Missing feature không bị biến thành 0 hoặc giá trị giả.
+9. Tin hết hạn không tham gia evidence LIVE.
+10. Ranking ổn định với cùng input.
+11. Public Comparable không truy vấn/fallback TiniX.
+12. Insufficient evidence được trình bày minh bạch.
+
+**Không cam kết:** zero duplicate toàn thị trường · 100% entity resolution · metric synthetic
+bằng metric production · SQL performance · calibrated confidence · cải thiện độ chính xác V1.3.
