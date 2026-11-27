@@ -9,6 +9,20 @@ from app.models.xgboost.features_v1_3 import clean_category
 
 router = APIRouter()
 
+# The street vocabulary is a model category list, not a verified administrative mapping.
+# A street being known to the model says nothing about whether it belongs to the chosen
+# district, so the answer must say so instead of implying the location was checked.
+STREET_UNVERIFIED_WARNING = (
+    "Tên đường chưa được đối chiếu với khu vực đã chọn. "
+    "Kết quả định giá có thể thay đổi đáng kể nếu thông tin vị trí không chính xác."
+)
+
+
+def street_warnings(street_name):
+    """Empty unless the caller supplied a street; the model cannot verify geography."""
+    return [STREET_UNVERIFIED_WARNING] if street_name and str(street_name).strip() else []
+
+
 
 def predictor_for(request):
     """The primary predictor is V1.3; V6 is only an optional fallback."""
@@ -163,6 +177,7 @@ def predict(payload: ValuationRequest, request: Request, background_tasks: Backg
         "naive_price_vnd": response["naive_price_vnd"],
         "features_used": response["features_used"],
         "missing_features": response.get("missing_features", []),
+        "warnings": list(response.get("warnings", [])) + street_warnings(payload.street_name),
         "shap_explanation": response.get("shap_explanation"),
         "valuation_timestamp": datetime.now(timezone.utc).isoformat(),
         "disclaimer": "Giá rao ước tính từ mô hình V1.3 (Multi-Source Zenodo + TiniX).",

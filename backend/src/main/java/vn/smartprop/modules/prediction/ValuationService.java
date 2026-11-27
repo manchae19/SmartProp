@@ -65,8 +65,12 @@ public class ValuationService {
         if(r.areaSqm().compareTo(new BigDecimal("20"))<0||r.areaSqm().compareTo(new BigDecimal("1000"))>0)return unsupported("Model hỗ trợ diện tích từ 20 đến 1000 m².");
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>30)return unsupported("Số phòng ngủ vượt phạm vi model (1–30).");
         if("Căn hộ chung cư".equals(category)&&(r.roadWidthM()!=null||r.frontageWidthM()!=null))return unsupported("Chiều rộng đường/mặt tiền không áp dụng cho căn hộ.");
-        var options=loadOptions();String location=r.locationFeature().strip();
-        if(options.categories().stream().noneMatch(c->c.category().equals(category)&&c.locations().contains(location)))return unsupported("Khu vực chưa được hỗ trợ cho loại bất động sản này.");
+        var options=loadOptions();
+        // Canonicalise the caller spelling before the vocabulary check so casing/whitespace
+        // cannot change the accept/reject decision. Unknown districts stay unknown: no
+        // default district and no cross-province remapping is attempted.
+        String location=displayDistrict(r.locationFeature());
+        if(location==null||options.categories().stream().noneMatch(c->c.category().equals(category)&&c.locations().contains(location)))return unsupported("Khu vực chưa được hỗ trợ cho loại bất động sản này.");
         Map<String,Object> input=new LinkedHashMap<>();input.put("category",category);input.put("area_sqm",r.areaSqm().doubleValue());input.put("location_feature",location);
         if(r.ward()!=null&&!r.ward().isBlank())input.put("ward",r.ward().strip());
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>0)input.put("rooms",r.bedrooms());
