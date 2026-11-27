@@ -45,7 +45,7 @@ class ValuationServiceTest {
     @Test
     void aPreviewReportsV13AndItsPrice() throws Exception {
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null, null, null);
         var preview = service.preview(42L, request);
         assertTrue(preview.available());
         assertEquals("v1.3", preview.modelVersion());
@@ -58,7 +58,7 @@ class ValuationServiceTest {
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
             new BigDecimal("80"), "Hải Châu", "Hải Châu 1", 3, "", "",
             new BigDecimal("7.5"), new BigDecimal("4.5"), "Nguyễn Văn Linh", "Dự án A", 2,
-            "Đông Nam", "Tây Bắc");
+            "Đông Nam", "Tây Bắc", null, null);
         service.preview(42L, request);
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(client).exchange(eq("/predict"), captor.capture());
@@ -75,7 +75,7 @@ class ValuationServiceTest {
     @Test
     void absentRealMeasurementsAreNotSynthesized() throws Exception {
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, null, "", "", null, null, null, null, null, null, null);
+            new BigDecimal("80"), "Hải Châu", null, null, "", "", null, null, null, null, null, null, null, null, null);
         service.preview(42L, request);
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
         verify(client).exchange(eq("/predict"), captor.capture());
@@ -93,7 +93,7 @@ class ValuationServiceTest {
              "features_used":{"area":80,"bathroom_count":2},"missing_features":[]}
             """));
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, 2, null, null);
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, 2, null, null, null, null);
         var preview = service.preview(42L, request);
         assertEquals(2, preview.featuresUsed().get("bathrooms"));
     }
@@ -102,7 +102,7 @@ class ValuationServiceTest {
     void anUnavailableModelLeavesThePreviewUnavailableInsteadOfFailing() throws Exception {
         when(client.exchange(eq("/predict"), any())).thenThrow(ValuationClient.unavailable());
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null, null, null);
         var preview = service.preview(42L, request);
         assertFalse(preview.available(), "nguoi dung van luu duoc tin");
         assertNotNull(preview.reason());
@@ -115,7 +115,7 @@ class ValuationServiceTest {
              "features_used":{"area":80}}
             """));
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null, null, null);
         assertThrows(vn.smartprop.common.ApiException.class, () -> service.preview(42L, request));
     }
 
@@ -126,7 +126,50 @@ class ValuationServiceTest {
              "features_used":{"area":99},"missing_features":[]}
             """));
         var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
-            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null);
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null, null, null);
         assertThrows(vn.smartprop.common.ApiException.class, () -> service.preview(42L, request));
+    }
+    @Test
+    void floorsAndSubtypeAreForwardedForAHouse() throws Exception {
+        var request = new ValuationRequest(Property.Type.HOUSE, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 3, "", "", null, null, null, null, null, null, null, 3, "house_c4");
+        service.preview(42L, request);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(client).exchange(eq("/predict"), captor.capture());
+        JsonNode input = json.valueToTree(captor.getValue());
+        assertEquals(3, input.path("floors").asInt());
+        assertEquals("house_c4", input.path("house_subtype").asText());
+    }
+
+    @Test
+    void villaAlwaysKeepsTheVillaSubtypeEvenWhenAnotherIsSent() throws Exception {
+        var request = new ValuationRequest(Property.Type.VILLA, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 4, "", "", null, null, null, null, null, null, null, 2, "house_c4");
+        service.preview(42L, request);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(client).exchange(eq("/predict"), captor.capture());
+        assertEquals("villa", json.valueToTree(captor.getValue()).path("house_subtype").asText());
+    }
+
+    @Test
+    void floorsAndSubtypeAreDroppedForAnApartment() throws Exception {
+        var request = new ValuationRequest(Property.Type.APARTMENT, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, 2, "", "", null, null, null, null, null, null, null, 5, "house_c4");
+        service.preview(42L, request);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(client).exchange(eq("/predict"), captor.capture());
+        JsonNode input = json.valueToTree(captor.getValue());
+        assertFalse(input.has("floors"), "tầng căn hộ không phải tổng số tầng nhà");
+        assertFalse(input.has("house_subtype"), "căn hộ không nhận kiểu nhà");
+    }
+
+    @Test
+    void floorsAreDroppedForLand() throws Exception {
+        var request = new ValuationRequest(Property.Type.LAND, Property.Transaction.SALE,
+            new BigDecimal("80"), "Hải Châu", null, null, "", "", null, null, null, null, null, null, null, 3, null);
+        service.preview(42L, request);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+        verify(client).exchange(eq("/predict"), captor.capture());
+        assertFalse(json.valueToTree(captor.getValue()).has("floors"));
     }
 }
