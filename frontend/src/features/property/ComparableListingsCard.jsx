@@ -133,8 +133,10 @@ export default function ComparableListingsCard({ loading, error, forbidden, resu
       {result?.eligibleCountsBySource ? (
         <p className="cmp-eligible">
           Nguồn dữ liệu hợp lệ: SmartProp {result.eligibleCountsBySource.SMARTPROP ?? 0},
-          {' '}tin ngoài {result.eligibleCountsBySource.EXTERNAL_LISTING ?? 0},
-          {' '}TiniX nghiên cứu {result.eligibleCountsBySource.TINIX_RESEARCH ?? 0}.
+          {' '}tin ngoài {result.eligibleCountsBySource.EXTERNAL_LISTING ?? 0}
+          {result.eligibleCountsBySource.TINIX_RESEARCH != null
+            ? `, TiniX nghiên cứu ${result.eligibleCountsBySource.TINIX_RESEARCH}`
+            : ''}.
         </p>
       ) : null}
     </section>

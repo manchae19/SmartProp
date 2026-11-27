@@ -13,6 +13,9 @@ public class RecommendationCandidateRepository {
     private final JdbcTemplate jdbc;
     private final ObjectMapper mapper;
     public RecommendationCandidateRepository(JdbcTemplate jdbc,ObjectMapper mapper) { this.jdbc=jdbc;this.mapper=mapper; }
+    public List<Candidate> findPublic(Request request) {
+        return find(request,false);
+    }
     public List<Candidate> find(Request request,boolean demo) {
         var result=new ArrayList<Candidate>();
         var minimum=request.minAreaSqm()==null?java.math.BigDecimal.ZERO:request.minAreaSqm();

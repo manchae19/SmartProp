@@ -155,7 +155,35 @@ export function validateLocationIntelligence(loc, prop) {
   return loc
 }
 
-export function validateAdvisorResponse(data) {
+function hasResearchLeakText(list) {
+  return Array.isArray(list) && list.some(s =>
+    typeof s === 'string' && (
+      s.startsWith('RESEARCH_COMPARABLES_LABEL:')
+      || s.includes('TINIX_RESEARCH')
+      || s.includes('CC BY-NC')
+      || s.startsWith('INTERNAL_DEMO:')
+    )
+  )
+}
+
+export function isResearchComparableItem(item) {
+  return Boolean(
+    item && (
+      item.sourceKind === 'TINIX_RESEARCH'
+      || item.researchReference === true
+      || item.datasetLicense === 'CC BY-NC 4.0'
+      || String(item.candidateId ?? '').startsWith('tnx-')
+    )
+  )
+}
+
+export function visibleAdvisorComparables(comparable, mode = 'SAFE', allowResearch = false) {
+  const list = Array.isArray(comparable?.comparables) ? comparable.comparables : []
+  const permitResearch = mode === 'INTERNAL_RESEARCH' && allowResearch === true
+  return permitResearch ? list : list.filter(item => !isResearchComparableItem(item))
+}
+
+export function validateAdvisorResponse(data, options = {}) {
   if (!data || typeof data !== 'object'
       || data.advisorVersion !== 'ADVISOR_ORCHESTRATOR_V1'
       || !['SAFE', 'INTERNAL_RESEARCH'].includes(data.mode)
@@ -164,6 +192,14 @@ export function validateAdvisorResponse(data) {
       || !validStringList(data.warnings)
       || !data.serviceStatus) {
     throw Error('Phản hồi từ AI Advisor không đúng định dạng hợp đồng.')
+  }
+
+  const allowResearch = options.allowResearch !== undefined ? options.allowResearch === true : data.mode === 'INTERNAL_RESEARCH'
+  if (!allowResearch && data.mode !== 'SAFE') {
+    throw Error('Chế độ dữ liệu nghiên cứu không được phép khi truy vấn ở chế độ công khai SAFE.')
+  }
+  if (data.mode === 'SAFE' && (data.criteria?.includeResearch === true || hasResearchLeakText(data.warnings))) {
+    throw Error('Phản hồi SAFE chứa cờ hoặc cảnh báo dữ liệu nghiên cứu nội bộ.')
   }
 
   const rawJson = JSON.stringify(data)
@@ -185,8 +221,8 @@ export function validateAdvisorResponse(data) {
     if (prop.isProtectedHoldout || prop.protectedHoldout || prop.is_protected_holdout) {
       throw Error('Phát hiện bản ghi holdout được bảo vệ trong kết quả.')
     }
-    if (data.mode === 'SAFE' && (!prop.liveListing || prop.researchReference || prop.source?.kind === 'TINIX_AI')) {
-      throw Error('Chế độ công khai SAFE không được phép trả bản ghi nghiên cứu TiniX làm tin đang bán.')
+    if (data.mode === 'SAFE' && (!prop.liveListing || prop.researchReference || prop.source?.kind === 'TINIX_AI' || hasResearchLeakText(prop.warnings) || hasResearchLeakText(prop.fitReasons))) {
+      throw Error('Chế độ công khai SAFE không được phép trả bản ghi nghiên cứu TiniX.')
     }
     if (prop.researchReference && prop.source?.detailUrl != null) {
       throw Error('Bản ghi nghiên cứu không được phép có URL tin gốc.')
@@ -206,9 +242,15 @@ export function validateAdvisorResponse(data) {
       if (!Array.isArray(comp.comparables) || comp.comparables.length > 5) {
         throw Error('Bằng chứng bất động sản tương đồng không hợp lệ.')
       }
+      if (data.mode === 'SAFE' && hasResearchLeakText(comp.warnings)) {
+        throw Error('Bằng chứng tương đồng ở chế độ SAFE chứa metadata nghiên cứu không hợp lệ.')
+      }
       for (const item of comp.comparables) {
         if (!COMPARABLE_KINDS.has(item.sourceKind)) {
           throw Error('Nguồn bất động sản tương đồng không xác định.')
+        }
+        if (data.mode === 'SAFE' && isResearchComparableItem(item)) {
+          throw Error('Chế độ công khai SAFE không được phép chứa bằng chứng tương đồng từ nguồn nghiên cứu TiniX.')
         }
         if (item.sourceKind === 'TINIX_RESEARCH') {
           if (!item.researchReference || item.liveListing || item.listingUrl != null || item.datasetLicense !== 'CC BY-NC 4.0') {
@@ -234,14 +276,68 @@ export function validateAdvisorResponse(data) {
   return data
 }
 
-export const createAdvisorConsultClient = request => async form => {
+export function advisorResearchActorKey(snap) {
+  if (!snap || snap.status !== 'AUTHENTICATED' || snap.user?.role !== 'ADMIN') return ''
+  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? snap.token ?? ''
+  const normalized = String(identity).trim()
+  return normalized ? `ADMIN:${normalized}` : ''
+}
+
+export function advisorDistrictSuggestions(baseDistricts, result, canViewResearch = false) {
+  const base = Array.isArray(baseDistricts) ? baseDistricts.filter(d => d && d !== 'Tất cả') : []
+  if (!result || (result.mode === 'INTERNAL_RESEARCH' && canViewResearch !== true)) {
+    return [...new Set(base)]
+  }
+  const fromResult = (result.topAreas || [])
+    .map(a => a?.district)
+    .filter(d => typeof d === 'string' && d.trim() !== '')
+  return [...new Set([...base, ...fromResult])]
+}
+
+export function resolveAdvisorResultsView(result, canViewResearch = false) {
+  if (!result || typeof result !== 'object') return null
+  if (result.mode === 'INTERNAL_RESEARCH' && canViewResearch !== true) {
+    return null
+  }
+  const isResearch = result.mode === 'INTERNAL_RESEARCH' && canViewResearch === true
+  const properties = (result.recommendedProperties || []).filter(
+    p => isResearch || (p?.liveListing === true && !p?.researchReference && p?.source?.kind !== 'TINIX_AI')
+  )
+  const topAreas = (result.topAreas || []).filter(
+    a => isResearch || ((a?.unverifiedCount ?? 0) === 0 && (a?.needsReviewCount ?? 0) === 0)
+  )
+  const warnings = (result.warnings || []).filter(
+    w => isResearch || !hasResearchLeakText([w])
+  )
+  return {
+    isResearch,
+    isPartial: Boolean(result.serviceStatus?.partialResult),
+    topAreas,
+    properties,
+    warnings,
+  }
+}
+
+export const createAdvisorConsultClient = (request, getSession = null) => async (form, requestOptions = {}) => {
   const body = advisorConsultRequest(form)
-  const data = await request('/advisor/consult', {
+  if (body.includeResearch === true && typeof getSession === 'function') {
+    const snap = getSession()
+    if (!advisorResearchActorKey(snap)) {
+      const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ.')
+      err.status = 403
+      throw err
+    }
+  }
+  const options = {
     method: 'POST',
     authenticated: body.includeResearch === true,
     body,
-  })
-  return validateAdvisorResponse(data)
+  }
+  if (requestOptions?.signal) {
+    options.signal = requestOptions.signal
+  }
+  const data = await request('/advisor/consult', options)
+  return validateAdvisorResponse(data, { allowResearch: body.includeResearch === true })
 }
 
 export function safeAdvisorPropertyUrl(property) {
