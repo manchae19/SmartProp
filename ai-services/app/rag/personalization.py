@@ -15,6 +15,7 @@ AGE_CHOICES = ["Dưới 25", "25–34", "35–44", "45–54", "55 trở lên", "
 GUIDED_RE = re.compile(r"\b(?:tu van tung buoc|bat dau tu van|tu van theo tung buoc|huong dan tung buoc)\b")
 HOUSEHOLD_RE = re.compile(r"\b(?:tu van theo ho gia dinh|ho gia dinh|con nho|tre nho)\b")
 SKIP_RE = re.compile(r"\b(?:bo qua|khong can hoi them|giu tieu chi)\b")
+FINISH_INTAKE_REPLIES = frozenset({"xem goi y ngay", "tim ngay", "xem ket qua", "khong can hoi them"})
 
 AREA_LIMIT = Decimal("1000000")
 _AREA_NUMBER = r"([+-]?\d+(?:\.\d+)*)"
@@ -261,8 +262,10 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
     value = fold(question)
     state = context.needs
     pending = state.get("pending")
-    skip_all = bool(re.search(r"\b(?:xem goi y ngay|tim ngay)\b", value))
-    skip = skip_all or bool(pending and SKIP_RE.search(value))
+    reply = " ".join(value.split()).rstrip(".!?")
+    skip_all = bool(pending and reply in FINISH_INTAKE_REPLIES)
+    skip = skip_all or bool(pending and (SKIP_RE.search(value)
+                                         or (pending == "age" and reply == "khong muon cung cap")))
     refine = "tim ky hon" in value
     explicit_priority = bool(re.search(r"\b(?:uu tien|quan trong|thi tot|gan truong|gan sieu thi)\b", value))
     guided = bool(state.get("guided") or GUIDED_RE.search(value))

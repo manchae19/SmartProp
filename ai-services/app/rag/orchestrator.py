@@ -21,7 +21,7 @@ from .scope import domain_reply
 from .discovery import AREA_RANGE_PROMPT, NEARBY_PENDING, AdvisorDiscoveryMixin
 from . import address_search, commute_destination, commute_ranking
 from .focused_property import focused_intent
-from .personalization import describe_area, intake, merge_area, projection
+from .personalization import describe_area, FINISH_INTAKE_REPLIES, intake, merge_area, projection
 
 
 LIMITATIONS = [
@@ -57,11 +57,20 @@ from .tools import UpstreamError
 
 def _listing_continuation(question, state):
     """Return whether a context-only reply has a compatible pending stage."""
-    value = norm(question).strip().rstrip(".!?")
+    value = " ".join(norm(question).split()).rstrip(".!?")
+    pending = state.get("pending")
     commute = commute_destination.stage_of(state)
     nearby_consent = bool(state.get("nearConsentPending") and state.get("pendingNearbyAddress"))
+    if value in FINISH_INTAKE_REPLIES or value == "giu tieu chi":
+        return bool(pending)
+    if value == "khong muon cung cap":
+        return pending == "age"
+    if value == "co, uu tien truong hoc va cong vien":
+        return pending == "children_needs"
+    if value in ("mua de o", "mua dau tu", "thue de o") and pending != "purpose":
+        return False
     if value in ("bo qua", "huy"):
-        return bool(nearby_consent or state.get("nearbyPoints") or commute or state.get("pending"))
+        return bool(nearby_consent or state.get("nearbyPoints") or commute or pending)
     if value == "dong y tim vi tri":
         return nearby_consent
     if value == "mo rong ban kinh":
@@ -73,7 +82,7 @@ def _listing_continuation(question, state):
             return commute == commute_destination.ASK_SOURCE
         if commute_destination.wants_new(question):
             return commute == commute_destination.ASK_SOURCE or bool(commute_destination.destination_of(state))
-    if value.isdigit() and state.get("pending") in ("budget", "min_area", "age"):
+    if value.isdigit() and pending in ("budget", "min_area", "age"):
         return None
     if re.match(r"^(?:so\s+)?[1-5](?:[.):]\s+|$)", value):
         points = state.get("nearbyPoints") or (
@@ -219,7 +228,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "RENTAL_BUDGET_NOT_SUPPORTED"})
 
     def _prepare_listing_transaction(self, request, session_id, context, turn, address_query,
-                                     transaction, selected, text_transaction, structured_purpose, *, research):
+                                     transaction, selected, text_transaction, structured_purpose, *, research, continuation):
         state, prior = context.needs, context.criteria()
         _, filter_text, mode = address_query
         if transaction == "PURCHASE_DECLINED":
@@ -257,7 +266,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             return None
 
         listing_turn = (
-            mode or request.propertyId or state.get("focusedPropertyId")
+            continuation is not None or mode or request.propertyId or state.get("focusedPropertyId")
             or turn["searchChange"] or turn["intent"] in ("PROPERTY_FOLLOWUP", "UPDATE_CRITERIA")
             or state.get("nearConsentPending") or state.get("nearbyPoints") or state.get("pending")
             or commute_destination.stage_of(state) or state.get("commutePendingLimit")
@@ -353,7 +362,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                     answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
         transaction_reply = self._prepare_listing_transaction(
             request, session_id, context, turn, address_query, transaction, selected,
-            text_transaction, structured_purpose, research=research,
+            text_transaction, structured_purpose, research=research, continuation=continuation,
         )
         if transaction_reply is not None:
             return transaction_reply

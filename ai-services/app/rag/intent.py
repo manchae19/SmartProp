@@ -63,7 +63,8 @@ _TRANSACTION_ACTION = (
 _NEGATED_TRANSACTION = re.compile(rf"\b(?:khong|chua)\s+(?:con\s+)?{_TRANSACTION_ACTION}")
 _STOP_LISTING = re.compile(
     rf"\b(?:tam\s+dung|dung|ngung|huy(?:\s+bo)?|thoi)\s+(?:viec\s+)?"
-    rf"tim\s+(?:kiem(?:\s+(?:{_LISTING_OBJECT}|mua\b|thue\b))?|mua\b|thue\b|{_LISTING_OBJECT})"
+    rf"(?:tim\s+(?:kiem(?:\s+(?:{_LISTING_OBJECT}|mua\b|thue\b))?|mua\b|thue\b|{_LISTING_OBJECT})"
+    rf"|mua\s+{_LISTING_OBJECT})"
 )
 _HYPOTHETICAL_TRANSACTION = re.compile(rf"^(?:neu(?:\s+nhu)?|gia su)\s+(?:(?:toi|minh)\s+)?{_TRANSACTION_ACTION}")
 _CLAUSE_BREAK = re.compile(r",(?=\s|[^\d])|[;!?]|\.(?=\s|$)|\b(?:nhung|ma|thay vao do)\b")

@@ -70,6 +70,7 @@ def test_canceled_workflow_rejects_late_control(chat, stage, stale, state_key):
 @pytest.mark.parametrize("command", [
     STOP, "Tôi muốn dừng tìm mua nhà.", "Thôi, dừng tìm nhà.", "Hủy tìm kiếm bất động sản.",
     "Tôi muốn ngừng tìm mua.", "Không tìm mua nhà nữa.", "Tạm dừng tìm nhà ở Thanh Khê.",
+    "Tôi muốn dừng mua nhà", "Tôi không cần tìm nhà nữa", "Tôi không muốn tiếp tục tìm nhà",
 ])
 def test_cancellation_is_not_affirmative_search(chat, command):
     ask, _, backend = chat
@@ -96,6 +97,71 @@ def test_skip_is_valid_during_guided_optional_step(chat):
     assert reply["evidence"]["needs"]["pending"] == "property_type"
     assert not reply["recommendedProperties"] and not listing_calls(backend)
     assert public_needs(service, reply)["purposeAsked"] is True
+
+
+def test_issued_skip_all_cannot_search_after_cancel(chat):
+    ask, service, backend = chat
+    first = start_sale(ask, backend)
+    pending = ask("Tìm kỹ hơn", first)
+    assert pending["evidence"]["needs"]["pending"] == "priorities"
+    button = next(label for label in pending["evidence"]["quickReplies"] if label == "Xem gợi ý ngay")
+    canceled = ask(CANCEL, pending)
+    assert_preserved(canceled, pending, backend, "PURCHASE_DECLINED")
+    assert not public_needs(service, canceled).get("pending")
+
+    replayed = ask(button, canceled)
+    calls = listing_calls(backend)
+    assert not calls and not replayed["recommendedProperties"], {
+        "calls": calls,
+        "budget": backend.recommend.call_args.args[0]["budgetVnd"] if backend.recommend.called else None,
+        "cards": [card["id"] for card in replayed["recommendedProperties"]],
+    }
+    assert_preserved(replayed, canceled, backend, STALE)
+    assert not public_needs(service, replayed).get("pending")
+
+
+@pytest.mark.parametrize("button", [
+    "Tìm ngay", "Xem kết quả", "Không cần hỏi thêm", "Giữ tiêu chí",
+    "Mua để ở", "Mua đầu tư", "Thuê để ở", "Không muốn cung cấp", "Có, ưu tiên trường học và công viên",
+])
+def test_workflow_replies_require_a_matching_pending_step_after_cancel(chat, button):
+    ask, service, backend = chat
+    initial = start_sale(ask, backend)
+    pending = ask("Tư vấn từng bước", initial)
+    canceled = ask(CANCEL, pending)
+    assert_preserved(canceled, pending, backend, "PURCHASE_DECLINED")
+    reply = ask(button, canceled)
+    assert_preserved(reply, canceled, backend, STALE)
+    assert not public_needs(service, reply).get("pending")
+
+
+@pytest.mark.parametrize("button", [
+    "Xem gợi ý ngay", "Tìm ngay", "Xem kết quả", "Không cần hỏi thêm", "Giữ tiêu chí",
+])
+def test_valid_pending_priorities_accept_workflow_replies(chat, button):
+    ask, service, backend = chat
+    first = start_sale(ask, backend)
+    pending = ask("Tìm kỹ hơn", first)
+    assert pending["evidence"]["needs"]["pending"] == "priorities"
+    assert "Xem gợi ý ngay" in pending["evidence"]["quickReplies"]
+    reply = ask(button, pending)
+    assert listing_calls(backend) == {"recommend": 1}
+    assert reply["recommendedProperties"]
+    assert backend.recommend.call_args.args[0]["budgetVnd"] == "3000000000"
+    assert session_criteria(reply) == session_criteria(first)
+    assert not public_needs(service, reply).get("pending")
+    backend.reset_mock()
+    assert_preserved(ask(button, reply), reply, backend, STALE)
+
+
+def test_workflow_reply_cannot_use_pending_location_consent(chat):
+    ask, service, backend = chat
+    first = start_sale(ask, backend)
+    pending = ask(f"Tìm nhà gần {ADDRESS}, ngân sách 3 tỷ", first)
+    assert pending["evidence"]["clarification"] == "NEAR_ADDRESS_CONSENT"
+    reply = ask("Xem gợi ý ngay", pending)
+    assert_preserved(reply, pending, backend, STALE)
+    assert public_needs(service, reply)["nearConsentPending"] is True
 
 
 def test_rejecting_pending_nearby_location_does_not_cancel_saved_criteria(chat):
@@ -133,7 +199,7 @@ def test_explicit_cancel_precedes_price_comparison_in_same_turn(chat):
     ("Bỏ qua trường học, vẫn tìm mua nhà.", "LIVING"),
     ("Dừng tìm nhà ở Sơn Trà, vẫn tìm mua nhà ở Thanh Khê.", "LIVING"),
     ("Tìm theo ngân sách", "LIVING"),
-    ("Xem gợi ý ngay", "LIVING"),
+    ("Tìm nhà theo ngân sách đã lưu", "LIVING"),
     ("Tôi không muốn mua, hãy tìm nhà thuê.", "RENTAL"),
 ])
 def test_explicit_later_action_uses_saved_criteria_after_cancel(chat, new_command, expected_purpose):
@@ -181,7 +247,12 @@ def test_cancel_retains_state_across_market_question_and_repeat(chat):
     assert_preserved(ask(CANCEL, market), initial, backend, "PURCHASE_DECLINED")
 
 
-def test_cancel_in_restored_authenticated_checkpoint():
+@pytest.mark.parametrize(("open_step", "code", "state_key", "button", "cancel"), [
+    (f"Tìm nhà gần {ADDRESS}, ngân sách 3 tỷ", "NEAR_ADDRESS_CONSENT", "nearConsentPending", "Bỏ qua", True),
+    ("Tìm kỹ hơn", "LIFESTYLE_INTAKE", "pending", "Xem gợi ý ngay", True),
+    ("Tìm kỹ hơn", "LIFESTYLE_INTAKE", "pending", "Xem gợi ý ngay", False),
+])
+def test_control_in_restored_authenticated_checkpoint(open_step, code, state_key, button, cancel):
     checkpoint = checkpoints.CheckpointsTest()
     checkpoint.setUp()
     service, backend, _, _ = fixtures.MultiTurnTests().service()
@@ -194,7 +265,7 @@ def test_cancel_in_restored_authenticated_checkpoint():
         payload = {"question": question}
         if session:
             payload["sessionId"] = session
-        # Each app invocation has a fresh in-memory store. The mock server stores revisions.
+        # The authenticated route restores each turn from the mock server's checkpoint.
         with TestClient(create_chat_app(Settings(), service)) as client:
             response = client.post("/chat/personalized", json=payload, headers={"Authorization": "Bearer 1"})
         assert response.status_code == 200, response.text
@@ -203,14 +274,20 @@ def test_cancel_in_restored_authenticated_checkpoint():
     try:
         initial = send(SALE_START)
         sid = initial["evidence"]["session"]["id"]
-        pending = send(f"Tìm nhà gần {ADDRESS}, ngân sách 3 tỷ", session=sid)
-        assert pending["evidence"]["clarification"] == "NEAR_ADDRESS_CONSENT"
+        pending = send(open_step, session=sid)
+        assert pending["evidence"]["clarification"] == code
+        assert button in pending["evidence"]["quickReplies"]
         backend.reset_mock()
-        assert_preserved(send(CANCEL, session=sid), pending, backend, "PURCHASE_DECLINED")
-        assert_preserved(send("Bỏ qua", session=sid), pending, backend, STALE)
+        if cancel:
+            assert_preserved(send(CANCEL, session=sid), pending, backend, "PURCHASE_DECLINED")
+            assert_preserved(send(button, session=sid), pending, backend, STALE)
+        else:
+            reply = send(button, session=sid)
+            assert reply["recommendedProperties"] and listing_calls(backend) == {"recommend": 1}
+            assert session_criteria(reply) == session_criteria(initial)
         row = checkpoint.rows[("Bearer 1", sid)]
-        assert row["revision"] == 4
-        assert "nearConsentPending" not in row["checkpoint"]["needs"]
+        assert row["revision"] == (4 if cancel else 3)
+        assert not row["checkpoint"]["needs"].get(state_key)
         assert row["checkpoint"]["budget_vnd"] == "3000000000"
         assert profile["selectedNeeds"] == ["HOSPITAL"]
     finally:
@@ -269,9 +346,12 @@ def test_date_and_nonmoney_are_not_recurring_amounts(text):
     assert parse_budget(f"Ngân sách 3 tỷ; {text}").maximum == 3_000_000_000
 
 
-def test_stale_continuation_packet_in_production_frontend(chat):
+@pytest.mark.parametrize("button", ["Bỏ qua", "Xem gợi ý ngay"])
+def test_stale_continuation_packet_in_production_frontend(chat, button):
     ask, _, backend = chat
     initial = start_sale(ask, backend)
-    reply = ask("Bỏ qua", ask(CANCEL, initial))
+    pending = ask("Tìm kỹ hơn", initial) if button == "Xem gợi ý ngay" else initial
+    reply = ask(button, ask(CANCEL, pending))
+    assert_preserved(reply, pending, backend, STALE)
     assert_frontend_contract(reply, {"cards": 0, "empty": False, "clarification": STALE,
                                      "purpose": "LIVING", "budget": "3000000000"})
