@@ -21,11 +21,13 @@ public class NewsAdminController {
     private final NewsService read;
     private final NewsAdminService admin;
     private final AccountAccess access;
+    private final NewsSchemaAvailability schema;
 
-    public NewsAdminController(NewsService read, NewsAdminService admin, AccountAccess access) {
+    public NewsAdminController(NewsService read, NewsAdminService admin, AccountAccess access, NewsSchemaAvailability schema) {
         this.read = read;
         this.admin = admin;
         this.access = access;
+        this.schema = schema;
     }
 
     private Long actor(Jwt jwt) { return Long.valueOf(jwt.getSubject()); }
@@ -33,6 +35,7 @@ public class NewsAdminController {
     @GetMapping("/sources")
     public java.util.List<NewsDtos.AdminSource> sources(@AuthenticationPrincipal Jwt jwt) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return read.adminSources();
     }
 
@@ -40,6 +43,7 @@ public class NewsAdminController {
     public NewsDtos.AdminSource source(@AuthenticationPrincipal Jwt jwt,
                                        @PathVariable String id) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return read.adminSource(id);
     }
 
@@ -47,6 +51,7 @@ public class NewsAdminController {
     public NewsDtos.AdminSource create(@AuthenticationPrincipal Jwt jwt,
                                        @Valid @RequestBody NewsDtos.CreateSource input) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return admin.create(input);
     }
 
@@ -55,6 +60,7 @@ public class NewsAdminController {
                                        @PathVariable String id,
                                        @Valid @RequestBody NewsDtos.UpdateSource input) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return admin.update(id, input);
     }
 
@@ -63,6 +69,7 @@ public class NewsAdminController {
     public NewsIngestionService.Outcome sync(@AuthenticationPrincipal Jwt jwt,
                                              @PathVariable String id) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return admin.sync(id);
     }
 
@@ -71,6 +78,7 @@ public class NewsAdminController {
                                                 @RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return read.adminArticles(page, size);
     }
 
@@ -79,6 +87,7 @@ public class NewsAdminController {
                                             @PathVariable String id,
                                             @Valid @RequestBody NewsDtos.VisibilityPatch input) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return admin.setVisibility(id, input.publicationStatus());
     }
 
@@ -87,6 +96,7 @@ public class NewsAdminController {
                                           @PathVariable String id,
                                           @Valid @RequestBody NewsDtos.FeaturedPatch input) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return admin.setFeatured(id, input.featured());
     }
 
@@ -95,12 +105,14 @@ public class NewsAdminController {
                                         @RequestParam(defaultValue = "0") int page,
                                         @RequestParam(defaultValue = "20") int size) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return read.adminRuns(page, size);
     }
 
     @GetMapping("/stats")
     public NewsDtos.Stats stats(@AuthenticationPrincipal Jwt jwt) {
         access.admin(actor(jwt));
+        schema.requireAvailable();
         return read.stats();
     }
 }

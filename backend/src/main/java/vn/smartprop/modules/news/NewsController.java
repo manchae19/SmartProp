@@ -20,8 +20,9 @@ import org.springframework.web.bind.annotation.*;
 @ConditionalOnProperty(name = "app.news.enabled", havingValue = "true", matchIfMissing = true)
 public class NewsController {
     private final NewsService service;
+    private final NewsSchemaAvailability schema;
 
-    public NewsController(NewsService service) { this.service = service; }
+    public NewsController(NewsService service, NewsSchemaAvailability schema) { this.service = service; this.schema = schema; }
 
     @GetMapping
     public NewsDtos.Page list(
@@ -30,11 +31,13 @@ public class NewsController {
             @RequestParam(required = false, defaultValue = "newest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size) {
+        schema.requireAvailable();
         return service.list(category, q, sort, page, size);
     }
 
     @GetMapping("/featured")
     public NewsDtos.Page featured() {
+        schema.requireAvailable();
         return service.featured();
     }
 
@@ -48,6 +51,7 @@ public class NewsController {
      */
     @GetMapping("/sources")
     public java.util.List<NewsDtos.Source> sources() {
+        schema.requireAvailable();
         return service.sources().sources();
     }
 }

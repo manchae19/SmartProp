@@ -1,691 +1,125 @@
-# SmartProp — News Backend V1: Triển khai
+# SmartProp — News Backend V1
 
-**Ngày:** 2026-11-24
-**Branch:** `feature/news-backend-v1`
-**Base:** `main @ d202792`
-**Migration:** `V27__news_backend_v1.sql`
+Ngày cập nhật: 2026-11-27. Branch: `feature/news-backend-v1`.
+Main tích hợp: `1f36205fbff5ef04f43c27af83c1694d500a9d61`.
 
----
+## Trạng thái release
 
-## 1. Tóm tắt
+- `VALIDATION_PARTIAL`: chưa đạt điều kiện phát hành hoặc push.
+- `LIVE_INGESTION_DISABLED`: hằng số `LIVE_INGESTION_PERMITTED=false` bắt buộc giữ nguyên.
+- `SOURCE_RIGHTS_APPROVAL_PENDING`: không có nguồn báo chí thật nào được phê duyệt trong đợt này.
+- Không công bố `NEWS_BACKEND_READY` hoặc `READY_FOR_FINAL_REVIEW` khi còn blocker.
 
-News Backend V1 cung cấp dữ liệu tin tức bất động sản thật cho Frontend PR #37, qua
-ba endpoint công khai và một bộ API quản trị. Thu thập từ RSS/Atom bằng scheduler,
-phân loại theo luật, chống trùng ở tầng DB.
+News V1 phục vụ dữ liệu đã lưu qua REST. Scheduler, manual sync, gọi trực tiếp ingestion
+service và production fetcher đều dừng tại hard release gate. Config/environment không
+mở được gate. Scheduler trả danh sách rỗng trước mọi truy vấn repository.
+Private transport chỉ được kiểm thử bằng fixture loopback trong `src/test`; artifact
+production không chứa `TestNewsFeedFetcher` hay đường gọi package-private để bỏ gate.
+Không dùng LLM; không thay đổi valuation, RAG hoặc Advisor.
 
-**Không dùng LLM.** Không đụng XGBoost, RAG, AI Advisor. Không microservice mới.
+## Kiến trúc và contract
 
----
-
-## 2. Kiến trúc
-
-```
-RSS/Atom (nguồn đã duyệt quyền)
-        ↓
-NewsFeedFetcher   — SSRF guard, timeout, size limit, conditional GET
-        ↓
-NewsFeedParser    — RSS 2.0 / Atom, XXE-safe
-        ↓
-NewsText          — sanitize HTML, canonical URL, SHA-256
-        ↓
-NewsClassifier    — relevance filter + category + region (rule-based)
-        ↓
-MySQL             — unique (source_id, url_hash) chống trùng
-        ↓
-NewsService       — đọc, phân trang, lọc
-        ↓
-REST API          — /api/v1/news, /featured, /sources
+```text
+Public GET -> NewsService -> rights-filtered repository -> stored articles
+Admin request -> Spring Security -> AccountAccess.admin -> schema availability -> service
+Scheduler/manual/service/fetcher -> immutable release gate -> no outbound RSS
 ```
 
-**Package:** `vn.smartprop.modules.news` (theo convention `modules.<name>` của main).
-
-| File | Trách nhiệm |
-|---|---|
-| `NewsSource` / `NewsArticle` / `NewsIngestionRun` | Entity |
-| `NewsSourceRepository` / `NewsArticleRepository` / `NewsIngestionRunRepository` | Data access |
-| `NewsUrlSafety` | SSRF guard |
-| `NewsFeedFetcher` | HTTP client an toàn |
-| `NewsFeedParser` | RSS/Atom parser, XXE-safe |
-| `NewsText` | Sanitize + canonical URL + hash |
-| `NewsClassifier` | Phân loại rule-based |
-| `NewsIngestionService` | Điều phối thu thập |
-| `NewsService` | Đọc public + admin |
-| `NewsAdminService` | Quản trị nguồn/bài |
-| `NewsController` / `NewsAdminController` | REST |
-| `NewsScheduler` | Scheduler (mặc định tắt) |
-| `NewsProperties` | Cấu hình |
-
----
-
-## 3. Database
-
-### Bảng
-
-| Bảng | Cột | Vai trò |
-|---|---:|---|
-| `news_sources` | 22 | Nguồn tin + trạng thái quyền + conditional GET |
-| `news_articles` | 19 | Bài viết (metadata + summary, không toàn văn) |
-| `news_ingestion_runs` | 16 | Lịch sử đồng bộ |
-
-### Ràng buộc then chốt
-
-```sql
--- Chống trùng ở tầng DB, không chỉ kiểm tra exists trước INSERT.
-UNIQUE KEY uq_news_articles_source_url (source_id, canonical_url_hash)
-UNIQUE KEY uq_news_articles_source_external (source_id, external_id)
-
--- Enum hợp lệ.
-CONSTRAINT ck_news_sources_rights CHECK (
-  rights_review_status IN ('PENDING_REVIEW','APPROVED','REJECTED'))
-CONSTRAINT ck_news_articles_status CHECK (
-  publication_status IN ('VISIBLE','HIDDEN'))
-
--- Cascade: xoá nguồn xoá bài + lịch sử.
-CONSTRAINT fk_news_articles_source FOREIGN KEY (source_id)
-  REFERENCES news_sources (id) ON DELETE CASCADE
-```
-
-### Index
-
-| Index | Phục vụ |
-|---|---|
-| `idx_news_sources_schedule` | Scheduler chọn nguồn đến hạn |
-| `idx_news_articles_public` | Danh sách công khai |
-| `idx_news_articles_category` | Lọc chuyên mục |
-| `idx_news_articles_region` | Lọc Đà Nẵng |
-| `idx_news_articles_featured` | Bài nổi bật |
-| `idx_news_runs_source` | Lịch sử theo nguồn |
-
-### Kết quả kiểm chứng
-
-```
-Flyway migrate: V27 applied, schema at v27
-13/13 constraint test PASS (unique, FK, enum, cascade)
-```
-
----
-
-## 4. Migration lineage
-
-**V27** — không trùng với V26 của PR #38.
-
-### Thay đổi guard cần thiết
-
-`MigrationLineageConfiguration` hardcode danh sách version và `target`. Đã cập nhật:
-
-| Chỗ | Trước | Sau |
-|---|---|---|
-| `MigrationLineageConfiguration.target` | `"25"` | `"27"` |
-| `Set.of(...)` pending check | đến `25` | đến `27` |
-| `allowed` list | đến `25` | đến `27` |
-| `pom.xml` flyway target | `25` | `27` |
-| `application-hybrid-local-existing-v13.yml` | `'25'` | `'27'` |
-| `...-staging.yml` | `'25'` | `'27'` |
-
-**Quan trọng:** kiểm tra history đổi từ "khớp tuần tự từng vị trí" sang "mọi version
-đã biết và tăng dần". Lý do: V26 (PR #38) và V27 (News) là hai nhánh độc lập — DB có
-thể có V27 mà chưa có V26 nếu News merge trước. Guard cũ sẽ từ chối trường hợp đó.
-
----
-
-## 5. API contract
-
-Khớp chính xác Frontend PR #37.
-
-### `GET /api/v1/news`
-
-| Param | Kiểu | Mặc định | Ghi chú |
-|---|---|---|---|
-| `category` | string | — | Nhãn tiếng Việt hoặc enum |
-| `q` | string | — | Tìm trong title/summary, tối đa 200 ký tự |
-| `sort` | string | `newest` | `newest` / `oldest` |
-| `page` | int | 0 | |
-| `size` | int | 12 | Clamp tối đa 50 |
-
-Response:
-
-```json
-{
-  "items": [{
-    "id": "uuid",
-    "title": "Đà Nẵng đấu thầu khu đô thị 19.000 tỷ",
-    "summary": "...",
-    "category": "Thị trường BĐS",
-    "region": "Đà Nẵng",
-    "articleUrl": "https://vnexpress.net/...",
-    "sourceName": "VnExpress Bất động sản",
-    "sourceUrl": "https://vnexpress.net",
-    "publishedAt": "2026-11-24T08:00:00Z",
-    "fetchedAt": "2026-11-24T09:00:00Z",
-    "locationTags": "da nang"
-  }],
-  "page": 0, "size": 12, "totalElements": 49, "totalPages": 5,
-  "lastUpdatedAt": "2026-11-24T09:00:00Z",
-  "refreshing": false,
-  "sources": [{ "id": "...", "name": "...", "feedUrl": "...",
-                "count": 49, "lastSuccessAt": "...", "status": "AVAILABLE" }]
-}
-```
-
-### `GET /api/v1/news/featured`
-
-Cùng cấu trúc. Xếp hạng: `featured` → Đà Nẵng → mới nhất.
-
-### `GET /api/v1/news/sources`
-
-```json
-{ "sources": [...], "lastUpdatedAt": "..." }
-```
-
-**Không trả:** `rightsReference`, `lastError`, `httpEtag`, IP nội bộ, stack trace.
-
-### Admin API (chỉ ADMIN)
-
-| Endpoint | Method |
-|---|---|
-| `/api/v1/admin/news/sources` | GET, POST |
-| `/api/v1/admin/news/sources/{id}` | GET, PATCH |
-| `/api/v1/admin/news/sources/{id}/sync` | POST |
-| `/api/v1/admin/news/articles` | GET |
-| `/api/v1/admin/news/articles/{id}/visibility` | PATCH |
-| `/api/v1/admin/news/articles/{id}/featured` | PATCH |
-| `/api/v1/admin/news/ingestion-runs` | GET |
-| `/api/v1/admin/news/stats` | GET |
-
-**Không có endpoint nhận URL tùy ý để fetch.**
-
----
-
-## 6. Nguồn tin — trạng thái thật
-
-Khảo sát 2026-11-24:
-
-| Nguồn | Feed URL | HTTP | Format | Items | Quyền |
-|---|---|---|---:|---:|---|
-| VnExpress BĐS | `https://vnexpress.net/rss/bat-dong-san.rss` | 200 | RSS | 60 | **PENDING_REVIEW** |
-| VnExpress Kinh doanh | `https://vnexpress.net/rss/kinh-doanh.rss` | 200 | RSS | 60 | **PENDING_REVIEW** |
-| VietnamNet BĐS | `https://vietnamnet.vn/rss/bat-dong-san.rss` | 200 | RSS | 1000 | **PENDING_REVIEW** |
-| Tuổi Trẻ BĐS | `https://tuoitre.vn/rss/bat-dong-san.rss` | 404 | — | 0 | — |
-| Thanh Niên BĐS | `https://thanhnien.vn/rss/bat-dong-san.rss` | 404 | — | 0 | — |
-| Báo Đà Nẵng | `https://baodanang.vn/rss/home.rss` | 403 | — | 0 | — |
-| Bộ Xây dựng | `https://moc.gov.vn/rss/tin-tuc.rss` | ERR | — | 0 | — |
-
-**HTTP 200 + RSS hợp lệ KHÔNG phải bằng chứng quyền tái bản nội dung.** Mọi nguồn vẫn
-`PENDING_REVIEW` cho đến khi có văn bản cho phép. Không nguồn nào được bật.
-
----
-
-## 7. Ingestion — kết quả thật
-
-Chạy với VnExpress BĐS trên DB cô lập (`127.0.0.1:3307`):
-
-```
-Lần 1: SUCCESS  received=60  inserted=49  updated=0   duplicate=0  rejected=11
-Lần 2: SUCCESS  received=60  inserted=0   updated=49  duplicate=0  rejected=11
-```
-
-**Idempotent:** lần 2 không chèn mới, chỉ cập nhật `lastSeenAt`/`fetchedAt`.
-
-**11 bài bị loại:** không liên quan bất động sản (relevance filter hoạt động).
-
-**Phân bố:**
-
-| Category | Region | Số bài |
-|---|---|---:|
-| MARKET | VIETNAM | 17 |
-| RESIDENTIAL | VIETNAM | 16 |
-| PLANNING | VIETNAM | 4 |
-| RESIDENTIAL | CENTRAL | 3 |
-| MARKET | CENTRAL | 3 |
-| **MARKET** | **DA_NANG** | **2** |
-| PLANNING | CENTRAL | 1 |
-| PROJECTS | VIETNAM | 1 |
-| PROJECTS | CENTRAL | 1 |
-| LEGAL | CENTRAL | 1 |
-
-**Bài Đà Nẵng thật:**
-
-- "Đà Nẵng tìm nhà đầu tư khu đô thị Tây Bắc sườn đồi 9.900 tỷ" — MARKET / DA_NANG
-- "Đà Nẵng đấu thầu quốc tế khu đô thị gần 19.000 tỷ đồng" — MARKET / DA_NANG
-
-**`publishedAt ≈ fetchedAt`: 0 bài** — không gán sai thời điểm.
-
----
-
-## 8. Security
-
-| Hạng mục | Cơ chế | Test |
-|---|---|---|
-| **SSRF** | `NewsUrlSafety`: chặn loopback/private/link-local/CGNAT/metadata, IPv4+IPv6, IPv4-mapped, kiểm tra lại mỗi redirect | 15 test PASS |
-| **XXE** | `disallow-doctype-decl`, tắt external entities/DTD, `FEATURE_SECURE_PROCESSING`, EntityResolver rỗng | 2 test PASS |
-| **XSS** | `NewsText.clean`: bỏ script/style kèm nội dung, bỏ mọi tag, giải entity, không trả HTML | 3 test PASS |
-| **SQL injection** | JPA parameterized, enum validation, LIKE escape, page size clamp | 1 test PASS |
-| **Authorization** | `access.admin()` kiểm tra role trong DB, không tin JWT claim | 5 test PASS |
-| **Rate limit** | Tôn trọng 429 + `Retry-After`, không retry vô hạn | Code path |
-| **Concurrency** | Unique constraint ở DB, bắt `DataIntegrityViolationException` | 1 test PASS |
-
-**Giới hạn đã biết:** DNS rebinding vẫn có thể xảy ra (kiểm tra DNS và kết nối là hai
-thời điểm). Lớp phòng thủ thứ hai: chỉ fetch URL đã lưu trong `news_sources`, không có
-endpoint nhận URL tùy ý.
-
----
-
-## 9. Cấu hình
-
-```yaml
-app:
-  news:
-    enabled: true                 # API đọc
-    ingestion-enabled: false      # MẶC ĐỊNH TẮT
-    allow-http: false             # chỉ https
-    connect-timeout-ms: 5000
-    read-timeout-ms: 15000
-    max-feed-bytes: 2097152
-    max-redirects: 3
-    max-page-size: 50
-    featured-limit: 6
-    user-agent: "SmartPropNewsBot/1.0 (+https://smartprop.vn/bot)"
-```
-
-**Mặc định an toàn:** ingestion tắt, không nguồn nào được bật, không tự gọi mạng.
-
----
-
-## 10. Test
-
-| Suite | PASS | FAIL | NOT_RUN |
-|---|---:|---:|---:|
-| Backend unit (toàn bộ) | **237** | 0 | 0 |
-| — `NewsFeedParserTest` | 10 | 0 | 0 |
-| — `NewsUrlSafetyTest` | 15 | 0 | 0 |
-| — `NewsTextAndClassifierTest` | 24 | 0 | 0 |
-| HTTP integration (`NewsApiIT`) | **22** | 0 | 0 |
-| MySQL constraint | **13** | 0 | 0 |
-| Live ingestion (`NewsLiveIngestionIT`) | **1** | 0 | 0 |
-| Flyway migrate | **V27 applied** | 0 | 0 |
-| Frontend contract | — | — | **NOT_RUN** |
-| Playwright E2E | — | — | **NOT_RUN** |
-
-### Lỗi đã phát hiện và sửa trong quá trình test
-
-| Lỗi | Nguyên nhân | Sửa |
-|---|---|---|
-| `foldForMatch("Đà Nẵng")` → `"?à Nẵng"` | `Đ` (U+0110) không decompose bằng NFD | Thay `Đ/đ` → `D/d` trước NFD |
-| `parseDate("Tue, 24 Nov 2026 08:00:00 +0700")` → null | `RFC_1123_DATE_TIME` chỉ nhận `+07:00` | Thêm pattern RFC 822 với `Z` |
-| Test date dùng "Mon" cho 2026-11-24 (là Tuesday) | Test data sai | Sửa thành "Tue" |
-| `canonical_url_hash` CHAR vs VARCHAR | Entity thiếu `@JdbcTypeCode(SqlTypes.CHAR)` | Thêm annotation |
-| `fetch_interval_minutes` SMALLINT vs int | Entity khai `int` | Đổi sang `short` |
-| Flyway không thấy V27 | `pom.xml` `<target>25</target>` thắng profile | Sửa pom target |
-| Lineage guard từ chối V27 khi thiếu V26 | Kiểm tra khớp tuần tự từng vị trí | Đổi sang "mọi version đã biết, tăng dần" |
-
----
-
-## 11. Triển khai
-
-### Runbook
-
-1. **Backup** database trước khi migrate.
-2. Kiểm tra Flyway lineage: `flyway:info` — schema version hiện tại.
-3. Xác minh PR #38 (V26) đã merge hay chưa. Nếu chưa, V27 vẫn chạy được (guard đã sửa).
-4. Test migration trên bản sao cô lập trước.
-5. `flyway:migrate` — áp dụng V27.
-6. Khởi động Backend với `app.news.ingestion-enabled=false` (mặc định).
-7. Kiểm tra `GET /api/v1/news` trả 200 với `items: []`.
-8. Tạo nguồn qua `POST /api/v1/admin/news/sources` — sẽ ở `PENDING_REVIEW`.
-9. **Chỉ sau khi có văn bản cho phép**: `PATCH` với `rightsReviewStatus=APPROVED` +
-   `rightsReference`, rồi `enabled=true`.
-10. Bật `app.news.ingestion-enabled=true` khi được phép.
-11. Kiểm tra `GET /api/v1/admin/news/ingestion-runs`.
-12. Tích hợp PR #37.
-
-### Rollback
-
-1. `app.news.ingestion-enabled=false` — dừng thu thập.
-2. Revert code nếu cần.
-3. **Giữ schema và dữ liệu** để bảo toàn lịch sử.
-4. `DROP TABLE` chỉ khi có phê duyệt riêng.
-
----
-
-## 12. Tích hợp PR #37
-
-### Trạng thái
-
-| Hạng mục | Trạng thái |
-|---|---|
-| Backend News tồn tại | **CÓ** |
-| Ba endpoint công khai | **HOẠT ĐỘNG** |
-| JSON contract khớp PR #37 | **CÓ** (22 test) |
-| Dữ liệu thật | **CÓ** (49 bài từ VnExpress) |
-| Nguồn được phê duyệt | **KHÔNG** — tất cả PENDING_REVIEW |
-| Scheduler | **HOẠT ĐỘNG** nhưng mặc định tắt |
-| News page test với Backend thật | **NOT_RUN** |
-| 5 ảnh quận | **BLOCKER** của PR #37 |
-| PR #38/#39 merge | **CHƯA** |
-
-### Các bước tích hợp (sau khi PR #38/#39 merge)
-
-1. Merge PR #38 (coordinate provenance).
-2. Merge PR #39 (admin coordinate review).
-3. Merge News Backend V1.
-4. Đồng bộ `main` vào PR #37.
-5. Giữ route `/news` và `/admin/coordinate-review`.
-6. Giữ `CoordinateStatusPanel`.
-7. Kết nối News API — không cần sửa Frontend, contract đã khớp.
-8. Xử lý 5 ảnh quận chưa rõ quyền.
-9. Chạy regression với Backend thật.
-10. Chạy E2E.
-11. Chuyển PR #37 sang Ready.
-
----
-
-## 13. Giới hạn
-
-| Hạng mục | Trạng thái |
-|---|---|
-| Backend News V1 | **IMPLEMENTED + TESTED** |
-| RSS/Atom ingestion | **IMPLEMENTED + TESTED** (live) |
-| SSRF/XXE/XSS protection | **IMPLEMENTED + TESTED** |
-| Deduplication | **IMPLEMENTED + TESTED** |
-| Scheduler | **IMPLEMENTED**, mặc định tắt |
-| Public API | **IMPLEMENTED + TESTED** |
-| Admin API | **IMPLEMENTED + TESTED** |
-| Nguồn được phê duyệt quyền | **KHÔNG CÓ** — cần văn bản pháp lý |
-| Frontend contract test | **NOT_RUN** |
-| Playwright E2E | **NOT_RUN** |
-| Admin News UI | **NOT_IMPLEMENTED** — PR riêng |
-| AI summarization | **NOT_IMPLEMENTED** — roadmap V2 |
-| Ảnh báo chí | **KHÔNG BẬT** — `NEWS_IMAGE_PERMISSIONS = {}` |
-
----
-
-## 13b. Hardening sau review PR #41
-
-Chín lỗi phát hiện khi review đã được sửa và kiểm chứng.
-
-### 1. HTTP 304 bị xử lý như redirect
-
-**Nguyên nhân:** khối `if (status >= 300 && status < 400)` đứng trước `if (status == 304)`,
-nên conditional GET bị coi là "redirect thiếu Location" và trả `BAD_REDIRECT`.
-
-**Sửa:** kiểm tra 304 trước; chỉ 301/302/303/307/308 mới là redirect thật
-(`REDIRECT_STATUSES`). 304 giữ nguyên ETag/Last-Modified đã gửi.
-
-**Test:** `NewsFeedFetcherIT.http304IsNotTreatedAsRedirect` — HTTP server thật trả 304,
-xác nhận `notModified() == true` và `errorCode == null`.
-
-### 2. Transaction không có hiệu lực
-
-**Nguyên nhân:** `persist()` được gọi từ method khác trong **cùng bean** — Spring AOP
-proxy không can thiệp, `@Transactional(REQUIRES_NEW)` bị bỏ qua.
-
-**Sửa:** tách sang `NewsIngestionPersistenceService` (bean riêng). Transaction chỉ bao
-quanh phần ghi DB, không bao gồm network fetch.
-
-**Luồng:** claim lease → tạo run → fetch (ngoài transaction) → parse (ngoài transaction)
-→ persist (transaction riêng) → markSuccess (transaction riêng) → release lease.
-
-### 3. Không chống ingestion job overlap
-
-**Nguyên nhân:** scheduler và manual sync đều gọi `ingest(sourceId)`; unique constraint
-chỉ chặn bài trùng, không chặn hai job fetch cùng nguồn.
-
-**Sửa:** lease ở tầng DB.
-
-```sql
-UPDATE news_sources
-SET sync_lease_token = :token, sync_lease_until = :until, last_attempt_at = :now
-WHERE id = :id AND enabled = 1 AND rights_review_status = 'APPROVED'
-  AND (next_fetch_at IS NULL OR next_fetch_at <= :now)
-  AND (sync_lease_token IS NULL OR sync_lease_until IS NULL OR sync_lease_until <= :now)
-```
-
-Compare-and-set: hai job đồng thời chỉ một job nhận `rows == 1`. Lease sống 5 phút.
-Chỉ job giữ token mới release/renew được — job cũ không xoá lease của job mới.
-
-**Test:** `NewsConcurrencyIT.concurrentIngestAllowsOnlyOneWinner` — 4 thread qua
-`CountDownLatch`, đúng 1 claim thành công.
-
-### 4. Source rights không được bảo vệ khi đổi định danh
-
-**Nguyên nhân:** đổi `feedUrl` chỉ reset ETag, giữ nguyên `APPROVED` + `enabled`.
-
-**Sửa:** đổi `feedUrl` hoặc `publisher` → `PENDING_REVIEW` + `enabled=false` +
-`rightsCheckedAt=null` + `nextFetchAt=null`. Admin phải duyệt lại có căn cứ mới.
-Không cho xoá `rightsReference` khi đang `APPROVED`.
-
-Thêm `allowSummary` / `allowImages` — quyền theo từng loại nội dung. Mặc định:
-summary có, ảnh không.
-
-### 5. SSRF chưa có host allowlist
-
-**Sửa:** thêm `app.news.allowed-hosts` + `enforce-host-allowlist`. Khớp chính xác
-hostname hoặc subdomain — `evil-vnexpress.net` không khớp `vnexpress.net`.
-Allowlist không vô hiệu hoá kiểm tra IP.
-
-Thêm body read deadline: `HttpRequest.timeout` chỉ phủ tới header, body chậm vẫn phải
-có hạn.
-
-**Giới hạn đã biết:** DNS rebinding vẫn có thể xảy ra (kiểm tra DNS và kết nối là hai
-thời điểm). Lớp phòng thủ: chỉ fetch URL đã lưu trong `news_sources`, không có endpoint
-nhận URL tùy ý, và allowlist khi bật.
-
-### 6. Retry-After chỉ được log
-
-**Sửa:** thêm `next_fetch_at`. 429 → tôn trọng `Retry-After` (không bao giờ sớm hơn).
-Lỗi khác → backoff luỹ thừa theo `consecutive_failures`, trần 6 giờ. Scheduler và
-manual sync đều kiểm tra `next_fetch_at` — admin nhấn Sync cũng không bypass cooldown.
-
-### 7. Sorting sai qua nhiều trang
-
-**Nguyên nhân:** `sort=oldest` đảo danh sách của trang đã lấy theo newest — sai khi có
-nhiều trang.
-
-**Sửa:** `findPublicOldest` sắp xếp tại DB trước pagination:
-`ORDER BY publishedAt ASC NULLS LAST, firstSeenAt ASC, id ASC`. Bài không rõ ngày luôn
-xuống cuối ở cả hai chiều. Tie-breaker `id` giữ thứ tự ổn định.
-
-**Category mapping:** "Quy hoạch & hạ tầng" → `PLANNING + INFRASTRUCTURE` (nếu chỉ lọc
-PLANNING sẽ mất toàn bộ bài hạ tầng). "Thị trường BĐS" → `MARKET + RESIDENTIAL +
-COMMERCIAL`. "Tin tức Đà Nẵng" là bộ lọc **region**, không phải category.
-
-**Test:** `NewsConcurrencyIT.oldestSortingIsDoneInDatabase` — 25 bài, kiểm tra page 0/1
-không trùng, oldest page 1 nối tiếp page 0.
-
-### 8. Frontend contract không khớp
-
-**Hai lỗi:**
-
-| Lỗi | Frontend | Backend cũ | Sửa |
-|---|---|---|---|
-| `/news/sources` | `sources.some(...)` | `{sources: [...], lastUpdatedAt}` | Trả **array** trực tiếp |
-| `locationTags` | `.includes('Đà Nẵng')` | `"da nang"` (không dấu) | Trả nhãn có dấu |
-
-`hasNewNewsSnapshot(sources, lastUpdatedAt)` gọi `sources.some(...)` — object không có
-`.some` → TypeError. Đã sửa backend trả array, không đụng Frontend.
-
-### 9. Migration lineage bị nới lỏng
-
-**Nguyên nhân:** PR #41 đổi guard sang "mọi version đã biết + tăng dần", chấp nhận
-lịch sử thiếu migration trung gian.
-
-**Sửa:** khôi phục kiểm tra nghiêm ngặt:
-- V13/V14 bắt buộc (baseline).
-- V17/V18 optional (đúng bản chất "pending" của chúng).
-- V19–V27 optional nhưng **mọi version đã áp dụng** phải: đã biết, success, không trùng,
-  tăng dần.
-- Thiếu version bắt buộc → từ chối.
-
-**Test:** `MigrationLineageConfigurationTest` 21/21 PASS.
-
-**V26 + V27 cùng nhau:** đã kiểm chứng trên `smartprop_v26v27` — cả
-`property_coordinate_audit` và 3 bảng news cùng tồn tại, không xung đột.
-
----
-## 13c. Safety gate sau review lần hai
-
-Bảy vấn đề còn tồn tại đã được sửa.
-
-### 1. Global ingestion safety gate
-
-**Nguyên nhân:** `NewsAdminService.sync()` gọi `ingestion.ingest(id)` trực tiếp; `ingest()`
-không kiểm tra `ingestionEnabled`. Manual sync bypass được global policy.
-
-**Sửa:** gate đặt ở **đầu `ingest()`** — trước claim lease, trước tạo run, trước DNS,
-trước HTTP. Mọi đường vào (scheduler, manual sync, gọi service trực tiếp) đều đi qua.
-
-```java
-if (!properties.isIngestionEnabled()) return SKIPPED("INGESTION_DISABLED");
-if (properties.isEnforceHostAllowlist() && properties.getAllowedHosts().isEmpty())
-    return SKIPPED("ALLOWLIST_EMPTY");
-```
-
-**Test:** `NewsSafetyGateIT` 9/9 — không lease, không run, không article, không
-`lastAttemptAt`, public read vẫn hoạt động.
-
-### 2. SSRF fail-closed
-
-**Sửa:** `enforceHostAllowlist` mặc định **`true`**. Allowlist rỗng → từ chối mọi fetch.
-Không thể vô tình mở network ingestion tới host bất kỳ bằng cấu hình thiếu sót.
-
-**Trạng thái:** `SSRF_FULL_PROTECTION: PARTIAL` — DNS rebinding vẫn có thể xảy ra
-(kiểm tra DNS và kết nối là hai thời điểm). Giảm thiểu: allowlist bắt buộc + chỉ fetch
-URL đã lưu trong `news_sources` + không endpoint nhận URL tùy ý.
-
-### 3. HTTP body timeout thật
-
-**Nguyên nhân:** kiểm tra `System.nanoTime()` giữa các lần `read()` không bao giờ chạy
-tới khi `read()` block — nguồn gửi header rồi im lặng giữ worker vô thời hạn.
-
-**Sửa:** đọc body trong task riêng, `Future.get(readTimeoutMs)`. Hết hạn →
-`cancel(true)` + đóng stream, giải phóng worker và connection.
-
-**Test:** `NewsBodyTimeoutIT` 5/5 — body im lặng, body một phần, slow drip đều bị cắt
-trong <10s; fetcher vẫn dùng được sau timeout; không rò rỉ thread.
-
-### 4. Transaction fencing
-
-**Nguyên nhân:** `findById` không lock; kiểm tra lease/revision trên snapshot có thể
-đã cũ.
-
-**Sửa:** `lockById` với `PESSIMISTIC_WRITE` (`SELECT ... FOR UPDATE`) trong
-`persist`/`markSuccess`/`markFailure`. Sau khi lock, mọi kiểm tra đọc trạng thái mới
-nhất. Đây là linearization point.
-
-Kiểm tra đầy đủ: lease token, lease expiry, `sourceRevision`, `ingestible()`.
-
-**Test:** `NewsFencingIT` 16/16 — stale worker không persist/markSuccess/markFailure,
-lease hết hạn bị chặn, quyền thu hồi bị chặn.
-
-### 5. Admin decision integrity
-
-**Nguyên nhân:** `articles.save(article)` ghi toàn entity — có thể ghi đè
-`publicationStatus`/`featured` bằng snapshot cũ.
-
-**Sửa:** targeted JPQL update `touchSeen` chỉ sửa `last_seen_at`, `fetched_at`,
-`updated_at`, và tuỳ chọn `published_at`/`summary`. Không đụng cột admin.
-
-**Test:** `ingestionDoesNotOverwriteAdminHidden`, `ingestionDoesNotOverwriteAdminFeatured`,
-`ingestionDoesNotOverwriteSourceRights`.
-
-### 6. Source rights lifecycle
-
-**Sửa:** đổi `feedUrl` hoặc `publisher` → `PENDING_REVIEW` + `disabled` +
-`rightsCheckedAt=null` + `nextFetchAt=null`. **Từ chối** APPROVED hoặc `enabled=true`
-trong cùng request — approval mới phải là hành động riêng.
-
-**Summary permission thực thi ở tầng đọc:** `toArticle` trả `null` khi
-`allowSummary=false`, kể cả khi đã lưu. Search loại summary bị cấm khỏi điều kiện LIKE.
-
-**Test:** `NewsSourceRightsIT` 14/14.
-
-### 7. Migration lineage nghiêm ngặt
-
-**Nguyên nhân:** `require-complete` dùng `history.size() < 4` — bốn dòng có thể là
-13,14,19,20 và vẫn thiếu V17/V18.
-
-**Sửa:** kiểm tra **trực tiếp** `seen.contains("17")` và `seen.contains("18")`.
-
-**Test:** `MigrationLineageStrictTest` 17/17 — bao gồm ca "bốn dòng nhưng thiếu V17/V18",
-V27 trước V26 bị từ chối, V27 đơn lẻ hợp lệ.
-
-### Lỗi thật phát hiện thêm trong quá trình test
-
-| Lỗi | Nguyên nhân | Sửa |
-|---|---|---|
-| Search không khớp tiếng Việt có dấu | keyword bị `foldForMatch` (bỏ dấu) nhưng title trong DB giữ dấu | Dùng keyword gốc, chỉ escape wildcard |
-| Duplicate identity không nhận ra | `findBySourceIdAndExternalId` đọc trước khi flush | `articles.flush()` trước lookup |
-
----
-## 13d. Read-only release gate (V1 chốt)
-
-News Backend V1 phát hành ở chế độ **READ-ONLY**. Live network ingestion bị khóa
-bằng hằng số biên dịch, không phải cấu hình.
-
-### Hard lock
-
-`NewsReleaseCapability.LIVE_INGESTION_PERMITTED = false` — `static final`, không có
-property, biến môi trường, profile, admin request hay allowlist nào thay đổi được ở
-runtime. Mở lại yêu cầu sửa source + security review + build lại.
-
-Hai lớp chặn:
-1. `NewsIngestionService.ingest()` — trước claim lease, trước tạo run, trước DNS, trước HTTP.
-2. `NewsFeedFetcher.fetch()` — defense in depth nếu ai gọi thẳng fetcher.
-
-Trả `SKIPPED` + `LIVE_INGESTION_LOCKED`.
-
-### Loại bỏ test bypass khỏi production
-
-`NewsProperties.allowLoopbackForTests` đã **xóa hoàn toàn**. Test dùng
-`TestNewsFeedFetcher` trong `src/test` — subclass override `checkDestination` (chỉ nới
-loopback) và `fetch` (bỏ release gate). Không tồn tại trong artifact production.
-
-`NewsFeedFetcher.fetchUnlocked()` là package-private, chỉ test transport gọi được.
-
-### Migration lineage nghiêm ngặt
-
-Thêm kiểm tra: **V27 yêu cầu V26**. Database có V27 mà thiếu V26 bị từ chối — dấu hiệu
-history bị sửa tay hoặc migration bị bỏ qua. V26 đơn lẻ (PR #38 chưa merge) vẫn hợp lệ.
-
-### Frontend integration — đã kiểm thử thật
-
-`frontend/e2e/news-real-backend.e2e.mjs` — 30 check PASS với:
-- Spring Boot thật trên `127.0.0.1:18080`
-- MySQL cô lập `127.0.0.1:3307/smartprop` (V26 + V27)
-- React PR #37 trên `127.0.0.1:5173`
-- Fixture 40 bài tự tạo (5 sources: approved/enabled, no-summary, disabled, pending)
-
-Kiểm chứng: contract 14 field, sources là array, featured, category grouping
-(PLANNING+INFRASTRUCTURE = 13 bài), sorting newest/oldest, summary permission
-(null + search không khớp), hidden/disabled/pending không lộ, badge Đà Nẵng, responsive.
-
-### News V1.1 backlog
-
-| Task | V1 status | Điều kiện mở V1.1 |
-|---|---|---|
-| DNS rebinding | **INCOMPLETE** | Controlled resolver hoặc egress verification |
-| Live network ingestion | **HARD_LOCKED** | Security review + transport mới |
-| Worker pool | Chưa giới hạn đầy đủ | Bounded concurrency |
-| Lease expiration | Cần hoàn thiện | Fencing theo thời điểm thực tế |
-| markSuccess/markFailure | Cần hoàn thiện | Atomic conditional finalization |
-| Run recovery | Chưa chứng minh crash recovery | Recovery integration test |
-| Full ingestion concurrency | Chưa đầy đủ | Controlled transport + concurrent test |
-| Real sources | **BLOCKED** | Quyền sử dụng được xác minh |
-
-**Không mục nào ở trên là FIXED.** Chúng deferred vì mọi đường thực thi đã bị khóa.
-
----
-## 14. Quyết định thiết kế
-
-| Quyết định | Lý do |
-|---|---|
-| Rule-based classification, không LLM | Không chi phí token định kỳ; deterministic, test được |
-| Unique constraint ở DB, không chỉ check exists | Chống race condition khi hai ingestion chạy đồng thời |
-| Fetch ngoài transaction | Không giữ DB lock trong lúc chờ network |
-| `publishedAt` NULL khi feed không cung cấp | Không gán `fetchedAt` giả làm ngày đăng |
-| Nguồn mới luôn PENDING_REVIEW + disabled | Không tự động thu thập khi chưa duyệt quyền |
-| APPROVED bắt buộc có `rightsReference` | Không duyệt quyền mà không có căn cứ |
-| Không endpoint nhận URL tùy ý | SSRF không thể khai thác qua API |
-| Chỉ lưu metadata + summary | Không lưu toàn văn, không vi phạm bản quyền |
-| Không lưu ảnh báo chí | Tôn trọng `newsImagePolicy.js` của PR #37 |
-| Scheduler mặc định tắt | Không tự gọi mạng ngoài khi chưa cấu hình |
+- `GET /api/v1/news`: `items`, pagination, `lastUpdatedAt`, `refreshing=false`, `sources`.
+- `GET /api/v1/news/featured`: cùng cấu trúc page; ưu tiên featured, Đà Nẵng, ngày đăng, ID.
+- `GET /api/v1/news/sources`: **array trực tiếp**, tương thích PR #37.
+- Search title; chỉ search summary khi nguồn cho phép. LIKE wildcard được escape.
+- Category/nhóm category và khu vực Đà Nẵng; newest/oldest tại DB trước pagination.
+- `publishedAt=NULL` xuống cuối ở cả hai chiều. Không thay bằng fetchedAt.
+- Tiebreaker ID giữ pagination/featured ổn định.
+- Public chỉ có bài VISIBLE, nguồn enabled + APPROVED + rightsReference không whitespace.
+- Summary bị ẩn khi không có quyền; không trả ảnh báo chí. `allowImages` không mở thêm
+  image field trong public DTO.
+- Public không trả rightsReference, lease token, revision, ETag, lastError hay stack trace.
+
+Admin surface: nguồn (list/detail/create/update), articles (list/visibility/featured),
+stats, ingestion runs, manual sync. Guest bị 401, Buyer/Broker bị 403, Admin phải được
+xác minh role trong DB. Manual sync trả `SKIPPED / LIVE_INGESTION_LOCKED`; không claim
+lease, tạo run, ghi article hoặc fetch mạng.
+
+## Migration lineage
+
+`MigrationLineageConfiguration` lấy strict ordered history validation từ main.
+Danh sách Local: 13 BASELINE, crawler14 đúng checksum, 17..27 đúng thứ tự; V27 đứng sau
+V26. Missing intermediate, failed, duplicate, unknown và out-of-order đều bị từ chối.
+Runtime pending V26 guard từ main vẫn giữ nguyên. Flyway validate kiểm tra checksum;
+không repair, baseline tự động, auto-migrate hoặc sửa history.
+
+Local target = **27**; Standard target = **23**. V13–V27 không được chỉnh sửa.
+V26 từ main và V27 từ PR #41 vẫn nguyên byte. Existing Local runtime identity guard
+không được nới lỏng: profile staging vẫn chỉ cho URL/schema/datadir cố định của main.
+
+**Blocker database constraint:** V27 chỉ CHECK enum rights status, chưa CHECK rằng
+APPROVED phải có rightsReference khác NULL/rỗng/whitespace. App policy, public SQL,
+lease SQL và entity callbacks đã bảo vệ yêu cầu này, nhưng chưa thay thế được DB CHECK.
+Không tạo V28, không tăng target 28: nhóm trưởng chưa phê duyệt version. Cần kiểm tra
+cả migration chưa push của WP-01 và phê duyệt chính thức cho migration forward-only.
+Không tự điền reference hoặc sửa legacy data để constraint đạt.
+
+## Standard V23
+
+Standard không có ba bảng News. Hibernate vẫn dùng `ddl-auto=validate`; schema filter
+riêng cho profile Standard chỉ loại đúng `news_sources`, `news_articles`,
+`news_ingestion_runs` khỏi bước validation. Mọi bảng/entity hiện có vẫn được validate.
+Public News trả 503 `NEWS_SCHEMA_UNAVAILABLE` trước truy vấn. Admin kiểm tra auth/role
+trước schema gate; Admin hợp lệ nhận 503, Guest/Buyer/Broker vẫn nhận 401/403.
+Runtime regression xác minh property create/detail/search vẫn hoạt động.
+
+## Source rights lifecycle
+
+`NewsRightsPolicy` là policy dùng chung cho ingestion, persistence và summary reads.
+Entity callbacks chặn APPROVED thiếu reference hoặc enabled khi không được duyệt.
+Public/lease SQL cũng từ chối reference NULL, rỗng và whitespace, kể cả legacy rows.
+
+Publisher, website URL và feed URL là identity. Đổi identity:
+
+1. Khoá source row cùng transaction với admin update.
+2. Reset PENDING_REVIEW, disabled, xoá reference/checkedAt/conditional GET/cooldown;
+   summary/images trở về false.
+3. Ẩn bài cũ, giữ nguyên nội dung và các bản ghi lịch sử; không xoá article.
+4. Không approve/enable trong cùng request; approval mới cần request review riêng.
+
+Thay rightsReference của nguồn APPROVED cũng mất approval và cần review lại.
+APPROVED -> PENDING_REVIEW/REJECTED tắt ingestion. Mọi admin edit tăng sourceRevision.
+Approval mới không tự công khai lại các bài cũ đã bị ẩn do thay identity.
+Nguồn mới mặc định PENDING_REVIEW, disabled, summary/images false.
+
+## Security và concurrency
+
+Giữ SSRF private/loopback/link-local/metadata protection, host allowlist, XXE hardening,
+connect/read timeout, body read deadline, max bytes, Retry-After và conditional GET 304.
+DNS rebinding vẫn là limitation V1: kiểm tra DNS và kết nối chưa được pin resolver;
+hard release gate vì vậy vẫn bắt buộc đóng. Không mở rộng sang V1.1.
+
+Lease claim là atomic SQL. Persistence khoá source row, kiểm tra token, thời gian lease
+**sau khi lấy lock**, revision và rights trên trạng thái mới nhất. Success/failure
+metadata cũng bị fence theo lease/revision/rights. Caller timestamp cũ không hồi sinh
+lease đã hết hạn. Targeted article updates không ghi đè visibility/featured của admin.
+Fixture DB tests kiểm tra lease, fencing, idempotency/dedup và constraints trực tiếp;
+không đi qua network ingestion hoặc tạo production bypass.
+
+## Kiểm thử và triển khai
+
+Xem [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md) và
+[final report](SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md). SHA của final commit và exit
+codes sau commit được lưu ở `.scratch/evidence/final-head.txt` và final evidence manifest.
+Không tái dùng kết quả live ingestion cũ như fresh PASS của release hiện tại.
+
+Môi trường duy nhất dùng trong đợt kiểm thử này: MySQL riêng `127.0.0.1:3311`, datadir
+`D:/Cap2_HoangDuy/SmartProp-News-Backend/.scratch/mysql-pr41/data/`, UUID
+`0f29afde-ea54-11f1-bcac-088fc36287dc`. PID khởi tạo 7604, executable/config/datadir
+đã xác minh; backup trước migration. Không kết nối 3306/3307, không dừng MySQL80/WP-01.
+Schema `pr41_standard` là V1–V23. Schema News synthetic là Standard V23 + nguyên bản
+V26 + nguyên bản V27; không gọi đây là bản triển khai Local BASELINE13.
+
+PR #37 được kiểm thử detached ở `151a07b4472ea0fd3134fb50f4f3de757e83d46f`, API Spring
+thật và MySQL thật, fixtures ghi rõ SYNTHETIC TEST ONLY. Không sửa/push branch PR #37.
+Không phê duyệt nguồn báo thật, không fetch live RSS.
+
+Chưa push khi mandatory validation còn BLOCKED. Không tự merge/approve PR. Rollback
+code bằng quy trình review riêng; giữ schema và dữ liệu lịch sử, không DROP bảng.

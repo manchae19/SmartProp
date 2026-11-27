@@ -133,6 +133,11 @@ export default React.forwardRef(function AdminLayout(props, ref) {
                 </div>
               </div>
             </SiteLink>
+            <SiteLink to="/admin/coordinate-review" className="nav2" activeClass="active-nav" data-sp-87e8ba60="">
+              <div data-sp-87e8ba60="">
+                {"Xác minh tọa độ"}
+              </div>
+            </SiteLink>
             <SiteLink to="/admin/audit-logs" className="nav" activeClass="active-nav" data-sp-87e8ba60="">
               <div className="nh-t-ký-ki-m-to-n" data-sp-87e8ba60="">
                 {"Nhật ký kiểm toán"}

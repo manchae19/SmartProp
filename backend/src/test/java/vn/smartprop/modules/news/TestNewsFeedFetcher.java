@@ -29,7 +29,13 @@ class TestNewsFeedFetcher extends NewsFeedFetcher {
      */
     @Override
     public FetchResult fetch(String feedUrl, String etag, String lastModified) {
-        return fetchUnlocked(feedUrl, etag, lastModified);
+        try {
+            var transport = NewsFeedFetcher.class.getDeclaredMethod("fetchTransport", String.class, String.class, String.class);
+            transport.setAccessible(true);
+            return (FetchResult) transport.invoke(this, feedUrl, etag, lastModified);
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError("Test-only transport invocation failed", exception);
+        }
     }
 
     /**

@@ -32,9 +32,7 @@ class NewsReleaseLockIT {
 
     @BeforeEach
     void guardIsolatedDatabase() {
-        Integer port = jdbc.queryForObject("SELECT @@port", Integer.class);
-        assertThat(port).as("test ghi dữ liệu chỉ chạy trên MySQL cô lập (3307)")
-            .isEqualTo(3307);
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
     }
 
     @AfterEach
@@ -131,9 +129,7 @@ class NewsReleaseLockIT {
         approvedEnabledSource("it-lock-4");
         var outcomes = ingestion.ingestDue();
 
-        assertThat(outcomes).isNotEmpty();
-        assertThat(outcomes).allSatisfy(outcome ->
-            assertThat(outcome.errorCode()).isEqualTo("LIVE_INGESTION_LOCKED"));
+        assertThat(outcomes).isEmpty();
     }
 
     @Test

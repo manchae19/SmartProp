@@ -90,16 +90,16 @@ public class NewsFeedFetcher {
             return new FetchResult(0, null, null, null, feedUrl,
                 NewsReleaseCapability.LOCK_CODE, NewsReleaseCapability.LOCK_REASON);
         }
-        return fetchUnlocked(feedUrl, etag, lastModified);
+        return fetchTransport(feedUrl, etag, lastModified);
     }
 
     /**
      * Thân fetch thật, không qua release gate.
      *
-     * <p>Package-private để test transport gọi được. Production chỉ tới đây qua
+     * <p>Private: không có đường gọi bỏ qua release gate trong production. Chỉ tới đây qua
      * {@link #fetch}, nơi release gate đã chặn.
      */
-    FetchResult fetchUnlocked(String feedUrl, String etag, String lastModified) {
+    private FetchResult fetchTransport(String feedUrl, String etag, String lastModified) {
         String currentUrl = feedUrl;
         int redirects = 0;
 

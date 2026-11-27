@@ -27,6 +27,7 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
         where a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.VISIBLE
           and s.enabled = true
           and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
           and (:category is null or a.category = :category)
           and (:categories is null or a.category in :categories)
           and (:region is null or a.region = :region)
@@ -55,6 +56,7 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
         where a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.VISIBLE
           and s.enabled = true
           and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
           and (:category is null or a.category = :category)
           and (:categories is null or a.category in :categories)
           and (:region is null or a.region = :region)
@@ -77,10 +79,11 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
         where a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.VISIBLE
           and s.enabled = true
           and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
         order by a.featured desc,
                  case when a.region = vn.smartprop.modules.news.NewsSource$Region.DA_NANG then 0 else 1 end,
                  a.publishedAt desc nulls last,
-                 a.firstSeenAt desc
+                 a.firstSeenAt desc, a.id desc
         """)
     Page<NewsArticle> findFeatured(Pageable pageable);
 
@@ -91,6 +94,7 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
         where a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.VISIBLE
           and s.enabled = true
           and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
         """)
     Instant lastPublicUpdate();
 
@@ -101,6 +105,10 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
           and a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.VISIBLE
         """)
     long countPublicBySource(@Param("sourceId") String sourceId);
+
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = false)
+    @Query("update NewsArticle a set a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.HIDDEN, a.updatedAt = :now where a.sourceId = :sourceId")
+    int hideBySource(@Param("sourceId") String sourceId, @Param("now") Instant now);
 
     List<NewsArticle> findBySourceId(String sourceId);
 

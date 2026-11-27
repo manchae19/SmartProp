@@ -40,11 +40,8 @@ class NewsConcurrencyIT {
     @BeforeEach
     void guardIsolatedDatabase() {
         // Fail closed: từ chối chạy nếu không phải DB cô lập.
-        Integer port = jdbc.queryForObject("SELECT @@port", Integer.class);
-        String schema = jdbc.queryForObject("SELECT DATABASE()", String.class);
-        assertThat(port).as("test ghi dữ liệu chỉ được chạy trên MySQL cô lập (3307)")
-            .isEqualTo(3307);
-        assertThat(schema).isEqualTo("smartprop");
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
+
     }
 
     @AfterEach
@@ -226,7 +223,7 @@ class NewsConcurrencyIT {
 
         NewsIngestionService.Outcome outcome = ingestion.ingest(id);
         assertThat(outcome.status()).isEqualTo(NewsIngestionRun.Status.SKIPPED);
-        assertThat(outcome.errorCode()).isEqualTo("LEASE_HELD");
+        assertThat(outcome.errorCode()).isEqualTo(NewsReleaseCapability.LOCK_CODE);
     }
 
     @Test
@@ -234,7 +231,7 @@ class NewsConcurrencyIT {
         String id = source("it-skip-pending", "PENDING_REVIEW", true);
         NewsIngestionService.Outcome outcome = ingestion.ingest(id);
         assertThat(outcome.status()).isEqualTo(NewsIngestionRun.Status.SKIPPED);
-        assertThat(outcome.errorCode()).isEqualTo("SOURCE_NOT_INGESTIBLE");
+        assertThat(outcome.errorCode()).isEqualTo(NewsReleaseCapability.LOCK_CODE);
     }
 
     @Test

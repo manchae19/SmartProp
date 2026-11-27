@@ -51,7 +51,7 @@ public class NewsIngestionPersistenceService {
         if (!leaseToken.equals(source.syncLeaseToken)) {
             return new Persisted(0, 0, 0, 0, true, false);
         }
-        if (source.syncLeaseUntil == null || !source.syncLeaseUntil.isAfter(now)) {
+        if (source.syncLeaseUntil == null || !source.syncLeaseUntil.isAfter(Instant.now())) {
             return new Persisted(0, 0, 0, 0, true, false);
         }
         if (source.sourceRevision != expectedRevision) {
@@ -71,7 +71,7 @@ public class NewsIngestionPersistenceService {
             if (title == null) { rejected++; continue; }
 
             // Chỉ lưu summary khi nguồn cho phép.
-            String summary = source.allowSummary ? NewsText.clean(item.summary(), 2000) : null;
+            String summary = NewsRightsPolicy.summary(source) ? NewsText.clean(item.summary(), 2000) : null;
             String hash = NewsText.sha256(canonical);
             String externalId = truncate(item.externalId(), 500);
 
@@ -162,6 +162,7 @@ public class NewsIngestionPersistenceService {
         NewsSource source = sources.lockById(sourceId).orElse(null);
         if (source == null) return false;
         if (!leaseToken.equals(source.syncLeaseToken)) return false;
+        if (!source.leaseActive(Instant.now()) || !source.ingestible()) return false;
         if (source.sourceRevision != expectedRevision) return false;
 
         source.httpEtag = truncate(etag, 200);
@@ -181,12 +182,14 @@ public class NewsIngestionPersistenceService {
      * <p>Khoá dòng + kiểm tra lease trước khi ghi.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public boolean markFailure(String sourceId, String leaseToken, String errorCode,
+    public boolean markFailure(String sourceId, String leaseToken, int expectedRevision, String errorCode,
                                String errorMessage, Instant nextFetchAt, Instant now) {
         NewsSource source = sources.lockById(sourceId).orElse(null);
         if (source == null) return false;
         if (!leaseToken.equals(source.syncLeaseToken)) return false;
+        if (!source.leaseActive(Instant.now()) || !source.ingestible()) return false;
 
+        if (source.sourceRevision != expectedRevision) return false;
         source.lastError = truncate(errorCode + ": "
             + (errorMessage == null ? "" : errorMessage), 500);
         source.consecutiveFailures = (short) Math.min(source.consecutiveFailures + 1, 100);

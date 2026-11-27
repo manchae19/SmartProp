@@ -75,7 +75,7 @@ public class NewsAdminService {
     /** Cập nhật nguồn. Duyệt quyền phải kèm căn cứ. */
     @Transactional
     public NewsDtos.AdminSource update(String id, NewsDtos.UpdateSource input) {
-        NewsSource source = sources.findById(id).orElseThrow(() -> ApiInputs.missing());
+        NewsSource source = sources.lockById(id).orElseThrow(() -> ApiInputs.missing());
 
         // Thay đổi định danh nguồn (feed URL hoặc publisher) làm approval cũ không
         // còn áp dụng: quyền sử dụng đã được xét cho một nguồn cụ thể. Đưa về
@@ -86,7 +86,10 @@ public class NewsAdminService {
             source.publisher = input.publisher();
             identityChanged = true;
         }
-        if (input.websiteUrl() != null) source.websiteUrl = input.websiteUrl();
+        if (input.websiteUrl() != null && !input.websiteUrl().equals(source.websiteUrl)) {
+            source.websiteUrl = input.websiteUrl();
+            identityChanged = true;
+        }
         if (input.feedUrl() != null && !input.feedUrl().equals(source.feedUrl)) {
             NewsUrlSafety.Result safety = NewsUrlSafety.check(input.feedUrl(), false, false);
             if (!safety.allowed()) {
@@ -111,13 +114,22 @@ public class NewsAdminService {
             source.fetchIntervalMinutes = input.fetchIntervalMinutes().shortValue();
         }
 
-        if (identityChanged) {
+        boolean referenceChanged = input.rightsReference() != null
+            && !java.util.Objects.equals(input.rightsReference(), source.rightsReference)
+            && source.rightsReviewStatus == NewsSource.RightsStatus.APPROVED;
+        if (identityChanged || referenceChanged) {
             // Đổi định danh làm approval cũ không còn áp dụng. Đưa về PENDING và
             // từ chối mọi nỗ lực approve/enable trong CÙNG request — approval mới
             // phải là hành động riêng, có căn cứ cho nguồn mới.
             source.rightsReviewStatus = NewsSource.RightsStatus.PENDING_REVIEW;
             source.rightsCheckedAt = null;
+            source.rightsReference = null;
+            source.allowSummary = false;
+            source.allowImages = false;
+            source.httpEtag = null;
+            source.httpLastModified = null;
             source.enabled = false;
+            if (identityChanged) articles.hideBySource(id, Instant.now());
             source.nextFetchAt = null;
             if (input.rightsReviewStatus() == NewsSource.RightsStatus.APPROVED) {
                 throw ApiInputs.bad(
@@ -143,7 +155,7 @@ public class NewsAdminService {
             }
             source.rightsReviewStatus = input.rightsReviewStatus();
             // Thu hồi quyền thì tắt luôn ingestion và xoá cooldown cũ.
-            if (input.rightsReviewStatus() == NewsSource.RightsStatus.REJECTED) {
+            if (input.rightsReviewStatus() != NewsSource.RightsStatus.APPROVED) {
                 source.enabled = false;
                 source.nextFetchAt = null;
             }
@@ -163,6 +175,7 @@ public class NewsAdminService {
             source.enabled = input.enabled();
         }
 
+        NewsRightsPolicy.validate(source);
         // Tăng revision để job đang chạy phát hiện thay đổi và bỏ kết quả.
         source.sourceRevision = source.sourceRevision + 1;
 
@@ -173,6 +186,7 @@ public class NewsAdminService {
 
     /** Sync thủ công một nguồn. Không nhận URL từ client. */
     public NewsIngestionService.Outcome sync(String id) {
+        if (!NewsReleaseCapability.liveIngestionPermitted()) return ingestion.ingest(id);
         NewsSource source = sources.findById(id).orElseThrow(() -> ApiInputs.missing());
         if (!source.ingestible()) {
             throw ApiInputs.bad("Nguồn chưa được duyệt quyền hoặc đang tắt");

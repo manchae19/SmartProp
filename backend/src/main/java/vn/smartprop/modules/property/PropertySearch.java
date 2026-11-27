@@ -51,7 +51,9 @@ public class PropertySearch {
     }
     @Transactional(readOnly=true) public PageResponse<PropertyDtos.View> search(Filters filters,int page,int size,String sort) {
         Page<Property> result=properties.findAll(specification(filters,Instant.now()),ApiInputs.page(page,size,sort(sort)));
-        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,List.of()))));
+        var grouped=service.imageMap(result.getContent());
+        var coordinates=service.coordinates(result.getContent().stream().map(p->p.id).toList());
+        return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,List.of()),coordinates.getOrDefault(p.id,PropertyDtos.Coordinate.absent()))));
     }
-    @Transactional(readOnly=true) public PropertyDtos.View detail(String id) {Property p=service.publicProperty(id);return PropertyService.view(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
+    @Transactional(readOnly=true) public PropertyDtos.View detail(String id) {Property p=service.publicProperty(id);return PropertyService.view(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),service.coordinate(p.id));}
 }

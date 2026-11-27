@@ -50,6 +50,7 @@ class NewsApiIT {
 
     @BeforeEach
     void setUp() {
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
         List<User> staff = users.findAll().stream()
             .filter(u -> u.deletedAt == null && u.status == User.Status.ACTIVE)
             .toList();
@@ -416,7 +417,7 @@ class NewsApiIT {
     }
 
     @Test
-    void syncRejectsUnapprovedSource() throws Exception {
+    void syncIsHardLockedEvenForUnapprovedSource() throws Exception {
         String id = UUID.randomUUID().toString();
         jdbc.update("""
             INSERT INTO news_sources (id, source_code, name, publisher, website_url, feed_url,
@@ -427,6 +428,49 @@ class NewsApiIT {
         createdSources.add(id);
 
         mvc.perform(post("/api/v1/admin/news/sources/" + id + "/sync").with(asAdmin()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.errorCode").value(NewsReleaseCapability.LOCK_CODE));
+    }
+
+    @Test void summaryPermissionAlsoAppliesToSearchAndLegacyInvalidRights() throws Exception {
+        String source=approvedSource("it-summary-search");
+        article(source,"Synthetic title without the secret","MARKET","DA_NANG","VISIBLE",false,Instant.now());
+        jdbc.update("UPDATE news_articles SET summary='synthetic forbidden needle' WHERE source_id=?",source);
+        jdbc.update("UPDATE news_sources SET allow_summary=0 WHERE id=?",source);
+        mvc.perform(get("/api/v1/news").param("q","forbidden needle"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        String response=mvc.perform(get("/api/v1/news").param("q","Synthetic title"))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(response).doesNotContain("synthetic forbidden needle");
+        for(String reference:new String[]{null,""," ","\t\r\n"}) {
+            jdbc.update("UPDATE news_sources SET rights_reference=? WHERE id=?",reference,source);
+            mvc.perform(get("/api/v1/news").param("q","Synthetic title"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        }
+    }
+    @Test void websiteIdentityChangeCannotRepublishOldArticlesAfterSeparateReview() throws Exception {
+        String source=approvedSource("it-website-identity");
+        String id=article(source,"Synthetic identity history","MARKET","DA_NANG","VISIBLE",false,Instant.now());
+        mvc.perform(patch("/api/v1/admin/news/sources/"+source).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"websiteUrl\":\"https://identity.example.invalid\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.rightsReviewStatus").value("PENDING_REVIEW"))
+            .andExpect(jsonPath("$.enabled").value(false));
+        assertThat(jdbc.queryForObject("SELECT publication_status FROM news_articles WHERE id=?",String.class,id)).isEqualTo("HIDDEN");
+        mvc.perform(patch("/api/v1/admin/news/sources/"+source).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"rightsReviewStatus\":\"APPROVED\"}"))
             .andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/v1/admin/news/sources/"+source).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"rightsReviewStatus\":\"APPROVED\",\"rightsReference\":\"synthetic-fixture-new-identity-review\",\"enabled\":true}"))
+            .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/news").param("q","Synthetic identity history"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM news_articles WHERE id=?",Integer.class,id)).isEqualTo(1);
+    }
+    @Test void buyerCannotAccessAnyAdminReadSurfaceEvenWithValidSubject() throws Exception {
+        Long buyer=users.findAll().stream().filter(u->u.role==User.Role.BUYER).map(u->u.id).findFirst().orElseThrow();
+        for(String path:new String[]{"sources","sources/synthetic","articles","ingestion-runs","stats"})
+            mvc.perform(get("/api/v1/admin/news/"+path).with(jwt().jwt(j->j.subject(buyer.toString()))
+                .authorities(new SimpleGrantedAuthority("ROLE_BUYER"))))
+                .andExpect(status().isForbidden());
     }
 }

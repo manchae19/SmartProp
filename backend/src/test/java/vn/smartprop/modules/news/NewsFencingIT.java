@@ -37,9 +37,7 @@ class NewsFencingIT {
 
     @BeforeEach
     void guardIsolatedDatabase() {
-        Integer port = jdbc.queryForObject("SELECT @@port", Integer.class);
-        assertThat(port).as("test ghi dữ liệu chỉ chạy trên MySQL cô lập (3307)")
-            .isEqualTo(3307);
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
     }
 
     @AfterEach
@@ -193,7 +191,7 @@ class NewsFencingIT {
         jdbc.update("UPDATE news_sources SET sync_lease_token = ? WHERE id = ?",
             UUID.randomUUID().toString(), id);
 
-        boolean ok = persistence.markFailure(id, oldToken, "HTTP_500", "lỗi",
+        boolean ok = persistence.markFailure(id, oldToken, 1, "HTTP_500", "lỗi",
             Instant.now().plusSeconds(600), Instant.now());
 
         assertThat(ok).as("job cũ không được markFailure").isFalse();
@@ -401,5 +399,29 @@ class NewsFencingIT {
             "SELECT COUNT(*) FROM news_articles WHERE source_id = ?", Long.class, id);
         assertThat(count).as("không được tạo bản ghi trùng khi persist đồng thời")
             .isEqualTo((long) inserted.get());
+    }
+
+    @Test void expiredLeaseCannotMarkSuccessOrFailure() {
+        String id=source("it-expired-finish");String token=claim(id);
+        jdbc.update("UPDATE news_sources SET sync_lease_until=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE id=?",id);
+        Instant now=Instant.now();
+        assertThat(persistence.markSuccess(id,token,1,null,null,now.plusSeconds(60),now)).isFalse();
+        assertThat(persistence.markFailure(id,token,1,"SYNTHETIC","fixture",now.plusSeconds(60),now)).isFalse();
+    }
+    @Test void sourceRevisionChangeFencesFailureMetadata() {
+        String id=source("it-revision-failure");String token=claim(id);
+        jdbc.update("UPDATE news_sources SET source_revision=2 WHERE id=?",id);
+        Instant now=Instant.now();
+        assertThat(persistence.markFailure(id,token,1,"SYNTHETIC","fixture",now.plusSeconds(60),now)).isFalse();
+        assertThat(jdbc.queryForObject("SELECT last_error FROM news_sources WHERE id=?",String.class,id)).isNull();
+    }
+
+    @Test void staleCallerTimestampCannotResurrectExpiredLease() {
+        String id=source("it-stale-clock");String token=claim(id);
+        jdbc.update("UPDATE news_sources SET sync_lease_until=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE id=?",id);
+        Instant staleTime=Instant.now().minusSeconds(3600);
+        assertThat(persistence.persist(id,token,1,feedWith("Giá đất synthetic", "https://example.vn/stale-clock"),staleTime).leaseLost()).isTrue();
+        assertThat(persistence.markSuccess(id,token,1,null,null,Instant.now().plusSeconds(60),staleTime)).isFalse();
+        assertThat(persistence.markFailure(id,token,1,"SYNTHETIC","fixture",Instant.now().plusSeconds(60),staleTime)).isFalse();
     }
 }

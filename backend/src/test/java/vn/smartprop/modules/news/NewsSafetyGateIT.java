@@ -32,9 +32,7 @@ class NewsSafetyGateIT {
 
     @BeforeEach
     void guardIsolatedDatabase() {
-        Integer port = jdbc.queryForObject("SELECT @@port", Integer.class);
-        assertThat(port).as("test ghi dữ liệu chỉ chạy trên MySQL cô lập (3307)")
-            .isEqualTo(3307);
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
     }
 
     @AfterEach
@@ -73,7 +71,7 @@ class NewsSafetyGateIT {
         NewsIngestionService.Outcome outcome = ingestion.ingest(id);
 
         assertThat(outcome.status()).isEqualTo(NewsIngestionRun.Status.SKIPPED);
-        assertThat(outcome.errorCode()).isEqualTo("INGESTION_DISABLED");
+        assertThat(outcome.errorCode()).isEqualTo(NewsReleaseCapability.LOCK_CODE);
     }
 
     @Test
@@ -121,10 +119,10 @@ class NewsSafetyGateIT {
         approvedSource("it-gate-6");
         var outcomes = ingestion.ingestDue();
         // Mỗi nguồn đến hạn trả một outcome SKIPPED — không fetch, không ghi.
-        assertThat(outcomes).isNotEmpty();
+        assertThat(outcomes).isEmpty();
         assertThat(outcomes).allSatisfy(outcome -> {
             assertThat(outcome.status()).isEqualTo(NewsIngestionRun.Status.SKIPPED);
-            assertThat(outcome.errorCode()).isEqualTo("INGESTION_DISABLED");
+            assertThat(outcome.errorCode()).isEqualTo(NewsReleaseCapability.LOCK_CODE);
         });
     }
 
@@ -154,6 +152,6 @@ class NewsSafetyGateIT {
         NewsIngestionService.Outcome outcome = service.ingest(id);
 
         assertThat(outcome.status()).isEqualTo(NewsIngestionRun.Status.SKIPPED);
-        assertThat(outcome.errorCode()).isEqualTo("ALLOWLIST_EMPTY");
+        assertThat(outcome.errorCode()).isEqualTo(NewsReleaseCapability.LOCK_CODE);
     }
 }

@@ -1,6 +1,7 @@
 import { validCoordinates } from '../property/postForm.js';
+import { canShowReferenceMap } from './coordinateEligibility.js';
 export function publicMapPoint(property) {
-  return !!property && validCoordinates(property.latitude, property.longitude) && property.locationVisibility !== 'HIDDEN' && !(property.locationAccuracy === 'BUILDING_ONLY' && property.locationApproved !== true);
+  return !!property && canShowReferenceMap(property) && validCoordinates(property.latitude, property.longitude) && property.locationVisibility !== 'HIDDEN' && !(property.locationAccuracy === 'BUILDING_ONLY' && property.locationApproved !== true);
 }
 export function locationLabel(property) {
   switch (property?.locationAccuracy) {

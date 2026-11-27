@@ -22,7 +22,7 @@ public class FavoriteService {
     }
     @Transactional(readOnly=true) public PageResponse<PropertyDtos.View> list(Long actor,int page,int size) {
         access.active(actor);var result=properties.findVisibleSaved(actor,Instant.now(),Property.Status.PUBLISHED,ApiInputs.page(page,size,Sort.unsorted()));
-        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,java.util.List.of()))));
+        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,java.util.List.of()),service.coordinate(p.id))));
     }
 
     @Transactional(readOnly=true)
@@ -46,6 +46,6 @@ public class FavoriteService {
             return cb.and(terms.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
         var result=properties.findAll(filter,ApiInputs.page(page,size,Sort.unsorted()));
-        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(item->PropertyService.view(item,grouped.getOrDefault(item.id,java.util.List.of()))));
+        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(item->PropertyService.view(item,grouped.getOrDefault(item.id,java.util.List.of()),service.coordinate(item.id))));
     }
 }

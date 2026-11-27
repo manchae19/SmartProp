@@ -125,7 +125,7 @@ public class NewsIngestionService {
                 fetcher.fetch(source.feedUrl, source.httpEtag, source.httpLastModified);
 
             if (fetched.failed()) {
-                return finishFailure(runId, sourceId, leaseToken, startedAt, begin,
+                return finishFailure(runId, sourceId, leaseToken, expectedRevision, startedAt, begin,
                     fetched.status() == 0 ? null : (short) fetched.status(),
                     fetched.errorCode(), fetched.errorMessage(), fetched.retryAfter());
             }
@@ -145,7 +145,7 @@ public class NewsIngestionService {
             try {
                 parsed = NewsFeedParser.parse(fetched.body());
             } catch (Exception e) {
-                return finishFailure(runId, sourceId, leaseToken, startedAt, begin,
+                return finishFailure(runId, sourceId, leaseToken, expectedRevision, startedAt, begin,
                     (short) fetched.status(), "PARSE_ERROR", safeMessage(e), null);
             }
 
@@ -178,7 +178,7 @@ public class NewsIngestionService {
             // Lỗi bất ngờ: ghi FAILED, giải phóng lease, cho phép retry.
             log.error("news.ingest failed source={} run={} error={}",
                 sourceId, runId, e.getClass().getSimpleName());
-            return finishFailure(runId, sourceId, leaseToken, startedAt, begin, null,
+            return finishFailure(runId, sourceId, leaseToken, expectedRevision, startedAt, begin, null,
                 "INTERNAL_ERROR", safeMessage(e), null);
         } finally {
             // Luôn giải phóng lease — kể cả khi lỗi. Chỉ job giữ token mới giải phóng được.
@@ -219,12 +219,12 @@ public class NewsIngestionService {
     }
 
     /** Ghi run thất bại, tính backoff (tôn trọng Retry-After), giải phóng lease. */
-    private Outcome finishFailure(String runId, String sourceId, String leaseToken,
+    private Outcome finishFailure(String runId, String sourceId, String leaseToken, int expectedRevision,
                                   Instant startedAt, long begin, Short httpStatus,
                                   String errorCode, String errorMessage, String retryAfter) {
         Instant now = Instant.now();
         Instant nextFetch = computeNextFetch(sourceId, errorCode, retryAfter, now);
-        persistence.markFailure(sourceId, leaseToken, errorCode, errorMessage, nextFetch, now);
+        persistence.markFailure(sourceId, leaseToken, expectedRevision, errorCode, errorMessage, nextFetch, now);
         return finishRun(runId, sourceId, leaseToken, startedAt, begin,
             NewsIngestionRun.Status.FAILED, httpStatus, 0, 0, 0, 0, 0, errorCode, errorMessage);
     }
@@ -277,6 +277,7 @@ public class NewsIngestionService {
 
     /** Thu thập mọi nguồn đã đến hạn. Dùng bởi scheduler. */
     public List<Outcome> ingestDue() {
+        if (!NewsReleaseCapability.liveIngestionPermitted()) return List.of();
         return sources.findDue(Instant.now()).stream()
             .map(source -> ingest(source.id))
             .toList();

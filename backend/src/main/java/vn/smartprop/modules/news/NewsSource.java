@@ -66,8 +66,11 @@ public class NewsSource {
 
     /** Nguồn chỉ được thu thập khi đã duyệt quyền VÀ được bật. */
     public boolean ingestible() {
-        return enabled && rightsReviewStatus == RightsStatus.APPROVED;
+        return enabled && NewsRightsPolicy.approved(this);
     }
+
+    @PrePersist @PreUpdate
+    public void validateRights() { NewsRightsPolicy.validate(this); }
 
     /** Lease còn hiệu lực tại thời điểm {@code now}. */
     public boolean leaseActive(Instant now) {

@@ -34,9 +34,7 @@ class NewsSourceRightsIT {
 
     @BeforeEach
     void guardIsolatedDatabase() {
-        Integer port = jdbc.queryForObject("SELECT @@port", Integer.class);
-        assertThat(port).as("test ghi dữ liệu chỉ chạy trên MySQL cô lập (3307)")
-            .isEqualTo(3307);
+        vn.smartprop.testing.Pr41DatabaseTestSafety.require(jdbc);
     }
 
     @AfterEach
@@ -160,13 +158,15 @@ class NewsSourceRightsIT {
     }
 
     @Test
-    void cannotClearReferenceWhileApproved() {
+    void clearingReferenceRevokesApprovalAndRequiresReview() {
         String id = createSource("it-rights-clear");
         approveAndEnable(id, "IT-REF-5");
 
-        assertThatThrownBy(() -> admin.update(id, new NewsDtos.UpdateSource(
-            null, null, null, null, null, null, null, "   ", null, null, null, null, null)))
-            .isInstanceOf(ApiException.class);
+        admin.update(id, new NewsDtos.UpdateSource(
+            null, null, null, null, null, null, null, "   ", null, null, null, null, null));
+        NewsSource source=sources.findById(id).orElseThrow();
+        assertThat(source.rightsReviewStatus).isEqualTo(NewsSource.RightsStatus.PENDING_REVIEW);
+        assertThat(source.enabled).isFalse();
     }
 
     @Test

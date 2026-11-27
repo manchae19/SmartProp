@@ -146,7 +146,7 @@ public class NewsService {
         NewsSource source = sources.findById(article.sourceId).orElse(null);
         // Thực thi quyền summary ở tầng đọc: nếu nguồn không cho phép, không trả
         // summary kể cả khi đã lưu từ trước. Không xoá dữ liệu, chỉ không công bố.
-        String summary = source != null && source.allowSummary ? article.summary : null;
+        String summary = NewsRightsPolicy.summary(source) ? article.summary : null;
         return new NewsDtos.Article(
             article.id,
             article.title,

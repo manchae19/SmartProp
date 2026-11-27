@@ -19,6 +19,7 @@ public interface NewsSourceRepository extends JpaRepository<NewsSource, String> 
     @Query("""
         select s from NewsSource s
         where s.enabled = true and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
         """)
     List<NewsSource> findIngestible();
 
@@ -30,6 +31,7 @@ public interface NewsSourceRepository extends JpaRepository<NewsSource, String> 
         select s from NewsSource s
         where s.enabled = true
           and s.rightsReviewStatus = vn.smartprop.modules.news.NewsSource$RightsStatus.APPROVED
+          and s.rightsReference is not null and length(cast(function('regexp_replace', s.rightsReference, '[[:space:]]', '') as String)) > 0
           and (s.nextFetchAt is null or s.nextFetchAt <= :now)
           and (s.syncLeaseToken is null or s.syncLeaseUntil is null or s.syncLeaseUntil <= :now)
         """)
@@ -55,6 +57,7 @@ public interface NewsSourceRepository extends JpaRepository<NewsSource, String> 
         WHERE id = :id
           AND enabled = 1
           AND rights_review_status = 'APPROVED'
+          AND rights_reference IS NOT NULL AND REGEXP_LIKE(rights_reference, '[^[:space:]]')
           AND (next_fetch_at IS NULL OR next_fetch_at <= :now)
           AND (sync_lease_token IS NULL OR sync_lease_until IS NULL OR sync_lease_until <= :now)
         """, nativeQuery = true)
