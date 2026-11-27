@@ -45,3 +45,43 @@ Revert commit này; explanation là additive nên không ảnh hưởng client c
 FastAPI non-RAG: **437 passed / 20 skipped / 84 subtests / exit 0**.
 WP-04 contract tests: **14/14**. Benchmark: **105 case / 15 extras / digest không đổi**
 `9eedb3c7c3668f61` ⇒ chứng minh explanation **không đổi prediction/benchmark**.
+
+
+---
+
+## B1/B2 final validation (round 3)
+
+### Additivity normalisation (root cause)
+LAND failed because the validator divided the residual by `|margin - base|` (0.805) instead of
+`|margin|` (22.08): residual 2.575e-05 → 3.2e-05 relative instead of 1.17e-06. Fixed to the
+reviewed Phase A formula `abs(margin-(base+sum_phi))/max(1,|margin|) <= 1e-5`. No tolerance
+relaxation. `margin_shap == log_pred` verified (parity exact), so no tree-range discrepancy.
+
+### Legacy nullability
+`shap_valid` is computed from the SHAP numbers themselves (dimension, finiteness, group
+mapping, additivity, margin parity). Legacy `shap_explanation` is returned only when
+`shap_valid`; otherwise it is `null`. A **builder-only** failure keeps the valid legacy block
+and sets `explanation.status = UNAVAILABLE`.
+
+### HTTP contract
+`tests/test_wp04_explanation_http.py`: both endpoints × HOUSE/LAND/APARTMENT/VILLA plus six
+failure modes injected at the **native SHAP output** (exception, NaN, Infinity, dimension,
+additivity, margin mismatch). All return HTTP 200 with an unchanged price; invalid input still
+returns 4xx. Strict `json.dumps(..., allow_nan=False)` and recursive finiteness checks.
+
+### Benchmark rejection source
+Extras now separate **SCHEMA** (ValuationRequest), **ADAPTER** (adapter + transform executed
+alone) and **INTERNAL** (any error from full prediction, always a failure).
+
+### Environment
+`faiss-cpu==1.15.1` installed with `--no-deps` into the project venv
+(Python 3.14.6, numpy 2.5.3, xgboost 3.4.1 — both unchanged, `pip check` clean, nothing else
+added or changed). Installed into the shared `ai-services/.venv` because the worktree has no
+venv of its own — recorded as a deviation from "worktree-local venv".
+
+### Fresh evidence
+- `tests/test_wp04_explanation_http.py` + contract: **37 passed**
+- `tests/test_rag_g2.py`: **37 passed**
+- Full FastAPI serial: **1216 passed, 20 skipped, 105 subtests, exit 0**
+- Benchmark `--assertions`: 105 cases, 15 extras, self-tests PASS, digest `9eedb3c7c3668f61`
+- Two JSON runs: identical digest, exit 0

@@ -16,8 +16,10 @@ import xgboost as xgb
 
 from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3, real_feature_input_enabled
 from app.models.xgboost.explanation_v1_3 import (
+    FEATURE_GROUPS,
     build_explanation,
     unavailable_explanation,
+    validate_explanation,
 )
 from app.models.xgboost.features_v1_3 import (
     ALL_FEATURES,
@@ -274,9 +276,30 @@ class PredictorV1_3:
         if record.get("ward") and clean_category(record["ward"]) not in vocabs.get("ward", []):
             warnings.append(f"Phường/xã '{record.get('ward')}' ít dữ liệu hoặc mới; mô hình áp dụng trọng số trung bình.")
 
+        # The legacy block is only trustworthy when the SHAP numbers themselves validate.
+        # A builder-only failure must NOT discard valid native SHAP data.
+        shap_valid = False
+        if shap_ok and contribs is not None:
+            try:
+                _values = [float(c) for c in contribs[:-1]]
+                _groups: dict = {}
+                for _name, _value in zip(X.columns, _values):
+                    _group = FEATURE_GROUPS.get(_name)
+                    if _group:
+                        _groups[_group] = _groups.get(_group, 0.0) + _value
+                shap_valid = not validate_explanation(
+                    features=list(X.columns), contributions=_values,
+                    base_log=base_log,
+                    margin_log=(margin_shap if margin_shap is not None else log_pred),
+                    calibration_factor=float(factor), groups=_groups,
+                    ordered=list(X.columns),
+                    schema_features=list(self.schema["features"]))
+            except Exception:  # noqa: BLE001
+                shap_valid = False
+
         # WP-04: additive explanation. If SHAP failed above, the explanation is explicitly
         # UNAVAILABLE - never fabricated - while the price stays valid.
-        if not shap_ok or contribs is None:
+        if not shap_valid:
             explanation = unavailable_explanation(
                 f"Không tạo được giải thích SHAP ({shap_error or 'unavailable'})")
         else:
@@ -353,7 +376,7 @@ class PredictorV1_3:
                     f"{round(factor, 4)}x." if shap_ok else
                     "Không tạo được giải thích SHAP cho lần định giá này; "
                     "giá dự đoán và hệ số hiệu chỉnh vẫn được áp dụng bình thường."),
-            } if shap_ok else None,
+            } if shap_valid else None,
             "explanation": explanation,
         }
 

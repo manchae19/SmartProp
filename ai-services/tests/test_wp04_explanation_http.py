@@ -1,9 +1,12 @@
-"""WP-04 B1/B2 — HTTP contract tests for /predict and /predict/v1_3_preview.
+"""WP-04 B1/B2 — HTTP contract tests for both valuation endpoints.
 
-Uses the real V1.3 predictor and pinned artifacts; no database is involved. Covers the happy
-path for every supported property type and the full failure matrix (native SHAP, builder,
-validation, true prediction failure).
+Real V1.3 predictor, pinned artifacts, no database. Covers happy path for every supported
+property type, and the failure matrix injected at the NATIVE SHAP OUTPUT (not into the
+validator): exception, NaN, Infinity, dimension mismatch, additivity mismatch, margin
+mismatch, and builder-only failure.
 """
+import json
+import math
 import os
 from pathlib import Path
 
@@ -14,19 +17,25 @@ from fastapi.testclient import TestClient
 from app.api.valuation import router
 from app.models.xgboost.predictor_v1_3 import PredictorV1_3
 
-
-def _artifacts_dir() -> Path:
-    env = os.environ.get("SMARTPROP_V1_3_ARTIFACTS")
-    return Path(env) if env else Path(__file__).resolve().parents[1] / "artifacts" / "v1_3"
-
+PREDICT_PATH = "/predict"
+PREVIEW_PATH = "/predict/v1_3_preview"
+ENDPOINTS = [PREDICT_PATH, PREVIEW_PATH]
+LEGACY_KEYS = {"base_value_log", "base_price_vnd", "scale", "top_factors", "method",
+               "summary_vi"}
 
 HOUSE = {"category": "Nhà ở", "location_feature": "Cẩm Lệ", "area_sqm": 100.0, "rooms": 3}
 LAND = {"category": "Đất nền", "location_feature": "Cẩm Lệ", "area_sqm": 120.0,
         "road_width_m": 5.5, "frontage_width_m": 6.0}
 APARTMENT = {"category": "Căn hộ chung cư", "location_feature": "Hải Châu", "area_sqm": 75.0,
-             "rooms": 2, "project_name": None}
+             "rooms": 2}
 VILLA = {"category": "Nhà ở", "location_feature": "Sơn Trà", "area_sqm": 150.0,
          "house_subtype": "villa", "floors": 3, "rooms": 4}
+PAYLOADS = {"HOUSE": HOUSE, "LAND": LAND, "APARTMENT": APARTMENT, "VILLA": VILLA}
+
+
+def _artifacts_dir() -> Path:
+    env = os.environ.get("SMARTPROP_V1_3_ARTIFACTS")
+    return Path(env) if env else Path(__file__).resolve().parents[1] / "artifacts" / "v1_3"
 
 
 @pytest.fixture(scope="module")
@@ -38,23 +47,82 @@ def client():
     app.include_router(router)
     app.state.predictor_v1_3 = PredictorV1_3(directory)
     with TestClient(app) as test_client:
-        test_client.app.state.predictor_v1_3 = app.state.predictor_v1_3
         yield test_client
 
 
-# Paths verified from the router itself (router.routes) rather than from the ASGI app object.
-PREDICT_PATH = "/predict"
-PREVIEW_PATH = "/predict/v1_3_preview"
+def assert_all_finite(node, path="root"):
+    """Recursive numeric finiteness check (no substring heuristics)."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            assert_all_finite(value, f"{path}.{key}")
+    elif isinstance(node, list):
+        for index, value in enumerate(node):
+            assert_all_finite(value, f"{path}[{index}]")
+    elif isinstance(node, (int, float)) and not isinstance(node, bool):
+        assert math.isfinite(float(node)), f"non-finite number at {path}: {node}"
 
 
-def _path_for(_client=None, want_preview: bool = False) -> str:
-    return PREVIEW_PATH if want_preview else PREDICT_PATH
+def additivity(body):
+    explanation = body["explanation"]
+    total = (sum(f["contribution_log_raw"] for f in explanation["factors"])
+             + explanation["other_contribution_log"])
+    margin = explanation["predicted_margin_log"]
+    base = explanation["base_value_log"]
+    # Reviewed Phase A normalisation: residual against |margin|.
+    return abs(margin - (base + total)) / max(1.0, abs(margin))
 
 
-@pytest.mark.parametrize("payload", [HOUSE, LAND, APARTMENT, VILLA])
-def test_predict_returns_available_explanation(client, payload):
-    path = _path_for(client, want_preview=False)
-    response = client.post(path, json=payload)
+class ShapProxy:
+    """Wraps the real booster and corrupts only the SHAP output."""
+
+    def __init__(self, real, mode):
+        self._real = real
+        self._mode = mode
+
+    def predict(self, *args, **kwargs):
+        result = self._real.predict(*args, **kwargs)
+        if not kwargs.get("pred_contribs"):
+            if self._mode == "margin_mismatch":
+                return result + 1.0
+            return result
+        array = result[0]
+        if self._mode == "exception":
+            raise RuntimeError("native pred_contribs failed")
+        if self._mode == "nan":
+            array = array.copy()
+            array[0] = float("nan")
+        elif self._mode == "inf":
+            array = array.copy()
+            array[0] = float("inf")
+        elif self._mode == "dimension":
+            array = array[:-1]
+        elif self._mode == "additivity":
+            array = array.copy()
+            array[0] = array[0] + 1.0
+        return [array]
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+@pytest.fixture()
+def proxy_factory(client, monkeypatch):
+    predictor = client.app.state.predictor_v1_3
+    real_booster = predictor.model.get_booster()
+
+    def install(mode):
+        monkeypatch.setattr(predictor.model, "get_booster",
+                            lambda: ShapProxy(real_booster, mode))
+        return predictor
+
+    return install
+
+
+# ---------------------------------------------------------------- happy path
+@pytest.mark.parametrize("path", ENDPOINTS)
+@pytest.mark.parametrize("name", list(PAYLOADS))
+def test_available_explanation_on_both_endpoints(client, path, name):
+    response = client.post(path, json=PAYLOADS[name])
     assert response.status_code == 200, response.text
     body = response.json()
 
@@ -62,98 +130,59 @@ def test_predict_returns_available_explanation(client, payload):
     explanation = body["explanation"]
     assert explanation["status"] == "AVAILABLE"
     assert len(explanation["feature_provenance"]) == 22
+    assert additivity(body) <= 1e-5
 
     legacy = body["shap_explanation"]
-    assert set(legacy) == {"base_value_log", "base_price_vnd", "scale", "top_factors",
-                           "method", "summary_vi", "status"}
-    assert legacy["status"] == "AVAILABLE"
+    assert set(legacy) == LEGACY_KEYS, "legacy block keeps exactly the 6 legacy keys"
+    assert legacy["base_value_log"] is not None
 
-    total = (sum(f["contribution_log_raw"] for f in explanation["factors"])
-             + explanation["other_contribution_log"])
-    expected = explanation["predicted_margin_log"] - explanation["base_value_log"]
-    assert abs(total - expected) / max(1.0, abs(expected)) < 1e-5
+    assert_all_finite(body)
+    json.dumps(body, allow_nan=False)          # strict JSON: raises on NaN/Infinity
 
 
-def test_preview_returns_available_explanation(client):
-    path = _path_for(client, want_preview=True)
+# ---------------------------------------------------------------- SHAP failures
+@pytest.mark.parametrize("mode", ["exception", "nan", "inf", "dimension",
+                                  "additivity", "margin_mismatch"])
+@pytest.mark.parametrize("path", ENDPOINTS)
+def test_invalid_native_shap_degrades_but_keeps_price(client, proxy_factory, path, mode):
+    baseline = client.post(path, json=HOUSE).json()["predicted_asking_price_vnd"]
+    proxy_factory(mode)
+
     response = client.post(path, json=HOUSE)
-    assert response.status_code == 200, response.text
-    assert response.json()["explanation"]["status"] == "AVAILABLE"
-
-
-def test_native_shap_failure_is_isolated_over_http(client, monkeypatch):
-    predictor = client.app.state.predictor_v1_3
-    real_booster = predictor.model.get_booster()
-
-    class ShapBoom:
-        def __init__(self, real):
-            self.real = real
-
-        def predict(self, *args, **kwargs):
-            if kwargs.get("pred_contribs"):
-                raise RuntimeError("pred_contribs failed")
-            return self.real.predict(*args, **kwargs)
-
-        def __getattr__(self, name):
-            return getattr(self.real, name)
-
-    monkeypatch.setattr(predictor.model, "get_booster", lambda: ShapBoom(real_booster))
-    path = _path_for(client, want_preview=False)
-    response = client.post(path, json=HOUSE)
-
-    assert response.status_code == 200, "a valid prediction must not become a 5xx"
+    assert response.status_code == 200, "a valid prediction must stay a 200"
     body = response.json()
+
     assert body["explanation"]["status"] == "UNAVAILABLE"
     assert body["explanation"]["factors"] is None
-    assert body["shap_explanation"] is None, "legacy block must be null, not fabricated"
-    assert body["predicted_asking_price_vnd"] > 0
+    assert body["shap_explanation"] is None, "no fabricated legacy contribution"
+    assert body["predicted_asking_price_vnd"] == baseline
     assert body["calibration_factor"] > 0
 
+    assert_all_finite(body)
+    json.dumps(body, allow_nan=False)
 
-def test_builder_failure_keeps_legacy_block(client, monkeypatch):
-    monkeypatch.setattr("app.models.xgboost.predictor_v1_3.build_explanation",
-                        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("builder boom")))
-    path = _path_for(client, want_preview=False)
-    response = client.post(path, json=HOUSE)
+
+def test_builder_failure_keeps_valid_legacy_block(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.models.xgboost.predictor_v1_3.build_explanation",
+        lambda **kwargs: (_ for _ in ()).throw(RuntimeError("builder boom")))
+    response = client.post(PREDICT_PATH, json=HOUSE)
 
     assert response.status_code == 200
     body = response.json()
     assert body["explanation"]["status"] == "UNAVAILABLE"
-    assert body["shap_explanation"] is not None, "raw SHAP was valid, keep legacy data"
+    assert set(body["shap_explanation"]) == LEGACY_KEYS
+    assert body["shap_explanation"]["top_factors"], "native SHAP was valid, legacy kept"
 
 
-@pytest.mark.parametrize("problem", [
-    "dimension mismatch: 21 != 22",
-    "non-finite contribution",
-    "base + contributions do not reproduce the margin",
-])
-def test_validation_failure_degrades_to_unavailable(client, monkeypatch, problem):
-    real_validate = None
-    import app.models.xgboost.explanation_v1_3 as module
-
-    real_validate = module.validate_explanation
-    monkeypatch.setattr(module, "validate_explanation",
-                        lambda **kwargs: [problem])
-    monkeypatch.setattr("app.models.xgboost.predictor_v1_3.build_explanation",
-                        module.build_explanation)
-
-    path = _path_for(client, want_preview=False)
-    response = client.post(path, json=HOUSE)
-    assert response.status_code == 200
-    body = response.json()
-    assert body["explanation"]["status"] == "UNAVAILABLE"
-    assert body["predicted_asking_price_vnd"] > 0
-    assert real_validate is not None
+# ---------------------------------------------------------------- input failures
+def test_invalid_input_is_not_200(client):
+    response = client.post(PREDICT_PATH, json={"category": "Nhà ở", "area_sqm": 0})
+    assert response.status_code >= 400
 
 
-def test_true_prediction_failure_is_not_200(client):
-    path = _path_for(client, want_preview=False)
-    response = client.post(path, json={"category": "Nhà ở", "area_sqm": 0})
-    assert response.status_code >= 400, "invalid input must not be reported as a valid valuation"
-
-
-def test_no_nan_or_infinity_in_json(client):
-    path = _path_for(client, want_preview=False)
-    body = client.post(path, json=HOUSE).json()
-    packed = str(body).lower()
-    assert "nan" not in packed and "infinity" not in packed
+def test_unknown_location_is_not_silently_served(client):
+    response = client.post(PREDICT_PATH,
+                           json={"category": "Nhà ở", "location_feature": "Hà Nội",
+                                 "area_sqm": 100.0})
+    assert response.status_code >= 400

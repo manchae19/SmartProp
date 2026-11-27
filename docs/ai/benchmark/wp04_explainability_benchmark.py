@@ -311,6 +311,13 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
     from app.models.xgboost.features_v1_3 import transform
 
     schema = predictor.schema
+    RENAME_FOR_PREFLIGHT = {}
+    RENAME = {"street_name": "raw_street_name", "project_name": "raw_project_name",
+              "house_direction": "raw_house_direction",
+              "balcony_direction": "raw_balcony_direction",
+              "floor_count": "raw_floor_count", "frontage_width": "raw_frontage_width",
+              "road_width": "raw_road_width", "bedroom_count": "raw_bedroom_count",
+              "bathroom_count": "raw_bathroom_count"}
     features = list(schema["features"])
     booster = predictor.model.get_booster()
     best = getattr(predictor.model, "best_iteration", None)
@@ -468,44 +475,53 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
     from pydantic import ValidationError
 
     for item in extras:
-        reject_source = None
+        # 1) API contract
         try:
-            ValuationRequest(**item.payload)                 # API contract first
+            ValuationRequest(**item.payload)
         except ValidationError as error:
-            extra_outcomes.append({
-                "case_id": item.case_id, "expectation": item.expectation,
-                "outcome": "REJECTED", "reject_source": "SCHEMA",
-                "ok": item.expectation == "REJECT", "detail": str(error)[:100]})
+            extra_outcomes.append({"case_id": item.case_id,
+                                   "expectation": item.expectation,
+                                   "outcome": "REJECTED", "reject_source": "SCHEMA",
+                                   "ok": item.expectation == "REJECT",
+                                   "detail": str(error)[:100]})
             if item.expectation != "REJECT":
                 failures.append(f"{item.case_id}: expected SUCCESS, rejected by schema")
             continue
-
+        # 2) adapter + feature transform, executed on its own so an adapter rejection is
+        #    distinguishable from an internal predictor defect.
+        try:
+            mapped = map_v6_to_v1_3(
+                item.payload,
+                district_vocabulary=schema.get("vocabularies", {}).get("district"))
+            row = {RENAME.get(k, k): v for k, v in mapped.items()}
+            row["ward"] = item.payload.get("ward")
+            transform(pd.DataFrame([row]), schema)
+        except (ValueError, KeyError, TypeError) as error:
+            extra_outcomes.append({"case_id": item.case_id,
+                                   "expectation": item.expectation,
+                                   "outcome": "REJECTED", "reject_source": "ADAPTER",
+                                   "ok": item.expectation == "REJECT",
+                                   "detail": str(error)[:100]})
+            if item.expectation != "REJECT":
+                failures.append(f"{item.case_id}: expected SUCCESS, adapter rejected input")
+            continue
+        # 3) full prediction. Any error here is INTERNAL and always fails, even ValueError.
         try:
             out = predictor.predict_from_v6_payload(item.payload)
-            extra_outcomes.append({
-                "case_id": item.case_id, "expectation": item.expectation,
-                "outcome": "SUCCESS", "reject_source": None,
-                "ok": item.expectation == "SUCCESS",
-                "detail": int(out["predicted_asking_price_vnd"])})
+            extra_outcomes.append({"case_id": item.case_id,
+                                   "expectation": item.expectation,
+                                   "outcome": "SUCCESS", "reject_source": None,
+                                   "ok": item.expectation == "SUCCESS",
+                                   "detail": int(out["predicted_asking_price_vnd"])})
             if item.expectation != "SUCCESS":
                 failures.append(f"{item.case_id}: expected REJECT, got SUCCESS")
-        except ValueError as error:
-            # A ValueError from the adapter is a documented rejection only for cases that
-            # declare it; otherwise it is indistinguishable from an internal defect.
-            reject_source = "ADAPTER"
-            ok = item.expectation == "REJECT"
-            extra_outcomes.append({
-                "case_id": item.case_id, "expectation": item.expectation,
-                "outcome": "REJECTED", "reject_source": reject_source, "ok": ok,
-                "detail": str(error)[:100]})
-            if not ok:
-                failures.append(f"{item.case_id}: expected SUCCESS, adapter raised ValueError")
-        except Exception as error:  # noqa: BLE001 - never a pass
-            extra_outcomes.append({
-                "case_id": item.case_id, "expectation": item.expectation,
-                "outcome": "UNEXPECTED_ERROR", "reject_source": None, "ok": False,
-                "detail": f"{type(error).__name__}: {str(error)[:100]}"})
-            failures.append(f"{item.case_id}: UNEXPECTED_ERROR always fails")
+        except Exception as error:  # noqa: BLE001
+            extra_outcomes.append({"case_id": item.case_id,
+                                   "expectation": item.expectation,
+                                   "outcome": "INTERNAL_ERROR", "reject_source": None,
+                                   "ok": False,
+                                   "detail": f"{type(error).__name__}: {str(error)[:90]}"})
+            failures.append(f"{item.case_id}: INTERNAL predictor error always fails")
 
     # empty fixture matrix must never PASS
     failures.extend(require_cases(cases))
