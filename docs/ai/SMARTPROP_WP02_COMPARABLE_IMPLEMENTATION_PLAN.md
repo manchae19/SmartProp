@@ -105,3 +105,38 @@ Segmentation: nếu C chưa đủ evidence, triển khai **B trước**, C theo 
 
 **Không cam kết:** zero duplicate toàn thị trường · 100% entity resolution · metric synthetic
 bằng metric production · SQL performance · calibrated confidence · cải thiện độ chính xác V1.3.
+
+---
+
+## 19. Reconciliation với revised design (thay thế các mục mâu thuẫn)
+
+Các mục dưới đây **supersede** phần cũ nếu có xung đột:
+
+| Yêu cầu cũ | Trạng thái mới |
+|---|---|
+| "Self-match leakage = 0" tuyệt đối | **Chỉ khi identity xác minh được.** Realistic còn residual (repost không có identity) và residual đó phải được báo cáo, không bị ép về 0 |
+| Approach C phải tăng Precision@5 | **Không bắt buộc.** Giá trị chính của C là **price independence**; P@5 ngang B ở k=5 và nhỉnh ở k=10 (0.514 vs 0.511) |
+| D confidence gate trong Phase B | **DEFERRED** — không phải yêu cầu Phase B |
+| HISTORICAL_AS_OF | **DEFERRED** |
+| T3 auto-merge | **REQUIRES_DATA_APPROVAL** — chỉ flag-only cho tới khi có labeled pairs |
+| Rebase/force push để đồng bộ | **Không bắt buộc** — sync thường, không force push |
+| Bỏ band giá là đủ cho valuation support | **Không đủ** — phải bỏ cả `W_PRICE` khỏi similarity (biến thể **BF**) |
+
+### Phase B = correctness-first + incremental scoring
+
+**Bắt buộc (correctness):**
+1. Strict type/locality/source eligibility, live expiry, deterministic ordering, cap trước khi
+   xếp hạng.
+2. Identity: exact self-match, source-qualified id, canonical URL, group namespaced theo nguồn;
+   **T3 flag-only**.
+3. `VALUATION_SUPPORT`: **không** target-relative band, **không** `W_PRICE`; trace mọi caller
+   kể cả nhánh `propertyId` tự load giá.
+4. `BUYER_BUDGET_SEARCH` giữ nguyên budget.
+
+**Incremental (scoring):**
+5. Type-aware weights trên feature đã xác minh (không frontage/road cho public).
+6. Coverage shrinkage — phải sensitivity-test trước khi chốt.
+7. Evidence presentation + DTO additive (count đã dedupe, asking-price stats, limitations).
+
+**Deferred / cần phê duyệt riêng:** D, historical as-of, T3 auto-merge, index mới
+(`REQUIRES_SCHEMA_CHANGE`), mọi migration (**không** làm trong WP-02).

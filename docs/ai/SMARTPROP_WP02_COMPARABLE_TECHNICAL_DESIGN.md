@@ -266,3 +266,13 @@ Public/SAFE: không truy vấn TiniX, không dòng TiniX, không count research,
 public/research cache tách biệt, giữ role hiện có (BROKER/ADMIN theo contract đã duyệt — public
 mode **không** đồng nghĩa anonymous). Research: explicit opt-in + ADMIN ACTIVE + session sống +
 server flag + source eligibility + no-store. Advisor SAFE không được fallback TiniX.
+
+### 14.9. Cơ chế bất biến giá (bắt buộc) — kết quả benchmark
+
+Benchmark chứng minh: bỏ **band giá** (retrieval) **không đủ** để `VALUATION_SUPPORT` bất biến
+theo target price, vì `W_PRICE` vẫn nằm trong similarity (ids 0/56 giống khi ×0.5/×2.0).
+Bỏ **cả `W_PRICE`** cho kết quả bất biến tuyệt đối (pool/ids/scores 56/56, drift 0.0).
+
+⇒ `VALUATION_SUPPORT` **bắt buộc** loại target price khỏi: band, nearest-price, price
+similarity, fallback và nhãn relevance. Loại hình-aware weights (C) là tối ưu **tăng dần**,
+không phải điều kiện để đạt correctness này.

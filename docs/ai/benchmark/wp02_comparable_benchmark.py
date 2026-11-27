@@ -308,44 +308,61 @@ def build_cohorts(seed: int, *, density: str = "mixed") -> List[Tuple[str, Refer
 
 
 # --------------------------------------------------------------------------- dedupe
-def canonical_url(url: str) -> str:
-    return url.strip().rstrip("/").lower()
+def canonical_url(url: Optional[str]) -> str:
+    return (url or "").strip().rstrip("/").lower()
 
 
-def dedupe_oracle(candidates: List[Listing]) -> List[Listing]:
-    """ORACLE upper bound: ground-truth entity identity. Not implementable in production."""
-    seen, out = set(), []
+def observable_keys(cand: Listing) -> set:
+    """Identity keys that production can actually observe. Empty values never form a key."""
+    keys = set()
+    if cand.source and cand.source_record_id:
+        keys.add(f"{cand.source}|{cand.source_record_id}")
+    url = canonical_url(cand.detail_url)
+    if url:
+        keys.add(f"url|{url}")
+    if cand.source and cand.duplicate_group:
+        # A duplicate group label is meaningful only inside its own source namespace.
+        keys.add(f"group|{cand.source}|{cand.duplicate_group}")
+    return keys
+
+
+def dedupe_oracle(candidates: List[Listing]) -> Tuple[List[Listing], List[Tuple[str, str]]]:
+    """ORACLE upper bound: ground-truth entity. Returns (kept, merges)."""
+    seen, kept, merges = set(), [], []
     for cand in candidates:
         if cand.entity_id in seen:
+            merges.append((next(k.listing_id for k in kept if k.entity_id == cand.entity_id),
+                           cand.listing_id))
             continue
         seen.add(cand.entity_id)
-        out.append(cand)
-    return out
+        kept.append(cand)
+    return kept, merges
 
 
-def dedupe_realistic(candidates: List[Listing]) -> Tuple[List[Listing], List[Listing]]:
-    """Observable identity only. Returns (kept, flagged_suspects).
+def dedupe_realistic(candidates: List[Listing]) -> Tuple[List[Listing], List[Listing], List[Tuple[str, str]]]:
+    """Observable identity only. Returns (kept, suspects, merges).
 
-    T1 exact identity : source-qualified record id, or canonical URL.
-    T2 trusted group  : duplicate_group, namespaced by source (groups are not shared across
-                        sources, so the same label in two sources is NOT one entity).
-    T3 suspected      : same district + type + area(<=2%) + price(<=3%) -> FLAG ONLY, never merged.
+    T1 exact identity : source-qualified record id, canonical URL.
+    T2 trusted group  : duplicate_group, namespaced by source.
+    T3 suspected      : similar area/price in the same district+type -> FLAG ONLY, never merged.
     """
-    keys, out, suspects = set(), [], []
+    owner: Dict[str, str] = {}
+    kept, suspects, merges = [], [], []
     for cand in candidates:
-        identity = {f"{cand.source}|{cand.source_record_id}", f"url|{canonical_url(cand.detail_url)}"}
-        if cand.duplicate_group:
-            identity.add(f"group|{cand.source}|{cand.duplicate_group}")
-        if identity & keys:
+        keys = observable_keys(cand)
+        matched = next((owner[k] for k in keys if k in owner), None)
+        if matched is not None:
+            merges.append((matched, cand.listing_id))
             continue
-        keys |= identity
+        for key in keys:
+            owner[key] = cand.listing_id
         if any(c.district == cand.district and c.property_type == cand.property_type
                and c.area and cand.area and abs(c.area - cand.area) / max(c.area, 1) <= 0.02
                and c.price and cand.price and abs(c.price - cand.price) / max(c.price, 1) <= 0.03
-               for c in out):
+               for c in kept):
             suspects.append(cand)
-        out.append(cand)
-    return out, suspects
+        kept.append(cand)
+    return kept, suspects, merges
 
 
 # --------------------------------------------------------------------------- retrieval
@@ -358,78 +375,118 @@ class StageTrace:
     deduped: int = 0
     ranked: int = 0
     returned: int = 0
+    relevant_raw: int = 0
+    relevant_eligible: int = 0
+    relevant_filtered: int = 0
+    relevant_capped: int = 0
+    relevant_deduped: int = 0
+    relevant_ranked: int = 0
 
 
-def retrieve(ref: Reference, listings: List[Listing], mode: str, approach: str,
-             k: int, dedupe: str = "oracle", expiry: bool = True) -> Tuple[List[Tuple[Listing, float]], StageTrace]:
-    trace = StageTrace(raw=len(listings))
+def _relevant(listings: List[Listing]) -> int:
+    return len({c.entity_id for c in listings if c.relevant and not c.expired})
+
+
+APPROACHES = {"A", "B", "BF", "C", "D"}
+
+
+def retrieve(ref: Reference, listings: List[Listing], mode: str, approach: str, k: int,
+             dedupe: str = "oracle", expiry: bool = True,
+             caps: Tuple[int, int] = (SMARTPROP_CAP, EXTERNAL_CAP)
+             ) -> Tuple[List[Tuple[Listing, float]], StageTrace, Dict[str, List[str]]]:
+    if approach not in APPROACHES:
+        raise ValueError(f"unknown approach {approach}")
+    trace = StageTrace(raw=len(listings), relevant_raw=_relevant(listings))
+
     cands = list(listings)
-
-    # Not evidence in LIVE mode.
     if expiry:
         cands = [c for c in cands if not c.expired]
     trace.eligible = len(cands)
+    trace.relevant_eligible = _relevant(cands)
 
     if approach == "A":
-        # Verified production shape: price envelope per source, THEN cap, THEN rank.
         lo, hi = BAND_LOW * ref.target_price, BAND_HIGH * ref.target_price
         banded = [c for c in cands if c.price is not None and lo <= c.price <= hi]
         trace.filtered = len(banded)
-        smart = [c for c in banded if c.source == "SMARTPROP"][:SMARTPROP_CAP]
-        ext = [c for c in banded if c.source == "EXTERNAL_LISTING"][:EXTERNAL_CAP]
+        trace.relevant_filtered = _relevant(banded)
+        smart = [c for c in banded if c.source == "SMARTPROP"][:caps[0]]
+        ext = [c for c in banded if c.source == "EXTERNAL_LISTING"][:caps[1]]
         cands = smart + ext
         trace.capped = len(cands)
-        # Faithful to ComparableEligibilityService.notSelf(): it compares the reference id
-        # with the candidate id. The reference is a property id and candidates are listing
-        # ids, so nothing cross-source is ever excluded here.
+        trace.relevant_capped = _relevant(cands)
+        # Faithful to notSelf(): property id compared with listing ids -> cross-source never excluded.
         cands = [c for c in cands if c.listing_id != ref.property_id
                  and c.source_record_id != ref.property_id]
-        if dedupe == "oracle":
-            cands = dedupe_oracle(cands)
-        else:
-            cands, _ = dedupe_realistic(cands)
+        kept, merges = (dedupe_oracle(cands) if dedupe == "oracle" else
+                        (lambda r: (r[0], r[2]))(dedupe_realistic(cands)))
+        cands = kept
         trace.deduped = len(cands)
+        trace.relevant_deduped = _relevant(cands)
         scored = [(c, baseline_score(ref, c)) for c in cands]
     else:
-        # Corrected retrieval: hard filters before cap, no target-relative band.
         cands = [c for c in cands if c.property_type == ref.property_type]
         cands = [c for c in cands if c.district == ref.district]
         if mode == "BUYER_BUDGET_SEARCH" and ref.budget_max is not None:
             cands = [c for c in cands if c.price is not None and c.price <= ref.budget_max]
         trace.filtered = len(cands)
-        cands.sort(key=lambda c: c.listing_id)          # deterministic pre-cap order
-        smart = [c for c in cands if c.source == "SMARTPROP"][:SMARTPROP_CAP]
-        ext = [c for c in cands if c.source == "EXTERNAL_LISTING"][:EXTERNAL_CAP]
+        trace.relevant_filtered = _relevant(cands)
+        cands.sort(key=lambda c: c.listing_id)
+        smart = [c for c in cands if c.source == "SMARTPROP"][:caps[0]]
+        ext = [c for c in cands if c.source == "EXTERNAL_LISTING"][:caps[1]]
         cands = smart + ext
         trace.capped = len(cands)
+        trace.relevant_capped = _relevant(cands)
         if dedupe == "oracle":
-            # upper bound only: ground-truth entity never leaves this benchmark
-            cands = [c for c in cands if c.entity_id != ref.entity_id]
+            cands, merges = dedupe_oracle([c for c in cands if c.entity_id != ref.entity_id])
         else:
-            # observable identity only: the reference listing itself is removable by its own
-            # record id / canonical URL. A repost with a new URL remains - that is the residual
-            # leak the flag tier reports instead of silently merging.
+            # observable identity only: the reference listing is removable by its own record id
+            # or canonical URL; a repost with a new URL stays and is reported as residual.
             cands = [c for c in cands
                      if c.source_record_id != ref.source_record_id
                      and canonical_url(c.detail_url) != canonical_url(ref.detail_url)]
-        if dedupe == "oracle":
-            cands = dedupe_oracle(cands)
-        else:
-            cands, _ = dedupe_realistic(cands)
+            cands, _suspects, merges = dedupe_realistic(cands)
         trace.deduped = len(cands)
-        if approach == "B":
+        trace.relevant_deduped = _relevant(cands)
+        if approach in ("B",):
             scored = [(c, baseline_score(ref, c)) for c in cands]
+        elif approach == "BF":
+            # Corrected retrieval + baseline weights WITHOUT the price term.
+            scored = [(c, baseline_score_price_free(ref, c)) for c in cands]
         else:
             scored = [(c, valuation_score(ref, c)) for c in cands]
             if approach == "D":
                 scored = [(c, s) for c, s in scored
                           if evidence_confidence(ref, c) >= CONFIDENCE_FLOOR]
 
-    scored.sort(key=lambda item: (-item[1], item[0].listing_id))   # total order, id tie-break
+    scored.sort(key=lambda item: (-item[1], item[0].listing_id))
     trace.ranked = len(scored)
+    trace.relevant_ranked = _relevant([c for c, _ in scored])
     result = scored[:k]
     trace.returned = len(result)
-    return result, trace
+    pools = {"eligible": [c.listing_id for c in cands]}
+    return result, trace, pools
+
+
+def baseline_score_price_free(ref: Reference, cand: Listing) -> float:
+    """baseline_score() minus W_PRICE. Removing the price band alone is not enough: the
+    similarity term is what makes B non-invariant to the target price."""
+    total = weight_used = 0.0
+    total += location_score(ref, cand) * W["location"]; weight_used += W["location"]
+    if ref.area and cand.area:
+        total += ratio_score(ref.area, cand.area) * W["area"]; weight_used += W["area"]
+    if ref.bedrooms is not None and cand.bedrooms is not None:
+        total += (1.0 - min(abs(ref.bedrooms - cand.bedrooms) / 3.0, 1.0)) * W["bedrooms"]
+        weight_used += W["bedrooms"]
+    if ref.floors is not None and cand.floors is not None:
+        total += (1.0 - min(abs(ref.floors - cand.floors) / 4.0, 1.0)) * W["floors"]
+        weight_used += W["floors"]
+    if ref.frontage is not None and cand.frontage is not None and ref.frontage > 0 and cand.frontage > 0:
+        total += (1.0 - min(abs(ref.frontage - cand.frontage) / 10.0, 1.0)) * W["frontage"]
+        weight_used += W["frontage"]
+    if cand.property_type != ref.property_type:
+        total *= 0.5
+    score = total / weight_used if weight_used > 0 else 0.0
+    return max(0.0, min(1.0, score))
 
 
 # --------------------------------------------------------------------------- metrics
@@ -445,13 +502,12 @@ def evaluate(cohorts, approach: str, k: int, mode: str = "VALUATION_SUPPORT",
     traces: List[StageTrace] = []
 
     for label, ref, listings in cohorts:
-        results, trace = retrieve(ref, listings, mode, approach, k, dedupe=dedupe)
+        results, trace, _ = retrieve(ref, listings, mode, approach, k, dedupe=dedupe)
         traces.append(trace)
         relevant_entities = {c.entity_id for c in listings if c.relevant and not c.expired}
         raw_relevant += len(relevant_entities)
 
-        seen, gain = set(), 0.0
-        dcg = 0.0
+        seen, gain, dcg = set(), 0, 0.0
         for rank, (cand, _) in enumerate(results):
             returned += 1
             if cand.entity_id == ref.entity_id:
@@ -475,22 +531,23 @@ def evaluate(cohorts, approach: str, k: int, mode: str = "VALUATION_SUPPORT",
         ndcg = dcg / ideal if ideal else None
 
         precisions.append(precision)
-        if recall is not None:
-            recalls.append(recall)
-        else:
+        if recall is None:
             zero_positive += 1
+        else:
+            recalls.append(recall)
         if ndcg is not None:
             ndcgs.append(ndcg)
         if not results:
             empty_cohorts += 1
         per_type[ref.property_type].append(precision)
 
+    mean = lambda seq: statistics.fmean(seq) if seq else 0.0
     return {
         "approach": approach, "mode": mode, "dedupe": dedupe, "k": k,
         "cohorts": len(cohorts),
-        "entity_precision@k": statistics.fmean(precisions) if precisions else 0.0,
-        "entity_recall@k": statistics.fmean(recalls) if recalls else 0.0,
-        "entity_ndcg@k": statistics.fmean(ndcgs) if ndcgs else 0.0,
+        "entity_precision@k": mean(precisions),
+        "entity_recall@k": mean(recalls),
+        "entity_ndcg@k": mean(ndcgs),
         "self_match_count": self_matches,
         "duplicate_excess_rows": dup_excess,
         "wrong_type_count": wrong_type,
@@ -501,86 +558,177 @@ def evaluate(cohorts, approach: str, k: int, mode: str = "VALUATION_SUPPORT",
         "empty_result_cohorts": empty_cohorts,
         "zero_positive_cohorts": zero_positive,
         "fill_rate": returned / (len(cohorts) * k) if cohorts else 0.0,
-        "stage_raw": statistics.fmean([t.raw for t in traces]) if traces else 0,
-        "stage_filtered": statistics.fmean([t.filtered for t in traces]) if traces else 0,
-        "stage_capped": statistics.fmean([t.capped for t in traces]) if traces else 0,
-        "stage_deduped": statistics.fmean([t.deduped for t in traces]) if traces else 0,
-        "per_type_precision": {t: (statistics.fmean(v) if v else 0.0) for t, v in per_type.items()},
+        "stage_relevant_raw": mean([t.relevant_raw for t in traces]),
+        "stage_relevant_filtered": mean([t.relevant_filtered for t in traces]),
+        "stage_relevant_capped": mean([t.relevant_capped for t in traces]),
+        "stage_relevant_deduped": mean([t.relevant_deduped for t in traces]),
+        "stage_relevant_ranked": mean([t.relevant_ranked for t in traces]),
+        "stage_raw": mean([t.raw for t in traces]),
+        "stage_filtered": mean([t.filtered for t in traces]),
+        "stage_capped": mean([t.capped for t in traces]),
+        "stage_deduped": mean([t.deduped for t in traces]),
+        "per_type_precision": {t: mean(v) for t, v in per_type.items()},
     }
 
+
 # --------------------------------------------------------------------------- probes
-def price_invariance(cohorts, approach: str, k: int) -> Dict[str, object]:
-    """VALUATION_SUPPORT must not depend on the target price."""
-    identical = 0
-    score_drift = 0.0
+def cap_probe(k: int = 5) -> Dict[str, object]:
+    """Actual cap pressure: build cohorts that exceed each source cap."""
+    ref = Reference("E-REF", "HOUSE", "Hải Châu", "Phường 1", 100.0, 6e9,
+                    bedrooms=3, floors=3, frontage=6.0, property_id="PROP9",
+                    source_record_id="SMARTPROP:PROP9", detail_url="https://example.invalid/p/9")
+    listings: List[Listing] = []
+    # 260 SmartProp rows (cap 200) and 460 external rows (cap 400); the relevant ones sit
+    # at the END of the deterministic pre-cap order, i.e. beyond the cap.
+    for i in range(260):
+        listings.append(Listing(f"S{i:04d}", f"E-S{i}", "SMARTPROP", f"SMARTPROP:S{i:04d}",
+                                f"https://example.invalid/s/{i}", None, "HOUSE", "Hải Châu",
+                                "Phường 1", 100.0, 6e9, 3, 3, 6.0))
+    for i in range(460):
+        listings.append(Listing(f"X{i:04d}", f"E-X{i}", "EXTERNAL_LISTING", f"EXTERNAL_LISTING:X{i:04d}",
+                                f"https://example.invalid/x/{i}", None, "HOUSE", "Hải Châu",
+                                None, 100.0, 6e9, None, None, None))
+    for i in range(6):
+        # "Z" sorts after every filler id, so these land beyond the per-source cap.
+        listings.append(Listing(f"Z{i:04d}", f"E-Z{i}", "SMARTPROP", f"SMARTPROP:Z{i:04d}",
+                                f"https://example.invalid/z/{i}", None, "HOUSE", "Hải Châu",
+                                "Phường 1", 100.0, 6e9, 3, 3, 6.0, relevant=True))
+    listings.sort(key=lambda c: c.listing_id)          # relevant rows end up last
+
+    results, trace, _ = retrieve(ref, listings, "VALUATION_SUPPORT", "C", k,
+                                 dedupe="realistic")
+    pre_smart = sum(1 for c in listings if c.source == "SMARTPROP" and not c.expired)
+    pre_ext = sum(1 for c in listings if c.source == "EXTERNAL_LISTING" and not c.expired)
+    relevant_total = _relevant(listings)
+    return {
+        "pre_cap_smartprop": pre_smart, "pre_cap_external": pre_ext,
+        "cap_smartprop": SMARTPROP_CAP, "cap_external": EXTERNAL_CAP,
+        "post_cap": trace.capped,
+        "smartprop_cap_binds": pre_smart > SMARTPROP_CAP,
+        "external_cap_binds": pre_ext > EXTERNAL_CAP,
+        "relevant_total": relevant_total,
+        "relevant_surviving_cap": trace.relevant_capped,
+        "relevant_lost_at_cap": relevant_total - trace.relevant_capped,
+        "returned": len(results),
+    }
+
+
+def dedupe_pair_metrics() -> Dict[str, object]:
+    """Pair-level PRF: every merge decision is checked against ground-truth identity."""
+    tp = fp = fn = 0
+    details: List[Dict[str, object]] = []
+
+    def case(label: str, cands: List[Listing]) -> None:
+        nonlocal tp, fp, fn
+        kept, _suspects, merges = dedupe_realistic(cands)
+        by_id = {c.listing_id: c for c in cands}
+        for source_id, dropped_id in merges:
+            same = by_id[source_id].entity_id == by_id[dropped_id].entity_id
+            if same:
+                tp += 1
+            else:
+                fp += 1
+        groups: Dict[str, int] = {}
+        for c in cands:
+            groups[c.entity_id] = groups.get(c.entity_id, 0) + 1
+        true_dupes = sum(v - 1 for v in groups.values())
+        fn += true_dupes - sum(1 for s, d in merges if by_id[s].entity_id == by_id[d].entity_id)
+        details.append({"case": label, "merges": len(merges),
+                        "false_merges": sum(1 for s, d in merges
+                                            if by_id[s].entity_id != by_id[d].entity_id)})
+
+    def listing(lid, eid, *, source="SMARTPROP", rec=None, url=None, group=None,
+                area=100.0, price=6e9, district="Hải Châu"):
+        return Listing(lid, eid, source, rec if rec is not None else f"{source}:{lid}",
+                       url if url is not None else f"https://example.invalid/{lid}", group,
+                       "HOUSE", district, "Phường 1", area, price, 3, 3, 6.0, relevant=True)
+
+    # same entity reachable through a trusted identifier -> must merge
+    case("same entity, trusted record id",
+         [listing("a1", "E1", rec="SMARTPROP:TRUSTED"), listing("a2", "E1", rec="SMARTPROP:TRUSTED")])
+    # distinct entities with similar area/price -> must NOT merge
+    case("distinct entities, similar area/price",
+         [listing("b1", "E2", rec="SMARTPROP:B1"), listing("b2", "E3", rec="SMARTPROP:B2")])
+    # source id collision across sources -> must NOT merge
+    case("source id collision",
+         [listing("c1", "E4", source="SMARTPROP", rec="SMARTPROP:42"),
+          listing("c2", "E5", source="EXTERNAL_LISTING", rec="EXTERNAL_LISTING:42")])
+    # missing identifiers -> never key on empty values
+    case("missing source identity",
+         [listing("d1", "E6", rec="", url=""), listing("d2", "E7", rec="", url="")])
+    # same group label in different namespaces -> must NOT merge
+    case("group label in two namespaces",
+         [listing("e1", "E8", source="SMARTPROP", rec="SMARTPROP:E1", group="G1"),
+          listing("e2", "E9", source="EXTERNAL_LISTING", rec="EXTERNAL_LISTING:E2", group="G1")])
+    # real duplicate but no observable link -> must NOT merge (counted as false negative)
+    case("repost, new URL, same entity",
+         [listing("g1", "E11", source="SMARTPROP", rec="SMARTPROP:G1", url="https://x.invalid/a"),
+          listing("g2", "E11", source="EXTERNAL_LISTING", rec="EXTERNAL_LISTING:G2",
+                  url="https://x.invalid/b")])
+    # same URL -> merge; different URL same entity -> merge only with a group
+    case("canonical URL match",
+         [listing("f1", "E10", rec="SMARTPROP:F1", url="https://x.invalid/p/1/"),
+          listing("f2", "E10", rec="SMARTPROP:F2", url="https://x.invalid/p/1")])
+
+    precision = tp / (tp + fp) if tp + fp else 1.0
+    recall = tp / (tp + fn) if tp + fn else 1.0
+    return {"true_positive": tp, "false_positive_merge": fp, "false_negative": fn,
+            "precision": precision, "recall": recall, "cases": details}
+
+
+def price_invariance(cohorts, approach: str, k: int, dedupe: str = "realistic") -> Dict[str, object]:
+    """Compare the whole pipeline, not only top-K counts."""
+    identical_pools = identical_windows = identical_scores = 0
+    windows = len(cohorts) * 2
+    drift = 0.0
     for label, ref, listings in cohorts:
-        base_results, _ = retrieve(ref, listings, "VALUATION_SUPPORT", approach, k)
-        base_ids = [c.listing_id for c, _ in base_results]
-        base_scores = [round(s, 12) for _, s in base_results]
+        base, base_trace, _ = retrieve(ref, listings, "VALUATION_SUPPORT", approach, k, dedupe=dedupe)
+        base_ids = [c.listing_id for c, _ in base]
+        base_scores = [round(s, 12) for _, s in base]
         for factor in (0.5, 2.0):
             import copy
             clone = copy.deepcopy(ref)
             clone.target_price = ref.target_price * factor
-            other, _ = retrieve(clone, listings, "VALUATION_SUPPORT", approach, k)
-            other_ids = [c.listing_id for c, _ in other]
+            other, other_trace, _ = retrieve(clone, listings, "VALUATION_SUPPORT", approach, k,
+                                             dedupe=dedupe)
+            if other_trace.deduped == base_trace.deduped and other_trace.capped == base_trace.capped:
+                identical_pools += 1
+            if [c.listing_id for c, _ in other] == base_ids:
+                identical_windows += 1
             other_scores = [round(s, 12) for _, s in other]
-            if other_ids == base_ids:
-                identical += 1
+            if other_scores == base_scores:
+                identical_scores += 1
             for a, b in zip(base_scores, other_scores):
-                score_drift = max(score_drift, abs(a - b))
-    total = len(cohorts) * 2
-    return {"identical_windows": identical, "windows": total,
-            "score_max_abs_drift": score_drift,
-            "invariant": identical == total and score_drift == 0.0}
-
-
-def buyer_budget_cohorts(seed: int):
-    cohorts = build_cohorts(seed)
-    budgeted = []
-    for label, ref, listings in cohorts:
-        import copy
-        clone = copy.deepcopy(ref)
-        clone.budget_max = ref.target_price * 0.9
-        budgeted.append((label, clone, listings))
-    return budgeted
+                drift = max(drift, abs(a - b))
+    return {"windows": windows, "identical_pools": identical_pools,
+            "identical_windows": identical_windows, "identical_scores": identical_scores,
+            "score_max_abs_drift": drift,
+            "invariant": identical_pools == identical_windows == identical_scores == windows}
 
 
 def buyer_budget_check(cohorts, k: int) -> Dict[str, object]:
     violations = 0
     for label, ref, listings in cohorts:
-        results, _ = retrieve(ref, listings, "BUYER_BUDGET_SEARCH", "B", k)
+        results, _, _ = retrieve(ref, listings, "BUYER_BUDGET_SEARCH", "BF", k, dedupe="realistic")
         for cand, _ in results:
             if cand.price is not None and cand.price > ref.budget_max:
                 violations += 1
     return {"budget_violations": violations}
 
 
-def dedupe_prf(seed: int) -> Dict[str, object]:
-    """Precision/recall of predicted duplicate merging on labelled synthetic pairs."""
+def buyer_budget_cohorts(seed: int):
     cohorts = build_cohorts(seed)
-    tp = fp = fn = 0
+    import copy
+    out = []
     for label, ref, listings in cohorts:
-        cands = [c for c in listings if not c.expired and c.property_type == ref.property_type
-                 and c.district == ref.district]
-        kept, suspects = dedupe_realistic(cands)
-        merged = len(cands) - len(kept)
-        groups: Dict[str, int] = {}
-        for c in cands:
-            groups.setdefault(c.entity_id, 0)
-            groups[c.entity_id] += 1
-        true_duplicates = sum(v - 1 for v in groups.values())
-        tp += min(merged, true_duplicates)
-        fp += max(0, merged - true_duplicates)
-        fn += max(0, true_duplicates - merged)
-    precision = tp / (tp + fp) if tp + fp else 1.0
-    recall = tp / (tp + fn) if tp + fn else 1.0
-    return {"true_positive": tp, "false_positive_merge": fp, "false_negative": fn,
-            "precision": precision, "recall": recall}
+        clone = copy.deepcopy(ref)
+        clone.budget_max = ref.target_price * 0.9
+        out.append((label, clone, listings))
+    return out
 
 
 # --------------------------------------------------------------------------- assertions
 def run_assertions(seed: int) -> int:
-    """Targeted checks on metric definitions. Non-zero exit on failure."""
     failures: List[str] = []
 
     def check(ok: bool, label: str) -> None:
@@ -594,44 +742,62 @@ def run_assertions(seed: int) -> int:
     except ValueError:
         check(True, "k<1 is rejected")
 
-    # Duplicate gain counted once: two listings of one entity fill two slots but gain once.
-    dup = Listing("l1", "E1", "SMARTPROP", "SMARTPROP:l1", "u1", None, "HOUSE", "Hải Châu",
-                  "Phường 1", 100.0, 5e9, 3, 3, 6.0, relevant=True)
-    dup2 = Listing("l2", "E1", "EXTERNAL_LISTING", "EXTERNAL_LISTING:l2", "u2", None, "HOUSE",
-                   "Hải Châu", None, 100.0, 5e9, None, None, None, relevant=True)
-    ref = Reference("EREF", "HOUSE", "Hải Châu", "Phường 1", 100.0, 5e9, bedrooms=3, floors=3,
-                    frontage=6.0, property_id="P0", source_record_id="SMARTPROP:P0",
-                    detail_url="u0")
-    report = evaluate([("synthetic", ref, [dup, dup2])], "A", 2, dedupe="realistic")
-    check(report["entity_precision@k"] == 0.5, "duplicate gain counted once (P=1/2)")
-    check(report["duplicate_excess_rows"] == 1, "duplicate excess row reported")
+    # ---- candidate cap actually binds
+    cap = cap_probe()
+    check(cap["smartprop_cap_binds"] and cap["external_cap_binds"],
+          f"cap binds (pre {cap['pre_cap_smartprop']}/{cap['pre_cap_external']})")
+    check(cap["post_cap"] <= SMARTPROP_CAP + EXTERNAL_CAP, "post-cap count respects caps")
+    check(cap["relevant_lost_at_cap"] > 0,
+          f"relevant entities lost at cap = {cap['relevant_lost_at_cap']}")
 
-    # Empty / zero-positive cohort handling.
-    report = evaluate([("empty", ref, [])], "B", 5)
-    check(report["empty_result_cohorts"] == 1, "empty cohort counted")
-    check(report["zero_positive_cohorts"] == 1 and report["entity_recall@k"] == 0.0,
-          "zero-positive cohort excluded from recall and counted")
+    # ---- pair-level dedupe
+    prf = dedupe_pair_metrics()
+    check(prf["false_positive_merge"] == 0, f"no false merge at pair level (fp={prf['false_positive_merge']})")
+    check(prf["true_positive"] >= 2, f"trusted identifiers merge (tp={prf['true_positive']})")
 
-    # Exact self-match: oracle removes it, realistic removes the same-URL row.
-    report = evaluate([("self", ref, [dup])], "B", 5, dedupe="oracle")
-    check(report["self_match_count"] == 0, "oracle removes exact self-match")
+    # ---- non-vacuous self-match
+    ref = Reference("E-REF", "HOUSE", "Hải Châu", "Phường 1", 100.0, 6e9, bedrooms=3,
+                    floors=3, frontage=6.0, property_id="PROP1",
+                    source_record_id="SMARTPROP:PROP1", detail_url="https://x.invalid/p/1")
+    exact = Listing("self", "E-REF", "SMARTPROP", "SMARTPROP:PROP1", "https://x.invalid/p/1",
+                    None, "HOUSE", "Hải Châu", "Phường 1", 100.0, 6e9, 3, 3, 6.0)
+    repost = Listing("repost", "E-REF", "EXTERNAL_LISTING", "EXTERNAL_LISTING:R",
+                     "https://x.invalid/repost", None, "HOUSE", "Hải Châu", None,
+                     100.0, 6e9, None, None, None)
+    distinct = Listing("distinct", "E-OTHER", "SMARTPROP", "SMARTPROP:OTHER",
+                       "https://x.invalid/other", None, "HOUSE", "Hải Châu", "Phường 1",
+                       100.0, 6e9, 3, 3, 6.0, relevant=True)
+    fixture = [exact, repost, distinct]
+    real, _, _ = retrieve(ref, fixture, "VALUATION_SUPPORT", "C", 3, dedupe="realistic")
+    ids = [c.listing_id for c, _ in real]
+    check("self" not in ids, "exact observable self-match removed")
+    check("distinct" in ids, "distinct comparable not removed")
+    orc, _, _ = retrieve(ref, fixture, "VALUATION_SUPPORT", "C", 3, dedupe="oracle")
+    check("repost" not in [c.listing_id for c, _ in orc], "oracle removes every reference entity")
+    check("repost" in ids, "realistic keeps the unverifiable repost (residual reported)")
 
-    # Deterministic ordering under shuffled input.
-    base = build_cohorts(seed)[:4]
+    # ---- deterministic ranking: IDs, scores and representatives
+    base = build_cohorts(seed)[:6]
     shuffled = [(lbl, r, list(reversed(lst))) for lbl, r, lst in base]
-    a = evaluate(base, "C", 5)["returned_rows"]
-    b = evaluate(shuffled, "C", 5)["returned_rows"]
-    check(a == b, "returned row count stable under input order change")
+    a = [(c.listing_id, round(s, 12)) for c, s in retrieve(base[0][1], base[0][2],
+                                                           "VALUATION_SUPPORT", "C", 5,
+                                                           dedupe="realistic")[0]]
+    b = [(c.listing_id, round(s, 12)) for c, s in retrieve(shuffled[0][1], shuffled[0][2],
+                                                           "VALUATION_SUPPORT", "C", 5,
+                                                           dedupe="realistic")[0]]
+    check(a == b, "ranking IDs and scores stable under reversed input order")
 
-    # Price invariance for C (price is not a similarity feature).
-    inv = price_invariance(build_cohorts(seed)[:6], "C", 5)
-    check(inv["invariant"], f"VALUATION_SUPPORT price invariance (drift={inv['score_max_abs_drift']})")
-    inv_a = price_invariance(build_cohorts(seed)[:6], "A", 5)
-    check(not inv_a["invariant"], "baseline A is NOT price invariant (expected)")
+    # ---- realistic price invariance
+    for variant in ("BF", "C"):
+        inv = price_invariance(base, variant, 5, dedupe="realistic")
+        check(inv["invariant"], f"{variant} VALUATION_SUPPORT price invariance "
+                                f"(drift={inv['score_max_abs_drift']})")
+    inv_b = price_invariance(base, "B", 5, dedupe="realistic")
+    check(not inv_b["invariant"], "B alone is NOT price invariant (W_PRICE still applied)")
 
-    # Buyer budget still enforced.
-    budget = buyer_budget_check(buyer_budget_cohorts(seed)[:6], 5)
-    check(budget["budget_violations"] == 0, "BUYER_BUDGET_SEARCH honours budget_max")
+    # ---- buyer budget
+    check(buyer_budget_check(buyer_budget_cohorts(seed)[:6], 5)["budget_violations"] == 0,
+          "BUYER_BUDGET_SEARCH honours budget_max")
 
     print(f"\nassertions: {'PASS' if not failures else 'FAIL'} ({len(failures)} lỗi)")
     return 0 if not failures else 1
@@ -656,16 +822,18 @@ def main() -> int:
     cohorts = build_cohorts(args.seed, density=args.density)
     rows = {}
     for approach, dedupe in (("A", "realistic"), ("B", "oracle"), ("B", "realistic"),
-                             ("C", "realistic"), ("D", "realistic")):
+                             ("BF", "realistic"), ("C", "realistic"), ("D", "realistic")):
         key = approach if approach == "A" else f"{approach}_{dedupe.upper()}"
         rows[key] = evaluate(cohorts, approach, args.k, dedupe=dedupe)
-    prf = dedupe_prf(args.seed)
-    inv = {a: price_invariance(cohorts, a, args.k) for a in ("A", "B", "C")}
+    prf = dedupe_pair_metrics()
+    inv = {v: price_invariance(cohorts, v, args.k, dedupe="realistic")
+           for v in ("A", "B", "BF", "C", "D")}
     budget = buyer_budget_check(buyer_budget_cohorts(args.seed), args.k)
+    cap = cap_probe(args.k)
 
     payload = {"k": args.k, "seed": args.seed, "density": args.density,
-               "cohorts": len(cohorts), "rows": rows, "dedupe_prf": prf,
-               "price_invariance": inv, "buyer_budget": budget}
+               "cohorts": len(cohorts), "rows": rows, "dedupe_pair_metrics": prf,
+               "price_invariance": inv, "buyer_budget": budget, "cap_probe": cap}
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False)
                             .encode()).hexdigest()[:16]
     payload["digest"] = digest
@@ -677,18 +845,20 @@ def main() -> int:
     print(f"SYNTHETIC_SURROGATE_BASELINE  k={args.k} seed={args.seed} density={args.density} "
           f"cohorts={len(cohorts)}")
     print(f"{'variant':12s} {'P@k':>6s} {'R@k':>6s} {'NDCG':>6s} {'self':>5s} {'dup':>5s} "
-          f"{'type':>5s} {'loc':>5s} {'fill':>6s}")
-    print("-" * 70)
+          f"{'type':>5s} {'fill':>6s}")
+    print("-" * 66)
     for key, row in rows.items():
         print(f"{key:12s} {row['entity_precision@k']:6.3f} {row['entity_recall@k']:6.3f} "
               f"{row['entity_ndcg@k']:6.3f} {row['self_match_count']:5d} "
-              f"{row['duplicate_excess_rows']:5d} {row['wrong_type_count']:5d} "
-              f"{row['wrong_locality_count']:5d} {row['fill_rate']:6.3f}")
-    print(f"\ndedupe P/R: {prf['precision']:.3f}/{prf['recall']:.3f} "
-          f"(fp merges={prf['false_positive_merge']}, fn={prf['false_negative']})")
+              f"{row['duplicate_excess_rows']:5d} {row['wrong_type_count']:5d} {row['fill_rate']:6.3f}")
+    print(f"\ncap probe: pre {cap['pre_cap_smartprop']}/{cap['pre_cap_external']} -> "
+          f"capped {cap['post_cap']} · relevant lost at cap {cap['relevant_lost_at_cap']}")
+    print(f"dedupe pairs: P={prf['precision']:.3f} R={prf['recall']:.3f} "
+          f"(tp={prf['true_positive']}, fp={prf['false_positive_merge']}, fn={prf['false_negative']})")
     for name, value in inv.items():
-        print(f"price invariance {name}: identical {value['identical_windows']}/{value['windows']} "
-              f"drift={value['score_max_abs_drift']}")
+        print(f"price invariance {name}: pools {value['identical_pools']}/{value['windows']} "
+              f"ids {value['identical_windows']}/{value['windows']} "
+              f"scores {value['identical_scores']}/{value['windows']} drift={value['score_max_abs_drift']}")
     print(f"buyer budget violations: {budget['budget_violations']}")
     print(f"\ndigest {digest}  (metric payload only, not a dataset hash)")
     return 0
