@@ -17,7 +17,7 @@ public class StandardNewsSchemaConfiguration {
     }
     @Bean HibernatePropertiesCustomizer standardNewsValidation(NewsSchemaCapabilities capability) {
         return properties -> {
-            if (!capability.newsEnabled())
+            if (!capability.validateNewsTables())
                 properties.put("hibernate.hbm2ddl.schema_filter_provider", new NewsFilterProvider());
         };
     }

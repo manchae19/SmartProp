@@ -6,15 +6,15 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /** Read-only capability discovery, before Hibernate builds its validation plan. */
-public record NewsSchemaCapabilities(boolean newsEnabled) {
+public record NewsSchemaCapabilities(boolean newsEnabled, boolean validateNewsTables) {
+    /** Compatibility constructor for already validated full/Standard test fixtures. */
+    public NewsSchemaCapabilities(boolean newsEnabled) { this(newsEnabled, newsEnabled); }
     public static NewsSchemaCapabilities inspect(DataSource source, Environment env) throws Exception {
         JdbcTemplate jdbc = new JdbcTemplate(source);
         var history = jdbc.queryForList("SELECT version,type,checksum,success FROM flyway_schema_history ORDER BY installed_rank");
         boolean local = MigrationProfileEnvironmentGuard.isLocal(env);
         if (local) {
             new MigrationLineageConfiguration().validateSelectedMigrationLineage(source, env).afterPropertiesSet();
-            if (history.size() != 14 || !"28".equals(history.getLast().get("version")))
-                throw new IllegalStateException("News requires the completed Local V28 lineage.");
         } else {
             if (history.size() != 23) throw new IllegalStateException("Unknown schema lineage; refusing capability discovery.");
             for (int i = 0; i < history.size(); i++) {
@@ -28,11 +28,42 @@ public record NewsSchemaCapabilities(boolean newsEnabled) {
                 .target("23").createSchemas(false).baselineOnMigrate(false).cleanDisabled(true)
                 .ignoreMigrationPatterns(new String[]{}).validateMigrationNaming(true).load().validate();
         }
-        Integer tables = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('news_sources','news_articles','news_ingestion_runs')", Integer.class);
-        if (!Integer.valueOf(local ? 3 : 0).equals(tables))
-            throw new IllegalStateException("News tables do not match the validated schema lineage.");
-        if (local && !Integer.valueOf(1).equals(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_name='ck_news_sources_approved_reference' AND enforced='YES'", Integer.class)))
-            throw new IllegalStateException("Required V28 rights constraint is missing.");
-        return new NewsSchemaCapabilities(local);
+        return resolveValidated(jdbc, history, local,
+            env.getProperty("app.local-lineage.require-complete", Boolean.class, true));
+    }
+    /** The caller must first validate identity, ordered history, pending policy and Flyway checksums. */
+    static NewsSchemaCapabilities resolveValidated(JdbcTemplate jdbc, java.util.List<java.util.Map<String,Object>> history,
+            boolean local, boolean requireComplete) {
+        if (history.isEmpty()) throw new IllegalStateException("Unknown schema lineage; refusing capability discovery.");
+        String version = String.valueOf(history.getLast().get("version"));
+        if (!local && !"23".equals(version))
+            throw new IllegalStateException("Unknown Standard schema lineage; refusing capability discovery.");
+        if (local && !java.util.Set.of("21", "26", "27", "28").contains(version))
+            throw new IllegalStateException("Unsupported Local lineage for capability discovery.");
+        if (local && requireComplete && !"28".equals(version))
+            throw new IllegalStateException("Local News schema migration is pending; use the separately reviewed Flyway workflow.");
+        Integer objects = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('news_sources','news_articles','news_ingestion_runs')", Integer.class);
+        Integer tables = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE' AND table_name IN ('news_sources','news_articles','news_ingestion_runs')", Integer.class);
+        Integer checked = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_name='ck_news_sources_approved_reference' AND enforced='YES'", Integer.class);
+        if (!local) {
+            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(checked))
+                throw new IllegalStateException("News tables do not match the validated Standard schema lineage.");
+            return new NewsSchemaCapabilities(false, false);
+        }
+        if ("21".equals(version) || "26".equals(version)) {
+            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(checked))
+                throw new IllegalStateException("News tables do not match the validated Local V" + version + " lineage.");
+            return new NewsSchemaCapabilities(false, false);
+        }
+        if (!Integer.valueOf(3).equals(objects) || !Integer.valueOf(3).equals(tables))
+            throw new IllegalStateException("News tables do not match the validated Local V" + version + " lineage.");
+        if ("27".equals(version)) {
+            if (!Integer.valueOf(0).equals(checked))
+                throw new IllegalStateException("V27 cannot contain the V28 rights constraint.");
+            return new NewsSchemaCapabilities(false, true);
+        }
+        if (!Integer.valueOf(1).equals(checked))
+            throw new IllegalStateException("Required V28 rights constraint is missing or unenforced.");
+        return new NewsSchemaCapabilities(true, true);
     }
 }

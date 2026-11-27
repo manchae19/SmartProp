@@ -1,39 +1,26 @@
 ## Summary
 
-Targeted fixes for1 P1 and2 P2 from review of765cc5e. No News V1 scope expansion.
-
 ```text
-DB ordered lineage + checksum -> capability -> Hibernate validation/filter -> controlled News503
-featured UPDATE -> featured, updated_at -> clear + reread
-visibility UPDATE -> publication_status, updated_at -> clear + reread
-independent fixture manifest -> owned process + exact identity -> strict Local history/Hibernate
+validate ordered lineage, identity and Flyway checksum
+  -> inspect actual News tables and V28 rights constraint
+  -> configure Hibernate validation for that schema capability
+  -> enable News API only for valid Local V28
 ```
+
+Local V21/V26 can keep the read-only Advisor online while Hibernate filters the three absent News tables. V27 keeps News API unavailable but validates every existing News table. Local/Staging full mode still rejects pending V27/V28, and valid V28 requires the enforced rights constraint.
 
 ## Evidence
 
-- **Before:** Standard23+dev failed on missing news_articles; stale Admin entity save could
-  restore HIDDEN to VISIBLE; shared Coordinate test required the author's3311 identity.
-  **After:** Standard/dev/prod/dev+prod runtime matrix; actual targeted SQL with two concurrent
-  transactions and both commit orders;39 Coordinate tests on each of two independent fixtures.
-- Fresh final-HEAD backend521 PASS, Standard matrix11, Local/staging configuration and broken
-  schema runtime5, portable Coordinate/safety47;0 fail/error/skip. Backend package and fresh
-  migration checksum validation recorded in local final manifest.
-- Frontend93/65, Chrome real E2E and frontend builds are **REUSED_EVIDENCE** from765cc5e;
-  public DTO/frontend contract unchanged. Staging configuration is tested on approved3311
-  identity; native3306/3307 endpoints are never contacted, production guards unchanged.
-- Report: `docs/SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md`; fixture guide:
-  `docs/testing/ISOLATED_DATABASE_FIXTURES.md`; final SHA/commands/exits/SQL/identity:
-  `.scratch/evidence/targeted/final-validation.json`.
-
-Keep LIVE_INGESTION_DISABLED and SOURCE_RIGHTS_APPROVAL_PENDING. DNS rebinding remains
-V1 limitation;304 log race stays backlog. No real press-source approvals or live RSS.
+- **Before:** The Advisor's read-only Local V21/V26/V27 schema could not start because News capability discovery required V28. **After:** `AdvisorReadOnlyRuntimeIT` passes 13/13 with Spring Boot and Hibernate, including Advisor HTTP 200, News HTTP 503 for V21/V26/V27, full-mode pending rejection, invalid lineage/checksum/constraint refusal, broken V27 column and unexpected News view rejection, and pre-connection isolation checks.
+- Standard V23 Hibernate/API regression: 2/2 fresh. `ValuationServiceTest`: 12/12 fresh after merging latest `main`.
+- MySQL fixture identity, UUID, datadir, owner, process and JDBC URL verified. The test driver recorded only the approved isolated 3311 fixture; ports 3306/3307 were not contacted. Before/after database snapshots matched.
+- Frontend PR41 93/93, PR37 65/65, Chrome E2E and production builds are **REUSED_EVIDENCE** because this follow-up changes no frontend/API contract.
+- V13–V28 SQL/checksums and Flyway history are unchanged. V27 checksum `-1622560226`; V28 checksum `-1006687404`. `LIVE_INGESTION_DISABLED`; `SOURCE_RIGHTS_APPROVAL_PENDING`.
 
 ## Merge Danger
 
-**Door:** two-way code change; no migration added or edited.
+**Door:** two-way application code change; no migration added or edited.
 
 **Blast Radius:** moderate
 
-Hibernate capability selection and News Admin updates; shared Coordinate test bootstrap only.
-V13–V28 SQL/checksums unchanged (V27=-1622560226, V28=-1006687404). Older V27 checksum
-must stop for review, never repair. No changes to other branches, approve, merge or force-push.
+Hibernate validation selection and News capability discovery. Invalid or unknown lineage remains fail-closed. No live ingestion or source approval is enabled.

@@ -1,5 +1,28 @@
 # PR #41 — Targeted final review fixes
 
+## P1 Advisor compatibility addendum
+
+This addendum records the focused follow-up on top of the fetched `origin/main` merge at
+`a0e38349807b23fa071d0779d0a6211be9f3fb99`. The resulting code is validated against actual
+Local V21, V26, V27 and V28 lineage and schema capability before Hibernate validates the
+entity model. V21/V26 omit only the absent News tables from Hibernate validation; V27 validates
+all three News tables while News API remains unavailable; only V28 with the enforced rights
+constraint enables News API. Unknown Local versions and invalid histories/checksums fail closed.
+
+Fresh evidence on this follow-up: `AdvisorReadOnlyRuntimeIT` 13/13, Standard V23 runtime 2/2,
+and `ValuationServiceTest` 12/12. The Advisor suite verifies HTTP 200 for the read-only Advisor,
+News API 503 for V21/V26/V27, Local/Staging full-mode rejection while V27/V28 are pending,
+Hibernate rejection of a broken V27 column, V28 availability, checksum/history/constraint
+refusal, read-only session behavior, and protected/fallback destination rejection before JDBC.
+Database snapshots matched before/after runtime. The test-only guarded driver recorded no
+physical destination outside the authorized 3311 fixture. Port 3306 and 3307 were not contacted.
+
+V13–V28 migration SQL and Flyway history were not changed; V27 checksum remains
+`-1622560226` and V28 remains `-1006687404`. This follow-up adds no migration. Frontend PR41
+93/93, PR37 65/65, Chrome E2E and production builds remain **REUSED_EVIDENCE** because this
+follow-up changes no frontend/API contract. `LIVE_INGESTION_DISABLED` and
+`SOURCE_RIGHTS_APPROVAL_PENDING` remain in force.
+
 Reviewed starting HEAD: `765cc5e1ea1fc68cc90ea601912c74144731202a`.
 Only the requested1 P1 and2 P2 are addressed. Final acceptance is recorded against the
 committed HEAD in `.scratch/evidence/targeted/final-validation.json`; never infer a gate
@@ -17,15 +40,15 @@ from this report alone. No approve/merge or changes to other branches.
 | H. Backend | Full fresh backend521 tests (337 unit +184 integration/runtime),0 fail/error/skip; separate Standard11, Local/staging5 and portable fixture47. Logs/exit codes and tested final SHA in final manifest. Backend production package checked separately. |
 | I. Migration integrity | No migration SQL V13–V28 changes, noV29, no repair/history edits. V27=-1622560226, V28=-1006687404; Flyway validates unchanged resources. An older V27 checksum must stop deployment for review, never repair. |
 | J. PR37 compatibility | DTO/frontend/public contract unchanged. Frontend PR41 93/93, PR37 65/65, Chrome real E2E and frontend builds are **REUSED_EVIDENCE** from reviewed HEAD765cc5e, not fresh PASS. |
-| K. Delivery | Fetch confirms main1f36205 unchanged. No targeted-file overlap with PR37/44/45 or Research Access. Final local/remote SHA and PR readback are recorded after push in final manifest. |
+| K. Delivery | Historical delivery evidence above predates the latest main merge and is superseded for this follow-up. Latest `origin/main` is `a0e38349807b23fa071d0779d0a6211be9f3fb99`; PR44's 34 merged files have no overlap with this follow-up's changed files. Final branch/remote verification is recorded after push. |
 | L. Limits | LIVE_INGESTION_DISABLED; SOURCE_RIGHTS_APPROVAL_PENDING. DNS rebinding remains V1 limitation;304 logging race stays backlog beforeV1.1. No live RSS or real-source approval. |
 
-Only emit final gates after the corresponding final-HEAD execution and remote readback:
-STANDARD_V23_DEV_RUNTIME_PASS, STANDARD_V23_PROD_RUNTIME_PASS,
-STANDARD_V23_MIGRATION_PROFILE_PASS, LOCAL_STAGING_V28_STRICT_VALIDATION_PASS,
-NEWS_ADMIN_CONCURRENT_UPDATE_PASS, HIDDEN_ARTICLE_PUBLIC_EXCLUSION_PASS,
-COORDINATE_IT_PORTABLE_ISOLATION_PASS, COORDINATE_PROVENANCE_REGRESSION_PASS,
-MIGRATION_CHECKSUM_INTEGRITY_PASS, REMOTE_HEAD_VERIFIED, READY_FOR_TARGETED_FINAL_REVIEW.
+The gate list above belongs to the earlier reviewed HEAD and is not evidence for the post-merge
+follow-up by itself. For this follow-up, emit only after commit, push and remote readback:
+ADVISOR_READ_ONLY_V21_V26_V27_RUNTIME_PASS, HIBERNATE_V27_SCHEMA_VALIDATION_PASS,
+LOCAL_STAGING_PENDING_MIGRATION_REFUSAL_PASS, V28_RIGHTS_CONSTRAINT_CAPABILITY_PASS,
+FIXTURE_PRECONNECTION_ISOLATION_PASS, MERGED_MAIN_OVERLAP_CHECK_PASS,
+REMOTE_HEAD_VERIFIED, READY_FOR_LAST_P1_REVIEW.
 
 See [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md) and
 [fixture provisioning](testing/ISOLATED_DATABASE_FIXTURES.md). Raw logs, backups, manifests,

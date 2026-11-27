@@ -1,5 +1,22 @@
 # PR #41 — Targeted final test matrix
 
+## Advisor compatibility follow-up after `origin/main` merge
+
+| Suite | Pass | Fail/error/skip | Evidence |
+|---|---:|---|---|
+| Advisor read-only Local V21/V26/V27 + strict Local/Staging + negative lineage/schema/guards |13|0/0/0|**FRESH_PASS** `AdvisorReadOnlyRuntimeIT`; real Spring Boot/Hibernate; JDBC allowlist only authorized port3311 fixture; before/after snapshots equal; an unexpected News view is refused |
+| Standard V23 Hibernate/API regression |2|0/0/0|**FRESH_PASS** `NewsStandardV23IT` on isolated Standard fixture at3311 |
+| Merged-main valuation regression |12|0/0/0|**FRESH_PASS** `ValuationServiceTest` |
+| Frontend PR41/PR37, Chrome E2E, production builds |93/65 + existing E2E/build|—|**REUSED_EVIDENCE** from reviewed PR41 result; this follow-up changes no frontend/API contract |
+| MySQL ownership/isolation |—|—|**FRESH_PASS** fixture manifest/config SHA, UUID, datadir, owner, process and JDBC URL verified for3311; no3306/3307 destination in the runtime driver log |
+| Migration integrity |—|—|**FRESH_PASS** runtime Flyway validate on Local V21/V26/V27/V28; checksum-negative fixture refused; no V13–V28 source/history edits and no V29 |
+
+The focused follow-up command was `AdvisorReadOnlyRuntimeIT` (13 tests), followed by
+`NewsStandardV23IT` (2 tests) and `ValuationServiceTest` (12 tests). The first two used the
+test-only independent fixture manifest and explicitly authorized guarded JDBC driver on port
+3311; Flyway migration and SQL initialization were disabled. These fresh runs replace no
+unrelated earlier evidence and do not imply live-ingestion or native shared-database testing.
+
 Final SHA, commands, per-suite results and exit codes:
 `.scratch/evidence/targeted/final-validation.json`. Logs below must be freshly produced
 after the final commit. Precommit/red reproduction logs remain separate and are not final PASS.
