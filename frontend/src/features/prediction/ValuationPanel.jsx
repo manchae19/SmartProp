@@ -376,7 +376,7 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                 <span className="text-brand-navy/70" data-sp-018bbc28="">
                   {"· tùy chọn"}
                 </span>
-                <input type="number" min="1" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
+                <input type="number" min="0" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Chưa rõ" data-sp-018bbc28="" value={view.form.rooms ?? ""} onChange={event => ($value => {
               view.updateForm(draftValue => draftValue.rooms = $value);
             })(event.target.value)} />
               </label> : null}
@@ -424,6 +424,79 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
                       {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(label)}
                     </option>)}
                 </select>
+              </label> : null}
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Tên tuyến đường "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input maxLength="200" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-street-name" value={view.form.street_name ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.street_name = $value);
+            })(event.target.value)} />
+              </label>
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Tên dự án "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input maxLength="200" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-project-name" value={view.form.project_name ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.project_name = $value);
+            })(event.target.value)} />
+              </label>
+            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Chiều rộng đường "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="0.1" max="100" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-road-width" value={view.form.road_width_m ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.road_width_m = $value);
+            })(event.target.value)} />
+              </label> : null}
+            {view.hasRooms ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Số phòng tắm "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="0" max="30" step="1" inputMode="numeric" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-bathrooms" value={view.form.bathrooms ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.bathrooms = $value);
+            })(event.target.value)} />
+              </label> : null}
+            <label className="block text-sm" data-sp-018bbc28="">
+                {"Hướng nhà "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <select className="valuation-input mt-2" data-sp-018bbc28="" data-testid="valuation-house-direction" value={view.form.house_direction ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.house_direction = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
+                    {"Chưa rõ"}
+                  </option>
+                  {["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"].map(d => <option key={d} value={d} data-sp-018bbc28="">{d}</option>)}
+                </select>
+              </label>
+            {view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Hướng ban công "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <select className="valuation-input mt-2" data-sp-018bbc28="" data-testid="valuation-balcony-direction" value={view.form.balcony_direction ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.balcony_direction = $value);
+            })(event.target.value)}>
+                  <option value="" data-sp-018bbc28="">
+                    {"Chưa rõ"}
+                  </option>
+                  {["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"].map(d => <option key={d} value={d} data-sp-018bbc28="">{d}</option>)}
+                </select>
+              </label> : null}
+            {!view.isApartment ? <label className="block text-sm" data-sp-018bbc28="">
+                {"Chiều rộng mặt tiền "}
+                <span className="text-brand-navy/70" data-sp-018bbc28="">
+                  {"· tùy chọn"}
+                </span>
+                <input type="number" min="0.1" max="500" step="any" inputMode="decimal" className="valuation-input mt-2" placeholder="Để trống nếu chưa rõ" data-sp-018bbc28="" data-testid="valuation-frontage-width" value={view.form.frontage_width_m ?? ""} onChange={event => ($value => {
+              view.updateForm(draftValue => draftValue.frontage_width_m = $value);
+            })(event.target.value)} />
               </label> : null}
           </div>
           <button type="submit" disabled={view.predicting} className="mt-6 rounded-full bg-brand-card px-6 py-3 text-sm font-semibold text-[var(--ui-accent)] hover:bg-[var(--ui-surface)] disabled:opacity-60 disabled:cursor-wait transition" data-sp-018bbc28="">

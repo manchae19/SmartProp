@@ -28,31 +28,67 @@ DISTRICT_SEARCH = [
 ]
 
 
-def resolve_district(location_feature: str, ward: str | None = None) -> str:
-    """Extract and canonicalize Da Nang district name from location text."""
-    combined = f"{location_feature or ''} {ward or ''}".strip()
-    norm = unicodedata.normalize("NFC", combined).casefold()
+def canonical_district(value, vocabulary=None):
+    """NFC + trim + casefold, then require an EXACT match against the model vocabulary.
 
-    # Exact direct match
+    The vocabulary comes from the loaded artifact, so this cannot drift from what the
+    model actually supports. Unknown input stays unknown: there is no default district.
+    """
+    cleaned = unicodedata.normalize("NFC", str(value or "")).strip()
+    if not cleaned:
+        return None
+    if vocabulary:
+        folded = cleaned.casefold()
+        for entry in vocabulary:
+            if unicodedata.normalize("NFC", str(entry)).casefold() == folded:
+                return str(entry)
+        return None
+    return cleaned
+
+
+def resolve_district(location_feature: str, ward: str | None = None, vocabulary=None) -> str | None:
+    """Resolve the district from the validated location field ONLY.
+
+    `ward` is deliberately NOT used to decide the district: a ward name must never be
+    able to move a property into a different district. The parameter is kept for call
+    compatibility and ignored.
+
+    Returns None when the district cannot be resolved. There is no "safe default":
+    silently pricing an unknown location as Hải Châu is exactly the bug this prevents.
+    """
+    if vocabulary:
+        return canonical_district(location_feature, vocabulary)
+
+    # Legacy research path (no artifact vocabulary supplied): district-only regex list,
+    # still never falls back to a default district.
+    normalized = unicodedata.normalize("NFC", str(location_feature or "")).strip()
+    if not normalized:
+        return None
+    folded = normalized.casefold()
     for key, canonical in DISTRICT_CANONICAL.items():
-        if key in norm:
+        if key in folded:
             return canonical
-
-    # Regex search with diacritic fallback
     for pattern, canonical in DISTRICT_SEARCH:
-        if pattern.search(combined):
+        if pattern.search(normalized):
             return canonical
-
-    # Safe default within Da Nang core
-    return "Hải Châu"
+    return None
 
 
 def real_feature_input_enabled() -> bool:
-    """Staging/rollout switch; production defaults to legacy adapter behaviour."""
-    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "false").strip().lower() in {"1", "true", "yes", "on"}
+    """Real measurements are the default; legacy synthesis must be opted into.
+
+    The legacy adapter invented road_width/frontage_width from access_type
+    (frontage -> 10m/5m, alley -> 3m/4m). Those numbers were never measured, so
+    serving them as model input misrepresents the property. Production now keeps
+    unknown dimensions missing and lets the model's has_* indicators carry the
+    absence. Set SMARTPROP_V1_3_REAL_FEATURES=false only to reproduce historical
+    research runs.
+    """
+    return os.environ.get("SMARTPROP_V1_3_REAL_FEATURES", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = None) -> Dict[str, Any]:
+def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = None,
+                   district_vocabulary=None) -> Dict[str, Any]:
     """Convert a SmartProp V6 ValuationRequest dictionary into V1.3 format.
 
     use_real_features=False preserves the legacy behavior byte-for-byte (including
@@ -79,7 +115,13 @@ def map_v6_to_v1_3(v6_request: Dict[str, Any], use_real_features: bool | None = 
     # 2. Extract District from location_feature
     loc_feature = v6_request.get("location_feature", "")
     ward_val = v6_request.get("ward")
-    district = resolve_district(loc_feature, ward_val)
+    # The district is decided by the validated location field alone. `ward` is a separate
+    # feature and is never allowed to override it.
+    district = resolve_district(loc_feature, vocabulary=district_vocabulary)
+    if district_vocabulary is not None and district is None:
+        raise ValueError(
+            "unsupported_location: địa bàn không được mô hình hỗ trợ: " + str(loc_feature)
+        )
 
     # Clean ward string if needed
     cleaned_ward = ward_val

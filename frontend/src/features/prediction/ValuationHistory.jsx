@@ -191,6 +191,9 @@ export default React.forwardRef(function ValuationHistory(props, ref) {
                   }).format(new Date(item.createdAt)))}
                       {" · Giá rao tham khảo"}
                     </p>
+                    {Array.isArray(item.prediction?.warnings) && item.prediction.warnings.length ? <ul className="mt-2 space-y-1 text-xs" data-testid="history-warnings">
+                        {item.prediction.warnings.map((warning, index) => <li key={index} className="text-[var(--ui-accent)]">{(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(warning)}</li>)}
+                      </ul> : null}
                   </div>
                   <button type="button" disabled={!!view.removing} className="text-sm underline disabled:opacity-50" aria-label={`Xóa kết quả ${view.formatPrice(item.prediction.predicted_asking_price_vnd)}`} onClick={$event => {
                 view.remove(item.id);
