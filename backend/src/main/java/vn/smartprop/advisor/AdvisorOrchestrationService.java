@@ -405,7 +405,7 @@ public class AdvisorOrchestrationService {
                 List.of("Diện tích hoặc giá rao nằm ngoài khung tham chiếu tương đồng tiêu chuẩn."));
         }
 
-        // Pass propertyId when the recommended listing is a SmartProp platform property so notSelf excludes it.
+        // Compare the recommended listing's asking price, never the valuation evidence.
         String propertyId = "PROPERTY".equals(prop.source().kind()) ? prop.source().recordKey() : null;
         ComparableDtos.Request compReq = new ComparableDtos.Request(
             propertyId,
@@ -416,7 +416,11 @@ public class AdvisorOrchestrationService {
             prop.priceVnd(),
             null,
             null,
-            COMPARABLES_PER_PROPERTY
+            COMPARABLES_PER_PROPERTY,
+            null,
+            ComparableDtos.Purpose.SIMILAR_LISTING,
+            null,
+            comparableSubject(prop)
         );
 
         boolean allowTinix = includeResearchMode
@@ -431,7 +435,7 @@ public class AdvisorOrchestrationService {
             if (isTinix && !allowTinix) continue;
             boolean isSmartProp = c.sourceKind() == ComparableDtos.SourceKind.SMARTPROP;
             String verification = isSmartProp ? "PLATFORM_PUBLISHED"
-                : (isTinix ? "RESEARCH_REFERENCE_ONLY" : "EXTERNAL_UNVERIFIED");
+                : (isTinix ? "RESEARCH_REFERENCE_ONLY" : "EXTERNAL_VERIFIED");
             String url = sanitizeComparableUrl(c);
             mapped.add(new ComparableItem(
                 c.candidateId(),
@@ -464,6 +468,19 @@ public class AdvisorOrchestrationService {
         String status = mapped.isEmpty() ? "EMPTY_NO_MATCHES" : "AVAILABLE";
         String stage = mapped.isEmpty() ? "NONE" : raw.searchStage();
         return new ComparableEvidence(status, mapped.size(), stage, List.copyOf(mapped), compWarnings);
+    }
+
+    private static ComparableDtos.SubjectIdentity comparableSubject(PropertyResult prop) {
+        var source = prop.source();
+        if ("TINIX_AI".equals(source.kind())) {
+            return new ComparableDtos.SubjectIdentity(null, null, null, source.recordKey(), null);
+        }
+        if (!"EXTERNAL".equals(source.kind())) return null;
+        Long externalId = null;
+        if (prop.id() != null && prop.id().matches("external:[0-9]{1,18}")) {
+            externalId = Long.valueOf(prop.id().substring("external:".length()));
+        }
+        return new ComparableDtos.SubjectIdentity(externalId, null, null, null, source.detailUrl());
     }
 
     private static boolean isPublicLiveCandidate(PropertyResult prop) {

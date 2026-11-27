@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -59,8 +58,7 @@ class ComparableResearchAccessHardeningTest {
         when(users.findById(31L)).thenReturn(Optional.of(user(31L, User.Role.ADMIN, User.Status.LOCKED, null)));
         when(users.findById(32L)).thenReturn(Optional.of(user(32L, User.Role.ADMIN, User.Status.ACTIVE, Instant.now())));
 
-        when(repo.tinixIdsInPriceBand(any(), any(), anyInt(), anyInt())).thenReturn(List.of("tnx-500"));
-        when(repo.tinixDetails(anyList())).thenReturn(List.of(
+        when(repo.tinixCandidates(any(), anyInt())).thenReturn(List.of(
             new TinixRow("tnx-500", "HOUSE", "Hải Châu", "Phước Ninh",
                 new BigDecimal("80"), new BigDecimal("5000000000"),
                 new BigDecimal("3"), new BigDecimal("5"), new BigDecimal("3"), new BigDecimal("6"), "g1")
@@ -91,7 +89,7 @@ class ComparableResearchAccessHardeningTest {
 
     private static ComparableDtos.Request sampleReq(Boolean includeResearch) {
         return new ComparableDtos.Request(
-            null, "HOUSE", "Hải Châu", "Phước Ninh",
+            null, "HOUSE", "Hải Châu", null,
             new BigDecimal("80"), new BigDecimal("5000000000"),
             3, 3, 5, includeResearch
         );
@@ -100,11 +98,11 @@ class ComparableResearchAccessHardeningTest {
     @Test
     @DisplayName("BROKER and default ADMIN calls receive public SMARTPROP + EXTERNAL_LISTING comparables without touching TiniX")
     void brokerAndDefaultAdminReceivePublicComparablesOnly() throws Exception {
-        when(repo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of(
+        when(repo.propertyCandidates(any(), anyInt())).thenReturn(List.of(
             new PropertyRow("sp-01", "HOUSE", "Hải Châu", "Phước Ninh", new BigDecimal("82"), new BigDecimal("5100000000"), 3)
         ));
-        when(repo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of(
-            new ExternalRow(77L, "CAFELAND", "Nhà ở", "Hải Châu", new BigDecimal("78"), new BigDecimal("4900000000"), "VALID", "https://cafeland.vn/77")
+        when(repo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of(
+            new ExternalRow(77L, "CAFELAND", "Nhà ở", "Hải Châu", new BigDecimal("78"), new BigDecimal("4900000000"), "VALID", "https://cafeland.vn/77", "77", null)
         ));
 
         // Even when researchEnabled=true on the server, neither BROKER nor default ADMIN auto-triggers TiniX!
@@ -120,16 +118,15 @@ class ComparableResearchAccessHardeningTest {
             assertThat(json.writeValueAsString(res)).doesNotContain("TINIX_RESEARCH", "tnx-500", "CC BY-NC");
         }
 
-        verify(repo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
-        verify(repo, never()).tinixDetails(anyList());
+        verify(repo, never()).tinixCandidates(any(), anyInt());
         verify(repo, never()).eligibleCounts();
     }
 
     @Test
     @DisplayName("Public Comparable search never falls back to TiniX when SMARTPROP and EXTERNAL_LISTING are empty")
     void emptyPublicCohortNeverFallsBackToTinix() {
-        when(repo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
-        when(repo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
+        when(repo.propertyCandidates(any(), anyInt())).thenReturn(List.of());
+        when(repo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of());
 
         ComparableRankingService service = new ComparableRankingService(repo, eligibility, properties, true);
         ComparableController controller = new ComparableController(service, limits, access);
@@ -140,16 +137,15 @@ class ComparableResearchAccessHardeningTest {
         assertThat(res.searchStage()).isEqualTo("NONE");
         assertThat(res.eligibleCountsBySource()).doesNotContainKey("TINIX_RESEARCH");
 
-        verify(repo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
-        verify(repo, never()).tinixDetails(anyList());
+        verify(repo, never()).tinixCandidates(any(), anyInt());
         verify(repo, never()).eligibleCounts();
     }
 
     @Test
     @DisplayName("Default rank(request) overload cannot bypass research isolation and rejects includeResearch=true")
     void defaultRankOverloadCannotBypassIsolation() {
-        when(repo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
-        when(repo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
+        when(repo.propertyCandidates(any(), anyInt())).thenReturn(List.of());
+        when(repo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of());
 
         ComparableRankingService service = new ComparableRankingService(repo, eligibility, properties, true);
 
@@ -172,7 +168,7 @@ class ComparableResearchAccessHardeningTest {
             .isInstanceOf(ApiException.class)
             .extracting(e -> ((ApiException) e).status).isEqualTo(403);
 
-        verify(repo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
+        verify(repo, never()).tinixCandidates(any(), anyInt());
     }
 
     @Test
@@ -214,14 +210,14 @@ class ComparableResearchAccessHardeningTest {
             .isInstanceOf(ApiException.class)
             .extracting(e -> ((ApiException) e).status).isEqualTo(403);
 
-        verify(repo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
+        verify(repo, never()).tinixCandidates(any(), anyInt());
     }
 
     @Test
     @DisplayName("Active non-deleted ADMIN with explicit includeResearch=true and research-enabled=true receives labelled TiniX rows")
     void authorizedAdminExplicitResearchSucceedsWhenEnabled() {
-        when(repo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
-        when(repo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
+        when(repo.propertyCandidates(any(), anyInt())).thenReturn(List.of());
+        when(repo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of());
 
         ComparableRankingService enabledService = new ComparableRankingService(repo, eligibility, properties, true);
         ComparableController controller = new ComparableController(enabledService, limits, access);
@@ -229,7 +225,7 @@ class ComparableResearchAccessHardeningTest {
         ComparableDtos.Response res = controller.comparables(jwt(30L), true, sampleReq(null), httpReq, httpRes);
         assertThat(res.comparables()).hasSize(1);
         ComparableDtos.Candidate c = res.comparables().get(0);
-        assertThat(c.candidateId()).isEqualTo("tnx-500");
+        assertThat(c.candidateId()).isEqualTo("tinix:tnx-500");
         assertThat(c.sourceKind()).isEqualTo(ComparableDtos.SourceKind.TINIX_RESEARCH);
         assertThat(c.listingUrl()).isNull();
         assertThat(c.datasetLicense()).isEqualTo("CC BY-NC 4.0");

@@ -12,6 +12,7 @@ import {
 test('buildComparableBody accepts a valid district lookup', () => {
   const body = buildComparableBody({ propertyType: 'Nhà ở', district: 'Hải Châu', areaSqm: '80', priceVnd: '5000000000', bedrooms: '3' })
   assert.equal(body.propertyType, 'HOUSE')
+  assert.equal(body.purpose, 'SIMILAR_LISTING')
   assert.equal(body.district, 'Hải Châu')
   assert.equal(body.areaSqm, 80)
   assert.equal(body.limit, 5)

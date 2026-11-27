@@ -1,4 +1,4 @@
-// Comparable listings for a valuation: same ward, then district, then neighbours.
+// Similar-listing lookup within the requested ward or district.
 // The backend does the filtering, ranking and eligibility; this module only
 // shapes the request and normalises the response for the card.
 import { api } from '../auth/api.js'
@@ -28,7 +28,7 @@ export function buildComparableBody(form = {}) {
   if (!DISTRICT_SET.has(district)) throw new Error('Chỉ địa bàn cấp quận/huyện mới có dữ liệu tin tương đồng.')
   const area = Number(form.areaSqm)
   if (!Number.isFinite(area) || area < 5 || area > 50000) throw new Error('Diện tích không hợp lệ để tìm tin tương đồng.')
-  const body = { propertyType: type, district, areaSqm: area }
+  const body = { purpose: 'SIMILAR_LISTING', propertyType: type, district, areaSqm: area }
   const ward = String(form.ward ?? '').trim()
   if (ward) body.ward = ward
   const price = Number(form.priceVnd)

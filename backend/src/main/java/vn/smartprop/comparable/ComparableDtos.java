@@ -10,6 +10,11 @@ public final class ComparableDtos {
     private ComparableDtos() {}
 
     public enum SourceKind { SMARTPROP, EXTERNAL_LISTING, TINIX_RESEARCH }
+    public enum Purpose { BUYER_BUDGET_SEARCH, SIMILAR_LISTING, VALUATION_SUPPORT }
+
+    /** Observable identities of the subject listing, when the caller has them. */
+    public record SubjectIdentity(Long externalId, String externalSource, String sourceListingId,
+                                  String tinixId, String canonicalUrl) {}
 
     /** Either an existing property id, or a free-form valuation spec. */
     public record Request(
@@ -22,8 +27,18 @@ public final class ComparableDtos {
         Integer bedrooms,
         Integer floors,
         Integer limit,
-        Boolean includeResearch
+        Boolean includeResearch,
+        Purpose purpose,
+        BigDecimal buyerBudgetVnd,
+        SubjectIdentity subjectIdentity
     ) {
+        public Request(String propertyId, String propertyType, String district, String ward,
+                       BigDecimal areaSqm, BigDecimal priceVnd, Integer bedrooms, Integer floors,
+                       Integer limit, Boolean includeResearch) {
+            this(propertyId, propertyType, district, ward, areaSqm, priceVnd, bedrooms, floors,
+                limit, includeResearch, null, null, null);
+        }
+
         public Request(
             String propertyId,
             String propertyType,
