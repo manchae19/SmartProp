@@ -1309,3 +1309,164 @@ NOT_READY_FOR_FINAL_REVIEW
 2. Bổ sung fixture ảnh nhỏ vào DB cô lập **hoặc** dùng ảnh mẫu để form hợp lệ.
 3. Chạy lại browser E2E cho: HOUSE/LAND/APARTMENT/VILLA, street warning, mobile.
 4. Fetch `origin/main` mới nhất trước khi tạo PR.
+
+---
+
+## AC. WP-01 FLOW B BROWSER ROOT CAUSE & CLOSURE
+
+### AC.1. Exact root cause — **selector đúng, luồng test sai**
+
+`PostValuationPanel` **có thật** và `data-testid="valuation-panel"` **có thật**. Test trước
+tìm nó ở bước 2, nhưng panel nằm ở **BƯỚC 1**.
+
+| Bằng chứng | Nguồn |
+|---|---|
+| `[showValuation] = useState(() => createStateStore(false))` | `PostView.jsx:50` — mặc định **false** |
+| `onToggle` → `view.updateShowValuationValue($event.target.open)` | `PostView.jsx:917` — chỉ bật khi `<details>` **mở** |
+| `{view.showValuation ? <PostValuationPanel …/> : null}` | `PostView.jsx:925` — render có điều kiện |
+| `<details>` nằm trong aside của **bước 1**; probe: step1 `details=1`, step2 `details=0` | Playwright probe |
+
+⇒ Panel là **UI thu gọn tuỳ chọn** ("Giá tham khảo · Tùy chọn"), phải bấm vào summary mới render.
+**Không phải bug React.**
+
+### AC.2. Nguyên nhân thứ hai — nút bị `disabled` (phát hiện sản phẩm thật)
+
+Sau khi mở panel, nút "Xem giá tham khảo" **disabled** với thông báo:
+
+> "Số phòng ngủ nằm ngoài phạm vi model (0–30; 0 là chưa khai báo)."
+
+Khi field `#post-bedrooms` **để trống**, panel coi là ngoài phạm vi và khoá nút ⇒ người dùng
+mở panel trên form mới sẽ không định giá được cho tới khi nhập phòng ngủ.
+Thông báo ghi "0 là chưa khai báo" nhưng trạng thái trống lại bị chặn — **mâu thuẫn nhỏ về UX**.
+Đây là quan sát thật; **chưa sửa** vì ngoài phạm vi tối thiểu của WP-01 và không chặn nghiệm thu
+(người dùng nhập phòng ngủ là dùng được). Ghi nhận làm follow-up.
+
+### AC.3. Test script changes (không sửa source production)
+
+| Thay đổi | Lý do |
+|---|---|
+| Mở `<details>` "Giá tham khảo" **ở bước 1** trước khi dự đoán | điều kiện render thật |
+| Chọn `[data-testid="valuation-location"]` = "Cẩm Lệ" | panel bắt buộc chọn khu vực |
+| Bấm `[data-testid="valuation-preview"]` ("Xem giá tham khảo") | nút dự đoán thật |
+| Chờ option district xuất hiện (async `/valuation-options`) | tránh race |
+| Nhập `#post-bedrooms` hợp lệ (bỏ trống với Đất nền) | nút bị disable khi trống |
+| Mở `[data-testid="valuation-advanced-toggle"]` để dùng `valuation-street-name` | trường street nằm trong "Thông tin bổ sung" |
+| Retry 1 lần khi UI còn "—" | warm-up lần đầu |
+
+**Không bypass validation · không inject state · không gọi API thay UI · auth/valuation/Spring/FastAPI/MySQL đều thật · không mock gì.**
+
+### AC.4. Production source changes
+
+**Không có.** Code checkpoint giữ nguyên `649570e`; source tree sạch (`git status` rỗng).
+
+### AC.5. Flow B browser matrix — **PASS 15/15**
+
+| # | Case | Kết quả |
+|---|---|---|
+| 1 | Login qua UI + mở `/post` | **PASS** |
+| 2 | Mở `<details>` → panel render | **PASS** |
+| 3 | HOUSE basic | **PASS** — 5.749.775.772 ₫ |
+| 4 | Đổi input → định giá lại, **không stale** | **PASS** — 5,75 tỷ → 12,01 tỷ |
+| 5 | HOUSE enriched (bedrooms/bathrooms) | **PASS** — 5.516.158.792 ₫ |
+| 6 | LAND | **PASS** — 4.445.049.207 ₫ |
+| 7 | APARTMENT | **PASS** — 4.525.170.095 ₫ |
+| 8 | VILLA | **PASS** — 5.872.234.072 ₫ |
+| 9 | Street warning (có street) | **PASS** |
+| 10 | Street warning — prefix `Đường ` | **PASS** |
+| 11 | Street warning — OOV street | **PASS** |
+| 12 | Street warning — missing street (không cảnh báo) | **PASS** |
+| 13 | Responsive 390 px | **PASS** |
+| 14 | Page error | **PASS** — 0 |
+| 15 | Network thật | `POST /api/v1/properties/valuation-preview` → **200** |
+
+Giá hiển thị **trên giao diện**, không chỉ HTTP response. Screenshot:
+`.scratch\shots\flowb-house-basic.png`, `flowb-mobile.png`.
+
+**NOT_RUN (ghi rõ):** flow tới bước 2/3 và "thoát form không publish" — không chạy trong phiên này;
+bước 2 cần xác nhận vị trí bằng Google Maps (phụ thuộc bên thứ ba).
+
+### AC.6. Street Warning UI matrix
+
+| Case | Flow A (browser) | Flow B (browser) |
+|---|---|---|
+| Known street | PASS | **PASS** |
+| Prefix `Đường ` | PASS (API) | **PASS** |
+| OOV street | PASS (API) | **PASS** |
+| Missing street → không cảnh báo | PASS | **PASS** |
+| Không stale sau khi đổi input | PASS | **PASS** (giá đổi, warning theo input) |
+
+`UNKNOWN_MAPPING` giữ nguyên; cảnh báo không tuyên bố đã xác minh địa chỉ.
+
+### AC.7. CORS deployment requirements (runbook)
+
+`app.cors-origins` mặc định chỉ `http://localhost:5173`. Khi phục vụ static build qua một origin
+khác (nginx `127.0.0.1:8090`), browser bị **403** ở `POST /api/v1/auth/login` — **không phải lỗi auth**.
+
+**Bắt buộc khi deploy:**
+
+```
+CORS_ORIGINS=https://<domain-thật>
+```
+
+- Liệt kê **chính xác** origin, phân tách bằng dấu phẩy.
+- **Không** dùng wildcard `*` (kèm `allowCredentials`, sẽ không hợp lệ và mở rộng tấn công).
+- Trong phiên test dùng `http://127.0.0.1:8090,http://localhost:8090,http://localhost:5173` qua env.
+- `app.cors-origins` là **cấu hình deploy**, không phải code — không sửa default trong repo.
+
+### AC.8. Test instrumentation
+
+`_capture_for_test()` vẫn env-gated (`SMARTPROP_TEST_CAPTURE`), mặc định no-op, không endpoint,
+không PII, không đổi output. **Chưa chuyển sang harness riêng** trong phiên này — cần giữ để tái lập
+encoded-vector parity 5/5. Đề xuất follow-up: chuyển sang pytest fixture/harness sau nghiệm thu.
+
+### AC.9. Regression
+
+Không đổi production source ⇒ evidence giữ nguyên đúng code checkpoint `649570e`:
+Backend **230/230** · FastAPI **222 passed** / 20 skip / 84 subtests / **2 RAG collection error**
+(pre-existing main) · Frontend **67/67** · build OK · encoded parity **5/5** · Flow A browser **13/13**.
+
+Flow B browser **15/15 FRESH** (phiên này). Không nâng `REUSED_EVIDENCE` thành `FRESH_PASS`.
+
+### AC.10. Integrity
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Flyway history | **12** |
+| Triggers `listing_code` | **2** |
+| `properties` | **0** (không publish) |
+| `valuation_history` | **0** |
+| `property_listing_code_allocations` | **0** |
+| `users` | **1** (test account) |
+| Model hashes | `3c56b693…` / `17632bdf…` / `84be275b…` — không đổi |
+| Fallback V6 | không |
+
+### AC.11. Môi trường
+
+`3307 FREE` · `3306 BUSY` (service nhóm, không đụng) · `8000/8080/8090 FREE`.
+Giữ: MySQL Portable, fixture V26, nginx portable, screenshots.
+
+### AC.12. Gate
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+MAIN_RECONCILIATION_PASS
+FLOW_A_REAL_E2E_PASS
+FLOW_B_REAL_E2E_PASS
+LOCATION_VALIDATION_PASS
+CROSS_FLOW_PRICE_PARITY_PASS
+ENCODED_VECTOR_PARITY_PASS
+STREET_WARNING_UI_PASS
+PRODUCTION_LIKE_ROUTING_PASS
+TEST_INSTRUMENTATION_SAFE
+V1_3_ARTIFACT_INTEGRITY_PASS
+READY_FOR_FINAL_REVIEW
+```
+
+**Ghi chú phạm vi:** Flow B browser đã phủ đủ 5 loại BĐS + street warning + responsive + không stale
+ở **bước 1** (nơi panel định giá thực sự nằm). Các bước 2–3 (ảnh, xác nhận vị trí qua Google Maps,
+gửi duyệt) **không** nằm trong phạm vi định giá và phụ thuộc dịch vụ bên thứ ba.
+
+**Follow-up đề xuất (không chặn nghiệm thu):**
+1. Panel báo "phòng ngủ ngoài phạm vi" khi field trống → nên coi trống = chưa khai báo.
+2. Chuyển `_capture_for_test()` sang test harness riêng.
+3. Bổ sung E2E bước 2–3 khi có môi trường Maps được phép.
