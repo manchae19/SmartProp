@@ -3,9 +3,12 @@
 Kiểm hàm thuần; không cần model artifact.
 """
 import sys
+from pathlib import Path
 import unicodedata
 
-sys.path.insert(0, r"F:\SmartProp\.worktrees\v13-hardening-integration\ai-services")
+# Portable: resolve the service root relative to this file, never an absolute drive path.
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SERVICE_ROOT))
 
 from app.models.xgboost.features_v1_3 import canonical_street, clean_category  # noqa: E402
 

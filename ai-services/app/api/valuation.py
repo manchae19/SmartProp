@@ -120,6 +120,21 @@ def model_options(request: Request):
     }
 
 
+def _validate_location(predictor, payload):
+    """Single source of truth for the geographic gate.
+
+    Both /predict and /predict/v1_3_preview call this, so a legacy route cannot reach
+    model inference with a district the artifact does not support.
+    """
+    locations = _supported_locations(predictor)
+    if locations and clean_category(payload.location_feature) not in locations:
+        raise HTTPException(
+            status_code=422,
+            detail="unsupported_location: địa bàn không được mô hình hỗ trợ: "
+                   + payload.location_feature,
+        )
+
+
 def _supported_locations(predictor) -> set:
     """Districts the loaded V1.3 schema actually knows, straight from the artifact.
 
@@ -134,15 +149,7 @@ def _supported_locations(predictor) -> set:
 @router.post("/predict", response_model=V1_3PreviewResponse)
 def predict(payload: ValuationRequest, request: Request, background_tasks: BackgroundTasks):
     predictor = predictor_for(request)
-    # The model has no way to price a district it never trained on, so an unknown
-    # district is a client error rather than a silent extrapolation.
-    locations = _supported_locations(predictor)
-    if locations and clean_category(payload.location_feature) not in locations:
-        raise HTTPException(
-            status_code=422,
-            detail="unsupported_location: địa bàn không được mô hình hỗ trợ: "
-                   + payload.location_feature,
-        )
+    _validate_location(predictor, payload)
     t0 = time.perf_counter()
     try:
         response = predictor.predict_from_v6_payload(payload.model_dump())
@@ -192,12 +199,8 @@ def predict_v1_3_preview(payload: ValuationRequest, request: Request):
     for research, staging preview, and side-by-side model auditing without requiring
     administrative master credentials in client code.
     """
-    predictor_v1_3 = getattr(request.app.state, "predictor_v1_3", None)
-    if predictor_v1_3 is None:
-        raise HTTPException(
-            status_code=503,
-            detail="Mô hình thử nghiệm V1.3 chưa sẵn sàng hoặc chưa được khởi tạo."
-        )
+    predictor_v1_3 = predictor_for(request)
+    _validate_location(predictor_v1_3, payload)
 
     try:
         raw_res = predictor_v1_3.predict_from_v6_payload(payload.model_dump())
@@ -218,6 +221,7 @@ def predict_v1_3_preview(payload: ValuationRequest, request: Request):
         "naive_price_vnd": raw_res["naive_price_vnd"],
         "features_used": raw_res["features_used"],
         "missing_features": raw_res.get("missing_features", []),
+        "warnings": list(raw_res.get("warnings", [])) + street_warnings(payload.street_name),
         "shap_explanation": raw_res.get("shap_explanation"),
         "valuation_timestamp": datetime.now(timezone.utc).isoformat(),
         "disclaimer": "Mô hình thử nghiệm nghiên cứu V1.3 (Multi-Source Zenodo + TiniX). Không sử dụng làm định giá giao dịch chính thức."

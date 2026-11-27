@@ -24,10 +24,22 @@ public class ValuationService {
         Map<String,String> accessTypes,Map<String,String> houseSubtypes){}
     public record Preview(boolean available,String reason,String modelVersion,String modelRun,String predictedAskingPriceVnd,
         String currency,String priceBasis,Map<String,Object> featuresUsed,List<String> missingFeatures,List<String> warnings){}
-    /** Map a district name from any case to the display form the API uses. */
+    /**
+     * Map a district name from any case/Unicode form to the display label the API uses.
+     *
+     * FastAPI compares NFC-casefolded values, so this side must normalise NFC too. Otherwise
+     * a decomposed "Cảm Lẹ" is rejected here but accepted there, and the two flows
+     * disagree on the same input. DISTRICTS only supplies display labels; supported geography
+     * is still decided by the model vocabulary from /model/options.
+     */
     private static String displayDistrict(String raw){
-        String clean=raw==null?"":raw.strip();
-        for(String known:DISTRICTS)if(known.equalsIgnoreCase(clean))return known;
+        if(raw==null)return null;
+        String clean=java.text.Normalizer.normalize(raw,java.text.Normalizer.Form.NFC).strip();
+        if(clean.isEmpty())return null;
+        for(String known:DISTRICTS){
+            String label=java.text.Normalizer.normalize(known,java.text.Normalizer.Form.NFC);
+            if(label.equalsIgnoreCase(clean))return label;
+        }
         return null;
     }
     /** The service now answers with V1.3; the run identifier is V1.3's own. */

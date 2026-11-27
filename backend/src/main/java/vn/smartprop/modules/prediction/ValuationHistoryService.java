@@ -104,10 +104,14 @@ public class ValuationHistoryService {
             if (feature.isMissingNode() || feature.isContainerNode() || (feature.isTextual() && feature.asText().length()>200)) throw ValuationClient.unavailable();
             cleanFeatures.set(key,feature);
         }
-        for (String key:List.of("missing_features")) {
+        // Warnings come from the authoritative backend inference, never from the client, so a
+        // saved valuation keeps the same geographic caveat the user saw in the preview.
+        for (String key:List.of("missing_features","warnings")) {
             var list=value.path(key);
+            if (list.isMissingNode()) { if ("warnings".equals(key)) continue; throw ValuationClient.unavailable(); }
             if (!list.isArray() || list.size()>30) throw ValuationClient.unavailable();
             for (var item:list) if (!item.isTextual() || item.asText().length()>1000) throw ValuationClient.unavailable();
+            clean.set(key,list);
         }
         for (String key:List.of("model_version","predicted_asking_price_vnd","price_band","calibration_policy")) {
             var field=value.path(key);

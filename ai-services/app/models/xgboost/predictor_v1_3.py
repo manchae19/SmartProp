@@ -294,5 +294,8 @@ class PredictorV1_3:
 
     def predict_from_v6_payload(self, v6_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Convert a V6 ValuationRequest payload and execute V1.3 prediction."""
-        v1_3_record = map_v6_to_v1_3(v6_payload)
+        v1_3_record = map_v6_to_v1_3(
+            v6_payload,
+            district_vocabulary=self.schema.get("vocabularies", {}).get("district"),
+        )
         return self.predict(v1_3_record)

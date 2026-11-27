@@ -5,7 +5,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 Category = Literal["Nhà ở", "Đất nền", "Căn hộ chung cư"]
 Area = Annotated[float, Field(strict=True, ge=20, le=1000, allow_inf_nan=False)]
-Rooms = Annotated[int, Field(strict=True, ge=1, le=30)]
+# 0 is the posting form's "not declared" marker; it normalises to missing before
+# inference instead of being fed to the model as a fake bedroom count.
+Rooms = Annotated[int, Field(strict=True, ge=0, le=30)]
 Floors = Annotated[float, Field(strict=True, ge=1, le=20, allow_inf_nan=False)]
 
 
@@ -34,11 +36,21 @@ class ValuationRequest(BaseModel):
     frontage_width_source: Literal["user", "verified"] | None = None
 
     @model_validator(mode="after")
+    def zero_rooms_means_undeclared(self):
+        # Declared 0 means "not declared": drop it so the model keeps its
+        # own missing-value handling. 1..30 remain real values.
+        if self.rooms == 0:
+            self.rooms = None
+        return self
+
+    @model_validator(mode="after")
     def applicable_fields(self):
         if self.category == "Đất nền" and self.rooms is not None:
             raise ValueError("Đất nền không nhận số phòng ngủ.")
         if self.category != "Nhà ở" and (self.floors is not None or self.house_subtype is not None):
             raise ValueError("Số tầng nhà và subtype chỉ áp dụng Nhà ở; không dùng tầng tòa/căn hộ.")
+        if self.category != "Căn hộ chung cư" and self.balcony_direction is not None:
+            raise ValueError("Hướng ban công chỉ áp dụng căn hộ chung cư.")
         if self.category == "Căn hộ chung cư" and self.access_type is not None:
             raise ValueError("Mặt tiền/kiệt không áp dụng cho căn hộ trong model này.")
         if self.category == "Căn hộ chung cư" and (self.road_width_m is not None or self.frontage_width_m is not None):

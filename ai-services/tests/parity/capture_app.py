@@ -14,6 +14,14 @@ from main import app as production_app
 
 _TARGET = os.environ.get("SMARTPROP_PARITY_CAPTURE")
 
+# Model-relevant fields only. Anything not listed here is never written to disk.
+CAPTURE_FIELDS = frozenset({
+    "category", "area_sqm", "location_feature", "ward",
+    "rooms", "bathrooms", "floors", "house_subtype",
+    "road_width_m", "frontage_width_m", "street_name", "project_name",
+    "house_direction", "balcony_direction", "access_type",
+})
+
 
 class _CaptureMiddleware:
     """Pure ASGI so the request body can be buffered and replayed without loss."""
@@ -35,9 +43,14 @@ class _CaptureMiddleware:
                 break
         body = b"".join(chunks)
 
+        # Minimised capture: only the fields that feed the V1.3 feature pipeline.
+        # Free text (title/description/address) and any header, token or cookie are
+        # deliberately not written - parity is a feature question, not a data dump.
         try:
+            payload = json.loads(body)
+            kept = {k: v for k, v in payload.items() if k in CAPTURE_FIELDS}
             with open(self.target, "a", encoding="utf-8") as handle:
-                handle.write(json.dumps(json.loads(body), ensure_ascii=False) + "\n")
+                handle.write(json.dumps(kept, ensure_ascii=False, sort_keys=True) + "\n")
         except (OSError, ValueError):
             pass  # capture is best-effort; it must never affect the response
 
