@@ -44,7 +44,7 @@ class ComparableColdStartIT {
         c.setReadOnly(true);
         var service = new ComparableRankingService(
             new ComparableCandidateRepository(new NamedParameterJdbcTemplate(new SingleConnectionDataSource(c, true))),
-            new ComparableEligibilityService(), Mockito.mock(PropertyRepository.class));
+            new ComparableEligibilityService(), Mockito.mock(PropertyRepository.class), true);
 
         // Distinct price bands so each first call touches rows the previous one did not.
         String[][] bands = {
@@ -59,10 +59,10 @@ class ComparableColdStartIT {
         for (String[] b : bands) {
             var req = new ComparableDtos.Request(null, b[1], b[0], null,
                 new BigDecimal(b[2]), new BigDecimal(b[3]), null, null, null);
-            service.rank(req); // warm the cohort counts cache only
-            long cold = time(() -> service.rank(req));
-            long warm1 = time(() -> service.rank(req));
-            long warm2 = time(() -> service.rank(req));
+            service.rankResearch(req); // warm the cohort counts cache only
+            long cold = time(() -> service.rankResearch(req));
+            long warm1 = time(() -> service.rankResearch(req));
+            long warm2 = time(() -> service.rankResearch(req));
             System.out.println("COLDWARM band=" + b[0] + "/" + b[1] + " cold_ms=" + cold
                 + " warm_ms=" + warm1 + "," + warm2);
         }

@@ -11,14 +11,19 @@ and the street name is kept whole so "Dũng Sĩ Thanh Khê" is not cut down to a
 """
 import re
 import unicodedata
+from .money import mask_recurring_amounts
+from .personalization import AREA_COMPARISON
 
 # A house number followed by a street name. The number must start a token, so "3000"
 # and "30" never match "300", and the street must carry at least one letter.
+_AREA_SUFFIX = (rf"\b(?:(?:dien\s+tich\s+(?:{AREA_COMPARISON}\s+)?|{AREA_COMPARISON}\s+)[+-]?\d"
+                r"|\d+(?:[.,]\d+)?\s*(?:m2|m²|met vuong|m vuong)(?!\w))")
 _ADDRESS = re.compile(
-    r"(?<![\w.,])(\d{1,5}[a-zA-Z]?)\s+"
-    r"((?:[^\W\d_]+\s*){1,6}?)"
-    r"(?=\s*(?:,|\.|$|\b(?:co|khong|nao|giup|tim|gia|va|o|tai|gan)\b))",
-    re.UNICODE,
+    r"(?<![\w.,])(\d{1,5}[a-z]?)\s+"
+    r"([^\W\d_]+(?:\s+[^\W\d_]+){0,9}?)"
+    r"(?=\s*(?:[,.;!?]|$|\b(?:nao|giup|tim|co|khong|gan|o|tai)\b"
+    r"|\b(?:ngan\s+sach|gia\s+(?:mua|ban|thue|duoi|tren|toi\s+da|tu)|cho\s+thue|chi\s+(?:o|tai|thuoc)"
+    r"|(?:(?:thuoc|nam\s+trong)\s+)?(?:quan|huyen|phuong|xa)\s+\w+)\b|" + _AREA_SUFFIX + r"))"
 )
 
 # Words that look like a street but are really a search filter.
@@ -31,7 +36,7 @@ _AT = re.compile(r"\b(?:o|tai|tren|thuoc|xem)\b")
 _NEAR = re.compile(r"\b(?:gan|quanh|ke|sat)\b")
 _HOUSE = re.compile(r"\b(?:nha|can ho|chung cu|nha pho|nha rieng|biet thu|dat nen|bat dong san)\b")
 _AMENITY = re.compile(
-    r"\b(?:benh vien|truong|tieu hoc|trung hoc|dai hoc|sieu thi|nha thuoc|"
+    r"\b(?:benh vien|truong|tieu hoc|trung hoc|dai hoc|sieu thi|nha thuoc|co cho|cho nao|"
     r"cong vien|bai bien|xe buyt|ben xe|phong kham|y te|giao duc|sieu thi)\b")
 
 
@@ -44,37 +49,45 @@ def fold(text):
 
 
 def _clean_street(raw):
-    words = [w for w in re.split(r"\s+", raw.strip()) if w]
-    kept = []
-    for word in words:
-        if fold(word) in _NOT_STREET:
-            break
-        kept.append(word)
-    return " ".join(kept).strip(" ,.")
+    words = raw.split()
+    return " ".join(words) if words and fold(words[0]) not in _NOT_STREET else ""
+
+
+def split_address(question):
+    """Return the street address and the text outside it, preserving the original spelling."""
+    text = unicodedata.normalize("NFC", question or "")
+    # Keep offsets in the original text. Distinguish phường (ward) from names such
+    # as Phương Dung, even though both tokens fold to phuong.
+    def aligned_token(match):
+        raw = match[0]
+        plain = fold(raw)
+        markers = {"quan": "quận", "huyen": "huyện", "phuong": "phường", "xa": "xã", "thuoc": "thuộc"}
+        if plain in markers and raw.lower() not in (plain, markers[plain]):
+            return raw.lower()
+        return plain if len(plain) == len(raw) else raw
+
+    folded = re.sub(r"\w+", aligned_token, text)
+    without_recurring = mask_recurring_amounts(folded)
+    for match in _ADDRESS.finditer(folded):
+        if without_recurring[match.start():match.end()] != match[0]:
+            continue
+        start, end = match.span(2)
+        number = text[slice(*match.span(1))]
+        street = _clean_street(text[start:end])
+        if not street or len(street) < 3:
+            continue
+        return f"{number} {street}", text[:match.start()] + " " + text[end:]
+    return None, text
 
 
 def address_in(question):
-    """The address the user typed, with its house number, or None.
-
-    Returns the text as written (diacritics preserved) so it can be echoed back and
-    sent to the backend filter unchanged.
-    """
-    text = str(question or "")
-    for match in _ADDRESS.finditer(text):
-        number, street = match.group(1), _clean_street(match.group(2))
-        if not street or len(street) < 3:
-            continue
-        if not re.search(r"[^\W\d_]", street, re.UNICODE):
-            continue
-        return f"{number} {street}".strip()
-    return None
+    return split_address(question)[0]
 
 
-def intent(question):
+def intent(question, address=None):
     """AT_ADDRESS, NEAR_ADDRESS, or None when this is not an address lookup."""
     folded = fold(question)
-    address = address_in(question)
-    if address is None:
+    if address is None and address_in(question) is None:
         return None
     # An amenity question keeps its own path even when it names an address.
     if _AMENITY.search(folded):

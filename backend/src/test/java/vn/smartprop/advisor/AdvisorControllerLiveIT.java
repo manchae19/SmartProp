@@ -158,12 +158,8 @@ class AdvisorControllerLiveIT {
             JsonNode comp = prop.path("comparableEvidence");
             for (JsonNode c : comp.path("comparables")) {
                 assertNoProtectedHoldoutComparable(c);
-                if ("TINIX_RESEARCH".equals(c.path("sourceKind").asText())) {
-                    assertThat(c.path("researchReference").asBoolean()).isTrue();
-                    assertThat(c.path("liveListing").asBoolean()).isFalse();
-                    assertThat(c.path("listingUrl").isNull()).isTrue();
-                    assertThat(c.path("datasetLicense").asText()).isEqualTo("CC BY-NC 4.0");
-                }
+                assertThat(c.path("sourceKind").asText()).isNotEqualTo("TINIX_RESEARCH");
+                assertThat(c.path("researchReference").asBoolean()).isFalse();
             }
         }
         assertThat(liveValuations).as("at least one real property must receive live V6 + TreeSHAP valuation").isGreaterThan(0);

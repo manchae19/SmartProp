@@ -57,31 +57,36 @@ public class HybridRecommendationService {
     public boolean internalDemo() { return demo; }
     public boolean v11Enabled() { return v11Enabled; }
     @Transactional(readOnly=true)
+    public Response recommendPublic(Request request) {
+        return recommend(request,false,false);
+    }
+    @Transactional(readOnly=true)
     public Response recommend(Request request) {
-        return recommend(request,false);
+        return recommend(request,false,this.demo);
     }
     @Transactional(readOnly=true)
     public Response recommendResearch(Request request) {
         if(!tinixEnabled||tinix==null)throw vn.smartprop.common.ApiInputs.forbidden();
-        return recommend(request,true);
+        return recommend(request,true,this.demo);
     }
-    private Response recommend(Request request,boolean research) {
+    private Response recommend(Request request,boolean research,boolean allowDemo) {
         if(!request.amenityPriorities().isEmpty()&&!v11Enabled)
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,"Personalized ranking requires APP_RECOMMENDATION_V11_ENABLED=true and V1.1 services");
-        boolean demo=this.demo||research;
-        var raw=new ArrayList<>(repository.find(request,this.demo));
+        boolean demoMode=allowDemo||research;
+        var raw=new ArrayList<>(repository.find(request,allowDemo));
         if(research)raw.addAll(tinix.find(request));
         var warnings=new ArrayList<String>();
         warnings.add("HEURISTIC_V1: điểm quy tắc tham khảo, không phải AI cá nhân hóa đã huấn luyện hoặc dự báo lợi nhuận.");
         warnings.add("RENTAL là mua để khai thác cho thuê; ngân sách là tổng giá mua, không phải tiền thuê. Không dự đoán lợi suất thuê.");
-        if(demo)warnings.add("INTERNAL_DEMO: chứa dữ liệu UNVERIFIED/NEEDS_REVIEW có điều kiện; không công khai như tin đã xác minh.");
+        if(demoMode)warnings.add("INTERNAL_DEMO: chứa dữ liệu UNVERIFIED/NEEDS_REVIEW có điều kiện; không công khai như tin đã xác minh.");
         if(research)warnings.add("TiniX AI / tinixai/vietnam-real-estates, CC BY-NC 4.0: dữ liệu lịch sử 2025–2026 chỉ nghiên cứu phi thương mại, đã lọc bằng quy tắc; chưa xác minh còn bán. Không dự báo lợi suất hay mức tăng giá.");
         if(request.ward()!=null&&!request.ward().isBlank())warnings.add("External chưa có ward chuẩn hóa; không suy ra phường/xã từ địa chỉ thô.");
         if(raw.stream().filter(c->"EXTERNAL".equals(c.source().kind())).count()>=RecommendationCandidateRepository.CAP
             ||raw.stream().filter(c->"PROPERTY".equals(c.source().kind())).count()>=RecommendationCandidateRepository.CAP)
             warnings.add("Nguồn vượt giới hạn10001 ứng viên mỗi loại; kết quả chỉ xếp hạng trong tập đã đọc theo ID.");
-        if (v11Enabled) return rankV11(raw,request,research,demo,warnings);
-        var ranked=raw.stream().filter(c->eligible(c,request,research)).map(c->propertyScoring.score(c,request))
+        var eligibleRaw=raw.stream().filter(c->eligible(c,request,research,allowDemo)).toList();
+        if (v11Enabled) return rankV11(eligibleRaw,request,demoMode,warnings);
+        var ranked=eligibleRaw.stream().map(c->propertyScoring.score(c,request))
             .sorted(Comparator.comparingDouble(Scored::score).reversed().thenComparing(s->s.candidate().id())).toList();
         Map<String,Scored> unique=new LinkedHashMap<>();
         for(var s:ranked) {
@@ -99,15 +104,15 @@ public class HybridRecommendationService {
             return new PropertyResult(c.id(),c.title(),c.type(),c.price(),c.area(),c.district(),c.ward(),s.score(),s.parts(),s.explanations(),
                 c.source(),c.quality(),c.verification(),c.duplicateGroup(),List.copyOf(itemWarnings),null);
         }).toList();
-        return new Response("HEURISTIC_V1",demo?"INTERNAL_DEMO":"SAFE","ASKING_SALE_VND_TOTAL",request,
+        return new Response("HEURISTIC_V1",demoMode?"INTERNAL_DEMO":"SAFE","ASKING_SALE_VND_TOTAL",request,
             candidates.size(),areaScoring.top(candidates),top,List.copyOf(warnings),null);
     }
 
     /** Hybrid V1.1 ranking. Same eligibility and dedup rules as V1; new scoring and amenity evidence. */
-    private Response rankV11(List<Candidate> raw,Request request,boolean research,boolean demo,List<String> warnings) {
+    private Response rankV11(List<Candidate> eligibleRaw,Request request,boolean demoMode,List<String> warnings) {
         warnings.add("HEURISTIC_V1_1: điểm quy tắc có trọng số, không phải AI đã huấn luyện và không dự báo lợi nhuận.");
         if(!request.purpose().name().equals("LIVING"))warnings.add("PURPOSE_WEIGHTS: trọng số tiện ích được giảm cho "+request.purpose()+"; tiện ích không được coi là tiêu chí chính.");
-        var ranked=raw.stream().filter(c->eligible(c,request,research))
+        var ranked=eligibleRaw.stream()
             .map(c->propertyScoringV11.scoreForRanking(c,request,propertyLocationResolver.resolve(c.district(),c.ward())))
             .sorted(Comparator.comparingDouble(PropertyScoringV11Service.Scored11::score).reversed()
                 .thenComparing(s->s.candidate().id())).toList();
@@ -130,7 +135,7 @@ public class HybridRecommendationService {
                 propertyScoringV11.explain(c,request,s),
                 c.source(),c.quality(),c.verification(),c.duplicateGroup(),List.copyOf(itemWarnings),evidence);
         }).toList();
-        return new Response("HEURISTIC_V1_1",demo?"INTERNAL_DEMO":"SAFE","ASKING_SALE_VND_TOTAL",request,
+        return new Response("HEURISTIC_V1_1",demoMode?"INTERNAL_DEMO":"SAFE","ASKING_SALE_VND_TOTAL",request,
             candidates.size(),areaScoringV11.top(candidates),top,List.copyOf(warnings),
             propertyScoringV11.weights().asMap(request.purpose()));
     }
@@ -144,10 +149,13 @@ public class HybridRecommendationService {
         return itemWarnings;
     }
 
-    boolean eligible(Candidate c,Request r) {
-        return eligible(c,r,false);
+    boolean eligiblePublic(Candidate c,Request r) {
+        return eligible(c,r,false,false);
     }
-    private boolean eligible(Candidate c,Request r,boolean research) {
+    boolean eligible(Candidate c,Request r) {
+        return eligible(c,r,false,this.demo);
+    }
+    private boolean eligible(Candidate c,Request r,boolean research,boolean allowDemo) {
         if(c.holdout()||c.groupHasHoldout()||c.type()==null||c.price()==null||c.area()==null||c.price().signum()<=0||c.area().signum()<=0)return false;
         if(c.price().compareTo(r.budgetVnd())>0)return false;
         if(r.minAreaSqm()!=null){
@@ -163,10 +171,10 @@ public class HybridRecommendationService {
         if("TINIX_AI".equals(c.source().kind()))return research&&tinixEnabled&&"HYBRID_ELIGIBLE_RESEARCH".equals(c.quality())
             &&"UNVERIFIED".equals(c.verification())&&c.issues().isEmpty()&&c.duplicateGroup()!=null&&!c.duplicateGroup().isBlank();
         if("EXTERNAL".equals(c.source().kind())) {
-            if(!Set.of("VERIFIED","UNVERIFIED").contains(c.verification())||(!demo&&!"VERIFIED".equals(c.verification())))return false;
+            if(!Set.of("VERIFIED","UNVERIFIED").contains(c.verification())||(!allowDemo&&!"VERIFIED".equals(c.verification())))return false;
             if(c.duplicate()&&(c.duplicateGroup()==null||c.duplicateGroup().isBlank()))return false;
             if("VALID".equals(c.quality()))return c.issues().isEmpty();
-            return demo&&"NEEDS_REVIEW".equals(c.quality())&&!c.issues().isEmpty()&&DEMO_REVIEW_ISSUES.containsAll(c.issues());
+            return allowDemo&&"NEEDS_REVIEW".equals(c.quality())&&!c.issues().isEmpty()&&DEMO_REVIEW_ISSUES.containsAll(c.issues());
         }
         return "PROPERTY".equals(c.source().kind())&&"PLATFORM_PUBLISHED".equals(c.quality());
     }

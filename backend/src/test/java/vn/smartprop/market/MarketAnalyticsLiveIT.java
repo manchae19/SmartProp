@@ -55,7 +55,7 @@ class MarketAnalyticsLiveIT {
             props.getProperty("DB_USER"), props.getProperty("DB_PASSWORD"));
         connection.setReadOnly(true);
         jdbc = new NamedParameterJdbcTemplate(new SingleConnectionDataSource(connection, true));
-        service = new MarketAnalyticsService(new MarketAnalyticsRepository(jdbc));
+        service = new MarketAnalyticsService(new MarketAnalyticsRepository(jdbc), true);
     }
 
     private static long count(String sql) {
@@ -78,7 +78,7 @@ class MarketAnalyticsLiveIT {
     @DisplayName("pooled count equals the sum of the three real source counts")
     void pooledCountMatchesSources() {
         long sp = count(SP_COUNT), ext = count(EXT_COUNT), tinix = count(TINIX_COUNT);
-        Response r = service.analytics(null, null, null, null, true);
+        Response r = service.analyticsResearch(null, null, null, null, true);
         assertEquals(sp + ext + tinix, r.meta().totalSampleCount());
         assertEquals(sp, r.bySource().stream().filter(s -> "SMARTPROP".equals(s.source())).map(SourceCount::count).reduce(0L, Long::sum));
         assertEquals(tinix, r.bySource().stream().filter(s -> "TINIX_RESEARCH".equals(s.source())).map(SourceCount::count).reduce(0L, Long::sum));
@@ -106,14 +106,14 @@ class MarketAnalyticsLiveIT {
         assertEquals(0, off.bySource().stream().filter(s -> "TINIX_RESEARCH".equals(s.source())).map(SourceCount::count).reduce(0L, Long::sum));
         assertTrue(off.monthly().isEmpty());
 
-        Response on = service.analytics(null, null, null, null, true);
+        Response on = service.analyticsResearch(null, null, null, null, true);
         assertTrue(on.bySource().stream().filter(s -> "TINIX_RESEARCH".equals(s.source())).map(SourceCount::count).reduce(0L, Long::sum) > 0);
     }
 
     @Test
     @DisplayName("temporal series is TiniX-only and inside the documented snapshot window")
     void temporalSeriesIsTinixOnly() {
-        Response r = service.analytics(null, null, null, "TINIX_RESEARCH", true);
+        Response r = service.analyticsResearch(null, null, null, "TINIX_RESEARCH", true);
         assertFalse(r.monthly().isEmpty());
         for (var p : r.monthly()) {
             assertTrue(p.period().compareTo("2025-01") >= 0 && p.period().compareTo("2026-12") <= 0, p.period());
