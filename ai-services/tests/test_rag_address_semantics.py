@@ -102,18 +102,20 @@ def test_rental_to_purchase_restores_fresh_nearby_consent(search):
     packet, calls = search(
         [row], prompt=f"Nhà cho thuê {{relation}} {ADDRESS} dưới 10 triệu",
         prior={"purpose": "RENTAL", "budgetVnd": "10000000"},
-        followups=["Đổi sang mua", f"Nhà gần {ADDRESS} thuộc phường Thanh Khê Tây trên 70 và dưới 80 m²",
+        followups=["Đổi sang mua", "Ngân sách 3 tỷ", f"Nhà gần {ADDRESS} thuộc phường Thanh Khê Tây trên 70 và dưới 80 m²",
                    "Đồng ý tìm vị trí", f"1. {ADDRESS}"],
         audit=audit, auto_consent=False,
     )
     assert_clarification(audit["turns"][0], "RENTAL_BUDGET_NOT_SUPPORTED")
-    assert audit["turns"][1]["evidence"]["responseKind"] == "CRITERIA_UPDATED"
-    assert_clarification(audit["turns"][2], "NEAR_ADDRESS_CONSENT")
-    assert_clarification(audit["turns"][3], "NEAR_ADDRESS_PICK")
+    assert_clarification(audit["turns"][1], "PURCHASE_BUDGET_REQUIRED")
+    assert "budgetVnd" not in audit["turns"][1]["evidence"]["session"]["context"]["criteria"]
+    assert audit["turns"][2]["evidence"]["responseKind"] == "CRITERIA_UPDATED"
+    assert_clarification(audit["turns"][3], "NEAR_ADDRESS_CONSENT")
+    assert_clarification(audit["turns"][4], "NEAR_ADDRESS_PICK")
     assert property_ids(packet) == [row["id"]]
     assert packet["evidence"]["session"]["context"]["criteria"]["ward"] == "Thanh Khê Tây"
     assert len(calls) == 1 and calls[0]["transactionType"] == "SALE"
-    assert "maxPrice" not in calls[0]
+    assert calls[0]["maxPrice"] == "3000000000"
     assert (calls[0]["minArea"], calls[0]["maxArea"]) == ("70", "80")
     assert audit["geocodes"] == [ADDRESS] and not audit["recommendations"]
 

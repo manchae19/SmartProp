@@ -14,7 +14,6 @@ from .focused_property import focused_intent
 from .geo import haversine_meters
 from .gis import gis_evidence
 from .money import parse_budget
-from .intent import listing_transaction
 from .locality import (is_listing_location_edit, key as locality_key, listing_location,
                        listing_location_mentions, listing_location_text)
 SUGGESTION_LIMIT=3
@@ -507,54 +506,18 @@ class AdvisorDiscoveryMixin:
             responseKind="PROPERTY_LIST", limitations=limitations,
             extra={**extra, "nearOrigin": origin})
 
-    def dispatch_discovery(self, request, session_id, context, turn, *, districts=(), research=False, token=None, account=None):
+    def dispatch_discovery(self, request, session_id, context, turn, address_query, *, districts=(), research=False, token=None, account=None):
         if research:return None
         state=context.needs
-        address, outside_address = address_search.split_address(request.question)
-        mode = address_search.intent(request.question, address) if address else None
+        address, outside_address, mode = address_query
         previous_search = state.get("listingAddressScope")
-        transaction = listing_transaction(outside_address if mode else request.question)
         location_edit = bool(previous_search and not address and is_listing_location_edit(request.question)
                              and not turn["categories"] and not turn["domain"])
         prior = context.criteria()
-        selected_purpose = request.purpose if "purpose" in request.model_fields_set else turn["purpose"]
         pending_nearby = state.get("nearConsentPending") or state.get("nearbyPoints")
         reply_to_nearby = (norm(request.question).rstrip(".!?") == "dong y tim vi tri"
                            or commute_destination.is_plain_consent(request.question)
                            or commute_destination.candidate_index(request.question, 5))
-        rental = transaction == "RENT" or (
-            transaction is None and ((selected_purpose or prior.get("purpose")) == "RENTAL"
-                                     or (not selected_purpose and state.get("listingRentalBlocked")))
-        )
-        rental_discovery = (mode or location_edit or pending_nearby
-                            or (transaction == "RENT" and turn["intent"] not in ("MARKET_ANALYSIS", "MARKET_TREND"))
-                            or (state.get("listingRentalBlocked") and
-                                (reply_to_nearby or turn["searchChange"] or turn["intent"] == "PROPERTY_FOLLOWUP")))
-        if rental and rental_discovery:
-            for key in (*NEARBY_PENDING, "listingAddressScope"):
-                state.pop(key, None)
-            state["listingRentalBlocked"] = True
-            return self._reply(request, session_id, context, {**prior, "purpose": "RENTAL"},
-                properties=[], citations=[], research=False,
-                answer="Tìm tin theo địa chỉ trong chatbot hiện chỉ hỗ trợ mua. Bạn có thể lọc tin cho thuê tại trang Bất động sản.",
-                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "RENTAL_BUDGET_NOT_SUPPORTED"})
-        explicit_purchase = transaction == "SALE" or (
-            transaction is None and "purpose" in request.model_fields_set and selected_purpose != "RENTAL"
-        )
-        if explicit_purchase and (prior.get("purpose") == "RENTAL" or state.get("listingRentalBlocked")):
-            for key in (*NEARBY_PENDING, "listingRentalBlocked"):
-                state.pop(key, None)
-            for key in ("budgetVnd", "minPriceVnd"):
-                prior.pop(key, None)
-            prior["purpose"] = turn["purpose"] = "INVESTMENT" if selected_purpose == "INVESTMENT" else "LIVING"
-            if not mode and not turn["searchChange"]:
-                return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
-                    answer="Đã chuyển sang tìm tin mua. Bạn có thể nhập địa chỉ cần tìm.",
-                    responseKind="CRITERIA_UPDATED")
-            self.sessions.record(context, criteria=prior, property_ids=None, area_ids=None,
-                                 evidence_ids=context.evidence_source_ids, question=request.question)
-        elif transaction == "SALE" and selected_purpose == "RENTAL" and mode:
-            turn["purpose"] = "LIVING"
         if pending_nearby and reply_to_nearby and not mode and not state.get("nearbySaleVerified"):
             # Checkpoints from before the transaction guard may have recorded a rental as LIVING.
             for key in NEARBY_PENDING:

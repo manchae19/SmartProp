@@ -6,7 +6,7 @@ No model is consulted, so a follow-up can never invent a budget or a property.
 import re
 from decimal import Decimal
 
-from .intent import fold, poi_categories
+from .intent import fold, poi_categories, purchase_price_question
 from .money import parse_budget
 from .personalization import area_spec, invalid_area_text
 
@@ -151,7 +151,11 @@ def classification(question, context, *, districts=()):
     housing = r"(?:nha|can ho|chung cu|bat dong san|bds|dat nen|biet thu|phong tro|mat bang)"
     housing_value=re.sub(r"\b(?:nha thuoc|nha hang|nha khoa|nha kho|nha may|nha sach|nha tre)\b"," ",value)
     explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|tu van theo ho gia dinh|huong dan tung buoc|bo qua)\b",housing_value))
-    if re.search(r"\bgia (?:thue|mua)\b",value) and not re.search(r"\b(?:tim|muon|goi y|de xuat|co nha|co can ho)\b",value):explicit_search=False
+    if purchase_price_question(value) or (
+        re.search(r"\bgia (?:thue|mua)\b", value)
+        and not re.search(r"\b(?:tim|muon|goi y|de xuat|co nha|co can ho)\b", value)
+    ):
+        explicit_search = False
     priority_edit=bool(re.search(r"\b(?:uu tien|quan trong nhat|tim ky hon|bo uu tien|xoa uu tien)\b",value))
     knowledge=bool(re.search(r"\b(?:la gi|thu tuc|quy trinh|thue phi|thue truoc ba|hop dong|so do|so hong|lai suat|vay ngan hang|can luu y|kien thuc)\b",value)) and not explicit_search and not reference
     knowledge=knowledge or bool(re.search(r"\b(?:ha tang|tien do|cau duong|khoi cong)\b",value)) and not explicit_search and not reference

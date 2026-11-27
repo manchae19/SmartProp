@@ -8,7 +8,8 @@ from .validator import render_answer, validate_plan, validate_generated_answer, 
 from urllib.parse import quote
 from .gis import gis_evidence
 from .diagnostics import traced, event, reason
-from .intent import asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, insufficient_amenity_answer
+from .intent import (asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS,
+                     insufficient_amenity_answer, listing_transaction, effective_listing_transaction)
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
 from .money import parse_budget, format_vnd
@@ -17,8 +18,9 @@ from .tool_registry import ToolRegistry
 from .market import market_query, market_response
 from .property_context import focused_reply
 from .scope import domain_reply
-from .discovery import AREA_RANGE_PROMPT, AdvisorDiscoveryMixin
-from . import commute_destination, commute_ranking
+from .discovery import AREA_RANGE_PROMPT, NEARBY_PENDING, AdvisorDiscoveryMixin
+from . import address_search, commute_destination, commute_ranking
+from .focused_property import focused_intent
 from .personalization import describe_area, intake, merge_area, projection
 
 
@@ -47,6 +49,9 @@ from .account_preferences import fingerprint, seed
 
 # Districts the public catalog covers; used to seed a saved profile before any branch returns.
 SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "Ngũ Hành Sơn", "Liên Chiểu", "Hòa Vang"]
+_LISTING_PENDING = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked", "commuteStage",
+                    "commutePoints", "commutePendingAddress", "commutePendingLimit", "commuteResumeSearch",
+                    "focusedPropertyId")
 from .tools import UpstreamError
 
 class ChatOrchestrator(AdvisorDiscoveryMixin):
@@ -112,6 +117,10 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
+        # Informational replies may have no search criteria. Only a deliberate
+        # transaction switch may replace an established rental purpose.
+        if context.purpose == "RENTAL":
+            criteria = {**(criteria or context.criteria()), "purpose": "RENTAL"}
         address_search = bool(extra and extra.get("addressQuery"))
         if properties and address_search:
             for p in properties:
@@ -139,6 +148,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             evidence_ids=[c.sourceId for c in citations],
             referenced_property_id=reference_id,
             question=request.question)
+        if context.purpose != "RENTAL" and context.budget_vnd:
+            context.needs.pop("purchaseBudgetRequired", None)
         payload = dict(evidence or {})
         payload["intent"] = context.needs.get("turnIntent")
         payload["intentFamily"]=context.needs.get("turnIntentFamily")
@@ -158,6 +169,73 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         return ChatResponse(answer=answer, mode="INTERNAL_RESEARCH" if research else "SAFE",
             generationMode=generation_mode, retrievalMode=retrieval_mode, citations=list(citations),
             recommendedProperties=list(properties), evidence=payload, dataLimitations=list(limitations or []))
+
+    def _rental_reply(self, request, session_id, context, *, research):
+        criteria = context.criteria()
+        for key in (*_LISTING_PENDING, "purchaseBudgetRequired"):
+            context.needs.pop(key, None)
+        if criteria.get("purpose") != "RENTAL":
+            criteria.pop("budgetVnd", None)
+            criteria.pop("minPriceVnd", None)
+        criteria["purpose"] = "RENTAL"
+        return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
+            answer="Chatbot hiện chỉ hỗ trợ tìm tin mua. Bạn có thể dùng bộ lọc cho thuê tại trang Bất động sản.",
+            responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "RENTAL_BUDGET_NOT_SUPPORTED"})
+
+    def _prepare_listing_transaction(self, request, session_id, context, turn, address_query,
+                                     transaction, selected, text_transaction, structured_purpose, *, research):
+        state, prior = context.needs, context.criteria()
+        _, filter_text, mode = address_query
+        informational = turn["intent"] in (
+            "MARKET_ANALYSIS", "MARKET_TREND", "KNOWLEDGE", "LEGAL_QA", "PLANNING_QA", "AREA_AMENITIES"
+        ) or (turn["intent"] == "MARKET_PRICE" and text_transaction is None)
+        if informational:
+            return None
+        if transaction == "CONFLICT":
+            for key in _LISTING_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Bạn muốn tìm tin mua hay tin thuê? Tiêu chí giao dịch hiện chưa thống nhất.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "TRANSACTION_INTENT_CONFLICT"})
+
+        listing_turn = (
+            mode or request.propertyId or state.get("focusedPropertyId")
+            or turn["searchChange"] or turn["intent"] in ("PROPERTY_FOLLOWUP", "UPDATE_CRITERIA")
+            or state.get("nearConsentPending") or state.get("nearbyPoints") or state.get("pending")
+            or commute_destination.stage_of(state) or state.get("commutePendingLimit")
+            or commute_ranking.limit_from(request.question)[0] is not None
+            or commute_ranking.wants_work_proximity(request.question) or focused_intent(request.question) == "COMMUTE"
+            or is_listing_location_edit(request.question)
+            or re.search(r"\b(?:tim|loc|goi y)\s+(?:theo|trong)\s+(?:muc )?ngan sach\b", norm(request.question))
+            or norm(request.question).rstrip(".!?") == "dong y tim vi tri"
+            or commute_destination.is_plain_consent(request.question)
+            or commute_destination.candidate_index(request.question, 5)
+        )
+        if transaction == "RENT" and (selected or listing_turn):
+            return self._rental_reply(request, session_id, context, research=research)
+        if selected and transaction == "SALE":
+            if structured_purpose:
+                turn["purpose"] = structured_purpose
+            elif turn["purpose"] == "RENTAL":
+                turn["purpose"] = "LIVING"
+            if prior.get("purpose") == "RENTAL":
+                for key in _LISTING_PENDING:
+                    state.pop(key, None)
+                for key in ("budgetVnd", "minPriceVnd"):
+                    prior.pop(key, None)
+                prior["purpose"] = turn["purpose"] = turn["purpose"] or "LIVING"
+                state["purchaseBudgetRequired"] = True
+                self.sessions.record(context, criteria=prior, property_ids=[], area_ids=[],
+                                     evidence_ids=[], question=request.question)
+
+        if transaction == "SALE" and state.get("purchaseBudgetRequired"):
+            parsed = parse_budget(filter_text if mode else request.question)
+            valid_budget = parsed.status != "AMBIGUOUS" and (request.budgetVnd is not None or parsed.status == "VALID")
+            if not valid_budget and (selected or listing_turn):
+                return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                    answer="Bạn muốn đặt ngân sách mua tối đa bao nhiêu? Tôi cần ngân sách mua mới trước khi tìm.",
+                    responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PURCHASE_BUDGET_REQUIRED"})
+        return None
 
     def chat(self, request, *, research=False, token=None, account=None):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
@@ -197,14 +275,31 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
-        discovery_reply=self.dispatch_discovery(request,session_id,context,turn,districts=SUPPORTED_DISTRICTS,
-                                                research=research,token=token,account=account)
-        if discovery_reply is not None:return discovery_reply
-        resuming_commute_search = context.needs.pop("commuteResumeSearch", False)
+        address, outside_address = address_search.split_address(request.question)
+        mode = address_search.intent(request.question, address) if address else None
+        address_query = (address, outside_address, mode)
+        structured_purpose = request.purpose if "purpose" in request.model_fields_set else None
+        text_transaction = listing_transaction(outside_address if mode else request.question)
+        transaction, selected = effective_listing_transaction(
+            text_transaction, structured_purpose, context.criteria().get("purpose"),
+        )
+        transaction_reply = self._prepare_listing_transaction(
+            request, session_id, context, turn, address_query, transaction, selected,
+            text_transaction, structured_purpose, research=research,
+        )
+        if transaction_reply is not None:
+            return transaction_reply
+        purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL"
+        if purchase_allowed:
+            discovery_reply = self.dispatch_discovery(request, session_id, context, turn, address_query,
+                districts=SUPPORTED_DISTRICTS, research=research, token=token, account=account)
+            if discovery_reply is not None:
+                return discovery_reply
+        resuming_commute_search = purchase_allowed and context.needs.pop("commuteResumeSearch", False)
         if resuming_commute_search:
             turn["intent"]="REFINE_SEARCH";turn["searchChange"]=True
         focus=request.propertyId or context.needs.get("focusedPropertyId")
-        if focus and not turn["searchChange"] and turn["intent"] not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","AREA_AMENITIES","UPDATE_CRITERIA","PLANNING_QA","KNOWLEDGE"):
+        if purchase_allowed and focus and not turn["searchChange"] and turn["intent"] not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","AREA_AMENITIES","UPDATE_CRITERIA","PLANNING_QA","KNOWLEDGE"):
             context.needs["focusedPropertyId"]=focus
             result=focused_reply(self.backend,focus,request.question)
             if result.get("extra",{}).get("clearPropertyContext"): context.needs.pop("focusedPropertyId",None)
@@ -307,10 +402,6 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Tôi chưa xác định rõ giới hạn ngân sách mới nên chưa tìm bằng ngân sách cũ. Bạn nhập mức tối đa, ví dụ 2 tỷ 600 triệu, hoặc khoảng từ 2 đến 3 tỷ nhé.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification":"BUDGET_AMBIGUOUS", "budgetReason":parsed_budget.reason})
-        if parsed_budget.status != "NOT_MENTIONED" and re.search(r"(?:/\s*(?:thang|nam)|moi thang|moi nam)",norm(request.question)):
-            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
-                answer="Bạn đang nói tới tiền thuê theo tháng/năm. Công cụ tư vấn này hiện lọc theo tổng giá mua, nên tôi chưa dùng số tiền thuê để tìm nhà bán. Bạn có thể tìm tin cho thuê tại trang Bất động sản.",
-                responseKind="CLARIFICATION_REQUIRED",extra={"clarification":"RENTAL_BUDGET_NOT_SUPPORTED"})
         if (turn["ordinal"] is not None or turn["intent"]=="PROPERTY_FOLLOWUP") and not context.last_property_ids:
             return self._reply(request,session_id,context,prior,properties=[],citations=[],research=research,
                 answer="Chưa có danh sách căn để đối chiếu trong phiên này. Bạn gửi mã tin hoặc tìm lại bằng ngân sách và khu vực nhé.",
@@ -397,6 +488,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         # never replayed as a new result set; it only names what to ask about.
         must_search = budget is not None and (decision["search"] or turn["intent"]=="PROPERTY_FOLLOWUP")
         if must_search:
+            if not purchase_allowed or criteria.get("purpose") == "RENTAL":
+                return self._rental_reply(request, session_id, context, research=research)
             if budget is None:
                 limitations.append("Chưa có ngân sách trong ngữ cảnh; không thể xác định lại danh sách bất động sản.")
             else:

@@ -10,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import test_rag_nearby as nearby
+from test_chat_market_g1 import snapshot
 from app.rag import tools as tools_module
 from app.rag.api import create_chat_app
 from app.rag.config import Settings
@@ -38,7 +39,7 @@ def search(request):
 
     def run(rows, constraint="", *, prompt=None, followups=(), expected_address=ADDRESS,
             upstream_filters=False, continue_session=True, auto_consent=True,
-            prior=None, pending=None, audit=None, **criteria):
+            prior=None, pending=None, audit=None, empty_recommendations=False, **criteria):
         calls = []
 
         def public_backend(outbound):
@@ -66,6 +67,9 @@ def search(request):
             })
 
         service, backend = nearby.NearbyAnswerTests().service([])
+        backend.market_summary.return_value = snapshot()
+        if empty_recommendations:
+            backend.recommend.return_value.update(topProperties=[], eligibleCandidateCount=0)
         if prior is not None:
             context, prior_id, _ = service.sessions.begin(None, scope="PUBLIC")
             service.sessions.record(context, criteria=prior, property_ids=[], area_ids=[], evidence_ids=[])
@@ -117,7 +121,9 @@ def search(request):
                     turns.append(response.json())
         if audit is not None:
             audit.update(turns=turns, geocodes=[call.args[0] for call in backend.geocode_workplace.call_args_list],
-                         recommendations=backend.recommend.call_count)
+                         recommendations=backend.recommend.call_count,
+                         recommendation_criteria=[call.args[0] for call in backend.recommend.call_args_list],
+                         market=backend.market_summary.call_count, details=backend.property_detail.call_count)
         return response.json(), calls
 
     return run

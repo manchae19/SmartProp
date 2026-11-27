@@ -128,7 +128,7 @@ class MultiTurnTests(unittest.TestCase):
     def test_budget_change_requeries_and_keeps_other_criteria(self):
         service, backend, retriever, model = self.service()
         first = service.chat(ChatRequest(question="Tôi có 2 tỷ, muốn mua căn hộ ở Cẩm Lệ.",
-                                         purpose="RENTAL"))
+                                         purpose="INVESTMENT"))
         sid = first.evidence["session"]["id"]
         self.assertEqual(backend.recommend.call_count, 1)
         second = service.chat(ChatRequest(question="Nếu tăng ngân sách lên 6 tỷ thì sao?", sessionId=sid))
@@ -136,7 +136,7 @@ class MultiTurnTests(unittest.TestCase):
         criteria = backend.recommend.call_args.args[0]
         self.assertEqual(str(criteria["budgetVnd"]), "6000000000")
         self.assertEqual(criteria["district"], "Cẩm Lệ", "district must be retained")
-        self.assertEqual(criteria["purpose"], "RENTAL", "purpose must be retained")
+        self.assertEqual(criteria["purpose"], "INVESTMENT", "purchase purpose must be retained")
         self.assertEqual(criteria["propertyType"], "APARTMENT", "type must be retained")
         self.assertEqual(second.evidence["session"]["context"]["criteria"]["budgetVnd"], "6000000000")
 

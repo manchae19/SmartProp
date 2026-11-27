@@ -41,24 +41,54 @@ def _has(value, term):
     return re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", value) is not None
 
 
+LISTING_TYPES = r"(?:nha|chung cu|can ho|biet thu|phong tro|mat bang|bat dong san|bds|dat nen)"
+_PURCHASE_ACTION = re.compile(
+    rf"^mua\b|\b(?:tim|muon|can|doi sang|chuyen sang|bat dau)\s+mua\b"
+    rf"|\b(?:tim|muon|can|goi y|de xuat|xem)\s+(?:tin\s+)?{LISTING_TYPES}"
+    r"(?:\s+(?:pho|rieng|nguyen can))?\s+(?:rao\s+)?ban\b"
+)
+_RENT_ACTION = re.compile(
+    rf"\b(?:tim|muon|can|doi sang|chuyen sang)\s+thue\b"
+    rf"|(?<!gia )(?<!gia cho )\bthue\s+{LISTING_TYPES}\b"
+    rf"|\b{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?\s+(?:de |cho )?thue\b"
+    r"|\bgia (?:cho )?thue\s+(?:\d|[^.!?]*?\b(?:duoi|tren|toi da|tu)\s+\d)"
+    r"|^thue\s+(?:de o\b|(?:duoi|tren|toi da|tu)\s+\d|\d)"
+    r"|\d\s*(?:trieu|ty|nghin|ngan|dong|vnd)\s*(?:/\s*|moi\s+|mot\s+|theo\s+)(?:thang|nam|ngay)\b"
+)
+
+
+def purchase_price_question(value):
+    """Recognize price inquiries phrased with a purchase verb in folded text."""
+    value = " ".join(value.split())
+    return bool(
+        re.match(r"^(?:(?:toi|minh) )?(?:(?:muon|can) )?biet gia mua\b", value)
+        or re.match(r"^mua\b", value) and re.search(r"\bgia bao nhieu\b", value)
+    )
+
+
 def listing_transaction(question):
-    """Recognize an explicit choice to buy or rent a listing."""
+    """Explicit listing action, excluding informational price questions."""
     text = re.sub(r"\bthuế\b", "tax", unicodedata.normalize("NFC", question.lower()))
     value = " ".join(fold(text).split())
+    if purchase_price_question(value):
+        return None
     value = re.sub(r"\b(?:khong|chua)\s+(?:(?:tim|muon|can)\s+)?(?:mua|thue)\b", " ", value)
-    buy = re.search(r"\bmua\b", value)
-    rent = re.search(
-        r"\b(?:gia (?:cho )?thue\s+(?:\d|[^.!?]*?\b(?:duoi|tren|toi da|tu)\s+\d)"
-        r"|(?:tim|muon|can|doi sang|chuyen sang)\s+thue\b"
-        r"|(?<!gia )(?<!gia cho )thue\s+(?:nha|can ho|bat dong san|mat bang|phong tro)\b"
-        r"|(?:nha|can ho|mat bang|bat dong san)\s+(?:de |cho )?thue\b)"
-        r"|^\s*thue\s+(?:de o\b|(?:duoi|tren|toi da|tu)\s+\d|\d)"
-        r"|\d\s*(?:trieu|ty|nghin|ngan|dong|vnd)\s*(?:/\s*|moi\s+|theo\s+)(?:thang|nam|ngay)\b",
-        value,
-    )
-    if buy and (not rent or re.search(r"\bmua\b[^.!?]*\b(?:de|roi)\s+cho\s+thue\b", value)):
-        return "SALE"
+    buy = _PURCHASE_ACTION.search(value)
+    # Renting out a purchased property describes its use, not the acquisition.
+    rent_text = re.sub(r"\b(?:de|roi)\s+(?:(?:dau tu|khai thac)\s+){0,2}cho\s+thue\b", " ", value) if buy else value
+    rent = _RENT_ACTION.search(rent_text)
+    if buy:
+        return "CONFLICT" if rent else "SALE"
     return "RENT" if rent else None
+
+
+def effective_listing_transaction(text, structured_purpose, saved_purpose):
+    """Return the transaction and whether the caller selected it on this turn."""
+    structured = None if structured_purpose is None else "RENT" if structured_purpose == "RENTAL" else "SALE"
+    if text and structured and text != structured:
+        return "CONFLICT", True
+    selected = text or structured
+    return selected or ("RENT" if saved_purpose == "RENTAL" else "SALE"), selected is not None
 
 
 def _market_request(value):
