@@ -12,10 +12,12 @@ NUM = r"[0-9]+(?:[.,][0-9]+|[ ][0-9]{3})*"
 UNIT = "|".join(UNITS)
 TOKEN = re.compile(r"(?<![\w.,])("+NUM+r")\s*("+UNIT+r")(?!\w)")
 _AMOUNT = rf"{NUM}\s*(?:{UNIT})(?!\w)"
+_RANGE_START = rf"(?:(?:{_AMOUNT}|{NUM})\s*(?:den|toi|[-–—])\s*)?"
 _RECURRING = re.compile(
-    rf"(?<![\w.,])(?:(?:{_AMOUNT}|{NUM})\s*(?:den|toi|[-–—])\s*)?"
-    rf"{_AMOUNT}(?:\s*{_AMOUNT})*(?:\s+ruoi)?"
+    rf"(?<![\w.,/])(?:{_RANGE_START}{_AMOUNT}(?:\s*{_AMOUNT})*(?:\s+ruoi)?"
+    rf"|(?<!\bngay )(?<!\bthang ){_RANGE_START}(?P<bare>{NUM}))"
     r"\s*(?:/\s*|(?:theo|moi|mot|hang)\s+)(?:thang|nam|ngay)\b"
+    r"(?(bare)(?!\s+\d))"
 )
 
 @dataclass(frozen=True)
@@ -47,9 +49,14 @@ def recurring_amounts(question):
     return _RECURRING.finditer(_fold(question))
 
 
+def mask_recurring_amounts(folded_text):
+    """Hide periodic amounts while retaining offsets for other text parsers."""
+    return _RECURRING.sub(lambda match: " " * len(match[0]), folded_text)
+
+
 def parse_budget(question):
     # A recurring amount cannot be interpreted as a total purchase price.
-    text = _RECURRING.sub(" ", _fold(question))
+    text = mask_recurring_amounts(_fold(question))
     text=text.replace("–","-").replace("—","-")
     # Shared unit in ranges: '2 den 3 ty' -> '2 ty den 3 ty'.
     text=re.sub(r"(?<![\w.,])("+NUM+r")\s*(den|toi|-)\s*("+NUM+r")\s*("+UNIT+r")(?!\w)",

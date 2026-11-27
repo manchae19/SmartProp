@@ -11,6 +11,7 @@ and the street name is kept whole so "Dũng Sĩ Thanh Khê" is not cut down to a
 """
 import re
 import unicodedata
+from .money import mask_recurring_amounts
 from .personalization import AREA_COMPARISON
 
 # A house number followed by a street name. The number must start a token, so "3000"
@@ -66,7 +67,10 @@ def split_address(question):
         return plain if len(plain) == len(raw) else raw
 
     folded = re.sub(r"\w+", aligned_token, text)
+    without_recurring = mask_recurring_amounts(folded)
     for match in _ADDRESS.finditer(folded):
+        if without_recurring[match.start():match.end()] != match[0]:
+            continue
         start, end = match.span(2)
         number = text[slice(*match.span(1))]
         street = _clean_street(text[start:end])

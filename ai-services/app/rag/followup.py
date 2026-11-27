@@ -7,7 +7,7 @@ import re
 from decimal import Decimal
 
 from .intent import buy_to_let, fold, poi_categories, transaction_information
-from .money import parse_budget
+from .money import mask_recurring_amounts, parse_budget
 from .personalization import area_spec, invalid_area_text
 
 # Word ordinals only. A bare digit must NEVER be read as an ordinal: "2 tỷ" is a
@@ -54,7 +54,7 @@ def ordinal_reference(question):
     An ordinal only exists when it is attached to a property noun, so amounts,
     areas and prices can never be mistaken for a position in the result list.
     """
-    value = fold(question)
+    value = mask_recurring_amounts(fold(question))
     numeric = re.search(
         r"(?:can|can ho|bds|bat dong san|nha|lua chon|phuong an)\s+(?:so\s+)?(?:thu\s+)?(\d{1,2})(?![\d.,]|\s*(?:ty|ti|trieu|m2|m\b|phong|pn))",
         value)
@@ -171,14 +171,20 @@ def classification(question, context, *, districts=()):
     purpose=detect_purpose(question)
     refinement=bool(re.search(r"\b(?:tim ky hon|goi y khac|lua chon khac|mo rong|thu hep|giu ngan sach)\b",value)) or priority_edit
     if has_history and not reference:
-        district_change = detect_district(question, districts) and re.search(
+        district = detect_district(question, districts)
+        district_change = district and re.search(
             r"\b(?:doi|chuyen)\s+(?:quan\s+)?sang\b", value)
         budget_scenario = budget_edit and re.search(
             r"\bneu\s+(?:tang|giam|doi)\s+(?:muc\s+)?ngan sach\b", value)
         citywide = (context.last_criteria or {}).get("district") and re.fullmatch(
             r"(?:toan da nang|tat ca khu vuc)[.!? ]*", value)
+        purchase_followup = context.last_property_ids and (context.last_criteria or {}).get("purpose") != "RENTAL" and (
+            district and re.match(r"^con\s+(?:o|tai)\b", value)
+            or parsed.status == "VALID" and re.match(r"^(?:giam|tang)\s+ngan sach\b", value)
+            or re.fullmatch(r"xem them (?:can|tin) khac[.!? ]*", value)
+        )
         refinement = refinement or bool(district_change or budget_scenario or citywide
-                                        or area_spec(question) or invalid_area_text(question))
+                                        or purchase_followup or area_spec(question) or invalid_area_text(question))
     pending_search=bool(pending) and not reference
     legal=bool(re.search(r"\b(?:phap ly|so do|so hong|hop dong|sang ten|cong chung|thue truoc ba|giay chung nhan)\b",value))
     planning=bool(re.search(r"\b(?:quy hoach|giai toa|giai phong mat bang|lo gioi|thu hoi dat|quy hoach xay dung)\b",value))

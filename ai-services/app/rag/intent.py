@@ -43,10 +43,10 @@ def _has(value, term):
 
 
 LISTING_TYPES = r"(?:nha|chung cu|can ho|biet thu|phong tro|mat bang|bat dong san|bds|dat nen)"
+_LISTING_OBJECT = rf"(?:tin\s+)?{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?\b"
 _PURCHASE_ACTION = re.compile(
     rf"^mua\b|\b(?:tim|muon|can|doi sang|chuyen sang|bat dau)\s+mua\b"
-    rf"|\b(?:tim|muon|can|goi y|de xuat|xem)\s+(?:tin\s+)?{LISTING_TYPES}"
-    r"(?:\s+(?:pho|rieng|nguyen can))?\s+(?:rao\s+)?ban\b"
+    rf"|\b(?:tim|muon|can|goi y|de xuat|xem)\s+{_LISTING_OBJECT}\s+(?:rao\s+)?ban\b"
 )
 _RENT_ACTION = re.compile(
     rf"\b(?:tim|muon|can|doi sang|chuyen sang)\s+thue\b"
@@ -55,10 +55,18 @@ _RENT_ACTION = re.compile(
     r"|\bgia (?:cho )?thue\s+(?:\d|[^.!?]*?\b(?:duoi|tren|toi da|tu)\s+\d)"
     r"|^thue\s+(?:de o\b|(?:duoi|tren|toi da|tu)\s+\d|\d)"
 )
-_NEGATED_TRANSACTION = re.compile(r"\b(?:khong|chua)\s+(?:(?:tim|muon|can)\s+)?(mua|thue)\b")
+_ACTION_PREFIX = r"(?:(?:muon|can|tim|dinh|nen|tiep tuc)\s+)*"
+_TRANSACTION_ACTION = (
+    rf"{_ACTION_PREFIX}(?:(mua|thue)\b|{_LISTING_OBJECT}\s+(?:rao\s+|cho\s+)?(ban|thue)\b"
+    rf"|tim\s+{_LISTING_OBJECT}(?!\s+(?:thuoc|hang|khoa|kho|may|sach|tre)\b))"
+)
+_NEGATED_TRANSACTION = re.compile(rf"\b(?:khong|chua)\s+(?:con\s+)?{_TRANSACTION_ACTION}")
+_HYPOTHETICAL_TRANSACTION = re.compile(rf"^(?:neu(?:\s+nhu)?|gia su)\s+(?:(?:toi|minh)\s+)?{_TRANSACTION_ACTION}")
+_CLAUSE_BREAK = re.compile(r",(?=\s|[^\d])|[;!?]|\.(?=\s|$)|\b(?:nhung|ma|thay vao do)\b")
+NO_LISTING_ACTION = frozenset({"CONFLICT", "PURCHASE_DECLINED", "RENT_DECLINED", "RECURRING_AMOUNT_CLARIFICATION"})
 _LET_PURPOSE = re.compile(
     rf"\b(?:de|roi)\s+(?:(?:dau tu|khai thac)\s+){{0,2}}cho thue\b"
-    rf"|\b(mua\s+{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?)\s+cho thue\b"
+    rf"|\b(mua\s+{LISTING_TYPES}(?:\s+(?:pho|rieng|nguyen can))?(?:\s+dau tu)?)\s+cho thue\b"
 )
 _RENTAL_INCOME = re.compile(r"\b(?:doanh thu|thu nhap|dong tien|loi nhuan)(?:\s+tu)?(?:\s+cho thue)?\b")
 _INCOME_LABEL = re.compile(r"\s*(?:(?:du kien|ky vong|uoc tinh|khoang|la|dat|tu)\s*)*[:=]?\s*$")
@@ -88,8 +96,15 @@ def transaction_information(value):
     return None
 
 
+def _transaction_clauses(value):
+    """Separate declined/conditional actions from independently stated actions."""
+    return [clause.strip() for clause in _CLAUSE_BREAK.split(value) if clause.strip()]
+
+
 def buy_to_let(value):
-    return bool(_PURCHASE_ACTION.search(_NEGATED_TRANSACTION.sub(" ", value)) and _LET_PURPOSE.search(value))
+    return any(_PURCHASE_ACTION.search(clause) and _LET_PURPOSE.search(clause)
+               for clause in _transaction_clauses(value)
+               if not _NEGATED_TRANSACTION.search(clause) and not _HYPOTHETICAL_TRANSACTION.match(clause))
 
 
 def listing_transaction(question):
@@ -98,30 +113,35 @@ def listing_transaction(question):
     value = " ".join(fold(text).split())
     if transaction_information(value):
         return None
-    if re.match(r"^(?:neu|gia su)\s+(?:(?:toi|minh)\s+)?(?:mua|thue)\b", value):
+    clauses = _transaction_clauses(value)
+    if any(_HYPOTHETICAL_TRANSACTION.match(clause) for clause in clauses):
         return "CONFLICT"
-    negated_purchase = any(match[1] == "mua" for match in _NEGATED_TRANSACTION.finditer(value))
-    value = _NEGATED_TRANSACTION.sub(" ", value).strip()
-    buy = _PURCHASE_ACTION.search(value)
-    investment = buy and _LET_PURPOSE.search(value)
+    declined = {match[1] or match[2] or "mua" for match in _NEGATED_TRANSACTION.finditer(value)}
+    affirmative = [clause for clause in clauses if not _NEGATED_TRANSACTION.search(clause)]
+    buy = any(_PURCHASE_ACTION.search(clause) for clause in affirmative)
+    value = ", ".join(affirmative)
+    investment = buy_to_let(value)
     rent_text = _RENTAL_INCOME.sub(" ", _LET_PURPOSE.sub(r"\1 ", value)) if investment else value
-    periodic = list(recurring_amounts(value))
-    unlabeled_periodic = any(
-        not investment or not any(_INCOME_LABEL.fullmatch(value[label.end():amount.start()])
-                                  for label in _RENTAL_INCOME.finditer(value, 0, amount.start()))
-        for amount in periodic
-    )
-    rent = _RENT_ACTION.search(rent_text) or unlabeled_periodic
+    rent = bool(_RENT_ACTION.search(rent_text))
+    for amount in recurring_amounts(value):
+        if investment and any(_INCOME_LABEL.fullmatch(value[label.end():amount.start()])
+                              for label in _RENTAL_INCOME.finditer(value, 0, amount.start())):
+            continue
+        if amount["bare"] and (buy or not rent):
+            return "RECURRING_AMOUNT_CLARIFICATION"
+        rent = True
     if buy:
         return "CONFLICT" if rent else "SALE"
     if rent:
         return "RENT"
-    return "NEGATED" if negated_purchase else None
+    if declined & {"mua", "ban"}:
+        return "PURCHASE_DECLINED"
+    return "RENT_DECLINED" if declined else None
 
 
 def effective_listing_transaction(text, structured_purpose, saved_purpose):
     """Return the transaction and whether the caller selected it on this turn."""
-    if text == "NEGATED":
+    if text in NO_LISTING_ACTION:
         return text, False
     structured = None if structured_purpose is None else "RENT" if structured_purpose == "RENTAL" else "SALE"
     if text and structured and text != structured:

@@ -49,9 +49,10 @@ from .account_preferences import fingerprint, seed
 
 # Districts the public catalog covers; used to seed a saved profile before any branch returns.
 SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "Ngũ Hành Sơn", "Liên Chiểu", "Hòa Vang"]
-_LISTING_LOCATION_STATE = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked",
-                           "commuteDestination", "commuteStage", "commutePoints", "commutePendingAddress",
-                           "commutePendingLimit", "commuteResumeSearch", "focusedPropertyId")
+_PENDING_LISTING_LOCATION = (*NEARBY_PENDING, "commuteStage", "commutePoints", "commutePendingAddress",
+                             "commutePendingLimit", "commuteResumeSearch")
+_LISTING_LOCATION_STATE = (*_PENDING_LISTING_LOCATION, "listingAddressScope", "listingRentalBlocked",
+                           "commuteDestination", "focusedPropertyId")
 from .tools import UpstreamError
 
 class ChatOrchestrator(AdvisorDiscoveryMixin):
@@ -210,10 +211,21 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Bạn muốn tìm tin mua hay tin thuê? Nếu tìm mua, hãy nêu ngân sách mua tổng bằng đồng.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "TRANSACTION_INTENT_CONFLICT"})
-        if transaction == "NEGATED":
+        if transaction == "PURCHASE_DECLINED":
+            if context.purpose != "RENTAL":
+                for key in (*_PENDING_LISTING_LOCATION, "pending", "guided", "householdMode"):
+                    state.pop(key, None)
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Tôi đã ghi nhận bạn chưa muốn tìm mua. Bạn muốn tham khảo thông tin gì?",
-                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PURCHASE_DECLINED"})
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
+        if transaction == "RENT_DECLINED":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Tôi đã ghi nhận bạn chưa muốn tìm thuê. Bạn muốn tham khảo thông tin gì?",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
+        if transaction == "RECURRING_AMOUNT_CLARIFICATION":
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Khoản định kỳ này là tiền thuê hay doanh thu? Nếu bạn muốn tìm mua, hãy cho tôi biết tổng ngân sách mua.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
         if informational:
             return None
 
