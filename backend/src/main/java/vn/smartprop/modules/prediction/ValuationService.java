@@ -24,10 +24,22 @@ public class ValuationService {
         Map<String,String> accessTypes,Map<String,String> houseSubtypes){}
     public record Preview(boolean available,String reason,String modelVersion,String modelRun,String predictedAskingPriceVnd,
         String currency,String priceBasis,Map<String,Object> featuresUsed,List<String> missingFeatures,List<String> warnings){}
-    /** Map a district name from any case to the display form the API uses. */
+    /**
+     * Map a district name from any case/Unicode form to the display label the API uses.
+     *
+     * FastAPI compares NFC-casefolded values, so this side must normalise NFC too. Otherwise
+     * a decomposed "Cảm Lẹ" is rejected here but accepted there, and the two flows
+     * disagree on the same input. DISTRICTS only supplies display labels; supported geography
+     * is still decided by the model vocabulary from /model/options.
+     */
     private static String displayDistrict(String raw){
-        String clean=raw==null?"":raw.strip();
-        for(String known:DISTRICTS)if(known.equalsIgnoreCase(clean))return known;
+        if(raw==null)return null;
+        String clean=java.text.Normalizer.normalize(raw,java.text.Normalizer.Form.NFC).strip();
+        if(clean.isEmpty())return null;
+        for(String known:DISTRICTS){
+            String label=java.text.Normalizer.normalize(known,java.text.Normalizer.Form.NFC);
+            if(label.equalsIgnoreCase(clean))return label;
+        }
         return null;
     }
     /** The service now answers with V1.3; the run identifier is V1.3's own. */
@@ -65,12 +77,20 @@ public class ValuationService {
         if(r.areaSqm().compareTo(new BigDecimal("20"))<0||r.areaSqm().compareTo(new BigDecimal("1000"))>0)return unsupported("Model hỗ trợ diện tích từ 20 đến 1000 m².");
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>30)return unsupported("Số phòng ngủ vượt phạm vi model (1–30).");
         if("Căn hộ chung cư".equals(category)&&(r.roadWidthM()!=null||r.frontageWidthM()!=null))return unsupported("Chiều rộng đường/mặt tiền không áp dụng cho căn hộ.");
-        var options=loadOptions();String location=r.locationFeature().strip();
-        if(options.categories().stream().noneMatch(c->c.category().equals(category)&&c.locations().contains(location)))return unsupported("Khu vực chưa được hỗ trợ cho loại bất động sản này.");
+        var options=loadOptions();
+        // Canonicalise the caller spelling before the vocabulary check so casing/whitespace
+        // cannot change the accept/reject decision. Unknown districts stay unknown: no
+        // default district and no cross-province remapping is attempted.
+        String location=displayDistrict(r.locationFeature());
+        if(location==null||options.categories().stream().noneMatch(c->c.category().equals(category)&&c.locations().contains(location)))return unsupported("Khu vực chưa được hỗ trợ cho loại bất động sản này.");
         Map<String,Object> input=new LinkedHashMap<>();input.put("category",category);input.put("area_sqm",r.areaSqm().doubleValue());input.put("location_feature",location);
         if(r.ward()!=null&&!r.ward().isBlank())input.put("ward",r.ward().strip());
         if(!"Đất nền".equals(category)&&r.bedrooms()!=null&&r.bedrooms()>0)input.put("rooms",r.bedrooms());
+        // VILLA always implies villa subtype; otherwise an explicit valid subtype wins.
         if(r.propertyType()==Property.Type.VILLA)input.put("house_subtype","villa");
+        else if(r.propertyType()==Property.Type.HOUSE&&r.houseSubtype()!=null&&!r.houseSubtype().isBlank())input.put("house_subtype",r.houseSubtype().strip());
+        // Floors describe the whole house; apartments and land carry no such notion.
+        if((r.propertyType()==Property.Type.HOUSE||r.propertyType()==Property.Type.VILLA)&&r.floors()!=null)input.put("floors",r.floors());
         // Optional real measurements; omitted fields remain absent, never defaulted.
         if(r.roadWidthM()!=null)input.put("road_width_m",r.roadWidthM());
         if(r.frontageWidthM()!=null)input.put("frontage_width_m",r.frontageWidthM());

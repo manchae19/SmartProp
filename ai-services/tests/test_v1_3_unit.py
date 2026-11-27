@@ -11,7 +11,11 @@ from app.models.xgboost.predictor_v1_3 import (
     PredictorV1_3,
     band_of,
 )
-from app.models.xgboost.adapter_v1_3 import resolve_district, map_v6_to_v1_3
+from app.models.xgboost.adapter_v1_3 import (
+    canonical_district,
+    map_v6_to_v1_3,
+    resolve_district,
+)
 
 
 class TestV1_3Unit(unittest.TestCase):
@@ -51,7 +55,36 @@ class TestV1_3Unit(unittest.TestCase):
         self.assertEqual(resolve_district("Đường 2/9, quận Hải Châu"), "Hải Châu")
         self.assertEqual(resolve_district("quận Ngũ Hành Sơn"), "Ngũ Hành Sơn")
         self.assertEqual(resolve_district("Sơn Trà"), "Sơn Trà")
-        self.assertEqual(resolve_district("Khu vực ven biển", "Hòa Hải"), "Hải Châu")  # Fallback
+        # Không còn fallback: địa bàn không nhận diện được phải trả None để tầng API từ chối,
+        # thay vì âm thầm định giá như Hải Châu.
+        self.assertIsNone(resolve_district("Khu vực ven biển", "Hòa Hải"))
+
+    def test_ward_can_never_override_district(self):
+        """P1: ward là feature riêng, không được kéo bất động sản sang quận khác."""
+        # Đúng tổ hợp trong finding: Cẩm Lệ + ward Hải Châu 1 phải vẫn là Cẩm Lệ.
+        self.assertEqual(resolve_district("Cẩm Lệ", "Hải Châu 1"), "Cẩm Lệ")
+        self.assertEqual(resolve_district("Cẩm Lệ", "Phường Hải Châu 1"), "Cẩm Lệ")
+        self.assertEqual(resolve_district("Ngũ Hành Sơn", "Hòa Hải"), "Ngũ Hành Sơn")
+        # Ward một mình không bao giờ xác định được quận.
+        self.assertIsNone(resolve_district("", "Hải Châu 1"))
+
+    def test_district_vocabulary_is_exact_and_unicode_aware(self):
+        vocab = ["Cẩm Lệ", "Hải Châu", "Thanh Khê"]
+        import unicodedata
+        self.assertEqual(canonical_district("Cẩm Lệ", vocab), "Cẩm Lệ")
+        self.assertEqual(canonical_district("  cẩm lệ  ", vocab), "Cẩm Lệ")
+        self.assertEqual(canonical_district("CẨM LỆ", vocab), "Cẩm Lệ")
+        self.assertEqual(canonical_district(unicodedata.normalize("NFD", "Cẩm Lệ"), vocab), "Cẩm Lệ")
+        self.assertIsNone(canonical_district("Hà Nội", vocab))
+        self.assertIsNone(canonical_district("", vocab))
+
+    def test_unknown_district_is_refused_not_defaulted(self):
+        """Adapter phải từ chối, không được biến input lạ thành Hải Châu."""
+        with self.assertRaises(ValueError):
+            map_v6_to_v1_3(
+                {"category": "Nhà ở", "area_sqm": 80.0, "location_feature": "Hà Nội"},
+                district_vocabulary=["Cẩm Lệ", "Hải Châu"],
+            )
 
     def test_adapter_v6_mapping(self):
         v6_req = {
