@@ -22,7 +22,7 @@ _ADDRESS = re.compile(
     r"([^\W\d_]+(?:\s+[^\W\d_]+){0,9}?)"
     r"(?=\s*(?:[,.;!?]|$|\b(?:nao|giup|tim|co|khong|gan|o|tai)\b"
     r"|\b(?:ngan\s+sach|gia\s+(?:mua|ban|thue|duoi|tren|toi\s+da|tu)|cho\s+thue|chi\s+(?:o|tai|thuoc)"
-    r"|(?:quan|huyen|phuong|xa)\s+\w+)\b|" + _AREA_SUFFIX + r"))"
+    r"|(?:(?:thuoc|nam\s+trong)\s+)?(?:quan|huyen|phuong|xa)\s+\w+)\b|" + _AREA_SUFFIX + r"))"
 )
 
 # Words that look like a street but are really a search filter.
@@ -60,7 +60,7 @@ def split_address(question):
     def aligned_token(match):
         raw = match[0]
         plain = fold(raw)
-        markers = {"quan": "quận", "huyen": "huyện", "phuong": "phường", "xa": "xã"}
+        markers = {"quan": "quận", "huyen": "huyện", "phuong": "phường", "xa": "xã", "thuoc": "thuộc"}
         if plain in markers and raw.lower() not in (plain, markers[plain]):
             return raw.lower()
         return plain if len(plain) == len(raw) else raw

@@ -17,9 +17,9 @@ from .tool_registry import ToolRegistry
 from .market import market_query, market_response
 from .property_context import focused_reply
 from .scope import domain_reply
-from .discovery import AdvisorDiscoveryMixin
+from .discovery import AREA_RANGE_PROMPT, AdvisorDiscoveryMixin
 from . import commute_destination, commute_ranking
-from .personalization import AREA_KEYS, describe_area, intake, invalid_area_text, merge_area, projection
+from .personalization import describe_area, intake, merge_area, projection
 
 
 LIMITATIONS = [
@@ -197,12 +197,6 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
-        if turn["searchChange"] and not any(getattr(request, key) is not None for key in AREA_KEYS):
-            if invalid_area_text(request.question):
-                return self._reply(request, session_id, context, context.criteria(),
-                    properties=[], citations=[], research=research, responseKind="CLARIFICATION_REQUIRED",
-                    answer="Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m².",
-                    extra={"clarification": "AREA_RANGE_INVALID"})
         discovery_reply=self.dispatch_discovery(request,session_id,context,turn,districts=SUPPORTED_DISTRICTS,
                                                 research=research,token=token,account=account)
         if discovery_reply is not None:return discovery_reply
@@ -335,8 +329,11 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             criteria["purpose"] = prior["purpose"]
         if criteria.get("propertyType") == "ALL" and prior.get("propertyType"):
             criteria["propertyType"] = prior["propertyType"]
-        merge_area(criteria, prior, request.question if turn["searchChange"] or turn["intent"] == "UPDATE_CRITERIA" else "",
-                   allow_bare=context.needs.get("pending") == "min_area")
+        if not merge_area(criteria, prior, request.question if turn["searchChange"] or turn["intent"] == "UPDATE_CRITERIA" else "",
+                          allow_bare=context.needs.get("pending") == "min_area"):
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer=AREA_RANGE_PROMPT, responseKind="CLARIFICATION_REQUIRED",
+                extra={"clarification": "AREA_RANGE_INVALID"})
         if turn["purpose"]:
             criteria["purpose"] = turn["purpose"]
         if turn["propertyType"]:

@@ -17,7 +17,7 @@ HOUSEHOLD_RE = re.compile(r"\b(?:tu van theo ho gia dinh|ho gia dinh|con nho|tre
 SKIP_RE = re.compile(r"\b(?:xem goi y ngay|tim ngay|bo qua|khong can hoi them|giu tieu chi)\b")
 
 AREA_LIMIT = Decimal("1000000")
-_AREA_NUMBER = r"(\d{1,7}(?:\.\d{1,2})?)"
+_AREA_NUMBER = r"([+-]?\d+(?:\.\d+)*)"
 # Only square-metre units count. A bare "m" is a width or a distance ("hẻm 5m",
 # "mặt tiền 5m", "cách 500m") and must never become an area filter.
 _AREA_UNIT = r"\s*(?:m2|m²|met vuong|m vuong)(?!\w)"
@@ -26,9 +26,21 @@ _AREA_RANGE = re.compile(r"(?<![\w.+-])(?:tu\s*)?" + _AREA_NUMBER + r"(?:" + _AR
 _AREA_VALUE = re.compile(r"(?<![\w.+-])" + _AREA_NUMBER + _AREA_UNIT)
 AREA_COMPARISON = (r"(?:nho hon|thap hon|it hon|be hon|lon hon|cao hon|nhieu hon|rong hon|"
                    r"toi da|khong qua|khong vuot|nhieu nhat|toi thieu|it nhat|duoi|tren|hon|tu)")
+_AREA_TERM = rf"(?:{AREA_COMPARISON}\s+)?{_AREA_NUMBER}(?:{_AREA_UNIT})?"
+_SHARED_AREA = re.compile(
+    rf"\b(?={AREA_COMPARISON}\s+)(?:{_AREA_TERM}\s*(?:\b(?:va|hoac|hay)\b|[,;])\s*)+"
+    rf"(?:{AREA_COMPARISON}\s+)?{_AREA_NUMBER}{_AREA_UNIT}"
+)
+_AREA_TERM_PARTS = re.compile(rf"(?:(?P<operator>{AREA_COMPARISON})\s+)?(?P<number>{_AREA_NUMBER})(?:{_AREA_UNIT})?")
+_AREA_MENTION = re.compile(r"\d+(?:[.,]\d+)*" + _AREA_UNIT)
+_NON_AREA_PREFIX = re.compile(
+    r"\b(?:ngan sach|gia(?: mua| ban| thue)?|khoang cach|chieu rong|mat tien|so phong)\s*$"
+)
 
 
 def _area(raw):
+    if not re.fullmatch(r"\d{1,7}(?:\.\d{1,2})?", raw):
+        return None
     value = Decimal(raw)
     return value if 0 < value <= AREA_LIMIT else None
 
@@ -36,6 +48,23 @@ def _area(raw):
 def _plain(value):
     text = format(value, "f")
     return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def _constrain(spec, side, area, exclusive=False):
+    bound, flag = side + "AreaSqm", side + "AreaExclusive"
+    previous = Decimal(spec[bound]) if spec.get(bound) is not None else None
+    if previous is None or (area > previous if side == "min" else area < previous):
+        spec.update({bound: _plain(area), flag: exclusive})
+    elif area == previous and exclusive:
+        spec[flag] = True
+
+
+def _valid_area_bounds(spec):
+    low, high = spec.get("minAreaSqm"), spec.get("maxAreaSqm")
+    if low is None or high is None:
+        return True
+    low, high = Decimal(low), Decimal(high)
+    return low < high or (low == high and not (spec.get("minAreaExclusive") or spec.get("maxAreaExclusive")))
 
 
 def area_spec(question, *, allow_bare=False):
@@ -46,24 +75,27 @@ def area_spec(question, *, allow_bare=False):
     legacy meaning). "từ A đến B m²" is an inclusive range. A bare number counts only when
     the caller is answering an explicit area question (`allow_bare`).
     """
-    value = fold(question).replace(",", ".").replace("–", "-").replace("—", "-")
+    value = re.sub(r"(?<=\d),(?=\d)", ".", fold(question)).replace("–", "-").replace("—", "-")
     spec = {"minAreaSqm": None, "maxAreaSqm": None, "minAreaExclusive": False, "maxAreaExclusive": False}
 
-    def constrain(side, area, exclusive=False):
-        bound, flag = side + "AreaSqm", side + "AreaExclusive"
-        previous = Decimal(spec[bound]) if spec[bound] is not None else None
-        if previous is None or (area > previous if side == "min" else area < previous):
-            spec.update({bound: _plain(area), flag: exclusive})
-        elif area == previous and exclusive:
-            spec[flag] = True
+    # Only a contiguous chain of comparators can borrow its final area unit.
+    # A price, room count or linear measurement interrupts that chain.
+    for shared in reversed(list(_SHARED_AREA.finditer(value))):
+        parts = list(_AREA_TERM_PARTS.finditer(shared[0]))
+        if _NON_AREA_PREFIX.search(value[:shared.start()]) or re.search(r"\b(?:hoac|hay)\b", shared[0]) or any(
+            not part["operator"] or _area(part["number"]) is None for part in parts
+        ):
+            return None
+        expanded = " va ".join(f"{part['operator']} {part['number']} m2" for part in parts)
+        value = value[:shared.start()] + expanded + value[shared.end():]
 
     ranges = list(_AREA_RANGE.finditer(value))
     for ranged in ranges:
         low, high = _area(ranged[1]), _area(ranged[2])
         if low is None or high is None or low > high:
             return None
-        constrain("min", low)
-        constrain("max", high)
+        _constrain(spec, "min", low)
+        _constrain(spec, "max", high)
     value = _AREA_RANGE.sub(lambda match: " " * len(match[0]), value)
     found = bool(ranges)
     for match in _AREA_VALUE.finditer(value):
@@ -73,13 +105,13 @@ def area_spec(question, *, allow_bare=False):
         before = value[max(0, match.start() - 32):match.start()].strip()
         after = value[match.end():match.end() + 32].strip()
         if re.search(r"\b(?:duoi|nho hon|thap hon|it hon|be hon)\s*$", before):
-            constrain("max", area, True)
+            _constrain(spec, "max", area, True)
         elif re.search(r"\b(?:toi da|khong qua|khong vuot|nhieu nhat)\s*$", before) or after.startswith("tro xuong"):
-            constrain("max", area)
+            _constrain(spec, "max", area)
         elif re.search(r"\b(?:tren|hon|lon hon|cao hon|nhieu hon|rong hon)\s*$", before):
-            constrain("min", area, True)
+            _constrain(spec, "min", area, True)
         else:
-            constrain("min", area)
+            _constrain(spec, "min", area)
         found = True
     if not found and allow_bare:
         bare = re.fullmatch(r"\s*" + _AREA_NUMBER + r"\s*", value)
@@ -88,21 +120,14 @@ def area_spec(question, *, allow_bare=False):
             return None
         spec.update(minAreaSqm=_plain(area))
         found = True
-    if not found:
-        return None
-    if spec["minAreaSqm"] and spec["maxAreaSqm"]:
-        low, high = Decimal(spec["minAreaSqm"]), Decimal(spec["maxAreaSqm"])
-        if low > high or (low == high and (spec["minAreaExclusive"] or spec["maxAreaExclusive"])):
-            return None
-    return spec
+    return spec if found and _valid_area_bounds(spec) else None
 
 
 AREA_KEYS = ("minAreaSqm", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive")
 
 
 def invalid_area_text(question):
-    value = fold(question)
-    return bool(re.search(r"\d+(?:[.,]\d+)*" + _AREA_UNIT, value) and area_spec(question) is None)
+    return bool(_AREA_MENTION.search(fold(question)) and area_spec(question) is None)
 
 
 def apply_area(criteria, question, *, allow_bare=False):
@@ -120,13 +145,24 @@ def apply_area(criteria, question, *, allow_bare=False):
 
 
 def merge_area(criteria, prior, question, *, allow_bare=False):
-    """Explicit request fields replace the previous area as a group."""
-    if not any(key in criteria for key in AREA_KEYS):
-        if not apply_area(criteria, question, allow_bare=allow_bare):
-            criteria.update({key: prior[key] for key in AREA_KEYS if key in prior})
+    """New bounds replace the prior group. Text and structured bounds on one turn intersect."""
+    spec = area_spec(question, allow_bare=allow_bare)
+    if spec is None and _AREA_MENTION.search(fold(question)):
+        return False
+    bounds = {key: criteria[key] for key in AREA_KEYS if key in criteria}
+    if spec:
+        for side in ("min", "max"):
+            if (area := spec[side + "AreaSqm"]) is not None:
+                _constrain(bounds, side, Decimal(area), spec[side + "AreaExclusive"])
+        if not _valid_area_bounds(bounds):
+            return False
+    elif not bounds:
+        bounds = {key: prior[key] for key in AREA_KEYS if key in prior}
+    criteria.update(bounds)
     for key in ("minAreaSqm", "maxAreaSqm"):
         if key in criteria:
             criteria[key] = str(criteria[key])
+    return True
 
 
 def matches_area(area, criteria):

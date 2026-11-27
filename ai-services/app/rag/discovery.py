@@ -2,7 +2,7 @@ from decimal import Decimal
 import re
 import time
 from urllib.parse import quote
-from .personalization import AREA_KEYS, invalid_area_text, matches_area, merge_area
+from .personalization import AREA_KEYS, matches_area, merge_area
 from .config import GroundingError, RagUnavailable
 from .schemas import Citation
 from .knowledge import digest
@@ -14,12 +14,14 @@ from .focused_property import focused_intent
 from .geo import haversine_meters
 from .gis import gis_evidence
 from .money import parse_budget
-from .intent import rental_listing_request
+from .intent import listing_transaction
 from .locality import (is_listing_location_edit, key as locality_key, listing_location,
                        listing_location_mentions, listing_location_text)
 SUGGESTION_LIMIT=3
 RANKING_POOL=6
 NEARBY_RADIUS_METERS=1000
+NEARBY_PENDING = ("nearbyPoints", "nearbyAddress", "nearConsentPending", "pendingNearbyAddress", "nearbySaleVerified")
+AREA_RANGE_PROMPT = "Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m²."
 def norm(text):
     from .orchestrator import norm as normalize
     return normalize(text)
@@ -511,16 +513,55 @@ class AdvisorDiscoveryMixin:
         address, outside_address = address_search.split_address(request.question)
         mode = address_search.intent(request.question, address) if address else None
         previous_search = state.get("listingAddressScope")
-        rental = rental_listing_request(request.question)
+        transaction = listing_transaction(outside_address if mode else request.question)
         location_edit = bool(previous_search and not address and is_listing_location_edit(request.question)
                              and not turn["categories"] and not turn["domain"])
-        rental_followup = bool(previous_search and not address and rental and
-                               re.match(r"^(?:gia thue|ngan sach|(?:tim|muon|can) thue|duoi|toi da)\b", norm(request.question)))
         prior = context.criteria()
-        if rental and (mode or rental_followup):
-            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+        selected_purpose = request.purpose if "purpose" in request.model_fields_set else turn["purpose"]
+        pending_nearby = state.get("nearConsentPending") or state.get("nearbyPoints")
+        reply_to_nearby = (norm(request.question).rstrip(".!?") == "dong y tim vi tri"
+                           or commute_destination.is_plain_consent(request.question)
+                           or commute_destination.candidate_index(request.question, 5))
+        rental = transaction == "RENT" or (
+            transaction is None and ((selected_purpose or prior.get("purpose")) == "RENTAL"
+                                     or (not selected_purpose and state.get("listingRentalBlocked")))
+        )
+        rental_discovery = (mode or location_edit or pending_nearby
+                            or (transaction == "RENT" and turn["intent"] not in ("MARKET_ANALYSIS", "MARKET_TREND"))
+                            or (state.get("listingRentalBlocked") and
+                                (reply_to_nearby or turn["searchChange"] or turn["intent"] == "PROPERTY_FOLLOWUP")))
+        if rental and rental_discovery:
+            for key in (*NEARBY_PENDING, "listingAddressScope"):
+                state.pop(key, None)
+            state["listingRentalBlocked"] = True
+            return self._reply(request, session_id, context, {**prior, "purpose": "RENTAL"},
+                properties=[], citations=[], research=False,
                 answer="Tìm tin theo địa chỉ trong chatbot hiện chỉ hỗ trợ mua. Bạn có thể lọc tin cho thuê tại trang Bất động sản.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "RENTAL_BUDGET_NOT_SUPPORTED"})
+        explicit_purchase = transaction == "SALE" or (
+            transaction is None and "purpose" in request.model_fields_set and selected_purpose != "RENTAL"
+        )
+        if explicit_purchase and (prior.get("purpose") == "RENTAL" or state.get("listingRentalBlocked")):
+            for key in (*NEARBY_PENDING, "listingRentalBlocked"):
+                state.pop(key, None)
+            for key in ("budgetVnd", "minPriceVnd"):
+                prior.pop(key, None)
+            prior["purpose"] = turn["purpose"] = "INVESTMENT" if selected_purpose == "INVESTMENT" else "LIVING"
+            if not mode and not turn["searchChange"]:
+                return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                    answer="Đã chuyển sang tìm tin mua. Bạn có thể nhập địa chỉ cần tìm.",
+                    responseKind="CRITERIA_UPDATED")
+            self.sessions.record(context, criteria=prior, property_ids=None, area_ids=None,
+                                 evidence_ids=context.evidence_source_ids, question=request.question)
+        elif transaction == "SALE" and selected_purpose == "RENTAL" and mode:
+            turn["purpose"] = "LIVING"
+        if pending_nearby and reply_to_nearby and not mode and not state.get("nearbySaleVerified"):
+            # Checkpoints from before the transaction guard may have recorded a rental as LIVING.
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                answer="Bạn nhập lại địa chỉ cần tìm tin mua để xác nhận vị trí cho lượt tìm này nhé.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "NEAR_ADDRESS_RESTART"})
         minutes,fresh_kind=commute_ranking.limit_from(request.question)
         explicit_commute=minutes is not None or commute_ranking.wants_work_proximity(request.question) or focused_intent(request.question)=='COMMUTE'
         if turn['intent'] in ('MARKET_PRICE','MARKET_TREND','MARKET_ANALYSIS','LEGAL_QA','PLANNING_QA','KNOWLEDGE','AREA_AMENITIES') and not explicit_commute:
@@ -533,6 +574,16 @@ class AdvisorDiscoveryMixin:
             state.pop("listingAddressScope", None)
         criteria={k:v for k,v in prior.items() if not k.startswith('_')}
         criteria.setdefault('purpose','LIVING');criteria.setdefault('propertyType','ALL')
+        prior_area = {key: criteria.pop(key) for key in AREA_KEYS if key in criteria}
+        criteria.update(request.model_dump(include=set(AREA_KEYS), exclude_none=True))
+        filter_text = outside_address if mode else request.question
+        if not merge_area(criteria, prior_area, filter_text if mode or location_edit or turn["searchChange"] else "",
+                          allow_bare=state.get("pending") == "min_area"):
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
+                answer=AREA_RANGE_PROMPT, responseKind="CLARIFICATION_REQUIRED",
+                extra={"clarification": "AREA_RANGE_INVALID"})
         location = {"district": request.district, "ward": request.ward}
         if mode or location_edit:
             place_text = listing_location_text(outside_address) if mode else outside_address
@@ -555,15 +606,6 @@ class AdvisorDiscoveryMixin:
             criteria["district"] = location["district"]
         if location["ward"]:
             criteria["ward"] = location["ward"]
-        prior_area = {key: criteria.pop(key) for key in AREA_KEYS if key in criteria}
-        criteria.update(request.model_dump(include=set(AREA_KEYS), exclude_none=True))
-        filter_text = outside_address if mode else request.question
-        if (mode or location_edit) and not any(key in criteria for key in AREA_KEYS) and invalid_area_text(filter_text):
-            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
-                answer="Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m².",
-                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "AREA_RANGE_INVALID"})
-        merge_area(criteria, prior_area, filter_text if mode or location_edit or turn["searchChange"] else "",
-                   allow_bare=state.get("pending") == "min_area")
         parsed=parse_budget(filter_text)
         if parsed.status == 'AMBIGUOUS' and (mode or location_edit):
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=False,
@@ -587,13 +629,14 @@ class AdvisorDiscoveryMixin:
             return self._address_answer(request, session_id, context, criteria, previous_search["address"],
                                         limitations=limits, research=False)
         if mode:
-            for key in ("listingAddressScope", "nearbyPoints", "nearbyAddress", "nearConsentPending", "pendingNearbyAddress"):
+            for key in ("listingAddressScope", *NEARBY_PENDING):
                 state.pop(key, None)
         if mode=='AT_ADDRESS':
             return self._address_answer(request,session_id,context,criteria,address,limitations=limits,research=False)
         if mode=='NEAR_ADDRESS':
             state['pendingNearbyAddress']=address
             state['nearConsentPending']=True
+            state["nearbySaleVerified"] = True
             self.sessions.record(context,criteria=criteria,property_ids=None,area_ids=None,evidence_ids=[],question=request.question)
             return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
                 answer='Để tìm nhà trong 1 km, bạn có đồng ý gửi địa chỉ này tới Geoapify không? Tôi chỉ dùng điểm trong phiên này.',
@@ -601,6 +644,7 @@ class AdvisorDiscoveryMixin:
         if state.get('nearConsentPending'):
             if norm(request.question) in ('bo qua','huy'):
                 state.pop('nearConsentPending',None);state.pop('pendingNearbyAddress',None)
+                state.pop("nearbySaleVerified", None)
                 return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,answer='Đã bỏ qua tìm vị trí.',responseKind='CRITERIA_UPDATED')
             if norm(request.question)=='dong y tim vi tri':
                 state.pop('nearConsentPending',None)
@@ -608,10 +652,12 @@ class AdvisorDiscoveryMixin:
                 try:
                     points=self.backend.geocode_workplace(address)
                 except (UpstreamError,GroundingError):
+                    state.pop("nearbySaleVerified", None)
                     return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
                         answer="Dịch vụ tìm vị trí chưa sẵn sàng hoặc đã chạm hạn mức. Tôi chưa thể xác định vị trí để tìm trong 1 km; đây không phải kết luận là không có nhà. Bạn có thể thử lại sau hoặc tìm theo ngân sách.",
                         responseKind="DATA_SOURCE_ERROR",extra={"queryStatus":"GEOCODING_UNAVAILABLE","quickReplies":["Tìm theo ngân sách"]})
                 if not points:
+                    state.pop("nearbySaleVerified", None)
                     return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,answer='Chưa tìm được vị trí cho địa chỉ này. Bạn có thể nhập địa chỉ rõ hơn.',responseKind='CLARIFICATION_REQUIRED')
                 state['nearbyPoints']=points[:5];state['nearbyAddress']=address
                 return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
@@ -623,6 +669,7 @@ class AdvisorDiscoveryMixin:
                 origin = points[index - 1]
                 state.pop("nearbyPoints")
                 address = state.pop("nearbyAddress")
+                state.pop("nearbySaleVerified", None)
                 return self._nearby_from(request,session_id,context,criteria,address,origin,limitations=limits,research=False)
         minutes,kind=commute_ranking.limit_from(request.question)
         if minutes is not None or commute_ranking.wants_work_proximity(request.question):

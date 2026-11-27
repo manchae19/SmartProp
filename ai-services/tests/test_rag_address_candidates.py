@@ -37,7 +37,8 @@ def search(request):
     is_nearby = request.param == "nearby"
 
     def run(rows, constraint="", *, prompt=None, followups=(), expected_address=ADDRESS,
-            upstream_filters=False, continue_session=True, **criteria):
+            upstream_filters=False, continue_session=True, auto_consent=True,
+            prior=None, pending=None, audit=None, **criteria):
         calls = []
 
         def public_backend(outbound):
@@ -65,6 +66,11 @@ def search(request):
             })
 
         service, backend = nearby.NearbyAnswerTests().service([])
+        if prior is not None:
+            context, prior_id, _ = service.sessions.begin(None, scope="PUBLIC")
+            service.sessions.record(context, criteria=prior, property_ids=[], area_ids=[], evidence_ids=[])
+            context.needs.update(pending or {})
+            criteria["sessionId"] = prior_id
         backend.amenity_areas.return_value = [
             {"areaLevel": "WARD", "areaName": name, "parentDistrict": "Thanh Khê"}
             for name in ("Thanh Khê Đông, Thanh Khê", "Thanh Khê Tây, Thanh Khê")
@@ -83,7 +89,8 @@ def search(request):
                     **criteria,
                 })
                 assert response.status_code == 200
-                if response.json()["evidence"].get("clarification") == "NEAR_ADDRESS_CONSENT":
+                turns = [response.json()]
+                if auto_consent and response.json()["evidence"].get("clarification") == "NEAR_ADDRESS_CONSENT":
                     assert is_nearby
                     backend.geocode_workplace.assert_not_called()
                     first = response.json()["evidence"]
@@ -92,6 +99,7 @@ def search(request):
                         "question": "Đồng ý tìm vị trí", "sessionId": session_id,
                     })
                     assert second.status_code == 200
+                    turns.append(second.json())
                     backend.geocode_workplace.assert_called_once_with(expected_address)
                     pick = second.json()["evidence"]
                     assert pick["clarification"] == "NEAR_ADDRESS_PICK"
@@ -99,12 +107,17 @@ def search(request):
                         "question": pick["quickReplies"][0], "sessionId": session_id,
                     })
                     assert response.status_code == 200
+                    turns.append(response.json())
                 for question in followups:
                     payload = {"question": question}
                     if continue_session:
                         payload["sessionId"] = response.json()["evidence"]["session"]["id"]
                     response = client.post("/chat", json=payload)
                     assert response.status_code == 200
+                    turns.append(response.json())
+        if audit is not None:
+            audit.update(turns=turns, geocodes=[call.args[0] for call in backend.geocode_workplace.call_args_list],
+                         recommendations=backend.recommend.call_count)
         return response.json(), calls
 
     return run
