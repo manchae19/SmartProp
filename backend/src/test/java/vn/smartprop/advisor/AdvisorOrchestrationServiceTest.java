@@ -190,6 +190,7 @@ class AdvisorOrchestrationServiceTest {
     void researchRecordsSkipXGBoostValuationAndCarryStrictResearchLabels() {
         AdvisorOrchestrationService orchestrator = newOrchestrator(true);
         when(recService.tinixEnabled()).thenReturn(true);
+        when(compService.isResearchEnabled()).thenReturn(true);
 
         PropertyResult tinixProp = new PropertyResult(
             "tinix:tnx-500", "Quan sát lịch sử Thanh Khê", PropertyType.HOUSE,

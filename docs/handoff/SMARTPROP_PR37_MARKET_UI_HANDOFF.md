@@ -17,6 +17,7 @@
 | `frontend/src/features/market/MarketInsightsView.jsx` | `L702–L775` | Render `<PriceTrendChart history={view.currentDistrict.priceHistory} />` và khối nhận định gắn huy hiệu **`"SMARTPROP AI MARKET INTELLIGENCE · MODEL V1.3"`** (`L711`) cho văn bản tĩnh viết tay trong `aiInsights`. |
 | `frontend/src/features/market/PriceTrendChart.jsx` | `L64–L80`, `L194–L208`, `L304` | Vẽ đường biểu đồ mượt 12 quý từ mảng tĩnh và gắn nhãn tooltip **`"Chuẩn hóa"`** (`L304`) như thể được tính từ dữ liệu lịch sử thực. |
 | `frontend/src/features/market/TopSearchedAreas.jsx` | `L28–L37`, `L109–L134`, `L163–L182` | Xếp hạng khu vực theo `viewsCount` tĩnh (`37.637 lượt xem`), `activeListingsCount` tĩnh (`1.674 bất động sản đang bán`), `avgPricePerM2` và `priceGrowthYoY` tĩnh; bỏ qua `Hòa Vang`. |
+| `frontend/src/features/market/MarketAnalyticsView.jsx` | `L97–L111` | Hiển thị công khai tùy chọn nguồn `TINIX_RESEARCH` trong `<select>` và checkbox `"Bao gồm dữ liệu nghiên cứu TiniX (CC BY-NC 4.0)"` cho mọi khách truy cập không có quyền, khiến người dùng bấm vào sẽ nhận lỗi `403 Forbidden` từ backend sau khi Phase 0 khóa quyền truy cập. |
 
 ---
 
@@ -42,15 +43,20 @@
 
 ---
 
-## 4. Quy tắc bắt buộc cho `Hòa Vang` & Empty State khi thiếu dữ liệu thật
+## 4. Quy tắc bắt buộc cho Quyền dữ liệu nghiên cứu, `Hòa Vang` & Empty State khi thiếu dữ liệu thật
 
-1. **Không bao giờ fallback sang `Sơn Trà`**:
+1. **Ẩn hoàn toàn tùy chọn dữ liệu nghiên cứu (`TINIX_RESEARCH`) với người dùng không có quyền (`MarketAnalyticsView.jsx:L97–L111`)**:
+   - Kể từ Phase 0, backend `GET /api/v1/properties/market-analytics` chặn cứng `includeResearch=true` và `source=TINIX_RESEARCH` bằng `403 Forbidden` trừ khi phiên đăng nhập là **`ADMIN` đang hoạt động (`ACTIVE`)** VÀ cờ cấu hình máy chủ được bật.
+   - Trên `MarketAnalyticsView.jsx` (đang nằm trong phạm vi PR #37):
+     - **Không hiển thị** lựa chọn `TINIX_RESEARCH` trong dropdown `Nguồn` và **không hiển thị** checkbox `"Bao gồm dữ liệu nghiên cứu TiniX"` đối với khách ẩn danh, `BUYER`, `BROKER`, hoặc khi máy chủ chưa bật chế độ nghiên cứu.
+     - **Không để UI có sẵn checkbox gửi request chắc chắn bị `403`**; nếu trạng thái phiên thay đổi (đăng xuất hoặc không đủ quyền), tự động reset `includeResearch = false` và `source = 'ALL'`.
+2. **Không bao giờ fallback `Hòa Vang` sang `Sơn Trà`**:
    - Bổ sung đầy đủ cấu hình địa lý hành chính của **`Hòa Vang`** (`slug: 'hoa-vang'`, `name: 'Huyện Hòa Vang'`, `shortName: 'Hòa Vang'`, tọa độ trung tâm hành chính Hòa Vang) vào danh sách **7 quận/huyện**.
    - Nếu URL `/market/:slug` nhận một `slug` không tồn tại trong 7 quận/huyện Đà Nẵng: `getDistrictProfile(slug)` phải trả `null` và UI hiển thị **trạng thái không tìm thấy khu vực** (kèm nút quay lại danh sách 7 quận/huyện), tuyệt đối không âm thầm hiển thị `Sơn Trà`.
-2. **Empty / Insufficient Sample State trung thực**:
+3. **Không tự tạo thống kê thị trường & Hiển thị Empty / Insufficient Sample State trung thực**:
    - Khi gọi API thật cho một `(district, propertyType)` mà `dataStatus === 'INSUFFICIENT_DATA'` hoặc `count === 0`:
      - Hiển thị rõ: *"Chưa đủ mẫu tin rao công khai hợp lệ (`n = <count>`, ngưỡng tối thiểu `<minSample>`) để tính trung vị đơn giá."*
-     - Không điền giá mặc định (`"145,0 triệu/m²"`), không nội suy từ quận bên cạnh, không vẽ biểu đồ mẫu.
+     - Không tự tạo trung vị/trung bình, không điền giá mặc định (`"145,0 triệu/m²"`), không nội suy từ quận bên cạnh, không vẽ biểu đồ mẫu hay gán mác `"AI Valuation V1.3"`.
 
 ---
 

@@ -73,6 +73,8 @@ app:
     valuation-enabled: ${APP_ADVISOR_VALUATION_ENABLED:true}
     valuation-base-url: ${APP_ADVISOR_VALUATION_BASE_URL:http://127.0.0.1:8000}
     allow-research-comparables: ${APP_ADVISOR_ALLOW_RESEARCH_COMPARABLES:false}
+  comparable:
+    research-enabled: ${APP_COMPARABLE_RESEARCH_ENABLED:false}
   market:
     research-enabled: ${APP_MARKET_RESEARCH_ENABLED:false}
   image-scan:

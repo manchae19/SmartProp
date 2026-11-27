@@ -44,23 +44,59 @@ public class ComparableRankingService {
     private final ComparableCandidateRepository candidates;
     private final ComparableEligibilityService eligibility;
     private final PropertyRepository properties;
+    private final boolean researchEnabled;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ComparableRankingService(
+            ComparableCandidateRepository candidates,
+            ComparableEligibilityService eligibility,
+            PropertyRepository properties,
+            @org.springframework.beans.factory.annotation.Value("${app.comparable.research-enabled:false}") boolean researchEnabled) {
+        this.candidates = candidates;
+        this.eligibility = eligibility;
+        this.properties = properties;
+        this.researchEnabled = researchEnabled;
+    }
 
     public ComparableRankingService(ComparableCandidateRepository candidates,
                                     ComparableEligibilityService eligibility,
                                     PropertyRepository properties) {
-        this.candidates = candidates;
-        this.eligibility = eligibility;
-        this.properties = properties;
+        this(candidates, eligibility, properties, false);
+    }
+
+    public boolean isResearchEnabled() {
+        return researchEnabled;
     }
 
     /** Search tiers, ordered. The response reports the deepest tier that reached the result. */
     public enum Stage { WARD, DISTRICT, ADJACENT, NONE }
 
+    /**
+     * Public-safe comparable lookup: returns only SMARTPROP and EXTERNAL_LISTING rows,
+     * never queries tinix_dataset_records, and fails closed if includeResearch=true.
+     */
     public ComparableDtos.Response rank(ComparableDtos.Request request) {
-        return rank(request, true);
+        if (request != null && Boolean.TRUE.equals(request.includeResearch())) {
+            throw ApiInputs.forbidden();
+        }
+        return computeRank(request, false);
+    }
+
+    /**
+     * Authorized research comparable lookup: requires server-side research enablement.
+     */
+    public ComparableDtos.Response rankResearch(ComparableDtos.Request request) {
+        if (!researchEnabled) {
+            throw ApiInputs.forbidden();
+        }
+        return computeRank(request, true);
     }
 
     public ComparableDtos.Response rank(ComparableDtos.Request request, boolean includeResearch) {
+        return includeResearch ? rankResearch(request) : rank(request);
+    }
+
+    private ComparableDtos.Response computeRank(ComparableDtos.Request request, boolean includeResearch) {
         int limit = limit(request.limit());
         ComparableDtos.Reference reference = reference(request);
         String type = normalizeType(reference.propertyType());

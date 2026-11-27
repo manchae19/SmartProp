@@ -66,8 +66,11 @@ public class AdvisorController {
         }
 
         AdvisorResponse response = service.consult(request);
+        CacheControl cacheControl = wantsResearch
+            ? CacheControl.noStore().cachePrivate()
+            : CacheControl.noStore();
         return ResponseEntity.ok()
-            .cacheControl(CacheControl.noStore())
+            .cacheControl(cacheControl)
             .body(response);
     }
 

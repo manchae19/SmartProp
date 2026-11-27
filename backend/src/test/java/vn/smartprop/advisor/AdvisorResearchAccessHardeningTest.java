@@ -63,8 +63,10 @@ class AdvisorResearchAccessHardeningTest {
     private final ComparableCandidateRepository compRepo = mock(ComparableCandidateRepository.class);
     private final ComparableEligibilityService compEligibility = new ComparableEligibilityService();
     private final PropertyRepository propertyRepo = mock(PropertyRepository.class);
-    private final ComparableRankingService realComparableService =
-        new ComparableRankingService(compRepo, compEligibility, propertyRepo);
+    private final ComparableRankingService publicOnlyComparableService =
+        new ComparableRankingService(compRepo, compEligibility, propertyRepo, false);
+    private final ComparableRankingService researchEnabledComparableService =
+        new ComparableRankingService(compRepo, compEligibility, propertyRepo, true);
     private final AdvisorValuationAdapter valAdapter = mock(AdvisorValuationAdapter.class);
     private final UserRepository userRepo = mock(UserRepository.class);
     private final AccountAccess accountAccess = new AccountAccess(userRepo);
@@ -186,9 +188,9 @@ class AdvisorResearchAccessHardeningTest {
             new ExternalRow(501L, "CHOTOT", "Nhà ở", "Hải Châu", new BigDecimal("79"), new BigDecimal("4550000000"), "VALID", "https://chotot.com/501")
         ));
 
-        // Even if allowResearchComparables=true is passed, SAFE mode MUST still exclude TiniX!
+        // Even if allowResearchComparables=true AND comparable researchEnabled=true, SAFE mode MUST still exclude TiniX!
         AdvisorOrchestrationService orchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, true);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, true);
         AdvisorController controller = new AdvisorController(orchestrator, accountAccess, limits);
 
         List<JwtAuthenticationToken> actors = java.util.Arrays.asList(
@@ -201,6 +203,7 @@ class AdvisorResearchAccessHardeningTest {
         for (JwtAuthenticationToken auth : actors) {
             ResponseEntity<AdvisorResponse> entity = controller.consult(consultReq(false), httpReq, auth);
             assertThat(entity.getStatusCode().value()).isEqualTo(200);
+            assertThat(entity.getHeaders().getCacheControl()).isEqualTo("no-store");
             AdvisorResponse body = entity.getBody();
             assertThat(body).isNotNull();
             assertThat(body.mode()).isEqualTo("SAFE");
@@ -238,7 +241,7 @@ class AdvisorResearchAccessHardeningTest {
         when(compRepo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
 
         AdvisorOrchestrationService orchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, true);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, true);
         AdvisorController controller = new AdvisorController(orchestrator, accountAccess, limits);
 
         AdvisorResponse res = controller.consult(consultReq(null), httpReq, null).getBody();
@@ -259,7 +262,7 @@ class AdvisorResearchAccessHardeningTest {
     void unauthorizedResearchModeFailsClosed() {
         when(recService.tinixEnabled()).thenReturn(true);
         AdvisorOrchestrationService orchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, true);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, true);
         AdvisorController controller = new AdvisorController(orchestrator, accountAccess, limits);
 
         // Anonymous -> 403
@@ -295,7 +298,7 @@ class AdvisorResearchAccessHardeningTest {
     void researchModeWhenDisabledFailsClosedForAdmin() {
         when(recService.tinixEnabled()).thenReturn(false);
         AdvisorOrchestrationService orchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, true);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, true);
         AdvisorController controller = new AdvisorController(orchestrator, accountAccess, limits);
 
         assertThatThrownBy(() -> controller.consult(consultReq(true), httpReq, jwtFor(30L, User.Role.ADMIN)))
@@ -326,18 +329,31 @@ class AdvisorResearchAccessHardeningTest {
 
         // Case A: default allowResearchComparables = false -> comparables stay public-only even in INTERNAL_RESEARCH mode
         AdvisorOrchestrationService defaultOrchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, false);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, false);
         AdvisorController defaultController = new AdvisorController(defaultOrchestrator, accountAccess, limits);
 
-        AdvisorResponse resDefault = defaultController.consult(consultReq(true), httpReq, jwtFor(30L, User.Role.ADMIN)).getBody();
+        ResponseEntity<AdvisorResponse> entityDefault = defaultController.consult(consultReq(true), httpReq, jwtFor(30L, User.Role.ADMIN));
+        assertThat(entityDefault.getHeaders().getCacheControl()).contains("private").contains("no-store");
+        AdvisorResponse resDefault = entityDefault.getBody();
         assertThat(resDefault).isNotNull();
         assertThat(resDefault.mode()).isEqualTo("INTERNAL_RESEARCH");
         assertThat(resDefault.recommendedProperties().get(0).comparableEvidence().comparables()).isEmpty();
         verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
 
-        // Case B: explicit allowResearchComparables = true -> ADMIN receives strictly labelled TiniX comparable
+        // Case B: allowResearchComparables = true while comparable.research-enabled = false -> clean public fallback (no DEGRADED crash!)
+        AdvisorOrchestrationService unalignedOrchestrator = new AdvisorOrchestrationService(
+            recService, publicOnlyComparableService, compEligibility, valAdapter, true);
+        AdvisorController unalignedController = new AdvisorController(unalignedOrchestrator, accountAccess, limits);
+
+        AdvisorResponse resUnaligned = unalignedController.consult(consultReq(true), httpReq, jwtFor(30L, User.Role.ADMIN)).getBody();
+        assertThat(resUnaligned).isNotNull();
+        assertThat(resUnaligned.serviceStatus().comparableService()).isEqualTo("AVAILABLE");
+        assertThat(resUnaligned.recommendedProperties().get(0).comparableEvidence().status()).isEqualTo("EMPTY_NO_MATCHES");
+        verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
+
+        // Case C: both allowResearchComparables = true AND comparable.research-enabled = true -> ADMIN receives labelled TiniX comparable
         AdvisorOrchestrationService explicitOrchestrator = new AdvisorOrchestrationService(
-            recService, realComparableService, compEligibility, valAdapter, true);
+            recService, researchEnabledComparableService, compEligibility, valAdapter, true);
         AdvisorController explicitController = new AdvisorController(explicitOrchestrator, accountAccess, limits);
 
         AdvisorResponse resExplicit = explicitController.consult(consultReq(true), httpReq, jwtFor(30L, User.Role.ADMIN)).getBody();

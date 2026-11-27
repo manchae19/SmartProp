@@ -73,7 +73,7 @@ class ComparableControllerIT {
     }
 
     @Test
-    void validRequestReturnsRealComparablesFromMySql() throws Exception {
+    void validBrokerRequestReturnsPublicComparablesWithoutTinixExposure() throws Exception {
         var body = mvc.perform(post("/api/v1/properties/comparables")
                 .with(broker())
                 .contentType(MediaType.APPLICATION_JSON).content(VALID))
@@ -81,20 +81,19 @@ class ComparableControllerIT {
             .andExpect(header().string("Cache-Control", "private, no-store"))
             .andExpect(jsonPath("$.candidateCount").value(org.hamcrest.Matchers.lessThanOrEqualTo(5)))
             .andExpect(jsonPath("$.reference.district").value("Hải Châu"))
-            .andExpect(jsonPath("$.eligibleCountsBySource.TINIX_RESEARCH").value(55816))
+            .andExpect(jsonPath("$.eligibleCountsBySource.TINIX_RESEARCH").doesNotExist())
             .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
 
         assertThat(body).contains("\"comparables\"");
-        // Every returned id must exist in MySQL and be sale/representative/non-holdout.
-        for (String id : idsIn(body)) {
-            var row = jdbc.queryForMap(
-                "SELECT transaction_type, is_protected_holdout, is_duplicate_representative, quality_status, price_vnd, area_sqm "
-              + "FROM tinix_dataset_records WHERE internal_id = ?", id);
-            assertThat(row.get("transaction_type")).isEqualTo("SALE");
-            assertThat(((Number) row.get("is_protected_holdout")).intValue()).isZero();
-            assertThat(((Number) row.get("is_duplicate_representative")).intValue()).isEqualTo(1);
-            assertThat(row.get("quality_status")).isEqualTo("HYBRID_ELIGIBLE_RESEARCH");
-        }
+        assertThat(body).doesNotContain("\"TINIX_RESEARCH\"", "CC BY-NC 4.0");
+    }
+
+    @Test
+    void brokerRequestingResearchIsForbidden() throws Exception {
+        mvc.perform(post("/api/v1/properties/comparables?includeResearch=true")
+                .with(broker())
+                .contentType(MediaType.APPLICATION_JSON).content(VALID))
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -135,17 +134,20 @@ class ComparableControllerIT {
     }
 
     @Test
-    void tiniXRowsCarryAttributionAndNoLink() throws Exception {
-        String body = mvc.perform(post("/api/v1/properties/comparables").with(broker())
+    void explicitResearchRequestFailsClosedWhenComparableResearchDisabled() throws Exception {
+        List<User> admins = users.findAll().stream()
+            .filter(u -> u.deletedAt == null && u.status == User.Status.ACTIVE && u.role == User.Role.ADMIN)
+            .toList();
+        assertThat(admins).isNotEmpty();
+        User admin = admins.get(0);
+        RequestPostProcessor adminJwt = jwt().jwt(j -> j.subject(String.valueOf(admin.id)).claim("ver", admin.tokenVersion))
+            .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+        mvc.perform(post("/api/v1/properties/comparables?includeResearch=true")
+                .with(adminJwt)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"propertyType\":\"LAND\",\"district\":\"Hòa Vang\",\"areaSqm\":300,\"priceVnd\":2000000000}"))
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
-        assertThat(body).contains("CC BY-NC 4.0");
-        int tinix = body.split("\"sourceKind\":\"TINIX_RESEARCH\"", -1).length - 1;
-        assertThat(tinix).isGreaterThan(0);
-        assertThat(body.split("\"sourceKind\":\"TINIX_RESEARCH\"[^}]*\"listingUrl\":\"", -1).length - 1)
-            .as("no TiniX row may carry a URL").isZero();
+            .andExpect(status().isForbidden());
     }
 
     /** Minimal id extraction; the JSON shape is asserted above. */

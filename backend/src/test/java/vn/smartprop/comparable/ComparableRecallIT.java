@@ -50,11 +50,11 @@ class ComparableRecallIT {
         c.setReadOnly(true);
         service = new ComparableRankingService(
             new ComparableCandidateRepository(new NamedParameterJdbcTemplate(new SingleConnectionDataSource(c, true))),
-            new ComparableEligibilityService(), Mockito.mock(PropertyRepository.class));
+            new ComparableEligibilityService(), Mockito.mock(PropertyRepository.class), true);
     }
 
     private static ComparableDtos.Response rank(String district, String type, String area, String price) {
-        return service.rank(new ComparableDtos.Request(null, type, district, null,
+        return service.rankResearch(new ComparableDtos.Request(null, type, district, null,
             new BigDecimal(area), new BigDecimal(price), null, null, null));
     }
 

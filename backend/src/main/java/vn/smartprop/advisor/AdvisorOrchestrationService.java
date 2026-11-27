@@ -402,7 +402,10 @@ public class AdvisorOrchestrationService {
             COMPARABLES_PER_PROPERTY
         );
 
-        boolean allowTinix = includeResearchMode && isResearchEnabled() && allowResearchComparables;
+        boolean allowTinix = includeResearchMode
+            && isResearchEnabled()
+            && allowResearchComparables
+            && comparableService.isResearchEnabled();
         ComparableDtos.Response raw = comparableService.rank(compReq, allowTinix);
 
         List<ComparableItem> mapped = new ArrayList<>();
