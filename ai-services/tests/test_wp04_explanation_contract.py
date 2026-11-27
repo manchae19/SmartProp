@@ -105,10 +105,13 @@ def test_unknown_ward_is_classified_unknown_category(predictor):
 
 def test_land_marks_not_applicable_features(predictor):
     exp = predictor.predict_from_v6_payload(LAND)["explanation"]
-    states = {f["feature_name"]: f["input_state"] for f in exp["factors"]}
-    for feature in ("bedroom_count", "has_bedroom"):
-        if feature in states:
-            assert states[feature] in ("NOT_APPLICABLE", "MISSING")
+    provenance = exp["feature_provenance"]          # covers ALL features, not just top-K
+    # numeric attributes are not applicable for LAND; the has_* indicators are derived flags
+    # Requirement: LAND features must never be reported as observed data.
+    for feature in ("bedroom_count", "bathroom_count"):
+        assert provenance[feature] in ("NOT_APPLICABLE", "MISSING"), (feature, provenance[feature])
+    for feature in ("has_bedroom", "has_bathroom"):
+        assert provenance[feature] != "OBSERVED", (feature, provenance[feature])
 
 
 def test_classifier_never_defaults_to_derived():
@@ -117,13 +120,23 @@ def test_classifier_never_defaults_to_derived():
     assert ex.classify_provenance("ward", None, [], "HOUSE") != "DERIVED"
     assert ex.classify_provenance("ward", "phường 1", ["ward"], "HOUSE") == "OBSERVED"
     assert ex.classify_provenance("has_ward", 0.0, [], "HOUSE") == "DERIVED"
+    # adapter-filled value whose source is not documented -> UNVERIFIED, never DERIVED
+    assert ex.classify_provenance("ward", "phường 1", [], "HOUSE") == "UNVERIFIED"
+    # adapter assumption must be DEFAULTED
+    assert ex.classify_provenance("road_width", 5.5, [], "HOUSE", ["road_width"]) == "DEFAULTED"
+    import numpy as np
+    assert ex.is_missing(np.float32("nan")) is True
+    assert ex.classify_provenance("ward", np.float32("nan"), [], "HOUSE") == "MISSING"
+    # caller supplied a value that the adapter rejected
+    assert ex.classify_provenance("area", None, ["area_sqm"], "HOUSE") == "MISSING_INVALID"
 
 
 # ---------------------------------------------------------------- legacy + invariance
 def test_legacy_shap_block_unchanged(predictor):
     shap = predictor.predict_from_v6_payload(HOUSE)["shap_explanation"]
     assert set(shap) == {"base_value_log", "base_price_vnd", "scale", "top_factors",
-                         "method", "summary_vi"}
+                         "method", "summary_vi", "status"}
+    assert shap["status"] == "AVAILABLE"
     assert len(shap["top_factors"]) <= 6
 
 
