@@ -1,0 +1,20 @@
+# Dedicated PR41 test instance. Environment guard pins URL; runtime also checks UUID/datadir.
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3311/pr41_local?connectionTimeZone=UTC
+  flyway:
+    enabled: false
+    locations: classpath:database/legacy-hybrid-local,classpath:database/research-migrations
+    target: '28'
+    clean-disabled: true
+    baseline-on-migrate: false
+    create-schemas: false
+app:
+  local-lineage:
+    require-complete: true
+  broker-applications:
+    enabled: true
+  profile:
+    avatar-enabled: true
+  recommendation:
+    allow-unverified-external: false

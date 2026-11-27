@@ -15,14 +15,20 @@ public class MigrationProfileEnvironmentGuard implements EnvironmentPostProcesso
     public static final String STAGING="hybrid-local-existing-v13-staging";
     public static final String STAGING_URL="jdbc:mysql://127.0.0.1:3307/smartprop?connectionTimeZone=UTC";
     public static final String STAGING_DATADIR_SUFFIX="/mysql-isolated/data/";
+    /** Explicit PR41-only boundary, never an override of Local or Staging URLs. */
+    public static final String PR41_ISOLATED="hybrid-local-existing-v13-pr41-isolated";
+    public static final String PR41_URL="jdbc:mysql://127.0.0.1:3311/pr41_local?connectionTimeZone=UTC";
+    public static final String PR41_DATADIR="D:/Cap2_HoangDuy/SmartProp-News-Backend/.scratch/mysql-pr41/data/";
+    public static final String PR41_SERVER_UUID="0f29afde-ea54-11f1-bcac-088fc36287dc";
+    public static boolean pr41Isolated(Environment env){return List.of(env.getActiveProfiles()).contains(PR41_ISOLATED);}
     @Override public int getOrder(){return Ordered.HIGHEST_PRECEDENCE+11;}
     @Override public void postProcessEnvironment(ConfigurableEnvironment env,SpringApplication app){check(env);}
     public static boolean staging(Environment env){return List.of(env.getActiveProfiles()).contains(STAGING);}
-    public static boolean isLocal(Environment env){return List.of(env.getActiveProfiles()).contains(LOCAL)||staging(env);}
-    public static String expectedLocalUrl(Environment env){return staging(env)?STAGING_URL:LOCAL_URL;}
+    public static boolean isLocal(Environment env){return List.of(env.getActiveProfiles()).contains(LOCAL)||staging(env)||pr41Isolated(env);}
+    public static String expectedLocalUrl(Environment env){return pr41Isolated(env)?PR41_URL:staging(env)?STAGING_URL:LOCAL_URL;}
     public static void check(ConfigurableEnvironment env){
         Set<String> profiles=new HashSet<>(List.of(env.getActiveProfiles()));
-        boolean local=profiles.contains(LOCAL)||profiles.contains(STAGING),standard=profiles.contains(STANDARD);
+        boolean local=isLocal(env),standard=profiles.contains(STANDARD);
         if(!local&&!standard)return;
         if(profiles.size()!=1)throw new IllegalStateException("Select exactly one explicit migration profile; do not combine it with dev or another lineage.");
         String location="classpath:database/"+(local?"legacy-hybrid-local":"migrations")+",classpath:database/research-migrations"+(local?"":"/poi");
@@ -31,7 +37,7 @@ public class MigrationProfileEnvironmentGuard implements EnvironmentPostProcesso
         if(!"validate".equals(env.getProperty("spring.jpa.hibernate.ddl-auto"))||!"never".equals(env.getProperty("spring.sql.init.mode")))throw new IllegalStateException("Runtime DDL/init must remain disabled.");
         if(local&&!expectedLocalUrl(env).equals(env.getProperty("spring.datasource.url")))throw new IllegalStateException("Local lineage only permits "+expectedLocalUrl(env)+".");
         if(local&&!env.getProperty("app.local-lineage.require-complete",Boolean.class,true)){
-            if(staging(env))throw new IllegalStateException("Staging requires the completed Local lineage; the read-only pending-schema mode is not allowed.");
+            if(staging(env)||pr41Isolated(env))throw new IllegalStateException("Staging requires the completed Local lineage; the read-only pending-schema mode is not allowed.");
             if(!env.getProperty("spring.datasource.hikari.read-only",Boolean.class,false)
                 ||!"SET SESSION TRANSACTION READ ONLY".equals(env.getProperty("spring.datasource.hikari.connection-init-sql"))
                 ||env.getProperty("app.broker-applications.enabled",Boolean.class,false)

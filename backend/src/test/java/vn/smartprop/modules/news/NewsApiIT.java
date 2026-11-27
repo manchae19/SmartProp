@@ -196,9 +196,9 @@ class NewsApiIT {
         String id = UUID.randomUUID().toString();
         jdbc.update("""
             INSERT INTO news_sources (id, source_code, name, publisher, website_url, feed_url,
-              rights_review_status, enabled)
+              rights_review_status, rights_reference, enabled)
             VALUES (?, 'it-disabled', 'Nguồn tắt', 'NXB', 'https://d.vn',
-              'https://d.vn/rss', 'APPROVED', 0)
+              'https://d.vn/rss', 'APPROVED', 'SYNTHETIC-DISABLED-FIXTURE', 0)
             """, id);
         createdSources.add(id);
         article(id, "Bài từ nguồn đang tắt", "MARKET", "DA_NANG", "VISIBLE", false,
@@ -432,7 +432,7 @@ class NewsApiIT {
             .andExpect(jsonPath("$.errorCode").value(NewsReleaseCapability.LOCK_CODE));
     }
 
-    @Test void summaryPermissionAlsoAppliesToSearchAndLegacyInvalidRights() throws Exception {
+    @Test void summaryPermissionAppliesToSearchAndDatabaseRejectsInvalidRights() throws Exception {
         String source=approvedSource("it-summary-search");
         article(source,"Synthetic title without the secret","MARKET","DA_NANG","VISIBLE",false,Instant.now());
         jdbc.update("UPDATE news_articles SET summary='synthetic forbidden needle' WHERE source_id=?",source);
@@ -443,9 +443,11 @@ class NewsApiIT {
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         assertThat(response).doesNotContain("synthetic forbidden needle");
         for(String reference:new String[]{null,""," ","\t\r\n"}) {
-            jdbc.update("UPDATE news_sources SET rights_reference=? WHERE id=?",reference,source);
+            var error=org.junit.jupiter.api.Assertions.assertThrows(org.springframework.dao.DataAccessException.class,
+                ()->jdbc.update("UPDATE news_sources SET rights_reference=? WHERE id=?",reference,source));
+            org.junit.jupiter.api.Assertions.assertEquals(3819,((java.sql.SQLException)error.getMostSpecificCause()).getErrorCode());
             mvc.perform(get("/api/v1/news").param("q","Synthetic title"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
         }
     }
     @Test void websiteIdentityChangeCannotRepublishOldArticlesAfterSeparateReview() throws Exception {
@@ -472,5 +474,31 @@ class NewsApiIT {
             mvc.perform(get("/api/v1/admin/news/"+path).with(jwt().jwt(j->j.subject(buyer.toString()))
                 .authorities(new SimpleGrantedAuthority("ROLE_BUYER"))))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test void adminCannotApproveMissingBlankOrUnicodeWhitespaceReference() throws Exception {
+        String id=UUID.randomUUID().toString();createdSources.add(id);
+        jdbc.update("INSERT INTO news_sources(id,source_code,name,publisher,website_url,feed_url) VALUES(?,?,'SYNTHETIC REVIEW TEST','SYNTHETIC TEST OWNER','https://example.invalid',?)",id,id,"https://example.invalid/"+id);
+        for(String reference:new String[]{null,""," ","\t\r\n","\u00a0","\u2003"}){
+            var body=new java.util.LinkedHashMap<String,Object>();body.put("rightsReviewStatus","APPROVED");body.put("rightsReference",reference);body.put("enabled",true);
+            mvc.perform(patch("/api/v1/admin/news/sources/"+id).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+                .content(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body))).andExpect(status().isBadRequest());
+            assertThat(jdbc.queryForObject("SELECT rights_review_status FROM news_sources WHERE id=?",String.class,id)).isEqualTo("PENDING_REVIEW");
+            assertThat(jdbc.queryForObject("SELECT enabled FROM news_sources WHERE id=?",Boolean.class,id)).isFalse();
+        }
+    }
+    @Test void adminReferenceReplacementRequiresReviewAndPendingRevokesEnabledState() throws Exception {
+        String id=approvedSource("it-v28-admin-lifecycle");
+        mvc.perform(patch("/api/v1/admin/news/sources/"+id).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"rightsReference\":\"SYNTHETIC REPLACEMENT REVIEW PROPOSAL\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.rightsReviewStatus").value("PENDING_REVIEW")).andExpect(jsonPath("$.enabled").value(false));
+        mvc.perform(patch("/api/v1/admin/news/sources/"+id).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"enabled\":true}")).andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/v1/admin/news/sources/"+id).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"rightsReviewStatus\":\"APPROVED\",\"rightsReference\":\"SYNTHETIC TEST OWNER REVIEWED\",\"enabled\":true}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(true));
+        mvc.perform(patch("/api/v1/admin/news/sources/"+id).with(asAdmin()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"rightsReviewStatus\":\"PENDING_REVIEW\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(false));
     }
 }

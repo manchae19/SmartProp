@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Existing V27 constraints, against synthetic data only. Approval-reference CHECK remains blocked. */
+/** V27/V28 constraints against synthetic data only; no real source approvals. */
 @SpringBootTest
 @Transactional
 @EnabledIfEnvironmentVariable(named="DB_URL",matches=".+")
@@ -44,4 +44,16 @@ class NewsDatabaseConstraintsIT {
         var error=assertThrows(org.springframework.dao.DataAccessException.class,()->jdbc.update("UPDATE news_sources SET rights_review_status='INVALID' WHERE id=?",source));
         assertEquals(3819,((java.sql.SQLException)error.getMostSpecificCause()).getErrorCode());
     }
+
+    String[] invalidReferences(){return new String[]{null,""," ","\t\r\n","\u00a0","\u2003"," \t\u3000"};}
+    void rejectedCheck(org.junit.jupiter.api.function.Executable action){
+        var error=assertThrows(org.springframework.dao.DataAccessException.class,action);
+        var sql=(java.sql.SQLException)error.getMostSpecificCause();assertEquals(3819,sql.getErrorCode());
+        assertTrue(sql.getMessage().contains("ck_news_sources_approved_reference"));
+    }
+    @Test void rejectsApprovedNullEmptyAndUnicodeWhitespaceOnUpdate(){for(String ref:invalidReferences())rejectedCheck(()->jdbc.update("UPDATE news_sources SET rights_reference=? WHERE id=?",ref,source));}
+    @Test void rejectsApprovedNullEmptyAndUnicodeWhitespaceOnInsert(){for(String ref:invalidReferences()){String id=UUID.randomUUID().toString();rejectedCheck(()->jdbc.update("INSERT INTO news_sources(id,source_code,name,publisher,website_url,feed_url,rights_review_status,rights_reference) VALUES(?,?,'SYNTHETIC TEST ONLY','SYNTHETIC TEST ONLY','https://example.invalid',?,'APPROVED',?)",id,id,"https://example.invalid/"+id,ref));}}
+    @Test void statusChangeCannotApproveAnUnreviewedReference(){jdbc.update("UPDATE news_sources SET rights_review_status='PENDING_REVIEW',rights_reference=NULL,enabled=0 WHERE id=?",source);rejectedCheck(()->jdbc.update("UPDATE news_sources SET rights_review_status='APPROVED' WHERE id=?",source));}
+    @Test void pendingAndRejectedDoNotRequireAnApprovalReference(){for(String status:new String[]{"PENDING_REVIEW","REJECTED"})assertEquals(1,jdbc.update("UPDATE news_sources SET rights_review_status=?,rights_reference=NULL,enabled=0 WHERE id=?",status,source));}
+    @Test void acceptsAnExplicitReferenceForSyntheticReviewedSource(){assertEquals(1,jdbc.update("UPDATE news_sources SET rights_reference='SYNTHETIC TEST OWNER PERMISSION' WHERE id=?",source));}
 }

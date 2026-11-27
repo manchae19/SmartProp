@@ -3,9 +3,12 @@ package vn.smartprop.modules.news;
 /** One rights decision for reads, persistence and ingestion. No network access. */
 public final class NewsRightsPolicy {
     private NewsRightsPolicy() {}
+    public static boolean hasReference(String reference) {
+        return reference != null && reference.codePoints().anyMatch(c -> !Character.isWhitespace(c) && !Character.isSpaceChar(c));
+    }
     public static boolean approved(NewsSource source) {
         return source != null && source.rightsReviewStatus == NewsSource.RightsStatus.APPROVED
-            && source.rightsReference != null && !source.rightsReference.isBlank();
+            && hasReference(source.rightsReference);
     }
     public static boolean summary(NewsSource source) {
         return approved(source) && source.enabled && source.allowSummary;

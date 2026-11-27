@@ -146,7 +146,7 @@ public class NewsAdminService {
             if (input.rightsReviewStatus() == NewsSource.RightsStatus.APPROVED) {
                 String reference = input.rightsReference() != null
                     ? input.rightsReference() : source.rightsReference;
-                if (reference == null || reference.isBlank()) {
+                if (!NewsRightsPolicy.hasReference(reference)) {
                     throw ApiInputs.bad(
                         "Duyệt quyền sử dụng cần rightsReference (căn cứ pháp lý hoặc văn bản)");
                 }

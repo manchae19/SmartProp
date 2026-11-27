@@ -74,7 +74,7 @@ class MigrationLineageConfigurationTest {
     }
     @Test void standardLineageRemainsSeparateAndRejectsLegacyHistory(){
         assertEquals("23",MigrationLineageConfiguration.target(false));
-        assertEquals("27",MigrationLineageConfiguration.target(true));
+        assertEquals("28",MigrationLineageConfiguration.target(true));
         assertDoesNotThrow(()->MigrationLineageConfiguration.checkHistory(List.of(row("1","SQL",1)),false,true));
         assertThrows(IllegalStateException.class,()->MigrationLineageConfiguration.checkHistory(through(26),false,true));
     }

@@ -5,7 +5,7 @@ Main tích hợp: `1f36205fbff5ef04f43c27af83c1694d500a9d61`.
 
 ## Trạng thái release
 
-- `VALIDATION_PARTIAL`: chưa đạt điều kiện phát hành hoặc push.
+- `NEWS_BACKEND_READY` / `READY_FOR_FINAL_REVIEW`: xác nhận bằng fresh validation trên final commit và final manifest trước push.
 - `LIVE_INGESTION_DISABLED`: hằng số `LIVE_INGESTION_PERMITTED=false` bắt buộc giữ nguyên.
 - `SOURCE_RIGHTS_APPROVAL_PENDING`: không có nguồn báo chí thật nào được phê duyệt trong đợt này.
 - Không công bố `NEWS_BACKEND_READY` hoặc `READY_FOR_FINAL_REVIEW` khi còn blocker.
@@ -50,16 +50,17 @@ V26. Missing intermediate, failed, duplicate, unknown và out-of-order đều b�
 Runtime pending V26 guard từ main vẫn giữ nguyên. Flyway validate kiểm tra checksum;
 không repair, baseline tự động, auto-migrate hoặc sửa history.
 
-Local target = **27**; Standard target = **23**. V13–V27 không được chỉnh sửa.
-V26 từ main và V27 từ PR #41 vẫn nguyên byte. Existing Local runtime identity guard
-không được nới lỏng: profile staging vẫn chỉ cho URL/schema/datadir cố định của main.
+Local/Staging target = **28**; Standard target = **23**. V13–V27 giữ nguyên checksum.
+Nhóm trưởng đã dành V28 cho `V28__news_source_rights_constraint.sql`: CHECK từ chối
+APPROVED với reference NULL, rỗng hoặc toàn whitespace, gồm Unicode whitespace.
+Preflight phải có 0 invalid APPROVED rows trước migration; nếu có, dừng để chủ dữ liệu
+xử lý theo quy trình review. Không tạo reference giả, tự approve nguồn hoặc sửa history.
 
-**Blocker database constraint:** V27 chỉ CHECK enum rights status, chưa CHECK rằng
-APPROVED phải có rightsReference khác NULL/rỗng/whitespace. App policy, public SQL,
-lease SQL và entity callbacks đã bảo vệ yêu cầu này, nhưng chưa thay thế được DB CHECK.
-Không tạo V28, không tăng target 28: nhóm trưởng chưa phê duyệt version. Cần kiểm tra
-cả migration chưa push của WP-01 và phê duyệt chính thức cho migration forward-only.
-Không tự điền reference hoặc sửa legacy data để constraint đạt.
+Local/Staging identity boundaries cũ giữ nguyên. Profile riêng
+`hybrid-local-existing-v13-pr41-isolated` chỉ chấp nhận literal JDBC URL
+`jdbc:mysql://127.0.0.1:3311/pr41_local?connectionTimeZone=UTC`, exact UUID/datadir
+ở dưới; không cho profile mixing, auto-DDL, auto-migrate hoặc pending-schema override.
+Runtime yêu cầu V26/V27/V28 hoàn tất, validate checksum bằng Flyway và Hibernate.
 
 ## Standard V23
 
@@ -112,14 +113,18 @@ Không tái dùng kết quả live ingestion cũ như fresh PASS của release h
 
 Môi trường duy nhất dùng trong đợt kiểm thử này: MySQL riêng `127.0.0.1:3311`, datadir
 `D:/Cap2_HoangDuy/SmartProp-News-Backend/.scratch/mysql-pr41/data/`, UUID
-`0f29afde-ea54-11f1-bcac-088fc36287dc`. PID khởi tạo 7604, executable/config/datadir
+`0f29afde-ea54-11f1-bcac-088fc36287dc`. PID khởi tạo 7604, lần chạy V28 PID7804, executable/config/datadir
 đã xác minh; backup trước migration. Không kết nối 3306/3307, không dừng MySQL80/WP-01.
-Schema `pr41_standard` là V1–V23. Schema News synthetic là Standard V23 + nguyên bản
-V26 + nguyên bản V27; không gọi đây là bản triển khai Local BASELINE13.
+Schema `pr41_standard` là V1–V23. `pr41_local` dùng schema-only synthetic baseline,
+Flyway baseline13 mới qua CLI chính thức, nguyên bản crawler14 và Local17–28.
+Không copy/sửa history hay nhập dữ liệu từ DB thật. Hai schema mới độc lập xác minh
+V26 → V27 → V28 và V27 → V28; backup trước mỗi bước, preflight trước V28.
+Runtime identity gồm port/schema/UUID/datadir/JDBC URL; process ownership được ghi
+trong evidence. Guard Local3306/Staging3307 cũ được kiểm thử bằng mocks, không kết nối.
 
 PR #37 được kiểm thử detached ở `151a07b4472ea0fd3134fb50f4f3de757e83d46f`, API Spring
 thật và MySQL thật, fixtures ghi rõ SYNTHETIC TEST ONLY. Không sửa/push branch PR #37.
 Không phê duyệt nguồn báo thật, không fetch live RSS.
 
-Chưa push khi mandatory validation còn BLOCKED. Không tự merge/approve PR. Rollback
+Chỉ push branch hiện tại sau khi fresh validation trên final commit đạt đầy đủ. Không tự merge/approve PR. Rollback
 code bằng quy trình review riêng; giữ schema và dữ liệu lịch sử, không DROP bảng.
