@@ -2,6 +2,7 @@ from decimal import Decimal
 import re
 import time
 from urllib.parse import quote
+from .personalization import AREA_KEYS, merge_area
 from .config import GroundingError, RagUnavailable
 from .schemas import Citation
 from .knowledge import digest
@@ -507,7 +508,16 @@ class AdvisorDiscoveryMixin:
                 state.pop(key,None)
         criteria={k:v for k,v in context.criteria().items() if not k.startswith('_')}
         criteria.setdefault('purpose','LIVING');criteria.setdefault('propertyType','ALL')
-        if request.district:criteria['district']=request.district
+        if request.district:
+            if criteria.get("district") != request.district:
+                criteria.pop("ward", None)
+            criteria["district"] = request.district
+        if request.ward:
+            criteria["ward"] = request.ward
+        prior_area = {key: criteria.pop(key) for key in AREA_KEYS if key in criteria}
+        criteria.update(request.model_dump(include=set(AREA_KEYS), exclude_none=True))
+        merge_area(criteria, prior_area, request.question if turn["searchChange"] else "",
+                   allow_bare=state.get("pending") == "min_area")
         parsed=parse_budget(request.question)
         if parsed.status=='AMBIGUOUS' and turn.get('budgetMentioned'):return None
         if parsed.status=='VALID':

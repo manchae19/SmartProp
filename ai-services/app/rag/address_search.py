@@ -17,7 +17,8 @@ import unicodedata
 _ADDRESS = re.compile(
     r"(?<![\w.,])(\d{1,5}[a-zA-Z]?)\s+"
     r"((?:[^\W\d_]+\s*){1,6}?)"
-    r"(?=\s*(?:,|\.|$|\b(?:co|khong|nao|giup|tim|gia|va|o|tai|gan)\b))",
+    r"(?=\s*(?:,|\.|$|\b(?:co|khong|nao|giup|tim|gia|va|o|tai|gan)\b"
+    r"|\b(?:diện tích|tr[êe]n|dưới|duoi|t[ừu]|tối đa|tối thiểu|không quá|hơn)\s+\d))",
     re.UNICODE,
 )
 

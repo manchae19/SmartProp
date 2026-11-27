@@ -16,15 +16,132 @@ GUIDED_RE = re.compile(r"\b(?:tu van tung buoc|bat dau tu van|tu van theo tung b
 HOUSEHOLD_RE = re.compile(r"\b(?:tu van theo ho gia dinh|ho gia dinh|con nho|tre nho)\b")
 SKIP_RE = re.compile(r"\b(?:xem goi y ngay|tim ngay|bo qua|khong can hoi them|giu tieu chi)\b")
 
-def area_sqm(question):
-    value = fold(question).replace(",", ".")
-    match = re.search(r"(?<![\w.])(\d{1,5}(?:\.\d{1,2})?)\s*(?:m2|m²|met vuong|m\b)", value)
-    if not match:
-        match = re.fullmatch(r"\s*(\d{1,5}(?:\.\d{1,2})?)\s*", value)
-    if not match:
+AREA_LIMIT = Decimal("1000000")
+_AREA_NUMBER = r"(\d{1,7}(?:\.\d{1,2})?)"
+# Only square-metre units count. A bare "m" is a width or a distance ("hẻm 5m",
+# "mặt tiền 5m", "cách 500m") and must never become an area filter.
+_AREA_UNIT = r"\s*(?:m2|m²|met vuong|m vuong)(?!\w)"
+_AREA_RANGE = re.compile(r"(?<![\w.+-])(?:tu\s*)?" + _AREA_NUMBER + r"(?:" + _AREA_UNIT + r")?\s*(?:den|toi|-|~)\s*"
+                         + _AREA_NUMBER + _AREA_UNIT)
+_AREA_VALUE = re.compile(r"(?<![\w.+-])" + _AREA_NUMBER + _AREA_UNIT)
+
+
+def _area(raw):
+    value = Decimal(raw)
+    return value if 0 < value <= AREA_LIMIT else None
+
+
+def _plain(value):
+    text = format(value, "f")
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def area_spec(question, *, allow_bare=False):
+    """Explicit floor/ceiling area constraints stated in one message, or None.
+
+    "trên/hơn X" is a strict floor, "dưới/nhỏ hơn X" a strict ceiling, "tối đa/không quá
+    X" an inclusive ceiling and "từ/tối thiểu X" or a bare "X m²" an inclusive floor (the
+    legacy meaning). "từ A đến B m²" is an inclusive range. A bare number counts only when
+    the caller is answering an explicit area question (`allow_bare`).
+    """
+    value = fold(question).replace(",", ".").replace("–", "-").replace("—", "-")
+    spec = {"minAreaSqm": None, "maxAreaSqm": None, "minAreaExclusive": False, "maxAreaExclusive": False}
+    ranged = _AREA_RANGE.search(value)
+    if ranged:
+        low, high = _area(ranged.group(1)), _area(ranged.group(2))
+        if low is None or high is None or low > high:
+            return None
+        spec.update(minAreaSqm=_plain(low), maxAreaSqm=_plain(high))
+        return spec
+    found = False
+    for match in _AREA_VALUE.finditer(value):
+        area = _area(match.group(1))
+        if area is None:
+            return None
+        before = value[max(0, match.start() - 32):match.start()].strip()
+        after = value[match.end():match.end() + 32].strip()
+        if re.search(r"\b(?:tren|hon|lon hon|cao hon|nhieu hon|rong hon)\s*$", before):
+            spec.update(minAreaSqm=_plain(area), minAreaExclusive=True)
+        elif re.search(r"\b(?:duoi|nho hon|thap hon|it hon|be hon)\s*$", before):
+            spec.update(maxAreaSqm=_plain(area), maxAreaExclusive=True)
+        elif re.search(r"\b(?:toi da|khong qua|khong vuot|nhieu nhat)\s*$", before) or after.startswith("tro xuong"):
+            spec.update(maxAreaSqm=_plain(area), maxAreaExclusive=False)
+        else:
+            spec.update(minAreaSqm=_plain(area), minAreaExclusive=False)
+        found = True
+    if not found and allow_bare:
+        bare = re.fullmatch(r"\s*" + _AREA_NUMBER + r"\s*", value)
+        area = _area(bare.group(1)) if bare else None
+        if area is None:
+            return None
+        spec.update(minAreaSqm=_plain(area))
+        found = True
+    if not found:
         return None
-    area = Decimal(match.group(1))
-    return area if 0 < area <= 1000000 else None
+    if spec["minAreaSqm"] and spec["maxAreaSqm"]:
+        low, high = Decimal(spec["minAreaSqm"]), Decimal(spec["maxAreaSqm"])
+        if low > high or (low == high and (spec["minAreaExclusive"] or spec["maxAreaExclusive"])):
+            return None
+    return spec
+
+
+AREA_KEYS = ("minAreaSqm", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive")
+
+
+def apply_area(criteria, question, *, allow_bare=False):
+    """Replace the whole area constraint when the message states a new one."""
+    spec = area_spec(question, allow_bare=allow_bare)
+    if spec is None:
+        return False
+    for key in AREA_KEYS:
+        criteria.pop(key, None)
+    for key, value in spec.items():
+        # The Backend request uses primitive booleans; send a flag only when it is set.
+        if value is not None and value is not False:
+            criteria[key] = value
+    return True
+
+
+def merge_area(criteria, prior, question, *, allow_bare=False):
+    """Explicit request fields replace the previous area as a group."""
+    if not any(key in criteria for key in AREA_KEYS):
+        if not apply_area(criteria, question, allow_bare=allow_bare):
+            criteria.update({key: prior[key] for key in AREA_KEYS if key in prior})
+    for key in ("minAreaSqm", "maxAreaSqm"):
+        if key in criteria:
+            criteria[key] = str(criteria[key])
+
+
+def matches_area(area, criteria):
+    if not any(criteria.get(key) is not None for key in ("minAreaSqm", "maxAreaSqm")):
+        return True
+    if area is None:
+        return False
+    area = Decimal(str(area))
+    if not area.is_finite() or area <= 0:
+        return False
+    for key, exclusive, sign in (("minAreaSqm", "minAreaExclusive", 1),
+                                 ("maxAreaSqm", "maxAreaExclusive", -1)):
+        if criteria.get(key) is not None:
+            difference = sign * (area - Decimal(str(criteria[key])))
+            if difference < 0 or (difference == 0 and criteria.get(exclusive)):
+                return False
+    return True
+
+
+def describe_area(criteria):
+    low, high = criteria.get("minAreaSqm"), criteria.get("maxAreaSqm")
+    if low and high:
+        if criteria.get("minAreaExclusive") or criteria.get("maxAreaExclusive"):
+            minimum = "trên" if criteria.get("minAreaExclusive") else "từ"
+            maximum = "dưới" if criteria.get("maxAreaExclusive") else "tối đa"
+            return f"diện tích {minimum} {low} đến {maximum} {high} m²"
+        return f"diện tích từ {low} đến {high} m²"
+    if low:
+        return ("diện tích trên " if criteria.get("minAreaExclusive") else "diện tích từ ") + f"{low} m²"
+    if high:
+        return ("diện tích dưới " if criteria.get("maxAreaExclusive") else "diện tích tối đa ") + f"{high} m²"
+    return None
 
 def family_status(value):
     if "da lap gia dinh" in value or "da ket hon" in value or "married" in value:
@@ -178,9 +295,7 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
             else:
                 return {"search": True, "question": "Bạn muốn tìm loại bất động sản nào?", "choices": PROPERTY_TYPE_CHOICES}
         elif pending == "min_area":
-            area = area_sqm(question)
-            if area is not None:
-                criteria["minAreaSqm"] = str(area)
+            if any(criteria.get(key) is not None for key in ("minAreaSqm", "maxAreaSqm")):
                 state["areaAsked"] = True
                 state["pending"] = None
             elif skip:
@@ -267,10 +382,7 @@ def intake(context, question, criteria, turn, *, explicit_district=None):
             else:
                 state["typeAsked"] = True
         if not state.get("areaAsked"):
-            area = area_sqm(question)
-            if area is not None:
-                criteria["minAreaSqm"] = str(area)
-            if "minAreaSqm" not in criteria and not skip:
+            if not any(criteria.get(key) is not None for key in ("minAreaSqm", "maxAreaSqm")) and not skip:
                 state["areaAsked"] = True
                 state["pending"] = "min_area"
                 return {"search": True, "question": "Diện tích tối thiểu bạn cần là bao nhiêu m²? Nhập số hoặc chọn bên dưới.", "choices": AREA_CHOICES}
@@ -319,6 +431,8 @@ def projection(context, criteria):
         summary.append("Giá mua tối đa: " + format_vnd(criteria["budgetVnd"]) + " (không tự nâng)")
         if criteria.get("minPriceVnd"):
             summary.append("Giá mua tối thiểu: " + format_vnd(criteria["minPriceVnd"]))
+    if area := describe_area(criteria):
+        summary.append(area)
     summary.append(types.get(criteria.get("propertyType", "ALL"), criteria.get("propertyType", "ALL")))
     summary.append("Khu vực: " + (criteria.get("district") or "Đà Nẵng") + (", " + criteria["ward"] if criteria.get("ward") else ""))
     if state.get("profileUsed"):

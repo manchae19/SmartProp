@@ -19,7 +19,7 @@ from .property_context import focused_reply
 from .scope import domain_reply
 from .discovery import AdvisorDiscoveryMixin
 from . import commute_destination, commute_ranking
-from .personalization import intake, projection
+from .personalization import describe_area, intake, matches_area, merge_area, projection
 
 
 LIMITATIONS = [
@@ -108,9 +108,21 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 p.setdefault("score",0);p.setdefault("explanations",[]);p.setdefault("warnings",[])
                 p["matchBasis"]="ADDRESS"
         if properties and extra and extra.get("addressQuery"):
-            properties=[p for p in properties if (not criteria.get("budgetVnd") or Decimal(str(p["priceVnd"]))<=Decimal(str(criteria["budgetVnd"]))) and (not criteria.get("minPriceVnd") or Decimal(str(p["priceVnd"]))>=Decimal(str(criteria["minPriceVnd"]))) and (criteria.get("propertyType","ALL")=="ALL" or p.get("propertyType")==criteria["propertyType"]) and (not criteria.get("district") or p.get("district")==criteria["district"]) and (not criteria.get("minAreaSqm") or Decimal(str(p["areaSqm"]))>=Decimal(str(criteria["minAreaSqm"])))]
+            before_filter = len(properties)
+            properties = [
+                p for p in properties
+                if (not criteria.get("budgetVnd") or Decimal(str(p["priceVnd"])) <= Decimal(str(criteria["budgetVnd"])))
+                and (not criteria.get("minPriceVnd") or Decimal(str(p["priceVnd"])) >= Decimal(str(criteria["minPriceVnd"])))
+                and (criteria.get("propertyType", "ALL") == "ALL" or p.get("propertyType") == criteria["propertyType"])
+                and all(not criteria.get(key) or norm(criteria[key]).split() == norm(p.get(key) or "").split()
+                        for key in ("district", "ward"))
+                and matches_area(p.get("areaSqm"), criteria)
+            ]
             if not properties:
-                answer="Không có tin phù hợp với địa chỉ và các bộ lọc bắt buộc hiện tại. Tôi không tự tăng ngân sách.";responseKind="ADDRESS_NO_RESULTS"
+                answer = "Không có tin phù hợp với địa chỉ và các bộ lọc bắt buộc hiện tại. Tôi không tự tăng ngân sách."
+                responseKind = "ADDRESS_NO_RESULTS"
+            elif len(properties) != before_filter:
+                answer = f"Có {len(properties)} tin khớp địa chỉ và các bộ lọc hiện tại."
             citations=[Citation(sourceId="property:"+p["source"]["recordKey"],url="/api/v1/properties/"+p["source"]["recordKey"],version=str(p.get("contentVersion") or "1"),contentHash=digest(p),scope="PUBLIC",kind="PROPERTY_DETAIL",title=p["title"]) for p in properties]
         if properties:
             self._enrich(properties)
@@ -314,8 +326,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             criteria["purpose"] = prior["purpose"]
         if criteria.get("propertyType") == "ALL" and prior.get("propertyType"):
             criteria["propertyType"] = prior["propertyType"]
-        if "minAreaSqm" not in criteria and prior.get("minAreaSqm") is not None:
-            criteria["minAreaSqm"] = prior["minAreaSqm"]
+        merge_area(criteria, prior, request.question if turn["searchChange"] or turn["intent"] == "UPDATE_CRITERIA" else "",
+                   allow_bare=context.needs.get("pending") == "min_area")
         if turn["purpose"]:
             criteria["purpose"] = turn["purpose"]
         if turn["propertyType"]:
@@ -337,8 +349,6 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         referral = turn["needsPropertyReference"]
         if budget is not None:
             criteria["budgetVnd"] = str(budget)
-            if "minAreaSqm" in criteria:
-                criteria["minAreaSqm"] = str(criteria["minAreaSqm"])
         if turn["intent"]=="UPDATE_CRITERIA":
             context.needs["active"]=True
             text="Đã cập nhật tiêu chí cho phiên trò chuyện này."
@@ -523,7 +533,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             if request.requireGeneration:
                 raise RagUnavailable("FULL_RAG_RUNTIME_UNAVAILABLE")
             return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
-                answer=empty_search_answer(criteria), responseKind="NO_MATCHES", limitations=limitations, response=response,
+                answer=empty_search_answer(criteria, area=describe_area(criteria)), responseKind="NO_MATCHES", limitations=limitations, response=response,
                 extra={"quickReplies": ["Tìm bất động sản toàn Đà Nẵng, giữ ngân sách"] if criteria.get("district") else ["Tìm mọi loại bất động sản, giữ ngân sách", "Tìm kỹ hơn"]},
                 evidence={"recommendationMethod": response.get("method"),
                     "criteria": criteria, "eligibleCandidateCount": response.get("eligibleCandidateCount"), "topAreas": [],

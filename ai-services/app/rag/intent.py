@@ -81,7 +81,7 @@ def asks_for_amenities(question):
     return _market_request(value)
 
 
-def empty_search_answer(criteria):
+def empty_search_answer(criteria, *, area=None):
     whole, _, fraction = format(Decimal(str(criteria["budgetVnd"])), "f").partition(".")
     amount = f"{int(whole):,}".replace(",", ".")
     fraction = fraction.rstrip("0")
@@ -90,7 +90,7 @@ def empty_search_answer(criteria):
     location = ", ".join(criteria[k] for k in ("ward", "district") if criteria.get(k))
     kinds={"ALL":"mọi loại bất động sản","HOUSE":"nhà phố/nhà riêng","APARTMENT":"căn hộ","LAND":"đất nền","VILLA":"biệt thự","ROOM":"phòng trọ","COMMERCIAL":"mặt bằng"}
     filters=" Loại đang lọc: "+kinds.get(criteria.get("propertyType","ALL"),"chưa rõ")+"."
-    if criteria.get("minAreaSqm"):filters+=" Diện tích tối thiểu: "+str(criteria["minAreaSqm"])+" m²."
+    if area:filters+=" Tiêu chí "+area+"."
     if criteria.get("minPriceVnd"):filters+=" Giá tối thiểu: "+str(criteria["minPriceVnd"])+" đồng."
     return (f"Chưa tìm thấy bất động sản đủ điều kiện công khai trong ngân sách {amount} đồng"
             + (f" tại {location}" if location else "")

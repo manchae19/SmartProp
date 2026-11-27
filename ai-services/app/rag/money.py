@@ -89,4 +89,6 @@ def parse_budget(question):
 
 
 def format_vnd(value):
-    return f"{int(Decimal(str(value))):,}".replace(",", ".")+" đồng"
+    whole, _, fraction = format(Decimal(str(value)), ",f").partition(".")
+    fraction = fraction.rstrip("0")
+    return whole.replace(",", ".") + ("," + fraction if fraction else "") + " đồng"

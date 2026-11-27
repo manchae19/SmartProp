@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from .intent import fold, poi_categories
 from .money import parse_budget
+from .personalization import area_spec
 
 # Word ordinals only. A bare digit must NEVER be read as an ordinal: "2 tỷ" is a
 # budget, not "căn thứ hai". Numeric ordinals need an explicit property noun prefix,
@@ -164,6 +165,8 @@ def classification(question, context):
     if re.search(r"\b(?:tat ca loai|moi loai|khong gioi han loai)\b",value):kind="ALL"
     purpose=detect_purpose(question)
     refinement=bool(re.search(r"\b(?:tim ky hon|goi y khac|lua chon khac|mo rong|thu hep|giu ngan sach)\b",value)) or priority_edit
+    if has_history and not reference and area_spec(question) is not None:
+        refinement = True
     pending_search=bool(pending) and not reference
     legal=bool(re.search(r"\b(?:phap ly|so do|so hong|hop dong|sang ten|cong chung|thue truoc ba|giay chung nhan)\b",value))
     planning=bool(re.search(r"\b(?:quy hoach|giai toa|giai phong mat bang|lo gioi|thu hoi dat|quy hoach xay dung)\b",value))

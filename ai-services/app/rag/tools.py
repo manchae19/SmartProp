@@ -1,5 +1,6 @@
 """Fixed backend routes and parameterized SQL projections. There is no text-to-SQL API."""
 import json
+from html import unescape
 import time
 import math
 NEARBY_MAX_PAGES=20
@@ -7,6 +8,7 @@ import re
 from decimal import Decimal
 import httpx
 from .config import GroundingError, RagUnavailable
+from .personalization import matches_area
 
 
 def _is_number(value):
@@ -24,6 +26,16 @@ class OutboundRateLimited(UpstreamError):
     def __init__(self, retry_after=60):
         super().__init__(429)
         self.retry_after=retry_after
+
+def _public_text(value, max_length=1000):
+    """Redact common contact formats and research markers from listing prose."""
+    text = re.sub(r"<[^>]*>", "", unescape(str(value or "")))
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
+    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.()\-]*\d){8,10}(?!\d)", "[redacted-phone]", text)
+    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|"
+                  r"sampleListingCount|raw_payload)\b", "[redacted]", text, flags=re.IGNORECASE)
+    return " ".join(text.split())[:max_length]
+
 
 class BackendTools:
     def __init__(self, settings):
@@ -91,6 +103,8 @@ class BackendTools:
             price, area = Decimal(str(p["priceVnd"])), Decimal(str(p["areaSqm"]))
             if not price.is_finite() or not area.is_finite() or not 0 < price <= Decimal(str(criteria["budgetVnd"])) or area <= 0 or price < Decimal(str(criteria.get("minPriceVnd") or 0)):
                 raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
+            if not matches_area(area, criteria):
+                raise GroundingError("RECOMMENDATION_OUTSIDE_AREA_RANGE")
             if p["id"] in seen or p.get("qualityStatus") in ("REJECTED", "EXCLUDED") or p.get("isProtectedHoldout") or p.get("holdout") or p.get("groupHasHoldout"):
                 raise GroundingError("INELIGIBLE_RECOMMENDATION")
             seen.add(p["id"])
@@ -105,6 +119,17 @@ class BackendTools:
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
             if kind == "TINIX_AI" and (not research or p.get("qualityStatus") != "HYBRID_ELIGIBLE_RESEARCH"):
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
+        if not research:
+            public_fields = ("id", "title", "propertyType", "priceVnd", "areaSqm", "district",
+                             "ward", "score", "scoreBreakdown", "explanations", "qualityStatus",
+                             "verificationStatus", "duplicateGroup", "warnings", "amenityEvidence")
+            body["topProperties"] = [
+                {**{key: p[key] for key in public_fields if key in p},
+                 "title": _public_text(p.get("title"), 255),
+                 "source": {key: p["source"][key] for key in ("kind", "name", "recordKey", "detailUrl")
+                            if key in p["source"]}}
+                for p in properties
+            ]
         return body
 
     def market_summary(self, query):
@@ -229,7 +254,15 @@ class BackendTools:
         body = self._call("GET", "/api/v1/properties/" + property_id)
         if not isinstance(body, dict) or body.get("id") != property_id or body.get("status") != "PUBLISHED":
             raise GroundingError("INVALID_PUBLIC_PROPERTY")
-        return body
+        public_fields = ("id", "listingCode", "status", "expiresAt", "price", "priceUnit",
+                         "currency", "areaSqm", "transactionType", "propertyType", "district",
+                         "ward", "city", "bedrooms", "bathrooms")
+        return {
+            **{key: body[key] for key in public_fields if key in body},
+            "title": _public_text(body.get("title"), 255),
+            "description": _public_text(body.get("description"), 20000),
+            "address": _public_text(body.get("address"), 500),
+        }
 
     def property_image(self, property_id):
         """Cover image from the existing public property detail; no generated or external image."""
@@ -298,7 +331,7 @@ class BackendTools:
             raise GroundingError("INVALID_PROPERTY_DETAIL")
         return {
             "id": body["id"],
-            "title": str(body.get("title") or "").strip(),
+            "title": _public_text(body.get("title"), 255),
             "priceVnd": float(price),
             "areaSqm": float(body["areaSqm"]) if _is_number(body.get("areaSqm")) else None,
             "district": str(body.get("district") or "").strip(),
@@ -496,10 +529,10 @@ class BackendTools:
                 continue
             results.append({
                 "id": str(item.get("id") or ""),
-                "title": str(item.get("title") or "").strip(),
+                "title": _public_text(item.get("title"), 255),
                 "priceVnd": float(price),
                 "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
-                "address": str(item.get("address") or "").strip(),
+                "address": _public_text(item.get("address"), 500),
                 "district": str(item.get("district") or "").strip(),
                 "ward": str(item.get("ward") or "").strip(),
                 "propertyType": str(item.get("propertyType") or ""),
@@ -564,10 +597,10 @@ class BackendTools:
                 seen.add(listing_id)
                 results.append({
                     "id": listing_id,
-                    "title": str(item.get("title") or "").strip(),
+                    "title": _public_text(item.get("title"), 255),
                     "priceVnd": float(price),
                     "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
-                    "address": str(item.get("address") or "").strip(),
+                    "address": _public_text(item.get("address"), 500),
                     "district": str(item.get("district") or "").strip(),
                     "ward": str(item.get("ward") or "").strip(),
                     "latitude": float(item_lat),
@@ -609,7 +642,7 @@ class PublishedPropertyRepository:
                     for image in item.get("images") or []:
                         url=image.get("url","")
                         if not url.startswith("/api/v1/properties/"+uid+"/images/") or ".." in url or "//" in url:continue
-                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":str(item.get("title") or "")[:255],"district":item.get("district"),"ward":item.get("ward")})
+                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":_public_text(item.get("title"), 255),"district":item.get("district"),"ward":item.get("ward")})
                         if len(result)>=limit:return result
                 if not items or page+1>=body.get("totalPages",1):break
         return result
@@ -623,7 +656,8 @@ class PublishedPropertyRepository:
             raise GroundingError("INVALID_PROPERTY_IDS")
         try:
             import pymysql
-            with pymysql.connect(host="127.0.0.1", port=3306, database="smartprop",
+            with pymysql.connect(host=self.settings.sql_host, port=self.settings.sql_port,
+                    database=self.settings.sql_database,
                     user=self.settings.db_user, password=self.settings.db_password, charset="utf8mb4",
                     autocommit=False, init_command="SET SESSION TRANSACTION READ ONLY",
                     connect_timeout=3, read_timeout=5, cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -631,18 +665,20 @@ class PublishedPropertyRepository:
                 with conn.cursor() as cur:
                     cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
                     identity = cur.fetchone()
-                    if identity != {"db": "smartprop", "port": 3306, "read_only": 1}:
+                    if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
+                    source = "rag_public_properties" if self.settings.sql_use_views else "properties"
                     cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"
                         "CASE WHEN ST_SRID(location)=4326 THEN ST_Latitude(location) END latitude,"
-                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM properties "
+                        f"CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM {source} "
                         "WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6)) "
                         "AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL' AND price>0 AND area_sqm>0 "
                         f"AND id IN ({placeholders}) ORDER BY id LIMIT 10", tuple(ids))
                     rows = cur.fetchall()
                 conn.rollback()
-            return list(rows)
+            fields = ("id", "price", "area_sqm", "district", "ward", "coordinate_srid", "latitude", "longitude")
+            return [{key: row[key] for key in fields if key in row} for row in rows]
         except GroundingError:
             raise
         except Exception as e:
