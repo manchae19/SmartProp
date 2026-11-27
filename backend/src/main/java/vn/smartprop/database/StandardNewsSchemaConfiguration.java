@@ -8,12 +8,18 @@ import org.hibernate.tool.schema.spi.SchemaFilterProvider;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer;
 import org.springframework.context.annotation.*;
 
-/** Standard V23 validates every existing entity; only the three Local-only News tables are excluded. */
+/** Customizer depends on validated database capability before Hibernate validation. */
 @Configuration(proxyBeanMethods = false)
-@Profile(MigrationProfileEnvironmentGuard.STANDARD)
 public class StandardNewsSchemaConfiguration {
-    @Bean HibernatePropertiesCustomizer standardNewsValidation() {
-        return properties -> properties.put("hibernate.hbm2ddl.schema_filter_provider", new NewsFilterProvider());
+    @Bean NewsSchemaCapabilities newsSchemaCapabilities(javax.sql.DataSource source,
+            org.springframework.core.env.Environment environment) throws Exception {
+        return NewsSchemaCapabilities.inspect(source, environment);
+    }
+    @Bean HibernatePropertiesCustomizer standardNewsValidation(NewsSchemaCapabilities capability) {
+        return properties -> {
+            if (!capability.newsEnabled())
+                properties.put("hibernate.hbm2ddl.schema_filter_provider", new NewsFilterProvider());
+        };
     }
     public static final class NewsFilterProvider implements SchemaFilterProvider {
         private final SchemaFilter validation = new SchemaFilter() {

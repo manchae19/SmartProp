@@ -1,41 +1,39 @@
 ## Summary
 
-News Backend V1 read-only, đồng bộ main và giữ coordinate/Admin409/security regression.
+Targeted fixes for1 P1 and2 P2 from review of765cc5e. No News V1 scope expansion.
 
 ```text
-identity/reference change -> pending review + disabled -> separate rights review
-Standard V23 -> full existing Hibernate validation -> authorized News503
-Local BASELINE13 -> strict V26 -> V27 -> V28 -> nonblank APPROVED rights CHECK
-live ingestion -> immutable hard lock
+DB ordered lineage + checksum -> capability -> Hibernate validation/filter -> controlled News503
+featured UPDATE -> featured, updated_at -> clear + reread
+visibility UPDATE -> publication_status, updated_at -> clear + reread
+independent fixture manifest -> owned process + exact identity -> strict Local history/Hibernate
 ```
-
-V28 được nhóm trưởng phê duyệt; Local/Staging target28, Standard23, V13–V27 nguyên vẹn.
-Profile kiểm thử3311 riêng pin exact JDBC/schema/UUID/datadir; guard Local/Staging cũ giữ nguyên.
 
 ## Evidence
 
-- **Before:** branch behind main15; identity/reference changes retained approval;
-  APPROVED without reference was accepted by DB; mandatory Local validation blocked.
-  **After:** main merged, strict ordered lineage, V28 SQL3819 on invalid references,
-  Admin400 regressions, separate rights review, full Local Hibernate/Flyway validation.
-- Final acceptance requires exact final HEAD manifest: backend508 PASS (337 unit +171
-  integration/runtime), separate StandardV23 2 PASS, frontend93 + detached PR37 65 PASS;
-  backend and both frontend builds exit0. Real Chrome at1440/768/390 plus actual outage,
-  no API mocks or uncaught page exceptions. Independent V26→27→28 and V27→28 schemas,
-  backups/preflight, strict checksum validation, integrity/fixture cleanup.
-- Full report: `docs/SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md`; local evidence:
-  `.scratch/evidence/v28/final-validation.json` and migration/Chrome logs.
+- **Before:** Standard23+dev failed on missing news_articles; stale Admin entity save could
+  restore HIDDEN to VISIBLE; shared Coordinate test required the author's3311 identity.
+  **After:** Standard/dev/prod/dev+prod runtime matrix; actual targeted SQL with two concurrent
+  transactions and both commit orders;39 Coordinate tests on each of two independent fixtures.
+- Fresh final-HEAD backend521 PASS, Standard matrix11, Local/staging configuration and broken
+  schema runtime5, portable Coordinate/safety47;0 fail/error/skip. Backend package and fresh
+  migration checksum validation recorded in local final manifest.
+- Frontend93/65, Chrome real E2E and frontend builds are **REUSED_EVIDENCE** from765cc5e;
+  public DTO/frontend contract unchanged. Staging configuration is tested on approved3311
+  identity; native3306/3307 endpoints are never contacted, production guards unchanged.
+- Report: `docs/SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md`; fixture guide:
+  `docs/testing/ISOLATED_DATABASE_FIXTURES.md`; final SHA/commands/exits/SQL/identity:
+  `.scratch/evidence/targeted/final-validation.json`.
 
-`NEWS_BACKEND_READY` / `READY_FOR_FINAL_REVIEW` only after all final checks pass.
-`LIVE_INGESTION_DISABLED`; `SOURCE_RIGHTS_APPROVAL_PENDING`. No real press source approved.
-DNS rebinding remains a V1 limitation.
+Keep LIVE_INGESTION_DISABLED and SOURCE_RIGHTS_APPROVAL_PENDING. DNS rebinding remains
+V1 limitation;304 log race stays backlog. No real press-source approvals or live RSS.
 
 ## Merge Danger
 
-**Door:** two-way for code; V28 schema rollback requires separate review.
+**Door:** two-way code change; no migration added or edited.
 
 **Blast Radius:** moderate
 
-News rights, migration validation, Standard compatibility. Preflight must stop on invalid
-APPROVED rows; no reference fabrication/data repair/history rewrite. No shared DB3306/3307,
-main push, force-push, other PR branch changes, approve or merge.
+Hibernate capability selection and News Admin updates; shared Coordinate test bootstrap only.
+V13–V28 SQL/checksums unchanged (V27=-1622560226, V28=-1006687404). Older V27 checksum
+must stop for review, never repair. No changes to other branches, approve, merge or force-push.

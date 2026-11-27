@@ -198,26 +198,15 @@ public class NewsAdminService {
     @Transactional
     public NewsDtos.AdminArticle setVisibility(String articleId,
                                                NewsArticle.PublicationStatus status) {
-        NewsArticle article = articles.findById(articleId)
-            .orElseThrow(() -> ApiInputs.missing());
-        article.publicationStatus = status;
-        article.updatedAt = Instant.now();
-        articles.save(article);
-        return read.adminArticles(0, 1).getContent().stream()
-            .filter(a -> a.id().equals(articleId))
-            .findFirst()
-            .orElseGet(() -> adminArticle(article));
+        if (articles.updateVisibility(articleId, status, Instant.now()) != 1) throw ApiInputs.missing();
+        return adminArticle(articles.findById(articleId).orElseThrow(() -> ApiInputs.missing()));
     }
 
-    /** Đặt hoặc bỏ cờ nổi bật. */
+    /** Update only the featured decision; never write a stale visibility snapshot. */
     @Transactional
     public NewsDtos.AdminArticle setFeatured(String articleId, boolean featured) {
-        NewsArticle article = articles.findById(articleId)
-            .orElseThrow(() -> ApiInputs.missing());
-        article.featured = featured;
-        article.updatedAt = Instant.now();
-        articles.save(article);
-        return adminArticle(article);
+        if (articles.updateFeatured(articleId, featured, Instant.now()) != 1) throw ApiInputs.missing();
+        return adminArticle(articles.findById(articleId).orElseThrow(() -> ApiInputs.missing()));
     }
 
     private NewsDtos.AdminArticle adminArticle(NewsArticle article) {

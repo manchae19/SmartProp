@@ -11,7 +11,7 @@ class NewsStandardSchemaTest {
     }
     @Test void standardProfileFailsClosedBeforeNewsQueries() {
         var env=new MockEnvironment();env.setActiveProfiles("standard-migrations");
-        var error=assertThrows(vn.smartprop.common.ApiException.class,()->new NewsSchemaAvailability(env).requireAvailable());
+        var error=assertThrows(vn.smartprop.common.ApiException.class,()->new NewsSchemaAvailability(new vn.smartprop.database.NewsSchemaCapabilities(false)).requireAvailable());
         assertEquals(503,error.status);assertEquals("NEWS_SCHEMA_UNAVAILABLE",error.code);
     }
     @Test void standardStillValidatesEveryNonNewsTable() {

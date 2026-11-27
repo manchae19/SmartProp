@@ -5,10 +5,10 @@ Main tích hợp: `1f36205fbff5ef04f43c27af83c1694d500a9d61`.
 
 ## Trạng thái release
 
-- `NEWS_BACKEND_READY` / `READY_FOR_FINAL_REVIEW`: xác nhận bằng fresh validation trên final commit và final manifest trước push.
+- `NEWS_BACKEND_READY` / `READY_FOR_TARGETED_FINAL_REVIEW`: xác nhận bằng fresh validation trên final commit và final manifest trước push.
 - `LIVE_INGESTION_DISABLED`: hằng số `LIVE_INGESTION_PERMITTED=false` bắt buộc giữ nguyên.
 - `SOURCE_RIGHTS_APPROVAL_PENDING`: không có nguồn báo chí thật nào được phê duyệt trong đợt này.
-- Không công bố `NEWS_BACKEND_READY` hoặc `READY_FOR_FINAL_REVIEW` khi còn blocker.
+- Không công bố `NEWS_BACKEND_READY` hoặc `READY_FOR_TARGETED_FINAL_REVIEW` khi còn blocker.
 
 News V1 phục vụ dữ liệu đã lưu qua REST. Scheduler, manual sync, gọi trực tiếp ingestion
 service và production fetcher đều dừng tại hard release gate. Config/environment không
@@ -64,12 +64,23 @@ Runtime yêu cầu V26/V27/V28 hoàn tất, validate checksum bằng Flyway và 
 
 ## Standard V23
 
-Standard không có ba bảng News. Hibernate vẫn dùng `ddl-auto=validate`; schema filter
-riêng cho profile Standard chỉ loại đúng `news_sources`, `news_articles`,
-`news_ingestion_runs` khỏi bước validation. Mọi bảng/entity hiện có vẫn được validate.
-Public News trả 503 `NEWS_SCHEMA_UNAVAILABLE` trước truy vấn. Admin kiểm tra auth/role
-trước schema gate; Admin hợp lệ nhận 503, Guest/Buyer/Broker vẫn nhận 401/403.
-Runtime regression xác minh property create/detail/search vẫn hoạt động.
+Standard V23 capability được xác định từ ordered history và Flyway checksum thực tế,
+không dựa vào tên dev/prod/standard-migrations. Bean capability là dependency của Hibernate
+customizer, vì vậy hoàn tất trước EntityManagerFactory/schema validation. Chỉ Standard23
+đã validate và vắng cả3 bảng News mới dùng filter. Unknown/partial schema fail closed.
+Mọi bảng/entity khác giữ ddl-auto=validate; Local V28 luôn validate đủ News, yêu cầu CHECK
+V28 enforced và giữ nguyên identity/pending/strict history guards.
+NewsSchemaAvailability dùng cùng capability: News public503, Admin auth trước503.
+Runtime regression gồm Standard/dev/prod/dev+prod và property create/detail/search.
+
+Admin featured/visibility dùng targeted UPDATE riêng, kiểm tra affected rows, clear persistence
+context rồi đọc lại. Transaction/latch tests kiểm tra stale snapshots, cả hai thứ tự commit,
+source identity bulk hide và actual SQL; HIDDEN không xuất hiện ở list/featured public.
+
+Shared Coordinate integration dùng [manifest fixture độc lập](testing/ISOLATED_DATABASE_FIXTURES.md)
+và bootstrap test-only với validation history/checksum/Hibernate đầy đủ; không hardcode
+identity tác giả, không thay guard production. Frontend/Chrome evidence từ765cc5e được ghi
+REUSED_EVIDENCE trong vòng targeted này; backend và targeted runtime chạy fresh.
 
 ## Source rights lifecycle
 

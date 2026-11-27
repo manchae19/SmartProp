@@ -1,43 +1,33 @@
-# PR #41 — Final completion report
+# PR #41 — Targeted final review fixes
 
-Ngày: 2026-11-27. **READY_FOR_FINAL_REVIEW**.
-`LIVE_INGESTION_DISABLED` · `SOURCE_RIGHTS_APPROVAL_PENDING`.
-`NEWS_BACKEND_READY` sau khi final manifest xác nhận toàn bộ mandatory checks trên đúng final HEAD; dừng để nhóm trưởng review.
+Reviewed starting HEAD: `765cc5e1ea1fc68cc90ea601912c74144731202a`.
+Only the requested1 P1 and2 P2 are addressed. Final acceptance is recorded against the
+committed HEAD in `.scratch/evidence/targeted/final-validation.json`; never infer a gate
+from this report alone. No approve/merge or changes to other branches.
 
-| Mục | Kết quả |
+| Item | Result and evidence |
 |---|---|
-| A. Main synchronization | Merge main 1f36205; giữ provenance, accuracy, GIS eligibility, Admin Coordinate Review, 409 lock và cả coordinate/News routes. |
-| B. V27 lineage | Strict order từ main, V27 sau V26; target Local/Staging28, Standard23. V28 được nhóm trưởng phê duyệt. V13–V27 và identity guard không sửa. 32+18+8 migration/identity unit tests; real Flyway checksum negative. |
-| C. Standard V23 | Hibernate validate giữ nguyên; chỉ loại ba bảng News khỏi Standard validation. Hai runtime/HTTP tests PASS; public/Admin503 và 401/403 đúng auth; property create/detail/search hoạt động. |
-| D. Source rights | Identity/reference change mất approval; disabled; bài cũ được giữ nhưng ẩn; central policy, callbacks và SQL từ chối invalid references; summary read/search enforcement. V28 DB CHECK chặn NULL/rỗng/Unicode whitespace trên INSERT/UPDATE; Admin regression400. |
-| E. Release gate | false compile-time; scheduler dừng trước repository; manual/service/fetcher không fetch. Test-only transport không nằm trong production jar. |
-| F. Security | SSRF/XXE/allowlist/timeouts/deadline/size/Retry-After/304 regression PASS. DNS rebinding vẫn là limitation V1. |
-| G. Concurrency/fencing | 19 lease/concurrency +19 fencing tests PASS; kiểm tra expiry theo thời gian thực sau row lock; source revision fence cho cả failure metadata. |
-| H. Backend | 337 unit +171 integration/fixture/runtime =508 PASS, 0 fail/error/skip. Separate Standard run 2 PASS. |
-| I. Frontend | PR41:93 PASS; PR37 detached:65 PASS; 0 fail/skip. |
-| J. Production build | Backend package, PR41 frontend và PR37 frontend build exit0. |
-| K. Public/Admin HTTP | MockMvc + MySQL và real HTTP registration/login; Guest401, Buyer/Broker403, Admin200; manual sync hard locked. |
-| L. PR37 integration | Detached SHA151a07b; frontend14137 -> real backend18141 -> MySQL3311; synthetic fixtures only; no PR37 branch writes. |
-| M. Chrome E2E | 12 scenario groups + real outage; desktop/tablet/mobile; screenshots; 0 uncaught page exceptions; no mocked News API. |
-| N. Database integrity | Own MySQL PID7804/UUID0f29afde-ea54-11f1-bcac-088fc36287dc,3311; backup before migration. Final read-only integrity/lineage evidence in scratch. No3306/3307 access. |
-| O. Final commit SHA | `.scratch/evidence/final-head.txt` and final execution manifest record the commit tested after commit; report does not embed its own commit hash. |
-| P. GitHub PR | PR41 open, base main unchanged. Push chỉ feature/news-backend-v1 sau final checks; remote HEAD phải khớp final manifest. Không force-push/merge/approve. |
-| Q. Blockers | See below. |
-| R. Evidence | `.scratch/evidence/`; `.scratch/mysql-pr41/evidence/`; backup hashes in manifest. Private credentials/dumps/logs/fixtures excluded from Git. |
+| A. Standard runtime fix | `NewsSchemaCapabilities` validates actual ordered history/checksums and table capability before the Hibernate customizer is created. Standard23 excludes only the3 absent News tables; unknown/partial schema refuses startup. |
+| B. Dev/prod | Real Spring/Hibernate matrix: standard-migrations, dev, prod, dev+prod; News public503, Guest401, User/Broker403, valid Admin503. Property create/detail/search smoke under Standard/dev/prod.11 tests,0 failures/skips. |
+| C. Local/Staging | Full News validation remains enabled.5 real-runtime tests: Local, staging configuration imported under the strict approved3311 profile, missing table, missing column and disabled CHECK. Native Local3306/Staging3307 identity guards unchanged; no3306/3307 connection. Existing strict/pending V26/V27/V28 regression remains in full unit suite. |
+| D. Concurrent decisions | Targeted repository UPDATE writes only featured+updated_at or publication_status+updated_at; affected-row check retains404; clear context and reread prevent stale response. |
+| E. Actual SQL/transactions |5 Admin tests: two overlapping real transactions, latches, both commit orders, stale article snapshots and source identity bulk hide; captured SQL and public list/featured exclusion assertions. No arbitrary sleep. |
+| F. Portable safety | Independent provisioner manifest authorizes destination, port/schema/UUID/datadir and process ownership/config/start time. Shared Coordinate test has no author paths/UUID/schema. Test-only bootstrap retains strict history/checksum/Hibernate validation. |
+| G. Coordinate regression |39/39 on original3311 and39/39 on separately provisioned3312;8 safety tests on each,0 skip. Negative UUID/schema/datadir/destination/owner/authorization/protected-port cases refuse access. |
+| H. Backend | Full fresh backend521 tests (337 unit +184 integration/runtime),0 fail/error/skip; separate Standard11, Local/staging5 and portable fixture47. Logs/exit codes and tested final SHA in final manifest. Backend production package checked separately. |
+| I. Migration integrity | No migration SQL V13–V28 changes, noV29, no repair/history edits. V27=-1622560226, V28=-1006687404; Flyway validates unchanged resources. An older V27 checksum must stop deployment for review, never repair. |
+| J. PR37 compatibility | DTO/frontend/public contract unchanged. Frontend PR41 93/93, PR37 65/65, Chrome real E2E and frontend builds are **REUSED_EVIDENCE** from reviewed HEAD765cc5e, not fresh PASS. |
+| K. Delivery | Fetch confirms main1f36205 unchanged. No targeted-file overlap with PR37/44/45 or Research Access. Final local/remote SHA and PR readback are recorded after push in final manifest. |
+| L. Limits | LIVE_INGESTION_DISABLED; SOURCE_RIGHTS_APPROVAL_PENDING. DNS rebinding remains V1 limitation;304 logging race stays backlog beforeV1.1. No live RSS or real-source approval. |
 
-## Remaining blockers
+Only emit final gates after the corresponding final-HEAD execution and remote readback:
+STANDARD_V23_DEV_RUNTIME_PASS, STANDARD_V23_PROD_RUNTIME_PASS,
+STANDARD_V23_MIGRATION_PROFILE_PASS, LOCAL_STAGING_V28_STRICT_VALIDATION_PASS,
+NEWS_ADMIN_CONCURRENT_UPDATE_PASS, HIDDEN_ARTICLE_PUBLIC_EXCLUSION_PASS,
+COORDINATE_IT_PORTABLE_ISOLATION_PASS, COORDINATE_PROVENANCE_REGRESSION_PASS,
+MIGRATION_CHECKSUM_INTEGRITY_PASS, REMOTE_HEAD_VERIFIED, READY_FOR_TARGETED_FINAL_REVIEW.
 
-Không còn blocker phê duyệt V28. Final manifest là điều kiện bắt buộc trước push và
-xác nhận READY. Hai schema synthetic mới chạy V26 → V27 → V28 và V27 → V28; Local
-BASELINE13 runtime dùng exact-identity profile3311, giữ nguyên guard Local/Staging cũ.
-Checksums V13–V27 giữ nguyên. Preflight không có invalid APPROVED rows; không sửa
-dữ liệu legacy/history. DB constraint và Admin API từ chối reference không hợp lệ.
-DNS rebinding vẫn là limitation V1; live ingestion luôn đóng.
-
-No press source was approved and no live RSS was requested. Historical live results
-are not fresh acceptance evidence. Workspaces/branches PR37/38/39 and WP-01 remain
-untouched. Original main workspace stays on its original main HEAD with its untracked
-`.tools/` and stash intact.
-
-Full commands and per-suite counts: [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md).
-Current architecture/operating limits: [implementation](SMARTPROP_NEWS_BACKEND_V1_IMPLEMENTATION.md).
+See [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md) and
+[fixture provisioning](testing/ISOLATED_DATABASE_FIXTURES.md). Raw logs, backups, manifests,
+tokens and fixtures stay outside Git. Final evidence distinguishes FRESH_PASS, REUSED_EVIDENCE,
+FAIL, BLOCKED and NOT_RUN. The original workspace/main/stashes remain intact.

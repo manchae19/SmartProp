@@ -110,6 +110,14 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, String
     @Query("update NewsArticle a set a.publicationStatus = vn.smartprop.modules.news.NewsArticle$PublicationStatus.HIDDEN, a.updatedAt = :now where a.sourceId = :sourceId")
     int hideBySource(@Param("sourceId") String sourceId, @Param("now") Instant now);
 
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update NewsArticle a set a.featured = :featured, a.updatedAt = :now where a.id = :id")
+    int updateFeatured(@Param("id") String id, @Param("featured") boolean featured, @Param("now") Instant now);
+
+    @org.springframework.data.jpa.repository.Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("update NewsArticle a set a.publicationStatus = :status, a.updatedAt = :now where a.id = :id")
+    int updateVisibility(@Param("id") String id, @Param("status") NewsArticle.PublicationStatus status, @Param("now") Instant now);
+
     List<NewsArticle> findBySourceId(String sourceId);
 
     Page<NewsArticle> findAllByOrderByFirstSeenAtDesc(Pageable pageable);

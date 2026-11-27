@@ -22,6 +22,23 @@ class NewsStandardV23IT {
     @Autowired MockMvc mvc;
     @Autowired JdbcTemplate jdbc;
     @Autowired vn.smartprop.modules.user.UserRepository users;
+    @Autowired org.springframework.core.env.Environment environment;
+    @Test void partialNewsSchemaIsRefusedBeforeHibernateValidation() {
+        assertEquals(3311,jdbc.queryForObject("SELECT @@port",Integer.class));
+        assertEquals("pr41_standard",jdbc.queryForObject("SELECT DATABASE()",String.class));
+        assertEquals(0,jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='news_articles'",Integer.class));
+        jdbc.execute("CREATE TABLE news_articles (synthetic_test_id INT PRIMARY KEY)");
+        try {
+            var error=assertThrows(Exception.class,()->{
+                try(var context=new org.springframework.boot.builder.SpringApplicationBuilder(vn.smartprop.SmartPropApplication.class)
+                    .profiles(environment.getActiveProfiles()).run("--server.address=127.0.0.1","--server.port=0","--spring.main.banner-mode=off")) {
+                    fail("Partial News schema was accepted");
+                }
+            });
+            StringBuilder messages=new StringBuilder();for(Throwable cause=error;cause!=null;cause=cause.getCause())messages.append(cause.getMessage());
+            assertTrue(messages.toString().contains("News tables do not match"),messages.toString());
+        } finally {jdbc.execute("DROP TABLE news_articles");}
+    }
     @Test void noNewsTablesAndControlled503WithRealAuthorization() throws Exception {
         assertEquals(3311,jdbc.queryForObject("SELECT @@port",Integer.class));
         assertEquals("pr41_standard",jdbc.queryForObject("SELECT DATABASE()",String.class));
