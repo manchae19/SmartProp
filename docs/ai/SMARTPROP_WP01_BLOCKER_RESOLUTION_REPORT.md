@@ -1470,3 +1470,226 @@ gửi duyệt) **không** nằm trong phạm vi định giá và phụ thuộc d
 1. Panel báo "phòng ngủ ngoài phạm vi" khi field trống → nên coi trống = chưa khai báo.
 2. Chuyển `_capture_for_test()` sang test harness riêng.
 3. Bổ sung E2E bước 2–3 khi có môi trường Maps được phép.
+
+---
+
+## AD. WP-01 FINAL RELEASE CLEANUP & PR PREPARATION
+
+**Integration HEAD:** `68dfaf4` · **origin/main:** `1f36205f` · **V1.3:** `a7db792`
+
+### AD.1. Bedrooms root cause & fix
+
+**Root cause** — `frontend/src/features/prediction/valuation.js:24`:
+
+```js
+const rooms = String(draft.bedrooms ?? '0');          // '' KHÔNG bị ?? bắt
+if (propertyType !== 'LAND' && (!/^\d+$/.test(rooms) || Number(rooms) > 30)) return { reason: … };
+```
+
+`<input type="number">` trả **chuỗi rỗng** `''` khi để trống. `??` chỉ bắt `null/undefined`,
+nên `''` lọt xuống `/^\d+$/` → **false** ⇒ báo "ngoài phạm vi" và **disable** nút.
+
+**Fix** (chỉ valuation preview, không chạm validation publish):
+
+```js
+const roomsRaw = String(draft.bedrooms ?? '').trim();
+const roomsProvided = roomsRaw !== '';
+if (propertyType !== 'LAND' && roomsProvided && (!/^\d+$/.test(roomsRaw) || Number(roomsRaw) > 30)) …
+…
+bedrooms: propertyType === 'LAND' || !roomsProvided ? null : Number(roomsRaw),
+```
+
+- Trống ⇒ **`null` (missing)**, đúng missing-value handling của V1.3 (`bedroom_count = NaN`,
+  `has_bedroom = 0`), **không** gán 0 (0 là giá trị người dùng chủ động khai báo).
+- `0` vẫn hợp lệ; `-1`, `31`, `2.5`, `abc` vẫn bị chặn.
+- LAND luôn `null`.
+
+**Regression:** `frontend/tests/postValuationInput.test.mjs` — **20/20** (13 case mới: empty,
+undefined, null, whitespace, 0, 1, 30, −1, 31, decimal, invalid string, LAND có/không bedrooms).
+
+### AD.2. Test capture removed from production — **PASS**
+
+| Trước | Sau |
+|---|---|
+| `_capture_for_test()` + `SMARTPROP_TEST_CAPTURE` **trong** `app/api/valuation.py` | **Đã xoá hoàn toàn** (`git grep` = 0 match) |
+| Ghi payload ra file nếu env bật | Không còn đường ghi nào trong production |
+| — | Capture chuyển sang `ai-services/tests/parity/capture_app.py` (pure-ASGI middleware, chỉ tồn tại trong test, import `main:app` của production) |
+
+Production inference **không** ghi feature vector/request data. Không debug endpoint.
+Không đổi output, schema, calibration. Parity vẫn tái lập: chạy
+`uvicorn tests.parity.capture_app:app --port 8001` với `SMARTPROP_PARITY_CAPTURE`,
+Spring trỏ `APP_VALUATION_BASE_URL=http://127.0.0.1:8001`.
+Không commit capture file (nằm trong `.scratch`).
+
+**Encoded-vector parity sau khi chuyển — PASS 5/5** (đo lại, không suy luận):
+payload (trừ `title`/`description` là metadata tin đăng, không phải feature) **giống hệt** và
+**ma trận encoded 22 feature giống hệt** cho HOUSE basic, HOUSE enriched, LAND, APARTMENT, VILLA.
+
+### AD.3. Flow B valuation preview browser E2E — **PASS 18/18**
+
+Gate đúng phạm vi: **`FLOW_B_VALUATION_PREVIEW_E2E_PASS`** (không gọi
+`FULL_PROPERTY_POSTING_E2E_PASS` — chưa kiểm thử toàn quy trình đăng tin).
+
+| # | Case | Kết quả |
+|---|---|---|
+| 1 | Login qua UI → `/post` | **PASS** |
+| 2 | Mở `<details>` "Giá tham khảo" → panel | **PASS** |
+| 3 | **HOUSE basic với bedrooms TRỐNG** | **PASS** — 6.605.239.848 ₫ (đây là fix) |
+| 4 | bedrooms = 0 | **PASS** — vẫn định giá |
+| 5 | bedrooms = 31 | **PASS** — bị chặn (disabled) |
+| 6 | Đổi input → giá mới, không stale | **PASS** — 6,61 → 13,19 tỷ |
+| 7 | HOUSE enriched | **PASS** — 5.516.158.792 ₫ |
+| 8 | LAND | **PASS** — 4.445.049.207 ₫ |
+| 9 | APARTMENT | **PASS** — 4.531.630.748 ₫ |
+| 10 | VILLA | **PASS** — 5.893.564.675 ₫ |
+| 11 | Street warning (có street) | **PASS** |
+| 12 | Prefix `Đường ` | **PASS** |
+| 13 | OOV street | **PASS** |
+| 14 | Missing street | **PASS** — không cảnh báo |
+| 15 | Responsive 390 px | **PASS** |
+| 16 | Page error | **PASS** — 0 |
+| 17 | Network thật | `POST /api/v1/properties/valuation-preview` **200** |
+| 18 | Không mock auth/valuation/Spring/FastAPI/MySQL | **PASS** |
+
+**NOT_RUN (ghi rõ):** bước 2–3 (Google Maps location) và "thoát form không publish" —
+ngoài phạm vi valuation preview.
+
+### AD.4. Flow A browser E2E — **PASS 13/13** (fresh, build mới)
+
+Deep link · SPA render · refresh · model options qua nginx · submit · giá **7,69 tỷ** ·
+street warning hiển thị · bỏ street → cảnh báo mất · responsive 390 px · `/login` 200 · 0 page error.
+
+### AD.5. Regression (final code `68dfaf4`)
+
+| Suite | Command | Kết quả | Nhãn |
+|---|---|---|---|
+| Backend full | `backend\mvnw.cmd -o -B test` | **230/230 PASS**, BUILD SUCCESS | **FRESH_PASS** |
+| FastAPI | `pytest tests/ -q --ignore-glob='*test_rag*'` | **222 passed**, 20 skipped, 84 subtests | **FRESH_PASS** (trừ RAG) |
+| Frontend | `node --test tests/*.test.mjs` | **91/91 PASS** (exit 0) | **FRESH_PASS** |
+| Production build | `vite build` | `✓ built in 6.09 s` | **FRESH_PASS** |
+| Flow A browser | Playwright + nginx | **13/13** | **FRESH_PASS** |
+| Flow B browser | Playwright + nginx | **18/18** | **FRESH_PASS** |
+| Encoded parity | harness 8001 | **5/5 + 22 feature** | **FRESH_PASS** |
+
+**2 lỗi RAG** (`test_rag_area_filter.py`, `test_rag_public_projection.py`,
+`ImportError: area_spec`) — **pre-existing trên main**, không sửa, **không** báo full FastAPI PASS.
+
+### AD.6. Database integrity
+
+| Kiểm tra | Trước | Sau |
+|---|---|---|
+| Flyway history | 12 | **12** |
+| Triggers `listing_code` | 2 | **2** |
+| `properties` | 0 | **0** |
+| `valuation_history` | 0 | **0** |
+| `property_listing_code_allocations` | 0 | **0** |
+| `users` | 1 (test account) | **1** |
+
+Không publish · không ghi đè asking price · không tạo listing code · không ghi history ·
+không đổi toạ độ/pháp lý. Không xoá dữ liệu ngoài phiên test.
+
+### AD.7. Model integrity
+
+`model.json 3c56b693…` · `calibration.json 17632bdf…` · `feature_schema.json 84be275b…` — **không đổi**.
+V1.3 vẫn là model duy nhất sinh giá mới · không fallback V6 · không train · không Shadow.
+
+### AD.8. PR diff summary — **CLEAN**
+
+`git diff --stat origin/main...HEAD` → **24 files, ~3.5k insertions, 19 deletions**.
+
+| Nhóm | Số file |
+|---|---|
+| `backend/src/main` (ValuationRequest, ValuationService) | 2 |
+| `backend/src/test` (ValuationServiceTest) | 1 |
+| `frontend/src` (ValuationPanel, PostValuationPanel, AdvancedValuationFields, valuation.js, advancedValuation.js, usePostEditor.js) | 6 |
+| `frontend/tests` | 3 |
+| `ai-services/app` (schemas, valuation, adapter, features_v1_3) | 4 |
+| `ai-services/tests` (street canonical + parity harness) | 3 |
+| `docs/ai` | 5 |
+
+Quét file ngoài scope (`jsonl|zip|npy|node_modules|.scratch|artifacts|.env|datadir|mysql|nginx|png|sql`)
+→ **rỗng**. Không có dump/weights/raw data/credentials/screenshot trong diff.
+Không file V1.4–V1.6 nào bị xoá.
+
+**Không migration mới.** Không đổi migration SQL. Không nới guard.
+
+### AD.9. Proposed PR
+
+**Title:**
+```
+feat(ai): harden XGBoost V1.3 valuation inference and input consistency
+```
+
+**Description** (rút gọn — bản đầy đủ ở `SMARTPROP_WP01_FINAL_REPORT.md`):
+
+> **Summary** — Siết luồng định giá XGBoost V1.3 ở cả hai luồng sản phẩm: kiểm tra địa bàn theo
+> artifact, chuẩn hoá tên đường, hoàn thiện input contract, cảnh báo độ tin cậy vị trí.
+>
+> **Problem** — (1) địa bàn không hỗ trợ vẫn trả giá; (2) `Đường X` rơi vào OOV nên mất tín hiệu
+> vị trí; (3) Flow A thiếu bathrooms/hướng nhà/ban công; (4) Flow B từ chối `cẩm lệ` trong khi
+> Flow A chấp nhận; (5) không cảnh báo khi tên đường chưa đối chiếu được với khu vực;
+> (6) để trống phòng ngủ làm khoá nút định giá.
+>
+> **Implementation** — whitelist district từ `feature_schema.json`; `canonical_street()`
+> (exact-match-first, chỉ bỏ tiền tố khi ra entry thật, không fuzzy); `displayDistrict()`
+> chuẩn hoá input Flow B; `warnings` (additive) cho street chưa xác minh; blank bedrooms = missing.
+>
+> **Architecture** — Flow A: React → `/api/ai` → FastAPI. Flow B: React → Spring Boot
+> `/api/v1/properties/valuation-preview` → FastAPI. Không đổi kiến trúc; WP-09 gateway chưa duyệt.
+>
+> **Validation** — 422 (A) / `available=false` (B) cho địa bàn không hỗ trợ; parity 10/10.
+>
+> **Optional features** — blank = missing; không suy diễn, không default.
+>
+> **Street normalization** — NFC, casefold, trim, prefix strip có kiểm chứng.
+>
+> **Geographic warning** — `UNKNOWN_MAPPING` vẫn giữ; cảnh báo không tuyên bố đã xác minh địa chỉ.
+>
+> **Cross-flow parity** — giá cuối delta **0** trên 5/5 case; encoded vector 22 feature giống hệt.
+>
+> **Tests** — Backend 230/230 · FastAPI 222 (+2 pre-existing collection errors) · Frontend 91/91 ·
+> Flow A browser 13/13 · Flow B browser 18/18 · build OK.
+>
+> **Routing** — production bundle phục vụ qua nginx (SPA fallback, `/api/ai` và `/api/v1`).
+> **Chưa** kiểm thử deployment production thật.
+>
+> **CORS** — deploy cần `CORS_ORIGINS=https://<domain>` chính xác, **không wildcard**.
+>
+> **Database** — không migration mới; không publish/không ghi history ngoài contract.
+>
+> **Model** — hash không đổi; V1.3 là model duy nhất; không fallback V6.
+>
+> **Known limitations** — chưa E2E bước 2–3 của form đăng tin (Google Maps); chưa kiểm thử toàn
+> bộ quy trình publish; `UNKNOWN_MAPPING` cho street↔district.
+>
+> **Pre-existing** — 2 lỗi RAG `area_spec` có từ main, không sửa.
+>
+> **Rollback** — revert merge commit; không có migration nên không cần rollback DB.
+>
+> **Merge risk** — thấp: additive API field, không đổi schema DB, không đổi model.
+
+### AD.10. Gate
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+MAIN_RECONCILIATION_PASS
+FLOW_A_REAL_E2E_PASS
+FLOW_B_VALUATION_PREVIEW_E2E_PASS
+OPTIONAL_BEDROOMS_VALIDATION_PASS
+LOCATION_VALIDATION_PASS
+CROSS_FLOW_PRICE_PARITY_PASS
+ENCODED_VECTOR_PARITY_PASS
+STREET_WARNING_UI_PASS
+PRODUCTION_LIKE_ROUTING_PASS
+TEST_CAPTURE_REMOVED_FROM_PRODUCTION
+DATABASE_INTEGRITY_PASS
+V1_3_ARTIFACT_INTEGRITY_PASS
+PR_DIFF_CLEAN
+READY_FOR_PR_CREATION
+```
+
+### AD.11. Môi trường sau phiên
+
+`3307 FREE` · `3306 BUSY` (service nhóm, không đụng) · `8000/8001/8080/8090 FREE`.
+Giữ: MySQL Portable 8.4.13 · fixture V26 · nginx 1.29.3 · scripts test trong `.scratch`.
+**Chưa push · chưa tạo PR · chưa merge.**
