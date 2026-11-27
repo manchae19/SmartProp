@@ -8,7 +8,7 @@ from .validator import render_answer, validate_plan, validate_generated_answer, 
 from urllib.parse import quote
 from .gis import gis_evidence
 from .diagnostics import traced, event, reason
-from .intent import (asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS,
+from .intent import (asks_for_amenities, empty_search_answer, poi_categories, CATEGORY_LABELS, NO_LISTING_ACTION,
                      insufficient_amenity_answer, listing_transaction, effective_listing_transaction)
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
@@ -49,11 +49,38 @@ from .account_preferences import fingerprint, seed
 
 # Districts the public catalog covers; used to seed a saved profile before any branch returns.
 SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "Ngũ Hành Sơn", "Liên Chiểu", "Hòa Vang"]
-_PENDING_LISTING_LOCATION = (*NEARBY_PENDING, "commuteStage", "commutePoints", "commutePendingAddress",
-                             "commutePendingLimit", "commuteResumeSearch")
-_LISTING_LOCATION_STATE = (*_PENDING_LISTING_LOCATION, "listingAddressScope", "listingRentalBlocked",
-                           "commuteDestination", "focusedPropertyId")
+_LISTING_LOCATION_STATE = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked",
+                           "commuteDestination", "commuteStage", "commutePoints", "commutePendingAddress",
+                           "commutePendingLimit", "commuteResumeSearch", "focusedPropertyId")
 from .tools import UpstreamError
+
+
+def _listing_continuation(question, state):
+    """Return whether a context-only reply has a compatible pending stage."""
+    value = norm(question).strip().rstrip(".!?")
+    commute = commute_destination.stage_of(state)
+    nearby_consent = bool(state.get("nearConsentPending") and state.get("pendingNearbyAddress"))
+    if value in ("bo qua", "huy"):
+        return bool(nearby_consent or state.get("nearbyPoints") or commute or state.get("pending"))
+    if value == "dong y tim vi tri":
+        return nearby_consent
+    if value == "mo rong ban kinh":
+        return bool((state.get("listingAddressScope") or {}).get("origin"))
+    if commute_destination.is_plain_consent(question):
+        return commute == commute_destination.AWAIT_ADDRESS  # The address is still required.
+    if re.match(r"^(?:nhap|go|dien|dung|su dung|lay|dia diem khac|noi lam viec da luu|cho lam da luu)\b", value):
+        if commute_destination.wants_saved(question):
+            return commute == commute_destination.ASK_SOURCE
+        if commute_destination.wants_new(question):
+            return commute == commute_destination.ASK_SOURCE or bool(commute_destination.destination_of(state))
+    if value.isdigit() and state.get("pending") in ("budget", "min_area", "age"):
+        return None
+    if re.match(r"^(?:so\s+)?[1-5](?:[.):]\s+|$)", value):
+        points = state.get("nearbyPoints") or (
+            state.get("commutePoints") if commute == commute_destination.PICK_CANDIDATE else None)
+        return bool(points and commute_destination.candidate_index(question, len(points)))
+    return None
+
 
 class ChatOrchestrator(AdvisorDiscoveryMixin):
     def __init__(self, backend, repository, knowledge, retriever, llm, sessions=None, document_advisor=None):
@@ -195,6 +222,13 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                                      transaction, selected, text_transaction, structured_purpose, *, research):
         state, prior = context.needs, context.criteria()
         _, filter_text, mode = address_query
+        if transaction == "PURCHASE_DECLINED":
+            if context.purpose != "RENTAL":
+                for key in (*_LISTING_LOCATION_STATE, "pending", "guided", "householdMode"):
+                    state.pop(key, None)
+            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
+                answer="Tôi đã dừng tìm tin mua. Bạn có thể yêu cầu tìm lại khi cần.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
         information = turn["transactionInformation"]
         if information == "PRICE_COMPARISON":
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
@@ -211,13 +245,6 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Bạn muốn tìm tin mua hay tin thuê? Nếu tìm mua, hãy nêu ngân sách mua tổng bằng đồng.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "TRANSACTION_INTENT_CONFLICT"})
-        if transaction == "PURCHASE_DECLINED":
-            if context.purpose != "RENTAL":
-                for key in (*_PENDING_LISTING_LOCATION, "pending", "guided", "householdMode"):
-                    state.pop(key, None)
-            return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
-                answer="Tôi đã ghi nhận bạn chưa muốn tìm mua. Bạn muốn tham khảo thông tin gì?",
-                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
         if transaction == "RENT_DECLINED":
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Tôi đã ghi nhận bạn chưa muốn tìm thuê. Bạn muốn tham khảo thông tin gì?",
@@ -285,46 +312,60 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 self.sessions.drop(context)
                 context,session_id,resumed=self.sessions.begin(None,scope=scope)
             context.needs["accountFingerprint"]=current_fingerprint
+        # The saved profile must be seeded before any branch can return, otherwise a
+        # focused or commute turn runs without the account context it needs.
+        if account and not resumed:
+            seed(context,account,SUPPORTED_DISTRICTS)
+        continuation = _listing_continuation(request.question, context.needs)
+        address, outside_address = (address_search.split_address(request.question) if continuation is None
+                                    else (None, request.question))
+        mode = address_search.intent(request.question, address) if address else None
+        address_query = (address, outside_address, mode)
+        structured_purpose = request.purpose if "purpose" in request.model_fields_set else None
+        if continuation is None:
+            text_transaction = listing_transaction(outside_address if mode else request.question)
+        else:
+            conflicts = (structured_purpose is not None
+                         and (structured_purpose == "RENTAL") != (context.purpose == "RENTAL"))
+            text_transaction, structured_purpose = ("CONFLICT" if conflicts else None), None
+        transaction, selected = effective_listing_transaction(
+            text_transaction, structured_purpose, context.criteria().get("purpose"),
+        )
+        no_listing_action = transaction in NO_LISTING_ACTION or continuation is False
         turn = classification(request.question, context if resumed else None, districts=SUPPORTED_DISTRICTS)
+        if no_listing_action:
+            turn.update(intent="CLARIFY", intentFamily="CLARIFY", searchChange=False, unsupportedPopularityFilter=False)
         context.needs["turnIntent"]=turn["intent"]
         context.needs["turnIntentFamily"]=turn["intentFamily"]
         context.needs["unsupportedPopularityFilter"]=turn["unsupportedPopularityFilter"]
         event("intent_decision", intent=turn["intent"], budgetMentioned=turn["budgetMentioned"],
               tool="KNOWLEDGE_MARKET" if turn["intent"]=="MARKET_ANALYSIS" else "MARKET_SUMMARY" if turn["intent"] in ("MARKET_PRICE","MARKET_TREND") else "PLACES" if turn["intent"]=="AREA_AMENITIES" else "RECOMMENDATION" if turn["searchChange"] or turn["intent"]=="PROPERTY_FOLLOWUP" else "NONE")
-        # The saved profile must be seeded before any branch can return, otherwise a
-        # focused or commute turn runs without the account context it needs.
-        if account and not resumed:
-            seed(context,account,SUPPORTED_DISTRICTS)
-        planning=self.planning_advisor.reply(request.question,context)
-        if planning is not None:
-            context.needs["turnIntent"]="PLANNING_LOOKUP"
-            return self._reply(request,session_id,context,context.criteria(),research=research,**planning)
-        # While the session waits for a commute destination, the three official replies
-        # belong to that flow and must reach the state machine, not the scope filter.
-        pending = ("COMMUTE_DESTINATION_REQUIRED"
-                   if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
-        outside=domain_reply(request.question,turn,pending=pending)
-        if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
-            return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
-                answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
-        address, outside_address = address_search.split_address(request.question)
-        mode = address_search.intent(request.question, address) if address else None
-        address_query = (address, outside_address, mode)
-        structured_purpose = request.purpose if "purpose" in request.model_fields_set else None
-        text_transaction = listing_transaction(outside_address if mode else request.question)
-        transaction, selected = effective_listing_transaction(
-            text_transaction, structured_purpose, context.criteria().get("purpose"),
-        )
+        if not no_listing_action and continuation is None:
+            planning=self.planning_advisor.reply(request.question,context)
+            if planning is not None:
+                context.needs["turnIntent"]="PLANNING_LOOKUP"
+                return self._reply(request,session_id,context,context.criteria(),research=research,**planning)
+            pending = ("COMMUTE_DESTINATION_REQUIRED"
+                       if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
+            outside=domain_reply(request.question,turn,pending=pending)
+            if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
+                return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
+                    answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
         transaction_reply = self._prepare_listing_transaction(
             request, session_id, context, turn, address_query, transaction, selected,
             text_transaction, structured_purpose, research=research,
         )
         if transaction_reply is not None:
             return transaction_reply
+        if continuation is False:
+            return self._reply(request, session_id, context, context.criteria(), properties=[], citations=[], research=research,
+                answer="Phiên này không có bước xác nhận phù hợp. Bạn có thể nêu yêu cầu mới.",
+                responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "NO_PENDING_LISTING_STEP"})
         purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL" and not turn["transactionInformation"]
         if purchase_allowed:
             discovery_reply = self.dispatch_discovery(request, session_id, context, turn, address_query,
-                districts=SUPPORTED_DISTRICTS, research=research, token=token, account=account)
+                districts=SUPPORTED_DISTRICTS, research=research, token=token, account=account,
+                continuing=continuation is True)
             if discovery_reply is not None:
                 return discovery_reply
         resuming_commute_search = purchase_allowed and context.needs.pop("commuteResumeSearch", False)

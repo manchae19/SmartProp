@@ -506,7 +506,8 @@ class AdvisorDiscoveryMixin:
             responseKind="PROPERTY_LIST", limitations=limitations,
             extra={**extra, "nearOrigin": origin})
 
-    def dispatch_discovery(self, request, session_id, context, turn, address_query, *, districts=(), research=False, token=None, account=None):
+    def dispatch_discovery(self, request, session_id, context, turn, address_query, *,
+                           districts=(), research=False, token=None, account=None, continuing=False):
         if research:return None
         state=context.needs
         address, outside_address, mode = address_query
@@ -515,7 +516,8 @@ class AdvisorDiscoveryMixin:
                              and not turn["categories"] and not turn["domain"])
         prior = context.criteria()
         pending_nearby = state.get("nearConsentPending") or state.get("nearbyPoints")
-        reply_to_nearby = (norm(request.question).rstrip(".!?") == "dong y tim vi tri"
+        control = norm(request.question).strip().rstrip(".!?")
+        reply_to_nearby = (control == "dong y tim vi tri"
                            or commute_destination.is_plain_consent(request.question)
                            or commute_destination.candidate_index(request.question, 5))
         if pending_nearby and reply_to_nearby and not mode and not state.get("nearbySaleVerified"):
@@ -531,7 +533,7 @@ class AdvisorDiscoveryMixin:
             return None
         if turn["intent"] == "UPDATE_CRITERIA" and not (mode or location_edit or explicit_commute):
             return None
-        if turn.get('searchChange') and not explicit_commute and not (mode or location_edit):
+        if turn.get('searchChange') and not (continuing or explicit_commute or mode or location_edit):
             for key in ('commuteStage','commutePoints','commutePendingAddress','commutePendingLimit'):
                 state.pop(key,None)
             state.pop("listingAddressScope", None)
@@ -604,12 +606,13 @@ class AdvisorDiscoveryMixin:
             return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,
                 answer='Để tìm nhà trong 1 km, bạn có đồng ý gửi địa chỉ này tới Geoapify không? Tôi chỉ dùng điểm trong phiên này.',
                 responseKind='CLARIFICATION_REQUIRED',extra={'clarification':'NEAR_ADDRESS_CONSENT','quickReplies':['Đồng ý tìm vị trí','Bỏ qua']})
+        if pending_nearby and control in ("bo qua", "huy"):
+            for key in NEARBY_PENDING:
+                state.pop(key, None)
+            return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=False,
+                answer="Đã bỏ qua tìm vị trí.", responseKind="CRITERIA_UPDATED")
         if state.get('nearConsentPending'):
-            if norm(request.question) in ('bo qua','huy'):
-                state.pop('nearConsentPending',None);state.pop('pendingNearbyAddress',None)
-                state.pop("nearbySaleVerified", None)
-                return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=False,answer='Đã bỏ qua tìm vị trí.',responseKind='CRITERIA_UPDATED')
-            if norm(request.question)=='dong y tim vi tri':
+            if control == "dong y tim vi tri":
                 state.pop('nearConsentPending',None)
                 address=state.pop('pendingNearbyAddress')
                 try:

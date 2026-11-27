@@ -151,13 +151,13 @@ def classification(question, context, *, districts=()):
     pending = state.get("pending")
     housing = r"(?:nha|can ho|chung cu|bat dong san|bds|dat nen|biet thu|phong tro|mat bang)"
     housing_value=re.sub(r"\b(?:nha thuoc|nha hang|nha khoa|nha kho|nha may|nha sach|nha tre)\b"," ",value)
-    explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|tu van theo ho gia dinh|huong dan tung buoc|bo qua)\b",housing_value))
+    explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|tim theo ngan sach|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|tu van theo ho gia dinh|huong dan tung buoc)\b",housing_value))
     if information or (
         re.search(r"\bgia (?:thue|mua)\b", value)
         and not re.search(r"\b(?:tim|muon|goi y|de xuat|co nha|co can ho)\b", value)
     ):
         explicit_search = False
-    priority_edit=bool(re.search(r"\b(?:uu tien|quan trong nhat|tim ky hon|bo uu tien|xoa uu tien)\b",value))
+    priority_edit=bool(re.search(r"\b(?:uu tien|quan trong nhat|tim ky hon|bo uu tien|xoa uu tien|bo dieu kien gan)\b",value))
     knowledge=bool(re.search(r"\b(?:la gi|thu tuc|quy trinh|thue phi|thue truoc ba|hop dong|so do|so hong|lai suat|vay ngan hang|can luu y|kien thuc)\b",value)) and not explicit_search and not reference
     knowledge=knowledge or bool(re.search(r"\b(?:ha tang|tien do|cau duong|khoi cong)\b",value)) and not explicit_search and not reference
     owned_budget=bool(re.search(r"\b(?:toi co|minh co|ngan sach|tai chinh|toi da|gioi han)\b",value))

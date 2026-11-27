@@ -13,11 +13,12 @@ UNIT = "|".join(UNITS)
 TOKEN = re.compile(r"(?<![\w.,])("+NUM+r")\s*("+UNIT+r")(?!\w)")
 _AMOUNT = rf"{NUM}\s*(?:{UNIT})(?!\w)"
 _RANGE_START = rf"(?:(?:{_AMOUNT}|{NUM})\s*(?:den|toi|[-–—])\s*)?"
+_SLASH_DATE = (r"(?:0?[1-9]|[12]\d|3[01])\s*/\s*thang\s+(?:0?[1-9]|1[0-2])\b"
+               r"(?:\s*[/.-]\s*\d{2,4}\b|\s+nam\s+\d{4}\b|\s*[.!?,;]?\s*$)")
 _RECURRING = re.compile(
     rf"(?<![\w.,/])(?:{_RANGE_START}{_AMOUNT}(?:\s*{_AMOUNT})*(?:\s+ruoi)?"
-    rf"|(?<!\bngay )(?<!\bthang ){_RANGE_START}(?P<bare>{NUM}))"
+    rf"|(?<!\bngay )(?<!\bthang )(?!{_SLASH_DATE}){_RANGE_START}(?P<bare>{NUM}))"
     r"\s*(?:/\s*|(?:theo|moi|mot|hang)\s+)(?:thang|nam|ngay)\b"
-    r"(?(bare)(?!\s+\d))"
 )
 
 @dataclass(frozen=True)

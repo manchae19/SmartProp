@@ -61,6 +61,10 @@ _TRANSACTION_ACTION = (
     rf"|tim\s+{_LISTING_OBJECT}(?!\s+(?:thuoc|hang|khoa|kho|may|sach|tre)\b))"
 )
 _NEGATED_TRANSACTION = re.compile(rf"\b(?:khong|chua)\s+(?:con\s+)?{_TRANSACTION_ACTION}")
+_STOP_LISTING = re.compile(
+    rf"\b(?:tam\s+dung|dung|ngung|huy(?:\s+bo)?|thoi)\s+(?:viec\s+)?"
+    rf"tim\s+(?:kiem(?:\s+(?:{_LISTING_OBJECT}|mua\b|thue\b))?|mua\b|thue\b|{_LISTING_OBJECT})"
+)
 _HYPOTHETICAL_TRANSACTION = re.compile(rf"^(?:neu(?:\s+nhu)?|gia su)\s+(?:(?:toi|minh)\s+)?{_TRANSACTION_ACTION}")
 _CLAUSE_BREAK = re.compile(r",(?=\s|[^\d])|[;!?]|\.(?=\s|$)|\b(?:nhung|ma|thay vao do)\b")
 NO_LISTING_ACTION = frozenset({"CONFLICT", "PURCHASE_DECLINED", "RENT_DECLINED", "RECURRING_AMOUNT_CLARIFICATION"})
@@ -104,21 +108,29 @@ def _transaction_clauses(value):
 def buy_to_let(value):
     return any(_PURCHASE_ACTION.search(clause) and _LET_PURPOSE.search(clause)
                for clause in _transaction_clauses(value)
-               if not _NEGATED_TRANSACTION.search(clause) and not _HYPOTHETICAL_TRANSACTION.match(clause))
+               if not _NEGATED_TRANSACTION.search(clause) and not _STOP_LISTING.search(clause)
+               and not _HYPOTHETICAL_TRANSACTION.match(clause))
 
 
 def listing_transaction(question):
     """Explicit listing action, excluding informational price questions."""
     text = re.sub(r"\bthuế\b", "tax", unicodedata.normalize("NFC", question.lower()))
     value = " ".join(fold(text).split())
+    clauses = _transaction_clauses(value)
+    declined = {match[1] or match[2] or "mua" for match in _NEGATED_TRANSACTION.finditer(value)}
+    canceled = any(_STOP_LISTING.search(clause) for clause in clauses)
+    affirmative = [clause for clause in clauses
+                   if not _NEGATED_TRANSACTION.search(clause) and not _STOP_LISTING.search(clause)
+                   and not _HYPOTHETICAL_TRANSACTION.match(clause)]
+    buy = any(_PURCHASE_ACTION.search(clause) for clause in affirmative)
+    if (canceled or declined & {"mua", "ban"}) and not buy and not any(
+        _RENT_ACTION.search(clause) for clause in affirmative
+    ):
+        return "PURCHASE_DECLINED"
     if transaction_information(value):
         return None
-    clauses = _transaction_clauses(value)
     if any(_HYPOTHETICAL_TRANSACTION.match(clause) for clause in clauses):
         return "CONFLICT"
-    declined = {match[1] or match[2] or "mua" for match in _NEGATED_TRANSACTION.finditer(value)}
-    affirmative = [clause for clause in clauses if not _NEGATED_TRANSACTION.search(clause)]
-    buy = any(_PURCHASE_ACTION.search(clause) for clause in affirmative)
     value = ", ".join(affirmative)
     investment = buy_to_let(value)
     rent_text = _RENTAL_INCOME.sub(" ", _LET_PURPOSE.sub(r"\1 ", value)) if investment else value
@@ -134,8 +146,6 @@ def listing_transaction(question):
         return "CONFLICT" if rent else "SALE"
     if rent:
         return "RENT"
-    if declined & {"mua", "ban"}:
-        return "PURCHASE_DECLINED"
     return "RENT_DECLINED" if declined else None
 
 
