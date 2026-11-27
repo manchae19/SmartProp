@@ -79,7 +79,7 @@ public class AdvisorOrchestrationService {
             ComparableEligibilityService comparableEligibility,
             AdvisorValuationAdapter valuationAdapter,
             AdvisorLocationIntelligenceService locationIntelligenceService,
-            @Value("${app.advisor.allow-research-comparables:true}") boolean allowResearchComparables) {
+            @Value("${app.advisor.allow-research-comparables:false}") boolean allowResearchComparables) {
         this.recommendationService = recommendationService;
         this.comparableService = comparableService;
         this.comparableEligibility = comparableEligibility;
@@ -124,6 +124,9 @@ public class AdvisorOrchestrationService {
             throw ApiInputs.bad("Thiếu thông tin bắt buộc: ngân sách, mục đích mua và loại bất động sản.");
         }
         ResolvedCriteria baseCriteria = resolveCriteria(rawRequest);
+        if (baseCriteria.includeResearch() && !isResearchEnabled()) {
+            throw ApiInputs.forbidden();
+        }
         NormalizedAdvisorFilter normFilter = locationIntelligenceService.normalizeAdvisorFilter(
             baseCriteria.district(), baseCriteria.ward());
         ResolvedCriteria criteria = new ResolvedCriteria(
@@ -153,9 +156,14 @@ public class AdvisorOrchestrationService {
 
         RecommendationDtos.Response recRes = criteria.includeResearch()
             ? recommendationService.recommendResearch(recReq)
-            : recommendationService.recommend(recReq);
+            : recommendationService.recommendPublic(recReq);
 
-        LinkedHashSet<String> warnings = new LinkedHashSet<>(recRes.warnings());
+        LinkedHashSet<String> warnings = new LinkedHashSet<>();
+        for (String w : recRes.warnings()) {
+            if (criteria.includeResearch() || !containsNonPublicMetadata(w)) {
+                warnings.add(w);
+            }
+        }
         if (normFilter.warning() != null) {
             warnings.add(normFilter.warning());
         }
@@ -165,11 +173,20 @@ public class AdvisorOrchestrationService {
                 + " VND); các tin vượt ngân sách gốc được gắn nhãn rõ ràng.");
         }
 
+        List<PropertyResult> candidateProps = criteria.includeResearch()
+            ? recRes.topProperties()
+            : recRes.topProperties().stream().filter(AdvisorOrchestrationService::isPublicLiveCandidate).toList();
+        List<RecommendationDtos.AreaResult> effectiveAreas = criteria.includeResearch()
+            ? recRes.topAreas()
+            : recRes.topAreas().stream()
+                .filter(a -> a.unverifiedCount() == 0 && a.needsReviewCount() == 0)
+                .toList();
+
         // Batch-enrich location intelligence & purpose-aware GIS insights (1 SQL round-trip for coordinates)
         Map<String, PropertyGisEnrichment> gisByPropertyId = locationIntelligenceService.enrichProperties(
-            recRes.topProperties(), criteria.purpose());
+            candidateProps, criteria.purpose());
         List<AreaPurposeInsight> areaLocationInsights = locationIntelligenceService.buildAreaPurposeInsights(
-            recRes.topAreas(), criteria.purpose());
+            effectiveAreas, criteria.purpose());
 
         // Probe FastAPI Valuation service once per consultation for fast partial-result fallback.
         String valuationStatus;
@@ -192,11 +209,18 @@ public class AdvisorOrchestrationService {
         boolean hasResearchComparable = false;
 
         List<AdvisedProperty> advisedProperties = new ArrayList<>();
-        for (PropertyResult prop : recRes.topProperties()) {
-            boolean isTinix = "TINIX_AI".equals(prop.source().kind());
+        for (PropertyResult prop : candidateProps) {
+            boolean isTinix = "TINIX_AI".equals(prop.source().kind())
+                || "HYBRID_ELIGIBLE_RESEARCH".equals(prop.qualityStatus());
             boolean isPlatform = "PROPERTY".equals(prop.source().kind()) && "PLATFORM_PUBLISHED".equals(prop.qualityStatus());
-            boolean isVerifiedExt = "EXTERNAL".equals(prop.source().kind()) && "VERIFIED".equals(prop.verificationStatus());
+            boolean isVerifiedExt = "EXTERNAL".equals(prop.source().kind())
+                && "VALID".equals(prop.qualityStatus())
+                && "VERIFIED".equals(prop.verificationStatus());
             boolean liveListing = isPlatform || isVerifiedExt;
+            if (!criteria.includeResearch() && (isTinix || !liveListing)) {
+                // Defense in depth: SAFE mode never surfaces research or unverified/needs-review records.
+                continue;
+            }
             boolean researchRef = isTinix;
             String availabilityStatus = isPlatform ? "PUBLISHED_ACTIVE"
                 : (isVerifiedExt ? "VERIFIED_EXTERNAL"
@@ -216,7 +240,11 @@ public class AdvisorOrchestrationService {
             } else {
                 fitReasons.add("Phù hợp trong trần ngân sách mục tiêu (" + budgetDeltaPct.toPlainString() + "% so với trần).");
             }
-            fitReasons.addAll(prop.explanations());
+            for (String exp : prop.explanations()) {
+                if (criteria.includeResearch() || !containsResearchMetadata(exp)) {
+                    fitReasons.add(exp);
+                }
+            }
 
             // Sanitize listing source URL & enforce null URL for research observations
             Source safeSource = sanitizeSource(prop.source(), researchRef);
@@ -260,7 +288,12 @@ public class AdvisorOrchestrationService {
                 );
             }
 
-            List<String> itemWarnings = new ArrayList<>(prop.warnings());
+            List<String> itemWarnings = new ArrayList<>();
+            for (String w : prop.warnings()) {
+                if (criteria.includeResearch() || !containsResearchMetadata(w)) {
+                    itemWarnings.add(w);
+                }
+            }
             if (researchRef && itemWarnings.stream().noneMatch(w -> w.contains("CC BY-NC 4.0"))) {
                 itemWarnings.add(ComparableSourceClassifier.TINIX_ATTRIBUTION);
             }
@@ -329,6 +362,12 @@ public class AdvisorOrchestrationService {
             partial
         );
 
+        int effectiveEligibleCount = criteria.includeResearch()
+            ? recRes.eligibleCandidateCount()
+            : (recRes.topProperties().size() == candidateProps.size()
+                ? recRes.eligibleCandidateCount()
+                : candidateProps.size());
+
         return new AdvisorResponse(
             ADVISOR_VERSION,
             criteria.includeResearch() ? "INTERNAL_RESEARCH" : "SAFE",
@@ -337,9 +376,9 @@ public class AdvisorOrchestrationService {
             SCORE_DISCLAIMER,
             criteria,
             serviceStatus,
-            recRes.eligibleCandidateCount(),
+            effectiveEligibleCount,
             recRes.scoringWeights(),
-            recRes.topAreas(),
+            effectiveAreas,
             areaLocationInsights,
             List.copyOf(advisedProperties),
             List.copyOf(warnings)
@@ -380,8 +419,11 @@ public class AdvisorOrchestrationService {
             COMPARABLES_PER_PROPERTY
         );
 
-        ComparableDtos.Response raw = comparableService.rank(compReq);
-        boolean allowTinix = allowResearchComparables || includeResearchMode;
+        boolean allowTinix = includeResearchMode
+            && isResearchEnabled()
+            && allowResearchComparables
+            && comparableService.isResearchEnabled();
+        ComparableDtos.Response raw = comparableService.rank(compReq, allowTinix);
 
         List<ComparableItem> mapped = new ArrayList<>();
         for (ComparableDtos.Candidate c : raw.comparables()) {
@@ -416,9 +458,39 @@ public class AdvisorOrchestrationService {
             ));
         }
 
+        List<String> compWarnings = raw.warnings().stream()
+            .filter(w -> allowTinix || !containsResearchMetadata(w))
+            .toList();
         String status = mapped.isEmpty() ? "EMPTY_NO_MATCHES" : "AVAILABLE";
         String stage = mapped.isEmpty() ? "NONE" : raw.searchStage();
-        return new ComparableEvidence(status, mapped.size(), stage, List.copyOf(mapped), raw.warnings());
+        return new ComparableEvidence(status, mapped.size(), stage, List.copyOf(mapped), compWarnings);
+    }
+
+    private static boolean isPublicLiveCandidate(PropertyResult prop) {
+        if (prop == null || prop.source() == null) return false;
+        if ("TINIX_AI".equals(prop.source().kind()) || "HYBRID_ELIGIBLE_RESEARCH".equals(prop.qualityStatus())) {
+            return false;
+        }
+        if ("PROPERTY".equals(prop.source().kind())) {
+            return "PLATFORM_PUBLISHED".equals(prop.qualityStatus());
+        }
+        if ("EXTERNAL".equals(prop.source().kind())) {
+            return "VALID".equals(prop.qualityStatus()) && "VERIFIED".equals(prop.verificationStatus());
+        }
+        return false;
+    }
+
+    private static boolean containsNonPublicMetadata(String text) {
+        if (text == null) return false;
+        return containsResearchMetadata(text)
+            || text.startsWith("UNVERIFIED:")
+            || text.startsWith("NEEDS_REVIEW:");
+    }
+
+    private static boolean containsResearchMetadata(String text) {
+        if (text == null) return false;
+        return text.contains("TiniX") || text.contains("TINIX") || text.contains("CC BY-NC")
+            || text.startsWith("INTERNAL_DEMO:");
     }
 
     static ResolvedCriteria resolveCriteria(AdvisorRequest req) {

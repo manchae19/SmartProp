@@ -64,26 +64,74 @@ public class MarketAnalyticsService {
 
     private record Cohort(List<CohortRow> rows, long loadedAt) {}
 
+    private record CacheKey(
+        boolean researchScope,
+        String district,
+        String ward,
+        String propertyType,
+        Source source,
+        boolean includeResearch
+    ) {}
+
     private final MarketAnalyticsRepository repository;
-    private final ConcurrentHashMap<String, Cached> responseCache = new ConcurrentHashMap<>();
+    private final boolean researchEnabled;
+    private final ConcurrentHashMap<CacheKey, Cached> publicResponseCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<CacheKey, Cached> researchResponseCache = new ConcurrentHashMap<>();
     private volatile Cohort researchCohort;
     private volatile Cohort safeCohort;
 
-    public MarketAnalyticsService(MarketAnalyticsRepository repository) {
+    @org.springframework.beans.factory.annotation.Autowired
+    public MarketAnalyticsService(
+            MarketAnalyticsRepository repository,
+            @org.springframework.beans.factory.annotation.Value("${app.market.research-enabled:false}") boolean researchEnabled) {
         this.repository = repository;
+        this.researchEnabled = researchEnabled;
     }
 
+    public MarketAnalyticsService(MarketAnalyticsRepository repository) {
+        this(repository, false);
+    }
+
+    public boolean isResearchEnabled() {
+        return researchEnabled;
+    }
+
+    public static boolean requestsResearch(String source, Boolean includeResearch) {
+        if (Boolean.TRUE.equals(includeResearch)) return true;
+        return source != null && "TINIX_RESEARCH".equalsIgnoreCase(source.strip());
+    }
+
+    /** Public entrypoint: fails closed if research data or source is requested. */
     public Response analytics(String district, String ward, String propertyType, String source, Boolean includeResearch) {
+        if (requestsResearch(source, includeResearch)) {
+            throw ApiInputs.forbidden();
+        }
+        Query q = validate(district, ward, propertyType, source, false);
+        return cachedOrCompute(q, false, publicResponseCache);
+    }
+
+    /** Authorized research entrypoint: requires server-side research flag to be enabled. */
+    public Response analyticsResearch(String district, String ward, String propertyType, String source, Boolean includeResearch) {
+        if (!researchEnabled) {
+            throw ApiInputs.forbidden();
+        }
         Query q = validate(district, ward, propertyType, source, includeResearch);
-        String key = key(q);
+        if (!q.includeResearch()) {
+            return cachedOrCompute(q, false, publicResponseCache);
+        }
+        return cachedOrCompute(q, true, researchResponseCache);
+    }
+
+    private Response cachedOrCompute(Query q, boolean researchScope, ConcurrentHashMap<CacheKey, Cached> cache) {
+        CacheKey key = new CacheKey(researchScope, q.district(), q.ward(), q.propertyType(), q.source(), q.includeResearch());
         long now = System.currentTimeMillis();
-        Cached cached = responseCache.get(key);
+        Cached cached = cache.get(key);
         if (cached != null && cached.expiresAt() > now) {
             return cached.response();
         }
         Response response = compute(q);
-        if (responseCache.size() >= MAX_CACHE_ENTRIES) responseCache.clear();
-        responseCache.put(key, new Cached(response, now + RESPONSE_TTL_MILLIS));
+        if (cache.size() >= MAX_CACHE_ENTRIES) cache.clear();
+        cache.put(key, new Cached(response, now + RESPONSE_TTL_MILLIS));
         return response;
     }
 
@@ -113,8 +161,11 @@ public class MarketAnalyticsService {
         for (GroupRow r : c.sources()) {
             if (r.key() != null) sourceCounts.put(r.key(), r.count());
         }
+        List<Source> visibleSources = q.includeResearch()
+            ? List.of(Source.SMARTPROP, Source.EXTERNAL_LISTING, Source.TINIX_RESEARCH)
+            : List.of(Source.SMARTPROP, Source.EXTERNAL_LISTING);
         List<SourceCount> bySource = new ArrayList<>();
-        for (Source s : List.of(Source.SMARTPROP, Source.EXTERNAL_LISTING, Source.TINIX_RESEARCH)) {
+        for (Source s : visibleSources) {
             long n = sourceCounts.getOrDefault(s.name(), 0L);
             bySource.add(new SourceCount(s.name(), sourceLabel(s), n, s == Source.TINIX_RESEARCH,
                 s == Source.TINIX_RESEARCH ? RESEARCH_LICENSE : null));
@@ -156,7 +207,13 @@ public class MarketAnalyticsService {
             if (current != null && System.currentTimeMillis() - current.loadedAt() < COHORT_TTL_MILLIS) {
                 return current.rows();
             }
-            Cohort fresh = new Cohort(repository.loadCohort(includeResearch), System.currentTimeMillis());
+            List<CohortRow> loaded = repository.loadCohort(includeResearch);
+            if (!includeResearch) {
+                loaded = loaded.stream()
+                    .filter(r -> r != null && !"TINIX_RESEARCH".equalsIgnoreCase(r.source()))
+                    .toList();
+            }
+            Cohort fresh = new Cohort(loaded, System.currentTimeMillis());
             if (includeResearch) researchCohort = fresh;
             else safeCohort = fresh;
             return fresh.rows();
@@ -166,7 +223,8 @@ public class MarketAnalyticsService {
     private static List<CohortRow> filtered(List<CohortRow> all, Query q) {
         String src = q.source() == null || q.source() == Source.ALL ? null : q.source().name();
         return all.stream().filter(r ->
-            (q.district() == null || q.district().equals(r.district()))
+            (q.includeResearch() || !"TINIX_RESEARCH".equalsIgnoreCase(r.source()))
+                && (q.district() == null || q.district().equals(r.district()))
                 && (q.ward() == null || q.ward().equals(r.ward()))
                 && (q.propertyType() == null || q.propertyType().equalsIgnoreCase(r.propertyType()))
                 && (src == null || src.equals(r.source())))
@@ -257,10 +315,6 @@ public class MarketAnalyticsService {
         String t = value.strip();
         if (t.isEmpty() || "ALL".equalsIgnoreCase(t) || "Tất cả".equalsIgnoreCase(t)) return null;
         return t;
-    }
-
-    private static String key(Query q) {
-        return String.valueOf(q.district()) + '|' + q.ward() + '|' + q.propertyType() + '|' + q.source() + '|' + q.includeResearch();
     }
 
     private static String sourceLabel(Source s) {

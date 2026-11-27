@@ -2,7 +2,7 @@ import React from 'react'
 import AmenityEvidence from './AmenityEvidence.jsx'
 import AdvisorLocationCard from './AdvisorLocationCard.jsx'
 import AdvisorEvidencePanel from './AdvisorEvidencePanel.jsx'
-import { advisorWarning, safeAdvisorPropertyUrl } from './advisorAnalysis.js'
+import { advisorWarning, resolveAdvisorResultsView, safeAdvisorPropertyUrl } from './advisorAnalysis.js'
 
 const money = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value) || 0)
@@ -10,14 +10,14 @@ const score = (value) => (Number.isFinite(Number(value)) ? Math.round(Number(val
 const area = (value) => (Number.isFinite(Number(value)) ? `${Number(value).toLocaleString('vi-VN', { maximumFractionDigits: 1 })} m²` : '—')
 
 /** Results of one Unified Advisor consultation: areas + ranked properties with evidence. */
-export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi }) {
-  const properties = result?.recommendedProperties || []
-  const isResearch = result?.mode === 'INTERNAL_RESEARCH'
-  const isPartial = Boolean(result?.serviceStatus?.partialResult)
+export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi, canViewResearch = false }) {
+  const view = resolveAdvisorResultsView(result, canViewResearch)
+  if (!view) return null
+  const { isResearch, isPartial, topAreas, properties, warnings } = view
 
   return (
     <div className="ar-root" data-advisor-results>
-      <div className={`ar-mode-note${isResearch ? ' research' : ''}`} data-advisor-mode={result?.mode}>
+      <div className={`ar-mode-note${isResearch ? ' research' : ''}`} data-advisor-mode={isResearch ? 'INTERNAL_RESEARCH' : 'SAFE'}>
         {isResearch
           ? 'Chế độ nghiên cứu nội bộ (ADMIN · TiniX CC BY-NC 4.0) — quan sát lịch sử đã lọc holdout, không phải tin đang bán.'
           : 'Chế độ công khai an toàn (SAFE) — chỉ bất động sản đang công khai hợp lệ.'}
@@ -30,11 +30,11 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
         </p>
       ) : null}
 
-      {result?.topAreas?.length ? (
+      {topAreas.length ? (
         <section className="ar-section">
           <h3>Khu vực phù hợp nhất</h3>
           <div className="area-grid">
-            {result.topAreas.map((item, index) => (
+            {topAreas.map((item, index) => (
               <article className="area-card" key={`${item.district}:${item.ward || ''}:${index}`} data-top-area>
                 <div className="area-card-head">
                   <strong>{item.district}{item.ward ? ` · ${item.ward}` : ''}</strong>
@@ -105,7 +105,12 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
                     </dl>
                   ) : null}
 
-                  <AdvisorEvidencePanel valuation={property.valuationEvidence} comparable={property.comparableEvidence} />
+                  <AdvisorEvidencePanel
+                    valuation={property.valuationEvidence}
+                    comparable={property.comparableEvidence}
+                    mode={isResearch ? 'INTERNAL_RESEARCH' : 'SAFE'}
+                    allowResearch={isResearch}
+                  />
 
                   {property.amenityEvidence ? <AmenityEvidence evidence={property.amenityEvidence} compact /> : null}
 
@@ -123,9 +128,9 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi 
         )}
       </section>
 
-      {result?.warnings?.length ? (
+      {warnings.length ? (
         <ul className="ar-warnings">
-          {result.warnings.map((warning, index) => <li key={index + ':' + warning}>{advisorWarning(warning)}</li>)}
+          {warnings.map((warning, index) => <li key={index + ':' + warning}>{advisorWarning(warning)}</li>)}
         </ul>
       ) : null}
     </div>
