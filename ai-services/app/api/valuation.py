@@ -1,4 +1,6 @@
 """Valuation endpoints; models live in application state, not request state."""
+import json
+import os
 import time
 from datetime import datetime, timezone
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
@@ -131,8 +133,22 @@ def _supported_locations(predictor) -> set:
     return {clean_category(v) for v in (info.get("supported_districts") or [])}
 
 
+def _capture_for_test(payload):
+    """Test-only capture: writes the received payload to a file when the operator points
+    SMARTPROP_TEST_CAPTURE at one. Never exposed as an endpoint, never enabled by default."""
+    target = os.environ.get("SMARTPROP_TEST_CAPTURE")
+    if not target:
+        return
+    try:
+        with open(target, "a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload.model_dump(), ensure_ascii=False, default=str) + "\n")
+    except OSError:
+        pass
+
+
 @router.post("/predict", response_model=V1_3PreviewResponse)
 def predict(payload: ValuationRequest, request: Request, background_tasks: BackgroundTasks):
+    _capture_for_test(payload)
     predictor = predictor_for(request)
     # The model has no way to price a district it never trained on, so an unknown
     # district is a client error rather than a silent extrapolation.
