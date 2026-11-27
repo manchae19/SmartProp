@@ -114,6 +114,8 @@ class V1_3PreviewResponse(BaseModel):
     naive_price_vnd: int
     features_used: dict
     missing_features: list[str]
+    # WP-04 additive explanation object; the legacy shap_explanation above is unchanged.
+    explanation: dict | None = None
     # Additive: the caller needs to see when the model could not verify the location.
     warnings: list[str] = []
     shap_explanation: ShapExplanation | None = None

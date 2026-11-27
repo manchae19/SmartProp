@@ -15,6 +15,10 @@ import pandas as pd
 import xgboost as xgb
 
 from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3, real_feature_input_enabled
+from app.models.xgboost.explanation_v1_3 import (
+    build_explanation,
+    unavailable_explanation,
+)
 from app.models.xgboost.features_v1_3 import (
     ALL_FEATURES,
     LIMITS,
@@ -116,7 +120,8 @@ class PredictorV1_3:
             "real_feature_input_enabled": real_feature_input_enabled(),
         }
 
-    def predict(self, record: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, record: Dict[str, Any],
+                raw_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Execute in-memory prediction from canonical V1.3 record."""
         # 1. Mandatory fields
         for field in ["area", "normalized_type", "district"]:
@@ -250,6 +255,29 @@ class PredictorV1_3:
         if record.get("ward") and clean_category(record["ward"]) not in vocabs.get("ward", []):
             warnings.append(f"Phường/xã '{record.get('ward')}' ít dữ liệu hoặc mới; mô hình áp dụng trọng số trung bình.")
 
+        # WP-04: additive explanation built from the SHAP values already computed above.
+        # The model is NOT run a second time; the prediction path is untouched. A failure here
+        # is isolated - the price stays valid and the explanation reports UNAVAILABLE.
+        try:
+            provided = [k for k, v in (raw_payload or {}).items() if v is not None]
+            explanation = build_explanation(
+                features=list(X.columns),
+                contributions=[float(c) for c in contribs[:-1]],
+                base_log=base_log,
+                margin_log=log_pred,
+                naive_price_vnd=int(round(naive_vnd)),
+                calibration_policy=method,
+                calibration_factor=float(factor),
+                calibrated_price_vnd=int(round(calibrated_vnd)),
+                encoded_row={name: X.iloc[0][name] for name in X.columns},
+                provided=provided,
+                model_type=record["normalized_type"],
+                warnings=warnings,
+            )
+        except Exception as error:  # noqa: BLE001 - explanation must never break inference
+            explanation = unavailable_explanation(
+                f"Không tạo được giải thích: {type(error).__name__}")
+
         return {
             "model_version": "v1.3",
             "model_run": "tinix_xgboost_v1_3_integrated",
@@ -290,6 +318,7 @@ class PredictorV1_3:
                 "method": "TreeSHAP (Native Additive Contribution)",
                 "summary_vi": f"Giá cơ sở phân khúc của V1.3 là {round(base_price_vnd / 1e9, 2)} tỷ đồng. Hiệu chỉnh Duan Smearing phân khúc {band_of(calibrated_vnd)} là {round(factor, 4)}x.",
             },
+            "explanation": explanation,
         }
 
     def predict_from_v6_payload(self, v6_payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -298,4 +327,4 @@ class PredictorV1_3:
             v6_payload,
             district_vocabulary=self.schema.get("vocabularies", {}).get("district"),
         )
-        return self.predict(v1_3_record)
+        return self.predict(v1_3_record, raw_payload=v6_payload)
