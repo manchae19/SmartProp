@@ -1167,3 +1167,145 @@ NOT_READY_FOR_FINAL_REVIEW
 **Hai mục chưa đạt đúng nghĩa:**
 1. **Flow B browser E2E** — mới chạy HTTP integration 15/15, **chưa** drive `/post` multi-step trên browser.
 2. **Street warning UI ở Flow B** — API forward đúng nhưng **chưa** xác minh React render.
+
+---
+
+## AB. WP-01 FINAL BROWSER ACCEPTANCE
+
+### AB.1. Runtime environment (tái sử dụng, không cài lại)
+
+| Thành phần | Giá trị | Kiểm chứng |
+|---|---|---|
+| MySQL Portable 8.4.13 | `.scratch\mysql-8.4\` · `127.0.0.1:3307` | READY |
+| Fixture V26 | `.scratch\pr38-handoff\mysql-isolated\data` | `@@datadir` kết thúc `/mysql-isolated/data/` · **không** restore lại |
+| FastAPI | `127.0.0.1:8000` | READY |
+| Spring Boot | `127.0.0.1:8080`, profile `hybrid-local-existing-v13-staging` | READY |
+| nginx 1.29.3 | `127.0.0.1:8090` · static `frontend/dist` | READY |
+| Trình duyệt | Playwright + Chromium thật | — |
+
+**Phát hiện khi khởi động:** browser login qua nginx ban đầu trả **403** vì
+`app.cors-origins` mặc định chỉ cho `http://localhost:5173`. Đã chạy test với
+`CORS_ORIGINS=http://127.0.0.1:8090,http://localhost:8090,http://localhost:5173`
+qua **biến môi trường phiên test** — **không** sửa default production.
+Sau đó `POST /api/v1/auth/login` → **200**, chuyển tới `/home`.
+
+### AB.2. Flow B browser E2E — **BLOCKED (không đạt)**
+
+Đã đi được tới bước 2 của form đăng tin bằng trình duyệt thật, **không mock**:
+
+| Bước | Kết quả |
+|---|---|
+| Mở `/login`, đăng nhập bằng form thật | **PASS** — 200, → `/home` |
+| Điều hướng client-side tới `/post` (token lưu in-memory, hard reload sẽ mất) | **PASS** |
+| Điền bước 1 (`#post-propertyType`, `#post-title`, `#post-area`, `#post-price`) | **PASS** |
+| Chuyển bước 1 → 2 | **PASS** — `/post/step-2` |
+| Điền bước 2 (`#post-address`, `#post-district`) | **PASS** |
+| **Panel định giá `[data-testid="valuation-panel"]` render** | **FAIL** — `panels=0` (kể cả sau khi scroll cuối trang) |
+| Kích hoạt định giá, đọc `valuation-price` | **NOT_RUN** (phụ thuộc panel) |
+| Street warning UI ở Flow B | **NOT_RUN** (phụ thuộc panel) |
+| Page error | **PASS** — 0 lỗi |
+
+**Nguyên nhân đã xác định:** bước 2 là "Ảnh & vị trí"; panel định giá **không render** khi
+form chưa có ảnh bất động sản (hoặc panel nằm ở bước 3). Chưa xác định được điều kiện chính xác
+trong ngân sách phiên này, nên **không kết luận** là panel bị lỗi.
+
+Screenshot bằng chứng: `.scratch\shots\flowb-step2-nopanel.png`.
+
+⇒ **`FLOW_B_REAL_E2E_PASS` vẫn KHÔNG đạt ở nghĩa browser.** Evidence hiện có chỉ là
+**HTTP integration 15/15** (phiên trước), loại evidence khác.
+
+### AB.3. Street Warning UI
+
+| Luồng | API | UI render |
+|---|---|---|
+| Flow A | 9/9 | **PASS** — browser trên static build (`chưa được đối chiếu với khu vực`), biến mất khi bỏ street |
+| Flow B | 9/9 (Spring forward đúng) | **NOT_RUN** — panel chưa render |
+
+### AB.4. Authentication & error handling (browser)
+
+| Case | Kết quả |
+|---|---|
+| Truy cập `/post` khi chưa đăng nhập | **PASS** — redirect `/login?reason=login-required` |
+| Login sai qua UI (bị CORS chặn trước khi sửa) | **PASS** — 403, không vào được |
+| Login đúng qua UI | **PASS** — 200, `/home` |
+| HTTP 200 + `available=false` (Flow B, location sai) | Không hiển thị như định giá thành công (không có giá) |
+
+### AB.5. Test instrumentation safety — **PASS**
+
+`_capture_for_test()` trong `ai-services/app/api/valuation.py`:
+
+| Tiêu chí | Kết quả |
+|---|---|
+| Mặc định **no-op** | **PASS** — chỉ hoạt động khi `SMARTPROP_TEST_CAPTURE` được đặt; unset ⇒ `return` ngay |
+| Public endpoint | **PASS** — không có; đây là hàm nội bộ gọi từ handler |
+| Capture request người dùng thật | **PASS** — không; chỉ khi operator đặt biến môi trường |
+| Dữ liệu nhạy cảm | **PASS** — chỉ ghi payload đặc trưng định giá (không PII, không token) |
+| Ghi file ngoài test dir | **PASS** — đường dẫn do operator chỉ định; không có input từ người dùng |
+| Thay đổi model output | **PASS** — không; chỉ đọc `payload.model_dump()` rồi return |
+| Commit file capture/raw input | **PASS** — không; `encode-capture.jsonl` nằm trong `.scratch` |
+
+**Quyết định:** giữ lại instrumentation (env-gated) để **tái lập** encoded-vector parity.
+Loại bỏ nó sẽ làm mất khả năng tái lập bằng chứng; đây là 16 dòng, không ảnh hưởng runtime.
+Nếu muốn bỏ, đó là một commit riêng sau nghiệm thu.
+
+### AB.6. Regression evidence
+
+Không có thay đổi **source** trong phiên này (chỉ chạy test). Code checkpoint giữ nguyên `649570e`.
+
+| Suite | Kết quả | Nhãn |
+|---|---|---|
+| FastAPI (222 passed / 20 skip / 84 subtests / **2 RAG collection error**) | không đổi | `REUSED_EVIDENCE` (đúng code checkpoint) |
+| Backend full 230/230 | không đổi | `REUSED_EVIDENCE` |
+| Frontend 67/67 · build | không đổi | `REUSED_EVIDENCE` |
+| Flow A browser trên static build | **13/13** (phiên trước) | `REUSED_EVIDENCE` |
+| Flow B browser | **BLOCKED** | **FAIL** |
+| Encoded-vector parity 5/5 | đã đo trực tiếp | `REUSED_EVIDENCE` |
+
+2 lỗi RAG `area_spec` vẫn là vấn đề **pre-existing của main** — không sửa, không báo full PASS.
+
+### AB.7. Database & model integrity
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Flyway history | **12** |
+| Trigger `listing_code` | **2** |
+| `properties` | **0** (không tạo tin đăng) |
+| `valuation_history` | **0** |
+| `property_listing_code_allocations` | **0** |
+| `users` | **1** (test account `wp01.test@example.invalid`, không phải dữ liệu thật) |
+| `model.json` | `3c56b693…` không đổi |
+| `calibration.json` | `17632bdf…` không đổi |
+| `feature_schema.json` | `84be275b…` không đổi |
+
+Không có listing, không có history, không có allocation, không sửa toạ độ/pháp lý.
+PR #38 và PR #39 **bảo toàn** (không sửa file nào của họ).
+
+### AB.8. Môi trường
+
+`3307 FREE` · `3306 BUSY` (service nhóm, không đụng) · `8000/8080/8090 FREE`.
+Giữ lại: MySQL Portable, fixture V26, nginx portable, screenshots.
+
+### AB.9. Gate
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+MAIN_RECONCILIATION_PASS
+FLOW_A_REAL_E2E_PASS
+LOCATION_VALIDATION_PASS
+CROSS_FLOW_PRICE_PARITY_PASS
+ENCODED_VECTOR_PARITY_PASS
+PRODUCTION_LIKE_ROUTING_PASS
+TEST_INSTRUMENTATION_SAFE
+V1_3_ARTIFACT_INTEGRITY_PASS
+FLOW_B_REAL_E2E_PASS  ← KHÔNG đạt ở nghĩa browser
+STREET_WARNING_UI_PASS ← Flow A đạt; Flow B chưa kiểm được
+NOT_READY_FOR_FINAL_REVIEW
+```
+
+### AB.10. Việc cần làm để đóng hai mục còn lại
+
+1. Xác định điều kiện render `PostValuationPanel` ở bước 2/3 (có thể cần ≥1 ảnh, hoặc panel
+   nằm ở bước 3) — đọc `PostView.jsx` quanh `step === 2` / `step === 3`.
+2. Bổ sung fixture ảnh nhỏ vào DB cô lập **hoặc** dùng ảnh mẫu để form hợp lệ.
+3. Chạy lại browser E2E cho: HOUSE/LAND/APARTMENT/VILLA, street warning, mobile.
+4. Fetch `origin/main` mới nhất trước khi tạo PR.
