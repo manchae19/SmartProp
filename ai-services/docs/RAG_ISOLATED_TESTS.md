@@ -31,3 +31,19 @@ loopback sockets owned by that test process. A blocked attempt fails the run
 even if code catches the exception. Use in-memory ASGI, HTTP transports,
 and mocked SQL for these tests. The guard does not sandbox child processes
 or arbitrary native binaries. Only run the repository's offline test suite.
+
+Install Node.js using the version range in `frontend/package.json` to run the
+Python-to-browser contract tests. These tests pass actual FastAPI responses to
+the frontend modules in a Node process. They need no HTTP listener.
+
+For the Spring strict-area integration test, use a fresh loopback-only MySQL
+instance with a separate datadir and an empty `rag_area_fixture` schema. Give a
+dedicated `rag_area_fixture` test user access to that schema only. Check
+`@@port`, `@@datadir` and `@@server_uuid` against the fixture identity and
+set `RAG_AREA_FIXTURE_PORT`, `RAG_AREA_FIXTURE_DATADIR` and
+`RAG_AREA_FIXTURE_UUID` accordingly. Supply the test user's password via
+`RAG_AREA_FIXTURE_PASSWORD`. From `backend`, run
+`./mvnw.cmd "-Dtest=PropertyStrictAreaIT" test`. The test verifies the
+identity and empty schema before creating temporary fixture tables. It runs
+the real controller and JPA specification against MySQL. Ports 3306, 3307
+and 3311 are rejected. The fixture does not run Flyway.

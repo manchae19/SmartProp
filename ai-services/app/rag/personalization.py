@@ -24,6 +24,8 @@ _AREA_UNIT = r"\s*(?:m2|m²|met vuong|m vuong)(?!\w)"
 _AREA_RANGE = re.compile(r"(?<![\w.+-])(?:tu\s*)?" + _AREA_NUMBER + r"(?:" + _AREA_UNIT + r")?\s*(?:den|toi|-|~)\s*"
                          + _AREA_NUMBER + _AREA_UNIT)
 _AREA_VALUE = re.compile(r"(?<![\w.+-])" + _AREA_NUMBER + _AREA_UNIT)
+AREA_COMPARISON = (r"(?:nho hon|thap hon|it hon|be hon|lon hon|cao hon|nhieu hon|rong hon|"
+                   r"toi da|khong qua|khong vuot|nhieu nhat|toi thieu|it nhat|duoi|tren|hon|tu)")
 
 
 def _area(raw):
@@ -46,28 +48,38 @@ def area_spec(question, *, allow_bare=False):
     """
     value = fold(question).replace(",", ".").replace("–", "-").replace("—", "-")
     spec = {"minAreaSqm": None, "maxAreaSqm": None, "minAreaExclusive": False, "maxAreaExclusive": False}
-    ranged = _AREA_RANGE.search(value)
-    if ranged:
-        low, high = _area(ranged.group(1)), _area(ranged.group(2))
+
+    def constrain(side, area, exclusive=False):
+        bound, flag = side + "AreaSqm", side + "AreaExclusive"
+        previous = Decimal(spec[bound]) if spec[bound] is not None else None
+        if previous is None or (area > previous if side == "min" else area < previous):
+            spec.update({bound: _plain(area), flag: exclusive})
+        elif area == previous and exclusive:
+            spec[flag] = True
+
+    ranges = list(_AREA_RANGE.finditer(value))
+    for ranged in ranges:
+        low, high = _area(ranged[1]), _area(ranged[2])
         if low is None or high is None or low > high:
             return None
-        spec.update(minAreaSqm=_plain(low), maxAreaSqm=_plain(high))
-        return spec
-    found = False
+        constrain("min", low)
+        constrain("max", high)
+    value = _AREA_RANGE.sub(lambda match: " " * len(match[0]), value)
+    found = bool(ranges)
     for match in _AREA_VALUE.finditer(value):
         area = _area(match.group(1))
         if area is None:
             return None
         before = value[max(0, match.start() - 32):match.start()].strip()
         after = value[match.end():match.end() + 32].strip()
-        if re.search(r"\b(?:tren|hon|lon hon|cao hon|nhieu hon|rong hon)\s*$", before):
-            spec.update(minAreaSqm=_plain(area), minAreaExclusive=True)
-        elif re.search(r"\b(?:duoi|nho hon|thap hon|it hon|be hon)\s*$", before):
-            spec.update(maxAreaSqm=_plain(area), maxAreaExclusive=True)
+        if re.search(r"\b(?:duoi|nho hon|thap hon|it hon|be hon)\s*$", before):
+            constrain("max", area, True)
         elif re.search(r"\b(?:toi da|khong qua|khong vuot|nhieu nhat)\s*$", before) or after.startswith("tro xuong"):
-            spec.update(maxAreaSqm=_plain(area), maxAreaExclusive=False)
+            constrain("max", area)
+        elif re.search(r"\b(?:tren|hon|lon hon|cao hon|nhieu hon|rong hon)\s*$", before):
+            constrain("min", area, True)
         else:
-            spec.update(minAreaSqm=_plain(area), minAreaExclusive=False)
+            constrain("min", area)
         found = True
     if not found and allow_bare:
         bare = re.fullmatch(r"\s*" + _AREA_NUMBER + r"\s*", value)

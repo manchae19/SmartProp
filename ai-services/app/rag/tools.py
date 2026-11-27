@@ -20,6 +20,9 @@ def _property_search_params(criteria):
                        ("minAreaSqm", "minArea"), ("maxAreaSqm", "maxArea")):
         if criteria.get(key) is not None:
             params[param] = str(criteria[key])
+    for flag in ("minAreaExclusive", "maxAreaExclusive"):
+        if criteria.get(flag):
+            params[flag] = "true"
     # The Java route rejects crossed price bounds. The caller still checks both bounds.
     if "minPrice" in params and "maxPrice" in params:
         if Decimal(params["minPrice"]) > Decimal(params["maxPrice"]):

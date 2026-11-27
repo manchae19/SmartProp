@@ -12,7 +12,7 @@ from .intent import asks_for_amenities, empty_search_answer, poi_categories, CAT
 from .followup import (classification, detect_district, budget_from_followup)
 from .session import SessionStore, MAX_PROPERTY_IDS
 from .money import parse_budget, format_vnd
-from .locality import amenity_locality
+from .locality import amenity_locality, is_listing_location_edit
 from .tool_registry import ToolRegistry
 from .market import market_query, market_response
 from .property_context import focused_reply
@@ -194,7 +194,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         pending = ("COMMUTE_DESTINATION_REQUIRED"
                    if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
         outside=domain_reply(request.question,turn,pending=pending)
-        if outside:
+        if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
         if turn["searchChange"] and not any(getattr(request, key) is not None for key in AREA_KEYS):
@@ -203,7 +203,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                     properties=[], citations=[], research=research, responseKind="CLARIFICATION_REQUIRED",
                     answer="Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m².",
                     extra={"clarification": "AREA_RANGE_INVALID"})
-        discovery_reply=self.dispatch_discovery(request,session_id,context,turn,research=research,token=token,account=account)
+        discovery_reply=self.dispatch_discovery(request,session_id,context,turn,districts=SUPPORTED_DISTRICTS,
+                                                research=research,token=token,account=account)
         if discovery_reply is not None:return discovery_reply
         resuming_commute_search = context.needs.pop("commuteResumeSearch", False)
         if resuming_commute_search:

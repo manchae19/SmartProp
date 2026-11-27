@@ -41,6 +41,15 @@ def _has(value, term):
     return re.search(r"(?<!\w)" + re.escape(term) + r"(?!\w)", value) is not None
 
 
+def rental_listing_request(question):
+    value = fold(question)
+    return bool(re.search(
+        r"\b(?:gia thue|(?:tim|muon|can)\s+thue|(?:nha|can ho|mat bang)\s+(?:de |cho )?thue)\b"
+        r"|\d\s*(?:trieu|ty|nghin|ngan|dong|vnd)\s*(?:/\s*|moi\s+|theo\s+)(?:thang|nam|ngay)\b",
+        value,
+    ))
+
+
 def _market_request(value):
     """'cho thuê', 'cho tôi', 'cho mình' are not market requests."""
     if re.search(r"(?<!\w)(?:gan cho|cac cho|cho nao)(?!\w)", value):
