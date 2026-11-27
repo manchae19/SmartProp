@@ -798,3 +798,223 @@ LOCATION_VALIDATION_PASS (Flow A) / FAIL (Flow B)
 VALIDATION_PARTIAL
 NOT_READY_TO_MERGE
 ```
+
+---
+
+## Z. WP-01 FINAL CLOSURE (sau khi merge main `1f36205`)
+
+### Z.1. Main reconciliation
+
+| Mục | Giá trị |
+|---|---|
+| `origin/main` | **`1f36205f`** — "Merge pull request #39 from manchae19/feature/admin-coordinate-review-ui" |
+| Merge vào integration | **`git merge origin/main`** — **sạch, 0 conflict** |
+| Integration HEAD sau merge | `6258638` → sau fix: **`9c4619d`** |
+| Bảo toàn | PR #38 Coordinate Provenance · PR #39 Admin Coordinate Review · parcel eligibility · evidence validation · per-property/revision conflict lock · HTTP 409 · deterministic pagination · migration lineage guard |
+| PR #41/#37 | **không đụng** |
+| Merge WP-01 → main | **KHÔNG** |
+
+### Z.2. Location root cause (`VERIFIED`)
+
+`ValuationService` dòng 68 cũ:
+
+```java
+String location=r.locationFeature().strip();                       // chưa canonical hoá
+if(options.categories().stream().noneMatch(
+     c->c.category().equals(category)&&c.locations().contains(location)))  // contains = case-sensitive
+   return unsupported(...);
+```
+
+`DISTRICTS` và `options.categories().locations()` chứa **dạng hiển thị** ("Cẩm Lệ"), còn input
+được so **nguyên văn** → `"cẩm lệ"` không khớp ⇒ **reject**, trong khi Flow A chuẩn hoá bằng
+`clean_category()` nên **accept**. Đó là lệch duy nhất.
+
+### Z.3. Location fix
+
+```java
+String location=displayDistrict(r.locationFeature());               // tái dùng helper có sẵn
+if(location==null||options.categories().stream().noneMatch(...))return unsupported(...);
+```
+
+- Dùng **cùng một nguồn chuẩn**: vocabulary district của V1.3 qua `/model/options`.
+- Cho phép: canonical name, Unicode NFC, trim, casefold (`equalsIgnoreCase`).
+- **Không** cho phép: default district, map Hà Nội/TP.HCM → Đà Nẵng, chọn district phổ biến,
+  suy diễn ward/street.
+- Không hardcode whitelist thứ hai — `displayDistrict` đọc từ `DISTRICTS` đã dùng cho options.
+- Không thêm mapping hành chính mới.
+
+### Z.4. Location parity matrix — **PASS 10/10, 0 mismatch**
+
+| district | Flow A | Flow B | decision |
+|---|---|---|---|
+| `Cẩm Lệ` | 200 ACCEPT | 200 ACCEPT | **OK** |
+| `cẩm lệ` | 200 ACCEPT | 200 ACCEPT | **OK** (trước fix: B reject) |
+| `  Cẩm Lệ  ` | 200 ACCEPT | 200 ACCEPT | **OK** |
+| `Hải Châu` | 200 ACCEPT | 200 ACCEPT | **OK** |
+| `Thanh Khê` | 200 ACCEPT | 200 ACCEPT | **OK** |
+| `Hà Nội` | **422 REJECT** | 200 `available=false` REJECT | **OK** |
+| `TP. Hồ Chí Minh` | **422 REJECT** | 200 `available=false` REJECT | **OK** |
+| `Quận Không Tồn Tại` | **422 REJECT** | 200 `available=false` REJECT | **OK** |
+| `""` | 422 REJECT | 400 REJECT | **OK** |
+| missing | 422 REJECT | 400 REJECT | **OK** |
+
+Status code khác nhau (được phép), **quyết định accept/reject giống nhau 10/10**.
+Invalid location **không tới model inference** (Flow A 422 trước khi gọi predictor; Flow B
+không gọi FastAPI).
+
+### Z.5. Street consistency warning — **PASS 9/9**
+
+Thêm vào FastAPI (nguồn duy nhất, cả hai luồng hưởng):
+
+```python
+STREET_UNVERIFIED_WARNING = (
+    "Tên đường chưa được đối chiếu với khu vực đã chọn. "
+    "Kết quả định giá có thể thay đổi đáng kể nếu thông tin vị trí không chính xác.")
+```
+
+`V1_3PreviewResponse.warnings: list[str] = []` (additive). Spring đã đọc `warnings` từ FastAPI
+và forward nguyên vẹn ⇒ **không cần sửa FE**.
+
+| Case | Flow A | Flow B |
+|---|---|---|
+| Street known (`Nguyễn Phước Lan`) | cảnh báo ✅ | cảnh báo ✅ |
+| Street có tiền tố `Đường …` | cảnh báo ✅ | cảnh báo ✅ |
+| Street OOV | cảnh báo ✅ | cảnh báo ✅ |
+| Không nhập street | **không** cảnh báo ✅ | **không** cảnh báo ✅ |
+| Stale (gửi street rồi bỏ) | **không** giữ cảnh báo cũ ✅ | — |
+
+Phân biệt rõ: `KNOWN_MODEL_CATEGORY` (street trong vocab) **không** đồng nghĩa
+`VERIFIED_MATCH`. Trạng thái vẫn `UNKNOWN_MAPPING`. Cảnh báo **không** tuyên bố đã xác minh
+địa chỉ. Model input giữ nguyên policy hiện tại (không tự bỏ street feature).
+
+### Z.6. Cross-flow prediction parity — **PASS 5/5, delta = 0**
+
+Cùng input ngữ nghĩa, so **giá cuối**:
+
+| Case | Flow A | Flow B | delta |
+|---|---:|---:|---:|
+| HOUSE basic | 5,365098 tỷ | 5,365098 tỷ | **0** |
+| HOUSE full (road/frontage/street/floors/subtype/bathrooms/direction) | 8,946491 tỷ | 8,946491 tỷ | **0** |
+| LAND | 4,059448 tỷ | 4,059448 tỷ | **0** |
+| APARTMENT (+balcony direction) | 4,544814 tỷ | 4,544814 tỷ | **0** |
+| VILLA (subtype villa) | 16,775497 tỷ | 16,775497 tỷ | **0** |
+
+Delta **chính xác 0** trên 5/5 case, 4 loại BĐS ⇒ cùng encoded vector, cùng model, cùng
+calibration, cùng inverse transform.
+
+**Về `features_used`:** hai luồng trả **shape khác nhau có chủ đích** —
+Flow A: raw V1.3 (`area`, `district`, `normalized_type`, …);
+Flow B: subset camelCase có giới hạn (`areaSqm`, `locationFeature`, …) do
+`ValuationService` cố ý chỉ expose "numeric/enum model features", không trả arbitrary upstream
+JSON. Vì vậy **không so key-by-key** được; bằng chứng parity là **giá cuối delta = 0**.
+Không thêm debug endpoint công khai.
+
+### Z.7. Flow B final E2E — **PASS 15/15**
+
+| # | Case | Kết quả |
+|---|---|---|
+| 1 | Login (JWT) | PASS |
+| 2 | HOUSE basic | PASS — 5,365 tỷ |
+| 3 | HOUSE enriched | PASS — 8,946 tỷ |
+| 4 | LAND | PASS — 4,059 tỷ |
+| 5 | APARTMENT | PASS — 4,545 tỷ |
+| 6 | VILLA | PASS — 16,775 tỷ |
+| 7 | Không token | PASS — 401 |
+| 8 | Location không hỗ trợ | PASS — REJECT (`available=false`) |
+| 9 | `area=0` | PASS — 400 |
+| 10 | `floors=99` | PASS — 400 |
+| 11 | `subtype=penthouse` | PASS — 400 |
+| 12 | Street chuẩn | PASS — 8,4254 tỷ |
+| 13 | Street có tiền tố | PASS — 8,4254 tỷ |
+| 14 | Street lowercase | PASS — 8,4254 tỷ |
+| 15 | 3 biến thể street cùng giá | PASS — `8425395955` ×3 |
+
+**Lưu ý vận hành:** app có rate limit — test phải giãn cách (~3 s/lệnh), nếu không sẽ nhận
+**429** và dễ bị đọc nhầm là lỗi chức năng.
+
+`APP_VALUATION_ENABLED=true` chỉ set trong **biến môi trường phiên test**; default production
+của repo **không đổi**.
+
+### Z.8. Fresh regression trên final HEAD `9c4619d`
+
+| Suite | Kết quả | Nhãn |
+|---|---|---|
+| **Backend full** | **230 / 230 PASS**, BUILD SUCCESS (+2 test từ PR #39) | **FRESH_PASS** |
+| **FastAPI** | **222 passed**, 20 skipped, 84 subtests, **2 collection error RAG** | **FRESH_PASS** (trừ RAG) |
+| **Frontend unit** | **67 / 67 PASS** | **FRESH_PASS** |
+| **Production build** | **`✓ built in 7,05 s`** | **FRESH_PASS** |
+| Flow A browser E2E | PASS (trước merge; code Flow A không đổi) | `REUSED_EVIDENCE` |
+| Flow B E2E | **PASS 15/15** | **FRESH_PASS** |
+| Location parity | **PASS 10/10** | **FRESH_PASS** |
+| Street warning | **PASS 9/9** | **FRESH_PASS** |
+| Cross-flow price parity | **PASS 5/5 delta 0** | **FRESH_PASS** |
+
+**2 lỗi RAG collection** (`test_rag_area_filter.py`, `test_rag_public_projection.py`,
+`ImportError: cannot import name 'area_spec'`) — **có từ main**, đã đối chiếu base trước đó
+(`bab3d7b`) và vẫn còn trên `1f36205`. **Không sửa** (ngoài scope). Không báo full suite PASS.
+
+### Z.9. Production-like routing — **PARTIAL**
+
+| Kiểm tra | Trạng thái |
+|---|---|
+| `vite build` production bundle | **PASS** |
+| `vite preview` + proxy `/api/ai` → JSON thật | **PASS** (phiên trước) |
+| **Reverse proxy độc lập (nginx/IIS) trên static build** | **NOT_RUN** — repo không có config deploy |
+
+⇒ `PRODUCTION_LIKE_ROUTING_PASS` **chưa đạt**; `ACTUAL_PRODUCTION_DEPLOYMENT_VERIFIED`
+**dứt khoát chưa**. Không chuyển Flow A sang Spring Boot (WP-09 chưa duyệt). FastAPI không mở
+ra Internet.
+
+### Z.10. Database integrity
+
+| Kiểm tra | Giá trị |
+|---|---|
+| Flyway history | **12** (V13 BASELINE · V14 · V17..V26) — không đổi |
+| `properties` | **0** |
+| `valuation_history` | **0** |
+| `property_listing_code_allocations` | **0** |
+| Triggers `listing_code` | **2** |
+| Preview tự publish listing | **KHÔNG** |
+| Ghi đè asking price | **KHÔNG** |
+| Ghi history ngoài contract | **KHÔNG** |
+| Tạo listing code ngoài luồng đăng tin | **KHÔNG** |
+| Fallback V6 | **KHÔNG** |
+| Sửa toạ độ / pháp lý | **KHÔNG** |
+
+### Z.11. Model hash integrity
+
+| File | SHA256 (prefix) |
+|---|---|
+| `model.json` | `3c56b6937902d9f736f9eb0278683f0c…` |
+| `calibration.json` | `17632bdf4d578723a5c336b7c7e3aed6…` |
+| `feature_schema.json` | `84be275b12b3c426497c00be80eed621…` |
+
+Không đổi. Không train. Không synthetic. Không Shadow.
+
+### Z.12. Môi trường sau phiên
+
+| Hạng mục | Trạng thái |
+|---|---|
+| Port 3307 | **FREE** (shutdown graceful) |
+| Port 3306 | BUSY pid 6556 — **không đụng** |
+| 8080 / 8000 | free |
+| Fixture V26 `.scratch\pr38-handoff\mysql-isolated\data` | **GIỮ** — dùng lại cho WP-02..WP-08 |
+| MySQL Portable 8.4.13 | **GIỮ** |
+| Các fixture khác (`clean-v26`, `work-3307`, datadir gốc V27) | **GIỮ nguyên**, không xoá |
+
+### Z.13. Final gate
+
+```
+WP_01_IMPLEMENTATION_COMPLETE
+MAIN_RECONCILIATION_PASS
+FLOW_A_REAL_E2E_PASS
+FLOW_B_REAL_E2E_PASS
+LOCATION_VALIDATION_PASS
+CROSS_FLOW_PARITY_PASS
+STREET_WARNING_VERIFIED
+V1_3_ARTIFACT_INTEGRITY_PASS
+PRODUCTION_LIKE_ROUTING_PARTIAL
+```
+
+**Chỉ còn một mục chưa đạt:** `PRODUCTION_LIKE_ROUTING_PASS` — cần reverse proxy độc lập
+(nginx/IIS) cho static build, hiện repo chưa có cấu hình deploy. Đây là blocker **duy nhất**.
