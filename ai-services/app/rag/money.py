@@ -53,7 +53,7 @@ def parse_budget(question):
                 return Budget("AMBIGUOUS",reason="INVALID_NUMBER")
         mentioned=bool(re.search(r"\d[^;!?]{0,15}\b(?:ty|ti|trieu|vnd|dong)\b",text))
         return Budget("AMBIGUOUS" if mentioned else "NOT_MENTIONED",reason="UNREADABLE_AMOUNT" if mentioned else None)
-    if re.search(r"(?:-|am)\s*$",text[:matches[0].start()]):
+    if re.search(r"(?:-|\bam)\s*$",text[:matches[0].start()]):
         return Budget("AMBIGUOUS",reason="NEGATIVE_AMOUNT")
     amounts=[]
     end=0

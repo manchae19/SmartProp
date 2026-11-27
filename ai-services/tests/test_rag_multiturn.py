@@ -78,7 +78,8 @@ class MultiTurnTests(unittest.TestCase):
         self.assertIsNone(ordinal_reference("Ngân sách 2 tỷ"))
         self.assertEqual(detect_purpose("tôi muốn đầu tư"), "INVESTMENT")
         self.assertEqual(detect_property_type("tìm căn hộ"), "APARTMENT")
-        self.assertEqual(detect_property_type("muốn mua nhà ở Hải Châu"), "HOUSE")
+        self.assertIsNone(detect_property_type("muốn mua nhà ở Hải Châu"))
+        self.assertEqual(detect_property_type("muốn mua nhà riêng ở Hải Châu"), "HOUSE")
         self.assertEqual(detect_property_type("tìm nhà phố"), "HOUSE")
         # Non-residential "nhà X" compounds must not become a property type.
         for q in ("có nhà thuốc nào", "nhà hàng gần đây", "tìm nhà kho", "nha khoa"):
@@ -141,12 +142,24 @@ class MultiTurnTests(unittest.TestCase):
 
     def test_district_change_requeries_with_new_district(self):
         service, backend, _, _ = self.service()
-        first = service.chat(ChatRequest(question="Tôi có 3 tỷ, tìm nhà ở Cẩm Lệ."))
+        first = service.chat(ChatRequest(question="Tôi có 3 tỷ, tìm nhà ở Cẩm Lệ.", ward="Hòa Thọ Đông"))
         sid = first.evidence["session"]["id"]
         service.chat(ChatRequest(question="Chuyển sang Hải Châu thì sao?", sessionId=sid))
         self.assertEqual(backend.recommend.call_count, 2)
         self.assertEqual(backend.recommend.call_args.args[0]["district"], "Hải Châu")
+        self.assertNotIn("ward", backend.recommend.call_args.args[0])
         self.assertEqual(str(backend.recommend.call_args.args[0]["budgetVnd"]), "3000000000")
+
+    def test_expanding_to_all_districts_removes_location_without_reusing_it(self):
+        service, backend, _, _ = self.service()
+        first = service.chat(ChatRequest(question="Tìm căn hộ ở Cẩm Lệ dưới 3 tỷ", ward="Hòa Thọ Đông"))
+        sid = first.evidence["session"]["id"]
+        response = service.chat(ChatRequest(question="Toàn Đà Nẵng", sessionId=sid))
+        sent = backend.recommend.call_args.args[0]
+        self.assertNotIn("district", sent)
+        self.assertNotIn("ward", sent)
+        self.assertEqual(sent["budgetVnd"], "3000000000")
+        self.assertNotIn("district", response.evidence["session"]["context"]["criteria"])
 
     def test_new_search_does_not_replay_stored_list(self):
         service, backend, _, _ = self.service()

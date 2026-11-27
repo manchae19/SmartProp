@@ -19,7 +19,7 @@ from .property_context import focused_reply
 from .scope import domain_reply
 from .discovery import AdvisorDiscoveryMixin
 from . import commute_destination, commute_ranking
-from .personalization import describe_area, intake, matches_area, merge_area, projection
+from .personalization import AREA_KEYS, describe_area, intake, invalid_area_text, matches_area, merge_area, projection
 
 
 LIMITATIONS = [
@@ -89,6 +89,18 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                         p["imageUrl"] = image
                 except Exception:
                     p["imageUrl"] = None
+            poi_fn = getattr(self.backend, "nearby_pois", None)
+            if callable(poi_fn):
+                try:
+                    items = poi_fn(property_id)
+                    if isinstance(items, list):
+                        p["nearbyPois"] = items
+                        p["nearbyPoisStatus"] = "AVAILABLE" if items else "NO_POIS_IN_RADIUS"
+                except UpstreamError as error:
+                    if error.status == 404:
+                        p["nearbyPoisStatus"] = "PROPERTY_NOT_PUBLIC"
+                except GroundingError:
+                    pass
 
     # ------------------------------------------------------------------
     def _reply(self, request, session_id, context, criteria, *, properties, citations, research,
@@ -100,14 +112,15 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
-        if properties and extra and extra.get("addressQuery"):
+        address_search_completed = bool(extra and extra.get("addressQuery"))
+        if properties and address_search_completed:
             for p in properties:
                 uid=p["id"].split(":")[-1]
                 p.setdefault("source",{"kind":"PROPERTY","recordKey":uid,"name":"SmartProp"})
                 p.setdefault("qualityStatus","PLATFORM_PUBLISHED");p.setdefault("verificationStatus","PLATFORM_PUBLISHED")
                 p.setdefault("score",0);p.setdefault("explanations",[]);p.setdefault("warnings",[])
                 p["matchBasis"]="ADDRESS"
-        if properties and extra and extra.get("addressQuery"):
+        if properties and address_search_completed:
             before_filter = len(properties)
             properties = [
                 p for p in properties
@@ -129,7 +142,9 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         # Only a completed search replaces result references; POI/clarification replies preserve them.
         if result_properties is None and not properties and (response or {}).get("topProperties") is not None:
             result_properties = response["topProperties"]
-        preserve_references = response is None and not properties
+        if address_search_completed:
+            criteria = {**criteria, "lastSearchEmpty": not properties}
+        preserve_references = response is None and not properties and not address_search_completed
         full = list(result_properties if result_properties is not None else properties)
         property_ids = [p["id"] for p in full][:MAX_PROPERTY_IDS]
         self.sessions.record(context,
@@ -176,7 +191,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 self.sessions.drop(context)
                 context,session_id,resumed=self.sessions.begin(None,scope=scope)
             context.needs["accountFingerprint"]=current_fingerprint
-        turn = classification(request.question, context if resumed else None)
+        turn = classification(request.question, context if resumed else None, districts=SUPPORTED_DISTRICTS)
         context.needs["turnIntent"]=turn["intent"]
         context.needs["turnIntentFamily"]=turn["intentFamily"]
         context.needs["unsupportedPopularityFilter"]=turn["unsupportedPopularityFilter"]
@@ -198,9 +213,16 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if outside:
             return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
                 answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
+        if turn["searchChange"] and not any(getattr(request, key) is not None for key in AREA_KEYS):
+            if invalid_area_text(request.question):
+                return self._reply(request, session_id, context, context.criteria(),
+                    properties=[], citations=[], research=research, responseKind="CLARIFICATION_REQUIRED",
+                    answer="Khoảng diện tích chưa hợp lệ. Bạn nhập lại một cận hoặc khoảng, ví dụ từ 70 đến 90 m².",
+                    extra={"clarification": "AREA_RANGE_INVALID"})
         discovery_reply=self.dispatch_discovery(request,session_id,context,turn,research=research,token=token,account=account)
         if discovery_reply is not None:return discovery_reply
-        if context.needs.pop("commuteResumeSearch",False):
+        resuming_commute_search = context.needs.pop("commuteResumeSearch", False)
+        if resuming_commute_search:
             turn["intent"]="REFINE_SEARCH";turn["searchChange"]=True
         focus=request.propertyId or context.needs.get("focusedPropertyId")
         if focus and not turn["searchChange"] and turn["intent"] not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","AREA_AMENITIES","UPDATE_CRITERIA","PLANNING_QA","KNOWLEDGE"):
@@ -272,10 +294,12 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if traced("amenity_summary", self.backend.amenity_summary)["catalogVersion"] != corpus["summary"]["catalogVersion"]:
             raise GroundingError("PUBLIC_CORPUS_VERSION_DRIFT")
         documents = corpus["documents"]
-        names = sorted({d["metadata"].get("district", "") for d in documents} | ({"Hải Châu","Sơn Trà","Thanh Khê","Cẩm Lệ","Ngũ Hành Sơn","Liên Chiểu","Hòa Vang"} if turn["intent"]=="AREA_AMENITIES" else set()), key=len, reverse=True)
+        names = sorted({d["metadata"].get("district", "") for d in documents} | set(SUPPORTED_DISTRICTS),
+                       key=len, reverse=True)
         # The profile was already seeded before any early-return branch; seeding again
         # here would only repeat the same work.
-        explicit_district = request.district or detect_district(request.question, names)
+        # A confirmed workplace address is a route destination, not a listing filter.
+        explicit_district = request.district or (None if resuming_commute_search else detect_district(request.question, names))
         # A follow-up that only refines one criterion keeps every other stored criterion.
         prior = context.criteria()
         district = explicit_district or prior.get("district")
@@ -332,7 +356,9 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             criteria["purpose"] = turn["purpose"]
         if turn["propertyType"]:
             criteria["propertyType"] = turn["propertyType"]
-        if not request.ward and prior.get("ward") and not explicit_district:
+        if not request.ward and prior.get("ward") and (
+            not explicit_district or norm(explicit_district).split() == norm(prior.get("district") or "").split()
+        ):
             criteria["ward"] = prior["ward"]
         pure_amenity = bool(categories) and not turn["searchChange"] and turn["ordinal"] is None and not turn["needsPropertyReference"]
         if district is not None and not pure_amenity:
@@ -425,7 +451,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             previous_ids=list(context.last_property_ids)
             if not 1<=asked_index<=len(previous_ids):
                 return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
-                    answer="Thứ tự căn nhà nằm ngoài danh sách đã hiển thị. Hãy chọn lại căn cần xem.",responseKind="CLARIFICATION_REQUIRED",result_properties=result_properties)
+                    answer=f"Căn thứ {asked_index} nằm ngoài danh sách đã hiển thị. Không có căn ở vị trí đó.",
+                    responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PROPERTY_INDEX_OUT_OF_RANGE"})
             expected_id=previous_ids[asked_index-1]
             current={p["id"]:p for p in result_properties}
             if expected_id not in current:

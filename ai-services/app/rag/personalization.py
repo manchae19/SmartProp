@@ -88,6 +88,11 @@ def area_spec(question, *, allow_bare=False):
 AREA_KEYS = ("minAreaSqm", "maxAreaSqm", "minAreaExclusive", "maxAreaExclusive")
 
 
+def invalid_area_text(question):
+    value = fold(question)
+    return bool(re.search(r"\d+(?:[.,]\d+)*" + _AREA_UNIT, value) and area_spec(question) is None)
+
+
 def apply_area(criteria, question, *, allow_bare=False):
     """Replace the whole area constraint when the message states a new one."""
     spec = area_spec(question, allow_bare=allow_bare)

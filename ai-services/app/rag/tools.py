@@ -5,10 +5,12 @@ import time
 import math
 NEARBY_MAX_PAGES=20
 import re
+from datetime import datetime, timezone
 from decimal import Decimal
 import httpx
 from .config import GroundingError, RagUnavailable
 from .personalization import matches_area
+from .intent import CATEGORY_LABELS, fold
 
 
 def _is_number(value):
@@ -29,12 +31,46 @@ class OutboundRateLimited(UpstreamError):
 
 def _public_text(value, max_length=1000):
     """Redact common contact formats and research markers from listing prose."""
-    text = re.sub(r"<[^>]*>", "", unescape(str(value or "")))
+    text = re.sub(r"<[^>]*>|[\u200b-\u200d\u2060\ufeff]", "", unescape(str(value or "")))
     text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
     text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.()\-]*\d){8,10}(?!\d)", "[redacted-phone]", text)
     text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|"
                   r"sampleListingCount|raw_payload)\b", "[redacted]", text, flags=re.IGNORECASE)
     return " ".join(text.split())[:max_length]
+
+
+_PROPERTY_UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", re.I)
+
+
+def _public_fields(record, fields):
+    if not isinstance(record, dict):
+        return {}
+    return {key: record[key] for key in fields if key in record
+            and (record[key] is None or isinstance(record[key], (str, int, float, Decimal, bool)))}
+
+
+def _public_texts(values):
+    return [_public_text(value) for value in values if isinstance(value, str)] if isinstance(values, list) else []
+
+
+def _public_poi_names(values):
+    if not isinstance(values, list):
+        return []
+    return [{"name": _public_text(item["name"], 255), "category": item["category"]}
+            for item in values if isinstance(item, dict) and isinstance(item.get("name"), str)
+            and isinstance(item.get("category"), str)]
+
+
+def _published_record(body):
+    if not isinstance(body, dict) or body.get("status") != "PUBLISHED" or body.get("deletedAt") is not None:
+        return False
+    expires = body.get("expiresAt")
+    if expires is None:
+        return True
+    try:
+        return datetime.fromisoformat(expires) > datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return False
 
 
 class BackendTools:
@@ -113,23 +149,54 @@ class BackendTools:
                 if group in groups:
                     raise GroundingError("DUPLICATE_RECOMMENDATION_GROUP")
                 groups.add(group)
-            kind = p.get("source", {}).get("kind")
+            source = p.get("source") or {}
+            kind = source.get("kind")
+            key = source.get("recordKey")
+            if kind == "PROPERTY" and (not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", key)
+                                       or p["id"] != "property:" + key):
+                raise GroundingError("INVALID_PROPERTY_REFERENCE")
+            for field in ("district", "ward"):
+                if criteria.get(field) and fold(criteria[field]).split() != fold(str(p.get(field) or "")).split():
+                    raise GroundingError("RECOMMENDATION_OUTSIDE_LOCATION")
+            if criteria.get("propertyType", "ALL") != "ALL" and p.get("propertyType") != criteria["propertyType"]:
+                raise GroundingError("RECOMMENDATION_OUTSIDE_PROPERTY_TYPE")
             if not research and not ((kind == "PROPERTY" and p.get("qualityStatus") == "PLATFORM_PUBLISHED") or
                                      (kind == "EXTERNAL" and p.get("qualityStatus") == "VALID" and p.get("verificationStatus") == "VERIFIED")):
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
             if kind == "TINIX_AI" and (not research or p.get("qualityStatus") != "HYBRID_ELIGIBLE_RESEARCH"):
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
         if not research:
-            public_fields = ("id", "title", "propertyType", "priceVnd", "areaSqm", "district",
-                             "ward", "score", "scoreBreakdown", "explanations", "qualityStatus",
-                             "verificationStatus", "duplicateGroup", "warnings", "amenityEvidence")
-            body["topProperties"] = [
-                {**{key: p[key] for key in public_fields if key in p},
-                 "title": _public_text(p.get("title"), 255),
-                 "source": {key: p["source"][key] for key in ("kind", "name", "recordKey", "detailUrl")
-                            if key in p["source"]}}
-                for p in properties
+            cards = []
+            for p in properties:
+                card = _public_fields(p, ("id", "propertyType", "priceVnd", "areaSqm", "district", "ward",
+                                          "score", "qualityStatus", "verificationStatus", "duplicateGroup"))
+                card.update(title=_public_text(p.get("title"), 255),
+                            explanations=_public_texts(p.get("explanations")),
+                            warnings=_public_texts(p.get("warnings")),
+                            source=_public_fields(p["source"], ("kind", "name", "recordKey", "detailUrl")))
+                if isinstance(p.get("scoreBreakdown"), dict):
+                    card["scoreBreakdown"] = _public_fields(p["scoreBreakdown"],
+                        ("budgetFit", "areaFit", "propertyTypeFit", "amenityFit"))
+                amenity = p.get("amenityEvidence")
+                if isinstance(amenity, dict):
+                    card["amenityEvidence"] = {
+                        **_public_fields(amenity, ("areaId", "areaLevel", "areaName", "parentDistrict",
+                            "areaAmenityScore", "amenityFit", "confidence", "evidenceBasis", "coverage", "note")),
+                        "poiEvidence": _public_poi_names(amenity.get("poiEvidence")),
+                        "dataLimitations": _public_texts(amenity.get("dataLimitations")),
+                        "categoryScores": _public_fields(amenity.get("categoryScores"), CATEGORY_LABELS),
+                    }
+                cards.append(card)
+            areas = [
+                {**_public_fields(a, ("district", "ward", "candidateCount", "score", "averageAskingPriceVnd",
+                     "unverifiedCount", "needsReviewCount", "amenityScore", "amenityConfidence",
+                     "amenityAreaId", "amenityEvidenceBasis", "amenityCoverage")),
+                 **{key: _public_texts(a.get(key)) for key in ("sources", "explanations", "warnings")},
+                 "poiEvidence": _public_poi_names(a.get("poiEvidence"))}
+                for a in (body.get("topAreas") or []) if isinstance(a, dict)
             ]
+            return {**_public_fields(body, ("method", "mode", "priceBasis", "eligibleCandidateCount")),
+                    "topProperties": cards, "topAreas": areas, "warnings": _public_texts(body.get("warnings"))}
         return body
 
     def market_summary(self, query):
@@ -220,7 +287,18 @@ class BackendTools:
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
             if not _is_number(item.get("latitude")) or not _is_number(item.get("longitude")) or not -90<=item["latitude"]<=90 or not -180<item["longitude"]<=180:
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
-        return body
+        return {**_public_fields(body, ("propertyId", "radiusMeters", "distanceType", "fetchedAt",
+                                        "cacheHit", "truncated", "coverage", "status")),
+                "categories": _public_texts(body.get("categories")),
+                "location": _public_fields(body.get("location"),
+                                           ("latitude", "longitude", "accuracy", "source", "verifiedAt")),
+                "items": [{**_public_fields(item, ("id", "category", "latitude", "longitude",
+                                                    "distanceMeters", "provider", "sourceUpdatedAt")),
+                           "name": _public_text(item["name"], 255),
+                           "address": _public_text(item.get("address"), 500),
+                           "categoryGroups": _public_texts(item.get("categoryGroups"))} for item in items],
+                "attribution": [_public_fields(a, ("label", "url")) for a in body.get("attribution") or []
+                                if isinstance(a, dict)]}
 
     def nearby_pois(self, property_id, radius=1000, limit=6):
         """Existing public property-to-POI endpoint; distance is straight-line (ST_Distance_Sphere)."""
@@ -236,53 +314,46 @@ class BackendTools:
             items = json.loads(response.content, parse_float=Decimal)
         except (httpx.HTTPError, ValueError) as e:
             raise UpstreamError() from e
-        if not isinstance(items, list) or len(items) > 20:
+        if not isinstance(items, list) or len(items) > limit:
             raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
         clean = []
         for item in items:
             if (not isinstance(item, dict) or not isinstance(item.get("name"), str) or not item["name"].strip()
                     or not isinstance(item.get("category"), str) or not item["category"].strip()
-                    or not _is_number(item.get("distanceMeters")) or item["distanceMeters"] < 0):
+                    or not _is_number(item.get("distanceMeters")) or not 0 <= item["distanceMeters"] <= radius):
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
-            clean.append({"name": item["name"].strip(), "category": item["category"].strip(),
+            clean.append({"name": _public_text(item["name"], 255), "category": item["category"].strip(),
                           "distanceMeters": float(item["distanceMeters"])})
         return clean
 
-    def public_property(self, property_id):
-        if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", property_id):
+    def _public_property_record(self, property_id):
+        if not isinstance(property_id, str) or not _PROPERTY_UUID.fullmatch(property_id):
             raise GroundingError("INVALID_PROPERTY_ID")
         body = self._call("GET", "/api/v1/properties/" + property_id)
-        if not isinstance(body, dict) or body.get("id") != property_id or body.get("status") != "PUBLISHED":
+        if not _published_record(body) or str(body.get("id", "")).lower() != property_id.lower():
             raise GroundingError("INVALID_PUBLIC_PROPERTY")
-        public_fields = ("id", "listingCode", "status", "expiresAt", "price", "priceUnit",
-                         "currency", "areaSqm", "transactionType", "propertyType", "district",
-                         "ward", "city", "bedrooms", "bathrooms")
-        return {
-            **{key: body[key] for key in public_fields if key in body},
-            "title": _public_text(body.get("title"), 255),
-            "description": _public_text(body.get("description"), 20000),
-            "address": _public_text(body.get("address"), 500),
-        }
+        return body
+
+    def public_property(self, property_id):
+        body = self._public_property_record(property_id)
+        fields = ("id", "listingCode", "status", "expiresAt", "price", "priceUnit", "currency", "areaSqm",
+                  "transactionType", "propertyType", "district", "ward", "city", "bedrooms",
+                  "bathrooms", "contentVersion")
+        return {**_public_fields(body, fields),
+                "title": _public_text(body.get("title"), 255),
+                "description": _public_text(body.get("description"), 20000),
+                "address": _public_text(body.get("address"), 500)}
 
     def property_image(self, property_id):
-        """Cover image from the existing public property detail; no generated or external image."""
-        if not isinstance(property_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", property_id):
-            raise GroundingError("INVALID_PROPERTY_ID")
-        try:
-            response = self.client.get("/api/v1/properties/" + property_id)
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        images = body.get("images") if isinstance(body, dict) else None
-        if not isinstance(images, list):
-            return None
-        for image in images:
-            url = image.get("url") if isinstance(image, dict) else None
-            if (isinstance(url, str) and url.startswith("/api/v1/properties/")
-                    and ".." not in url and "//" not in url and len(url) <= 500):
-                return url
+        """Return only an image content path belonging to this public listing."""
+        body = self._public_property_record(property_id)
+        prefix = "/api/v1/properties/" + body["id"] + "/images/"
+        images = body.get("images")
+        if isinstance(images, list):
+            for image in images:
+                url = image.get("url") if isinstance(image, dict) else None
+                if isinstance(url, str) and re.fullmatch(re.escape(prefix) + r"[A-Za-z0-9_-]{1,64}/content", url):
+                    return url
         return None
 
     def amenity_profile(self, area_id):
@@ -311,21 +382,16 @@ class BackendTools:
         return body
     def property_detail(self, property_id):
         """Public listing detail. Drafts and private listings are not served by this route."""
-        if not isinstance(property_id, str) or not re.fullmatch(r"[0-9a-fA-F-]{36}", property_id):
-            raise GroundingError("INVALID_PROPERTY_ID")
         try:
-            response = self.client.get("/api/v1/properties/" + property_id)
-            if response.status_code == 404:
-                raise GroundingError("PROPERTY_NOT_PUBLIC")
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content, parse_float=Decimal)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        if not isinstance(body, dict) or str(body.get("id", "")).lower() != property_id.lower():
-            raise GroundingError("INVALID_PROPERTY_DETAIL")
-        if body.get("status") != "PUBLISHED":
-            raise GroundingError("PROPERTY_NOT_PUBLIC")
+            body = self.public_property(property_id)
+        except UpstreamError as error:
+            if error.status == 404:
+                raise GroundingError("PROPERTY_NOT_PUBLIC") from error
+            raise
+        except GroundingError as error:
+            if str(error) == "INVALID_PUBLIC_PROPERTY":
+                raise GroundingError("PROPERTY_NOT_PUBLIC") from error
+            raise
         price = body.get("price")
         if not _is_number(price) or price <= 0:
             raise GroundingError("INVALID_PROPERTY_DETAIL")
@@ -522,7 +588,7 @@ class BackendTools:
             raise GroundingError("INVALID_PROPERTY_SEARCH")
         results = []
         for item in items:
-            if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
+            if not _published_record(item) or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
                 continue
             price = item.get("price")
             if not _is_number(price) or price <= 0:
@@ -582,7 +648,7 @@ class BackendTools:
             if not isinstance(items, list):
                 raise GroundingError("INVALID_PROPERTY_SEARCH")
             for item in items:
-                if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
+                if not _published_record(item) or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
                     continue
                 price = item.get("price")
                 if not _is_number(price) or price <= 0:
@@ -636,7 +702,7 @@ class PublishedPropertyRepository:
                 items=body.get("items")
                 if not isinstance(items,list):raise GroundingError("INVALID_PUBLIC_IMAGE_CATALOG")
                 for item in items:
-                    if item.get("status")!="PUBLISHED":continue
+                    if not _published_record(item):continue
                     uid=item.get("id","")
                     if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}",uid):continue
                     for image in item.get("images") or []:
@@ -652,7 +718,7 @@ class PublishedPropertyRepository:
             raise RagUnavailable("READ_ONLY_SQL_NOT_CONFIGURED")
         if not ids:
             return []
-        if len(ids) > 10 or not all(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", i) for i in ids):
+        if len(ids) > 10 or not all(isinstance(i, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", i) for i in ids):
             raise GroundingError("INVALID_PROPERTY_IDS")
         try:
             import pymysql

@@ -1,4 +1,6 @@
 import unittest
+
+import httpx
 from decimal import Decimal
 
 from unittest.mock import MagicMock, patch
@@ -42,7 +44,9 @@ class PublicPropertyProjectionTests(unittest.TestCase):
         tools = BackendTools(Settings())
         self.addCleanup(tools.close)
         pid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-        for row in ({"id": pid, "status": "DRAFT"}, {"id": "different", "status": "PUBLISHED"}):
+        for row in ({"id": pid, "status": "DRAFT"}, {"id": "different", "status": "PUBLISHED"},
+                    {"id": pid, "status": "PUBLISHED", "deletedAt": "2026-01-01T00:00:00Z"},
+                    {"id": pid, "status": "PUBLISHED", "expiresAt": "2026-01-01T00:00:00Z"}):
             with self.subTest(row=row), patch.object(tools, "_call", return_value=row):
                 with self.assertRaisesRegex(GroundingError, "INVALID_PUBLIC_PROPERTY"):
                     tools.public_property(pid)
@@ -52,14 +56,67 @@ class PublicPropertyProjectionTests(unittest.TestCase):
         self.addCleanup(tools.close)
         card = {"id": "property:x", "title": "Nhà 0905 123 456", "priceVnd": 2000000000, "areaSqm": 80,
                 "owner_id": 99, "source": {"kind": "PROPERTY", "recordKey": "x", "storage_key": "private"},
-                "qualityStatus": "PLATFORM_PUBLISHED"}
+                "qualityStatus": "PLATFORM_PUBLISHED",
+                "scoreBreakdown": {"areaFit": 95, "private_note": "private"},
+                "amenityEvidence": {"areaId": "public-area", "private_note": "private",
+                                    "poiEvidence": [{"name": "School", "category": "SCHOOL", "owner_id": 99}]}}
         with patch.object(tools, "_call", return_value={
-            "method": "HEURISTIC_V1_1", "mode": "SAFE", "topProperties": [card]
+            "method": "HEURISTIC_V1_1", "mode": "SAFE", "topProperties": [card],
+            "topAreas": [{"district": "Cẩm Lệ", "owner_id": 99}]
         }):
-            result = tools.recommend({"budgetVnd": "3000000000"})["topProperties"][0]
+            response = tools.recommend({"budgetVnd": "3000000000"})
+        result = response["topProperties"][0]
+        self.assertNotIn("owner_id", response["topAreas"][0])
+        self.assertEqual(result["scoreBreakdown"], {"areaFit": 95})
+        self.assertEqual(result["amenityEvidence"]["poiEvidence"], [{"name": "School", "category": "SCHOOL"}])
+        self.assertNotIn("private_note", result["amenityEvidence"])
         self.assertNotIn("owner_id", result)
         self.assertNotIn("storage_key", result["source"])
         self.assertNotIn("0905", result["title"])
+
+    def test_image_requires_public_matching_listing_and_same_property_path(self):
+        tools = BackendTools(Settings())
+        self.addCleanup(tools.close)
+        pid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        image = f"/api/v1/properties/{pid}/images/cover/content"
+        foreign = "/api/v1/properties/other/images/cover/content"
+        row = {"id": pid, "status": "PUBLISHED", "images": [{"url": foreign}, {"url": image}]}
+        with patch.object(tools, "_call", return_value=row):
+            self.assertEqual(tools.property_image(pid), image)
+        with patch.object(tools, "_call", return_value=dict(row, status="DRAFT")):
+            with self.assertRaisesRegex(GroundingError, "INVALID_PUBLIC_PROPERTY"):
+                tools.property_image(pid)
+
+    def test_recommendation_rejects_wrong_property_identity_or_ward(self):
+        tools = BackendTools(Settings())
+        self.addCleanup(tools.close)
+        card = {"id": "property:x", "priceVnd": 2000000000, "areaSqm": 80, "ward": "Hòa Thọ Đông",
+                "qualityStatus": "PLATFORM_PUBLISHED", "source": {"kind": "PROPERTY", "recordKey": "x"}}
+        body = {"method": "HEURISTIC_V1_1", "mode": "SAFE", "topProperties": [card]}
+        with patch.object(tools, "_call", return_value=body):
+            with self.assertRaisesRegex(GroundingError, "RECOMMENDATION_OUTSIDE_LOCATION"):
+                tools.recommend({"budgetVnd": "3000000000", "ward": "Hòa Thọ Tây"})
+            card["source"]["recordKey"] = "other"
+            with self.assertRaisesRegex(GroundingError, "INVALID_PROPERTY_REFERENCE"):
+                tools.recommend({"budgetVnd": "3000000000"})
+
+    def test_nearby_projection_drops_internal_origin_reference(self):
+        tools = BackendTools(Settings())
+        tools.close()
+        pid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        payload = {"propertyId": pid, "radiusMeters": 1000, "distanceType": "STRAIGHT_LINE",
+                   "location": {"accuracy": "EXACT_PROPERTY", "reference": "private"},
+                   "items": [{"name": "School", "latitude": 16, "longitude": 108,
+                              "distanceMeters": 100, "categoryGroups": ["education"], "owner_id": 99}]}
+        def reply(request):
+            self.assertIsNone(request.headers.get("Authorization"))
+            return httpx.Response(200, json=payload)
+        with httpx.Client(base_url="http://127.0.0.1:18080", transport=httpx.MockTransport(reply)) as client:
+            tools.client = client
+            result = tools.property_nearby(pid)
+        self.assertNotIn("reference", result["location"])
+        self.assertNotIn("owner_id", result["items"][0])
+        self.assertEqual(result["items"][0]["categoryGroups"], ["education"])
 
     def test_sql_view_cross_check_keeps_projection_bounded(self):
         repository = PublishedPropertyRepository(Settings(

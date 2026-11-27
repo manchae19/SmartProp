@@ -98,6 +98,22 @@ class AreaSemanticsTests(unittest.TestCase):
         self.assertEqual(len(reply.citations), 1)
         self.assertIn("1 tin", reply.answer)
 
+        empty = bot.chat(ChatRequest(question="Tìm nhà ở 300 Dũng Sĩ Thanh Khê dưới 70 m²",
+                                     district="Thanh Khê", ward="Thanh Khê Tây",
+                                     sessionId=reply.evidence["session"]["id"]))
+        self.assertEqual(empty.evidence["responseKind"], "ADDRESS_NO_RESULTS")
+        self.assertEqual(empty.evidence["session"]["context"]["lastPropertyIds"], [])
+        self.assertTrue(empty.evidence["session"]["context"]["lastSearchEmpty"])
+
+    def test_invalid_area_does_not_search_with_previous_bounds(self):
+        bot, backend, _, _ = fixtures.MultiTurnTests().service(props=[])
+        first = bot.chat(ChatRequest(question="Tìm nhà dưới 90 m² dưới 3 tỷ tại Cẩm Lệ"))
+        self.assertEqual(backend.recommend.call_count, 1)
+        reply = bot.chat(ChatRequest(question="Diện tích từ 100 đến 80 m²", sessionId=first.evidence["session"]["id"]))
+        self.assertEqual(reply.evidence["clarification"], "AREA_RANGE_INVALID")
+        self.assertEqual(backend.recommend.call_count, 1)
+        self.assertEqual(reply.evidence["session"]["context"]["criteria"]["maxAreaSqm"], "90")
+
     def test_vnd_budget_is_grouped_without_rounding(self):
         self.assertEqual(format_vnd("50000000000"), "50.000.000.000 đồng")
         self.assertEqual(format_vnd("5500000000"), "5.500.000.000 đồng")

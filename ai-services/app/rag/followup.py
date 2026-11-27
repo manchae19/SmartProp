@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from .intent import fold, poi_categories
 from .money import parse_budget
-from .personalization import area_spec
+from .personalization import area_spec, invalid_area_text
 
 # Word ordinals only. A bare digit must NEVER be read as an ordinal: "2 tỷ" is a
 # budget, not "căn thứ hai". Numeric ordinals need an explicit property noun prefix,
@@ -137,7 +137,7 @@ def detect_district(question, known):
     return None
 
 
-def classification(question, context):
+def classification(question, context, *, districts=()):
     """Tool intent is explicit; a remembered budget never selects a tool."""
     value = fold(question)
     categories = poi_categories(question)
@@ -150,7 +150,7 @@ def classification(question, context):
     pending = state.get("pending")
     housing = r"(?:nha|can ho|chung cu|bat dong san|bds|dat nen|biet thu|phong tro|mat bang)"
     housing_value=re.sub(r"\b(?:nha thuoc|nha hang|nha khoa|nha kho|nha may|nha sach|nha tre)\b"," ",value)
-    explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|huong dan tung buoc|bo qua)\b",housing_value))
+    explicit_search = bool(re.search(r"\b(?:tim|mua|thue|goi y|de xuat|muon)\b.{0,55}\b"+housing+r"\b|\bco\s+"+housing+r"\b.{0,60}\b(?:nao|khong|phu hop)\b|\b(?:tim lai|tim tiep|xem goi y ngay|tim ngay|xem ket qua|bat dau tu van|tu van tung buoc|tu van theo ho gia dinh|huong dan tung buoc|bo qua)\b",housing_value))
     if re.search(r"\bgia (?:thue|mua)\b",value) and not re.search(r"\b(?:tim|muon|goi y|de xuat|co nha|co can ho)\b",value):explicit_search=False
     priority_edit=bool(re.search(r"\b(?:uu tien|quan trong nhat|tim ky hon|bo uu tien|xoa uu tien)\b",value))
     knowledge=bool(re.search(r"\b(?:la gi|thu tuc|quy trinh|thue phi|thue truoc ba|hop dong|so do|so hong|lai suat|vay ngan hang|can luu y|kien thuc)\b",value)) and not explicit_search and not reference
@@ -165,14 +165,21 @@ def classification(question, context):
     if re.search(r"\b(?:tat ca loai|moi loai|khong gioi han loai)\b",value):kind="ALL"
     purpose=detect_purpose(question)
     refinement=bool(re.search(r"\b(?:tim ky hon|goi y khac|lua chon khac|mo rong|thu hep|giu ngan sach)\b",value)) or priority_edit
-    if has_history and not reference and area_spec(question) is not None:
-        refinement = True
+    if has_history and not reference:
+        district_change = detect_district(question, districts) and re.search(
+            r"\b(?:doi|chuyen)\s+(?:quan\s+)?sang\b", value)
+        budget_scenario = budget_edit and re.search(
+            r"\bneu\s+(?:tang|giam|doi)\s+(?:muc\s+)?ngan sach\b", value)
+        citywide = (context.last_criteria or {}).get("district") and re.fullmatch(
+            r"(?:toan da nang|tat ca khu vuc)[.!? ]*", value)
+        refinement = refinement or bool(district_change or budget_scenario or citywide
+                                        or area_spec(question) or invalid_area_text(question))
     pending_search=bool(pending) and not reference
     legal=bool(re.search(r"\b(?:phap ly|so do|so hong|hop dong|sang ten|cong chung|thue truoc ba|giay chung nhan)\b",value))
     planning=bool(re.search(r"\b(?:quy hoach|giai toa|giai phong mat bang|lo gioi|thu hoi dat|quy hoach xay dung)\b",value))
     market=bool(re.search(r"\b(?:thi truong|gia chao|gia rao|gia trung binh|mat bang gia|gia ban|gia thue|gia mua|gia nha|gia dat|gia can ho|gia chung cu|trieu/m2|gia moi m2|gia m2)\b",value))
     trend=bool(re.search(r"\b(?:xu huong|bien dong|tang gia|giam gia|tang hay giam|so voi|nam truoc|thang truoc|quy truoc|lich su gia|du bao)\b|(?:20[0-9]{2}|[0-9]+ thang|quy [1-4])",value))
-    market = market or bool(re.search(r"\bgia\b",value) and (trend or re.search(r"\b(?:o|tai|bao nhieu)\b",value)))
+    market = market or bool(re.search(r"\bgia\b(?!\s+dinh\b)",value) and (trend or re.search(r"\b(?:o|tai|bao nhieu)\b",value)))
     prior_intent=state.get("turnIntent")
     analysis_terms=bool(re.search(r"\b(?:thinh hanh|ua chuong|duoc quan tam|duoc tim kiem|ban chay|xu huong|nhu cau thi truong|suc hut|phan khuc noi bat)\b",value))
     analysis_subject=bool(re.search(r"\b"+housing+r"\b|\b(?:thi truong|phan khuc|loai hinh)\b",value)) or prior_intent in ("MARKET_PRICE","MARKET_TREND","MARKET_ANALYSIS")
