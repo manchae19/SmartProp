@@ -204,6 +204,10 @@ async function replaceAccountDuringResearch(browser) {
     await page.getByText("Chế độ công khai an toàn (SAFE)", { exact: true }).waitFor();
     loginRelease.resolve();
     assert.deepEqual(await replacement, { role: "BUYER" });
+    // Account replacement opens the real PR49 welcome dialog and inerts the form until dismissed.
+    const welcome = page.locator("dialog.welcome-notice[open]");
+    await welcome.getByRole("button", { name: "Đóng thông báo" }).click();
+    await welcome.waitFor({ state: "hidden" });
     assert.equal((await profile(page)).role, "BUYER");
     delayed.resolve();
     await drained.promise;
@@ -221,7 +225,7 @@ async function replaceAccountDuringResearch(browser) {
     await prepareAdvisor(page, app, { navigate: false });
     const [reply] = await Promise.all([
       waitResponse(page, advisorPath),
-      submit.press("Enter", { timeout: 12000 }),
+      submit.click({ timeout: 12000 }),
     ]);
     assert.equal(reply.request().postDataJSON().includeResearch, false);
     assert.equal((await reply.json()).mode, "SAFE");
