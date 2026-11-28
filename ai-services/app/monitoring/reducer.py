@@ -6,7 +6,7 @@ from hashlib import sha256
 from threading import Lock
 
 from .accumulator import MAX_UTC, WINDOW_SECONDS, Availability, Snapshot, apply_deltas, boundary
-from .batches import MAX_GENERATION, MAX_PRODUCERS, SERVING, SYNTHETIC, decode
+from .batches import HISTORICAL, MAX_GENERATION, MAX_PRODUCERS, POPULATIONS, decode
 from .core import DROP_SLOTS
 from .schema import InvalidTelemetry, LIFECYCLE, MAX_VALUE, REGISTRY, VERSION, integer
 
@@ -88,7 +88,7 @@ class Reducer:
         if (type(producers) is not tuple or not 1 <= len(producers) <= MAX_PRODUCERS
                 or any(not integer(p, MAX_PRODUCERS) or not p for p in producers)
                 or len(set(producers)) != len(producers)
-                or not integer(population, SYNTHETIC) or population not in (SERVING, SYNTHETIC)
+                or not integer(population, HISTORICAL) or population not in POPULATIONS
                 or not boundary(watermark) or type(inventory_known) is not bool
                 or not integer(max_dedupe, MAX_DEDUPE) or not max_dedupe):
             raise InvalidTelemetry("invalid_reducer_config")

@@ -5,13 +5,15 @@ from itertools import product
 from types import MappingProxyType
 
 
-VERSION = 2
+VERSION = 3
 RELEASE = 1  # Registry entry for V1.3: tinix_xgboost_v1_3_integrated.
 MAX_SERIES = 4096
 MAX_VALUE = (1 << 53) - 1
 MAX_DURATION_US = 3_600_000_000
 MAX_LABEL = 40
 SURFACES = ("standalone", "posting", "advisor")
+UNATTRIBUTED = "unattributed"
+AI_SOURCES = (*SURFACES, UNATTRIBUTED)
 FEATURES = (
     "area", "floor_count", "frontage_width", "road_width", "bedroom_count", "bathroom_count",
     "has_floor", "has_frontage", "has_road_width", "has_bedroom", "has_bathroom", "has_project",
@@ -26,6 +28,7 @@ SEGMENTS = (
     *(f"input:{v}" for v in ("canonical", "compat_real", "compat_legacy")),
 )
 EFFECTIVE = ("present", "missing", "invalid", "unknown", "not_applicable", "applicability_unknown")
+MATRIX_STATES = EFFECTIVE[:4]
 OUTCOMES = MappingProxyType({
     "surface": ("served", "no_point", "validation_rejection", "timeout", "cancelled",
                 "dependency_unavailable", "failed", "interrupted"),
@@ -34,9 +37,15 @@ OUTCOMES = MappingProxyType({
     "candidate": ("eligible", "skip", "interrupted"),
     "dispatch": ("ai_response", "timeout", "cancelled", "dependency_unavailable", "failed", "interrupted"),
     "invocation": ("valid_point", "invalid_output", "inference_exception", "interrupted"),
+    "api_request": ("accepted", "validation_rejection", "model_unavailable", "failed", "interrupted"),
 })
-STAGES = ("feature_prep", "point", "calibration", "explanation", "interval", "model_load", "options", "health")
-DROP_REASONS = ("invalid", "numeric_overflow", "lock_busy", "active_limit", "queue_full", "batch_rejected")
+LIFECYCLE_SOURCES = MappingProxyType({
+    kind: (UNATTRIBUTED,) if kind == "api_request" else AI_SOURCES if kind == "invocation" else SURFACES
+    for kind in OUTCOMES
+})
+STAGES = ("feature_prep", "point", "calibration", "explanation", "interval", "model_load", "options", "health", "adapter")
+DROP_REASONS = ("invalid", "numeric_overflow", "lock_busy", "active_limit", "queue_full", "batch_rejected",
+                "clock_discontinuity", "monitor_fault")
 EXPLANATION_STATES = ("available", "partial", "not_available", "not_supported", "not_enabled")
 INTERVAL_STATES = ("available", "not_enabled", "not_available", "not_supported", "insufficient_calibration", "invalid_bounds")
 LATENCY_EDGES = (10_000, 25_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 5_000_000, 15_000_000)
@@ -144,12 +153,14 @@ class Registry:
 
 def valuation_metrics():
     surface = ("surface", SURFACES)
+    ai_source = ("surface", AI_SOURCES)
     for kind, outcomes in OUTCOMES.items():
+        lifecycle_source = ("surface", LIFECYCLE_SOURCES[kind])
         for event in ("started", "completed", "lost_terminal", "outcome", "in_flight", "opening_in_flight"):
-            labels = (surface, ("outcome", outcomes)) if event == "outcome" else (surface,)
+            labels = (lifecycle_source, ("outcome", outcomes)) if event == "outcome" else (lifecycle_source,)
             metric_kind = "gauge" if event.endswith("in_flight") else "counter"
             yield Metric(f"{kind}_{event}", metric_kind, "count", labels, managed=True)
-        yield Metric(f"{kind}_latency", "histogram", "us", (surface,), LATENCY_EDGES,
+        yield Metric(f"{kind}_latency", "histogram", "us", (lifecycle_source,), LATENCY_EDGES,
                      MAX_DURATION_US, managed=True)
     yield Metric("telemetry_drop", "counter", "count", (("reason", DROP_REASONS),), managed=True)
     yield Metric("duplicate_completion", "counter", "count", (), managed=True)
@@ -163,28 +174,35 @@ def valuation_metrics():
         "ready", "missing_file", "hash_mismatch", "schema_mismatch", "calibration_mismatch",
         "load_error", "release_mismatch", "unsupported_version",
     )),))
+    yield Metric("artifact_integrity", "counter", "count", (("result", (
+        "verified", "missing_file", "hash_mismatch", "schema_mismatch", "calibration_mismatch",
+        "manifest_mismatch", "unavailable",
+    )),))
+    yield Metric("fastapi_health", "counter", "count", (("plane", ("process", "app", "model")),
+                 ("state", ("ready", "not_ready", "unknown"))), managed=True)
     yield Metric("stage_latency", "histogram", "us",
-                 (surface, ("stage", STAGES)), LATENCY_EDGES, MAX_DURATION_US)
+                 (ai_source, ("stage", STAGES)), LATENCY_EDGES, MAX_DURATION_US)
     feature = ("feature", FEATURES)
     yield Metric("feature_effective", "counter", "count",
                  (feature, ("state", EFFECTIVE), ("segment", SEGMENTS)), managed=True)
     yield Metric("feature_raw", "counter", "count",
                  (feature, ("presence", ("present", "absent"))), managed=True)
+    yield Metric("feature_matrix", "counter", "count", (feature, ("state", MATRIX_STATES)), managed=True)
     yield Metric("feature_provenance", "counter", "count",
                  (feature, ("axis", ("derived", "defaulted", "unverified")), ("observed", ("yes", "no"))),
                  managed=True)
-    yield Metric("explanation_status", "counter", "count", (surface, ("state", EXPLANATION_STATES)), managed=True)
+    yield Metric("explanation_status", "counter", "count", (ai_source, ("state", EXPLANATION_STATES)), managed=True)
     yield Metric("explanation_contract", "counter", "count",
-                 (surface, ("contract", ("wp04_v1", "absent", "mismatch")),
+                 (ai_source, ("contract", ("wp04_v1", "absent", "mismatch")),
                   ("check", ("passed", "failed", "not_checked"))), managed=True)
     yield Metric("explanation_provenance", "counter", "count",
-                 (surface, ("origin", ("provided", "derived", "assumed", "missing", "unknown", "not_applicable"))),
+                 (ai_source, ("origin", ("provided", "derived", "assumed", "missing", "unknown", "not_applicable"))),
                  managed=True)
-    yield Metric("interval_status", "counter", "count", (surface, ("state", INTERVAL_STATES)), managed=True)
+    yield Metric("interval_status", "counter", "count", (ai_source, ("state", INTERVAL_STATES)), managed=True)
     yield Metric("interval_scope", "counter", "count",
-                 (surface, ("scope", ("group", "global", "global_fallback"))), managed=True)
-    yield Metric("interval_width", "histogram", "vnd", (surface,), WIDTH_EDGES, managed=True)
-    yield Metric("interval_relative_width", "histogram", "ppm", (surface,), RELATIVE_EDGES,
+                 (ai_source, ("scope", ("group", "global", "global_fallback"))), managed=True)
+    yield Metric("interval_width", "histogram", "vnd", (ai_source,), WIDTH_EDGES, managed=True)
+    yield Metric("interval_relative_width", "histogram", "ppm", (ai_source,), RELATIVE_EDGES,
                  MAX_VALUE, managed=True)
 
 
@@ -213,5 +231,5 @@ LIFECYCLE = MappingProxyType({
                           for outcome in outcomes}),
         REGISTRY.find(f"{kind}_latency", (surface,)),
     )
-    for kind, outcomes in OUTCOMES.items() for surface in SURFACES
+    for kind, outcomes in OUTCOMES.items() for surface in LIFECYCLE_SOURCES[kind]
 })

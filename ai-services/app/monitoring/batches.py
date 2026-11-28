@@ -15,7 +15,11 @@ MAX_PENDING = 512
 MAX_PENDING_BYTES = 4 * 1024 * 1024
 SERVING = 1
 SYNTHETIC = 2
-MAGIC = b"WPT2"
+PREVIEW = 3
+INTERNAL = 4
+HISTORICAL = 5
+POPULATIONS = (SERVING, SYNTHETIC, PREVIEW, INTERNAL, HISTORICAL)
+MAGIC = b"WPT3"
 HEADER = Struct("<4sBBIBQBIIH")
 ENTRY = Struct("<HQ")
 MAX_PACKET = HEADER.size + REGISTRY.size * ENTRY.size
@@ -32,7 +36,7 @@ class BatchIdentity:
     def validate(self):
         if (not integer(self.producer, MAX_PRODUCERS) or self.producer == 0
                 or not integer(self.generation, MAX_GENERATION) or self.generation == 0
-                or not integer(self.population, SYNTHETIC) or self.population not in (SERVING, SYNTHETIC)
+                or not integer(self.population, HISTORICAL) or self.population not in POPULATIONS
                 or not integer(self.sequence) or self.sequence == 0
                 or type(self.release) is not int or self.release != RELEASE):
             raise InvalidTelemetry("invalid_batch_identity")

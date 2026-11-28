@@ -1,5 +1,7 @@
 """Lost-terminal and per-generation continuity regressions without a runtime."""
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Lock
 from unittest import TestCase
 
 from app.monitoring.accumulator import Availability
@@ -90,6 +92,48 @@ class LostTerminalTests(TestCase):
         self.assertEqual(s.value("invocation_lost_terminal", ("advisor",)), 1)
         self.assertEqual(s.value("invocation_outcome", ("advisor", "interrupted")), 1)
         self.assertEqual(s.value("invocation_in_flight", ("advisor",)), 0)
+
+    def test_shutdown_competing_with_announced_finish_counts_loss_not_interruption(self):
+        inside_stop, finish_waiting, stop_done = Event(), Event(), Event()
+        ticks = iter((0, 1000))
+
+        def clock():
+            now = next(ticks)
+            if now:
+                inside_stop.set()
+                self.assertTrue(finish_waiting.wait(3))
+            return now
+
+        class InterleavedLock:
+            def __init__(self):
+                self.lock = Lock()
+
+            def acquire(self, **options):
+                if inside_stop.is_set() and self.lock.locked():
+                    finish_waiting.set()
+                    if not stop_done.wait(3):
+                        return False
+                return self.lock.acquire(**options)
+
+            def release(self):
+                self.lock.release()
+
+        t = recorder(clock=clock)
+        t._lock = InterleavedLock()
+        ticket = t.begin("invocation", "advisor")
+        with ThreadPoolExecutor(2) as pool:
+            stop = pool.submit(t.stop)
+            self.assertTrue(inside_stop.wait(3))
+            finish = pool.submit(t.finish, ticket, "valid_point")
+            try:
+                self.assertTrue(stop.result(timeout=4))
+            finally:
+                stop_done.set()
+            self.assertFalse(finish.result(timeout=4))
+        s = t.snapshot()
+        s.validate()
+        self.assertEqual(s.value("invocation_lost_terminal", ("advisor",)), 1)
+        self.assertEqual(s.value("invocation_completed", ("advisor",)), 0)
 
     def test_invalid_clock_and_histogram_overflow_release_capacity(self):
         ticks = iter((0, float("nan"), 2000, 3000))

@@ -8,7 +8,7 @@ from time import monotonic_ns
 
 from .accumulator import MAX_UTC, WINDOW_SECONDS, Snapshot, apply_deltas, boundary, histogram_updates
 from .schema import (
-    DROP_REASONS, InvalidTelemetry, LIFECYCLE, MAX_DURATION_US, MAX_VALUE, REGISTRY, VERSION,
+    DROP_REASONS, FEATURES, InvalidTelemetry, LIFECYCLE, MAX_DURATION_US, MAX_VALUE, REGISTRY, VERSION,
     approved_string, integer,
 )
 
@@ -35,6 +35,7 @@ class TelemetryConfig:
 class Ticket:
     sequence: int
     owner: object
+    kind: str
 
 
 class Telemetry:
@@ -57,6 +58,7 @@ class Telemetry:
         self._owner = object()
         self._active = {}
         self._live = {}
+        self._finishing = set()
         self._lost = set()
         self._sequence = 0
         self._stopped = False
@@ -86,6 +88,7 @@ class Telemetry:
     def _forget_locked(self, sequence):
         del self._active[sequence]
         del self._live[sequence]
+        self._finishing.discard(sequence)
 
     def _reconcile_locked(self):
         for sequence in self._lost:
@@ -94,6 +97,19 @@ class Telemetry:
             self._cells[life.active] -= 1
             self._forget_locked(sequence)
         self._lost.clear()
+
+    def abandon(self, ticket):
+        """Record a known terminal whose telemetry code raised before recording it."""
+        if (not self.enabled or type(ticket) is not Ticket or ticket.owner is not self._owner
+                or not integer(ticket.sequence)):
+            return False
+        with self._health_lock:
+            live = self._live.get(ticket.sequence)
+            if live is None or live[0] is not ticket or ticket.sequence in self._lost:
+                return False
+            self._lost.add(ticket.sequence)
+            self._drop_locked("monitor_fault")
+            return True
 
     def _apply(self, changes):
         try:
@@ -168,7 +184,7 @@ class Telemetry:
             if not self._apply({life.started: 1, life.active: 1}):
                 return None
             self._sequence += 1
-            ticket = Ticket(self._sequence, self._owner)
+            ticket = Ticket(self._sequence, self._owner, kind)
             self._active[ticket.sequence] = (ticket, life, now)
             with self._health_lock:
                 self._live[ticket.sequence] = (ticket, life)
@@ -185,22 +201,29 @@ class Telemetry:
         return {life.completed: 1, outcome_slot: 1, life.active: -1,
                 **histogram_updates(life.latency, (now - start) // 1000)}
 
-    def finish(self, ticket, outcome):
+    def finish(self, ticket, outcome, *, kind=None):
         if not self.enabled:
             return False
         if (type(ticket) is not Ticket or ticket.owner is not self._owner
-                or not integer(ticket.sequence) or not ticket.sequence or not approved_string(outcome)):
+                or not integer(ticket.sequence) or not ticket.sequence or not approved_string(outcome)
+                or (kind is not None and (not approved_string(kind) or kind != ticket.kind))):
             self.drop("invalid")
             return False
+        with self._health_lock:
+            live = self._live.get(ticket.sequence)
+            if live is not None:
+                if live[0] is not ticket or outcome not in live[1].outcomes:
+                    self._drop_locked("invalid")
+                    return False
+                if ticket.sequence in self._finishing and ticket.sequence not in self._lost:
+                    return False
+                self._finishing.add(ticket.sequence)
         if not self._acquire(account=False):
             with self._health_lock:
                 live = self._live.get(ticket.sequence)
                 if live is not None and live[0] is ticket and ticket.sequence not in self._lost:
-                    if outcome in live[1].outcomes:
-                        self._lost.add(ticket.sequence)
-                        self._drop_locked("lock_busy")
-                    else:
-                        self._drop_locked("invalid")
+                    self._lost.add(ticket.sequence)
+                    self._drop_locked("lock_busy")
             return False
         try:
             entry = self._active.get(ticket.sequence)
@@ -255,6 +278,9 @@ class Telemetry:
                     return False
                 now = None
             with self._health_lock:
+                unobserved_finishes = self._finishing - self._lost
+                self._drop_locked("monitor_fault", len(unobserved_finishes))
+                self._lost.update(unobserved_finishes)
                 self._reconcile_locked()
                 changes = Counter()
                 reason = "invalid"
@@ -308,21 +334,63 @@ class Telemetry:
         """Explicitly close one UTC window. Carry opening and active gauges forward."""
         return self._snapshot(True, next_start)
 
+    @staticmethod
+    def _feature_segments(segments):
+        if (type(segments) is not tuple or len(segments) > 4
+                or any(not approved_string(s) or ":" not in s for s in segments)
+                or len({s.split(":", 1)[0] for s in segments}) != len(segments)):
+            raise InvalidTelemetry("invalid_feature_segment")
+
+    @staticmethod
+    def _feature_changes(feature, state, flags, segments):
+        if any(type(flag) is not bool for flag in flags):
+            raise InvalidTelemetry("invalid_feature_flag")
+        changes = {REGISTRY.find("feature_effective", (feature, state, s)).offset: 1
+                   for s in ("global", *segments)}
+        changes[REGISTRY.find("feature_raw", (feature, "present" if flags[0] else "absent")).offset] = 1
+        for axis, value in zip(("derived", "defaulted", "unverified"), flags[1:]):
+            changes[REGISTRY.find("feature_provenance", (feature, axis, "yes" if value else "no")).offset] = 1
+        return changes
+
     def feature(self, feature, state, raw_present, *, segments=(), derived=False, defaulted=False, unverified=False):
         if not self.enabled:
             return False
-        flags = (raw_present, derived, defaulted, unverified)
-        if (any(type(flag) is not bool for flag in flags) or type(segments) is not tuple or len(segments) > 4
-                or any(not approved_string(s) or ":" not in s for s in segments)
-                or len({s.split(":", 1)[0] for s in segments}) != len(segments)):
+        try:
+            self._feature_segments(segments)
+            changes = self._feature_changes(feature, state, (raw_present, derived, defaulted, unverified), segments)
+        except InvalidTelemetry:
             self.drop("invalid")
             return False
+        return self._write(changes)
+
+    def feature_frame(self, rows, segments):
+        """One atomic aggregate for a single transformed row, using only classified facts."""
+        if not self.enabled:
+            return False
         try:
-            changes = {REGISTRY.find("feature_effective", (feature, state, s)).offset: 1
-                       for s in ("global", *segments)}
-            changes[REGISTRY.find("feature_raw", (feature, "present" if raw_present else "absent")).offset] = 1
-            for axis, value in zip(("derived", "defaulted", "unverified"), flags[1:]):
-                changes[REGISTRY.find("feature_provenance", (feature, axis, "yes" if value else "no")).offset] = 1
+            self._feature_segments(segments)
+            if type(rows) is not tuple or len(rows) != len(FEATURES):
+                raise InvalidTelemetry("invalid_feature_frame")
+            changes = {}
+            for feature, row in zip(FEATURES, rows):
+                if type(row) is not tuple or len(row) != 6:
+                    raise InvalidTelemetry("invalid_feature_frame")
+                matrix, reporting, *flags = row
+                if not approved_string(reporting) or reporting not in (matrix, "not_applicable", "applicability_unknown"):
+                    raise InvalidTelemetry("invalid_feature_frame")
+                changes[REGISTRY.find("feature_matrix", (feature, matrix)).offset] = 1
+                changes.update(self._feature_changes(feature, reporting, flags, segments))
+        except InvalidTelemetry:
+            self.drop("invalid")
+            return False
+        return self._write(changes)
+
+    def readiness(self, process, app, model):
+        if not self.enabled:
+            return False
+        try:
+            changes = {REGISTRY.find("fastapi_health", (plane, value)).offset: 1
+                       for plane, value in zip(("process", "app", "model"), (process, app, model))}
         except InvalidTelemetry:
             self.drop("invalid")
             return False

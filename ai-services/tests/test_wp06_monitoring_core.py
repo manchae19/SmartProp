@@ -57,7 +57,7 @@ def evidence(window, **options):
 
 class SchemaTests(TestCase):
     def test_closed_registry_and_cardinality(self):
-        self.assertEqual(REGISTRY.size, 3647)
+        self.assertEqual(REGISTRY.size, 3986)
         self.assertLessEqual(REGISTRY.size, MAX_SERIES)
         self.assertEqual(len(FEATURES), 22)
         with self.assertRaisesRegex(InvalidTelemetry, "registry_capacity"):
