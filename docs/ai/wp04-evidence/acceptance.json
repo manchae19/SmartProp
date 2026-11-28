@@ -1,0 +1,1519 @@
+{
+  "status": "FINAL_ACCEPTANCE",
+  "runtime_report_timestamp_utc": "2026-11-28T11:42:35.852Z",
+  "tested_commit": "9fa708a070e352247ed08f4c8720dfe22221164b",
+  "tested_tree": "d1e57dfee9a9315a7f53d4ca75dbdfd03962f9ac",
+  "approved_branch_head": "a82bd7f69902db1e7c3d4bb0a4bd010901279c17",
+  "main_baseline": "0e9053f0c4085351a7d429f81995f6895ad80e33",
+  "suites": {
+    "failure_isolation": {
+      "classification": "MIXED_REAL_AND_MOCKED",
+      "passed": 11,
+      "failed": 0,
+      "notRun": 0,
+      "exit": 0,
+      "checks": [
+        {
+          "name": "unmodified real V1.3 positive control",
+          "status": "PASS",
+          "classification": "REAL_HTTP"
+        },
+        {
+          "name": "standalone: missing explanation -> ABSENT",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "standalone: unavailable explanation -> UNAVAILABLE",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "standalone: malformed explanation -> INVALID",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "standalone: invalid adjusted price -> INVALID",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "standalone: one-VND mismatch -> INCONSISTENT",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "standalone: reconstruction mismatch -> INVALID",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "stale prediction discarded after input edit",
+          "status": "PASS",
+          "classification": "HELD_REAL_RESPONSE"
+        },
+        {
+          "name": "posting: invalid explanation preserves authoritative preview",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "Advisor: unavailable explanation preserves recommendation and both Comparable sections",
+          "status": "PASS",
+          "classification": "MOCKED_RESPONSE"
+        },
+        {
+          "name": "owned FastAPI outage, no fabricated price, and recovery",
+          "status": "PASS",
+          "classification": "REAL_PROCESS_OUTAGE"
+        }
+      ]
+    },
+    "runtime_browser": {
+      "classification": "REAL_HTTP",
+      "passed": 298,
+      "failed": 0,
+      "notRun": 0,
+      "exit": 0,
+      "checks": [
+        {
+          "name": "WP04_APP is loopback",
+          "status": "PASS"
+        },
+        {
+          "name": "WP04_API is loopback",
+          "status": "PASS"
+        },
+        {
+          "name": "fixture credentials provided",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 predict 200",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 model v1.3",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 estimated price visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1280 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 predict 200",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 model v1.3",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 estimated price visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@320 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 predict 200",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 model v1.3",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 estimated price visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@390 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 predict 200",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 model v1.3",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 estimated price visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@768 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 predict 200",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 model v1.3",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 estimated price visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone@1440 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 preview 200",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 available",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 explanation AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 adjusted price matches",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1280 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 preview 200",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 available",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 explanation AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 adjusted price matches",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@320 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 preview 200",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 available",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 explanation AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 adjusted price matches",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@390 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 preview 200",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 available",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 explanation AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 adjusted price matches",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@768 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 preview 200",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 available",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 positive integer price",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 explanation AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 adjusted price matches",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "posting@1440 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 consult 200",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 request includeResearch false",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 request propertyType HOUSE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 SAFE mode",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 has recommendation",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 comparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 valuationComparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 featureCoverage present",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 price headline shown",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 heading: Tin tương đồng theo giá rao",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 heading: Đối chiếu định giá bằng tin đăng",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 no research disclosure",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1280 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 consult 200",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 request includeResearch false",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 request propertyType HOUSE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 SAFE mode",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 has recommendation",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 comparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 valuationComparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 featureCoverage present",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 price headline shown",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 heading: Tin tương đồng theo giá rao",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 heading: Đối chiếu định giá bằng tin đăng",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 no research disclosure",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@320 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 consult 200",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 request includeResearch false",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 request propertyType HOUSE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 SAFE mode",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 has recommendation",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 comparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 valuationComparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 featureCoverage present",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 price headline shown",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 heading: Tin tương đồng theo giá rao",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 heading: Đối chiếu định giá bằng tin đăng",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 no research disclosure",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@390 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 consult 200",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 request includeResearch false",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 request propertyType HOUSE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 SAFE mode",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 has recommendation",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 comparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 valuationComparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 featureCoverage present",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 price headline shown",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 heading: Tin tương đồng theo giá rao",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 heading: Đối chiếu định giá bằng tin đăng",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 no research disclosure",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@768 no failed API request",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 consult 200",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 request includeResearch false",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 request propertyType HOUSE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 SAFE mode",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 has recommendation",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 comparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 valuationComparableEvidence section",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 featureCoverage present",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 price headline shown",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 heading: Tin tương đồng theo giá rao",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 heading: Đối chiếu định giá bằng tin đăng",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 explanation panel visible",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 price text",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 technical section exists",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 waterfall rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 six factor rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 22 provenance entries",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 explanation groups",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 no NaN/Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 no research disclosure",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 no overflow",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 no page error",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor@1440 no failed API request",
+          "status": "PASS"
+        }
+      ]
+    },
+    "mocked_surfaces": {
+      "classification": "MOCKED_WITH_ROUTE_EVIDENCE",
+      "passed": 30,
+      "failed": 0,
+      "notRun": 0,
+      "exit": 0,
+      "checks": [
+        {
+          "name": "advisor mounts the explanation panel",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor panel status is AVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor waterfall shows the six contributions",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor renders all 22 provenance rows",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor shows the calibration bridge",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor renders the cumulative waterfall svg",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor keeps legacy SHAP hidden",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor does not duplicate a legacy SHAP panel",
+          "status": "PASS"
+        },
+        {
+          "name": "both comparable evidence sections render",
+          "status": "PASS"
+        },
+        {
+          "name": "feature coverage is displayed",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-available renders without a JS exception",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-available shows no NaN or Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "legacy response hides the new panel",
+          "status": "PASS"
+        },
+        {
+          "name": "legacy response offers the SHAP toggle",
+          "status": "PASS"
+        },
+        {
+          "name": "legacy response has no SHAP panel until opened",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-legacy renders without a JS exception",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-legacy shows no NaN or Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "unavailable explanation still renders the panel",
+          "status": "PASS"
+        },
+        {
+          "name": "unavailable panel reports UNAVAILABLE",
+          "status": "PASS"
+        },
+        {
+          "name": "unavailable panel shows no waterfall",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-unavailable renders without a JS exception",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-unavailable shows no NaN or Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "malformed explanation degrades to INVALID",
+          "status": "PASS"
+        },
+        {
+          "name": "malformed panel reports INVALID",
+          "status": "PASS"
+        },
+        {
+          "name": "malformed panel shows no attribution",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-malformed renders without a JS exception",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor-malformed shows no NaN or Infinity",
+          "status": "PASS"
+        },
+        {
+          "name": "standalone route-level mutation (failure-isolation.mjs)",
+          "status": "PASS"
+        },
+        {
+          "name": "posting route-level mutation (failure-isolation.mjs)",
+          "status": "PASS"
+        },
+        {
+          "name": "advisor route-level mutation (failure-isolation.mjs)",
+          "status": "PASS"
+        }
+      ]
+    },
+    "reactive_authorization": {
+      "classification": "MIXED_REAL_AND_MOCKED",
+      "passed": 3,
+      "failed": 0,
+      "notRun": 0,
+      "exit": 0,
+      "checks": [
+        {
+          "name": "active admin locks, shared client denies credential, account restored",
+          "status": "PASS",
+          "evidence": "REAL_HTTP_AND_MYSQL"
+        },
+        {
+          "name": "authTransition, account replacement, late research response rejected, SAFE fallback",
+          "status": "PASS",
+          "evidence": "REAL_SESSION_AND_SAFE_API_WITH_SYNTHETIC_RESEARCH_RESPONSE"
+        },
+        {
+          "name": "PR49 shared-session Web Locks, signed refresh and cross-tab revocation",
+          "status": "PASS",
+          "evidence": "REAL_SHARED_CLIENT_AND_SPRING_WITH_401_FIXTURE"
+        }
+      ]
+    },
+    "isolated_mysql": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "cases": {
+        "AdvisorPartialResultLiveIT": 1,
+        "ComparableSyntheticMysqlIT": 3
+      },
+      "exit": 0
+    },
+    "frontend": {
+      "passed": 348,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "spring_boot": {
+      "passed": 324,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "fastapi_serial": {
+      "passed": 1230,
+      "failed": 0,
+      "skipped": 20,
+      "subtestsPassed": 105,
+      "exit": 0
+    },
+    "wp04_python": {
+      "passed": 51,
+      "failed": 0,
+      "skipped": 0,
+      "exit": 0
+    },
+    "wp02_chromium": {
+      "passedGroups": 12,
+      "failedGroups": 0,
+      "exit": 0
+    },
+    "vite": {
+      "transformedModules": 273,
+      "exit": 0
+    },
+    "assets": {
+      "examinedFiles": 148,
+      "excludedAssets": 5,
+      "byteIdenticalApprovedAssets": 30,
+      "exit": 0
+    }
+  },
+  "integrity": {
+    "v1_3": {
+      "checksPassed": 8,
+      "files": [
+        {
+          "name": "model.json",
+          "bytes": 28512676,
+          "sha256": "3c56b6937902d9f736f9eb0278683f0c5ab8af027f5ea12b1a4072abff840a03",
+          "copiesVerified": 2
+        },
+        {
+          "name": "feature_schema.json",
+          "bytes": 24257,
+          "sha256": "84be275b12b3c426497c00be80eed621d7323ac2a2abcb282752c7a89361e7ea",
+          "copiesVerified": 2
+        },
+        {
+          "name": "calibration.json",
+          "bytes": 547,
+          "sha256": "17632bdf4d578723a5c336b7c7e3aed6021dbb68f38985b763839a763fbfe645",
+          "copiesVerified": 2
+        },
+        {
+          "name": "artifact_manifest.json",
+          "bytes": 1078,
+          "sha256": "419599ecbefbe24bbbc1754a0224a7c25747ac3a08827d4e14ea62a5e41f2dce",
+          "copiesVerified": 2
+        }
+      ]
+    },
+    "migrations": {
+      "trackedChanges": 0,
+      "standardSqlVersionsSuccessfullyApplied": 23
+    }
+  },
+  "cleanup": {
+    "state": "stopped",
+    "remainingFixtureListeners": 0,
+    "mentorListenersPreserved": 5,
+    "valuationProcessReplaced": true
+  }
+}

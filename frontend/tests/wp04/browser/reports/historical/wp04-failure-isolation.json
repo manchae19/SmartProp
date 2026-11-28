@@ -1,0 +1,183 @@
+{
+  "at": "2026-11-28T11:18:30.645Z",
+  "total": 35,
+  "passed": 24,
+  "failed": 11,
+  "results": [
+    {
+      "name": "baseline predict carries an explanation",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "missing explanation: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "missing explanation: status null",
+      "ok": true,
+      "detail": "null"
+    },
+    {
+      "name": "missing explanation: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing explanation: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing explanation: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "UNAVAILABLE: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "UNAVAILABLE: status UNAVAILABLE",
+      "ok": false,
+      "detail": "null"
+    },
+    {
+      "name": "UNAVAILABLE: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "UNAVAILABLE: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "UNAVAILABLE: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "malformed: status INVALID",
+      "ok": false,
+      "detail": "null"
+    },
+    {
+      "name": "malformed: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "malformed: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "malformed: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "invalid adjusted price: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "invalid adjusted price: status INVALID",
+      "ok": false,
+      "detail": "null"
+    },
+    {
+      "name": "invalid adjusted price: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "invalid adjusted price: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "invalid adjusted price: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "one-VND mismatch: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "one-VND mismatch: status INCONSISTENT",
+      "ok": false,
+      "detail": "null"
+    },
+    {
+      "name": "one-VND mismatch: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "one-VND mismatch: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "one-VND mismatch: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "reconstruction mismatch: authoritative price visible",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "reconstruction mismatch: status INVALID",
+      "ok": false,
+      "detail": "null"
+    },
+    {
+      "name": "reconstruction mismatch: no attribution rows",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "reconstruction mismatch: no waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "reconstruction mismatch: no crash text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "auth: login succeeded",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/account"
+    },
+    {
+      "name": "auth: locked account is refused",
+      "ok": true,
+      "detail": "403"
+    },
+    {
+      "name": "auth: restricted data is not served while locked",
+      "ok": true,
+      "detail": "401"
+    },
+    {
+      "name": "auth: restored fixture logs in again",
+      "ok": true,
+      "detail": "200"
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import { session, errorText } from "../auth/api.js";
 import { createHistoryClient } from "./history.js";
 import "./ValuationPanel.css";
 import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
+import ValuationExplanationPanel from './ValuationExplanationPanel.js';
+import { normalizeVnd } from './explanationModel.js';
 import { valuationComparableBody } from '../property/comparables.js';
 function useValuationPanelState(inputProps, forwardedRef) {
   inputProps = {
@@ -524,7 +526,14 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
               {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(new Intl.NumberFormat("vi-VN").format(view.result.predicted_asking_price_vnd))}
               {" đồng · Tổng giá bất động sản"}
             </p>
-            {view.historyEnabled && !view.demo ? <div className="mt-4" data-sp-018bbc28="">
+                            <ValuationExplanationPanel
+                  explanation={view.result.explanation}
+                  predictedPriceVnd={normalizeVnd(view.result.predicted_asking_price_vnd)}
+                  modelVersion={view.result.model_version}
+                  surface="standalone"
+                  className="mt-4"
+                />
+                {view.historyEnabled && !view.demo ? <div className="mt-4" data-sp-018bbc28="">
                 {view.session.token ? <button type="button" disabled={view.saving || view.saved} className="rounded-full border border-brand-line/40 px-4 py-2 text-sm disabled:opacity-60" onClick={$event => {
               return view.saveResult?.($event);
             }} data-sp-018bbc28="">

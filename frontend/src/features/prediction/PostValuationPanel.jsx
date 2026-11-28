@@ -4,6 +4,7 @@ import React, { useRef, useState, useSyncExternalStore, useEffect } from "react"
 import { api } from "../auth/api.js";
 import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
 import AdvancedValuationFields from "./AdvancedValuationFields.jsx";
+import ValuationExplanationPanel from "./ValuationExplanationPanel.js";
 import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
 import { valuationComparableBody } from '../property/comparables.js';
 function usePostValuationPanelState(inputProps, forwardedRef) {
@@ -144,6 +145,15 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       <p className="text-xs text-brand-navy/70 mt-2">
         {"Giá rao ước tính; giá chào của bạn được giữ nguyên."}
       </p>
+      {view.state.result?.available ? (
+        <ValuationExplanationPanel
+          explanation={view.state.result.explanation}
+          predictedPriceVnd={view.state.result.predictedAskingPriceVnd}
+          modelVersion={view.state.result.modelVersion}
+          surface="preview"
+          className="mt-4"
+        />
+      ) : null}
       <label className="block mt-5 text-xs">
         {"Khu vực tham khảo "}
         <select data-testid="valuation-location" value={view.location} onChange={$event => {
