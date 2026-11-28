@@ -5,7 +5,7 @@ from itertools import product
 from types import MappingProxyType
 
 
-VERSION = 1
+VERSION = 2
 RELEASE = 1  # Registry entry for V1.3: tinix_xgboost_v1_3_integrated.
 MAX_SERIES = 4096
 MAX_VALUE = (1 << 53) - 1
@@ -145,7 +145,7 @@ class Registry:
 def valuation_metrics():
     surface = ("surface", SURFACES)
     for kind, outcomes in OUTCOMES.items():
-        for event in ("started", "completed", "outcome", "in_flight", "opening_in_flight"):
+        for event in ("started", "completed", "lost_terminal", "outcome", "in_flight", "opening_in_flight"):
             labels = (surface, ("outcome", outcomes)) if event == "outcome" else (surface,)
             metric_kind = "gauge" if event.endswith("in_flight") else "counter"
             yield Metric(f"{kind}_{event}", metric_kind, "count", labels, managed=True)
@@ -195,6 +195,7 @@ REGISTRY = Registry(valuation_metrics())
 class LifecycleSeries:
     started: int
     completed: int
+    lost: int
     opening: int
     active: int
     outcomes: MappingProxyType
@@ -205,6 +206,7 @@ LIFECYCLE = MappingProxyType({
     (kind, surface): LifecycleSeries(
         REGISTRY.find(f"{kind}_started", (surface,)).offset,
         REGISTRY.find(f"{kind}_completed", (surface,)).offset,
+        REGISTRY.find(f"{kind}_lost_terminal", (surface,)).offset,
         REGISTRY.find(f"{kind}_opening_in_flight", (surface,)).offset,
         REGISTRY.find(f"{kind}_in_flight", (surface,)).offset,
         MappingProxyType({outcome: REGISTRY.find(f"{kind}_outcome", (surface, outcome)).offset

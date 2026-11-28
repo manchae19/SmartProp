@@ -23,9 +23,11 @@ DUPLICATE_SLOT = REGISTRY.find("duplicate_completion", ()).offset
 class TelemetryConfig:
     enabled: bool = False
     max_active: int = MAX_ACTIVE
+    nonblocking: bool = False
 
     def __post_init__(self):
-        if type(self.enabled) is not bool or not integer(self.max_active, MAX_ACTIVE) or not self.max_active:
+        if (type(self.enabled) is not bool or type(self.nonblocking) is not bool
+                or not integer(self.max_active, MAX_ACTIVE) or not self.max_active):
             raise InvalidTelemetry("invalid_config")
 
 
@@ -47,12 +49,15 @@ class Telemetry:
         self._start = start
         self._clock = clock_ns
         self._max_active = config.max_active
+        self._lock_timeout = 0 if config.nonblocking else LOCK_TIMEOUT_SECONDS
         self._lock = Lock()
         self._health_lock = Lock()
         self._drops = dict.fromkeys(DROP_REASONS, 0)
         self._cells = array("Q", [0]) * REGISTRY.size
         self._owner = object()
         self._active = {}
+        self._live = {}
+        self._lost = set()
         self._sequence = 0
         self._stopped = False
 
@@ -66,13 +71,29 @@ class Telemetry:
                 reason = "invalid"
             # Health accounting is a fixed-size independent critical section.
             with self._health_lock:
-                self._drops[reason] = min(MAX_VALUE, self._drops[reason] + 1)
+                self._drop_locked(reason)
 
-    def _acquire(self):
-        if self._lock.acquire(timeout=LOCK_TIMEOUT_SECONDS):
+    def _drop_locked(self, reason, count=1):
+        self._drops[reason] = min(MAX_VALUE, self._drops[reason] + count)
+
+    def _acquire(self, *, account=True):
+        if self._lock.acquire(timeout=self._lock_timeout):
             return True
-        self.drop("lock_busy")
+        if account:
+            self.drop("lock_busy")
         return False
+
+    def _forget_locked(self, sequence):
+        del self._active[sequence]
+        del self._live[sequence]
+
+    def _reconcile_locked(self):
+        for sequence in self._lost:
+            _, life, _ = self._active[sequence]
+            self._cells[life.lost] += 1
+            self._cells[life.active] -= 1
+            self._forget_locked(sequence)
+        self._lost.clear()
 
     def _apply(self, changes):
         try:
@@ -131,8 +152,13 @@ class Telemetry:
         if not self._acquire():
             return None
         try:
+            with self._health_lock:
+                self._reconcile_locked()
             if self._stopped or len(self._active) >= self._max_active or self._sequence >= MAX_VALUE:
                 self.drop("active_limit")
+                return None
+            if self._cells[life.opening] + self._cells[life.started] >= MAX_VALUE:
+                self.drop("numeric_overflow")
                 return None
             try:
                 now = self._now()
@@ -144,6 +170,8 @@ class Telemetry:
             self._sequence += 1
             ticket = Ticket(self._sequence, self._owner)
             self._active[ticket.sequence] = (ticket, life, now)
+            with self._health_lock:
+                self._live[ticket.sequence] = (ticket, life)
             return ticket
         finally:
             self._lock.release()
@@ -161,10 +189,18 @@ class Telemetry:
         if not self.enabled:
             return False
         if (type(ticket) is not Ticket or ticket.owner is not self._owner
-                or not integer(ticket.sequence) or not ticket.sequence):
+                or not integer(ticket.sequence) or not ticket.sequence or not approved_string(outcome)):
             self.drop("invalid")
             return False
-        if not self._acquire():
+        if not self._acquire(account=False):
+            with self._health_lock:
+                live = self._live.get(ticket.sequence)
+                if live is not None and live[0] is ticket and ticket.sequence not in self._lost:
+                    if outcome in live[1].outcomes:
+                        self._lost.add(ticket.sequence)
+                        self._drop_locked("lock_busy")
+                    else:
+                        self._drop_locked("invalid")
             return False
         try:
             entry = self._active.get(ticket.sequence)
@@ -178,15 +214,31 @@ class Telemetry:
                 self.drop("invalid")
                 return False
             _, life, start = entry
+            if outcome not in life.outcomes:
+                self.drop("invalid")
+                return False
             try:
                 changes = self._completion(life, start, self._now(), outcome)
             except InvalidTelemetry:
-                self.drop("invalid")
+                changes = None
+            with self._health_lock:
+                if ticket.sequence in self._lost:
+                    self._reconcile_locked()
+                    self._cells[DUPLICATE_SLOT] = min(MAX_VALUE, self._cells[DUPLICATE_SLOT] + 1)
+                    return False
+                reason = "invalid"
+                if changes is not None:
+                    try:
+                        apply_deltas(self._cells, changes)
+                    except InvalidTelemetry:
+                        reason = "numeric_overflow"
+                    else:
+                        self._forget_locked(ticket.sequence)
+                        return True
+                self._drop_locked(reason)
+                self._lost.add(ticket.sequence)
+                self._reconcile_locked()
                 return False
-            if not self._apply(changes):
-                return False
-            del self._active[ticket.sequence]
-            return True
         finally:
             self._lock.release()
 
@@ -195,36 +247,50 @@ class Telemetry:
         if not self.enabled or not self._acquire():
             return False
         try:
-            changes = Counter()
             try:
                 now = self._now()
-                for _, life, start in self._active.values():
-                    changes.update(self._completion(life, start, now, "interrupted"))
             except InvalidTelemetry:
-                self.drop("invalid")
-                return False
-            if not self._apply(changes):
-                return False
-            self._active.clear()
-            self._stopped = True
-            return True
+                if not self._active:
+                    self.drop("invalid")
+                    return False
+                now = None
+            with self._health_lock:
+                self._reconcile_locked()
+                changes = Counter()
+                reason = "invalid"
+                try:
+                    for _, life, start in self._active.values():
+                        changes.update(self._completion(life, start, now, "interrupted"))
+                    reason = "numeric_overflow"
+                    apply_deltas(self._cells, changes)
+                except InvalidTelemetry:
+                    self._drop_locked(reason, len(self._active))
+                    self._lost.update(self._active)
+                    self._reconcile_locked()
+                self._active.clear()
+                self._live.clear()
+                self._stopped = True
+                return True
         finally:
             self._lock.release()
 
-    def _snapshot(self, rotate):
+    def _snapshot(self, rotate, next_start=None):
         if not self.enabled or not self._acquire():
             return None
         try:
-            if rotate and self._start + 2 * WINDOW_SECONDS > MAX_UTC:
-                self.drop("batch_rejected")
-                return None
+            if rotate:
+                next_start = self._start + WINDOW_SECONDS if next_start is None else next_start
+                if not boundary(next_start) or not self._start < next_start <= MAX_UTC - WINDOW_SECONDS:
+                    self.drop("batch_rejected")
+                    return None
             with self._health_lock:
+                self._reconcile_locked()
                 cells = self._cells[:]
                 for reason, offset in DROP_SLOTS.items():
                     cells[offset] = self._drops[reason]
                 snapshot = Snapshot(VERSION, self._start, tuple(cells))
                 if rotate:
-                    self._start += WINDOW_SECONDS
+                    self._start = next_start
                     self._cells = array("Q", [0]) * REGISTRY.size
                     for life in LIFECYCLE.values():
                         self._cells[life.opening] = cells[life.active]
@@ -238,9 +304,9 @@ class Telemetry:
     def snapshot(self):
         return self._snapshot(False)
 
-    def rotate(self):
+    def rotate(self, next_start=None):
         """Explicitly close one UTC window. Carry opening and active gauges forward."""
-        return self._snapshot(True)
+        return self._snapshot(True, next_start)
 
     def feature(self, feature, state, raw_present, *, segments=(), derived=False, defaulted=False, unverified=False):
         if not self.enabled:

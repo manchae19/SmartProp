@@ -1,5 +1,12 @@
 # WP-06 B0/B1 · Bounded telemetry core
 
+## B1 hardening sau review
+
+- P2-01: terminal bị mất do lock contention, đồng hồ không hợp lệ hoặc số tổng vượt giới hạn được hạch toán vào `lost_terminal` riêng. Danh sách chờ chỉ nhận ticket đang sống và luôn nằm dưới active cap. Begin, snapshot/rotate, finish lặp và shutdown đối soát trước khi tái dùng capacity. Khi đã lost, report đến muộn không chuyển thành kết quả nghiệp vụ. Công thức mới là `opening + started = in_flight + completed + lost_terminal`. `completed` vẫn bằng tổng business outcomes và histogram count. Coverage bị hạ khi mất terminal. Không thay loss bằng point hoặc interrupted.
+- P2-02: reducer giữ hai vector opening/closing cho từng producer ở các window mở, cùng một window đã seal gần nhất. So từng producer cùng generation, kể cả khi số tổng của nhiều producer triệt tiêu sai lệch. Nếu hai window đã đến trước seal, có thể đánh dấu cả hai. Nếu hàng xóm đến sau khi kết quả trước đã finalize, chỉ window kế tiếp bị hạ coverage. Gap không có previous anchor cũng thiếu bằng chứng. Generation đổi thì reset đối soát, không suy luận lỗi model từ gauge cũ. Caps dedupe/watermark giữ nguyên.
+- Schema v2 có **3.647 slots** và từ chối packet v1. B1 fixture cũ không còn cùng digest vì schema/slot layout đổi. Sau hardening, **39/39 test** qua và SHA‑256 fixture v2 là `5b43c65089e244b59232082872f09c5890421badcb2b760c1b4ecc64742e0143`. Số liệu phía dưới là evidence của B1 gốc đã được review.
+- Mức chờ lock 20 ms của B1 gốc cao hơn budget added P95 2 ms nếu contention xảy ra thường xuyên. Recorder hỗ trợ chế độ không chờ main lock dành cho adapter B2. Health critical section vẫn ngắn và hữu hạn. Runtime overhead cần đo riêng khi wiring được duyệt.
+
 Baseline Phase A `6e25011533ac35d7b0b47780526c0d5273783bf5`, approved main `1c67a279a8ff6f6939767e82bb31b17584610864`. B0 khóa mẫu số và privacy. B1 thêm package độc lập dùng Python standard library. Các producer của production vẫn chưa nối vào package.
 
 ## Cấu trúc và dữ liệu

@@ -142,7 +142,8 @@ def dense_snapshot():
             cells[series.offset + series.width - 1] = series.width - 2
     for life in LIFECYCLE.values():
         count = cells[life.latency.offset + life.latency.width - 1]
-        cells[life.started] = cells[life.completed] = count
+        cells[life.started] = count + cells[life.lost]
+        cells[life.completed] = count
         cells[next(iter(life.outcomes.values()))] += count - len(life.outcomes)
     return Snapshot(VERSION, 0, tuple(cells))
 

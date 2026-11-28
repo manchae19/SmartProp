@@ -57,7 +57,7 @@ def evidence(window, **options):
 
 class SchemaTests(TestCase):
     def test_closed_registry_and_cardinality(self):
-        self.assertEqual(REGISTRY.size, 3632)
+        self.assertEqual(REGISTRY.size, 3647)
         self.assertLessEqual(REGISTRY.size, MAX_SERIES)
         self.assertEqual(len(FEATURES), 22)
         with self.assertRaisesRegex(InvalidTelemetry, "registry_capacity"):
@@ -173,7 +173,7 @@ class AccumulatorTests(TestCase):
         self.assertEqual(hist.merge(empty), hist)
         self.assertEqual(hist.merge(hist).total, 2 * hist.total)
         self.assertEqual(hist.merge(hist).count, 8)
-        for incompatible in (replace(hist, unit="vnd"), replace(hist, edges=(1, 2)), replace(hist, version=2)):
+        for incompatible in (replace(hist, unit="vnd"), replace(hist, edges=(1, 2)), replace(hist, version=VERSION + 1)):
             with self.assertRaisesRegex(InvalidTelemetry, "incompatible_histogram"):
                 hist.merge(incompatible)
         with self.assertRaisesRegex(InvalidTelemetry, "invalid_histogram_sum"):

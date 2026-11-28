@@ -141,10 +141,10 @@ class Snapshot:
             if series.metric.kind == "histogram":
                 self._histogram(series).validate()
         for life in LIFECYCLE.values():
-            opened, started, completed, current = (
-                self.cells[i] for i in (life.opening, life.started, life.completed, life.active)
+            opened, started, completed, lost, current = (
+                self.cells[i] for i in (life.opening, life.started, life.completed, life.lost, life.active)
             )
-            if (opened + started - completed != current
+            if (opened + started - completed - lost != current
                     or sum(self.cells[i] for i in life.outcomes.values()) != completed
                     or self.cells[life.latency.offset + life.latency.width - 1] != completed):
                 raise InvalidTelemetry("lifecycle_conservation")
