@@ -521,3 +521,39 @@ fallback. `WP04_REACTIVE_AUTHORIZATION_PRESERVED` is **not** claimed.
 - FastAPI: 20 tests are skipped by the suite itself (model-artifact/service-dependent cases); the
   count is unchanged and no skip was introduced here.
 - `AdvisorControllerLiveIT` stays excluded (legacy V6 assertions, TiniX enabled).
+
+## Final harness acceptance after PR48
+
+Main `0e9053f0c4085351a7d429f81995f6895ad80e33` was integrated by merge commit `1a6c2054087c6b5c5b26a3423694341e698377d8`. The PR48 Google Linking paths, PR49 shared HTTP client/session code, migrations and V1.3 artifacts were preserved. The test snapshot was `9fa708a070e352247ed08f4c8720dfe22221164b` with tree `d1e57dfee9a9315a7f53d4ca75dbdfd03962f9ac`. The acceptance commit adds this report. This section supersedes the prior partial isolation and authorization observations above.
+
+### Browser evidence
+
+- **11/11 failure-isolation scenarios.** The real standalone form waits for model options, selects Nhà ở and Cẩm Lệ, and submits 100 m². The harness verifies exactly one POST, category/location/area, the response, result container and authoritative price. Missing explanation renders `ABSENT`. The other mutations cover `UNAVAILABLE`, malformed output, invalid adjusted price, one-VND mismatch, and reconstruction mismatch. Invalid attribution and waterfall stay absent. The unmodified response renders `AVAILABLE`. The delayed prediction is discarded on edit and the new request renders the new price.
+- Real prediction/preview/Advisor responses supplied the base payloads. Posting and Advisor mutations preserve the authoritative price. The Advisor check also requires an independent recommendation and both Comparable evidence sections. The mocked component runner reports **30/30** with all three route-level checks linked to the executable isolation report and zero placeholders.
+- **Real outage.** The fixture owner verified the FastAPI PID and stopped that process. Vite reported connection refused. Standalone showed an error and no estimated price. Advisor returned SAFE recommendations with unavailable valuation, null price and no valuation evidence rendered. A replacement FastAPI PID passed health and the same standalone workflow before any further live tests.
+- **Reactive authorization.** A real active admin session was verified through the shared client. A bearer request after the isolated SQL account lock was denied and redirected. The SQL helper checked the UUID, port, schema, datadir, restricted user and marker before mutation, restored the account state and timestamp, and verified the result. A real account replacement held at login exposed `authTransition`, revoked the synthetic research response, rejected its late delivery, and completed a real SAFE submission. The real buyer research endpoint returned 403. The PR49 browser helper verified signed same-session refresh, Web Locks and cross-tab logout. The gated research response in this case uses synthetic browser data.
+
+### Fresh regression
+
+| Check | Result | Exit | Evidence |
+| --- | --- | --- | --- |
+| Frontend recursive | 348 passed | 0 | `frontend.log` |
+| Real three surfaces at 1280/320/390/768/1440 px | 298/298 | 0 | `runtime-surfaces.log` |
+| Failure isolation | 11/11 | 0 | `failure-results.json` |
+| Mocked three surfaces | 30/30, 0 not run | 0 | `wp04-surfaces.json` |
+| Browser reactive auth and PR49 helper | 3/3 | 0 | `auth-results.json` |
+| WP02 Chromium | 12/12 groups | 0 | `wp02.log` |
+| Spring Boot | 324 passed, 0 failed/skipped | 0 | `spring-unit.log` |
+| Isolated MySQL | 4 passed, 0 failed/skipped | 0 | `mysql-integration.log` |
+| Focused WP04 Python | 51 passed | 0 | `python.log` |
+| Full FastAPI serial | 1230 passed, 20 skipped, 105 subtests passed | 0 | `fastapi-full.log` |
+| Vite and assets | 273 modules, 148 output files audited | 0 | `vite.log`, `assets.log` |
+| V1.3 and migrations | 8/8 digest and size checks, 23 original SQL migrations validated | 0 | `artifacts.json`, owned fixture migration log |
+
+The first disposable datadir hit a Flyway deadline during V23. A retry against that partial schema failed validation. A fresh datadir reached V23 with all 23 SQL versions recorded successfully. The browser and integration suites then used one healthy stack. Authorization retries exposed a pointer-action timeout and the normal 20-request/15-minute login limit. After the same instance's window expired, investigation found that the account change opens the welcome dialog. The final run dismissed it through the real close button, then clicked the visible SAFE submit button. These earlier failures are preserved in local logs.
+
+### Reproduction and limits
+
+From the isolated worktree, use the local fixture launcher `.smartprop/wp04-final/stack.py` with the verified Python interpreter and `--mysql-bin`. It uses loopback MySQL/Spring/FastAPI/Vite on ports 54041–54044 and generates fixture credentials at startup. From `frontend/`, run the Node scripts under `tests/wp04/browser/` in this order: `reactive-authorization.mjs`, `failure-isolation.mjs`, `runtime-surfaces.mjs`, and `surfaces.mjs`. Set `WP04_APP`, `WP04_API`, `WP04_AI`, fixture account environment variables, `WP04_RUNTIME_FILE`, `WP04_FAILURE_REPORT`, `WP04_AUTH_REPORT` and Chromium paths from the checked runtime manifest. The outage uses the launcher-owned control files. The component runner consumes that run's failure report. Evidence and exit files are in `.smartprop/wp04-final/`. Do not copy credentials into documentation.
+
+`AdvisorControllerLiveIT` remains excluded because it asserts legacy V6 and enables TiniX. The applicable MySQL run was `AdvisorPartialResultLiveIT,ComparableSyntheticMysqlIT`. The suite used only synthetic properties/accounts and did not read research datasets or protected databases. Production deployment, real Google OAuth, and deployed DB grants/views are outside this acceptance. The owned fixture stopped with zero remaining listeners and the mentor demo retained its five listener PIDs. The no-DB Spring suite used `mvnw.cmd -o -B test`. The SQL suites used `mvnw.cmd -o -B -Dtest=AdvisorPartialResultLiveIT,ComparableSyntheticMysqlIT test` after ownership verification.
