@@ -1,5 +1,7 @@
 # PR48 shared session contract (handoff, not merged)
 
+This is the pre-closure handoff. The [PR #49 closure report](SMARTPROP_PR49_TARGETED_SHARED_SESSION_CLOSURE.md) records the implemented generation, credential-free scope and combined tests.
+
 **PR37 HEAD:** `0fdf48f` → this change · **PR48 reviewed SHA:** `287b4b2` · **main:** `1c67a27`
 
 PR48 is **not** merged into PR37 and its branch was not modified. This document defines the single

@@ -4,6 +4,8 @@
 
 ## Unified session integration — status after reading both implementations
 
+This checkpoint predates the targeted fix. The current policy, test results and delivery status are in the [PR #49 closure report](SMARTPROP_PR49_TARGETED_SHARED_SESSION_CLOSURE.md).
+
 ### Delivered in this pass (PR49 branch, local)
 
 - **JWT session continuity (A)**: `accessSession(token)` decodes the server-issued
