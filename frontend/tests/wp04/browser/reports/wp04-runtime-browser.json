@@ -1,10 +1,10 @@
 {
   "app": "http://127.0.0.1:5180",
   "api": "http://127.0.0.1:8080",
-  "at": "2026-11-28T08:56:07.025Z",
-  "total": 99,
-  "passed": 98,
-  "failed": 1,
+  "at": "2026-11-28T09:17:34.334Z",
+  "total": 86,
+  "passed": 84,
+  "failed": 2,
   "results": [
     {
       "name": "WP04_APP is loopback",
@@ -107,9 +107,14 @@
       "detail": "1"
     },
     {
+      "name": "posting@1280 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
       "name": "posting@1280 workflow",
       "ok": false,
-      "detail": "locator.click: Timeout 15000ms exceeded."
+      "detail": "locator.selectOption: Error: Element is not a <select> element"
     },
     {
       "name": "login response 200",
@@ -127,79 +132,9 @@
       "detail": ""
     },
     {
-      "name": "advisor@1280 consult 200",
-      "ok": true,
-      "detail": "200"
-    },
-    {
-      "name": "advisor@1280 SAFE mode",
-      "ok": true,
-      "detail": "SAFE"
-    },
-    {
-      "name": "advisor@1280 has recommendation",
-      "ok": true,
-      "detail": "5"
-    },
-    {
-      "name": "advisor@1280 explanation panel visible",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 AVAILABLE",
-      "ok": true,
-      "detail": "AVAILABLE"
-    },
-    {
-      "name": "advisor@1280 price text",
-      "ok": true,
-      "detail": "5,13 tỷ"
-    },
-    {
-      "name": "advisor@1280 technical section exists",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 waterfall rows",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 six factor rows",
-      "ok": true,
-      "detail": "6"
-    },
-    {
-      "name": "advisor@1280 22 provenance entries",
-      "ok": true,
-      "detail": "22"
-    },
-    {
-      "name": "advisor@1280 calibration bridge",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 no NaN/Infinity",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 comparable evidence shown",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 no research disclosure",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 no overflow",
-      "ok": true,
-      "detail": ""
+      "name": "advisor@1280 workflow",
+      "ok": false,
+      "detail": "locator.fill: Timeout 30000ms exceeded."
     },
     {
       "name": "standalone@320 predict 200",

@@ -20,7 +20,7 @@ const API = process.env.WP04_API || "";
 const EMAIL = process.env.WP04_FIXTURE_EMAIL || "";
 const PASSWORD = process.env.WP04_FIXTURE_PASSWORD || "";
 const here = dirname(fileURLToPath(import.meta.url));
-const shots = join(here, "..", "..", "..", "docs", "ai", "browser", "wp04");
+const shots = join(here, "..", "..", "..", "..", "docs", "ai", "browser", "wp04");
 
 const results = [];
 const record = (name, ok, detail = "") =>
@@ -128,49 +128,57 @@ async function standalone(browser, width) {
 async function posting(browser, width) {
   const page = await browser.newPage({ viewport: { width, height: 1200 } });
   const tag = `posting@${width}`;
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
   try {
     await login(page);
-    // The access token lives in memory only, so a full page load would drop the session and
-    // redirect to /login. Navigate inside the SPA instead.
-    const postLink = page.getByRole("link", { name: /Đăng tin|Đăng bán|Đăng bài/i }).first();
-    if (await postLink.count()) {
-      await postLink.click({ timeout: 15000 });
-    } else {
-      await page.getByRole("button", { name: /Đăng tin|Đăng bán/i }).first().click({ timeout: 15000 });
-    }
-    await page.waitForTimeout(1500);
-    record(`${tag} reached posting workflow`, !page.url().includes("/login"), page.url());
-    const start = page.getByRole("button", { name: /Đăng bán/i }).first();
-    if (await start.count()) await start.click({ timeout: 10000 });
+    // LoginView replaces the route to the ?next= destination, so no extra link search is needed.
+    await page.waitForURL((url) => url.pathname === "/post", { timeout: 25000 });
+    record(`${tag} landed on /post`, page.url().includes("/post"), page.url());
+    await page.getByRole("heading", { name: "Tạo tin đăng mới" }).first().waitFor({ timeout: 20000 });
+    await page.locator("#post-propertyType").waitFor({ timeout: 20000 });
+    const transaction = page.locator("#post-transactionType");
+    if (await transaction.count()) await transaction.selectOption({ index: 1 });
     await page.locator("#post-propertyType").selectOption({ index: 1 });
     await page.locator("#post-title").fill("WP04 runtime fixture");
     await page.locator("#post-area").fill("80");
     await page.locator("#post-price").fill("5000000000");
-    const summary = page.locator(".valuation-optional summary").first();
-    await summary.click({ timeout: 10000 });
-    await page.waitForTimeout(1500);
+
+    await page.locator(".valuation-optional summary").first().click({ timeout: 15000 });
     const locationSelect = page.locator('[data-testid="valuation-location"]');
-    const optionLabels = await locationSelect.locator("option").allInnerTexts();
-    const camLe = optionLabels.find((label) => /Cẩm Lệ/.test(label)) ? "Cẩm Lệ" : null;
+    await locationSelect.waitFor({ timeout: 20000 });
+    await page.waitForFunction(() => {
+      const select = document.querySelector('[data-testid="valuation-location"]');
+      return select && select.options.length > 1;
+    }, { timeout: 20000 });
+    const labels = await locationSelect.locator("option").allInnerTexts();
+    const camLe = labels.find((label) => /Cẩm Lệ/.test(label));
     if (camLe) await locationSelect.selectOption({ label: camLe });
     else await locationSelect.selectOption({ index: 1 });
+
     const response = await expectCall(page,
       (url) => url.includes("/api/v1/properties/valuation-preview"), async () => {
         await page.locator('[data-testid="valuation-preview"]').click({ timeout: 15000 });
-      });
+      }, 45000);
     record(`${tag} preview 200`, response.status() === 200, response.status());
     const body = await response.json();
     record(`${tag} available`, body.available === true, body.available);
-    record(`${tag} positive price`, Number.isInteger(Number(body.predictedAskingPriceVnd))
-      && Number(body.predictedAskingPriceVnd) > 0, body.predictedAskingPriceVnd);
+    const price = Number(body.predictedAskingPriceVnd);
+    record(`${tag} positive integer price`, Number.isInteger(price) && price > 0,
+      body.predictedAskingPriceVnd);
     record(`${tag} explanation AVAILABLE`, body.explanation?.status === "AVAILABLE",
       body.explanation?.status);
-    record(`${tag} adjusted price matches`, String(body.predictedAskingPriceVnd)
-      === String(body.explanation?.calibration?.adjusted_price_vnd),
-    `${body.predictedAskingPriceVnd}/${body.explanation?.calibration?.adjusted_price_vnd}`);
+    record(`${tag} adjusted price matches`,
+      String(body.predictedAskingPriceVnd) === String(body.explanation?.calibration?.adjusted_price_vnd),
+      `${body.predictedAskingPriceVnd}/${body.explanation?.calibration?.adjusted_price_vnd}`);
     await assertExplanation(page, tag);
     record(`${tag} no overflow`, await page.evaluate(() =>
       document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1));
+    record(`${tag} no page error`, errors.length === 0, errors.join(" | "));
+    if (width === 390) {
+      mkdirSync(shots, { recursive: true });
+      await page.screenshot({ path: join(shots, "real-posting-390.png") });
+    }
   } catch (error) {
     record(`${tag} workflow`, false, String(error.message || error).split("\n")[0].slice(0, 180));
   } finally {
@@ -187,11 +195,21 @@ async function advisor(browser, width) {
     await page.getByRole("heading", { name: /Tư vấn bất động sản đa bằng chứng/ })
       .first().waitFor({ timeout: 20000 });
     record(`${tag} unified advisor heading`, true);
-    await page.getByLabel(/Ngân sách mục tiêu/).first().fill("7000000000");
-    await page.getByLabel(/Loại bất động sản/).first().selectOption({ label: "Nhà ở" }).catch(() => {});
-    await page.getByLabel(/Quận\/Huyện|Khu vực/).first().fill("Cẩm Lệ").catch(() => {});
+    const form = page.locator(".advisor-page form").first();
+    const selects = form.locator("select");
+    const texts = form.locator('input[type="text"]');
+    await texts.first().fill("7000000000");
+    await selects.nth(0).selectOption("LIVING").catch(() => {});
+    await selects.nth(1).selectOption("HOUSE");
+    if ((await selects.count()) > 2) await selects.nth(2).selectOption({ index: 1 }).catch(() => {});
+    await form.locator('input[type="number"]').first().fill("60").catch(() => {});
+    const ward = texts.nth(1);
+    if (await ward.count()) await ward.fill("Cẩm Lệ").catch(() => {});
+    const submitControl = page.locator("[data-advisor-submit]");
+    const submitByName = page.getByRole("button", { name: /Nhận tư vấn AI/i }).first();
     const response = await expectCall(page, (url) => url.includes("/api/v1/advisor/consult"), async () => {
-      await page.locator(".advisor-page form").first().evaluate((form) => form.requestSubmit());
+      if (await submitControl.count()) await submitControl.first().click({ timeout: 15000 });
+      else await submitByName.click({ timeout: 15000 });
     }, 45000);
     record(`${tag} consult 200`, response.status() === 200, response.status());
     const body = await response.json();
@@ -200,8 +218,18 @@ async function advisor(browser, width) {
       (body.recommendedProperties || []).length);
     await page.waitForTimeout(1500);
     await assertExplanation(page, tag);
-    const text = await page.locator("body").innerText();
-    record(`${tag} comparable evidence shown`, /tương đồng|Comparable/i.test(text));
+    const first = (body.recommendedProperties || [])[0] || {};
+    const comparable = first.comparableEvidence;
+    const valuationComparable = first.valuationComparableEvidence;
+    record(`${tag} comparableEvidence section`, comparable?.status === "AVAILABLE" || comparable?.candidateCount > 0,
+      `${comparable?.status}/${comparable?.candidateCount}`);
+    record(`${tag} valuationComparableEvidence section`,
+      valuationComparable?.status === "AVAILABLE" || valuationComparable?.candidateCount > 0,
+      `${valuationComparable?.status}/${valuationComparable?.candidateCount}`);
+    const coverage = (comparable?.items || []).concat(valuationComparable?.items || [])
+      .some((item) => item && item.featureCoverage !== undefined && item.featureCoverage !== null);
+    record(`${tag} featureCoverage present`, coverage);
+    record(`${tag} request carried includeResearch=false`, body?.criteria?.includeResearch !== true);
     const researchFlags = JSON.stringify(body).match(/"researchReference":true|"includeResearch":true/g) || [];
     record(`${tag} no research disclosure`, researchFlags.length === 0, researchFlags.join(","));
     record(`${tag} no overflow`, await page.evaluate(() =>

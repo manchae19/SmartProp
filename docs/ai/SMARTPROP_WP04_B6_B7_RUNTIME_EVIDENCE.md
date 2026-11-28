@@ -316,3 +316,23 @@ Producer emits **AVAILABLE** / **UNAVAILABLE** only; `explanation_version=1.0`;
 `XGBOOST_NATIVE_TREESHAP`; `ASKING_PRICE_VND`; `LOG1P_PRICE_VND`; 22 feature identities; provenance
 states OBSERVED, DERIVED, DEFAULTED, MISSING, MISSING_INVALID, NOT_APPLICABLE, UNKNOWN_CATEGORY,
 UNVERIFIED; reconstruction tolerance `1e-5 * max(1, abs(predicted_margin_log))`.
+
+### Posting and Advisor form controls — latest attempt
+
+Navigation now matches the real contract: after a UI login with `?next=%2Fpost`, `LoginView` performs
+the SPA `router.replace` and the runner **waits for `/post`** instead of searching for a link (no
+localStorage injection, no reload). That part works.
+
+The remaining failure is form-driving, not routing:
+
+- `/post` exposes `#post-transactionType`, `#post-propertyType`, `#post-title`, `#post-area`,
+  `#post-price` and buttons “Đăng bán”, “Cho thuê”, “Tiếp tục →”. Selecting
+  `#post-transactionType` as an index raises `Element is not a <select> element`, so that control is
+  rendered as something other than a native select in this build.
+- `/advisor/analysis` renders an `.advisor-page` form whose fields carry **no name or id**
+  (a text input, three selects, two text inputs, one number input, one select and three checkboxes)
+  and a “Nhận tư vấn AI” submit. Position-based driving failed (`fill` timeout) because the first
+  text input is not the budget field.
+
+Those two workflows therefore remain **unverified**. Standalone valuation at 320/390/768/1440/1280
+still passes end to end, and the earlier real HTTP checks for preview and Advisor remain valid.
