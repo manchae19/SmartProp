@@ -14,6 +14,15 @@ function sameActor(previous, next) {
     && previous.user?.status === next.user?.status;
 }
 
+function identityOf(snapshot) {
+  return JSON.stringify([
+    snapshot?.status ?? null,
+    snapshot?.user?.id ?? snapshot?.user?.userId ?? snapshot?.user?.sub ?? snapshot?.user?.email ?? null,
+    snapshot?.user?.role ?? null,
+    snapshot?.user?.status ?? null,
+  ]);
+}
+
 async function waitForRefresh(flight, signal) {
   if (!signal) return flight;
   if (signal.aborted) throw abortError();
@@ -47,7 +56,24 @@ export function createHttpClient({
   let refreshFlight = null,
     initialization = null,
     initialized = false,
-    epoch = 0;
+    epoch = 0,
+    // Monotonic counters kept separate from the token value itself.
+    // rotations: incremented only by a refresh this client performed and verified, so a late
+    //   response can tell "my credentials were renewed" apart from "someone else replaced them".
+    // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
+    //   briefly restored cannot make a restricted response look current again.
+    rotations = 0,
+    identityEpoch = 0,
+    lastIdentity = identityOf(session.getSnapshot());
+  if (typeof session.subscribe === "function") {
+    session.subscribe(() => {
+      const next = identityOf(session.getSnapshot());
+      if (next !== lastIdentity) {
+        lastIdentity = next;
+        identityEpoch += 1;
+      }
+    });
+  }
   const state = (status, error = null) => {
     session.edit(draft => draft.status = status);
     session.edit(draft => draft.error = error);
@@ -73,6 +99,7 @@ export function createHttpClient({
     if (current !== epoch) throw sessionChanged();
     session.edit(draft => draft.token = result.accessToken);
     session.edit(draft => draft.user = result.user);
+    rotations += 1;
     state("AUTHENTICATED");
     initialized = true;
     return result;
@@ -168,14 +195,26 @@ export function createHttpClient({
   async function request(path, options = {}) {
     const started = session.getSnapshot();
     const current = epoch;
+    const startedIdentity = identityEpoch;
+    const startedRotations = rotations;
     const authenticated = options.authenticated !== false;
     const redirect = options.redirectOnSessionExpiry !== false;
-    const ensureCurrent = snapshot => {
+    /**
+     * A response is stale when the session was replaced, the actor/role/status changed, or the
+     * token was replaced by something this client did not refresh itself. A token that changed
+     * because of our own verified refresh keeps the request valid - that is a credential renewal,
+     * not a different session.
+     */
+    const ensureCurrent = (snapshot, rotationsAt = startedRotations) => {
       if (options.signal?.aborted) throw abortError();
       const latest = session.getSnapshot();
-      if (authenticated && (current !== epoch || snapshot.token !== latest.token || !sameActor(snapshot, latest))) {
+      if (!authenticated) return;
+      if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
+      if (snapshot.token !== latest.token
+        && !(rotations > rotationsAt && sameActor(snapshot, latest))) {
         throw sessionChanged();
       }
+      if (!sameActor(snapshot, latest)) throw sessionChanged();
     };
     try {
       const result = await send(path, options);
@@ -185,9 +224,12 @@ export function createHttpClient({
       ensureCurrent(started);
       if (authenticated && terminal(e)) {
         if (refreshEnabled && started.token && e.status === 401 && !path.startsWith("/auth/")) {
-          let refreshed;
+          let refreshed = null;
+          // Another request may already have completed the refresh while this response was in
+          // flight; in that case reuse it instead of rotating a second time.
+          const alreadyRotated = rotations > startedRotations && sameActor(started, session.getSnapshot());
           try {
-            refreshed = await waitForRefresh(rotate(), options.signal);
+            if (!alreadyRotated) refreshed = await waitForRefresh(rotate(), options.signal);
           } catch (next) {
             if (next.code !== "REQUEST_ABORTED" && next.code !== "SESSION_CHANGED") {
               ensureCurrent(started);
@@ -196,8 +238,9 @@ export function createHttpClient({
             throw next;
           }
           const retryScope = session.getSnapshot();
-          ensureCurrent(retryScope);
-          if (retryScope.token !== refreshed.accessToken || !sameActor(started, retryScope)) throw sessionChanged();
+          const rotatedAt = rotations;
+          ensureCurrent(retryScope, rotatedAt);
+          if (refreshed && retryScope.token !== refreshed.accessToken) throw sessionChanged();
           // Renew credentials but require explicit resubmission for writes; never duplicate an uncertain mutation.
           if (!["GET", "HEAD", "OPTIONS"].includes((options.method || "GET").toUpperCase())) throw Object.assign(Error("Phiên đã được gia hạn. Vui lòng thực hiện lại thao tác vừa gửi."), {
             status: 401,
@@ -206,10 +249,10 @@ export function createHttpClient({
           });
           try {
             const result = await send(path, options);
-            ensureCurrent(retryScope);
+            ensureCurrent(retryScope, rotatedAt);
             return result;
           } catch (next) {
-            ensureCurrent(retryScope);
+            ensureCurrent(retryScope, rotatedAt);
             if (terminal(next)) expire(redirect);
             throw next;
           }

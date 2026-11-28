@@ -89,3 +89,55 @@ Read-only assessment against the remote heads below. Path overlaps are scoped to
 | PR #43 | `f59edf223c98249ee6104c367c34537bd851aea5` | `router.js`, `ListingDetailView.jsx` and `httpClient.js`. Ten virtual conflicts span seven RAG modules, `HybridRecommendationService.java`, `chatPresentation.js` and the Caddyfile. Preserve Phase 0, PR #45 RAG and WP-02 evidence plus PR #37 coordinate and session guards. |
 
 The earlier Market and News run is retained as historical evidence. All counts above apply to the final correction tree.
+
+---
+
+## P2 closure — authentication epoch vs legitimate token refresh
+
+**Finding:** `httpClient.request()` compared the access-token value captured at send time with the
+current one and treated any difference as a replaced session. That conflated a legitimate refresh
+(issued by this same client after a 401) with logout, account switching or revocation. Consequences:
+a late 401 could not reuse the token another request had already refreshed, and a request that had
+already **succeeded** at the backend was reported as failed merely because credentials rotated.
+
+**Fix (narrow, in `frontend/src/shared/lib/httpClient.js`):**
+
+- `rotations` — monotonic counter incremented only inside `accept()` after a refresh this client
+  performed and scope-verified. A token change is tolerated only when `rotations` advanced and the
+  actor is unchanged.
+- `identityEpoch` — incremented whenever `status`/actor id/role/status changes. A revocation that is
+  briefly restored still invalidates in-flight requests, because the epoch moved even though the
+  final snapshot looks identical to the start.
+- `epoch` (logout / session replacement) and role/actor boundaries are unchanged.
+- Late 401 with an already-completed refresh now **reuses** it instead of starting a second refresh;
+  writes still never replay (`AUTH_RETRY_REQUIRED` preserved).
+- No credentials are logged.
+
+### Deterministic tests — `frontend/tests/httpClientRefreshEpoch.test.mjs` (9 passed)
+
+| Case | Result |
+|---|---|
+| A two concurrent GETs, delayed 401 after shared refresh | both recover, exactly 1 refresh, no logout |
+| B successful GET completing after a legitimate refresh | resolves, not `SESSION_CHANGED` |
+| C mutation confirmed by backend while token rotated | result returned, exactly 1 POST (no replay) |
+| D POST receives 401 during refresh | `AUTH_RETRY_REQUIRED`, session recovered, no replay |
+| E account replacement mid-flight | `SESSION_CHANGED` |
+| F role revoked then restored with the same token | `SESSION_CHANGED` (identity epoch moved) |
+| G external abort during shared refresh | `REQUEST_ABORTED`, no logout |
+| H different actor, same token | `SESSION_CHANGED` |
+| I logout mid-flight | `SESSION_CHANGED`, token not resurrected |
+
+### Fresh regression (this run, exit codes)
+
+| Suite | Command | Result |
+|---|---|---|
+| httpClient abort + refresh epoch | `node --test tests/httpClient*.test.mjs` | 9 + 6 passed, exit 0 |
+| Full frontend recursive | `npm test` | **203 tests, 203 pass, 0 fail**, exit 0 |
+| WP-02 Chromium | `WP02_CHROMIUM=... node tests/browser/wp02-browser.mjs` | 8 groups PASS, exit 0 |
+| PR #37 market + research authorization | `PR37_BASE=http://127.0.0.1:5173 node e2e/pr37-validation.e2e.mjs --groups=g1,g2,g3` | 3/3 groups, exit 0 |
+| Account / login / navigation smoke | `node e2e/pages-smoke.e2e.mjs` | PASS (incl. responsive 390/768/1440), exit 0 |
+| District asset integrity | `node e2e/pr37-dist-assets.mjs` | 5 withheld absent, 30 approved byte-identical, exit 0 |
+| Vite production build | `npm run build` | PASS (1.74s) |
+
+Integrity: no change under `backend/src`, `ai-services/`, or `db/`; the four V1.3 artifacts hash
+identically (`3c56b693…`, `17632bdf…`, `84be275b…`, `419599ec…`); main and other branches untouched.
