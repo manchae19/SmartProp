@@ -72,6 +72,17 @@ class Settings:
         if self.sql_enabled and (not self.sql_database or not self.db_user or not self.db_password):
             raise ValueError("RAG SQL database and credentials are required when SQL is enabled")
 
+        if self.sql_host not in ("127.0.0.1", "localhost"):
+            raise ValueError("RAG SQL host must be local")
+        if not 1 <= self.sql_port <= 65535:
+            raise ValueError("RAG SQL port is invalid")
+        if self.sql_port == 3306 and not self.sql_allow_production:
+            raise ValueError("RAG SQL port 3306 is disabled; use staging 13306")
+        if self.sql_database and not self.sql_database.replace("_", "").isalnum():
+            raise ValueError("RAG SQL database name is invalid")
+        if self.sql_enabled and (not self.sql_database or not self.db_user or not self.db_password):
+            raise ValueError("RAG SQL database and credentials are required when SQL is enabled")
+
     @classmethod
     def from_env(cls):
         return cls(planning_enabled=os.getenv("RAG_PLANNING_ENABLED", "false").lower()=="true", planning_snapshot_path=Path(os.environ["RAG_PLANNING_SNAPSHOT_PATH"]) if os.getenv("RAG_PLANNING_SNAPSHOT_PATH") else None, image_backend_url=os.getenv("RAG_IMAGE_BACKEND_URL",""),backend_url=os.getenv("RAG_BACKEND_URL", "http://127.0.0.1:8080"),

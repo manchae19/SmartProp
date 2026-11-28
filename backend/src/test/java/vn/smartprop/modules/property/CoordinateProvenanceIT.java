@@ -439,6 +439,101 @@ class CoordinateProvenanceIT {
             .andExpect(jsonPath("$.parcelAnalysisEligible").value(false));
     }
 
+    @Test
+    void adminReviewDetailReturnsSharedParcelEligibilityPolicy() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET coordinate_source='USER_PINNED', accuracy_level='PARCEL', accuracy_meters=3.0,
+                accuracy_method='CADASTRAL_COMPARISON', verification_status='VERIFIED',
+                verification_method='CADASTRAL_RECORD', verified_at=UTC_TIMESTAMP(6),
+                verified_by=?, evidence_reference='IT-SYNTHETIC-EVIDENCE',
+                geographic_validation_status='VERIFIED_EXACT'
+            WHERE property_id=? AND superseded_at IS NULL
+            """, adminId, id);
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(true));
+
+        // Keep one policy source: provenance, accuracy, geographic validity and a
+        // completed verification are all required for the detail headline.
+        jdbc.update("UPDATE property_coordinate_audit SET coordinate_source='UNKNOWN' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET coordinate_source='USER_PINNED', accuracy_level='STREET' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='DISTRICT' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='WARD' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='UNKNOWN', accuracy_meters=NULL WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET accuracy_level='PARCEL', accuracy_meters=3.0, geographic_validation_status='INVALID_DISTRICT_MISMATCH' WHERE property_id=?", id);
+        assertReviewEligibility(id, false);
+        jdbc.update("UPDATE property_coordinate_audit SET geographic_validation_status='VERIFIED_EXACT' WHERE property_id=?", id);
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET accuracy_level='STREET', accuracy_meters=3.0, verification_status='UNVERIFIED',
+                verification_method=NULL, verified_at=NULL, verified_by=NULL
+            WHERE property_id=?
+            """, id);
+        assertReviewEligibility(id, false);
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET verification_status='STALE', verification_method=NULL, verified_at=NULL, verified_by=NULL
+            WHERE property_id=?
+            """, id);
+        assertReviewEligibility(id, false);
+    }
+
+    private void assertReviewEligibility(String propertyId, boolean expected) throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/" + propertyId).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.parcelAnalysisEligible").value(expected));
+    }
+
+    @Test
+    void pendingPaginationIsStableWhenCreatedAtTiesAcrossPages() throws Exception {
+        String marker = "Coordinate tie " + UUID.randomUUID();
+        List<String> ids = new java.util.ArrayList<>();
+        for (int index = 0; index < 4; index++) {
+            String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+            ids.add(id);
+            jdbc.update("UPDATE properties SET title=? WHERE id=?", marker, id);
+        }
+        jdbc.update("""
+            UPDATE property_coordinate_audit
+            SET created_at='2026-11-25 12:00:00.000000'
+            WHERE property_id IN (?, ?, ?, ?)
+            """, ids.toArray());
+        List<String> expected = jdbc.queryForList("""
+            SELECT a.property_id FROM property_coordinate_audit a
+            JOIN properties p ON p.id=a.property_id
+            WHERE a.superseded_at IS NULL AND p.deleted_at IS NULL AND p.title=?
+            ORDER BY a.created_at DESC, a.id DESC
+            """, String.class, marker);
+
+        List<String> first = pendingIds(marker, 2, 0, 4);
+        List<String> second = pendingIds(marker, 2, 2, 4);
+        List<String> firstAgain = pendingIds(marker, 2, 0, 4);
+        List<String> empty = pendingIds(marker, 2, 4, 4);
+        assertThat(first).containsExactlyElementsOf(expected.subList(0, 2));
+        assertThat(second).containsExactlyElementsOf(expected.subList(2, 4));
+        assertThat(firstAgain).isEqualTo(first);
+        assertThat(java.util.stream.Stream.concat(first.stream(), second.stream()).distinct().count()).isEqualTo(4);
+        assertThat(empty).isEmpty();
+    }
+
+    private List<String> pendingIds(String marker, int limit, int offset, int expectedTotal) throws Exception {
+        String body = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("limit", String.valueOf(limit)).param("offset", String.valueOf(offset))
+                .param("q", marker).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(expectedTotal))
+            .andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(body, "$.items[*].propertyId");
+    }
+
     // ---------- F. Backfill identity (blocker A) ----------
 
     @Test
@@ -687,5 +782,157 @@ class CoordinateProvenanceIT {
             WHERE property_id = ? AND superseded_at IS NULL
             """, Integer.class, id);
         assertThat(currentCount).as("không có partial update").isEqualTo(1);
+    }
+
+    // ---------- I. Admin review endpoints ----------
+
+    @Test
+    void adminStatsCountsWholeTableNotOnePage() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/stats").with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").isNumber())
+            .andExpect(jsonPath("$.unverified").isNumber())
+            .andExpect(jsonPath("$.verified").isNumber())
+            .andExpect(jsonPath("$.districtMismatch").isNumber());
+
+        // Tin vừa tạo phải nằm trong tổng, không phụ thuộc phân trang.
+        Long total = jdbc.queryForObject("""
+            SELECT COUNT(*) FROM property_coordinate_audit a
+            JOIN properties p ON p.id = a.property_id
+            WHERE a.superseded_at IS NULL AND p.deleted_at IS NULL
+            """, Long.class);
+        String body = mvc.perform(get("/api/v1/admin/coordinates/stats").with(asAdmin(adminId)))
+            .andReturn().getResponse().getContentAsString();
+        Number reported = com.jayway.jsonpath.JsonPath.read(body, "$.total");
+        assertThat(reported.longValue()).as("stats phải đếm toàn bộ bảng").isEqualTo(total);
+    }
+
+    @Test
+    void nonAdminCannotReadStats() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/stats").with(as(brokerId)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousCannotReadStats() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/stats"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adminReviewDetailReturnsCoordinatesAndEvidence() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.propertyId").value(id))
+            .andExpect(jsonPath("$.latitude").isNumber())
+            .andExpect(jsonPath("$.longitude").isNumber())
+            .andExpect(jsonPath("$.revision").value(1))
+            .andExpect(jsonPath("$.coordinateSource").value("UNKNOWN"))
+            .andExpect(jsonPath("$.verificationStatus").value("UNVERIFIED"))
+            .andExpect(jsonPath("$.geographicValidationStatus").isNotEmpty());
+    }
+
+    @Test
+    void adminDetailFailsClosedForLegacyParcelAuditsWithoutEvidence() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Legacy parcel fixture", "Cẩm Lệ", "Hòa An");
+        record LegacyCase(String name, String accuracy, String verification, String method,
+                          boolean verifiedAt, String evidence, Double meters, boolean expected) {}
+        List<LegacyCase> cases = List.of(
+            new LegacyCase("complete legacy record", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, true),
+            new LegacyCase("null evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, null, 1.0, false),
+            new LegacyCase("empty evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "", 1.0, false),
+            new LegacyCase("blank evidence", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "   ", 1.0, false),
+            new LegacyCase("invalid accuracy", "PARCEL", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", null, false),
+            new LegacyCase("street accuracy", "STREET", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false),
+            new LegacyCase("unknown accuracy", "UNKNOWN", "VERIFIED", "FIELD_SURVEY", true, "legacy-evidence", null, false),
+            new LegacyCase("unverified status", "STREET", "UNVERIFIED", null, false, null, 1.0, false),
+            new LegacyCase("stale status", "STREET", "STALE", "FIELD_SURVEY", true, "legacy-evidence", 1.0, false)
+        );
+
+        // V26 CHECK ck_coord_audit_verified_fields disallows persisted VERIFIED rows
+        // without method/time. Those legacy metadata combinations are covered by the
+        // centralized policy unit tests; this endpoint test uses only schema-permitted rows.
+        for (LegacyCase item : cases) {
+            jdbc.update("""
+                UPDATE property_coordinate_audit
+                SET coordinate_source='USER_PINNED', accuracy_level=?, accuracy_meters=?,
+                    verification_status=?, verification_method=?,
+                    verified_at=CASE WHEN ? THEN UTC_TIMESTAMP(6) ELSE NULL END,
+                    evidence_reference=?, geographic_validation_status='VERIFIED_EXACT'
+                WHERE property_id=? AND superseded_at IS NULL
+                """, item.accuracy(), item.meters(), item.verification(), item.method(),
+                item.verifiedAt(), item.evidence(), id);
+
+            mvc.perform(get("/api/v1/admin/coordinates/" + id).with(asAdmin(adminId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.parcelAnalysisEligible").value(item.expected()))
+                .andDo(result -> assertThat(result.getResponse().getContentAsString())
+                    .as("legacy fixture case %s", item.name()).isNotBlank());
+        }
+    }
+
+    @Test
+    void nonAdminCannotReadReviewDetail() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        mvc.perform(get("/api/v1/admin/coordinates/" + id).with(as(brokerId)))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void reviewDetailForPropertyWithoutAuditIs404() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/" + java.util.UUID.randomUUID())
+                .with(asAdmin(adminId)))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void pendingQueueFiltersByStatusAndQuery() throws Exception {
+        String id = createProperty(16.0430, 108.1840, "Đường Tôn Đản, Hòa An", "Cẩm Lệ", "Hòa An");
+
+        // Lọc theo trạng thái: tin mới tạo là UNVERIFIED nên phải xuất hiện.
+        String unverified = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("verificationStatus", "UNVERIFIED")
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].propertyId").value(id))
+            .andExpect(jsonPath("$.total").isNumber())
+            .andExpect(jsonPath("$.offset").value(0))
+            .andReturn().getResponse().getContentAsString();
+        assertThat(unverified).contains(id);
+
+        // Lọc theo trạng thái khác: không được chứa tin này.
+        String verified = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("verificationStatus", "VERIFIED")
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(verified).doesNotContain(id);
+
+        // Tìm theo mã tin.
+        String code = jdbc.queryForObject(
+            "SELECT listing_code FROM properties WHERE id = ?", String.class, id);
+        String searched = mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("q", code)
+                .with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        assertThat(searched).contains(id);
+
+        mvc.perform(get("/api/v1/admin/coordinates/pending")
+                .param("q", code).param("offset", "1").with(asAdmin(adminId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.total").value(1))
+            .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    @Test
+    void pendingQueueDoesNotLeakToNonAdmin() throws Exception {
+        mvc.perform(get("/api/v1/admin/coordinates/pending").with(as(brokerId)))
+            .andExpect(status().isForbidden());
     }
 }

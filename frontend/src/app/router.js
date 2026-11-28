@@ -18,9 +18,11 @@ const restoredViews = {
   AuditLogsView: () => import('../features/admin/AuditLogsView.jsx'),
   ProjectsView: () => import('../features/admin/ProjectsView.jsx'),
   BrokerApplicationsView: () => import('../features/admin/BrokerApplicationsView.jsx'),
-  AiConfigView: () => import('../features/admin/AiConfigView.jsx')
+  AiConfigView: () => import('../features/admin/AiConfigView.jsx'),
+  CoordinateReviewView: () => import('../features/admin/AdminCoordinateReviewView.jsx')
 };
 const routes = [
+  {path:'/news', component:()=>import('../features/news/NewsView.jsx')},
   {path:'/market-analytics', component:()=>import('../features/market/MarketAnalyticsView.jsx')},
   {path:'/comparables', component:()=>import('../features/property/ComparablesView.jsx'), meta:{requiresAuth:true,roles:['BROKER','ADMIN']}},
   {path:'/advisor/analysis', component:()=>import('../features/prediction/UnifiedAdvisorView.jsx')},
@@ -141,7 +143,8 @@ const routes = [
     'audit-logs': 'AuditLogsView',
     'ai-config': 'AiConfigView',
     projects: 'ProjectsView',
-    'broker-applications': 'BrokerApplicationsView'
+    'broker-applications': 'BrokerApplicationsView',
+    'coordinate-review': 'CoordinateReviewView'
   }).map(([path, view]) => ({
     path,
     component: restoredViews[view]
@@ -171,6 +174,7 @@ async function authorize(to) {
   try {
     await loadProfile();
   } catch (error) {
+    if (error.code === 'SESSION_CHANGED') return false;
     if (error.status === 401) return {
       path: '/login',
       query: {

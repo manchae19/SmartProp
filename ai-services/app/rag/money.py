@@ -9,8 +9,17 @@ UNITS = {"ty": Decimal(10**9), "ti": Decimal(10**9), "trieu": Decimal(10**6), "t
          "nghin": Decimal(1000), "ngan": Decimal(1000), "k": Decimal(1000),
          "dong": Decimal(1), "vnd": Decimal(1), "d": Decimal(1)}
 NUM = r"[0-9]+(?:[.,][0-9]+|[ ][0-9]{3})*"
-UNIT = r"ty|ti|trieu|tr|nghin|ngan|dong|vnd|k|d"
+UNIT = "|".join(UNITS)
 TOKEN = re.compile(r"(?<![\w.,])("+NUM+r")\s*("+UNIT+r")(?!\w)")
+_AMOUNT = rf"{NUM}\s*(?:{UNIT})(?!\w)"
+_RANGE_START = rf"(?:(?:{_AMOUNT}|{NUM})\s*(?:den|toi|[-–—])\s*)?"
+_SLASH_DATE = (r"(?:0?[1-9]|[12]\d|3[01])\s*/\s*thang\s+(?:0?[1-9]|1[0-2])\b"
+               r"(?:\s*[/.-]\s*\d{2,4}\b|\s+nam\s+\d{4}\b|\s*[.!?,;]?\s*$)")
+_RECURRING = re.compile(
+    rf"(?<![\w.,/])(?:{_RANGE_START}{_AMOUNT}(?:\s*{_AMOUNT})*(?:\s+ruoi)?"
+    rf"|(?<!\bngay )(?<!\bthang )(?!{_SLASH_DATE}){_RANGE_START}(?P<bare>{NUM}))"
+    r"\s*(?:/\s*|(?:theo|moi|mot|hang)\s+)(?:thang|nam|ngay)\b"
+)
 
 @dataclass(frozen=True)
 class Budget:
@@ -31,8 +40,24 @@ def _number(raw):
     return Decimal(raw.replace(",", "."))
 
 
+def _fold(question):
+    return "".join(c for c in unicodedata.normalize("NFD", question.lower().replace("đ", "d"))
+                   if not unicodedata.combining(c))
+
+
+def recurring_amounts(question):
+    """Return periodic monetary spans in the folded question."""
+    return _RECURRING.finditer(_fold(question))
+
+
+def mask_recurring_amounts(folded_text):
+    """Hide periodic amounts while retaining offsets for other text parsers."""
+    return _RECURRING.sub(lambda match: " " * len(match[0]), folded_text)
+
+
 def parse_budget(question):
-    text="".join(c for c in unicodedata.normalize("NFD",question.lower().replace("đ","d")) if not unicodedata.combining(c))
+    # A recurring amount cannot be interpreted as a total purchase price.
+    text = mask_recurring_amounts(_fold(question))
     text=text.replace("–","-").replace("—","-")
     # Shared unit in ranges: '2 den 3 ty' -> '2 ty den 3 ty'.
     text=re.sub(r"(?<![\w.,])("+NUM+r")\s*(den|toi|-)\s*("+NUM+r")\s*("+UNIT+r")(?!\w)",
@@ -97,10 +122,6 @@ def parse_budget(question):
 
 
 def format_vnd(value):
-    """Vietnamese grouping without rounding: a non-zero fraction is kept, never dropped."""
-    amount=Decimal(str(value))
-    whole,_,fraction=format(amount,"f").partition(".")
-    sign="-" if whole.startswith("-") else ""
-    grouped=f"{int(whole.lstrip('-') or 0):,}".replace(",", ".")
-    fraction=fraction.rstrip("0")
-    return sign+grouped+(","+fraction if fraction else "")+" đồng"
+    whole, _, fraction = format(Decimal(str(value)), ",f").partition(".")
+    fraction = fraction.rstrip("0")
+    return whole.replace(",", ".") + ("," + fraction if fraction else "") + " đồng"

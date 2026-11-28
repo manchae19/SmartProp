@@ -12,6 +12,7 @@ import { price } from "./property.js";
 import ResourceState from "../../shared/components/ResourceState.jsx";
 import Pagination from "../../shared/components/Pagination.jsx";
 import "./ListingsView.css";
+import "./ListingsCardsPolish.css";
 function useListingsViewState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;

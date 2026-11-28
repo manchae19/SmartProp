@@ -1,0 +1,102 @@
+/* Coordinate Provenance V1 — bản đồ xác minh cho admin. */
+
+.review-map {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.review-map--empty {
+  padding: 24px 16px;
+  border: 1px dashed var(--color-border, #cbd5e1);
+  border-radius: 10px;
+  color: var(--color-text-muted, #64748b);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.review-map__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-map__layers {
+  display: inline-flex;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.review-map__layers button {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.review-map__layers button.is-active {
+  background: var(--ui-accent, #0f766e);
+  color: #fff;
+}
+
+.review-map__layers button:focus-visible,
+.review-map__recenter:focus-visible {
+  outline: 2px solid var(--ui-accent, #0f766e);
+  outline-offset: 2px;
+}
+
+.review-map__recenter {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+}
+
+.review-map__canvas {
+  height: 340px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #cbd5e1);
+}
+
+.review-map__coords {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #64748b);
+  font-variant-numeric: tabular-nums;
+}
+
+.review-map__error {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #92400e;
+}
+
+/* Marker: xanh khi khớp địa bàn, vàng khi lệch. */
+.review-marker span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0f766e;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.review-marker.is-mismatch span {
+  background: #d97706;
+}
+
+@media (max-width: 640px) {
+  .review-map__canvas {
+    height: 240px;
+  }
+}

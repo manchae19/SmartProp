@@ -5,7 +5,10 @@ import { useRouteState, useAppNavigation } from "../../app/navigation.jsx";
 import { api, session, errorText } from '../auth/api.js';
 import { validateFiles } from './property.js';
 import { postSteps, typeCodes, validatePost, fieldIssue, isPublisher, addressSignature, locationSignature, validCoordinates, buildPostPayload, payloadFromManaged, samePayload } from './postForm.js';
-const initial = () => ({
+import { ADVANCED_DRAFT_DEFAULTS } from '../prediction/advancedValuation.js';
+// Exported so a test can assert that every advanced valuation field is listed here;
+// reset() relies on Object.assign, which only overwrites keys that already exist.
+export const initialDraft = () => ({
   transactionType: 'Bán',
   rentUnit: 'PER_MONTH',
   propertyType: 'Nhà phố',
@@ -30,6 +33,9 @@ const initial = () => ({
   block: '',
   direction: '',
   selectedAmenities: [],
+  // Advanced valuation-only fields; the defaults live with the valuation logic so a
+  // property switch clears them instead of carrying the previous listing's values.
+  ...ADVANCED_DRAFT_DEFAULTS,
   accepted: false
 });
 const cleanState = () => ({
@@ -51,7 +57,7 @@ const cleanState = () => ({
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const uncertain = e => !e.status || e.status >= 500 || e.status === 408;
 function restoredDraft(value) {
-  const restored = initial();
+  const restored = initialDraft();
   if (!value || typeof value !== 'object') return restored;
   for (const name of Object.keys(restored)) {
     const item = value[name];
@@ -68,7 +74,7 @@ export function createPostEditor({
   urls = globalThis.URL,
   clock = () => Date.now()
 } = {}) {
-  const draft = createStateStore(initial()),
+  const draft = createStateStore(initialDraft()),
     state = createStateStore(cleanState()),
     managed = createStateStore(null),
     images = createStateStore([]),
@@ -113,7 +119,7 @@ export function createPostEditor({
     coverKey.set('');
     removed.set([]);
     hydrating = true;
-    draft.edit(draftValue => Object.assign(draftValue, initial()));
+    draft.edit(draftValue => Object.assign(draftValue, initialDraft()));
     hydrating = false;
     state.edit(draftValue => Object.assign(draftValue, cleanState()));
   }
@@ -161,7 +167,7 @@ export function createPostEditor({
   function fill(value) {
     const p = value.property;
     hydrating = true;
-    draft.edit(draftValue => Object.assign(draftValue, initial(), {
+    draft.edit(draftValue => Object.assign(draftValue, initialDraft(), {
       transactionType: p.transactionType === 'SALE' ? 'Bán' : 'Cho thuê',
       rentUnit: p.transactionType === 'RENT' ? p.priceUnit : 'PER_MONTH',
       propertyType: Object.keys(typeCodes).find(k => typeCodes[k] === p.propertyType) || '',

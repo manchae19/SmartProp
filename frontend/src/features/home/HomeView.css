@@ -86,3 +86,248 @@
 .home-light .light-slide-price {font-weight:750;color:#203c5b}
 .home-light .light-carousel-dots button[aria-current=true] {background:#d9b45e}
 .home-light .light-heading h2 {padding-left:14px;border-left:3px solid #d9b45e}
+
+/* Premium hero treatment, scoped to the existing home hero only. */
+html[data-ui-theme=slate] body .home-light .light-hero {
+  background: #f4efe5;
+  color: #142b45;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-banner {
+  filter: brightness(.9) contrast(1.1) saturate(.95);
+}
+html[data-ui-theme=slate] body .home-light .light-hero-wash {
+  background: radial-gradient(ellipse at 0% 100%, #294c7073 0%, #294c7000 65%),
+    linear-gradient(90deg, #10243bfa 0%, #142b45f5 25%, #142b45d9 36%, #294c7099 48%, #294c704d 58%, #294c7014 70%, #294c7000 85%),
+    linear-gradient(0deg, #dce7f033, #dce7f000 45%);
+}
+.home-light .light-hero-intro>div { min-width: 0; }
+html[data-ui-theme=slate] body .home-light .light-hero-intro h1 {
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.14;
+  color: #ffffff;
+  text-wrap: balance;
+}
+html[data-ui-theme=slate] body .home-light .light-hero-intro h1 span { color: #ffffff; }
+.home-light .light-hero-intro h1::after { background: #d9ad55; width: 72px; height: 4px; margin-top: 18px; box-shadow: 24px 0 0 #d9ad5533; }
+html[data-ui-theme=slate] body .home-light .light-hero-intro>div>p:not(.light-eyebrow) {
+  color: #dce7f0;
+  line-height: 1.8;
+  font-weight: 450;
+}
+html[data-ui-theme=slate] body .home-light .light-hero-intro .light-eyebrow { letter-spacing: .18em; color: #d9ad55; }
+.home-light .light-hero-shortcuts {
+  background: linear-gradient(150deg, #fffffffa, #f2f7fbee);
+  border-color: #cfdae5;
+  border-top: 2px solid #cfdae5;
+  box-shadow: inset 0 1px 0 #fff, 0 16px 40px #142b4521;
+  border-radius: 22px;
+}
+.home-light .light-hero .light-shortcuts-heading { margin-bottom: 5px; color: #294c70; }
+.home-light .light-hero .light-shortcut {
+  gap: 13px;
+  border-color: #203d5d14;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 1px 3px #203d5d05;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+.home-light .light-hero .light-shortcut:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  border-color: #315f8659;
+  box-shadow: 0 5px 12px #203d5d0d;
+}
+.home-light .light-hero .light-shortcut.is-primary { background: linear-gradient(120deg, #294c70, #142b45); border-color: #142b45; color: #fff; box-shadow: 0 4px 10px #142b451a; }
+.home-light .light-hero .light-shortcut.is-primary:hover { background: #294c70; border-color: #d9ad55; }
+.home-light .light-hero .light-shortcut.is-primary .light-shortcut-icon {
+  background: #e8c67a24;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px #e8c67a40;
+}
+.home-light .light-hero .light-shortcut.is-primary .light-shortcut-arrow { color: #e8c67a; opacity: 1; }
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) .light-shortcut-icon {
+  background: #e5f3f0;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px #168f8933;
+}
+.home-light .light-hero .light-shortcut[href="/advisor"] {
+  background: #edf4f8;
+  border-color: #294c7040;
+}
+.home-light .light-hero .light-shortcut[href="/advisor"]:hover { background: #e0edf9; border-color: #2f5d8a80; }
+.home-light .light-hero .light-shortcut[href="/advisor"] .light-shortcut-icon {
+  border-radius: 12px;
+  background: #d9eafa;
+  box-shadow: inset 0 0 0 1px #2f5d8a26;
+}
+.home-light .light-hero .light-shortcut-copy strong { font-size: 14px; font-weight: 650; letter-spacing: -.015em; }
+.home-light .light-hero .light-shortcut-copy small { line-height: 1.5; }
+.home-light .light-hero .light-shortcut-arrow { opacity: .8; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide {
+  background: rgb(255 255 255 / 95%);
+  border-color: #d5dfe8;
+  box-shadow: 0 calc(12px - var(--depth) * 3px) calc(26px - var(--depth) * 5px) rgb(20 43 69 / calc(.16 - var(--depth) * .04));
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active {
+  background: #142b45;
+  border-color: #d9ad55;
+  box-shadow: 0 16px 36px #142b4538, 0 0 0 1px #d9ad5526;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide-photo img {
+  filter: saturate(.9) brightness(.98);
+}
+.home-light .light-hero .light-slide h2 { font-weight: 650; letter-spacing: -.025em; line-height: 1.4; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide h2 a { color: #203d5d; }
+.home-light .light-hero .light-slide-meta { color: #526b80; letter-spacing: .1em; font-size: 10px; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide-price {
+  color: #203d5d;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide-body>p:not(.light-slide-meta) {
+  font-size: 12px;
+  color: #526b80;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide-links { color: #405b72; border-color: #e3eaf0; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  line-height: 1;
+  background: rgb(255 255 255 / 94%);
+  color: #203d5d;
+  border-color: #c6d5e1;
+  box-shadow: 0 2px 6px #203d5d0a;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button:hover {
+  background: #1f3b63;
+  color: #fff;
+  border-color: #d8a94e;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button[aria-pressed=true] {
+  background: #eaf3fb;
+  border-color: #d8a94e;
+  color: #1f3b63;
+}
+.home-light .light-hero .light-carousel-dots { gap: 9px; }
+.home-light .light-hero .light-carousel-dots button { background: #8ca1b3; transition: background-color 180ms ease, width 180ms ease; }
+.home-light .light-hero .light-carousel-dots button[aria-current=true] { background: #d8a94e; box-shadow: 0 0 0 1px #946d2a; }
+.home-light .light-hero .light-carousel-dots button:hover { background: #315f86; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-types {
+  background: rgb(255 255 255 / 85%);
+  border-color: #d5dfe8;
+  box-shadow: 0 2px 8px #203d5d08;
+}
+.home-light .light-hero .light-carousel-types button { transition: background-color 180ms ease, color 180ms ease; }
+.home-light .light-hero .light-carousel-types button:hover { background: #eaf3fb; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-types button[aria-pressed=true] { background: #1f3b63; color: #fff; box-shadow: inset 0 -2px 0 #d8a94e; }
+.home-light .light-hero :focus-visible { outline: 2px solid #168f89; outline-offset: 4px; }
+/* Teal belongs to GIS; recolor only the existing location illustration here. */
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) svg stop:first-child { stop-color: #39b6ad; }
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) svg stop:last-child { stop-color: #168f89; }
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) svg circle:last-child { fill: #168f89; }
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) svg ellipse { fill: #168f89; }
+.home-light .light-hero .light-shortcut:not(.is-primary):not([href="/advisor"]) .light-shortcut-arrow { color: #168f89; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active h2 a { color: #fff; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active .light-slide-price { color: #d9ad55; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active .light-slide-meta { color: #e2c58c; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active .light-slide-body>p:not(.light-slide-meta) { color: #d9e3eb; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active .light-slide-links { color: #f4efe5; border-color: #ffffff24; }
+.home-light .light-hero .light-slide.is-active .light-slide-links a:hover { color: #d9ad55; }
+/* Decorative coordinate grid only; no markers or real-world location claims. */
+.home-light .light-hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: 38px;
+  left: 46%;
+  right: 25%;
+  height: 260px;
+  background-image: linear-gradient(#168f89 1px, transparent 1px), linear-gradient(90deg, #168f89 1px, transparent 1px);
+  background-size: 44px 44px;
+  opacity: .07;
+  mask-image: radial-gradient(ellipse at center, #000 15%, transparent 70%);
+}
+/* Uniform title slots keep the stage stable while existing offsets set depth. */
+.home-light .light-hero .light-carousel-stage {
+  display: grid;
+  justify-items: center;
+  align-items: stretch;
+  height: auto;
+  padding: 10px 0 72px;
+  perspective: 1600px;
+}
+.home-light .light-hero .light-slide {
+  position: relative;
+  grid-area: 1 / 1;
+  left: auto;
+  top: auto;
+  margin-left: 0;
+  display: flex;
+  flex-direction: column;
+  width: clamp(240px, 21vw, 300px);
+  opacity: calc(1 - var(--depth) * .05);
+  transform-origin: center top;
+  transform: translateX(calc(var(--offset) * 292px)) translateY(calc(var(--depth) * 30px)) translateZ(calc(var(--depth) * -45px)) rotateY(calc(var(--offset) * -3deg)) scale(calc(1 - var(--depth) * .07));
+  transition: transform 650ms cubic-bezier(.22,.7,.25,1), opacity 500ms ease, box-shadow 300ms ease, background-color 300ms ease;
+}
+.home-light .light-hero .light-slide-photo { flex-shrink: 0; }
+.home-light .light-hero .light-slide-body { display: flex; flex: 1; flex-direction: column; padding: 20px; }
+.home-light .light-hero .light-slide h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  height: 104.4px;
+  min-height: 104.4px;
+  font-size: 18px;
+  line-height: 1.45;
+}
+.home-light .light-hero .light-slide-price { margin: 10px 0 8px; font-size: 29px; }
+.home-light .light-hero .light-slide-links { margin-top: auto; padding-top: 14px; }
+.home-light .light-hero .light-slide-body>p:not(.light-slide-meta) { margin-bottom: 24px; }
+/* Empty/loading states also need height now that populated cards size the grid. */
+.home-light .light-hero .light-carousel-stage:has(.light-carousel-empty) { min-height: 400px; }
+@media (max-width: 1100px) and (min-width: 701px) {
+  .home-light .light-hero .light-slide { transform: translateX(calc(var(--offset) * 258px)) translateY(calc(var(--depth) * 26px)) translateZ(calc(var(--depth) * -45px)) rotateY(calc(var(--offset) * -3deg)) scale(calc(1 - var(--depth) * .07)); }
+}
+@media (max-width: 700px) {
+  .home-light .light-hero::after { display: none; }
+  .home-light .light-hero .light-carousel-stage { padding-bottom: 44px; }
+  .home-light .light-hero .light-slide { width: 260px; transform: translateX(calc(var(--offset) * 262px)) translateY(calc(var(--depth) * 24px)) translateZ(calc(var(--depth) * -45px)) rotateY(calc(var(--offset) * -3deg)) scale(calc(1 - var(--depth) * .07)); }
+  .home-light .light-hero .light-slide-body { padding: 17px; }
+  .home-light .light-hero .light-slide h2 { font-size: 17px; height: 98.6px; min-height: 98.6px; }
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-slide.is-active :focus-visible { outline-color: #d9ad55; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button {
+  color: #142b45;
+  background: #fffdf6;
+  border-color: #d9ad5580;
+  box-shadow: 0 3px 9px #142b4512;
+}
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button:hover { color: #d9ad55; background: #142b45; border-color: #d9ad55; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-controls>button[aria-pressed=true] { background: #142b45; color: #d9ad55; }
+.home-light .light-hero .light-carousel-dots button[aria-current=true] { background: #d9ad55; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-types { background: #fffdf6e6; border-color: #d9ad5559; }
+html[data-ui-theme=slate] body .home-light .light-hero .light-carousel-types button[aria-pressed=true] { background: #142b45; box-shadow: inset 0 -2px 0 #d9ad55; }
+@media (max-width: 700px) {
+  html[data-ui-theme=slate] body .home-light .light-hero-intro h1 { font-size: clamp(34px, 6vw, 40px); line-height: 1.16; }
+  html[data-ui-theme=slate] body .home-light .light-hero-wash {
+    background: linear-gradient(180deg, #10243bfa 0px, #142b45f5 240px, #294c70b3 380px, #294c7033 560px, #294c7000 760px),
+      linear-gradient(0deg, #dce7f033, #dce7f000 45%);
+  }
+  .home-light .light-hero .light-shortcut-copy strong { font-size: 13px; }
+  .home-light .light-hero .light-carousel-types { flex-wrap: wrap; border-radius: 18px; }
+  .home-light .light-hero .light-carousel-types button { padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-light .light-hero .light-slide { transition: none; }
+  .home-light .light-hero :is(.light-shortcut,.light-carousel-controls>button,.light-carousel-dots button,.light-carousel-types button) { transition: none; }
+  .home-light .light-hero .light-shortcut:hover { transform: none; }
+}

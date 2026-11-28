@@ -30,9 +30,16 @@ class ChatRequest(BaseModel):
     propertyId: str | None = Field(default=None, pattern=r"^[0-9a-fA-F-]{36}$")
 
     @model_validator(mode="after")
-    def price_range_valid(self):
+    def ranges_valid(self):
         if self.minPriceVnd is not None and self.budgetVnd is not None and self.minPriceVnd > self.budgetVnd:
             raise ValueError("Minimum price must not exceed budget")
+        if self.minAreaSqm is not None and self.maxAreaSqm is not None:
+            if self.minAreaSqm > self.maxAreaSqm or (
+                self.minAreaSqm == self.maxAreaSqm and (self.minAreaExclusive or self.maxAreaExclusive)
+            ):
+                raise ValueError("Area range must contain at least one value")
+        if (self.minAreaExclusive and self.minAreaSqm is None) or (self.maxAreaExclusive and self.maxAreaSqm is None):
+            raise ValueError("An exclusive area bound requires its area")
         return self
 
 

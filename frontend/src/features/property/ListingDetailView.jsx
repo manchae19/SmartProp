@@ -7,6 +7,7 @@ import { useAppNavigation, useRouteState } from "../../app/navigation.jsx";
 import { api, session, errorText } from "../auth/api.js";
 import { adapt } from "./listingPresentation.js";
 import ResourceState from "../../shared/components/ResourceState.jsx";
+import ComparableEvidenceLookup from './ComparableEvidenceLookup.jsx';
 import ImageAnalysisSection from "./ImageAnalysisSection.jsx";
 import PrivateImage from "../../shared/components/PrivateImage.jsx";
 import { mapUrl } from "./property.js";
@@ -73,18 +74,51 @@ function useListingDetailViewState(inputProps, forwardedRef) {
   useSyncExternalStore(revealedContact.subscribe, revealedContact.getSnapshot);
   useSyncExternalStore(property.subscribe, property.getSnapshot);
   useSyncExternalStore(state.subscribe, state.getSnapshot);
+  const galleryDialog = useRef(null), galleryOpener = useRef(null);
+  const galleryOpen = showGallery.getSnapshot();
+  useEffect(() => {
+    if (!galleryOpen || !galleryDialog.current) return;
+    const dialog = galleryDialog.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusable = () => Array.from(dialog.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'))
+      .filter(node => node.getClientRects().length && getComputedStyle(node).visibility !== "hidden");
+    const focusFirst = () => (focusable()[0] || dialog).focus({ preventScroll: true });
+    focusFirst();
+    const keyboard = event => {
+      if (event.key === "Escape") {
+        event.preventDefault(); event.stopPropagation(); showGallery.set(false);
+      } else if (event.key === "Tab") {
+        const items = focusable(), first = items[0], last = items.at(-1);
+        if (!items.length) { event.preventDefault(); dialog.focus(); }
+        else if (event.shiftKey && (document.activeElement === first || document.activeElement === dialog)) {
+          event.preventDefault(); last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault(); first.focus();
+        }
+      }
+    };
+    const containFocus = event => { if (!dialog.contains(event.target)) focusFirst(); };
+    document.addEventListener("keydown", keyboard, true);
+    document.addEventListener("focusin", containFocus);
+    return () => {
+      document.removeEventListener("keydown", keyboard, true);
+      document.removeEventListener("focusin", containFocus);
+      document.body.style.overflow = previousOverflow;
+      if (galleryOpener.current?.isConnected) galleryOpener.current.focus({ preventScroll: true });
+    };
+  }, [galleryOpen]);
   const getListing = () => adapt(property.getSnapshot()),
     getListingId = () => _routeLatest.current.params.id,
     getImages = () => property.getSnapshot()?.images?.map(i => i.url) || [];
-  const openGallery = (index = 0) => {
+  const openGallery = (index = 0, opener = document.activeElement) => {
       if (!getImages().length) return;
+      galleryOpener.current = opener;
       currentImageIndex.set(Math.min(index, getImages().length - 1));
       showGallery.set(true);
-      document.body.style.overflow = "hidden";
     },
     closeGallery = () => {
       showGallery.set(false);
-      document.body.style.overflow = "";
     },
     nextImage = () => currentImageIndex.set((currentImageIndex.getSnapshot() + 1) % Math.max(getImages().length, 1)),
     prevImage = () => currentImageIndex.set((currentImageIndex.getSnapshot() - 1 + getImages().length) % Math.max(getImages().length, 1)),
@@ -219,6 +253,7 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     listing: getListing(),
     listingId: getListingId(),
     images: getImages(),
+    galleryDialog,
     openGallery,
     closeGallery,
     nextImage,
@@ -344,10 +379,9 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
           </div> : null}
         {view.property && !view.state.busy ? <React.Fragment>
             <section className={classNames(["listing-gallery", view.images.length > 1 && "has-secondary"])} data-sp-4f294819="">
-              <div onClick={$event => {
-              view.openGallery(0);
-            }} className="relative min-h-[300px] lg:min-h-0 rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-sm" data-sp-4f294819="">
+              <div className="relative min-h-[300px] lg:min-h-0 rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-sm" data-sp-4f294819="">
                 <PrivateImage src={view.images[0]} alt={view.listing.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" data-sp-4f294819="" />
+                <button type="button" className="absolute inset-0 z-[1] cursor-pointer rounded-3xl focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-brand-gold" aria-label={`Mở thư viện ảnh: ${view.listing.title}`} onClick={event => view.openGallery(0, event.currentTarget)} />
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-cream/60 via-transparent to-brand-cream/20 pointer-events-none" data-sp-4f294819="" />
                 <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2 z-10 pointer-events-none" data-sp-4f294819="">
                   <span className="px-3 py-1 rounded-full bg-[var(--ui-soft)]/85 backdrop-blur-md text-brand-navy text-[11px] font-bold border border-brand-line/20 shadow-xs flex items-center gap-1.5" data-sp-4f294819="">
@@ -379,21 +413,21 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
               </div>
               {view.images.length > 1 ? <div className="hidden lg:grid grid-rows-2 gap-3.5 h-full" data-sp-4f294819="">
                   <div onClick={$event => {
-                view.openGallery(1);
-              }} className="relative rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
+                  view.openGallery(1, $event.currentTarget);
+              }} role="button" tabIndex={0} aria-label="Mở ảnh bất động sản 2" onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); view.openGallery(1, event.currentTarget); } }} className="relative rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
                     <PrivateImage src={view.images[1]} alt="Ảnh bất động sản 2" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-sp-4f294819="" />
                     <div className="absolute inset-0 bg-brand-cream/10 group-hover:bg-transparent transition" data-sp-4f294819="" />
                   </div>
                   <div className="grid grid-cols-2 gap-3.5 h-full" data-sp-4f294819="">
                     {view.images.length > 2 ? <div onClick={$event => {
-                  view.openGallery(2);
-                }} className="relative rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
+                  view.openGallery(2, $event.currentTarget);
+                }} role="button" tabIndex={0} aria-label="Mở ảnh bất động sản 3" onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); view.openGallery(2, event.currentTarget); } }} className="relative rounded-3xl overflow-hidden bg-brand-card border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
                         <PrivateImage src={view.images[2]} alt="Ảnh bất động sản 3" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" data-sp-4f294819="" />
                         <div className="absolute inset-0 bg-brand-cream/10 group-hover:bg-transparent transition" data-sp-4f294819="" />
                       </div> : null}
                     {view.images.length > 3 ? <div onClick={$event => {
-                  view.openGallery(3);
-                }} className="relative rounded-3xl overflow-hidden bg-[var(--ui-soft)] border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
+                  view.openGallery(3, $event.currentTarget);
+                }} role="button" tabIndex={0} aria-label="Mở các ảnh bất động sản còn lại" onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); view.openGallery(3, event.currentTarget); } }} className="relative rounded-3xl overflow-hidden bg-[var(--ui-soft)] border border-brand-line cursor-pointer group shadow-2xs" data-sp-4f294819="">
                         <PrivateImage src={view.images[3]} alt="Ảnh bất động sản 4" className="absolute inset-0 w-full h-full object-cover opacity-60 transition-transform duration-500 group-hover:scale-105" data-sp-4f294819="" />
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--ui-soft)]/50 text-brand-navy backdrop-blur-[2px]" data-sp-4f294819="">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-1 text-[var(--ui-ink)]" data-sp-4f294819="">
@@ -411,9 +445,9 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   </div>
                 </div> : null}
             </section>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 mt-8 items-start" data-sp-4f294819="">
+            <div className="detail-layout grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 mt-8 items-start" data-sp-4f294819="">
               <div className="space-y-6" data-sp-4f294819="">
-                <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
+                <section className="detail-overview bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <div className="flex flex-wrap items-center gap-2 mb-4" data-sp-4f294819="">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--ui-surface)] text-[var(--ui-accent)] border border-[var(--ui-border)]" data-sp-4f294819="">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--ui-soft)]" data-sp-4f294819="" />{" "}
@@ -426,10 +460,10 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       </svg>{" "}
                       {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property?.transactionType === "RENT" ? "Cho thuê" : "Đang bán")}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--ui-success-bg)] text-[var(--ui-success-text)] border border-[var(--ui-success-border)]" data-sp-4f294819="">
+                    <span className="detail-unverified inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--ui-success-bg)] text-[var(--ui-success-text)] border border-[var(--ui-success-border)]" data-sp-4f294819="">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" data-sp-4f294819="">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" data-sp-4f294819="" />
-                        <polyline points="22 4 12 14.01 9 11.01" data-sp-4f294819="" />
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v6m0 3h.01" />
                       </svg>
                       {" Chưa xác minh thực địa "}
                     </span>
@@ -446,7 +480,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.listing.location)}
                     </span>
                   </div>
-                  <div className="mt-6 p-5 sm:p-6 rounded-2xl bg-[var(--ui-surface)] border border-[var(--ui-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-sp-4f294819="">
+                  <div className="detail-price mt-6 p-5 sm:p-6 rounded-2xl bg-[var(--ui-surface)] border border-[var(--ui-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4" data-sp-4f294819="">
                     <div data-sp-4f294819="">
                       <p className="text-[11px] font-bold text-[var(--ui-accent)] uppercase tracking-wider" data-sp-4f294819="">
                         {"Mức giá chào niêm yết"}
@@ -461,9 +495,10 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       </div>
                     </div>
                     <div className="sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-brand-line" data-sp-4f294819="">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--ui-success-text)] bg-[var(--ui-success-bg)] px-3 py-1.5 rounded-full border border-[var(--ui-success-border)]" data-sp-4f294819="">
+                      <span className="detail-source-price inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--ui-success-text)] bg-[var(--ui-success-bg)] px-3 py-1.5 rounded-full border border-[var(--ui-success-border)]" data-sp-4f294819="">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" data-sp-4f294819="">
-                          <polyline points="20 6 9 17 4 12" data-sp-4f294819="" />
+                          <circle cx="12" cy="12" r="9" />
+                          <path d="M12 11v6m0-10h.01" />
                         </svg>
                         {" Giá chào do người đăng cung cấp "}
                       </span>
@@ -472,7 +507,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-brand-line" data-sp-4f294819="">
+                  <div className="detail-specs grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-6 pt-6 border-t border-brand-line" data-sp-4f294819="">
                     <div className="bg-brand-card hover:bg-brand-card hover:border-[var(--ui-border)]/30 border border-brand-line rounded-2xl p-4 transition-all duration-150" data-sp-4f294819="">
                       <div className="w-9 h-9 rounded-xl bg-brand-card text-[var(--ui-accent)] flex items-center justify-center mb-2.5 border border-brand-line" data-sp-4f294819="">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" data-sp-4f294819="">
@@ -562,11 +597,11 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       {"Mô tả chi tiết bất động sản"}
                     </span>
                   </h2>
-                  <div className="text-xs sm:text-sm text-brand-muted leading-relaxed space-y-3 whitespace-pre-line font-normal" data-sp-4f294819="">
+                  <div className="detail-description text-xs sm:text-sm text-brand-muted leading-relaxed space-y-3 whitespace-pre-line font-normal" data-sp-4f294819="">
                     {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.property?.description || view.listing.description1)}
                   </div>
                 </section>
-                {view.property.declaredAmenities?.length ? <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
+                {view.property.declaredAmenities?.length ? <section className="detail-amenities bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                     <h2 className="text-base font-bold text-[var(--ui-accent)] mb-4 flex items-center gap-2" data-sp-4f294819="">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ui-accent)]" data-sp-4f294819="">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" data-sp-4f294819="" />
@@ -620,6 +655,10 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   </p>
                 </section>
                 <ImageAnalysisSection propertyId={view.property?.id} />
+                {view.property?.id && view.property.transactionType === "SALE" && view.property.status === "PUBLISHED" ? (
+                  <ComparableEvidenceLookup body={{ propertyId: view.property.id, purpose: "SIMILAR_LISTING" }}
+                    title="Đối chiếu tin tương đồng" />
+                ) : null}
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4" data-sp-4f294819="">
                     <div data-sp-4f294819="">
@@ -725,7 +764,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                         {"Thông tin niêm yết"}
                       </span>
                     </h3>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[var(--ui-success-bg)] text-[var(--ui-success-text)] border border-[var(--ui-success-border)]" data-sp-4f294819="">
+                    <span className="detail-display-status inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[var(--ui-success-bg)] text-[var(--ui-success-text)] border border-[var(--ui-success-border)]" data-sp-4f294819="">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--ui-success-bg)] animate-pulse" data-sp-4f294819="" />
                       {" Đang hiển thị "}
                     </span>
@@ -787,7 +826,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                           {"Pháp lý"}
                         </span>
                       </span>
-                      <span className="font-semibold text-[var(--ui-success-text)] bg-[var(--ui-success-bg)] px-2 py-0.5 rounded border border-[var(--ui-success-border)]" data-sp-4f294819="">
+                      <span className="detail-legal-pending font-semibold text-[var(--ui-success-text)] bg-[var(--ui-success-bg)] px-2 py-0.5 rounded border border-[var(--ui-success-border)]" data-sp-4f294819="">
                         {" Chưa có bằng chứng pháp lý công khai "}
                       </span>
                     </div>
@@ -807,10 +846,10 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       </span>
                     </div>
                   </div>
-                  <div className="mt-4 pt-3.5 border-t border-brand-line flex items-center gap-2 text-[11px] text-brand-muted bg-brand-card -mx-2 -mb-2 p-3 rounded-2xl border border-brand-line" data-sp-4f294819="">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[var(--ui-success-text)] shrink-0" data-sp-4f294819="">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" data-sp-4f294819="" />
-                      <polyline points="22 4 12 14.01 9 11.01" data-sp-4f294819="" />
+                  <div className="detail-source-note mt-4 pt-3.5 border-t border-brand-line flex items-center gap-2 text-[11px] text-brand-muted bg-brand-card -mx-2 -mb-2 p-3 rounded-2xl border border-brand-line" data-sp-4f294819="">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0" data-sp-4f294819="">
+                      <circle cx="12" cy="12" r="9" />
+                      <path d="M12 11v6m0-10h.01" />
                     </svg>
                     <span data-sp-4f294819="">
                       {"Thông tin do người đăng cung cấp"}
@@ -867,7 +906,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
               </a> : null}
           </div>
         </div> : null}{createPortal(<>
-        {view.showGallery ? <div className="fixed inset-0 z-[9999] bg-brand-cream/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-5" onClick={$event => {
+        {view.showGallery ? <div ref={view.galleryDialog} role="dialog" aria-modal="true" aria-label={`Thư viện ảnh: ${view.listing.title}`} tabIndex={-1} className="signature-gallery fixed inset-0 z-[9999] bg-brand-cream/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-5" onClick={$event => {
           if ($event.target !== $event.currentTarget) return;
           return view.closeGallery?.($event);
         }} data-sp-4f294819="">

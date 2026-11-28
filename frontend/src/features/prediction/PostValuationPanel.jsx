@@ -3,6 +3,9 @@ import { createStateStore, stateKey } from "../../shared/state/createStateStore.
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { api } from "../auth/api.js";
 import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
+import AdvancedValuationFields from "./AdvancedValuationFields.jsx";
+import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
+import { valuationComparableBody } from '../property/comparables.js';
 function usePostValuationPanelState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
@@ -22,6 +25,9 @@ function usePostValuationPanelState(inputProps, forwardedRef) {
     result: null,
     error: ""
   }));
+  // Advanced valuation fields start collapsed: they are optional and must never block
+  // the posting flow.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   useSyncExternalStore(state.subscribe, state.getSnapshot);
   const [preview] = useState(() => createPreviewState(body => api("/properties/valuation-preview", {
     method: "POST",
@@ -117,6 +123,8 @@ function usePostValuationPanelState(inputProps, forwardedRef) {
     locations: getLocations(),
     location: getLocation(),
     input: getInput(),
+    advancedOpen,
+    setAdvancedOpen,
     loadOptions,
     featureLabels,
     missingLabel,
@@ -157,6 +165,13 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       <p className="text-xs text-brand-navy/60 mt-2">
         {"Địa bàn theo dữ liệu model. Hãy chọn khu vực tương ứng với địa chỉ thực tế."}
       </p>
+      <AdvancedValuationFields
+        draft={view.draft}
+        propertyType={view.draft?.propertyType}
+        onChange={view.onDraftChange}
+        open={view.advancedOpen}
+        onToggle={view.setAdvancedOpen}
+      />
       {view.optionsError ? <p role="status" className="mt-3 text-xs text-[var(--ui-warning-text)]">
           {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.optionsError)}{" "}
           <button type="button" className="underline" onClick={$event => {
@@ -202,5 +217,7 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       <p className="mt-5 text-xs text-brand-navy/60 leading-relaxed">
         {"Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin."}
       </p>
+      <ComparableEvidenceLookup body={view.state.result?.available ? valuationComparableBody(view.input?.body) : null}
+        title="Đối chiếu định giá bằng tin đăng" />
     </section></>;
 });

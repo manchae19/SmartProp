@@ -42,7 +42,7 @@ export default function PropertyCarousel({
     }
   }} tabIndex={0}>
     <div className="light-carousel-stage">
-      {busy && !items.length ? <p className="light-carousel-empty" role="status">Đang tải tin nổi bật…</p> : error ? <div className="light-carousel-empty" role="alert">Chưa tải được tin. <button onClick={onRetry}>Thử lại</button></div> : !count ? <p className="light-carousel-empty">Chưa có tin thuộc loại hình này. <SiteLink to="/listings">Xem danh sách ↗</SiteLink></p> : list.map((p, i) => {
+      {busy && !items.length ? <p className="light-carousel-empty" role="status">Đang tải tin nổi bật…</p> : error ? <div className="light-carousel-empty" role="alert">Chưa tải được tin. <button type="button" onClick={onRetry}>Thử lại</button></div> : !count ? <p className="light-carousel-empty">Chưa có tin thuộc loại hình này. <SiteLink to="/listings">Xem danh sách ↗</SiteLink></p> : list.map((p, i) => {
         let offset = (i - active + count) % count;
         if (offset > count / 2) offset -= count;
         const cover = p.images?.find(x => x.cover) || p.images?.[0];
@@ -52,7 +52,7 @@ export default function PropertyCarousel({
           zIndex: 5 - Math.abs(offset)
         }} aria-label={i + 1 + ' / ' + count}>
         <SiteLink className="light-slide-photo" to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{cover?.url ? <PrivateImage src={cover.url} alt={p.title} /> : <span>Chưa có ảnh</span>}</SiteLink>
-        <div className="light-slide-body"><p className="light-slide-meta">{p.district || p.city} · {types[p.propertyType] || p.propertyType}</p><h2><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{p.title}</SiteLink></h2><strong className="light-slide-price" title={price(p)}>{compactPrice(p)}</strong><p>{displayDecimal(p.areaSqmExact ?? p.areaSqm)} m²{p.bedrooms != null ? ' · ' + p.bedrooms + ' phòng ngủ' : ''}</p><div className="light-slide-links"><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>Khám phá không gian ↗</SiteLink>{publicMapPoint(p) && <SiteLink to={{
+        <div className="light-slide-body"><p className="light-slide-meta">{p.district || p.city} · {types[p.propertyType] || p.propertyType}</p><h2 title={p.title}><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>{p.title}</SiteLink></h2><strong className="light-slide-price" title={price(p)}>{compactPrice(p)}</strong><p>{displayDecimal(p.areaSqmExact ?? p.areaSqm)} m²{p.bedrooms != null ? ' · ' + p.bedrooms + ' phòng ngủ' : ''}</p><div className="light-slide-links"><SiteLink to={'/listing/' + p.id} tabIndex={offset === 0 ? 0 : -1}>Khám phá không gian ↗</SiteLink>{publicMapPoint(p) && <SiteLink to={{
                 path: '/map',
                 query: {
                   propertyId: p.id
@@ -61,13 +61,13 @@ export default function PropertyCarousel({
       </article>;
       })}
     </div>
-    {count > 1 && <div className="light-carousel-controls"><button data-carousel-control aria-label="Tin trước" onClick={() => step(-1)}>←</button><div className="light-carousel-dots">{list.map((p, i) => <button key={p.id} aria-label={'Xem tin ' + (i + 1)} aria-current={i === active ? 'true' : undefined} onClick={() => setIndex(i)} />)}</div><button data-carousel-control aria-label="Tin tiếp theo" onClick={() => step(1)}>→</button><button aria-label={paused ? 'Tiếp tục carousel' : 'Tạm dừng carousel'} aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? '▷' : 'Ⅱ'}</button></div>}
+    {count > 1 && <div className="light-carousel-controls"><button type="button" data-carousel-control aria-label="Tin trước" onClick={() => step(-1)}>←</button><div className="light-carousel-dots">{list.map((p, i) => <button type="button" key={p.id} aria-label={'Xem tin ' + (i + 1)} aria-current={i === active ? 'true' : undefined} onClick={() => setIndex(i)} />)}</div><button type="button" data-carousel-control aria-label="Tin tiếp theo" onClick={() => step(1)}>→</button><button type="button" aria-label={paused ? 'Tiếp tục carousel' : 'Tạm dừng carousel'} aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? '▷' : 'Ⅱ'}</button></div>}
     <div className="light-carousel-types" role="group" aria-label="Loại hình tin nổi bật">{Object.entries({
         '': 'Tất cả',
         HOUSE: 'Nhà phố',
         VILLA: 'Biệt thự',
         APARTMENT: 'Căn hộ'
-      }).map(([key, label]) => <button key={key} aria-pressed={type === key} onClick={() => {
+      }).map(([key, label]) => <button type="button" key={key} aria-pressed={type === key} onClick={() => {
         setType(key);
         setIndex(0);
       }}>{label}</button>)}</div>

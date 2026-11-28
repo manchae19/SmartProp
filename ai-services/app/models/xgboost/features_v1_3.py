@@ -36,6 +36,34 @@ LIMITS = {
 }
 
 
+# Administrative prefixes that users type in front of a street name. A prefix is only
+# stripped when the remainder is an exact trained vocabulary entry, so an unknown name is
+# never rewritten into a different real street.
+STREET_PREFIXES = ("đường", "phố", "đại lộ", "quốc lộ", "tỉnh lộ", "hẻm", "kiệt")
+
+
+def canonical_street(value: Any, vocabulary: Any) -> str:
+    """NFC/casefold a street name, then resolve an exact vocabulary entry.
+
+    Order matters: an exact match always wins, so a street that genuinely starts with a
+    prefix word is never altered. Prefix stripping is tried only afterwards and only
+    accepted when the result is itself a vocabulary entry.
+    """
+    cleaned = clean_category(value)
+    if cleaned in ("__MISSING__", "__UNKNOWN__"):
+        return cleaned
+    known = vocabulary if isinstance(vocabulary, (set, frozenset)) else set(vocabulary)
+    if cleaned in known:
+        return cleaned
+    for prefix in STREET_PREFIXES:
+        head = prefix + " "
+        if cleaned.startswith(head):
+            remainder = cleaned[len(head):].strip()
+            if remainder and remainder in known:
+                return remainder
+    return cleaned
+
+
 def clean_category(value: Any) -> str:
     """Normalize categorical string values to NFC lowercase."""
     if value is None or pd.isna(value):
@@ -105,7 +133,10 @@ def transform(df: pd.DataFrame, schema: Dict[str, Any]) -> pd.DataFrame:
     vocabularies = schema["vocabularies"]
     for col in CATEGORICAL_FEATURES:
         src = df[col] if col in df.columns else pd.Series(index=df.index, data="__MISSING__")
-        cleaned = src.map(clean_category)
+        if col == "raw_street_name":
+            cleaned = src.map(lambda v: canonical_street(v, vocabularies[col]))
+        else:
+            cleaned = src.map(clean_category)
         known = set(vocabularies[col])
         mapped = cleaned.map(lambda x: x if x in known or x == "__MISSING__" else "__UNKNOWN__")
         levels = vocabularies[col] + ["__MISSING__", "__UNKNOWN__"]

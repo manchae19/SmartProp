@@ -1,12 +1,37 @@
 """Fixed backend routes and parameterized SQL projections. There is no text-to-SQL API."""
 import json
+from html import unescape
 import time
 import math
 NEARBY_MAX_PAGES=20
 import re
+from datetime import datetime, timezone
 from decimal import Decimal
 import httpx
 from .config import GroundingError, RagUnavailable
+from .personalization import matches_area
+from .intent import CATEGORY_LABELS, fold
+
+
+def _property_search_params(criteria):
+    criteria = criteria or {}
+    params = {"transactionType": "SALE"}
+    for key, param in (("budgetVnd", "maxPrice"), ("minPriceVnd", "minPrice"),
+                       ("minAreaSqm", "minArea"), ("maxAreaSqm", "maxArea")):
+        if criteria.get(key) is not None:
+            params[param] = str(criteria[key])
+    for flag in ("minAreaExclusive", "maxAreaExclusive"):
+        if criteria.get(flag):
+            params[flag] = "true"
+    # The Java route rejects crossed price bounds. The caller still checks both bounds.
+    if "minPrice" in params and "maxPrice" in params:
+        if Decimal(params["minPrice"]) > Decimal(params["maxPrice"]):
+            params.pop("minPrice")
+    if criteria.get("propertyType", "ALL") != "ALL":
+        params["propertyType"] = criteria["propertyType"]
+    # Java compares district and ward by equality. Keep the RAG whitespace and
+    # accent normalization locally so the upstream filter cannot drop valid rows.
+    return params
 
 
 def _is_number(value):
@@ -24,6 +49,50 @@ class OutboundRateLimited(UpstreamError):
     def __init__(self, retry_after=60):
         super().__init__(429)
         self.retry_after=retry_after
+
+def _public_text(value, max_length=1000):
+    """Redact common contact formats and research markers from listing prose."""
+    text = re.sub(r"<[^>]*>|[\u200b-\u200d\u2060\ufeff]", "", unescape(str(value or "")))
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
+    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.()\-]*\d){8,10}(?!\d)", "[redacted-phone]", text)
+    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|"
+                  r"sampleListingCount|raw_payload)\b", "[redacted]", text, flags=re.IGNORECASE)
+    return " ".join(text.split())[:max_length]
+
+
+_PROPERTY_UUID = re.compile(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", re.I)
+
+
+def _public_fields(record, fields):
+    if not isinstance(record, dict):
+        return {}
+    return {key: record[key] for key in fields if key in record
+            and (record[key] is None or isinstance(record[key], (str, int, float, Decimal, bool)))}
+
+
+def _public_texts(values):
+    return [_public_text(value) for value in values if isinstance(value, str)] if isinstance(values, list) else []
+
+
+def _public_poi_names(values):
+    if not isinstance(values, list):
+        return []
+    return [{"name": _public_text(item["name"], 255), "category": item["category"]}
+            for item in values if isinstance(item, dict) and isinstance(item.get("name"), str)
+            and isinstance(item.get("category"), str)]
+
+
+def _published_record(body):
+    if not isinstance(body, dict) or body.get("status") != "PUBLISHED" or body.get("deletedAt") is not None:
+        return False
+    expires = body.get("expiresAt")
+    if expires is None:
+        return True
+    try:
+        return datetime.fromisoformat(expires) > datetime.now(timezone.utc)
+    except (TypeError, ValueError):
+        return False
+
 
 class BackendTools:
     def __init__(self, settings):
@@ -91,14 +160,8 @@ class BackendTools:
             price, area = Decimal(str(p["priceVnd"])), Decimal(str(p["areaSqm"]))
             if not price.is_finite() or not area.is_finite() or not 0 < price <= Decimal(str(criteria["budgetVnd"])) or area <= 0 or price < Decimal(str(criteria.get("minPriceVnd") or 0)):
                 raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
-            if criteria.get("minAreaSqm") is not None:
-                low = Decimal(str(criteria["minAreaSqm"]))
-                if (area <= low) if criteria.get("minAreaExclusive") else (area < low):
-                    raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
-            if criteria.get("maxAreaSqm") is not None:
-                high = Decimal(str(criteria["maxAreaSqm"]))
-                if (area >= high) if criteria.get("maxAreaExclusive") else (area > high):
-                    raise GroundingError("INVALID_RECOMMENDATION_NUMBER")
+            if not matches_area(area, criteria):
+                raise GroundingError("RECOMMENDATION_OUTSIDE_AREA_RANGE")
             if p["id"] in seen or p.get("qualityStatus") in ("REJECTED", "EXCLUDED") or p.get("isProtectedHoldout") or p.get("holdout") or p.get("groupHasHoldout"):
                 raise GroundingError("INELIGIBLE_RECOMMENDATION")
             seen.add(p["id"])
@@ -107,12 +170,54 @@ class BackendTools:
                 if group in groups:
                     raise GroundingError("DUPLICATE_RECOMMENDATION_GROUP")
                 groups.add(group)
-            kind = p.get("source", {}).get("kind")
+            source = p.get("source") or {}
+            kind = source.get("kind")
+            key = source.get("recordKey")
+            if kind == "PROPERTY" and (not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", key)
+                                       or p["id"] != "property:" + key):
+                raise GroundingError("INVALID_PROPERTY_REFERENCE")
+            for field in ("district", "ward"):
+                if criteria.get(field) and fold(criteria[field]).split() != fold(str(p.get(field) or "")).split():
+                    raise GroundingError("RECOMMENDATION_OUTSIDE_LOCATION")
+            if criteria.get("propertyType", "ALL") != "ALL" and p.get("propertyType") != criteria["propertyType"]:
+                raise GroundingError("RECOMMENDATION_OUTSIDE_PROPERTY_TYPE")
             if not research and not ((kind == "PROPERTY" and p.get("qualityStatus") == "PLATFORM_PUBLISHED") or
                                      (kind == "EXTERNAL" and p.get("qualityStatus") == "VALID" and p.get("verificationStatus") == "VERIFIED")):
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
             if kind == "TINIX_AI" and (not research or p.get("qualityStatus") != "HYBRID_ELIGIBLE_RESEARCH"):
                 raise GroundingError("PUBLIC_RESEARCH_LEAK")
+        if not research:
+            cards = []
+            for p in properties:
+                card = _public_fields(p, ("id", "propertyType", "priceVnd", "areaSqm", "district", "ward",
+                                          "score", "qualityStatus", "verificationStatus", "duplicateGroup"))
+                card.update(title=_public_text(p.get("title"), 255),
+                            explanations=_public_texts(p.get("explanations")),
+                            warnings=_public_texts(p.get("warnings")),
+                            source=_public_fields(p["source"], ("kind", "name", "recordKey", "detailUrl")))
+                if isinstance(p.get("scoreBreakdown"), dict):
+                    card["scoreBreakdown"] = _public_fields(p["scoreBreakdown"],
+                        ("budgetFit", "areaFit", "propertyTypeFit", "amenityFit"))
+                amenity = p.get("amenityEvidence")
+                if isinstance(amenity, dict):
+                    card["amenityEvidence"] = {
+                        **_public_fields(amenity, ("areaId", "areaLevel", "areaName", "parentDistrict",
+                            "areaAmenityScore", "amenityFit", "confidence", "evidenceBasis", "coverage", "note")),
+                        "poiEvidence": _public_poi_names(amenity.get("poiEvidence")),
+                        "dataLimitations": _public_texts(amenity.get("dataLimitations")),
+                        "categoryScores": _public_fields(amenity.get("categoryScores"), CATEGORY_LABELS),
+                    }
+                cards.append(card)
+            areas = [
+                {**_public_fields(a, ("district", "ward", "candidateCount", "score", "averageAskingPriceVnd",
+                     "unverifiedCount", "needsReviewCount", "amenityScore", "amenityConfidence",
+                     "amenityAreaId", "amenityEvidenceBasis", "amenityCoverage")),
+                 **{key: _public_texts(a.get(key)) for key in ("sources", "explanations", "warnings")},
+                 "poiEvidence": _public_poi_names(a.get("poiEvidence"))}
+                for a in (body.get("topAreas") or []) if isinstance(a, dict)
+            ]
+            return {**_public_fields(body, ("method", "mode", "priceBasis", "eligibleCandidateCount")),
+                    "topProperties": cards, "topAreas": areas, "warnings": _public_texts(body.get("warnings"))}
         return body
 
     def market_summary(self, query):
@@ -203,7 +308,18 @@ class BackendTools:
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
             if not _is_number(item.get("latitude")) or not _is_number(item.get("longitude")) or not -90<=item["latitude"]<=90 or not -180<item["longitude"]<=180:
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
-        return body
+        return {**_public_fields(body, ("propertyId", "radiusMeters", "distanceType", "fetchedAt",
+                                        "cacheHit", "truncated", "coverage", "status")),
+                "categories": _public_texts(body.get("categories")),
+                "location": _public_fields(body.get("location"),
+                                           ("latitude", "longitude", "accuracy", "source", "verifiedAt")),
+                "items": [{**_public_fields(item, ("id", "category", "latitude", "longitude",
+                                                    "distanceMeters", "provider", "sourceUpdatedAt")),
+                           "name": _public_text(item["name"], 255),
+                           "address": _public_text(item.get("address"), 500),
+                           "categoryGroups": _public_texts(item.get("categoryGroups"))} for item in items],
+                "attribution": [_public_fields(a, ("label", "url")) for a in body.get("attribution") or []
+                                if isinstance(a, dict)]}
 
     def nearby_pois(self, property_id, radius=1000, limit=6):
         """Existing public property-to-POI endpoint; distance is straight-line (ST_Distance_Sphere)."""
@@ -219,45 +335,46 @@ class BackendTools:
             items = json.loads(response.content, parse_float=Decimal)
         except (httpx.HTTPError, ValueError) as e:
             raise UpstreamError() from e
-        if not isinstance(items, list) or len(items) > 20:
+        if not isinstance(items, list) or len(items) > limit:
             raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
         clean = []
         for item in items:
             if (not isinstance(item, dict) or not isinstance(item.get("name"), str) or not item["name"].strip()
                     or not isinstance(item.get("category"), str) or not item["category"].strip()
-                    or not _is_number(item.get("distanceMeters")) or item["distanceMeters"] < 0):
+                    or not _is_number(item.get("distanceMeters")) or not 0 <= item["distanceMeters"] <= radius):
                 raise GroundingError("INVALID_NEARBY_POI_EVIDENCE")
-            clean.append({"name": item["name"].strip(), "category": item["category"].strip(),
+            clean.append({"name": _public_text(item["name"], 255), "category": item["category"].strip(),
                           "distanceMeters": float(item["distanceMeters"])})
         return clean
 
-    def public_property(self, property_id):
-        if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", property_id):
+    def _public_property_record(self, property_id):
+        if not isinstance(property_id, str) or not _PROPERTY_UUID.fullmatch(property_id):
             raise GroundingError("INVALID_PROPERTY_ID")
         body = self._call("GET", "/api/v1/properties/" + property_id)
-        if not isinstance(body, dict) or body.get("id") != property_id or body.get("status") != "PUBLISHED":
+        if not _published_record(body) or str(body.get("id", "")).lower() != property_id.lower():
             raise GroundingError("INVALID_PUBLIC_PROPERTY")
         return body
 
+    def public_property(self, property_id):
+        body = self._public_property_record(property_id)
+        fields = ("id", "listingCode", "status", "expiresAt", "price", "priceUnit", "currency", "areaSqm",
+                  "transactionType", "propertyType", "district", "ward", "city", "bedrooms",
+                  "bathrooms", "contentVersion")
+        return {**_public_fields(body, fields),
+                "title": _public_text(body.get("title"), 255),
+                "description": _public_text(body.get("description"), 20000),
+                "address": _public_text(body.get("address"), 500)}
+
     def property_image(self, property_id):
-        """Cover image from the existing public property detail; no generated or external image."""
-        if not isinstance(property_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", property_id):
-            raise GroundingError("INVALID_PROPERTY_ID")
-        try:
-            response = self.client.get("/api/v1/properties/" + property_id)
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        images = body.get("images") if isinstance(body, dict) else None
-        if not isinstance(images, list):
-            return None
-        for image in images:
-            url = image.get("url") if isinstance(image, dict) else None
-            if (isinstance(url, str) and url.startswith("/api/v1/properties/")
-                    and ".." not in url and "//" not in url and len(url) <= 500):
-                return url
+        """Return only an image content path belonging to this public listing."""
+        body = self._public_property_record(property_id)
+        prefix = "/api/v1/properties/" + body["id"] + "/images/"
+        images = body.get("images")
+        if isinstance(images, list):
+            for image in images:
+                url = image.get("url") if isinstance(image, dict) else None
+                if isinstance(url, str) and re.fullmatch(re.escape(prefix) + r"[A-Za-z0-9_-]{1,64}/content", url):
+                    return url
         return None
 
     def amenity_profile(self, area_id):
@@ -286,27 +403,22 @@ class BackendTools:
         return body
     def property_detail(self, property_id):
         """Public listing detail. Drafts and private listings are not served by this route."""
-        if not isinstance(property_id, str) or not re.fullmatch(r"[0-9a-fA-F-]{36}", property_id):
-            raise GroundingError("INVALID_PROPERTY_ID")
         try:
-            response = self.client.get("/api/v1/properties/" + property_id)
-            if response.status_code == 404:
-                raise GroundingError("PROPERTY_NOT_PUBLIC")
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content, parse_float=Decimal)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        if not isinstance(body, dict) or str(body.get("id", "")).lower() != property_id.lower():
-            raise GroundingError("INVALID_PROPERTY_DETAIL")
-        if body.get("status") != "PUBLISHED":
-            raise GroundingError("PROPERTY_NOT_PUBLIC")
+            body = self.public_property(property_id)
+        except UpstreamError as error:
+            if error.status == 404:
+                raise GroundingError("PROPERTY_NOT_PUBLIC") from error
+            raise
+        except GroundingError as error:
+            if str(error) == "INVALID_PUBLIC_PROPERTY":
+                raise GroundingError("PROPERTY_NOT_PUBLIC") from error
+            raise
         price = body.get("price")
         if not _is_number(price) or price <= 0:
             raise GroundingError("INVALID_PROPERTY_DETAIL")
         return {
             "id": body["id"],
-            "title": str(body.get("title") or "").strip(),
+            "title": _public_text(body.get("title"), 255),
             "priceVnd": float(price),
             "areaSqm": float(body["areaSqm"]) if _is_number(body.get("areaSqm")) else None,
             "district": str(body.get("district") or "").strip(),
@@ -470,59 +582,16 @@ class BackendTools:
                 "durationSeconds": float(seconds) if _is_number(seconds) else None,
             })
         return {"provider": body.get("provider") or "", "mode": body.get("mode") or mode, "cells": cells}
-    def search_by_address(self, address, limit=5):
-        """Public listings whose address column matches the given street address.
-
-        The backend filters the address column itself, so prose that merely mentions
-        the street in a title or description is not returned as a match.
-        """
+    def search_by_address(self, address, *, criteria=None):
+        """Fetch a bounded set of public candidates in newest-first order."""
         text = str(address or "").strip()
         if len(text) < 3 or len(text) > 200:
             raise GroundingError("INVALID_ADDRESS")
-        try:
-            response = self.client.get("/api/v1/properties",
-                                       params={"address": text, "size": max(1, min(int(limit), 10)),
-                                               "sort": "newest"})
-            if response.status_code == 429:
-                raise OutboundRateLimited()
-            if response.status_code in (400, 422):
-                raise GroundingError("INVALID_ADDRESS")
-            if response.status_code != 200:
-                raise UpstreamError(response.status_code)
-            body = json.loads(response.content, parse_float=Decimal)
-        except (httpx.HTTPError, ValueError) as e:
-            raise UpstreamError() from e
-        items = body.get("items") if isinstance(body, dict) else None
-        if not isinstance(items, list):
-            raise GroundingError("INVALID_PROPERTY_SEARCH")
-        results = []
-        for item in items:
-            if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
-                continue
-            price = item.get("price")
-            if not _is_number(price) or price <= 0:
-                continue
-            results.append({
-                "id": str(item.get("id") or ""),
-                "title": str(item.get("title") or "").strip(),
-                "priceVnd": float(price),
-                "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
-                "address": str(item.get("address") or "").strip(),
-                "district": str(item.get("district") or "").strip(),
-                "ward": str(item.get("ward") or "").strip(),
-                "propertyType": str(item.get("propertyType") or ""),
-                "transactionType": str(item.get("transactionType") or ""),
-                "listingCode": str(item.get("listingCode") or ""),
-                "contentVersion": int(item.get("contentVersion") or 1),
-            })
-        return {"address": text, "total": int(body.get("totalElements") or 0), "items": results}
-    def search_nearby(self, latitude, longitude, radius_meters=1000, limit=10, max_price=None):
-        """Every public listing inside a bounding box around a point, with coordinates.
+        found = self._public_search({"address": text, **_property_search_params(criteria)}, "INVALID_ADDRESS")
+        return {"address": text, **found}
 
-        The list endpoint sorts by creation time, not by distance, so one page is not
-        enough: the nearest listing can sit on any page. All pages are read (bounded) and
-        the caller still computes the real distance before filtering.
-        """
+    def search_nearby(self, latitude, longitude, radius_meters=1000, max_price=None, *, criteria=None):
+        """Fetch bounded bbox candidates for exact distance filtering and ranking."""
         if not _is_number(latitude) or not _is_number(longitude):
             raise GroundingError("INVALID_COORDINATES")
         if not _is_number(radius_meters) or not 50 <= float(radius_meters) <= 50000:
@@ -533,21 +602,28 @@ class BackendTools:
         dlat = float(radius_meters) / 111_000.0
         dlon = float(radius_meters) / (111_000.0 * max(0.2, math.cos(math.radians(lat))))
         bbox = f"{lon - dlon:.6f},{lat - dlat:.6f},{lon + dlon:.6f},{lat + dlat:.6f}"
-        page_size = 50
+        if max_price is not None:
+            criteria = {**(criteria or {}), "budgetVnd": max_price}
+        params = {"bbox": bbox, **_property_search_params(criteria)}
+        found = self._public_search(params, "INVALID_BBOX")
+        return {"bbox": bbox, "radiusMeters": float(radius_meters), **found}
+
+    def _public_search(self, params, invalid_reason):
+        # Both routes use the same bounded, stable newest-first public API.
+        params = {**params, "size": 50, "sort": "newest"}
+        needs_coordinates = "bbox" in params
         results = []
         seen = set()
         page = 0
+        total = 0
         complete = False
         while page < NEARBY_MAX_PAGES:
-            params = {"bbox": bbox, "size": page_size, "page": page, "sort": "newest"}
-            if max_price is not None:
-                params["maxPrice"] = str(max_price)
             try:
-                response = self.client.get("/api/v1/properties", params=params)
+                response = self.client.get("/api/v1/properties", params={**params, "page": page})
                 if response.status_code == 429:
                     raise OutboundRateLimited()
                 if response.status_code in (400, 422):
-                    raise GroundingError("INVALID_BBOX")
+                    raise GroundingError(invalid_reason)
                 if response.status_code != 200:
                     raise UpstreamError(response.status_code)
                 body = json.loads(response.content, parse_float=Decimal)
@@ -556,42 +632,46 @@ class BackendTools:
             items = body.get("items") if isinstance(body, dict) else None
             if not isinstance(items, list):
                 raise GroundingError("INVALID_PROPERTY_SEARCH")
+            if type(body.get("totalElements")) is int:
+                total = body["totalElements"]
             for item in items:
-                if not isinstance(item, dict) or item.get("status") != "PUBLISHED" or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
+                if not _published_record(item) or item.get("transactionType") != "SALE" or item.get("priceUnit") != "TOTAL" or item.get("currency") != "VND":
                     continue
                 price = item.get("price")
                 if not _is_number(price) or price <= 0:
                     continue
                 item_lat, item_lon = item.get("latitude"), item.get("longitude")
-                if not _is_number(item_lat) or not _is_number(item_lon):
+                if needs_coordinates and (not _is_number(item_lat) or not _is_number(item_lon)):
                     continue
                 listing_id = str(item.get("id") or "")
                 # The API can repeat a row across pages if the data shifts mid-read.
                 if not listing_id or listing_id in seen:
                     continue
                 seen.add(listing_id)
-                results.append({
+                projected = {
                     "id": listing_id,
-                    "title": str(item.get("title") or "").strip(),
+                    "title": _public_text(item.get("title"), 255),
                     "priceVnd": float(price),
                     "areaSqm": float(item["areaSqm"]) if _is_number(item.get("areaSqm")) else None,
-                    "address": str(item.get("address") or "").strip(),
+                    "address": _public_text(item.get("address"), 500),
                     "district": str(item.get("district") or "").strip(),
                     "ward": str(item.get("ward") or "").strip(),
-                    "latitude": float(item_lat),
-                    "longitude": float(item_lon),
                     "propertyType": str(item.get("propertyType") or ""),
                     "transactionType": str(item.get("transactionType") or ""),
                     "listingCode": str(item.get("listingCode") or ""),
                     "contentVersion": int(item.get("contentVersion") or 1),
-                })
+                }
+                if needs_coordinates:
+                    projected.update(latitude=float(item_lat), longitude=float(item_lon))
+                results.append(projected)
             total_pages = body.get("totalPages")
             page += 1
-            if not items or (isinstance(total_pages, int) and page >= total_pages):
+            if type(total_pages) is int and page >= total_pages:
                 complete = True
                 break
-        return {"bbox": bbox, "radiusMeters": float(radius_meters),
-                "items": results, "complete": complete, "pagesRead": page}
+            if not items and type(total_pages) is not int:
+                break
+        return {"items": results, "total": total, "complete": complete, "pagesRead": page}
 
 
 def _public_text(value, max_length=1000):
@@ -622,13 +702,13 @@ class PublishedPropertyRepository:
                 items=body.get("items")
                 if not isinstance(items,list):raise GroundingError("INVALID_PUBLIC_IMAGE_CATALOG")
                 for item in items:
-                    if item.get("status")!="PUBLISHED":continue
+                    if not _published_record(item):continue
                     uid=item.get("id","")
                     if not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}",uid):continue
                     for image in item.get("images") or []:
                         url=image.get("url","")
                         if not url.startswith("/api/v1/properties/"+uid+"/images/") or ".." in url or "//" in url:continue
-                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":str(item.get("title") or "")[:255],"district":item.get("district"),"ward":item.get("ward")})
+                        result.append({"propertyId":uid,"imageId":image.get("id"),"url":(self.settings.image_backend_url or self.settings.backend_url).rstrip("/")+url,"publicUrl":url,"listingCode":item.get("listingCode"),"title":_public_text(item.get("title"), 255),"district":item.get("district"),"ward":item.get("ward")})
                         if len(result)>=limit:return result
                 if not items or page+1>=body.get("totalPages",1):break
         return result
@@ -638,15 +718,12 @@ class PublishedPropertyRepository:
             raise RagUnavailable("READ_ONLY_SQL_NOT_CONFIGURED")
         if not ids:
             return []
-        if len(ids) > 10 or not all(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", i) for i in ids):
+        if len(ids) > 10 or not all(isinstance(i, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", i) for i in ids):
             raise GroundingError("INVALID_PROPERTY_IDS")
-        if self.settings.sql_use_views:
-            # The rag_public_* views of the pre-merge branch do not exist in the current schema.
-            raise RagUnavailable("SQL_PUBLIC_VIEWS_NOT_AVAILABLE")
-        target_db, target_port = self.settings.sql_database, self.settings.sql_port
         try:
             import pymysql
-            with pymysql.connect(host=self.settings.sql_host, port=target_port, database=target_db,
+            with pymysql.connect(host=self.settings.sql_host, port=self.settings.sql_port,
+                    database=self.settings.sql_database,
                     user=self.settings.db_user, password=self.settings.db_password, charset="utf8mb4",
                     autocommit=False, init_command="SET SESSION TRANSACTION READ ONLY",
                     connect_timeout=3, read_timeout=5, cursorclass=pymysql.cursors.DictCursor) as conn:
@@ -654,18 +731,20 @@ class PublishedPropertyRepository:
                 with conn.cursor() as cur:
                     cur.execute("SELECT DATABASE() db, @@port port, @@transaction_read_only read_only")
                     identity = cur.fetchone()
-                    if identity != {"db": target_db, "port": target_port, "read_only": 1}:
+                    if identity != {"db": self.settings.sql_database, "port": self.settings.sql_port, "read_only": 1}:
                         raise GroundingError("WRONG_SQL_TARGET")
                     placeholders = ",".join(["%s"] * len(ids))
+                    source = "rag_public_properties" if self.settings.sql_use_views else "properties"
                     cur.execute("SELECT /*+ MAX_EXECUTION_TIME(3000) */ id,price,area_sqm,district,ward,ST_SRID(location) coordinate_srid,"
                         "CASE WHEN ST_SRID(location)=4326 THEN ST_Latitude(location) END latitude,"
-                        "CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM properties "
+                        f"CASE WHEN ST_SRID(location)=4326 THEN ST_Longitude(location) END longitude FROM {source} "
                         "WHERE status='PUBLISHED' AND deleted_at IS NULL AND (expires_at IS NULL OR expires_at>UTC_TIMESTAMP(6)) "
                         "AND transaction_type='SALE' AND currency='VND' AND price_unit='TOTAL' AND price>0 AND area_sqm>0 "
                         f"AND id IN ({placeholders}) ORDER BY id LIMIT 10", tuple(ids))
                     rows = cur.fetchall()
                 conn.rollback()
-            return list(rows)
+            fields = ("id", "price", "area_sqm", "district", "ward", "coordinate_srid", "latitude", "longitude")
+            return [{key: row[key] for key in fields if key in row} for row in rows]
         except GroundingError:
             raise
         except Exception as e:

@@ -1,0 +1,33 @@
+/* Coastal Living Gallery: all rules stay within the homepage lifestyle section. */
+#lifestyle { background: linear-gradient(135deg, #e8f1f2 0%, #f3f8f8 52%, #eaf3f3 100%); border-color: #d5e3e7; }
+#lifestyle .light-heading h2 { color: #142b45; font-weight: 700; line-height: 1.22; letter-spacing: -.035em; border-color: #d9ad55; }
+#lifestyle .light-heading .light-eyebrow { color: #168f89; }
+#lifestyle .light-heading>div>p:last-child:not(.light-eyebrow) { color: #526b80; }
+#lifestyle .light-text-link { color: #142b45; transition: color 300ms ease; }
+#lifestyle .light-text-link:hover { color: #168f89; }
+#lifestyle .light-lifestyles { align-items: stretch; }
+#lifestyle .light-lifestyles>a {
+  background: #fff;
+  border: 1px solid #d5e3e7;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px #10243b0b;
+  transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+#lifestyle .light-lifestyles>a:hover { transform: translateY(-4px); border-color: #168f8966; box-shadow: 0 12px 26px #10243b17; }
+#lifestyle .lifestyle-image { height: 150px; overflow: hidden; flex-shrink: 0; background: #e8f1f2; }
+#lifestyle .lifestyle-image img { height: 100%; width: 100%; object-fit: cover; filter: contrast(1.025) saturate(1.025); transition: transform 300ms ease; }
+#lifestyle .light-lifestyles>a:hover .lifestyle-image img { transform: scale(1.03); }
+#lifestyle .light-lifestyles strong { display: flex; align-items: flex-start; justify-content: space-between; gap: 9px; color: #142b45; font-size: 15px; font-weight: 700; line-height: 1.45; padding: 19px 18px 10px; }
+#lifestyle .light-lifestyles strong .lifestyle-arrow { flex-shrink: 0; padding: 0; font-size: 18px; font-weight: 700; line-height: 1.2; color: #142b45; transition: color 220ms ease, transform 220ms ease; }
+#lifestyle .light-lifestyles>a>span { flex: 1; padding: 0 18px 22px; color: #526b80; font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+#lifestyle .light-lifestyles>a:is(:hover,:focus-visible) .lifestyle-arrow { color: #168f89; transform: translate(2px,-2px); }
+#lifestyle .light-lifestyles>a:focus-visible { outline: 2px solid #142b45; outline-offset: 4px; border-color: #d9ad55; }
+@media (max-width: 700px) {
+  #lifestyle .lifestyle-image { height: 120px; }
+  #lifestyle .light-lifestyles strong { padding: 15px 12px 9px; font-size: 13px; }
+  #lifestyle .light-lifestyles>a>span { padding: 0 12px 18px; font-size: 12px; line-height: 1.6; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #lifestyle :is(.light-text-link,.light-lifestyles>a,.lifestyle-image img,.lifestyle-arrow) { transition: none; }
+  #lifestyle .light-lifestyles>a:hover, #lifestyle .light-lifestyles>a:hover .lifestyle-image img, #lifestyle .light-lifestyles>a:is(:hover,:focus-visible) .lifestyle-arrow { transform: none; }
+}

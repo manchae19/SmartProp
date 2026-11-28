@@ -1,23 +1,32 @@
 import React, { useState } from 'react'
+import { visibleAdvisorComparables } from './advisorAnalysis.js'
+import ComparableListingsCard from '../property/ComparableListingsCard.jsx'
 
 const money = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value) || 0)
 
 const exactMoney = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0) + ' VNĐ'
 
-const SOURCE_LABEL = { SMARTPROP: 'SmartProp', EXTERNAL_LISTING: 'Tin đăng ngoài', TINIX_RESEARCH: 'TiniX · nghiên cứu' }
-
 /**
  * Independent evidence for one property: XGBoost V1.3 valuation with TreeSHAP
  * explanation, plus comparable-listing evidence when present. Renders only
- * fields the API actually returned.
+ * fields the API actually returned and blocks research items unless both mode
+ * and caller authorization explicitly permit research.
  */
-export default function AdvisorEvidencePanel({ valuation, comparable }) {
+export default function AdvisorEvidencePanel({ valuation, comparable, valuationComparables, mode = 'SAFE', allowResearch = false }) {
   const [openShap, setOpenShap] = useState(false)
   const hasValuation = valuation?.available === true
   const shap = valuation?.shapExplanation
-  const comparables = comparable?.comparables || []
-  if (!hasValuation && comparables.length === 0) return null
+  const renderComparables = (source, title, research) => {
+    if (!source || source.status === 'SKIPPED_BY_REQUEST') return null
+    const error = ['DEGRADED', 'SKIPPED_UNSUPPORTED_INPUT'].includes(source.status)
+      ? source.warnings?.[0] || 'Chưa tải được tin tương đồng.' : null
+    return <div data-comparable-evidence>
+      <ComparableListingsCard title={title} error={error} allowResearch={research}
+        result={{ ...source, evidence: source.cohort, comparables: visibleAdvisorComparables(source, mode, research) }} />
+    </div>
+  }
+  if (!hasValuation && (!comparable || comparable.status === 'SKIPPED_BY_REQUEST') && !valuationComparables) return null
 
   return (
     <div className="ev-panel" data-advisor-evidence>
@@ -60,32 +69,8 @@ export default function AdvisorEvidencePanel({ valuation, comparable }) {
         </section>
       ) : null}
 
-      {comparables.length ? (
-        <section className="ev-block" data-comparable-evidence>
-          <div className="ev-head">
-            <span className="ev-title">Đối chiếu tin tương đồng</span>
-          </div>
-          <ul className="comp-list">
-            {comparables.map((item) => (
-              <li key={item.candidateId} className="comp-item" data-comparable-source={item.sourceKind}>
-                <span className="comp-source">{SOURCE_LABEL[item.sourceKind] ?? item.sourceKind}</span>
-                {item.scoreBreakdown ? (
-                  <div className="comp-tags">
-                    {Object.entries(item.scoreBreakdown).map(([key, val]) => (
-                      <span key={key}>{val}</span>
-                    ))}
-                  </div>
-                ) : null}
-                {item.sourceKind === 'TINIX_RESEARCH' ? (
-                  <p className="comp-attribution">
-                    {item.attribution || 'TiniX — Dữ liệu tham chiếu nghiên cứu, chưa xác minh còn giao dịch (CC BY-NC 4.0).'}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {renderComparables(comparable, 'Tin tương đồng theo giá rao', mode === 'INTERNAL_RESEARCH' && allowResearch)}
+      {renderComparables(valuationComparables, 'Đối chiếu định giá bằng tin đăng', false)}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { afterPaint, classNames, numericInput } from "../../shared/lib/ui.js";
-import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
+import { createStateStore } from "../../shared/state/createStateStore.js";
+import { hasActiveSession, sameRestrictedSession } from "../../shared/lib/restrictedSession.js";
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { api, session } from "../auth/api.js";
@@ -11,7 +12,7 @@ import "./AdvisorView.css";
 function useAdvisorViewState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
-  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot);
   const defaults = () => ({
     budgetVnd: "2.000.000.000",
     purpose: "LIVING",
@@ -51,32 +52,35 @@ function useAdvisorViewState(inputProps, forwardedRef) {
   useSyncExternalStore(research.subscribe, research.getSnapshot);
   const _sequenceRef = useRef(0),
     _mapSequenceRef = useRef(0);
-  const _watched = (() => [session.getSnapshot().user?.role, session.getSnapshot().status])();
-  const _previous = useRef(_watched),
-    _initialized = useRef(false);
+  const hasResearchAccess = snapshot => hasActiveSession(snapshot) && snapshot.user?.role === "ADMIN";
   useEffect(() => {
-    const previousValue = _previous.current;
-    _previous.current = _watched;
-    let dispose;
-    _initialized.current = true;
-    const result = (async ([role, status]) => {
+    let previous;
+    let probe;
+    const syncResearchScope = () => {
+      const next = session.getSnapshot();
+      if (previous && sameRestrictedSession(previous, next)) return;
+      previous = next;
+      probe?.abort();
       researchAvailable.set(false);
       research.set(false);
       reset();
-      if (role === "ADMIN" && status === "AUTHENTICATED") {
-        try {
-          const config = await api("/recommendations/research/config");
-          researchAvailable.set(session.getSnapshot().user?.role === "ADMIN" && config.enabled === true);
-        } catch {
-          /* Public Advisor remains available. */
-        }
-      }
-    })(_watched, previousValue, fn => dispose = fn);
-    result?.catch?.(console.error);
-    return () => dispose?.();
-  }, [stateKey(_watched)]);
+      if (!hasResearchAccess(next)) return;
+      const controller = new AbortController();
+      probe = controller;
+      api("/recommendations/research/config", { signal: controller.signal })
+        .then(config => {
+          if (!controller.signal.aborted) researchAvailable.set(config.enabled === true);
+        }).catch(() => {});
+    };
+    const unsubscribe = session.subscribe(syncResearchScope);
+    syncResearchScope();
+    return () => {
+      unsubscribe();
+      probe?.abort();
+    };
+  }, []);
   function setResearch(value) {
-    if (value && !researchAvailable.getSnapshot()) return;
+    if (value && (!hasResearchAccess(session.getSnapshot()) || !researchAvailable.getSnapshot())) return;
     reset();
     research.set(value);
   }
@@ -213,7 +217,7 @@ function useAdvisorViewState(inputProps, forwardedRef) {
     selected: selected.getSnapshot(),
     mapFailures: mapFailures.getSnapshot(),
     research: research.getSnapshot(),
-    researchAvailable: researchAvailable.getSnapshot(),
+    researchAvailable: hasResearchAccess(auth) && researchAvailable.getSnapshot(),
     setResearch,
     budgetHint: getBudgetHint(),
     districtSuggestions: getDistrictSuggestions(),

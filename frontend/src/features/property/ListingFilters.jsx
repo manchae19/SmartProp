@@ -74,7 +74,8 @@ function useListingFiltersState(inputProps, forwardedRef) {
     transaction,
     reset,
     updateErrorNodeValue: errorNode.set,
-    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["value", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
+    // These callbacks emit applied filters, not bubbling DOM form events.
+    rootAttributes: Object.fromEntries(Object.entries(inputProps).filter(([key]) => !["value", "onChange", "onSearch", "children", "ref", "key"].includes(key) && (!key.startsWith("on") || /^on(Click|DoubleClick|KeyDown|KeyUp|Change|Input|Focus|Blur|MouseDown|MouseUp|PointerDown)$/.test(key)))),
     updateExpandedValue: expanded.set,
     updateDraft: draft.edit
   };

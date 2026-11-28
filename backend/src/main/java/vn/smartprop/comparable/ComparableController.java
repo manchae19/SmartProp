@@ -6,15 +6,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import vn.smartprop.modules.auth.AccountAccess;
+import vn.smartprop.common.ApiException;
+import vn.smartprop.common.ApiInputs;
 import vn.smartprop.common.RequestLimits;
+import vn.smartprop.modules.auth.AccountAccess;
 
 /**
- * Comparable-properties lookup for the valuation screen.
+ * Comparable-properties lookup.
  *
- * Broker-only for the same reason the valuation preview is: the response can
- * carry research rows (TiniX) that are licensed for local demo use, not for an
- * anonymous browser.
+ * <ul>
+ *   <li>Default mode ({@code includeResearch=false/null}): accessible to active {@code BROKER}
+ *       and {@code ADMIN} accounts; serves only public {@code SMARTPROP} and
+ *       {@code EXTERNAL_LISTING} comparables without touching {@code tinix_dataset_records}.</li>
+ *   <li>Explicit research mode ({@code includeResearch=true}): strictly requires an active,
+ *       non-deleted {@code ADMIN} account and {@code app.comparable.research-enabled=true};
+ *       otherwise fails closed with {@code 403 Forbidden}.</li>
+ * </ul>
  */
 @RestController
 @RequestMapping("/api/v1/properties")
@@ -30,16 +37,46 @@ public class ComparableController {
     }
 
     @PostMapping("/comparables")
-    public ComparableDtos.Response comparables(@AuthenticationPrincipal Jwt jwt,
-                                               @RequestBody ComparableDtos.Request body,
-                                               HttpServletRequest request,
-                                               HttpServletResponse response) {
+    public ComparableDtos.Response comparables(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) Boolean includeResearch,
+            @RequestBody(required = false) ComparableDtos.Request body,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         response.setHeader("Cache-Control", "private, no-store");
-        Long id = Long.valueOf(jwt.getSubject());
-        access.publisher(id);
+        Long id = parseUserId(jwt);
+        boolean wantsResearch = Boolean.TRUE.equals(includeResearch)
+            || (body != null && Boolean.TRUE.equals(body.includeResearch()));
+
+        if (wantsResearch) {
+            access.admin(id);
+            if (!service.isResearchEnabled()) {
+                throw ApiInputs.forbidden();
+            }
+        } else {
+            access.publisher(id);
+        }
+
         limits.check("comparables:user:" + id, 20, 60);
         limits.check("comparables:ip:" + request.getRemoteAddr(), 40, 60);
-        return service.rank(body == null ? new ComparableDtos.Request(
-            null, null, null, null, null, null, null, null, null) : body);
+
+        ComparableDtos.Request effective = body == null
+            ? new ComparableDtos.Request(null, null, null, null, null, null, null, null, null, wantsResearch)
+            : new ComparableDtos.Request(
+                body.propertyId(), body.propertyType(), body.district(), body.ward(),
+                body.areaSqm(), body.priceVnd(), body.bedrooms(), body.floors(), body.limit(),
+                wantsResearch, body.purpose(), body.buyerBudgetVnd(), body.subjectIdentity(), body.physicalFeatures());
+        return wantsResearch ? service.rankResearch(effective) : service.rank(effective);
+    }
+
+    private static Long parseUserId(Jwt jwt) {
+        if (jwt == null) {
+            throw new ApiException(401, "UNAUTHENTICATED", "Vui lòng đăng nhập");
+        }
+        try {
+            return Long.valueOf(jwt.getSubject());
+        } catch (NumberFormatException | NullPointerException ex) {
+            throw new ApiException(401, "UNAUTHENTICATED", "Phiên không hợp lệ");
+        }
     }
 }

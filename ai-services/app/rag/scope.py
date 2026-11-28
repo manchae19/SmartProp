@@ -3,6 +3,7 @@ import re
 import unicodedata
 
 from . import commute_destination
+from .money import recurring_amounts
 OUTSIDE="Tôi chưa thể trả lời câu hỏi này của bạn vì dữ liệu nằm ngoài phạm vi hỗ trợ hiện tại của tôi. Tôi có thể hỗ trợ thông tin tin đăng, phân tích sơ bộ từ nội dung người đăng cung cấp, tìm bất động sản và tiện ích tại địa bàn SmartProp hỗ trợ."
 
 # The three replies the commute question offers. Matched on folded text so the
@@ -38,6 +39,7 @@ def domain_reply(question, turn, pending=None):
         return "Tôi chưa kết nối trực tiếp với nhân viên tư vấn. Bạn có thể nhắn người đăng tin ở trang chi tiết tin, hoặc lưu mã lô/tin để hỏi thêm."
     unrelated=re.search(r"\b(?:thoi tiet|du bao mua|bong da|ty so tran|nau an|cong thuc nau|chua benh|chan doan|dieu tri|mua co phieu|bitcoin|tien ao|viet code|lap trinh|chinh tri|tu vi|xem boi)\b",text)
     housing=re.search(r"\b(?:bat dong san|nha|can ho|dat|tin dang|gia|ngan sach|ty|trieu|thue|mua|dau tu|phap ly|quy hoach|tien ich|truong|benh vien|sieu thi|khu vuc|vi tri|can nay|can do|can thu|dien tich|phong ngu|hai chau|son tra|da nang|thanh khe|cam le|hoa vang|lien chieu|ngu hanh son)\b",text)
-    if unrelated or turn["intent"]=="CLARIFY" and not housing and len(text.split())>3:
+    if unrelated or (turn["intent"] == "CLARIFY" and not housing and len(text.split()) > 3
+                     and not any(recurring_amounts(text))):
         return OUTSIDE
     return None

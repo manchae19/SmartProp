@@ -535,6 +535,30 @@ Ví dụ nội dung site Caddy cần được người vận hành thay domain/�
 example.com {
     encode zstd gzip
     route {
+        @loopbackOnly {
+            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/*
+        }
+        @loopbackVariant {
+            path_regexp loopback_norm (?i)^/+api/+(?:v1/+)?(?:recommendations/+research|amenities/+research)(?:[;/]|$)
+        }
+        @ambiguousApiPath {
+            expression {http.request.uri}.matches("(?i)^/+api(?:/|%2f|%5c|;)[^?]*(?:%2f|%5c|%2e%2e|\\.\\.|;|//)")
+        }
+        handle @loopbackOnly {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Route nội bộ chỉ cho phép truy cập trực tiếp trên loopback."}` 403
+        }
+        handle @loopbackVariant {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Route nội bộ chỉ cho phép truy cập trực tiếp trên loopback."}` 403
+        }
+        handle @ambiguousApiPath {
+            header Content-Type "application/json; charset=utf-8"
+            header Cache-Control "no-store"
+            respond `{"code":"FORBIDDEN","message":"Đường dẫn API không hợp lệ."}` 403
+        }
         @chat path /api/chat
         handle @chat {
             reverse_proxy 127.0.0.1:8082
@@ -546,7 +570,10 @@ example.com {
             reverse_proxy 127.0.0.1:8000
         }
         handle /api/* {
-            reverse_proxy 127.0.0.1:8080
+            reverse_proxy 127.0.0.1:8080 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
         }
         handle {
             root * /srv/smartprop/www
@@ -557,7 +584,7 @@ example.com {
 }
 ```
 
-Giữ các header bảo mật/thiết lập vận hành phù hợp từ `ops/Caddyfile`. Cấu hình DNS/TLS, forwarded headers chỉ từ proxy tin cậy; đăng ký lại Google callback `https://YOUR_DOMAIN/api/v1/auth/oauth2/callback/google`. Không dùng Vite dev server làm production server.
+Giữ các header bảo mật/thiết lập vận hành phù hợp từ `ops/Caddyfile`. Cấu hình DNS/TLS, chỉ đặt `SERVER_FORWARD_HEADERS_STRATEGY=native` và `SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES=127\.\d{1,3}\.\d{1,3}\.\d{1,3}|0:0:0:0:0:0:0:1|::1` khi Backend chỉ lắng nghe trên `127.0.0.1:8080` phía sau Caddy; đăng ký lại Google callback `https://YOUR_DOMAIN/api/v1/auth/oauth2/callback/google`. Không dùng Vite dev server làm production server.
 
 Xem thêm [vận hành và backup](ops/OPERATIONS.md). File này có một số ghi chép lịch sử; đối chiếu source/README hiện tại khi gặp đường dẫn hoặc hướng dẫn test cũ.
 
