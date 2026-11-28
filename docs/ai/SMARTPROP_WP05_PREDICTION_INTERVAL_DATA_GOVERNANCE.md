@@ -1,0 +1,35 @@
+# WP-05 Phase A — Kiểm toán quản trị dữ liệu
+
+**`WP05_REAL_CALIBRATION_DATA_UNAVAILABLE`.** Metadata hiện có chưa xác nhận cohort độc lập được phép dùng cho WP-05. Phase A dùng benchmark synthetic riêng. Nguồn kiểm toán gồm tài liệu quản trị đính chính, manifest đánh giá, manifest inference, schema và policy Duan được pin. Không mở row-level residual, predictions CSV, training files, dữ liệu mù lịch sử, DB, listing production hoặc nguồn scrape.
+
+## Phân vai và mức bằng chứng
+
+| Tập | Metadata và lịch sử đã công bố | Quyết định WP-05 |
+| --- | --- | --- |
+| Train V1.3 | 36.617 dòng, 33.729 entity. Manifest ghi 2025-04-16 đến 2025-12-11. Chênh lệch số dòng và entity cho thấy quan sát lặp. | Toàn bộ entity, source ID và repost đã tham gia train phải embargo khỏi calibration và final evaluation mới theo protocol dự kiến. Phase A chưa xác minh membership từng dòng. |
+| Duan point calibration | `calibration.json` ghi 5-fold GroupKFold OOF trên 36.617 dòng train. Giải quyết bước retransformation của điểm dự đoán. | Cohort train đã tham gia chỉnh point. Không dùng score hoặc factor Duan làm interval calibration. |
+| Validation | 6.894 dòng, dùng early stopping và chọn model theo manifest. | Development-exposed. Chưa có metadata đủ về membership, thời gian và overlap tới từng nguồn. |
+| Dev test | 4.403 dòng, 4.163 entity, 240 dòng dư so với unique entity. Manifest ghi 2026-02-25 đến 2026-03-16, train/test entity overlap và ID overlap đều 0 ở lần kiểm cũ. Quy chế paired test có typo năm bắt đầu, dùng ngày trong manifest và chưa kiểm tra row-level. | Đã dùng so sánh full-real, basic, street và giả định legacy. Kiểm tra overlap cũ hữu ích để lập lịch sử, không xác nhận độc lập với tuning hiện tại hay với mọi repost xuyên nguồn. |
+| Reserved blind test lịch sử | 3.102 mẫu **đã mở ở Step 20.11B**. Giá trị đã công bố của V1.3 là MAPE 21,185%, Median APE 15,543%, W20 61,315%, R² 0,6944 và MAE 3,895 tỷ VND. Trường `opened:false` ở manifest cũ mô tả lúc tạo artifact. | Embargo. Không mở lại, tune, calibrate hoặc đánh giá WP-05 trên cohort này. Các metric lịch sử không cung cấp phân phối residual đủ cho interval. |
+| Cafeland OOT lịch sử | Manifest ghi 72 dòng và metrics đã công bố. | Đã exposure, nguồn/lịch sử repost không được xác nhận ở Phase A, quy mô nhỏ cho tail. |
+| Cohort mới | Không có metadata về dataset được phê duyệt, nguồn qua kiểm định, thời gian và overlap có thể xác minh cho mục đích WP-05. | `UNAVAILABLE`. B1/B2 chờ quyền sử dụng và bộ dữ liệu đạt gate. |
+
+Nguồn chính thức nội bộ của các số và tình trạng truy cập. [Evaluation governance](SMARTPROP_AI_VALUATION_EVALUATION_GOVERNANCE.md) · [Evaluation manifest](../../ai-services/evaluation/model_evaluation_manifest.json) · [WP-01 integration](SMARTPROP_WP01_INTEGRATION_REPORT.md)
+
+## Nguồn, giấy phép và target
+
+- Metadata mô tả V1.3 multi-source gồm TiniX và Zenodo. Manifest ghi Zenodo CC BY 4.0 và 1.072 entity sạch mới, 19 quarantine. TiniX là dữ liệu nghiên cứu với việc phân phối lại cần owner chấp thuận. Model card ghi CC BY-NC 4.0. Chính sách xuất bản theo manifest chỉ cho aggregate, hash và split counts đã được duyệt. Chưa xác minh hợp đồng, quyền xử lý cho mục đích serving, quyền hiển thị aggregate theo nhóm hoặc hiệu lực giấy phép trên từng nguồn. Quyền trên model không cấp quyền tương đương cho listing rows.
+- Target phải là giá rao **tổng giá bán VND**, xác định thời điểm quan sát từ cùng phiên bản listing ở snapshot, có quy tắc tiền tệ và loại hình. Loại rental, đơn vị tiền/m² không quy đổi đáng tin cậy, giao dịch công chứng và giá sửa sau thời điểm feature cutoff. Một property có nhiều giá rao qua thời gian cần định nghĩa observation unit và time horizon trước khi ghi evidence.
+- Dự báo population phải nêu rõ loại bất động sản, thời kỳ, coverage địa lý, nguồn, cách xử lý missingness và input mode từng luồng. Full-real từ hồ sơ và thông tin sparse do người dùng nhập có thể khác error law. Mức giá dự đoán dùng để partition runtime; giá thực chỉ có trong nhãn và phân tích hồi cứu.
+
+## Protocol đề xuất cho dataset mới
+
+1. Owner, usage purpose, retention, dự kiến downstream serving và giấy phép phải được duyệt bằng văn bản. Chỉ mở trong môi trường kiểm soát, tiếp cận tối thiểu, không commit rows, không chép dữ liệu sang bên thứ ba. Ghi manifest version với nguồn được phép và thời gian, feature cutoff và label availability riêng. Lưu audit access và danh sách cohort đã exposure ở nơi giới hạn quyền.
+2. Quy định primary unit là một entity có quan sát giá rao hợp lệ. Dùng canonical listing ID có namespace, URL đáng tin cậy và alias/repost groups đã kiểm, theo thời điểm. Gộp identity xuyên nguồn trước split, xử lý contested matches bằng quarantine. Ghi số bị loại và residual duplicate uncertainty. Dedupe không dựa vào việc cùng giá hay diện tích, và row-level fingerprint ở kho kiểm soát. Nếu cần nhiều snapshots một entity, giữ cluster trong một partition và đánh giá bằng group-aware resampling. [WP-02 identity contract](SMARTPROP_WP02_COMPARABLE_IMPLEMENTATION_REPORT.md)
+3. Đối chiếu entity/ID/repost và source-provenance với train, OOF, validation, dev, OOT và blind lịch sử qua **registry do data custodian kiểm soát**, tránh đưa row lịch sử cho WP-05. Kiểm tách thời gian, label availability, read-before timestamps, embargo theo repost và source slices. Source dùng chung qua hai kỳ chỉ hợp lệ khi thực sự thuộc target population đã khai báo, không phải bằng chứng độc lập nguồn. Nếu không xác minh lệch nhau, giữ trạng thái chưa đủ dữ liệu.
+4. Đóng băng toàn bộ identity, eligibility, score, group, nominal coverage, tails, deterministic rounding và artifact binding. Có thể dùng development partition mới để chọn phương pháp; dùng calibration riêng để tính cutoff, rồi duy nhất chạy evaluation untouched. Có thêm kỳ thời gian/nguồn khác để đánh giá shift. Xem final evaluation để chọn lại phương pháp biến nó thành development evidence, đòi holdout mới. Không suy ra exchangeability từ việc epoch dates khác nhau.
+5. Lưu dự đoán bằng đúng V1.3 artifact hashes, run, preprocessing, point calibration policy, variant input/mode và projection timestamp. Không trộn residual từ legacy assumed, alternate model, policy khác hoặc những nhóm được điền feature từ thông tin tương lai. Chỉ bàn giao aggregate về uncertainty, coverage, tails, width, fallback và invalid rates kèm số lượng. Public API có scope/sample count đã được duyệt, không công bố source rights, lịch cụ thể hoặc nhóm nhỏ có khả năng nhận diện.
+
+## Điều đã kiểm và chưa kiểm
+
+Benchmark kiểm vi phạm tạo sẵn gồm observation ID, entity ID, listing alias, repost, overlap calibration/evaluation, role của residual, future feature và outcome-window overlap, source ngoài whitelist, frozen model/schema/point policy/input mode/target mismatch và giá thực tác động chọn group. Kết quả đó giới hạn ở synthetic protocol. Duplicate real, membership chi tiết, source boundaries và actual runtime input distribution vẫn cần custodian xác nhận độc lập. Không áp dụng số liệu synthetic vào suy luận về coverage thị trường. [Benchmark](SMARTPROP_WP05_PREDICTION_INTERVAL_BENCHMARK_REPORT.md)
