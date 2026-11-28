@@ -21,6 +21,7 @@ import {
   formatBillion,
   formatLog,
   formatVnd,
+  normalizeVnd,
   summarizeProvenance,
   validateExplanation,
 } from "./explanationModel.js";
@@ -63,6 +64,8 @@ function statusText(status) {
       return "Mô hình không hỗ trợ giải thích";
     case STATUS.ABSENT:
       return "Không có phần giải thích";
+    case "INCONSISTENT":
+      return "Giải thích không khớp với kết quả định giá";
     default:
       return "Giải thích không dùng được";
   }
@@ -386,10 +389,21 @@ export function ValuationExplanationPanel({
   surface = "standalone",
   className = "",
 }) {
-  const result = validateExplanation(explanation);
-  const status = result.status;
-  const isAvailable = status === STATUS.AVAILABLE;
+  // The authoritative prediction is passed in so the validator can detect an explanation that
+  // belongs to a different valuation. When they disagree we keep the price and drop the
+  // attribution instead of showing contributions from another prediction.
+  const priceSupplied = predictedPriceVnd !== null && predictedPriceVnd !== undefined
+    && String(predictedPriceVnd).trim() !== "";
+  const authoritativePrice = normalizeVnd(predictedPriceVnd);
+  // A price was given but is not a usable V1.3 price (0, negative, "0x1f", NaN, Infinity, ...):
+  // the attribution cannot be tied to it, so it is treated exactly like a mismatch.
+  const priceUnusable = priceSupplied && authoritativePrice === null;
+  const result = validateExplanation(explanation, { priceVnd: authoritativePrice });
   const view = result.view;
+  const priceMismatch = result.status === STATUS.AVAILABLE
+    && (priceUnusable || view.priceConsistent === false);
+  const status = priceMismatch ? "INCONSISTENT" : result.status;
+  const isAvailable = status === STATUS.AVAILABLE;
 
   return h(
     "section",
@@ -410,6 +424,24 @@ export function ValuationExplanationPanel({
 
     status === STATUS.ABSENT || status === STATUS.UNAVAILABLE || status === STATUS.NOT_SUPPORTED
       ? unavailableBlock(result.reason, view?.limitations)
+      : null,
+
+    priceMismatch
+      ? h(
+          "div",
+          { "data-testid": "explanation-inconsistent", className: "mt-2 min-w-0" },
+          h(
+            "p",
+            { className: "min-w-0 break-words text-xs leading-relaxed text-brand-navy/75" },
+            "Phần giải thích này không khớp với mức giá đang hiển thị nên không được dùng để "
+              + "diễn giải kết quả hiện tại.",
+          ),
+          h(
+            "p",
+            { className: "mt-1 text-[11px] text-brand-navy/60" },
+            "Giá dự đoán vẫn là kết quả chính thức; hệ thống không hiển thị đóng góp nào.",
+          ),
+        )
       : null,
 
     status === STATUS.INVALID

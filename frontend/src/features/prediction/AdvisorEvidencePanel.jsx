@@ -3,6 +3,7 @@ import { visibleAdvisorComparables } from './advisorAnalysis.js'
 import ComparableListingsCard from '../property/ComparableListingsCard.jsx'
 import ValuationExplanationPanel from './ValuationExplanationPanel.js'
 import { normalizeVnd } from './explanationModel.js'
+import { evidenceSections } from './advisorEvidenceModel.js'
 
 const money = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value) || 0)
@@ -19,6 +20,9 @@ export default function AdvisorEvidencePanel({ valuation, comparable, valuationC
   const [openShap, setOpenShap] = useState(false)
   const hasValuation = valuation?.available === true
   const shap = valuation?.shapExplanation
+  const sections = evidenceSections({
+    explanation: valuation?.explanation, shap, openShap,
+  })
   const renderComparables = (source, title, research) => {
     if (!source || source.status === 'SKIPPED_BY_REQUEST') return null
     const error = ['DEGRADED', 'SKIPPED_UNSUPPORTED_INPUT'].includes(source.status)
@@ -39,7 +43,7 @@ export default function AdvisorEvidencePanel({ valuation, comparable, valuationC
             <span className="ev-model-tag">Model {valuation.modelVersion}</span>
           </div>
           <p className="ev-price" title={exactMoney(valuation.predictedAskingPriceVnd)}>{money(valuation.predictedAskingPriceVnd)}</p>
-          {valuation.explanation ? (
+          {sections.showExplanation ? (
             <ValuationExplanationPanel
               explanation={valuation.explanation}
               predictedPriceVnd={normalizeVnd(valuation.predictedAskingPriceVnd)}
@@ -48,12 +52,12 @@ export default function AdvisorEvidencePanel({ valuation, comparable, valuationC
               className="mt-3"
             />
           ) : null}
-          {shap && !valuation.explanation ? (
+          {sections.showLegacyShapToggle ? (
             <button type="button" className="ev-toggle" data-shap-toggle aria-expanded={openShap} onClick={() => setOpenShap((v) => !v)}>
               {openShap ? 'Ẩn giải thích SHAP' : 'Giải thích TreeSHAP'}
             </button>
           ) : null}
-          {hasValuation && shap && openShap ? (
+          {sections.showLegacyShapContent ? (
             <div className="shap-panel" data-shap-panel>
               {shap.summaryVi ? <p className="shap-summary">{shap.summaryVi}</p> : null}
               {Number.isFinite(Number(shap.basePriceVnd)) ? (

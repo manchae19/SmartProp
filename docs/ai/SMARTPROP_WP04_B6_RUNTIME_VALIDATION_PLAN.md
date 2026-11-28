@@ -1,75 +1,86 @@
-# WP-04 B6 — real runtime validation plan (FastAPI V1.3 → Spring Boot/Tomcat → React)
+# WP-04 B6 — real runtime validation plan (routes verified from source)
 
-**Status:** PLAN ONLY. Nothing in this document has been executed. The B6 gate stays open until the
-scripted harness below actually runs end to end.
+**Status:** partially executed. Real FastAPI standalone path **PASSED** (149/149 checks).
+Spring Boot posting and Advisor paths are **BLOCKED** in this session — see §7.
 
-## 1. Why this exists
+## 1. Verified routing (read from current source, not from old docs)
 
-B1–B5 were verified at three levels: the predictor itself (Python tests, 105-case matrix parity),
-the Java passthrough (Jackson round-trip + loopback client), and the React surface (484 true-viewport
-browser checks plus component tests). What has **not** been verified is one real request travelling
-React → HTTP → Tomcat → FastAPI → back, with real serialisation at every hop. Mocked HTTP fixtures
-must not be reported as that evidence.
+| Surface | Frontend call | Backend | Verified at |
+|---|---|---|---|
+| Standalone | `client.predict()` → `/api/ai/predict` (Vite proxy) | FastAPI `POST /predict` | `frontend/src/features/prediction/valuation.js`, runtime test |
+| Posting preview | `POST /api/v1/properties/valuation-preview` | Spring `ValuationController` → `ValuationService.preview` → `ValuationClient` → FastAPI `/predict/v1_3_preview` or `/predict` | `ValuationController.java:L20`, `ValuationService.java` |
+| Unified Advisor | `POST /api/v1/advisor/consult` | Spring `AdvisorController` → `AdvisorValuationAdapter` → FastAPI `/predict` | `AdvisorController.java:L64`, `AdvisorValuationAdapter.java` |
 
-## 2. Surfaces and their real routing
+No new production route is introduced by WP-04.
 
-| Surface | Real route | Path |
-|---|---|---|
-| Standalone valuation | React → **existing `/api/ai` dev proxy** → FastAPI V1.3 | `ValuationPanel.jsx` → `createValuationClient().predict()` |
-| Posting preview | React → **Spring Boot/Tomcat** `POST /api/valuation/preview` → FastAPI `/predict/v1_3_preview` | `PostValuationPanel.jsx` → `ValuationService.preview()` |
-| Unified Advisor | React → **Spring Boot/Tomcat** `POST /api/advisor/consult` → `AdvisorValuationAdapter` → FastAPI `/predict` | `AdvisorEvidencePanel.jsx` |
-
-Standalone must keep using the existing proxy route; introducing a new Spring controller for it
-would be a behaviour change outside WP-04.
-
-## 3. Harness
+## 2. Isolated services
 
 ```
-services (loopback only):
-  FastAPI     127.0.0.1:8000  ai-services/.venv, pinned v1_3 artifacts
-  Spring Boot 127.0.0.1:8080  backend/mvnw spring-boot:run (isolated profile)
-  Vite dev    127.0.0.1:5173  frontend (proxies /api/ai → 8000, /api → 8080)
-  MySQL       127.0.0.1:3311  TEMPORARY isolated instance (never 3306/3307/3311 group DB)
+FastAPI      127.0.0.1:8000   ai-services/.venv, uvicorn main:app, pinned v1_3 artifacts
+Vite dev     127.0.0.1:5173   proxies /api/ai → 8000, /api → 8080
+Spring Boot  127.0.0.1:8080   backend/mvnw spring-boot:run
+MySQL        <free loopback port chosen at run time>
 ```
 
-- Every port is loopback and every database is a throwaway instance created for the run.
-- Inputs come from the synthetic fixture set already committed
-  (`frontend/tests/wp04/fixtures/explanation-samples.json`) so no research or holdout data is touched.
+Database rules:
+- A throwaway data directory created for this run only.
+- A synthetic database and a restricted synthetic user.
+- Existing migrations applied **only** to that instance; only synthetic fixtures seeded.
+- **Never** 3306, 3307, 3311 or 3312. The existing Spring profiles point at 3306/3307, so
+  `application.yml` must be overridden with `SPRING_DATASOURCE_URL` before startup.
+- Fail closed: if the effective JDBC URL references anything other than the throwaway instance,
+  the run aborts.
+
+## 3. Pre-start checks (fail closed)
+
+1. `echo $SPRING_DATASOURCE_URL` shows the throwaway port, database and user.
+2. `SPRING_PROFILES_ACTIVE` is the isolated profile, not a shared one.
+3. `app.valuation.base-url` is `http://127.0.0.1:8000`.
+4. The artifacts directory contains the four pinned files and their hashes match.
+5. No process from another agent is bound to the chosen ports.
 
 ## 4. Assertions per surface
 
-1. HTTP status 200 and a positive `predicted_asking_price_vnd`.
-2. `explanation.status == "AVAILABLE"`, `method`, `target`, `output_space` unchanged end to end.
-3. `predicted_margin_log`, `base_value_log`, all `factors[].contribution_log_raw` and
-   `other_contribution_log` are **byte-identical** to a direct FastAPI call for the same payload.
-4. `grouped_contributions` and `feature_provenance` (22 keys) survive Spring's JSON round trip.
-5. Spring `Preview.explanation` and `ValuationEvidence.explanation` are both non-null for the same
-   input, with identical content.
-6. Legacy path: a response without `explanation` still renders and shows the authoritative price.
-7. Invalid explanation (mutated in a proxy shim) → panel shows the unavailable state, price unchanged.
-8. FastAPI down → Spring returns its documented unavailable preview, posting still works.
-9. Browser: panel rendered, 22 provenance rows, waterfall open, no clipping at 390/1440.
-10. WP-02 preservation: `comparableEvidence`, `valuationComparableEvidence`, `featureCoverage` and
-    `ComparableListingsCard` still render next to the explanation.
-11. Authorization: anonymous SAFE request returns no research fields; a research session is
-    exercised only with an approved staging account (never committed).
+1. HTTP 200 and a positive authoritative integer `predictedAskingPriceVnd`.
+2. Explanation `status/method/target/output_space` unchanged across the hop.
+3. `predicted_margin_log`, `base_value_log`, every `contribution_log_raw` and
+   `other_contribution_log` equal the direct FastAPI values for the same effective request.
+4. `grouped_contributions` and all 22 `feature_provenance` keys survive Spring serialization.
+5. Spring `Preview.explanation` / `ValuationEvidence.explanation` are non-null and identical.
+6. Legacy response without explanation still renders the authoritative price.
+7. Injected malformed explanation → panel shows the unavailable/inconsistent state, price unchanged.
+8. FastAPI down → documented unavailable preview; posting still works.
+9. Browser: panel, 22 provenance rows, waterfall, calibration; no clipping at 320/390/768/1440.
+10. WP-02: `comparableEvidence`, `valuationComparableEvidence`, `featureCoverage`,
+    `ComparableListingsCard` still render beside the explanation.
+11. Authorization: anonymous SAFE returns no research fields; denied research paths stay denied.
 
-## 5. Prediction invariance
+## 5. Failure isolation matrix
 
-Capture `predicted_asking_price_vnd` from the direct FastAPI call **before** wiring the full stack,
-then compare with each surface. Any difference fails the gate. The model artifact hashes are checked
-before and after the run (4/4).
+| Case | How to produce | Expected |
+|---|---|---|
+| A AVAILABLE | real FastAPI | full panel |
+| B legacy absent | strip `explanation` in a response shim | price + absent state |
+| C UNAVAILABLE | force SHAP failure in a shim | price + unavailable state |
+| D malformed | corrupt factors in a shim | price, no attribution |
+| E price mismatch | shift `adjusted_price_vnd` | price + inconsistent state |
+| F bad reconstruction | shift `other_contribution_log` | price, no waterfall |
+| G service down | stop FastAPI | documented unavailable preview |
+| H unauthorized | omit token | 401/403, no data |
+| I input change mid-flight | type then submit twice | only the latest result renders |
 
-## 6. Out of scope for B6
+## 6. Browser runtime harness
 
-- No model retraining, no V6 fallback, no migrations.
-- No prediction-interval work (WP-05 owns `prediction_interval`; the explanation contract keeps the
-  field absent so WP-05 can add it independently).
-- No production deployment.
+`frontend/tests/wp04/browser/runtime.mjs` — environment-driven (`WP04_AI_BASE`, `WP04_PROXY_BASE`),
+readiness-polled, writes `frontend/tests/wp04/browser/reports/wp04-runtime.json`.
 
-## 7. Definition of done
+## 7. What actually ran, and what is blocked
 
-A single `node frontend/tests/wp04/browser/runtime.mjs` invocation starts nothing itself (services
-are started by the operator), asserts items 1–11 above for all three surfaces, writes
-`frontend/tests/wp04/browser/reports/wp04-runtime.json`, and exits non-zero on any failure.
-Until that file exists and has run, `WP04_REAL_FASTAPI_TOMCAT_RUNTIME_PARITY_PENDING_B6` stays open.
+Executed: real FastAPI up, four property types through the direct service and through the Vite
+`/api/ai` proxy, contract + additivity + price invariance checks. **149/149 passed.**
+
+Blocked: Spring Boot posting preview and Advisor. Reason: every committed Spring profile binds to
+`127.0.0.1:3306` or `127.0.0.1:3307` (protected group databases). Provisioning a throwaway MySQL
+instance, applying migrations, seeding synthetic users and property fixtures, and then driving two
+authenticated routes was not completed in this session. Those two gates stay open; they must not be
+reported as passing until the isolated instance is actually started.

@@ -323,3 +323,37 @@ test("calibration price mismatch is surfaced, not silently accepted", () => {
   }).view;
   assert.equal(ok.priceConsistent, true);
 });
+
+// ---------------------------------------------------------------- exact V1.3 contract
+test("exactly six factors are required for AVAILABLE", () => {
+  const short = house();
+  short.factors = short.factors.slice(0, 5);
+  const result = validateExplanation(short);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /đúng 6 yếu tố/);
+});
+
+test("base and naive prices are mandatory", () => {
+  for (const field of ["base_price_vnd", "naive_price_vnd"]) {
+    const payload = house();
+    delete payload[field];
+    assert.equal(validateExplanation(payload).status, STATUS.INVALID, field);
+  }
+  const missingAdjusted = house();
+  delete missingAdjusted.calibration.adjusted_price_vnd;
+  assert.equal(validateExplanation(missingAdjusted).status, STATUS.INVALID);
+});
+
+test("unsupported calibration policy is rejected", () => {
+  const payload = house();
+  payload.calibration.policy = "magic_factor";
+  const result = validateExplanation(payload);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /Chính sách/);
+});
+
+test("non-finite intermediate sums are rejected", () => {
+  const payload = house();
+  payload.grouped_contributions.AREA = Infinity;
+  assert.equal(validateExplanation(payload).status, STATUS.INVALID);
+});

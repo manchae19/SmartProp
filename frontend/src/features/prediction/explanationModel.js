@@ -20,6 +20,9 @@ export const SUPPORTED_OUTPUT_SPACE = "LOG1P_PRICE_VND";
 export const RECONSTRUCTION_TOLERANCE = 1e-5;
 export const GROUP_TOTAL_TOLERANCE = 1e-5;
 export const TOP_K = 6;
+// backend contract: explanation_v1_3 always emits TOP_K factors and the policy that
+// calibration.json actually declares
+export const SUPPORTED_CALIBRATION_POLICIES = ["duan_by_band"];
 
 export const STATUS = {
   ABSENT: "ABSENT",
@@ -255,8 +258,8 @@ function validateFactors(raw, provenanceByName) {
   if (!Array.isArray(factors) || factors.length === 0) {
     return { ok: false, reason: "Danh sách yếu tố ảnh hưởng trống." };
   }
-  if (factors.length > TOP_K) {
-    return { ok: false, reason: `Danh sách yếu tố vượt quá ${TOP_K}.` };
+  if (factors.length !== TOP_K) {
+    return { ok: false, reason: `Cần đúng ${TOP_K} yếu tố ảnh hưởng, nhận ${factors.length}.` };
   }
 
   const seen = new Set();
@@ -419,13 +422,16 @@ export function validateExplanation(raw, options = {}) {
   if (!isText(calibration.policy) || !calibration.policy.trim()) {
     return invalid("Chính sách hiệu chỉnh không hợp lệ.");
   }
-  if (calibration.adjusted_price_vnd !== undefined
-      && !isNonNegativeFinite(calibration.adjusted_price_vnd)) {
+  if (!SUPPORTED_CALIBRATION_POLICIES.includes(calibration.policy)) {
+    return invalid(`Chính sách hiệu chỉnh không được hỗ trợ (${calibration.policy}).`);
+  }
+  if (!isNonNegativeFinite(calibration.adjusted_price_vnd)) {
     return invalid("Giá sau hiệu chỉnh không hợp lệ.");
   }
+  // V1.3 always emits both prices; a payload without them is not a complete explanation
   for (const [key, value] of [["base_price_vnd", raw.base_price_vnd],
     ["naive_price_vnd", raw.naive_price_vnd]]) {
-    if (value !== undefined && !isNonNegativeFinite(value)) {
+    if (!isNonNegativeFinite(value)) {
       return invalid(`Giá trị ${key} không hợp lệ.`);
     }
   }

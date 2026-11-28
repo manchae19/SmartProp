@@ -1,0 +1,769 @@
+{
+  "ai": "http://127.0.0.1:8000",
+  "proxy": "http://127.0.0.1:5199/api/ai",
+  "at": "2026-11-28T06:37:34.683Z",
+  "total": 149,
+  "passed": 149,
+  "failed": 0,
+  "notRun": [
+    {
+      "gate": "WP04_REAL_FASTAPI_TOMCAT_PREVIEW_HTTP_PASS",
+      "reason": "requires an isolated MySQL instance plus Spring Boot; not started in this run"
+    },
+    {
+      "gate": "WP04_REAL_FASTAPI_TOMCAT_ADVISOR_HTTP_PASS",
+      "reason": "requires an isolated MySQL instance plus an authenticated synthetic session"
+    },
+    {
+      "gate": "WP04_RUNTIME_FAILURE_ISOLATION_PASS",
+      "reason": "partially covered: real 4xx rejections asserted; injected SHAP failure is covered by component tests only"
+    }
+  ],
+  "results": [
+    {
+      "name": "FastAPI health ok",
+      "ok": true,
+      "detail": "{\"status\":\"ok\",\"model_version\":\"v1.3\",\"model_ready\":true}"
+    },
+    {
+      "name": "model_version is v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "model_ready true",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "HOUSE direct HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "HOUSE direct model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "HOUSE direct positive integer price",
+      "ok": true,
+      "detail": "5749775772"
+    },
+    {
+      "name": "HOUSE direct price matches the pinned fixture",
+      "ok": true,
+      "detail": "5749775772 vs 5749775772"
+    },
+    {
+      "name": "HOUSE direct explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE direct status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "HOUSE direct version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "HOUSE direct method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "HOUSE direct target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "HOUSE direct output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "HOUSE direct exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "HOUSE direct 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE direct calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "HOUSE direct calibration price equals the prediction",
+      "ok": true,
+      "detail": "5749775772 vs 5749775772"
+    },
+    {
+      "name": "HOUSE direct base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE direct additivity within 1e-5",
+      "ok": true,
+      "detail": "22.417733310968288 vs 22.417736053466797"
+    },
+    {
+      "name": "HOUSE direct grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.4713963277035873 vs -0.4713963277035873"
+    },
+    {
+      "name": "HOUSE via vite proxy HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "HOUSE via vite proxy model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "HOUSE via vite proxy positive integer price",
+      "ok": true,
+      "detail": "5749775772"
+    },
+    {
+      "name": "HOUSE via vite proxy price matches the pinned fixture",
+      "ok": true,
+      "detail": "5749775772 vs 5749775772"
+    },
+    {
+      "name": "HOUSE via vite proxy explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE via vite proxy status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "HOUSE via vite proxy version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "HOUSE via vite proxy method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "HOUSE via vite proxy target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "HOUSE via vite proxy output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "HOUSE via vite proxy exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "HOUSE via vite proxy 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE via vite proxy calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "HOUSE via vite proxy calibration price equals the prediction",
+      "ok": true,
+      "detail": "5749775772 vs 5749775772"
+    },
+    {
+      "name": "HOUSE via vite proxy base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE via vite proxy additivity within 1e-5",
+      "ok": true,
+      "detail": "22.417733310968288 vs 22.417736053466797"
+    },
+    {
+      "name": "HOUSE via vite proxy grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.4713963277035873 vs -0.4713963277035873"
+    },
+    {
+      "name": "HOUSE proxy returns the same prediction",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "HOUSE proxy preserves the explanation contract",
+      "ok": true,
+      "detail": "explanation differs across the proxy"
+    },
+    {
+      "name": "LAND direct HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "LAND direct model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "LAND direct positive integer price",
+      "ok": true,
+      "detail": "4059447662"
+    },
+    {
+      "name": "LAND direct price matches the pinned fixture",
+      "ok": true,
+      "detail": "4059447662 vs 4059447662"
+    },
+    {
+      "name": "LAND direct explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND direct status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "LAND direct version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "LAND direct method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "LAND direct target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "LAND direct output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "LAND direct exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "LAND direct 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND direct calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "LAND direct calibration price equals the prediction",
+      "ok": true,
+      "detail": "4059447662 vs 4059447662"
+    },
+    {
+      "name": "LAND direct base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND direct additivity within 1e-5",
+      "ok": true,
+      "detail": "22.08418178401189 vs 22.08420753479004"
+    },
+    {
+      "name": "LAND direct grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.8049478546599858 vs -0.8049478546599858"
+    },
+    {
+      "name": "LAND via vite proxy HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "LAND via vite proxy model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "LAND via vite proxy positive integer price",
+      "ok": true,
+      "detail": "4059447662"
+    },
+    {
+      "name": "LAND via vite proxy price matches the pinned fixture",
+      "ok": true,
+      "detail": "4059447662 vs 4059447662"
+    },
+    {
+      "name": "LAND via vite proxy explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND via vite proxy status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "LAND via vite proxy version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "LAND via vite proxy method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "LAND via vite proxy target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "LAND via vite proxy output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "LAND via vite proxy exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "LAND via vite proxy 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND via vite proxy calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "LAND via vite proxy calibration price equals the prediction",
+      "ok": true,
+      "detail": "4059447662 vs 4059447662"
+    },
+    {
+      "name": "LAND via vite proxy base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND via vite proxy additivity within 1e-5",
+      "ok": true,
+      "detail": "22.08418178401189 vs 22.08420753479004"
+    },
+    {
+      "name": "LAND via vite proxy grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.8049478546599858 vs -0.8049478546599858"
+    },
+    {
+      "name": "LAND proxy returns the same prediction",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "LAND proxy preserves the explanation contract",
+      "ok": true,
+      "detail": "explanation differs across the proxy"
+    },
+    {
+      "name": "APARTMENT direct HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "APARTMENT direct model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "APARTMENT direct positive integer price",
+      "ok": true,
+      "detail": "4532858277"
+    },
+    {
+      "name": "APARTMENT direct price matches the pinned fixture",
+      "ok": true,
+      "detail": "4532858277 vs 4532858277"
+    },
+    {
+      "name": "APARTMENT direct explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT direct status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "APARTMENT direct version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "APARTMENT direct method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "APARTMENT direct target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "APARTMENT direct output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "APARTMENT direct exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "APARTMENT direct 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT direct calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "APARTMENT direct calibration price equals the prediction",
+      "ok": true,
+      "detail": "4532858277 vs 4532858277"
+    },
+    {
+      "name": "APARTMENT direct base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT direct additivity within 1e-5",
+      "ok": true,
+      "detail": "22.194511939080257 vs 22.19451332092285"
+    },
+    {
+      "name": "APARTMENT direct grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.6946176995916176 vs -0.6946176995916176"
+    },
+    {
+      "name": "APARTMENT via vite proxy HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "APARTMENT via vite proxy model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "APARTMENT via vite proxy positive integer price",
+      "ok": true,
+      "detail": "4532858277"
+    },
+    {
+      "name": "APARTMENT via vite proxy price matches the pinned fixture",
+      "ok": true,
+      "detail": "4532858277 vs 4532858277"
+    },
+    {
+      "name": "APARTMENT via vite proxy explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT via vite proxy status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "APARTMENT via vite proxy version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "APARTMENT via vite proxy method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "APARTMENT via vite proxy target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "APARTMENT via vite proxy output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "APARTMENT via vite proxy exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "APARTMENT via vite proxy 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT via vite proxy calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "APARTMENT via vite proxy calibration price equals the prediction",
+      "ok": true,
+      "detail": "4532858277 vs 4532858277"
+    },
+    {
+      "name": "APARTMENT via vite proxy base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT via vite proxy additivity within 1e-5",
+      "ok": true,
+      "detail": "22.194511939080257 vs 22.19451332092285"
+    },
+    {
+      "name": "APARTMENT via vite proxy grouped total matches contributions",
+      "ok": true,
+      "detail": "-0.6946176995916176 vs -0.6946176995916176"
+    },
+    {
+      "name": "APARTMENT proxy returns the same prediction",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "APARTMENT proxy preserves the explanation contract",
+      "ok": true,
+      "detail": "explanation differs across the proxy"
+    },
+    {
+      "name": "VILLA direct HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "VILLA direct model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "VILLA direct positive integer price",
+      "ok": true,
+      "detail": "15693880409"
+    },
+    {
+      "name": "VILLA direct price matches the pinned fixture",
+      "ok": true,
+      "detail": "15693880409 vs 15693880409"
+    },
+    {
+      "name": "VILLA direct explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA direct status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "VILLA direct version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "VILLA direct method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "VILLA direct target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "VILLA direct output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "VILLA direct exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "VILLA direct 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA direct calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "VILLA direct calibration price equals the prediction",
+      "ok": true,
+      "detail": "15693880409 vs 15693880409"
+    },
+    {
+      "name": "VILLA direct base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA direct additivity within 1e-5",
+      "ok": true,
+      "detail": "23.410969979287984 vs 23.410974502563477"
+    },
+    {
+      "name": "VILLA direct grouped total matches contributions",
+      "ok": true,
+      "detail": "0.5218403406161087 vs 0.5218403406161087"
+    },
+    {
+      "name": "VILLA via vite proxy HTTP 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "VILLA via vite proxy model_version v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "VILLA via vite proxy positive integer price",
+      "ok": true,
+      "detail": "15693880409"
+    },
+    {
+      "name": "VILLA via vite proxy price matches the pinned fixture",
+      "ok": true,
+      "detail": "15693880409 vs 15693880409"
+    },
+    {
+      "name": "VILLA via vite proxy explanation present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA via vite proxy status AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "VILLA via vite proxy version 1.0",
+      "ok": true,
+      "detail": "1.0"
+    },
+    {
+      "name": "VILLA via vite proxy method",
+      "ok": true,
+      "detail": "XGBOOST_NATIVE_TREESHAP"
+    },
+    {
+      "name": "VILLA via vite proxy target",
+      "ok": true,
+      "detail": "ASKING_PRICE_VND"
+    },
+    {
+      "name": "VILLA via vite proxy output space",
+      "ok": true,
+      "detail": "LOG1P_PRICE_VND"
+    },
+    {
+      "name": "VILLA via vite proxy exactly 6 factors",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "VILLA via vite proxy 22 provenance features",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA via vite proxy calibration policy",
+      "ok": true,
+      "detail": "duan_by_band"
+    },
+    {
+      "name": "VILLA via vite proxy calibration price equals the prediction",
+      "ok": true,
+      "detail": "15693880409 vs 15693880409"
+    },
+    {
+      "name": "VILLA via vite proxy base and naive prices present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA via vite proxy additivity within 1e-5",
+      "ok": true,
+      "detail": "23.410969979287984 vs 23.410974502563477"
+    },
+    {
+      "name": "VILLA via vite proxy grouped total matches contributions",
+      "ok": true,
+      "detail": "0.5218403406161087 vs 0.5218403406161087"
+    },
+    {
+      "name": "VILLA proxy returns the same prediction",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "VILLA proxy preserves the explanation contract",
+      "ok": true,
+      "detail": "explanation differs across the proxy"
+    },
+    {
+      "name": "invalid numeric input is rejected",
+      "ok": true,
+      "detail": "422"
+    },
+    {
+      "name": "unsupported location is rejected",
+      "ok": true,
+      "detail": "422"
+    }
+  ]
+}

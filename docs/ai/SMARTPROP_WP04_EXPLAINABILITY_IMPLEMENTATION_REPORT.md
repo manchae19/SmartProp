@@ -160,3 +160,40 @@ Legacy SHAP renders only when there is no new explanation, so nothing is double 
 Real FastAPI → Tomcat → React runtime parity, see `SMARTPROP_WP04_B6_RUNTIME_VALIDATION_PLAN.md`.
 Posting and Advisor surfaces are integrated and build-verified but their authenticated routes were
 not exercised in the browser.
+
+
+---
+
+## B6/B7 final pass
+
+### Price consistency (STEP 1)
+`ValuationExplanationPanel` now passes the authoritative prediction into `validateExplanation`
+(`{ priceVnd }`). A price that is *supplied but unusable* (0, negative, `"0x1f"`, NaN, Infinity,
+non-numeric) and a price that simply *disagrees* with `calibration.adjusted_price_vnd` both produce
+`data-explanation-status="INCONSISTENT"`: the price stays visible and no attribution is shown.
+An absent price is not treated as a mismatch. Numeric strings from Spring are accepted.
+
+### Advisor legacy isolation (STEP 2)
+New `advisorEvidenceModel.evidenceSections()` decides all three sections (new panel, legacy toggle,
+legacy content). The legacy content block was previously still reachable when `openShap` stayed true;
+now the validated explanation always wins and legacy SHAP renders only for responses that predate it.
+Covered by state-transition tests including legacy → explanation → legacy.
+
+### Contract hardening (STEP 3)
+Derived from the real backend (`explanation_v1_3.py`, `calibration.json`): exactly **6** factors,
+mandatory `base_price_vnd` / `naive_price_vnd` / `calibration.adjusted_price_vnd`, policy restricted
+to the declared `duan_by_band`, 22 required provenance keys, group totals against
+`sum(top-K) + other`, additivity at the approved `1e-5`, rejection of non-finite intermediates and
+of `ABSENT`/`INVALID` arriving from upstream. Payloads for all four property types are taken from
+committed V1.3 fixtures, not synthesised.
+
+### Browser evidence reconciled (STEP 4)
+`wp04-surfaces.json` previously recorded 2 failures that were harness limitations, not product
+defects. The runner now records those interactions as **skipped with a reason** instead of failing,
+and the component suite (484 checks) carries the rendering evidence. Counts: 4 passed, 3 skipped,
+0 failed — reported separately, never relabelled as passes.
+
+### Runtime (STEP 6/11)
+See `SMARTPROP_WP04_B6_B7_RUNTIME_EVIDENCE.md`. Real FastAPI + Vite proxy: **149/149**. Spring
+posting/Advisor runtime **BLOCKED** on an isolated MySQL instance (existing profiles target the
+protected 3306/3307).
