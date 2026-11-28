@@ -3,7 +3,7 @@ import { createStateStore } from "../../shared/state/createStateStore.js";
 import React, { useState, useSyncExternalStore, useEffect, useRef } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { useAppNavigation } from "../../app/navigation.jsx";
-import { api, loadProfile, logout as revokeSession, clearSession, session, errorText } from "../auth/api.js";
+import { api, loadProfile, logout as revokeSession, clearSession, session, errorText, getGoogleLinkScope, assertGoogleLinkScope, googleLinkStatus, startGoogleLink, refreshEnabled } from "../auth/api.js";
 import BrokerApplicationCard from "../broker/BrokerApplicationCard.jsx";
 import ValuationHistory from "../prediction/ValuationHistory.jsx";
 import UserAvatar from "../../shared/components/UserAvatar.jsx";
@@ -14,7 +14,8 @@ import LifestyleFields, { emptyLifestyle } from "./LifestyleFields.jsx";
 function useAccountViewState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
-  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const linkScope = getGoogleLinkScope(auth);
   const router = useAppNavigation(),
     [form] = useState(() => createStateStore({
       fullName: "",
@@ -35,6 +36,11 @@ function useAccountViewState(inputProps, forwardedRef) {
   useSyncExternalStore(securityTab.subscribe, securityTab.getSnapshot);
   useSyncExternalStore(prefs.subscribe, prefs.getSnapshot);
   const [currentPassword] = useState(() => createStateStore("")),
+    [googleLinkPassword] = useState(() => createStateStore("")),
+    [googleLinked] = useState(() => createStateStore(null)),
+    [googleLinkAvailable] = useState(() => createStateStore(false)),
+    [googleLinkBusy] = useState(() => createStateStore(false)),
+    [googleLinkError] = useState(() => createStateStore("")),
     [newPassword] = useState(() => createStateStore("")),
     [confirmPassword] = useState(() => createStateStore("")),
     [showPassword] = useState(() => createStateStore(false));
@@ -42,6 +48,11 @@ function useAccountViewState(inputProps, forwardedRef) {
   useSyncExternalStore(confirmPassword.subscribe, confirmPassword.getSnapshot);
   useSyncExternalStore(newPassword.subscribe, newPassword.getSnapshot);
   useSyncExternalStore(currentPassword.subscribe, currentPassword.getSnapshot);
+  useSyncExternalStore(googleLinkPassword.subscribe, googleLinkPassword.getSnapshot);
+  useSyncExternalStore(googleLinked.subscribe, googleLinked.getSnapshot);
+  useSyncExternalStore(googleLinkAvailable.subscribe, googleLinkAvailable.getSnapshot);
+  useSyncExternalStore(googleLinkBusy.subscribe, googleLinkBusy.getSnapshot);
+  useSyncExternalStore(googleLinkError.subscribe, googleLinkError.getSnapshot);
   const [busy] = useState(() => createStateStore(false)),
     [loading] = useState(() => createStateStore(true)),
     [loaded] = useState(() => createStateStore(false)),
@@ -220,6 +231,30 @@ function useAccountViewState(inputProps, forwardedRef) {
       busy.set(false);
     }
   }
+  async function linkGoogle() {
+    if (linkScope == null || busy.getSnapshot() || googleLinkBusy.getSnapshot() || googleLinked.getSnapshot() === true || !googleLinkAvailable.getSnapshot()) return;
+    googleLinkError.set("");
+    if (!googleLinkPassword.getSnapshot()) {
+      googleLinkError.set("Vui lòng nhập mật khẩu hiện tại để xác nhận liên kết.");
+      return;
+    }
+    googleLinkBusy.set(true);
+    const password = googleLinkPassword.getSnapshot();
+    googleLinkPassword.set("");
+    try {
+      const result = await startGoogleLink(password, linkScope);
+      assertGoogleLinkScope(linkScope);
+      if (result?.authorizationPath !== "/auth/oauth2/link/authorize/google") {
+        throw Error("Không thể mở bước xác thực Google.");
+      }
+      const base = (import.meta.env?.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
+      window.location.assign(base + result.authorizationPath);
+    } catch (linkError) {
+      if (linkScope !== getGoogleLinkScope()) return;
+      googleLinkError.set(errorText(linkError));
+      googleLinkBusy.set(false);
+    }
+  }
   function editProfile() {
     document.getElementById("personal-information")?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
@@ -242,6 +277,19 @@ function useAccountViewState(inputProps, forwardedRef) {
     }
   }
   useEffect(() => {
+    if (linkScope == null) return;
+    let active = true;
+    googleLinkStatus(linkScope).then(status => {
+      if (!active || linkScope !== getGoogleLinkScope()) return;
+      googleLinked.set(status.linked === true);
+      googleLinkAvailable.set(status.available === true && refreshEnabled);
+    }).catch(statusError => {
+      if (!active || linkScope !== getGoogleLinkScope()) return;
+      googleLinkError.set(errorText(statusError));
+    });
+    return () => { active = false; };
+  }, [linkScope]);
+  useEffect(() => {
     const result = load();
     if (result && typeof result.then === "function") result.catch(console.error);
     return typeof result === "function" ? result : undefined;
@@ -253,6 +301,11 @@ function useAccountViewState(inputProps, forwardedRef) {
     prefs: prefs.getSnapshot(),
     securityTab: securityTab.getSnapshot(),
     currentPassword: currentPassword.getSnapshot(),
+    googleLinkPassword: googleLinkPassword.getSnapshot(),
+    googleLinked: googleLinked.getSnapshot(),
+    googleLinkAvailable: googleLinkAvailable.getSnapshot(),
+    googleLinkBusy: googleLinkBusy.getSnapshot(),
+    googleLinkError: googleLinkError.getSnapshot(),
     newPassword: newPassword.getSnapshot(),
     confirmPassword: confirmPassword.getSnapshot(),
     showPassword: showPassword.getSnapshot(),
@@ -274,6 +327,7 @@ function useAccountViewState(inputProps, forwardedRef) {
     resetProfile,
     savePreferences,
     changePassword,
+    linkGoogle,
     editProfile,
     signOut,
     updateNameInputValue: nameInput.set,
@@ -281,6 +335,7 @@ function useAccountViewState(inputProps, forwardedRef) {
     updateForm: form.edit,
     updateSecurityTabValue: securityTab.set,
     updateCurrentPasswordValue: currentPassword.set,
+    updateGoogleLinkPasswordValue: googleLinkPassword.set,
     updateNewPasswordValue: newPassword.set,
     updateConfirmPasswordValue: confirmPassword.set,
     updateShowPasswordValue: showPassword.set,
@@ -288,6 +343,11 @@ function useAccountViewState(inputProps, forwardedRef) {
   };
 }
 export default React.forwardRef(function AccountView(props, ref) {
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot);
+  return <AccountContent key={getGoogleLinkScope(auth) ?? 'no-session'} {...props} ref={ref} />;
+});
+
+const AccountContent = React.forwardRef(function AccountContent(props, ref) {
   const view = useAccountViewState(props, ref);
   return <><div data-ui-view="AccountView" aria-busy={view.loading} data-sp-c8811dc0="" {...view.rootAttributes} className={classNames(["account-page sp-container py-8 sm:py-12", view.rootAttributes.className])}>
       <div className="page-intro-banner mb-7" data-sp-c8811dc0="">
@@ -518,6 +578,24 @@ export default React.forwardRef(function AccountView(props, ref) {
               {"Lưu tùy chọn"}
             </button>
           </div>}
+        <div className="mt-8 border-t border-brand-line pt-6" aria-labelledby="google-link-heading" data-sp-c8811dc0="">
+          <h3 id="google-link-heading" className="text-lg font-semibold">{"Liên kết tài khoản Google"}</h3>
+          <p className="mt-2 text-sm leading-6 text-brand-muted">{"Dùng Google để đăng nhập vào chính tài khoản SmartProp này. Việc liên kết yêu cầu mật khẩu hiện tại và không thay đổi email hoặc quyền tài khoản."}</p>
+          {view.googleLinkError ? <p role="alert" className="account-notice account-error mt-4" data-sp-c8811dc0="">{view.googleLinkError}</p> : null}
+          {view.googleLinked === true ? <p role="status" className="account-notice account-success mt-4" data-sp-c8811dc0="">{"Đã liên kết Google với tài khoản SmartProp này."}</p> : view.googleLinked === false && !view.googleLinkAvailable ? <p role="status" className="mt-4 text-sm text-brand-muted">Liên kết Google hiện chưa khả dụng.</p> : view.googleLinked === false ? <><p role="status" className="mt-4 text-sm text-brand-muted">{"Chưa liên kết Google với tài khoản SmartProp này."}</p><form className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" onSubmit={$event => {
+            $event.preventDefault();
+            return view.linkGoogle?.($event);
+          }} data-sp-c8811dc0="">
+              <label className="account-field" data-sp-c8811dc0="">
+                {"Mật khẩu SmartProp hiện tại"}
+                <input type="password" required={true} maxLength="72" autoComplete="current-password" className="sp-input" disabled={view.googleLinkBusy || view.busy} value={view.googleLinkPassword ?? ""} onChange={event => view.updateGoogleLinkPasswordValue(event.target.value)} />
+              </label>
+              {!refreshEnabled ? <p className="text-sm text-[var(--ui-error-text)] sm:col-span-2">{"Cần bật VITE_ENABLE_REFRESH=true để giữ phiên SmartProp qua bước xác thực Google."}</p> : null}
+              <button type="submit" className="sp-button sp-button-primary" disabled={!view.loaded || !refreshEnabled || view.googleLinkBusy || view.busy} data-sp-c8811dc0="">
+                {view.googleLinkBusy ? "Đang chuyển tới Google…" : "Liên kết Google"}
+              </button>
+            </form></> : <div role="status" className="mt-4 text-sm text-brand-muted">{"Chưa xác nhận được trạng thái liên kết Google."} <button type="button" className="font-semibold underline" onClick={$event => view.load?.($event)}>{"Thử lại"}</button></div>}
+        </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-brand-line pt-5 text-sm" data-sp-c8811dc0="">
           <span data-sp-c8811dc0="">
             {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.user?.emailVerifiedAt ? "Email của bạn đã được xác minh." : "Hoàn tất xác minh để bảo vệ tài khoản.")}

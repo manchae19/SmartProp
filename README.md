@@ -177,6 +177,20 @@ Giữ `VITE_ENABLE_REFRESH` đồng bộ với Backend. Dùng thống nhất **1
 | Google Login | Root `.env`: `GOOGLE_LOGIN_ENABLED=true`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_FRONTEND_ORIGIN`, `GOOGLE_REDIRECT_URI`; cần refresh session và schema V15+ |
 | Email SMTP | Cần cấu hình SMTP, payload key và cờ email/worker; mặc định đang tắt, không chỉ điền SMTP là tự bật |
 
+### Liên kết Google với tài khoản SmartProp
+
+Trong **Tài khoản → Bảo mật**, đăng nhập bằng tài khoản SmartProp hiện tại rồi xác nhận mật khẩu trước khi chuyển sang Google. Bật `REFRESH_ENABLED=true` ở Backend và `VITE_ENABLE_REFRESH=true` khi chạy hoặc build Frontend. Backend cần bảng `user_external_identities` theo Flyway V15. Frontend tải lại trạng thái liên kết từ máy chủ sau khi hoàn tất.
+
+Liên kết dùng Google subject đã xác minh và giữ tài khoản, email, mật khẩu, vai trò và phiên SmartProp hiện tại. Nếu danh tính Google đã gắn với tài khoản khác, hệ thống từ chối. Nhập sai mật khẩu chỉ báo lỗi tại biểu mẫu. Khi phiên hoặc yêu cầu liên kết đã hết hạn, bắt đầu lại từ mục Bảo mật.
+
+Yêu cầu xác thực và CSRF áp dụng khi bắt đầu và hoàn tất liên kết. Yêu cầu OAuth hết hạn sau tối đa 5 phút. Vé hoàn tất chỉ dùng một lần trong 60 giây và gắn với phiên đã bắt đầu thao tác. Khởi động lại Backend làm mất luồng đang chờ. Triển khai nhiều instance cần thiết kế lưu trạng thái dùng chung trước khi bật tính năng.
+
+Mỗi phiên được thử 5 lần bắt đầu và 5 lần hoàn tất trong 300 giây. Giới hạn bắt đầu cũng áp dụng theo tài khoản. Điểm điều hướng Google có giới hạn 10 lần trong 60 giây theo IP.
+
+Xem [báo cáo kiểm thử và bàn giao PR #40](docs/auth/SMARTPROP_PR40_GOOGLE_ACCOUNT_LINKING_REPORT.md).
+
+Các endpoint bắt đầu/hoàn tất linking bị giới hạn 5 lần mỗi jti trong 300 giây; OAuth authorize cũng có giới hạn theo IP. Linking flow store hiện nằm trong bộ nhớ của một tiến trình, với TTL 5 phút: restart Backend sẽ làm mất flow đang chờ và triển khai nhiều instance cần store dùng chung trước khi bật.
+
 Google OAuth Client phải là **Web application**, đăng ký chính xác callback local:
 
 ```text
