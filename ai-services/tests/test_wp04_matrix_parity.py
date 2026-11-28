@@ -133,9 +133,16 @@ def test_parity_gate_rejects_corrupted_matrix(predictor, capture_production_matr
                                       check_categorical=True, check_exact=True)
 
 
-def test_invalid_numeric_is_rejected_before_the_matrix(predictor, capture_production_matrix):
-    with pytest.raises(Exception):
+def test_invalid_numeric_is_rejected_before_the_matrix(predictor, monkeypatch):
+    calls = {"n": 0}
+
+    def counting_transform(frame, schema):
+        calls["n"] += 1
+        return real_transform(frame, schema)
+
+    monkeypatch.setattr(predictor_module, "transform", counting_transform)
+    with pytest.raises(ValueError):
         predictor.predict_from_v6_payload({"category": "Nhà ở",
                                            "location_feature": "Cẩm Lệ",
                                            "area_sqm": -5})
-    assert "frame" not in capture_production_matrix or True
+    assert calls["n"] == 0, "invalid numeric must be rejected before the feature transform"
