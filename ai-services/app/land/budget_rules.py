@@ -49,7 +49,7 @@ def budget_band(question):
     if above and below:raise ValueError('Bạn muốn giá từ mốc này trở lên hay trở xuống?')
     if above:return {'minPrice':amount}
     if below:return {'maxPrice':amount}
-    if re.search(r'\bdung\b',n):return {'minPrice':amount,'maxPrice':amount}
+    if re.search(r'(?iu)\bđúng\b',question) or (re.search(r'\bdung\b',n) and not re.search(r'\bdung\s+vuot\b',n)):return {'minPrice':amount,'maxPrice':amount}
     if not re.search(r'\b(khoang|tam|quanh|xap xi)\b',n):return {'maxPrice':amount}
     delta=500000000 if amount>5000000000 else 300000000
     return {'minPrice':max(0,amount-delta),'maxPrice':amount+delta}

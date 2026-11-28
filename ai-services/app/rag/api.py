@@ -41,20 +41,20 @@ def create_chat_app(settings=None, orchestrator=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        import os, threading
-        from app.land.paths import land_enabled
-        if land_enabled():
-            # Load the Hòa Xuân land demo data (~5 s) off the request path.
+        import threading
+        from app.land.paths import land_runtime_mode
+        if land_runtime_mode(demo_key=settings.demo_key or None) == "SYNTHETIC_DEMO":
+            # Load the Hòa Xuân land demo data (~5 s) off the request path when internal demo mode is armed.
             threading.Thread(target=lambda: __import__("app.land.engine"), daemon=True).start()
         yield
         if backend:
             backend.close()
 
     app = FastAPI(title="SmartProp Grounded Chat", version="19.5.3", lifespan=lifespan)
-    from app.land.paths import land_enabled
-    if land_enabled():
+    from app.land.paths import authorize_land_demo_request, land_runtime_mode
+    if land_runtime_mode(demo_key=settings.demo_key or None) == "SYNTHETIC_DEMO":
         from app.land.api import create_land_router
-        app.include_router(create_land_router())
+        app.include_router(create_land_router(expected_demo_key=settings.demo_key or None))
 
     @app.middleware("http")
     async def no_store(request, call_next):
@@ -97,20 +97,27 @@ def create_chat_app(settings=None, orchestrator=None):
                 "qwenModel": QwenLLM.model_id, "embeddingModel": E5Embedding.model_id,
                 "researchEnabled": settings.research_enabled, "corpusPresent": settings.corpus_path.is_file()}
 
-    def run(payload, research=False, token=None, account=None):
+    def _is_demo_request(request: Request) -> bool:
+        expected_key = settings.demo_key or None
+        if not getattr(getattr(orchestrator, "land_advisor", None), "enabled", False):
+            return False
+        client_host = request.client.host if request.client else None
+        return authorize_land_demo_request(request.headers, client_host, expected_key)
+
+    def run(payload, research=False, token=None, account=None, allow_demo=False):
         with request_trace("/chat/research" if research else "/chat", payload.requireGeneration):
-            result = execute(payload, research, token, account)
+            result = execute(payload, research, token, account, allow_demo=allow_demo)
             event("response", status=200, generationMode=result.generationMode, retrievalMode=result.retrievalMode)
             return result
 
-    def execute(payload, research, token, account=None):
+    def execute(payload, research, token, account=None, allow_demo=False):
         if not slots.acquire(blocking=False):
             event("response", status=429, reason="CHAT_BUSY")
             raise HTTPException(429, "Chat đang bận; vui lòng thử lại.")
         claimed_guest_session = None
         try:
             if account:
-                return durable_chat(orchestrator, payload, token, account)
+                return durable_chat(orchestrator, payload, token, account, allow_demo=allow_demo)
             if not research and payload.sessionId:
                 # A guest turn mutates in-memory state. A late geocoder result
                 # must finish before another turn can switch its transaction.
@@ -120,7 +127,8 @@ def create_chat_app(settings=None, orchestrator=None):
                         raise HTTPException(429, "Phiên chat đang xử lý câu trước; vui lòng thử lại.")
                     guest_turns.add(payload.sessionId)
                     claimed_guest_session = payload.sessionId
-            return orchestrator.chat(payload, research=research, token=token)
+            call_kwargs = {"research": research, "token": token, **({"allow_demo": True} if allow_demo else {})}
+            return orchestrator.chat(payload, **call_kwargs)
         except UpstreamError as e:
             event("response", status=e.status, reason="BACKEND_UPSTREAM_ERROR")
             raise HTTPException(e.status, "Công cụ Backend chưa sẵn sàng hoặc không đủ quyền truy cập.") from None
@@ -137,19 +145,19 @@ def create_chat_app(settings=None, orchestrator=None):
             slots.release()
 
     @app.post("/chat", response_model=ChatResponse)
-    def chat(payload: ChatRequest):
-        # No caller-controlled mode, SQL, source filter or forwarded credentials on this route.
-        return run(payload)
+    def chat(payload: ChatRequest, request: Request):
+        # Synthetic demo land access is never controlled by JSON payload; it requires loopback + server demo key.
+        return run(payload, allow_demo=_is_demo_request(request))
 
     @app.post("/chat/personalized", response_model=ChatResponse)
-    def personalized_chat(payload: ChatRequest, authorization: str | None = Header(default=None)):
+    def personalized_chat(payload: ChatRequest, request: Request, authorization: str | None = Header(default=None)):
         if not authorization:
             raise HTTPException(401,"Authentication required")
         try:
             account=orchestrator.backend.account_context(authorization)
         except UpstreamError as e:
             raise HTTPException(e.status,"Account context unavailable") from None
-        return run(payload,token=authorization,account=account)
+        return run(payload, token=authorization, account=account, allow_demo=_is_demo_request(request))
 
     @app.delete("/chat/session/{session_id}")
     def end_session(session_id: str):

@@ -58,7 +58,7 @@ from .tools import UpstreamError, _public_text
 def _retire_buyer_and_land(state, *, clear_budget=False):
     buyer = state.get("buyerSearch")
     if isinstance(buyer, dict):
-        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False)
+        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False, consentScope=None)
         if clear_budget:
             buyer.pop("maxPrice", None)
             buyer.pop("minPrice", None)
@@ -151,9 +151,10 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         self.planning_advisor=PlanningAdvisor(getattr(settings,"planning_snapshot_path",None),enabled=getattr(settings,"planning_enabled",False))
         import os
         from .land_chat import LandAdvisor
-        # Hòa Xuân land demo tool (planning cells, Guland parcels, Euro Village 2, flood catalog).
-        from app.land.paths import land_enabled
-        self.land_advisor=LandAdvisor(settings,enabled=land_enabled())
+        # Hòa Xuân land demo tool (isolated internal SYNTHETIC_DEMO mode only; never PUBLIC_APPROVED).
+        from app.land.paths import land_runtime_mode
+        mode = land_runtime_mode(demo_key=getattr(settings, "demo_key", None) or None)
+        self.land_advisor = LandAdvisor(settings, enabled=(mode == "SYNTHETIC_DEMO"))
 
     def _enrich(self, properties):
         """Attach real image + straight-line POI evidence to visible platform properties.
@@ -379,13 +380,18 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                     responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PURCHASE_BUDGET_REQUIRED"})
         return None
 
-    def chat(self, request, *, research=False, token=None, account=None):
+    def chat(self, request, *, research=False, token=None, account=None, allow_demo=False):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
         if research:
             traced("research_authorization", lambda: self.backend.authorize_research(token))
-        # Session scope comes from the authenticated route, never from the client payload,
-        # so a public caller cannot address (or read) a research context.
-        scope = "INTERNAL_RESEARCH" if research else ("ACCOUNT:"+account["subject"] if account else "PUBLIC")
+        demo_allowed = bool(allow_demo and not research and getattr(self.land_advisor, "enabled", False))
+        # Session scope comes from the authenticated/authorized route, never from the client payload,
+        # so a public caller cannot address (or read) a research or synthetic-demo context.
+        scope = (
+            "INTERNAL_RESEARCH" if research else
+            (("ACCOUNT_DEMO:" if demo_allowed else "ACCOUNT:") + account["subject"]) if account else
+            ("PUBLIC_DEMO" if demo_allowed else "PUBLIC")
+        )
         context, session_id, resumed = traced("session_begin",
             lambda: self.sessions.begin(request.sessionId, scope=scope))
         if account:
@@ -455,7 +461,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             existing_buyer = context.needs.get("buyerSearch") if isinstance(context.needs.get("buyerSearch"), dict) else {}
             buyer_domain = bool(existing_buyer.get("active") or existing_buyer.get("pending")) or bool(re.search(r'\b(lo dat|tim dat|mua dat|dat o|dat nong nghiep|tat ca)\b', land_fold(request.question)))
             buyer_domain = buyer_domain or not context.budget_vnd and bool(re.fullmatch(r'(?:toi co)\s+[0-9.,\s]+(?:ty|ti|trieu)(?:\s+[0-9.,]+\s+trieu)?[.!? ]*', land_fold(request.question)))
-            buyer = None if research or not purchase_allowed or not buyer_domain else buyer_search(self, request, context, turn)
+            buyer = None if research or not purchase_allowed or not buyer_domain else buyer_search(self, request, context, turn, allow_demo=demo_allowed)
             if buyer is not None:
                 context.needs["turnIntent"] = "BUYER_SEARCH"
                 state=context.needs["buyerSearch"]
@@ -463,18 +469,20 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 if state.get("district"):criteria["district"]=state["district"]
                 return self._reply(request,session_id,context,criteria,research=research,**buyer)
             land_state = context.needs.get("land")
-            if isinstance(land_state, dict) and (turn["searchChange"] or turn["intent"] == "AREA_AMENITIES") and not self.land_advisor.wants(
-                    request.question, land_state, focused=bool(request.propertyId or context.needs.get("focusedPropertyId"))):
+            if isinstance(land_state, dict) and (turn["searchChange"] or turn["intent"] == "AREA_AMENITIES") and (
+                    not demo_allowed or not self.land_advisor.wants(
+                        request.question, land_state, focused=bool(request.propertyId or context.needs.get("focusedPropertyId")))):
                 land_state.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
                 context.needs["listOwner"] = "AMENITIES" if turn["intent"] == "AREA_AMENITIES" else "PROPERTY"
-            if self.land_advisor.enabled and request.landId and isinstance(land_state, dict) and context.needs.get("listOwner") in ("LAND","BUYER"):
+            if demo_allowed and request.landId and isinstance(land_state, dict) and context.needs.get("listOwner") in ("LAND","BUYER"):
                 selected_code = self.land_advisor.engine.code_for(request.landId)
                 visible = land_state.get("visibleIds", land_state.get("seen", []))
                 if selected_code in visible:
                     # Browser selection is a reference only; every field is re-read by the engine.
                     land_state["selected"] = selected_code
-            land=traced("land_tool",lambda:self.land_advisor.reply(request.question,context,
-                focused=bool(request.propertyId or context.needs.get("focusedPropertyId"))))
+            land = traced("land_tool", lambda: self.land_advisor.reply(
+                request.question, context, focused=bool(request.propertyId or context.needs.get("focusedPropertyId"))
+            )) if demo_allowed else None
             if land is not None:
                 context.needs["turnIntent"]="LAND_LOOKUP"
                 return self._reply(request,session_id,context,context.criteria(),research=research,**land)

@@ -8,7 +8,8 @@ import json
 import re
 from functools import lru_cache
 
-from fastapi import APIRouter, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from .paths import authorize_land_demo_request, land_runtime_mode
 
 CODE = re.compile(r"^[A-Za-z0-9._-]{1,80}$")
 RECORD_KEYS_DROP = {"geometry", "sourceFile", "reviewFlags"}
@@ -101,8 +102,16 @@ def record_view(code):
     }
 
 
-def create_land_router():
-    router = APIRouter(prefix="/land")
+def create_land_router(expected_demo_key: str | None = None):
+    def require_demo_access(request: Request):
+        key = expected_demo_key if expected_demo_key is not None else None
+        if land_runtime_mode(demo_key=key) != "SYNTHETIC_DEMO":
+            raise HTTPException(404, "Không tìm thấy hồ sơ đất.")
+        client_host = request.client.host if request.client else None
+        if not authorize_land_demo_request(request.headers, client_host, key):
+            raise HTTPException(403, "Hồ sơ đất demo chỉ dành cho môi trường trình diễn nội bộ được cấp phép trên loopback.")
+
+    router = APIRouter(prefix="/land", dependencies=[Depends(require_demo_access)])
 
     def code_or_404(value):
         code = _engine().code_for(value) if isinstance(value, str) and CODE.match(value) else None

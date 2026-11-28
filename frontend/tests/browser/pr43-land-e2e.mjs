@@ -59,6 +59,7 @@ const { createServer: createViteServer } = await import(
 const LAND_ID = '11111111-2222-3333-4444-555555555555';
 const PROP_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const SESSION_ID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+const DEMO_KEY = 'pr43-local-mentor-demo-fixture-key';
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
 const landRecord = {
@@ -282,6 +283,11 @@ const upstream = http.createServer(async (req, res) => {
 
   recordedRequests.push({ method: req.method, path: url.pathname, search: url.search });
 
+  if (url.pathname.startsWith('/land/')) {
+    if (req.headers['x-smartprop-demo-key'] !== DEMO_KEY) {
+      return sendJson(403, { detail: 'Hồ sơ đất demo chỉ dành cho môi trường trình diễn nội bộ được cấp phép trên loopback.' });
+    }
+  }
   if (url.pathname === `/land/records/${LAND_ID}` || url.pathname === '/land/records/DN-QH-0001') {
     return sendJson(200, landRecord);
   }
@@ -425,6 +431,24 @@ process.env.SMARTPROP_DEV_CHAT_TARGET = `http://127.0.0.1:${upstreamPort}`;
 process.env.SMARTPROP_DEV_AI_TARGET = `http://127.0.0.1:${upstreamPort}`;
 process.env.SMARTPROP_DEV_VISION_TARGET = `http://127.0.0.1:${upstreamPort}`;
 
+// Verify unconfigured public boundary blocks /api/land/* with 403 before starting authorized mentor demo Vite:
+delete process.env.SMARTPROP_INTERNAL_DEMO_KEY;
+delete process.env.RAG_DEMO_KEY;
+const publicVite = await createViteServer({
+  root: frontendRoot,
+  server: { host: '127.0.0.1', port: 0, strictPort: false },
+});
+await publicVite.listen();
+try {
+  const publicPort = publicVite.httpServer.address().port;
+  const blockedLand = await fetch(`http://127.0.0.1:${publicPort}/api/land/records/${LAND_ID}`);
+  assert.equal(blockedLand.status, 403, 'Public Vite boundary without SMARTPROP_INTERNAL_DEMO_KEY must block /api/land/* with 403');
+  console.log('PASS 0: Unconfigured public proxy boundary blocks /api/land/* with 403');
+} finally {
+  await publicVite.close();
+}
+
+process.env.SMARTPROP_INTERNAL_DEMO_KEY = DEMO_KEY;
 const vite = await createViteServer({
   root: frontendRoot,
   server: { host: '127.0.0.1', port: 0, strictPort: false },

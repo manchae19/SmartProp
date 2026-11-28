@@ -18,6 +18,7 @@ import {
   canExploreNearby,
 } from '../src/features/map/coordinateEligibility.js';
 import { publicChatBoundary } from '../build/chatProxy.mjs';
+import { publicChatBody } from '../server/publicChat.mjs';
 
 const LAND_UUID = '11111111-2222-3333-4444-555555555555';
 const PROP_UUID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
@@ -206,10 +207,10 @@ test('PR43 coordinate eligibility: estimated legacy pin enables nearby explorati
   assert.equal(canAnalyzeDistance(rejectedPin), false);
 });
 
-test('PR43 chatProxy boundary: allows GET /api/chat/health and POST /api/chat while blocking unexpected subpaths', () => {
-  let middleware;
-  publicChatBoundary().configureServer({ middlewares: { use: fn => { middleware = fn; } } });
-  const call = (method, url, authorization) => {
+test('PR43 chatProxy & publicChatBody: isolates synthetic demo land on public relay while preserving authorized local demo', () => {
+  let publicMiddleware;
+  publicChatBoundary().configureServer({ middlewares: { use: fn => { publicMiddleware = fn; } } });
+  const call = (mw, method, url, authorization) => {
     let nextCalled = false;
     const headers = {};
     const res = {
@@ -217,12 +218,68 @@ test('PR43 chatProxy boundary: allows GET /api/chat/health and POST /api/chat wh
       setHeader: (k, v) => { headers[k] = v; },
       end: body => { res.body = body; },
     };
-    middleware({ method, url, headers: authorization ? { authorization } : {} }, res, () => { nextCalled = true; });
+    mw({ method, url, headers: authorization ? { authorization } : {} }, res, () => { nextCalled = true; });
     return { nextCalled, statusCode: res.statusCode };
   };
 
-  assert.deepEqual(call('GET', '/api/chat/health'), { nextCalled: true, statusCode: 200 });
-  assert.deepEqual(call('POST', '/api/chat'), { nextCalled: true, statusCode: 200 });
-  assert.deepEqual(call('POST', '/api/chat/research'), { nextCalled: false, statusCode: 404 });
-  assert.deepEqual(call('GET', '/api/chat/health', 'Basic bad'), { nextCalled: false, statusCode: 401 });
+  assert.deepEqual(call(publicMiddleware, 'GET', '/api/chat/health'), { nextCalled: true, statusCode: 200 });
+  assert.deepEqual(call(publicMiddleware, 'POST', '/api/chat'), { nextCalled: true, statusCode: 200 });
+  assert.deepEqual(call(publicMiddleware, 'POST', '/api/chat/research'), { nextCalled: false, statusCode: 404 });
+  assert.deepEqual(call(publicMiddleware, 'GET', '/api/chat/health', 'Basic bad'), { nextCalled: false, statusCode: 401 });
+  // Without an internal demo key, /api/land/* MUST be blocked with 403:
+  assert.deepEqual(call(publicMiddleware, 'GET', '/api/land/records/' + LAND_UUID), { nextCalled: false, statusCode: 403 });
+  assert.deepEqual(call(publicMiddleware, 'GET', '/api/land/health'), { nextCalled: false, statusCode: 403 });
+
+  // With an authorized local mentor demo key (>= 16 chars), GET /api/land/* is permitted while POST remains 403:
+  let demoMiddleware;
+  publicChatBoundary({ demoKey: 'local-mentor-demo-secret-key' }).configureServer({ middlewares: { use: fn => { demoMiddleware = fn; } } });
+  assert.deepEqual(call(demoMiddleware, 'GET', '/api/land/records/' + LAND_UUID), { nextCalled: true, statusCode: 200 });
+  assert.deepEqual(call(demoMiddleware, 'POST', '/api/land/records/' + LAND_UUID), { nextCalled: false, statusCode: 403 });
+
+  // Production publicChatBody (default allowDemo=false) blocks synthetic LAND_SEARCH and LAND_DATA rows:
+  const landPacket = {
+    answer: 'Tìm thấy 1 ô quy hoạch tham khảo.',
+    mode: 'SAFE',
+    generationMode: 'EVIDENCE_ONLY',
+    retrievalMode: 'TOOL_EVIDENCE_ONLY',
+    citations: [],
+    recommendedProperties: [],
+    dataLimitations: ['Bản demo Hòa Xuân.'],
+    evidence: {
+      responseKind: 'LAND_SEARCH',
+      land: { version: 'LAND_V1', kind: 'LAND_SEARCH', rows: [sampleLandRow()], floodRecords: [], demoOnly: true },
+    },
+  };
+  assert.throws(() => publicChatBody(landPacket), /Synthetic demo land data is blocked/);
+  assert.equal(publicChatBody(landPacket, { allowDemo: true }).evidence.responseKind, 'LAND_SEARCH');
+
+  const mixedBuyerPacket = {
+    answer: 'Hiển thị 1 kết quả demo.',
+    mode: 'SAFE',
+    generationMode: 'EVIDENCE_ONLY',
+    retrievalMode: 'TOOL_EVIDENCE_ONLY',
+    citations: [],
+    recommendedProperties: [],
+    dataLimitations: [],
+    evidence: {
+      responseKind: 'BUYER_SEARCH',
+      buyerSearch: {
+        summary: ['Đất ở', 'Hòa Xuân'],
+        rows: [{
+          key: 'LAND:DN-QH-0001',
+          source: 'LAND_DATA',
+          id: LAND_UUID,
+          title: 'Ô quy hoạch Hòa Xuân',
+          location: 'Hòa Xuân, Đà Nẵng',
+          price: 2_500_000_000,
+          area: 100,
+          overBudgetVnd: 0,
+          overBudgetPercent: 0,
+          land: sampleLandRow(),
+        }],
+      },
+    },
+  };
+  assert.throws(() => publicChatBody(mixedBuyerPacket), /Synthetic demo land data is blocked/);
+  assert.equal(publicChatBody(mixedBuyerPacket, { allowDemo: true }).evidence.buyerSearch.rows.length, 1);
 });

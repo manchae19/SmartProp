@@ -55,14 +55,15 @@ def _unsupported(value):
     raise TypeError("Unsupported checkpoint value")
 
 
-def durable_chat(orchestrator, payload, token, account):
+def durable_chat(orchestrator, payload, token, account, *, allow_demo=False):
     conversation_id = payload.sessionId or secrets.token_hex(16)
     if not re.fullmatch(r"[a-f0-9]{32}", conversation_id):
         raise UpstreamError(404)
     saved = checkpoint_call(orchestrator.backend, "GET", conversation_id+"/checkpoint", token) if payload.sessionId else None
     local = copy(orchestrator)
     local.sessions = CheckpointSessions(conversation_id, saved["checkpoint"] if saved else None)
-    result = local.chat(payload, token=token, account=account)
+    call_kwargs = {"token": token, "account": account, **({"allow_demo": True} if allow_demo else {})}
+    result = local.chat(payload, **call_kwargs)
     # Backend tools may use Decimal for coordinates or exact money; JSON must retain precision.
     context = json.loads(json.dumps(asdict(local.sessions.context), default=lambda value: str(value) if isinstance(value, Decimal) else _unsupported(value)))
     context.pop("scope",None)

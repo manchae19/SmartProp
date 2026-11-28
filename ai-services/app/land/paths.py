@@ -5,6 +5,7 @@ files (see SMARTPROP_DATA/pipelines/land_demo/README.md). Point SMARTPROP_LAND_D
 another version to swap data without touching the chatbot.
 """
 import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
@@ -108,21 +109,59 @@ def verify_land_dataset(data_root: Path | None = None, processed_dir: Path | Non
         if actual_sha != expected_sha:
             return {"ok": False, "mode": "BLOCKED", "reasons": ["RAW_FILE_HASH_MISMATCH", rel]}
 
-    public_approved = (
-        manifest.get("publicApproved") is True
-        and manifest.get("containsSyntheticData") is False
-        and isinstance(manifest.get("rightsApprovalRef"), str)
-        and bool(manifest["rightsApprovalRef"].strip())
-    )
-    if public_approved:
-        return {"ok": True, "mode": "PUBLIC_APPROVED", "reasons": []}
+    if manifest.get("publicApproved") is True:
+        # The current Hòa Xuân engine synthesizes demo unit prices and scenario assumptions.
+        # Block PUBLIC_APPROVED activation fail-closed until a zero-synthetic public engine exists.
+        return {"ok": False, "mode": "UNSUPPORTED_PUBLIC_APPROVED", "reasons": ["PUBLIC_APPROVED_ENGINE_NOT_IMPLEMENTED"]}
 
-    if _truthy("RAG_LAND_DEMO_ENABLED") and manifest.get("demoApproved") is True:
+    if _truthy("RAG_LAND_DEMO_ENABLED") and manifest.get("demoApproved") is True and manifest.get("containsSyntheticData") is not False:
         return {"ok": True, "mode": "SYNTHETIC_DEMO", "reasons": []}
 
     return {"ok": False, "mode": "BLOCKED", "reasons": ["DATASET_USAGE_NOT_APPROVED"]}
 
 
+def demo_key_configured(demo_key: str | None = None) -> bool:
+    key = (demo_key if demo_key is not None else os.getenv("RAG_DEMO_KEY", "")).strip()
+    return len(key) >= 16
+
+
+def land_runtime_mode(data_root: Path | None = None, processed_dir: Path | None = None,
+                      version: str | None = None, *, demo_key: str | None = None) -> str:
+    """Return active land runtime mode: `'SYNTHETIC_DEMO'` or `'DISABLED'`.
+
+    Never collapses public vs synthetic demo modes into an undifferentiated boolean, and
+    requires an explicit server-side demo key (`>= 16` chars) before synthetic demo mode can arm.
+    """
+    status = verify_land_dataset(data_root=data_root, processed_dir=processed_dir, version=version)
+    if status.get("ok") and status.get("mode") == "SYNTHETIC_DEMO" and demo_key_configured(demo_key):
+        return "SYNTHETIC_DEMO"
+    return "DISABLED"
+
+
+def authorize_land_demo_request(headers, client_host: str | None, expected_demo_key: str | None = None) -> bool:
+    """Enforce internal loopback + constant-time `X-SmartProp-Demo-Key` boundary on every request."""
+    if client_host not in ("127.0.0.1", "::1"):
+        return False
+    expected = (expected_demo_key if expected_demo_key is not None else os.getenv("RAG_DEMO_KEY", "")).strip()
+    if len(expected) < 16 or headers is None:
+        return False
+    # Reject proxied external requests even if the reverse proxy sits on 127.0.0.1.
+    if headers.get("forwarded") or headers.get("x-forwarded-host"):
+        return False
+    xff = (headers.get("x-forwarded-for") or "").strip()
+    if xff:
+        hops = [h.strip() for h in xff.split(",") if h.strip()]
+        if any(h not in ("127.0.0.1", "::1") for h in hops):
+            return False
+    real_ip = (headers.get("x-real-ip") or "").strip()
+    if real_ip and real_ip not in ("127.0.0.1", "::1"):
+        return False
+    provided = (headers.get("x-smartprop-demo-key") or "").strip()
+    if not provided:
+        return False
+    return hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
+
+
 def land_enabled() -> bool:
-    """Fail closed unless explicitly enabled and dataset provenance + usage governance pass."""
-    return verify_land_dataset()["ok"]
+    """True only when isolated SYNTHETIC_DEMO mode and server demo key are both configured."""
+    return land_runtime_mode() == "SYNTHETIC_DEMO"

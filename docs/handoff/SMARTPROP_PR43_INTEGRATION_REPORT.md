@@ -91,3 +91,47 @@ PR #43 (`feature/advisor-land-runtime-20261126`) has been integrated forward ont
 Status tokens:
 - `PR43_READY_FOR_INDEPENDENT_REVIEW`
 - `WAITING_FOR_PR43_MERGE_AUTHORIZATION`
+
+---
+
+## 5. Round 2 — P1-01 / P1-02 Hardening on PR #50 Baseline
+
+- **Integrated approved `main` baseline**: `b49a98fc333cbda1ff38d5511259a5329881812e` (PR #50, WP04 TreeSHAP explanations)
+- **Integration merge (`--no-ff`)**: `4cc68f07` (no rebase, no force-push, no dirty-work loss)
+- **Scope**: P1-01 over-budget consent and P1-02 synthetic-demo dataset isolation, plus their proxy/Caddy/Vite boundaries.
+
+### 5.1 Root causes closed
+
+| ID | Root cause | Fix |
+|---|---|---|
+| P1-01 | Over-budget consent was a single substring match (`chap nhan vuot ngan sach...`), so negations ("không đồng ý vượt ngân sách"), hedges/questions, and stale consent after criteria changes all leaked expanded results. | Added `parse_over_budget_consent()` (`GRANT` / `DENY` / `AMBIGUOUS` / `NONE`) with negation, withdrawal, hedge, question and contradiction detection; consent is now bound to a criteria snapshot (`consentScope`) and invalidated by any change of type/location/price/mode/area; only an explicit scoped `GRANT` re-enables the over-budget reference band. |
+| P1-02 | `verify_land_dataset()` treated any hash-valid manifest as usable, so a `PUBLIC_APPROVED` dataset and the synthetic Hòa Xuân demo were indistinguishable, and `/land/*` plus demo rows inside `/chat` were reachable by unauthenticated callers. | `PUBLIC_APPROVED` now fails closed (`UNSUPPORTED_PUBLIC_APPROVED`) until a zero-synthetic engine exists; `land_runtime_mode()` arms `SYNTHETIC_DEMO` only with `RAG_LAND_DEMO_ENABLED=true` + manifest `demoApproved` + server `RAG_DEMO_KEY` (>= 16 chars); every `/land/*` request requires loopback peer + constant-time `X-SmartProp-Demo-Key` + no external `Forwarded`/`X-Forwarded-For`/`X-Real-IP`; `/chat` demo land tools and `LAND_DATA` rows require the same boundary; session scopes `PUBLIC_DEMO` / `ACCOUNT_DEMO` are server-derived, never payload-derived. |
+| Boundary | Caddy, Vite dev proxy and the public chat relay forwarded `/api/land/*` and could surface synthetic demo rows to public callers. | Caddy blocks/normalises `/api/land` variants; Vite injects the demo key only server-side (never `VITE_*`), strips caller headers, and 403s `/api/land/*` when no key is configured; `publicChatBody()` rejects demo land payloads on the public relay; `TomcatLoopbackProxyBoundaryTest` extended for `/api/land`, `%6cand`, `;jsessionid` variants. |
+
+### 5.2 Fresh validation on final code (`4cc68f07` + Round 2 working tree)
+
+| Suite | Command | Result |
+|---|---|---|
+| Full Python | `pytest -rs -q tests` | **1244 passed, 19 skipped, 0 failed, 105 subtests passed** |
+| PR43 targeted | `pytest -q tests/test_pr43_land_and_rag.py` | **13 passed** (was 11; strengthened) |
+| Spring Boot | `.\mvnw.cmd -o test` | **329 passed, 0 failed, 0 errors, 0 skipped** |
+| Frontend unit/contract (32 files) | `node --test <all *.test.mjs/*.test.js>` | **352 passed, 0 failed, 0 skipped** |
+| Vite production build | `vite build` | **PASS** (`282` modules, built in `9.80 s`) |
+| PR43 browser E2E | `node tests/browser/pr43-land-e2e.mjs` | **6/6 PASS** (`0/1/2/3/4/5`, incl. public `/api/land` 403 and PR48 route) |
+| Security scan | `node ops/security-scan.mjs` | **PASS** (`1348` scanned, `0` findings) |
+| Graphify AST | `graphify update .` | **PASS** (`12266` nodes, `33185` edges, `537` communities) |
+
+Runtime gates truthfully `NOT_RUN`: live Caddy binary (`caddy` not installed), MySQL `LiveIT` (protected 3306/3307 untouched).
+
+### 5.3 Preserved contracts
+
+- **WP04 TreeSHAP (PR #50)**: `ai-services/tests/test_wp04_*`, `ValuationExplanation*Test`, `frontend/tests/wp04/*` all green; zero diff on `ai-services/app/models/xgboost/predictor_v1_3.py`, `explanation_v1_3.py`, `backend/.../ValuationService.java`.
+- **V1.3 artifacts**: `git diff b49a98f..HEAD -- ai-services/artifacts backend/src/main/resources/db database/migrations` is empty; SHA-256 verified `model.json 3C56B693…`, `feature_schema.json 84BE275B…`, `calibration.json 17632BDF…`, `artifact_manifest.json 419599EC…`.
+- **PR #48 Google linking**: `GoogleLink*Test`, `googleLinkSession*.test.mjs`, `/auth/google/link/complete` E2E suite PASS.
+- **PR #49 shared session**: `httpClient*` suites and `pr49SharedAuthTransitions.test.mjs` PASS.
+
+Status tokens:
+- `PR43_P1_01_P1_02_CLOSED`
+- `PR43_PR50_BASELINE_INTEGRATED`
+- `PR43_READY_FOR_INDEPENDENT_REVIEW`
+- `WAITING_FOR_PR43_MERGE_AUTHORIZATION`

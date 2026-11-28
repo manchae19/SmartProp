@@ -51,9 +51,51 @@ def _public(backend, filters, ceiling):
 
 NON_LAND_HOUSE_RE=re.compile(r'\b(nha|can ho|chung cu|biet thu|nha pho|phong tro|mat bang)\b')
 LAND_ASSET_RE=re.compile(r'\b(dat|lo dat|o dat|thua)\b')
-OVER_BUDGET_CONSENT_RE=re.compile(r'\b(chap nhan vuot ngan sach|cho xem vuot ngan sach|them tham khao vuot ngan sach)\b')
 
-def respond(bot,request,context,turn):
+_NEGATED_OVER_BUDGET_RE = re.compile(
+ r'\b(?:khong|ko|chua|dung|cam|chan|bo|huy|ngung|thoi|tu choi)'
+ r'(?:\s+(?:muon|can|nen|the|duoc|he|bao gio|dong y|chap nhan|cho|cho phep|cho xem|xem|lay|them|hien thi|mo rong)){0,4}'
+ r'\s+(?:nhom\s+|muc\s+|phan\s+|ket qua\s+)?(?:tham khao\s+)?vuot(?:\s+muc|\s+tran|\s+ngan\s+sach)?\b'
+ r'|\b(?:bo|tat|huy)\s+(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
+ r'|\b(?:nghiem ngat|tuyet doi)\s+(?:trong|duoi|khong qua|toi da)\s+ngan\s+sach\b'
+)
+_AMBIGUOUS_OVER_BUDGET_RE = re.compile(
+ r'\b(?:co the|khong chac|chua chac|phan van|dang nghi|neu|gia su|hay|hoac|lieu|co nen|tuy|xem xet)\b[^.?!]*\bvuot(?:\s+ngan\s+sach)?\b'
+ r'|\bvuot(?:\s+ngan\s+sach)?\b[^.?!]*\b(?:hay khong|khong nhi|chua nhi|sao nhi|khong\s*$)'
+)
+_POSITIVE_OVER_BUDGET_RE = re.compile(
+ r'\b(?:dong y|chap nhan|cho phep)\s+(?:xem\s+|lay\s+|hien thi\s+|them\s+)?(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
+ r'|\b(?:cho xem|hien thi them|them)\s+(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
+)
+
+def parse_over_budget_consent(question: str) -> str:
+ """Classify over-budget consent into `'GRANT'`, `'DENY'`, `'AMBIGUOUS'`, or `'NONE'`.
+
+ Any negation, withdrawal, hedging, conditional, contradiction, or question fails closed
+ (`'DENY'` or `'AMBIGUOUS'`), never `'GRANT'`.
+ """
+ raw = (question or '').strip()
+ n = fold(raw).strip(' !.')
+ if not n:
+  return 'NONE'
+ has_neg = bool(_NEGATED_OVER_BUDGET_RE.search(n))
+ has_pos = bool(_POSITIVE_OVER_BUDGET_RE.search(n))
+ is_question = '?' in raw or bool(re.search(r'\b(?:co\s+.*?\bkhong|phai khong|duoc khong)\b', n))
+ has_ambig = bool(_AMBIGUOUS_OVER_BUDGET_RE.search(n)) or (is_question and 'vuot' in n)
+ if has_neg:
+  # Check if positive consent also appeared in another clause without negation -> contradiction = AMBIGUOUS (still fail-closed)
+  stripped_neg = _NEGATED_OVER_BUDGET_RE.sub(' ', n)
+  return 'AMBIGUOUS' if _POSITIVE_OVER_BUDGET_RE.search(stripped_neg) else 'DENY'
+ if has_ambig:
+  return 'AMBIGUOUS'
+ if has_pos:
+  return 'GRANT'
+ return 'NONE'
+
+def _consent_scope(state: dict) -> dict:
+ return {k: state.get(k) for k in ('type', 'location', 'district', 'maxPrice', 'minPrice', 'mode', 'area')}
+
+def respond(bot,request,context,turn,*,allow_demo=False):
  n=fold(request.question).strip(' ?!.');existing=context.needs.get('buyerSearch');more=bool(MORE.fullmatch(n))
  if turn['intent']=='PROPERTY_FOLLOWUP':
   ordinal=turn.get('ordinal')
@@ -72,11 +114,12 @@ def respond(bot,request,context,turn):
   return None
  # Switching from a land/buyer search to a non-land house/apartment search exits to SmartProp Recommendation.
  if NON_LAND_HOUSE_RE.search(n) and not LAND_ASSET_RE.search(n) and (existing or {}).get('pending')!='type':
-  if isinstance(existing,dict):existing.update(active=False,pending=None,pagingActive=False,visible=[],order=None,offset=0,seen=[],allowOverBudget=False)
+  if isinstance(existing,dict):existing.update(active=False,pending=None,pagingActive=False,visible=[],order=None,offset=0,seen=[],allowOverBudget=False,consentScope=None)
   land_state=context.needs.get('land')
   if isinstance(land_state,dict):land_state.update(lastDomain=None,selected=None,seen=[],visibleIds=[],projectRows=[])
   if context.needs.get('listOwner') in ('BUYER','LAND'):context.needs['listOwner']='PROPERTY'
   return None
+ consent_decision=parse_over_budget_consent(request.question)
  try:band=budget_band(request.question)
  except ValueError as error:
   context.needs.setdefault('buyerSearch',dict(existing or {}))
@@ -91,7 +134,7 @@ def respond(bot,request,context,turn):
   return {'answer':'Danh sách tìm kiếm trước đã tạm dừng. Hãy nêu lại yêu cầu tìm tài sản để bắt đầu; tôi không lấy lại trang cũ sau câu hỏi tiện ích hoặc pháp lý.','properties':[],'citations':[],'responseKind':'BUYER_SEARCH','extra':{'buyerSearch':{'rows':[],'summary':[]}}}
  if more and not existing:return None
  if existing and not active_session and not pending_stage and not search:return None
- if not (more or search or (pending_stage and (chosen or band or 'hoa xuan' in n or any(fold(x) in n for x in DISTRICTS) or 'da nang' in n)) or (active_session and (band or chosen))):return None
+ if not (more or search or (pending_stage and (chosen or band or 'hoa xuan' in n or any(fold(x) in n for x in DISTRICTS) or 'da nang' in n)) or (active_session and (band or chosen or consent_decision in ('GRANT','DENY','AMBIGUOUS')))):return None
  if re.search(r'euro|trieu phu|b2[.\-]|guland',n):
   if isinstance(existing,dict):existing['pagingActive']=False
   return None
@@ -100,14 +143,11 @@ def respond(bot,request,context,turn):
  if not state.get('location'):
   if context.district:state.update(location=context.district,district=context.district)
   elif context.ward and fold(context.ward)=='hoa xuan':state['location']='Hòa Xuân'
- explicit_over_consent=bool(OVER_BUDGET_CONSENT_RE.search(n))
+ is_exact=bool(re.search(r'(?iu)\bđúng\b',request.question) or (re.search(r'\bdung\b',n) and not re.search(r'\bdung\s+vuot\b',n)))
  if band:
   state['maxPrice']=band.get('maxPrice');state['minPrice']=band.get('minPrice')
-  state['mode']='EXACT' if re.search(r'\bdung\b',n) else 'APPROXIMATE' if re.search(r'\b(khoang|tam|quanh|xap xi)\b',n) else 'MAXIMUM'
-  state['allowOverBudget']=explicit_over_consent
+  state['mode']='EXACT' if is_exact else 'APPROXIMATE' if re.search(r'\b(khoang|tam|quanh|xap xi)\b',n) else 'MAXIMUM'
   if state['maxPrice'] is not None:context.budget_vnd=str(state['maxPrice'])
- elif explicit_over_consent:
-  state['allowOverBudget']=True
  if chosen:state['type']=chosen
  elif re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='LAND'
  elif not state.get('type'):
@@ -122,9 +162,19 @@ def respond(bot,request,context,turn):
  if request.budgetVnd is not None:
   req_ceiling=int(request.budgetVnd)
   state['maxPrice']=min(state['maxPrice'],req_ceiling) if state.get('maxPrice') else req_ceiling
-  if not explicit_over_consent:state['allowOverBudget']=False
  area=area_filter(request.question)
  if area:state['area']=area
+ current_scope=_consent_scope(state)
+ if consent_decision=='GRANT':
+  state['allowOverBudget']=True
+  state['consentScope']=current_scope
+ elif consent_decision in ('DENY','AMBIGUOUS'):
+  state['allowOverBudget']=False
+  state['consentScope']=None
+ elif not state.get('allowOverBudget') or state.get('consentScope')!=current_scope:
+  # Any change to search criteria invalidates prior over-budget consent (fail-closed).
+  state['allowOverBudget']=False
+  state['consentScope']=None
  previous={k:v for k,v in (existing or {}).items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
  current={k:v for k,v in state.items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
  if previous!=current or not more:state.update(seen=[],offset=0,order=None)
@@ -148,9 +198,9 @@ def respond(bot,request,context,turn):
   return packet('Ngân sách tối đa của bạn là bao nhiêu?')
  state.update(active=True,pending=None,pagingActive=True)
  ceiling=state['maxPrice']
- reference_ceiling=ceiling*115//100 if (state.get('mode','MAXIMUM')=='MAXIMUM' and state.get('allowOverBudget') is True) else ceiling
+ reference_ceiling=ceiling*115//100 if (state.get('mode','MAXIMUM')=='MAXIMUM' and state.get('allowOverBudget') is True and state.get('consentScope')==_consent_scope(state)) else ceiling
  pool=[];warnings=[]
- if getattr(bot.land_advisor,"enabled",False) and state['type'] in ('LAND','RESIDENTIAL','AGRICULTURE','ALL') and state['location'] in ('Hòa Xuân','Đà Nẵng','Cẩm Lệ'):
+ if allow_demo and getattr(bot.land_advisor,"enabled",False) and state['type'] in ('LAND','RESIDENTIAL','AGRICULTURE','ALL') and state['location'] in ('Hòa Xuân','Đà Nẵng','Cẩm Lệ'):
   e=bot.land_advisor.engine;group='agriculture' if state['type']=='AGRICULTURE' else 'housing'
   candidates=[dict(e.imported.enrich(e.pricedbyid.get(r['id'],r)),purposeGroup=e.purpose(r)) for r in e.original if r['id'] in e.activeids]
   candidates+=list(e.imported.SOURCE_ROWS.values())+[e.unified_summary(r) for r in e.unified_lots.values()]+list(e.imported.EXTRAS.values())
