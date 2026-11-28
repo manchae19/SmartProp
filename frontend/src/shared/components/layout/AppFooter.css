@@ -1,0 +1,28 @@
+﻿/* Shared SmartProp Signature footer for every page that renders AppFooter. */
+html[data-ui-theme=slate] body footer.app-footer {
+  background: #10243b;
+  color: #fff;
+  border-top: 1px solid #39526a;
+  padding-top: 44px;
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
+}
+html[data-ui-theme=slate] body footer.app-footer .sp-container > div > a { color: #fff; font-weight: 750; }
+html[data-ui-theme=slate] body footer.app-footer .sp-container > div > a > span { color: #d9ad55; }
+html[data-ui-theme=slate] body footer.app-footer p { color: #cbd9e5; line-height: 1.8; }
+html[data-ui-theme=slate] body footer.app-footer nav { color: #cbd9e5; gap: 14px; }
+html[data-ui-theme=slate] body footer.app-footer nav a { color: #cbd9e5; line-height: 1.6; text-underline-offset: 5px; transition: color 180ms ease; }
+html[data-ui-theme=slate] body footer.app-footer a:hover { color: #d9ad55; }
+html[data-ui-theme=slate] body footer.app-footer nav a:hover { text-decoration: underline; }
+html[data-ui-theme=slate] body footer.app-footer a:focus-visible { outline: 2px solid #168f89; outline-offset: 4px; border-radius: 3px; }
+@media (max-width: 767px) {
+  html[data-ui-theme=slate] body footer.app-footer { padding-top: 32px; }
+  html[data-ui-theme=slate] body footer.app-footer nav a { min-height: 44px; display: flex; align-items: center; }
+  html[data-ui-theme=slate] body footer.app-footer nav { gap: 2px; }
+}
+/* Preserve room for Property Detail's existing mobile contact actions. */
+@media (max-width: 1023px) {
+  html body:has([data-ui-view=ListingDetailView]) footer.app-footer { padding-bottom: calc(200px + env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-ui-theme=slate] body footer.app-footer nav a { transition: none; }
+}

@@ -10,21 +10,11 @@ export const session = createStateStore({
 });
 export const refreshEnabled = import.meta.env?.VITE_ENABLE_REFRESH === 'true';
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
-let client;
-export function clearSession() {
-  client?.invalidate();
-  session.edit(draft => {
-    draft.token = null;
-    draft.user = null;
-    draft.status = 'UNAUTHENTICATED';
-    draft.error = null;
-    draft.authTransition = false;
-  });
+function clearLegacyCredentials() {
   globalThis.localStorage?.removeItem('token');
   globalThis.localStorage?.removeItem('role');
 }
-globalThis.localStorage?.removeItem('token');
-globalThis.localStorage?.removeItem('role');
+clearLegacyCredentials();
 let activityPending = true;
 if (typeof window !== 'undefined') {
   for (const event of ['pointerdown', 'keydown']) window.addEventListener(event, e => {
@@ -38,16 +28,17 @@ const activity = () => {
   activityPending = false;
   return pending;
 };
-client = createHttpClient({
+const client = createHttpClient({
   baseUrl,
   session,
   refreshEnabled,
-  clear: clearSession,
+  clear: clearLegacyCredentials,
   expired: () => window.dispatchEvent(new Event('smartprop:session-expired')),
   activity,
   lock: globalThis.navigator?.locks ? run => navigator.locks.request('smartprop-refresh', run) : null
 });
-// Cross-tab logout sends no credentials, token or profile. Web Locks serializes cookie rotation.
+export const clearSession = () => client.clearSession();
+// Cross-tab messages carry only the action. Tabs restore credentials through the server cookie.
 const channel = typeof window !== 'undefined' && window.location && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('smartprop-session') : null;
 if (channel) channel.onmessage = e => {
   if (e.data === 'logout') {
@@ -92,7 +83,7 @@ export async function loadProfile() {
   return user;
 }
 export async function logout() {
-  if (!await client.logout()) throw sessionChanged();
+  await client.logout();
   channel?.postMessage('logout');
 }
 export async function completeGoogleLogin() {

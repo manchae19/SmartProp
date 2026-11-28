@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { clearSession, session } from '../src/features/auth/api.js'
+import { createStateStore } from '../src/shared/state/createStateStore.js'
 import { resolveAdvisorResultsView } from '../src/features/prediction/advisorAnalysis.js'
 import { createUnifiedAdvisorController } from '../src/features/prediction/unifiedAdvisorState.js'
 
@@ -139,6 +140,40 @@ function sampleSafeResponse() {
 const flushMicrotasks = async () => {
   for (let i = 0; i < 6; i++) await Promise.resolve()
 }
+
+test('Advisor invalidates a same-token research result and pending response across auth transitions', async t => {
+  const snapshot = { status: 'AUTHENTICATED', token: 'advisor-fixture', authGeneration: 1,
+    user: { id: 42, role: 'ADMIN', status: 'ACTIVE' } }
+  const auth = createStateStore(snapshot)
+  let calls = 0, release
+  const late = new Promise(resolve => { release = resolve })
+  const controller = createUnifiedAdvisorController({
+    session: auth,
+    api: async (path, opts) => path === '/admin/advisor/research-config' ? { enabled: true }
+      : !opts.body.includeResearch ? sampleSafeResponse()
+        : ++calls === 1 ? sampleResearchResponse() : late,
+  })
+  t.after(controller.mount())
+  await flushMicrotasks()
+  controller.toggleResearch()
+  assert.equal(await controller.submit(), true)
+  assert.equal(controller.getSnapshot().result.mode, 'INTERNAL_RESEARCH')
+  const pending = controller.submit()
+  await flushMicrotasks()
+  assert.equal(calls, 2)
+
+  auth.set({ ...snapshot, authTransition: true, authGeneration: 2 })
+  assert.equal(controller.canViewResearch(), false)
+  assert.equal(controller.getSnapshot().result, null)
+  auth.set({ ...snapshot, authTransition: false, authGeneration: 2 })
+  release(sampleResearchResponse())
+  assert.equal(await pending, false)
+  await flushMicrotasks()
+  assert.equal(controller.getSnapshot().result, null)
+  assert.equal(controller.getSnapshot().form.includeResearch, false)
+  assert.equal(await controller.submit(), true)
+  assert.equal(controller.getSnapshot().result.mode, 'SAFE')
+})
 
 test('1 & 5. Valid ADMIN unlocks research via reactive session store (including login after mount) without auto-sending includeResearch=true', async () => {
   clearSession()
