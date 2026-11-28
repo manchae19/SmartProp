@@ -1,0 +1,86 @@
+{
+  "app": "http://127.0.0.1:5180",
+  "api": "http://127.0.0.1:8080",
+  "at": "2026-11-28T08:36:50.163Z",
+  "total": 15,
+  "passed": 2,
+  "failed": 13,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "real broker login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "valuation@320 real predict call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "valuation@320 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "valuation@390 real predict call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "valuation@390 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "valuation@768 real predict call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "valuation@768 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "valuation@1440 real predict call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "valuation@1440 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "advisor@390 real consult call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "advisor@1440 real consult call",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 interaction",
+      "ok": false,
+      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+    },
+    {
+      "name": "posting route renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting preview interaction",
+      "ok": false,
+      "detail": "posting draft state is not reachable from a cold route without a persisted draft"
+    }
+  ]
+}
