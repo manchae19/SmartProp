@@ -50,6 +50,13 @@ alignment instead of guessing. It never exposes history.
    responses via `identityEpoch`.
 8. **Writes are never replayed.** A POST that hits 401 still returns `AUTH_RETRY_REQUIRED`.
 9. **Abort** stays external-signal driven; cancellation never logs out.
+10. **JWT continuity (implemented)**: `sub` change or `jti` change inside a renewal is a different
+    session; a `ver` change is a legitimate server re-issue. Opaque tokens keep the structural checks.
+11. **Credential privacy (implemented)**: `sessionScope()` returns generations and flags only, never
+    the token, and no token history is retained.
+12. **Open**: `authTransition` must be raised before the login round-trip, pending linking responses
+    must be retired at that instant, and a late response must never expire a session that a later
+    refresh already renewed.
 
 ## 4. Compatibility tests (synthetic fixtures, no PR48 code imported)
 

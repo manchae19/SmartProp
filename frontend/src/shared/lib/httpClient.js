@@ -14,6 +14,41 @@ function sameActor(previous, next) {
     && previous.user?.status === next.user?.status;
 }
 
+/**
+ * Server-issued session claims, used ONLY to keep the UI consistent. Authorization stays with the
+ * server: every request is still authorized by the backend, and nothing here grants access.
+ *
+ * Returns a stable "sub|jti|ver" string, or null when the token is opaque/unparseable.
+ */
+function accessSession(token) {
+  if (typeof token !== "string" || !token) return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const { iss, sub, jti, ver } = payload || {};
+    if (iss === "smartprop" && typeof sub === "string" && sub
+      && typeof jti === "string" && jti && Number.isInteger(ver)) {
+      return JSON.stringify([sub, jti, ver]);
+    }
+  } catch {
+    // opaque or malformed token: no claims to compare
+  }
+  return null;
+}
+
+/** Same user and same server session (jti), regardless of ver. */
+function sameServerSession(left, right) {
+  if (!left || !right) return null;
+  try {
+    const a = JSON.parse(left);
+    const b = JSON.parse(right);
+    return a[0] === b[0] && a[1] === b[1];
+  } catch {
+    return null;
+  }
+}
+
 function identityOf(snapshot) {
   return JSON.stringify([
     snapshot?.status ?? null,
@@ -115,12 +150,28 @@ export function createHttpClient({
   const terminal = e => e?.status === 401 && e?.code !== "AUTH_RETRY_REQUIRED" || e?.status === 403 && e?.code === "ACCOUNT_LOCKED";
   function invalidate() {
     epoch++;
+    // PR48 reads authGeneration/authTransition from the same store for UI continuity.
+    session.edit(draft => { draft.authGeneration = epoch; });
+  }
+  function beginAuthChange() {
+    epoch++;
+    session.edit(draft => {
+      draft.authGeneration = epoch;
+      draft.authTransition = true;
+    });
+  }
+  function finishAuthChange(current) {
+    if (current === epoch) session.edit(draft => { draft.authTransition = false; });
   }
   function expire(redirect = true) {
     invalidate();
     clear();
     session.edit(draft => draft.token = null);
-    session.edit(draft => draft.user = null);
+    session.edit(draft => {
+      draft.user = null;
+      draft.authGeneration = epoch;
+      draft.authTransition = false;
+    });
     initialized = true;
     state("UNAUTHENTICATED");
     if (redirect) expired();
@@ -145,6 +196,11 @@ export function createHttpClient({
       invalidate();
       credentialGen += 1;
     }
+    session.edit(draft => {
+      // a verified renewal stays inside the same session generation
+      if (!verified) draft.authGeneration = epoch;
+      draft.authTransition = false;
+    });
     state("AUTHENTICATED");
     initialized = true;
     return result;
@@ -218,8 +274,9 @@ export function createHttpClient({
     const startedSnapshot = session.getSnapshot();
     // A flight is only reusable inside the exact session scope it was started in; a new session
     // must never join an obsolete refresh that belongs to the previous one.
-    const flightKey = `${epoch}:${identityEpoch}:${startedSnapshot.token}`;
+    const flightKey = `${epoch}:${identityEpoch}:${scopeGen}:${startedSnapshot.token}`;
     if (refreshFlight && refreshFlightKey === flightKey) return refreshFlight;
+    let claimsVerChanged = false;
     const current = epoch,
       startedIdentity = identityEpoch,
       startedScopeGen = scopeGen,
@@ -249,6 +306,21 @@ export function createHttpClient({
           const mine = identityOf({ status: "AUTHENTICATED", user: started.user });
           const theirs = identityOf({ status: "AUTHENTICATED", user: result.user });
           if (mine !== theirs) throw sessionChanged();
+        }
+        // A renewal may rotate the access token, but it must stay inside the same server session.
+        // A different `sub` is another account; a different `jti` is another session for the same
+        // account. Neither is an ordinary credential renewal. A changed `ver` IS legitimate: the
+        // server re-issued the claims (e.g. role change), so the identity epoch must move.
+        if (!allowNewIdentity) {
+          const before = accessSession(started.token);
+          const after = accessSession(result.accessToken);
+          if (before && after) {
+            const [oldSub, oldJti, oldVer] = JSON.parse(before);
+            const [newSub, newJti, newVer] = JSON.parse(after);
+            if (oldSub !== newSub) throw sessionChanged();
+            if (oldJti !== newJti) throw sessionChanged();
+            if (oldVer !== newVer) claimsVerChanged = true;
+          }
         }
         return accept(result, current, { verified: true });
       };
@@ -353,18 +425,27 @@ export function createHttpClient({
     const current = epoch;
     // Captured before any async work: `started` used to be an undeclared rotate()-local name.
     const startedSnapshot = session.getSnapshot();
+    const startedIdentity = identityEpoch;
+    const startedScopeGen = scopeGen;
+    const startedToken = startedSnapshot.token;
+    /** An obsolete initialization must not commit, expire, or overwrite a newer session. */
+    const stillCurrent = () => current === epoch
+      && identityEpoch === startedIdentity
+      && scopeGen === startedScopeGen
+      && (session.getSnapshot().token ?? null) === (startedToken ?? null);
     state("INITIALIZING");
-    initialization = (async () => {
+    const initializationFlight = (async () => {
       try {
         if (session.getSnapshot().token) {
           try {
             const profile = await send("/users/me");
-            if (current === epoch) {
+            if (stillCurrent()) {
               session.edit(draft => draft.user = profile);
               state("AUTHENTICATED");
             }
           } catch (e) {
             if (!terminal(e) || !refreshEnabled) throw e;
+            if (!stillCurrent()) throw sessionChanged();
             // An existing access token means an existing session: the renewal must not adopt a
             // different account. Without a token this is cookie-based restoration.
             await rotate({ allowNewIdentity: !startedSnapshot.token });
@@ -372,16 +453,18 @@ export function createHttpClient({
         } else if (refreshEnabled) await rotate({ allowNewIdentity: true });
         else if (current === epoch) state("UNAUTHENTICATED");
       } catch (e) {
-        if (current === epoch) {
+        if (stillCurrent()) {
           if (terminal(e)) expire(false);else if (e.code !== "SESSION_CHANGED") unavailable(e);
         }
       } finally {
-        if (current === epoch) initialized = true;
+        if (stillCurrent()) initialized = true;
       }
       return session.getSnapshot().status;
     })().finally(() => {
-      initialization = null;
+      // only the owning initialization may clear the shared reference
+      if (initialization === initializationFlight) initialization = null;
     });
+    initialization = initializationFlight;
     return initialization;
   }
   async function login(body) {
@@ -441,7 +524,7 @@ export function createHttpClient({
       credentialGen,
       scopeGen,
       authGeneration: snapshot.authGeneration ?? null,
-      token: snapshot.token ?? null,
+      // never expose the credential itself
       authenticated: Boolean(snapshot.token),
     };
   }

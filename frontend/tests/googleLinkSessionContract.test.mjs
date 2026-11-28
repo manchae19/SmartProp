@@ -152,9 +152,10 @@ test('contract: sessionScope exposes one bounded scope, no token history', () =>
   const scope = client.sessionScope()
   assert.deepEqual(Object.keys(scope).sort(),
     ['authGeneration', 'authenticated', 'credentialGen', 'epoch', 'identityEpoch',
-      'scopeGen', 'token'].sort())
+      'scopeGen'].sort())
   assert.equal(scope.authGeneration, 3)
   assert.equal(scope.authenticated, true)
+  assert.equal('token' in scope, false, 'the credential must never be exposed')
   assert.equal(JSON.stringify(scope).includes('fixtureToken'), false)
 })
 
