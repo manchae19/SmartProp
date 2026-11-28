@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -88,9 +87,10 @@ class AdvisorResearchAccessHardeningTest {
         refEntity.status = Property.Status.PUBLISHED;
         refEntity.transactionType = Property.Transaction.SALE;
         refEntity.priceUnit = Property.PriceUnit.TOTAL;
+        refEntity.currency = "VND";
         refEntity.propertyType = Property.Type.HOUSE;
         refEntity.district = "Hải Châu";
-        refEntity.ward = "Hòa Cường Bắc";
+        refEntity.ward = null;
         refEntity.areaSqm = new BigDecimal("80");
         refEntity.price = new BigDecimal("4700000000");
         refEntity.bedrooms = 3;
@@ -104,8 +104,7 @@ class AdvisorResearchAccessHardeningTest {
         );
 
         // Populate research repository with attractive TiniX rows that MUST NOT be queried in SAFE mode
-        when(compRepo.tinixIdsInPriceBand(any(), any(), anyInt(), anyInt())).thenReturn(List.of("tnx-leak-01"));
-        when(compRepo.tinixDetails(anyList())).thenReturn(List.of(
+        when(compRepo.tinixCandidates(any(), anyInt())).thenReturn(List.of(
             new TinixRow("tnx-leak-01", "HOUSE", "Hải Châu", "Hòa Cường Bắc",
                 new BigDecimal("80"), new BigDecimal("4600000000"),
                 new BigDecimal("3"), new BigDecimal("5"), new BigDecimal("3"), new BigDecimal("6"), "grp-1")
@@ -181,11 +180,11 @@ class AdvisorResearchAccessHardeningTest {
     void safeModeIsolatesAllActorsFromResearchRepository() throws Exception {
         stubPublicRecommendationWithData();
         when(recService.tinixEnabled()).thenReturn(true);
-        when(compRepo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of(
+        when(compRepo.propertyCandidates(any(), anyInt())).thenReturn(List.of(
             new PropertyRow("hc-200", "HOUSE", "Hải Châu", "Hòa Cường Bắc", new BigDecimal("82"), new BigDecimal("4650000000"), 3)
         ));
-        when(compRepo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of(
-            new ExternalRow(501L, "CHOTOT", "Nhà ở", "Hải Châu", new BigDecimal("79"), new BigDecimal("4550000000"), "VALID", "https://chotot.com/501")
+        when(compRepo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of(
+            new ExternalRow(501L, "CHOTOT", "Nhà ở", "Hải Châu", new BigDecimal("79"), new BigDecimal("4550000000"), "VALID", "https://chotot.com/501", "501", null)
         ));
 
         // Even if allowResearchComparables=true AND comparable researchEnabled=true, SAFE mode MUST still exclude TiniX!
@@ -225,8 +224,7 @@ class AdvisorResearchAccessHardeningTest {
         }
 
         // Strict repository isolation proof: ZERO TiniX SQL calls across all 4 actors!
-        verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
-        verify(compRepo, never()).tinixDetails(anyList());
+        verify(compRepo, never()).tinixCandidates(any(), anyInt());
         verify(compRepo, never()).eligibleCounts();
         verify(recService, never()).recommend(any());
         verify(recService, never()).recommendResearch(any());
@@ -238,8 +236,8 @@ class AdvisorResearchAccessHardeningTest {
         stubPublicRecommendationWithData();
         when(recService.tinixEnabled()).thenReturn(true);
         // Public repositories are completely empty (0 rows), while TiniX has matching rows stubbed in setUp()
-        when(compRepo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
-        when(compRepo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
+        when(compRepo.propertyCandidates(any(), anyInt())).thenReturn(List.of());
+        when(compRepo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of());
 
         AdvisorOrchestrationService orchestrator = new AdvisorOrchestrationService(
             recService, researchEnabledComparableService, compEligibility, valAdapter, true);
@@ -253,8 +251,7 @@ class AdvisorResearchAccessHardeningTest {
         assertThat(prop.comparableEvidence().comparables()).isEmpty();
 
         // Neither primary pass nor wide [0.1x, 10x] fallback pass touched TiniX!
-        verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
-        verify(compRepo, never()).tinixDetails(anyList());
+        verify(compRepo, never()).tinixCandidates(any(), anyInt());
         verify(compRepo, never()).eligibleCounts();
     }
 
@@ -325,8 +322,8 @@ class AdvisorResearchAccessHardeningTest {
             new RecommendationDtos.Request(new BigDecimal("5000000000"), Purpose.LIVING, PropertyType.HOUSE, null, "Hải Châu", null, 5),
             1, List.of(), List.of(publicProperty()), List.of(), Map.of()
         ));
-        when(compRepo.propertyCandidates(anyList(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
-        when(compRepo.externalCandidates(anyString(), anyString(), any(), any(), anyInt())).thenReturn(List.of());
+        when(compRepo.propertyCandidates(any(), anyInt())).thenReturn(List.of());
+        when(compRepo.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of());
 
         // Case A: default allowResearchComparables = false -> comparables stay public-only even in INTERNAL_RESEARCH mode
         AdvisorOrchestrationService defaultOrchestrator = new AdvisorOrchestrationService(
@@ -339,7 +336,7 @@ class AdvisorResearchAccessHardeningTest {
         assertThat(resDefault).isNotNull();
         assertThat(resDefault.mode()).isEqualTo("INTERNAL_RESEARCH");
         assertThat(resDefault.recommendedProperties().get(0).comparableEvidence().comparables()).isEmpty();
-        verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
+        verify(compRepo, never()).tinixCandidates(any(), anyInt());
 
         // Case B: allowResearchComparables = true while comparable.research-enabled = false -> clean public fallback (no DEGRADED crash!)
         AdvisorOrchestrationService unalignedOrchestrator = new AdvisorOrchestrationService(
@@ -350,7 +347,7 @@ class AdvisorResearchAccessHardeningTest {
         assertThat(resUnaligned).isNotNull();
         assertThat(resUnaligned.serviceStatus().comparableService()).isEqualTo("AVAILABLE");
         assertThat(resUnaligned.recommendedProperties().get(0).comparableEvidence().status()).isEqualTo("EMPTY_NO_MATCHES");
-        verify(compRepo, never()).tinixIdsInPriceBand(any(), any(), anyInt(), anyInt());
+        verify(compRepo, never()).tinixCandidates(any(), anyInt());
 
         // Case C: both allowResearchComparables = true AND comparable.research-enabled = true -> ADMIN receives labelled TiniX comparable
         AdvisorOrchestrationService explicitOrchestrator = new AdvisorOrchestrationService(
@@ -361,7 +358,7 @@ class AdvisorResearchAccessHardeningTest {
         assertThat(resExplicit).isNotNull();
         assertThat(resExplicit.recommendedProperties().get(0).comparableEvidence().comparables()).hasSize(1);
         var comp = resExplicit.recommendedProperties().get(0).comparableEvidence().comparables().get(0);
-        assertThat(comp.candidateId()).isEqualTo("tnx-leak-01");
+        assertThat(comp.candidateId()).isEqualTo("tinix:tnx-leak-01");
         assertThat(comp.researchReference()).isTrue();
         assertThat(comp.liveListing()).isFalse();
         assertThat(comp.listingUrl()).isNull();

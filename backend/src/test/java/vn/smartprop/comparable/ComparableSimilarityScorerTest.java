@@ -2,6 +2,7 @@ package vn.smartprop.comparable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.math.BigDecimal;
 
@@ -106,6 +107,56 @@ class ComparableSimilarityScorerTest {
         double nearScore = ComparableSimilarityScorer.score(ref, near).score();
         double farScore = ComparableSimilarityScorer.score(ref, far).score();
         assertTrue(nearScore > farScore, "0.1 m difference must beat a 4 m difference");
+    }
+
+    @Test
+    void landUsesOnlyPhysicalLandAttributesAndIgnoresPriceInValuation() {
+        var land = typed("LAND", 3, 2, "5", "8", "ABC");
+        var result = ComparableSimilarityScorer.score(land, land, ComparableDtos.Purpose.VALUATION_SUPPORT);
+        assertEquals(java.util.Set.of("location", "area", "frontage", "roadWidth", "type"), result.breakdown().keySet());
+        assertEquals(1.0, result.featureCoverage(), 1e-9);
+    }
+
+    @Test
+    void apartmentsUseProjectAndBedroomsWhileVillaUsesStructuralAttributes() {
+        var apartment = typed("APARTMENT", 3, 2, "5", "8", "project-one");
+        var other = typed("APARTMENT", 3, 3, "7", "2", "project-two");
+        var same = ComparableSimilarityScorer.score(apartment, apartment, ComparableDtos.Purpose.VALUATION_SUPPORT);
+        var moved = ComparableSimilarityScorer.score(apartment, other, ComparableDtos.Purpose.VALUATION_SUPPORT);
+        assertEquals(java.util.Set.of("location", "area", "bedrooms", "project", "type"), moved.breakdown().keySet());
+        assertTrue(same.score() > moved.score());
+        var villa = typed("VILLA", 0, 3, "7", "8", "project-one");
+        var result = ComparableSimilarityScorer.score(villa, villa, ComparableDtos.Purpose.BUYER_BUDGET_SEARCH);
+        assertTrue(result.breakdown().keySet().containsAll(java.util.Set.of("bedrooms", "floors", "frontage", "roadWidth")));
+        assertFalse(result.breakdown().containsKey("price"));
+        assertFalse(result.breakdown().containsKey("project"));
+    }
+
+    @Test
+    void coverageShrinkageChangesOrderOnSparseFixturesAndIsKeptOutsideProductionScore() {
+        var reference = typed("HOUSE", 3, 2, "5", "8", null);
+        var complete = typed("HOUSE", 4, 2, "5", "8", null);
+        var sparse = typed("HOUSE", null, null, null, null, null);
+        var purpose = ComparableDtos.Purpose.VALUATION_SUPPORT;
+        var wide = ComparableSimilarityScorer.score(reference, complete, purpose);
+        var thin = ComparableSimilarityScorer.score(reference, sparse, purpose);
+        assertTrue(thin.score() > wide.score());
+        assertTrue(thin.featureCoverage() < wide.featureCoverage());
+        assertTrue(adjusted(thin, 0.05) > adjusted(wide, 0.05));
+        assertTrue(adjusted(thin, 0.25) < adjusted(wide, 0.25));
+        assertTrue(adjusted(thin, 0.50) < adjusted(wide, 0.50));
+        assertFalse(thin.breakdown().containsKey("bedrooms"));
+    }
+
+    private static double adjusted(ComparableSimilarityScorer.Result value, double weight) {
+        return value.score() * ((1 - weight) + weight * value.featureCoverage());
+    }
+
+    private static ComparableSimilarityScorer.Input typed(String type, Integer bedrooms, Integer floors, String frontage,
+                                                          String road, String project) {
+        return new ComparableSimilarityScorer.Input("Hải Châu", "Hải Châu 1", type, new BigDecimal("80"),
+            new BigDecimal("3000000000"), bedrooms, floors, frontage == null ? null : new BigDecimal(frontage),
+            road == null ? null : new BigDecimal(road), project);
     }
 
     @Test
