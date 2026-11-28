@@ -44,6 +44,9 @@ const routes = [
   path: '/auth/google/complete',
   component: () => import('../features/auth/GoogleCompleteView.jsx')
 }, {
+  path: '/auth/google/link/complete',
+  component: () => import('../features/auth/GoogleLinkCompleteView.jsx')
+}, {
   path: '/valuation',
   component: () => import('../features/prediction/ValuationView.jsx')
 }, {
