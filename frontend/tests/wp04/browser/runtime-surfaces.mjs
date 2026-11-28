@@ -69,7 +69,11 @@ async function assertExplanation(page, tag) {
     (await panel.getAttribute("data-explanation-status")) === "AVAILABLE",
     await panel.getAttribute("data-explanation-status"));
   const price = await page.locator('[data-testid="explanation-price"]').first().innerText();
-  record(`${tag} price text`, /\d/.test(price.replace(/[^\d]/g, "1")), price.slice(0, 40));
+  const trimmed = price.trim();
+  // A placeholder dash is not a price: require at least one digit from the real response.
+  const hasDigits = /\d/.test(trimmed);
+  const notPlaceholder = trimmed !== "" && trimmed !== "—" && trimmed !== "-";
+  record(`${tag} price text`, hasDigits && notPlaceholder, trimmed.slice(0, 40));
 
   const summary = panel.locator("summary").first();
   record(`${tag} technical section exists`, (await summary.count()) === 1);

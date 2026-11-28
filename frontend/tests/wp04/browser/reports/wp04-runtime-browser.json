@@ -1,7 +1,7 @@
 {
   "app": "http://127.0.0.1:5180",
   "api": "http://127.0.0.1:8080",
-  "at": "2026-11-28T09:30:36.010Z",
+  "at": "2026-11-28T10:36:31.668Z",
   "total": 328,
   "passed": 328,
   "failed": 0,
@@ -484,7 +484,7 @@
     {
       "name": "posting@1280 price text",
       "ok": true,
-      "detail": "—"
+      "detail": "5,48 tỷ"
     },
     {
       "name": "posting@1280 technical section exists",
@@ -599,7 +599,7 @@
     {
       "name": "posting@320 price text",
       "ok": true,
-      "detail": "—"
+      "detail": "5,48 tỷ"
     },
     {
       "name": "posting@320 technical section exists",
@@ -714,7 +714,7 @@
     {
       "name": "posting@390 price text",
       "ok": true,
-      "detail": "—"
+      "detail": "5,48 tỷ"
     },
     {
       "name": "posting@390 technical section exists",
@@ -829,7 +829,7 @@
     {
       "name": "posting@768 price text",
       "ok": true,
-      "detail": "—"
+      "detail": "5,48 tỷ"
     },
     {
       "name": "posting@768 technical section exists",
@@ -944,7 +944,7 @@
     {
       "name": "posting@1440 price text",
       "ok": true,
-      "detail": "—"
+      "detail": "5,48 tỷ"
     },
     {
       "name": "posting@1440 technical section exists",

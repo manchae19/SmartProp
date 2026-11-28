@@ -71,8 +71,31 @@ function statusText(status) {
   }
 }
 
+/** Canonical VND digits for a point price: safe integers and canonical digit strings only. */
+function priceDigits(value) {
+  const digits = vndDigits(value);
+  if (digits) return digits;
+  // Spring may serialise an exact integer as a decimal string with a zero fraction.
+  if (typeof value === "string") {
+    const match = /^([1-9]\d{0,29})\.0+$/.exec(value.trim());
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/** Format canonical digits as tỷ with exact BigInt arithmetic, so long values keep every digit. */
+function formatBillionDigits(digits) {
+  const value = BigInt(digits);
+  const billion = 1000000000n;
+  const whole = value / billion;
+  const fraction = ((value % billion) * 100n) / billion;
+  const cents = fraction.toString().padStart(2, "0").replace(/0+$/, "");
+  return cents ? `${whole},${cents} tỷ` : `${whole} tỷ`;
+}
+
 function priceBlock({ predictedPriceVnd, modelVersion }) {
-  const hasPrice = typeof predictedPriceVnd === "number" && Number.isFinite(predictedPriceVnd);
+  const digits = priceDigits(predictedPriceVnd);
+  const hasPrice = digits !== null;
   return h(
     "div",
     { className: "flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1" },
@@ -83,7 +106,11 @@ function priceBlock({ predictedPriceVnd, modelVersion }) {
         "aria-live": "polite",
         className: "text-lg font-light break-words",
       },
-      hasPrice ? formatBillion(predictedPriceVnd) : "—",
+      hasPrice
+      ? (digits.length <= 15 && Number.isSafeInteger(Number(digits))
+          ? formatBillion(Number(digits))
+          : formatBillionDigits(digits))
+      : "—",
     ),
     hasPrice
       ? h("span", { className: "min-w-0 text-xs break-words text-brand-navy/60" },

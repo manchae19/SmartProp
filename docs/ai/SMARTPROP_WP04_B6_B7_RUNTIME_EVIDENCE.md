@@ -373,3 +373,49 @@ contract, only `/api/` failures count.
 Not run in this session, therefore not claimed: WP-02's 12 Chromium groups, full FastAPI serial,
 full RAG, full Spring Boot, isolated MySQL integration tests, UI failure isolation and browser-level
 reactive authorization. `AdvisorControllerLiveIT` remains excluded (legacy V6/TiniX assertions).
+
+---
+
+## Final acceptance regression
+
+### Display finding closed
+
+`priceBlock()` in `ValuationExplanationPanel.js` only accepted JavaScript numbers, so an exact
+integer arriving as a string rendered `—` while the assertion still passed. It now resolves the point
+price through `vndDigits` (safe integers and canonical digit strings, plus a zero-fraction decimal
+string such as `5476531536.00`), formats short values through the existing `formatBillion` and long
+values through exact BigInt arithmetic so every digit survives, and renders `—` only when no valid
+VND value exists.
+
+Assertions moved with it: the browser check now requires real digits and rejects a placeholder dash,
+and six new tests assert the **rendered price element** for a number, a Spring decimal string, a long
+canonical string, invalid inputs (0, negative, fractional, `NaN`, text, objects, booleans), a one-VND
+mismatch (price still visible, `data-explanation-status="INCONSISTENT"`) and an UNAVAILABLE
+explanation with a valid price.
+
+Five obsolete `V6` labels in `UnifiedAdvisorView.jsx` now read `V1.3`; no valuation behaviour changed.
+
+### Results in this session
+
+| Suite | Result |
+|---|---|
+| WP-04 frontend tests (`tests/wp04/*.test.js`) | **94 passed, 0 failed** |
+| Full frontend recursive | **341 passed, 0 failed** |
+| Real three-surface browser (1280/320/390/768/1440) | **328/328 passed** |
+| Component browser (`run.mjs`) | **484/484 passed** |
+| Mocked route surfaces (`surfaces.mjs`) | **30 passed, 0 failed, 3 not run** |
+| Spring Boot (`mvnw -o test`) | **285 tests, 0 failures, 0 errors**, BUILD SUCCESS |
+| FastAPI serial (full `tests/`) | **1230 passed, 20 skipped, 105 subtests** |
+| WP-02 Chromium | **12 groups PASS** |
+| WP-04 Python (contract + HTTP + matrix) | **51 passed** |
+| Phase A benchmark | **105 + 15 extras**, digest `9eedb3c7c3668f61` unchanged |
+| Vite build | PASS |
+| V1.3 artifacts | 4/4 unchanged · migrations 0 changes |
+
+### Not run (explicit)
+
+Browser-level failure isolation (missing/UNAVAILABLE/malformed explanation, one-VND mismatch,
+reconstruction mismatch, stale response, account lock, account replacement/authTransition,
+research revocation, live FastAPI outage through the UI), browser-level reactive authorization, and
+the isolated MySQL integration profile. `AdvisorControllerLiveIT` stays excluded: it asserts the
+legacy V6 contract and enables TiniX, so it is not a V1.3 acceptance test.

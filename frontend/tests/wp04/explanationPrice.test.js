@@ -19,6 +19,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const samples = JSON.parse(readFileSync(join(here, "fixtures/explanation-samples.json"), "utf8"));
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const render = (props) => renderToStaticMarkup(ValuationExplanationPanel(props));
+const renderedPrice = (html) => {
+  const match = /data-testid="explanation-price"[^>]*>([^<]*)</.exec(html);
+  return match ? match[1].trim() : "";
+};
 const house = () => clone(samples.HOUSE.explanation);
 
 // ---------------------------------------------------------------- normalizeVnd
@@ -146,4 +150,50 @@ test("an invalid adjusted price cannot silently bypass consistency", () => {
   payload.calibration.adjusted_price_vnd = Number.NaN;
   const result = validateExplanation(payload, { priceVnd: price });
   assert.equal(result.status, STATUS.INVALID, "must reject instead of returning null digits");
+});
+
+// ---------------------------------------------------------------- rendered price text
+test("the panel renders a valid numeric point price", () => {
+  const html = render({ predictedPriceVnd: 5476531536, modelVersion: "v1.3", explanation: house() });
+  assert.match(renderedPrice(html), /\d/);
+  assert.notEqual(renderedPrice(html), "—");
+});
+
+test("the panel renders a Spring decimal string without losing the integer", () => {
+  const html = render({ predictedPriceVnd: "5476531536.00", modelVersion: "v1.3", explanation: house() });
+  assert.match(renderedPrice(html), /\d/);
+});
+
+test("a long canonical digit string renders exactly", () => {
+  const html = render({
+    predictedPriceVnd: "123456789012345", modelVersion: "v1.3", explanation: house(),
+  });
+  const text = renderedPrice(html);
+  // 123456789012345 VND keeps its integer part exactly: 123.456 tỷ in vi-VN grouping
+  assert.match(text, /123[\.\s]?456/, text);
+  assert.equal(text.includes("—"), false, text);
+});
+
+test("invalid point prices render the placeholder, never a fabricated number", () => {
+  for (const bad of [0, -1, 1.5, "abc", "0", null, undefined, {}, true, Number.NaN]) {
+    const html = render({ predictedPriceVnd: bad, modelVersion: "v1.3", explanation: house() });
+    assert.equal(renderedPrice(html), "—", `rendered a price for ${String(bad)}`);
+  }
+});
+
+test("a one-VND mismatch keeps the authoritative price visible and flags inconsistency", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = 5476531537;
+  const html = render({ predictedPriceVnd: 5476531536, modelVersion: "v1.3", explanation: payload });
+  assert.match(renderedPrice(html), /\d/);
+  assert.match(html, /data-explanation-status="INCONSISTENT"/);
+});
+
+test("an UNAVAILABLE explanation still shows a valid point price", () => {
+  const html = render({
+    predictedPriceVnd: 5476531536,
+    modelVersion: "v1.3",
+    explanation: { status: "UNAVAILABLE", reason: "Không đủ dữ liệu." },
+  });
+  assert.match(html, /5,4[0-9]?\s*tỷ/);
 });
