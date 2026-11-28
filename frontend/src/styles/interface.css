@@ -80,3 +80,11 @@ html[data-ui-theme=slate] body .market-intro-banner{position:relative;isolation:
 html[data-ui-theme=slate] body :is(.sp-container,.light-container,.collection-v3>.page-width,.map-v3>.map-page-width,.completion-page,.posting-main,[data-ui-view=MarketInsightsView]>div:first-child,[data-ui-view=ListingDetailView]>div:first-child){box-sizing:border-box;width:min(var(--sp-content-max),calc(100% - var(--sp-page-gutter)*2));max-width:var(--sp-content-max);margin-inline:auto;padding-inline:0}
 @media(max-width:1023px){:root{--sp-page-gutter:24px}}
 @media(max-width:639px){:root{--sp-page-gutter:16px}}
+/* Projects banner: Ocean Navy refinement, isolated from shared page banners. */
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner{background:#142b45;color:#fff;border-color:#294c70}
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner::before{opacity:1;mask-image:linear-gradient(90deg,transparent,#000 28%);-webkit-mask-image:linear-gradient(90deg,transparent,#000 28%)}
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner::after{background:linear-gradient(90deg,#142b45 0%,#142b45f5 27%,#294c70d9 46%,#294c7066 64%,#294c7012 78%,transparent 100%)}
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner h1{color:#fff;font-weight:750;text-shadow:0 2px 8px #10243b24}
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner>p{color:#dce7f0}
+html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner>p:first-child{color:#d9ad55;font-weight:650}
+@media(max-width:700px){html[data-ui-theme=slate] body [data-ui-view=ProjectsView] .page-intro-banner::after{background:linear-gradient(90deg,#142b45fa 0%,#142b45ed 30%,#294c70d9 60%,#294c707a 100%)}}

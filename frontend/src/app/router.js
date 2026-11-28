@@ -22,6 +22,7 @@ const restoredViews = {
   CoordinateReviewView: () => import('../features/admin/AdminCoordinateReviewView.jsx')
 };
 const routes = [
+  {path:'/news', component:()=>import('../features/news/NewsView.jsx')},
   {path:'/market-analytics', component:()=>import('../features/market/MarketAnalyticsView.jsx')},
   {path:'/comparables', component:()=>import('../features/property/ComparablesView.jsx'), meta:{requiresAuth:true,roles:['BROKER','ADMIN']}},
   {path:'/advisor/analysis', component:()=>import('../features/prediction/UnifiedAdvisorView.jsx')},
@@ -42,6 +43,9 @@ const routes = [
 })), {
   path: '/auth/google/complete',
   component: () => import('../features/auth/GoogleCompleteView.jsx')
+}, {
+  path: '/auth/google/link/complete',
+  component: () => import('../features/auth/GoogleLinkCompleteView.jsx')
 }, {
   path: '/valuation',
   component: () => import('../features/prediction/ValuationView.jsx')
@@ -169,6 +173,7 @@ async function authorize(to) {
   try {
     await loadProfile();
   } catch (error) {
+    if (error.code === 'SESSION_CHANGED') return false;
     if (error.status === 401) return {
       path: '/login',
       query: {

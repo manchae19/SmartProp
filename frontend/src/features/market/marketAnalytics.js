@@ -2,12 +2,23 @@
 // The backend aggregates real MySQL rows; this module only shapes the request,
 // validates the contract and formats numbers. No value here is mock data.
 import { api } from '../auth/api.js'
+import { hasActiveSession } from '../../shared/lib/restrictedSession.js'
 
-export const ANALYSIS_SOURCES = {
+export const PUBLIC_ANALYSIS_SOURCES = Object.freeze({
+  ALL: 'Tất cả nguồn công khai',
+  SMARTPROP: 'SmartProp (đã duyệt)',
+  EXTERNAL_LISTING: 'Tin ngoài (VALID)',
+})
+
+export const ANALYSIS_SOURCES = Object.freeze({
   ALL: 'Tất cả nguồn',
   SMARTPROP: 'SmartProp (đã duyệt)',
   EXTERNAL_LISTING: 'Tin ngoài (VALID)',
   TINIX_RESEARCH: 'TiniX — nghiên cứu',
+})
+
+export function isMarketResearchAdmin(snap) {
+  return hasActiveSession(snap) && snap.user?.role === 'ADMIN'
 }
 
 export const PROPERTY_TYPES = {
@@ -18,14 +29,23 @@ export const PROPERTY_TYPES = {
   VILLA: 'Biệt thự',
 }
 
+export function requestsMarketResearch(filters = {}) {
+  return filters?.includeResearch === true
+    || String(filters?.source ?? '').trim().toUpperCase() === 'TINIX_RESEARCH'
+}
+
 /** Builds the query string for GET /properties/market-analytics. */
-export function buildAnalyticsQuery(filters = {}) {
+export function buildAnalyticsQuery(filters = {}, options = {}) {
+  const allowResearch = options.allowResearch !== false
   const params = new URLSearchParams()
   if (filters.district) params.set('district', String(filters.district).trim())
   if (filters.ward) params.set('ward', String(filters.ward).trim())
   if (filters.propertyType) params.set('propertyType', String(filters.propertyType))
-  if (filters.source && filters.source !== 'ALL') params.set('source', String(filters.source))
-  params.set('includeResearch', filters.includeResearch === true ? 'true' : 'false')
+  const source = filters.source ? String(filters.source).trim() : ''
+  if (source && source !== 'ALL' && (allowResearch || source.toUpperCase() !== 'TINIX_RESEARCH')) {
+    params.set('source', source)
+  }
+  params.set('includeResearch', allowResearch && filters.includeResearch === true ? 'true' : 'false')
   return params.toString()
 }
 
@@ -33,7 +53,7 @@ const FORBIDDEN_KEYS = ['contactPhone', 'contactEmail', 'address_raw', 'ownerId'
 const FORBIDDEN_TERMS = ['"forecast"', '"growthRate"', '"cagr"']
 
 /** Rejects malformed / unsafe payloads instead of rendering half a report. */
-export function validateMarketAnalytics(data) {
+export function validateMarketAnalytics(data, options = {}) {
   if (!data || typeof data !== 'object' || !data.meta || !data.overall) {
     throw new Error('Dữ liệu thị trường không đúng định dạng hợp đồng.')
   }
@@ -43,6 +63,23 @@ export function validateMarketAnalytics(data) {
   if (!Array.isArray(data.meta.dataQualityWarnings)) throw new Error('Thiếu cảnh báo chất lượng dữ liệu.')
   if (typeof data.meta.disclaimer !== 'string' || !data.meta.disclaimer) throw new Error('Thiếu tuyên bố miễn trừ (disclaimer).')
   if (data.meta.priceBasis !== 'ASKING_SALE_VND_TOTAL') throw new Error('Cơ sở giá không phải giá rao bán tổng.')
+
+  const allowResearch = options.allowResearch !== undefined
+    ? options.allowResearch === true
+    : data.meta.researchIncluded === true
+
+  if (!allowResearch && data.meta.researchIncluded === true) {
+    throw new Error('Phản hồi chứa dữ liệu nghiên cứu không được phép ở chế độ công khai.')
+  }
+  if (!data.meta.researchIncluded) {
+    if (data.meta.researchLicense != null
+        || requestsMarketResearch(data.meta.filters)
+        || data.monthly.length > 0
+        || data.bySource.some((s) => s?.source === 'TINIX_RESEARCH' || s?.researchReference === true || s?.license != null)
+        || data.meta.dataQualityWarnings.some((w) => typeof w === 'string' && (w.includes('TINIX') || w.includes('CC BY-NC')))) {
+      throw new Error('Phản hồi chế độ công khai chứa siêu dữ liệu nghiên cứu TiniX không hợp lệ.')
+    }
+  }
 
   const raw = JSON.stringify(data)
   if (FORBIDDEN_KEYS.some((k) => raw.includes(k))) {
@@ -57,10 +94,30 @@ export function validateMarketAnalytics(data) {
   return data
 }
 
-export async function loadMarketAnalytics(filters = {}) {
-  const query = buildAnalyticsQuery(filters)
-  const data = await api('/properties/market-analytics?' + query, { authenticated: false })
-  return validateMarketAnalytics(data)
+export async function loadMarketAnalytics(filters = {}, client = api, options = {}) {
+  const allowResearch = options.allowResearch !== undefined
+    ? options.allowResearch === true
+    : requestsMarketResearch(filters)
+  const wantsResearch = allowResearch && requestsMarketResearch(filters)
+  if (requestsMarketResearch(filters) && !wantsResearch) {
+    const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ và cấu hình máy chủ được bật.')
+    err.status = 403
+    throw err
+  }
+  if (wantsResearch && typeof options.getSession === 'function') {
+    if (!isMarketResearchAdmin(options.getSession())) {
+      const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ.')
+      err.status = 403
+      throw err
+    }
+  }
+  const query = buildAnalyticsQuery(filters, { allowResearch: wantsResearch })
+  // Research is optional on this public route. An expired session still clears,
+  // but the view can fall back to SAFE instead of redirecting to the login screen.
+  const requestOptions = { authenticated: wantsResearch, redirectOnSessionExpiry: false }
+  if (options.signal) requestOptions.signal = options.signal
+  const data = await client('/properties/market-analytics?' + query, requestOptions)
+  return validateMarketAnalytics(data, { allowResearch: wantsResearch })
 }
 
 export function isInsufficient(stat) {

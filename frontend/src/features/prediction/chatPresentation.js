@@ -22,7 +22,8 @@ export function compactChatPrice(value) {
 export function chatPresentation(packet, {historical = false} = {}) {
   const data = publicChatResponse(packet, {historical});
   const count = data.recommendedProperties.length;
-  const noMatches = data.evidence.responseKind === 'NO_MATCHES';
+  const noMatches = ['NO_MATCHES', 'ADDRESS_NO_RESULTS'].includes(data.evidence.responseKind);
+  const addressSearch = data.evidence.addressSearchComplete !== undefined;
   // A clarification is a normal answer, not a model outage: the question itself must be
   // visible, never hidden behind the collapsed raw-answer panel.
   const clarification = data.evidence.responseKind === 'CLARIFICATION_REQUIRED' ? data.answer : null;
@@ -47,7 +48,12 @@ export function chatPresentation(packet, {historical = false} = {}) {
   });
   const areaSources = data.citations.filter(c => ['AREA_AMENITY', 'POI_EVIDENCE'].includes(c.kind));
   let summary;
-  if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');else if (noMatches) summary = 'Không có tin công khai phù hợp tại ' + (data.evidence.criteria?.district || 'Đà Nẵng') + ' trong ngân sách tối đa ' + compactChatPrice(data.evidence.criteria.budgetVnd).text + '. Bộ lọc khu vực đang được giữ từ hồ sơ hoặc cuộc chat; hệ thống không tự mở rộng.';else if (areaSources.length) summary = data.answer;else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
+  if (addressSearch) summary = data.answer;
+  else if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';
+  else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');
+  else if (noMatches) summary = 'Không có tin công khai phù hợp tại ' + (data.evidence.criteria?.district || 'Đà Nẵng') + ' trong ngân sách tối đa ' + compactChatPrice(data.evidence.criteria.budgetVnd).text + '. Bộ lọc khu vực đang được giữ từ hồ sơ hoặc cuộc chat; hệ thống không tự mở rộng.';
+  else if (areaSources.length) summary = data.answer;
+  else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
   if (['PLANNING_LOOKUP','COMMUTE_DATA_UNAVAILABLE','FOCUSED_PROPERTY','ADDRESS_NO_RESULTS','OUT_OF_SCOPE','FOCUSED_PROPERTY_EVIDENCE','PROPERTY_UNAVAILABLE','PROPERTY_NEARBY_EVIDENCE','MARKET_PRICE_EVIDENCE','INSUFFICIENT_MARKET_DATA','INSUFFICIENT_TREND_DATA','INSUFFICIENT_MARKET_ANALYSIS_DATA','DATA_SOURCE_ERROR','KNOWLEDGE_SOURCE_UNAVAILABLE','KNOWLEDGE_EVIDENCE','INSUFFICIENT_KNOWLEDGE_EVIDENCE','STALE_KNOWLEDGE_DATA','KNOWLEDGE_SOURCE_CONFLICT'].includes(data.evidence.responseKind)) summary = data.answer;
   return {
     summary,

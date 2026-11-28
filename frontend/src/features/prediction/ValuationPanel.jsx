@@ -6,6 +6,8 @@ import { buildValuationPayload, createValuationClient, featureLabels, formatPric
 import { session, errorText } from "../auth/api.js";
 import { createHistoryClient } from "./history.js";
 import "./ValuationPanel.css";
+import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
+import { valuationComparableBody } from '../property/comparables.js';
 function useValuationPanelState(inputProps, forwardedRef) {
   inputProps = {
     initialInput: (() => ({}))(),
@@ -183,8 +185,8 @@ function useValuationPanelState(inputProps, forwardedRef) {
         signal: controller.signal
       });
       if (current === _generationRef.current && !controller.signal.aborted) {
-        result.set(prediction);
         _resultInputRef.current = payload;
+        result.set(prediction);
         _saveKeyRef.current = globalThis.crypto.randomUUID();
       }
     } catch (error) {
@@ -254,6 +256,7 @@ function useValuationPanelState(inputProps, forwardedRef) {
     predicting: predicting.getSnapshot(),
     predictionError: predictionError.getSnapshot(),
     result: result.getSnapshot(),
+    comparableBody: result.getSnapshot() ? valuationComparableBody(_resultInputRef.current) : null,
     form: form.getSnapshot(),
     legacyLocations: getLegacyLocations(),
     expandedLocations: getExpandedLocations(),
@@ -565,5 +568,6 @@ export default React.forwardRef(function ValuationPanel(props, ref) {
       <p className="mt-6 text-xs text-brand-navy/60 leading-5" data-sp-018bbc28="">
         {"Giá rao ước tính để tham khảo. Mô hình chưa sử dụng tọa độ tài sản và khoảng cách tới tiện ích; kết quả chưa được xác minh bằng giá giao dịch."}
       </p>
+      <ComparableEvidenceLookup body={!view.demo ? view.comparableBody : null} title="Đối chiếu định giá bằng tin đăng" />
     </section></>;
 });

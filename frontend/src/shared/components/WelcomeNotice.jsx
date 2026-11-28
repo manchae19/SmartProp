@@ -1,3 +1,4 @@
+import CloseIcon from './CloseIcon.jsx';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { session } from '../../features/auth/api.js';
@@ -54,7 +55,7 @@ export default function WelcomeNotice() {
     if (event.target === panel.current) close();
   }}>
     <div className="welcome-notice-content">
-      <header><span>SMARTPROP · THÔNG BÁO</span><button type="button" onClick={close} aria-label="Đóng thông báo" autoFocus>×</button></header>
+      <header><span>SMARTPROP · THÔNG BÁO</span><button type="button" onClick={close} aria-label="Đóng thông báo" autoFocus><CloseIcon /></button></header>
       <div className="welcome-notice-body">
         <p className="welcome-notice-eyebrow">BẮT ĐẦU CÙNG SMARTPROP</p>
         <h2 id="welcome-notice-title">Tìm nhà phù hợp.<br />Đăng tin thuận tiện.</h2>

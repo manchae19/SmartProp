@@ -26,11 +26,9 @@ export default React.forwardRef(function PostStepNav(props, ref) {
         query: view.route.query
       }} aria-current={view.current === item.step ? "step" : undefined} aria-disabled={view.busy || undefined} onClick={$event => {
         view.busy && $event.preventDefault();
-      }} className={classNames(["border-t-2 pt-2 text-xs leading-relaxed transition hover:text-[var(--ui-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ui-border)]", [item.step <= view.current ? "border-[var(--ui-border)] text-[var(--ui-accent)]" : "border-[var(--ui-border)] text-brand-muted", view.busy ? "pointer-events-none opacity-60" : ""]])}>
-          {"Bước "}
-          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.step)}
-          {" · "}
-          {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.label)}
+      }} className={classNames(["post-step", view.busy ? "pointer-events-none opacity-60" : ""])}>
+          <span className="post-step-number" aria-hidden="true">{String(item.step).padStart(2, "0")}</span>
+          <span className="post-step-label"><span className="sr-only">Bước {item.step} · </span>{item.label}</span>
         </SiteLink>)}
     </nav></>;
 });

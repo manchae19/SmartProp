@@ -2,365 +2,351 @@ package vn.smartprop.comparable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.IntFunction;
+import java.util.function.Function;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import vn.smartprop.common.ApiInputs;
 import vn.smartprop.modules.property.Property;
 import vn.smartprop.modules.property.PropertyRepository;
 
-/**
- * Builds the comparable set for one reference property.
- *
- * Everything is read-only and bounded: the research table is 889 MB with only
- * five indexed columns, so candidates are pulled by a price band (two-phase
- * ids-then-details) and every other rule is applied in Java where it can be
- * unit-tested. Nothing here consults XGBoost or the predicted price, so the
- * ranking cannot confirm the model's own output.
- */
+import static vn.smartprop.comparable.ComparableDtos.*;
+import static vn.smartprop.comparable.ComparableEligibilityService.*;
+
+/** Strict locality and eligibility precede the per-source caps. Research is separately opt-in. */
 @Service
 public class ComparableRankingService {
-
-    /** Brief: at most five comparables, and never invent one to fill the list. */
     public static final int MAX_RESULTS = 5;
-
-    /** A candidate must be within this area/price multiple of the reference. */
     static final BigDecimal ENVELOPE = new BigDecimal("2.5");
-
-    /** 12 slices x 25 = 300 ids. A plain ORDER BY .. LIMIT inside a 0.4x-2.5x
-     *  band only ever returns the cheapest (or dearest) rows, so the band is cut
-     *  into slices and each slice is capped. Measured on the live table: 1,200
-     *  ids costs 1.5-7.6 s of cold page reads per band, 300 costs about 2 s once
-     *  and ~5 ms afterwards, while still sampling the whole range. */
-    private static final int TINIX_PER_BUCKET = 25;
-    private static final int TINIX_BUCKETS = 12;
-    private static final int MAX_DISTRICTS = 8;
+    private static final BigDecimal MIN_RATIO = new BigDecimal("0.4");
+    private static final SubjectIdentity EMPTY_SUBJECT = new SubjectIdentity(null, null, null, null, null);
 
     private final ComparableCandidateRepository candidates;
     private final ComparableEligibilityService eligibility;
     private final PropertyRepository properties;
+    private final boolean researchEnabled;
+
+    @Autowired
+    public ComparableRankingService(ComparableCandidateRepository candidates,
+                                    ComparableEligibilityService eligibility,
+                                    PropertyRepository properties,
+                                    @Value("${app.comparable.research-enabled:false}") boolean researchEnabled) {
+        this.candidates = candidates;
+        this.eligibility = eligibility;
+        this.properties = properties;
+        this.researchEnabled = researchEnabled;
+    }
 
     public ComparableRankingService(ComparableCandidateRepository candidates,
                                     ComparableEligibilityService eligibility,
                                     PropertyRepository properties) {
-        this.candidates = candidates;
-        this.eligibility = eligibility;
-        this.properties = properties;
+        this(candidates, eligibility, properties, false);
     }
 
-    /** Search tiers, ordered. The response reports the deepest tier that reached the result. */
+    public boolean isResearchEnabled() {
+        return researchEnabled;
+    }
+
+    /** ADJACENT is retained for response compatibility. Strict retrieval never produces it. */
     public enum Stage { WARD, DISTRICT, ADJACENT, NONE }
 
-    public ComparableDtos.Response rank(ComparableDtos.Request request) {
-        int limit = limit(request.limit());
-        ComparableDtos.Reference reference = reference(request);
-        String type = normalizeType(reference.propertyType());
-        BigDecimal refArea = reference.areaSqm();
-        if (!eligibility.plausibleArea(refArea)) {
-            throw ApiInputs.bad("Diện tích tham chiếu phải từ 5 đến 50.000 m².");
-        }
-        if (reference.priceVnd() != null && !eligibility.plausiblePrice(reference.priceVnd())) {
-            throw ApiInputs.bad("Giá tham chiếu phải trong khoảng 200 triệu đến 1.000 tỷ VND.");
-        }
-
-        List<String> districts = searchDistricts(reference.district());
-        BigDecimal minPrice = reference.priceVnd() == null
-            ? ComparableEligibilityService.MIN_TOTAL_PRICE
-            : reference.priceVnd().multiply(new BigDecimal("0.4"));
-        BigDecimal maxPrice = reference.priceVnd() == null
-            ? ComparableEligibilityService.MAX_TOTAL_PRICE
-            : reference.priceVnd().multiply(new BigDecimal("2.5"));
-
-        Scored scored = new Scored();
-        collectTinix(reference, type, districts, minPrice, maxPrice, scored);
-        collectExternal(reference, type, districts, minPrice, maxPrice, scored);
-        collectSmartProp(reference, type, districts, minPrice, maxPrice, scored);
-
-        // The default band is centred on the caller's price, which for the valuation
-        // screen is the V6 estimate. If that band is too thin, widen it and search
-        // again rather than answering "nothing comparable" because of our own model.
-        // The reference district is still searched first and neighbours only ever
-        // fill a shortfall, so a wrong estimate cannot move the answer to another district.
-        if (scored.items.size() < limit && reference.priceVnd() != null) {
-            BigDecimal wideMin = reference.priceVnd().multiply(new BigDecimal("0.1"));
-            BigDecimal wideMax = reference.priceVnd().multiply(new BigDecimal("10"));
-            collectTinix(reference, type, districts, wideMin, wideMax, scored, true);
-            collectExternal(reference, type, districts, wideMin, wideMax, scored, true);
-            collectSmartProp(reference, type, districts, wideMin, wideMax, scored, true);
-        }
-
-        List<ComparableDtos.Candidate> ranked = scored.items.stream()
-            .sorted(Comparator.comparingDouble(Ranked::score).reversed())
-            .limit(limit)
-            .map(Ranked::candidate)
-            .toList();
-
-        Stage deepest = scored.items.stream()
-            .sorted(Comparator.comparingDouble(Ranked::score).reversed())
-            .limit(limit)
-            .map(Ranked::stage)
-            .max(Comparator.naturalOrder())
-            .orElse(Stage.NONE);
-
-        return new ComparableDtos.Response(
-            reference, ranked.size(), deepest.name(), ranked,
-            warnings(ranked, type), candidates.eligibleCounts());
+    public Response rank(Request request) {
+        if (request != null && Boolean.TRUE.equals(request.includeResearch())) throw ApiInputs.forbidden();
+        return computeRank(request, false);
     }
 
-    // ---------------------------------------------------------------- sources
-
-    private void collectTinix(ComparableDtos.Reference ref, String type, List<String> districts,
-                              BigDecimal minPrice, BigDecimal maxPrice, Scored out) {
-        collectTinix(ref, type, districts, minPrice, maxPrice, out, false);
+    public Response rankResearch(Request request) {
+        if (!researchEnabled) throw ApiInputs.forbidden();
+        return computeRank(request, true);
     }
 
-    private void collectTinix(ComparableDtos.Reference ref, String type, List<String> districts,
-                              BigDecimal minPrice, BigDecimal maxPrice, Scored out, boolean wide) {
-        List<String> ids = candidates.tinixIdsInPriceBand(minPrice, maxPrice, TINIX_PER_BUCKET, TINIX_BUCKETS);
-        if (ids.isEmpty()) return;
+    public Response rank(Request request, boolean includeResearch) {
+        return includeResearch ? rankResearch(request) : rank(request);
+    }
 
-        ComparableSimilarityScorer.Input reference = input(ref);
-        for (ComparableCandidateRepository.TinixRow row : candidates.tinixDetails(ids)) {
-            String rowType = normalizeType(row.propertyType());
-            if (!eligibility.supportedType(rowType) || !rowType.equals(type)) continue;
-            if (!eligibility.plausiblePrice(row.priceVnd()) || !eligibility.plausibleArea(row.areaSqm())) continue;
-            if (!eligibility.notSelf(ref.propertyId(), row.internalId())) continue;
-            if (!eligibility.withinEnvelope(ref.areaSqm(), row.areaSqm(), ENVELOPE)) continue;
-            if (!wide && ref.priceVnd() != null
-                    && !eligibility.withinEnvelope(ref.priceVnd(), row.priceVnd(), ENVELOPE)) continue;
-            Stage stage = stageOf(ref.district(), ref.ward(), row.district(), row.ward());
-            if (stage == Stage.NONE) continue;
-            if (out.contains(row.internalId())) continue;
+    private Response computeRank(Request request, boolean includeResearch) {
+        if (request == null) throw ApiInputs.bad("Thiếu tiêu chí tìm tin tương đồng.");
+        int limit = request.limit() == null ? MAX_RESULTS : request.limit();
+        if (limit < 1 || limit > MAX_RESULTS) throw ApiInputs.bad("limit phải từ 1 đến " + MAX_RESULTS + ".");
+        // Legacy callers supplied an asking price for similar-listing lookup.
+        Purpose purpose = request.purpose() == null ? Purpose.SIMILAR_LISTING : request.purpose();
+        Reference reference = reference(request, purpose);
+        BigDecimal price = reference.priceVnd();
+        BigDecimal budget = buyerBudget(request, purpose);
+        SubjectIdentity raw = request.subjectIdentity() == null ? EMPTY_SUBJECT : request.subjectIdentity();
+        SubjectIdentity subject = new SubjectIdentity(raw.externalId(), ComparableIdentity.text(raw.externalSource()),
+            ComparableIdentity.text(raw.sourceListingId()), ComparableIdentity.text(raw.tinixId()), raw.canonicalUrl());
+        Set<ComparableIdentity.Key> subjectKeys = ComparableIdentity.subject(reference.propertyId(), subject);
 
-            ComparableSimilarityScorer.Result result = ComparableSimilarityScorer.score(
-                reference, new ComparableSimilarityScorer.Input(
-                    row.district(), row.ward(), rowType, row.areaSqm(), row.priceVnd(),
-                    wholeOrNull(row.bedrooms()), wholeOrNull(row.floors()), row.frontageM()));
-            out.add(new Ranked(new ComparableDtos.Candidate(
-                row.internalId(),
-                ComparableDtos.SourceKind.TINIX_RESEARCH,
-                ComparableSourceClassifier.TINIX_ATTRIBUTION,
-                rowType, row.district(), row.ward(), row.areaSqm(), row.priceVnd(),
-                differencePct(ref.priceVnd(), row.priceVnd()),
-                wholeOrNull(row.bedrooms()), wholeOrNull(row.floors()), row.frontageM(), row.roadWidthM(),
-                round(result.score()), result.breakdown(),
-                "HYBRID_ELIGIBLE_RESEARCH", null, "CC BY-NC 4.0",
-                ComparableSourceClassifier.TINIX_ATTRIBUTION), stage, result.score()));
+        BigDecimal minPrice = price == null ? MIN_TOTAL_PRICE : MIN_TOTAL_PRICE.max(price.multiply(MIN_RATIO));
+        BigDecimal maxPrice = price == null ? MAX_TOTAL_PRICE : MAX_TOTAL_PRICE.min(price.multiply(ENVELOPE));
+        if (budget != null) maxPrice = maxPrice.min(budget);
+        var search = new ComparableCandidateRepository.Search(reference.district(), reference.ward(), reference.propertyType(),
+            reference.areaSqm(), MIN_AREA.max(reference.areaSqm().multiply(MIN_RATIO)),
+            MAX_AREA.min(reference.areaSqm().multiply(ENVELOPE)), minPrice, maxPrice, reference.propertyId(), subject);
+
+        List<Ranked> rows = new ArrayList<>();
+        Scan scan = new Scan();
+        collect(reference, purpose, search, includeResearch, rows, scan);
+        Deduped deduped = dedupe(rows, reference, subjectKeys);
+        // Only SIMILAR_LISTING can use the older asking-price widening policy.
+        if (deduped.rows().size() < limit && price != null) {
+            var wider = new ComparableCandidateRepository.Search(search.district(), search.ward(), search.type(), search.area(),
+                search.minArea(), search.maxArea(), MIN_TOTAL_PRICE.max(price.movePointLeft(1)),
+                MAX_TOTAL_PRICE.min(price.movePointRight(1)), search.propertyId(), search.subject());
+            collect(reference, purpose, wider, includeResearch, rows, scan);
+            deduped = dedupe(rows, reference, subjectKeys);
         }
+
+        List<Ranked> top = deduped.rows().stream().limit(limit).toList();
+        List<Candidate> ranked = top.stream().map(Ranked::candidate).toList();
+        Stage deepest = top.stream().map(Ranked::stage).max(Comparator.naturalOrder()).orElse(Stage.NONE);
+        var evidence = ComparableEvidenceSummary.build(purpose, scan.retrieved.size(), scan.caps, deduped.stats(),
+            deduped.rows().stream().map(Ranked::candidate).toList(), ranked);
+        return new Response(reference, ranked.size(), deepest.name(), ranked, warnings(ranked, reference.propertyType(), !evidence.scanComplete()),
+            includeResearch ? candidates.eligibleCounts() : candidates.publicEligibleCounts(), evidence);
     }
 
-    private void collectExternal(ComparableDtos.Reference ref, String type, List<String> districts,
-                                 BigDecimal minPrice, BigDecimal maxPrice, Scored out) {
-        collectExternal(ref, type, districts, minPrice, maxPrice, out, false);
-    }
-
-    private void collectExternal(ComparableDtos.Reference ref, String type, List<String> districts,
-                                 BigDecimal minPrice, BigDecimal maxPrice, Scored out, boolean wide) {
-        String category = externalCategory(type);
-        if (category == null) return;
-        ComparableSimilarityScorer.Input reference = input(ref);
-        for (String district : districts) {
-            for (ComparableCandidateRepository.ExternalRow row :
-                    candidates.externalCandidates(district, category, minPrice, maxPrice, 400)) {
-                if (!eligibility.plausiblePrice(row.priceVnd()) || !eligibility.plausibleArea(row.areaSqm())) continue;
-                if (!eligibility.withinEnvelope(ref.areaSqm(), row.areaSqm(), ENVELOPE)) continue;
-                if (!wide && ref.priceVnd() != null
-                        && !eligibility.withinEnvelope(ref.priceVnd(), row.priceVnd(), ENVELOPE)) continue;
-                Stage stage = stageOf(ref.district(), ref.ward(), row.district(), null);
-                if (stage == Stage.NONE) continue;
-                if (out.contains("external:" + row.id())) continue;
-
-                ComparableSimilarityScorer.Result result = ComparableSimilarityScorer.score(
-                    reference, new ComparableSimilarityScorer.Input(
-                        row.district(), null, type, row.areaSqm(), row.priceVnd(), null, null, null));
-                out.add(new Ranked(new ComparableDtos.Candidate(
-                    "external:" + row.id(),
-                    ComparableDtos.SourceKind.EXTERNAL_LISTING,
-                    ComparableSourceClassifier.externalLabel(row.source()),
-                    type, row.district(), null, row.areaSqm(), row.priceVnd(),
-                    differencePct(ref.priceVnd(), row.priceVnd()),
-                    null, null, null, null,
-                    round(result.score()), result.breakdown(),
-                    row.qualityStatus(), ComparableSourceClassifier.safeUrl(row.detailUrl()), null, null),
-                    stage, result.score()));
+    private void collect(Reference ref, Purpose purpose, ComparableCandidateRepository.Search search,
+                         boolean includeResearch, List<Ranked> rows, Scan scan) {
+        if (search.maxPrice().compareTo(search.minPrice()) < 0) return;
+        for (var row : scan.fetch(SourceKind.SMARTPROP, 200, cap -> candidates.propertyCandidates(search, cap),
+                row -> "property:" + row.id())) {
+            if (ComparableIdentity.text(row.id()) == null) continue;
+            add(rows, ref, purpose, search, new Listing("property:" + row.id(), SourceKind.SMARTPROP, ComparableSourceClassifier.smartPropLabel(),
+                row.propertyType(), row.district(), row.ward(), row.areaSqm(), row.priceVnd(), row.bedrooms(),
+                null, null, null, row.projectId(), "PUBLISHED", "/properties/" + row.id(), null, null,
+                ComparableIdentity.keys("property:" + row.id(), null, null, null, null)));
+        }
+        String category = externalCategory(search.type());
+        if (search.ward() == null && category != null) {
+            for (var row : scan.fetch(SourceKind.EXTERNAL_LISTING, 400, cap -> candidates.externalCandidates(search, category, cap),
+                    row -> "external:" + row.id())) {
+                if (!"VALID".equals(row.qualityStatus()) || !category.equals(row.propertyType())) continue;
+                String id = "external:" + row.id();
+                add(rows, ref, purpose, search, new Listing(id, SourceKind.EXTERNAL_LISTING,
+                    ComparableSourceClassifier.externalLabel(row.source()), search.type(), row.district(), null,
+                    row.areaSqm(), row.priceVnd(), null, null, null, null, null, row.qualityStatus(),
+                    ComparableSourceClassifier.safeUrl(row.detailUrl()), null, null,
+                    ComparableIdentity.keys(id, ComparableIdentity.externalNamespace(row.source()),
+                        row.sourceListingId(), row.duplicateGroup(), row.detailUrl())));
+            }
+        }
+        if (includeResearch) {
+            for (var row : scan.fetch(SourceKind.TINIX_RESEARCH, 300, cap -> candidates.tinixCandidates(search, cap),
+                    row -> "tinix:" + row.internalId())) {
+                if (ComparableIdentity.text(row.internalId()) == null) continue;
+                String id = "tinix:" + row.internalId();
+                add(rows, ref, purpose, search, new Listing(id, SourceKind.TINIX_RESEARCH, ComparableSourceClassifier.TINIX_ATTRIBUTION,
+                    row.propertyType(), row.district(), row.ward(), row.areaSqm(), row.priceVnd(), wholeOrNull(row.bedrooms()),
+                    wholeOrNull(row.floors()), row.frontageM(), row.roadWidthM(), null, "HYBRID_ELIGIBLE_RESEARCH", null,
+                    "CC BY-NC 4.0", ComparableSourceClassifier.TINIX_ATTRIBUTION,
+                    ComparableIdentity.keys(id, "tinix", row.internalId(), row.duplicateGroup(), null)));
             }
         }
     }
 
-    private void collectSmartProp(ComparableDtos.Reference ref, String type, List<String> districts,
-                                  BigDecimal minPrice, BigDecimal maxPrice, Scored out) {
-        collectSmartProp(ref, type, districts, minPrice, maxPrice, out, false);
+    private void add(List<Ranked> rows, Reference ref, Purpose purpose, ComparableCandidateRepository.Search search, Listing row) {
+        String type = normalizeType(row.type());
+        if (!ref.propertyType().equals(type) || !sameLocality(ref.district(), row.district())
+                || (ref.ward() != null && !sameLocality(ref.ward(), row.ward()))
+                || !eligibility.plausibleArea(row.area()) || !eligibility.plausiblePrice(row.price())
+                || row.area().compareTo(search.minArea()) < 0 || row.area().compareTo(search.maxArea()) > 0
+                || row.price().compareTo(search.minPrice()) < 0 || row.price().compareTo(search.maxPrice()) > 0) return;
+
+        PhysicalFeatures features = ref.physicalFeatures();
+        var result = ComparableSimilarityScorer.score(
+            new ComparableSimilarityScorer.Input(ref.district(), ref.ward(), type, ref.areaSqm(),
+                ref.priceVnd(), ref.bedrooms(), ref.floors(), features == null ? null : features.frontageM(),
+                features == null ? null : features.roadWidthM(), features == null ? null : features.projectId()),
+            new ComparableSimilarityScorer.Input(row.district(), row.ward(), type, row.area(), row.price(),
+                row.bedrooms(), row.floors(), row.frontage(), row.roadWidth(), row.projectId()), purpose);
+        var candidate = new Candidate(row.id(), row.kind(), row.sourceLabel(), type, row.district(), row.ward(),
+            row.area(), row.price(), differencePct(ref.priceVnd(), row.price()), row.bedrooms(), row.floors(),
+            row.frontage(), row.roadWidth(), BigDecimal.valueOf(result.score()).setScale(4, RoundingMode.HALF_UP).doubleValue(),
+            result.breakdown(), row.quality(), row.url(), row.license(), row.attribution(),
+            BigDecimal.valueOf(result.featureCoverage()).setScale(4, RoundingMode.HALF_UP).doubleValue());
+        Stage stage = ref.ward() == null ? Stage.DISTRICT : Stage.WARD;
+        rows.add(new Ranked(candidate, stage, result.score(), row.keys()));
     }
 
-    private void collectSmartProp(ComparableDtos.Reference ref, String type, List<String> districts,
-                                  BigDecimal minPrice, BigDecimal maxPrice, Scored out, boolean wide) {
-        ComparableSimilarityScorer.Input reference = input(ref);
-        for (ComparableCandidateRepository.PropertyRow row :
-                candidates.propertyCandidates(districts, type, minPrice, maxPrice, 200)) {
-            if (!eligibility.notSelf(ref.propertyId(), row.id())) continue;
-            if (!eligibility.plausiblePrice(row.priceVnd()) || !eligibility.plausibleArea(row.areaSqm())) continue;
-            if (!eligibility.withinEnvelope(ref.areaSqm(), row.areaSqm(), ENVELOPE)) continue;
-            if (!wide && ref.priceVnd() != null
-                    && !eligibility.withinEnvelope(ref.priceVnd(), row.priceVnd(), ENVELOPE)) continue;
-            Stage stage = stageOf(ref.district(), ref.ward(), row.district(), row.ward());
-            if (stage == Stage.NONE) continue;
-            if (out.contains("property:" + row.id())) continue;
-
-            ComparableSimilarityScorer.Result result = ComparableSimilarityScorer.score(
-                reference, new ComparableSimilarityScorer.Input(
-                    row.district(), row.ward(), type, row.areaSqm(), row.priceVnd(),
-                    row.bedrooms(), null, null));
-            out.add(new Ranked(new ComparableDtos.Candidate(
-                "property:" + row.id(),
-                ComparableDtos.SourceKind.SMARTPROP,
-                ComparableSourceClassifier.smartPropLabel(),
-                type, row.district(), row.ward(), row.areaSqm(), row.priceVnd(),
-                differencePct(ref.priceVnd(), row.priceVnd()),
-                row.bedrooms(), null, null, null,
-                round(result.score()), result.breakdown(),
-                "PUBLISHED", "/properties/" + row.id(), null, null), stage, result.score()));
+    private static Deduped dedupe(List<Ranked> rows, Reference ref, Set<ComparableIdentity.Key> subjectKeys) {
+        // Connect all trusted aliases before selecting winners. A dropped bridge row may carry a new key.
+        int[] parent = new int[rows.size() + 1];
+        int subject = rows.size();
+        for (int i = 0; i < parent.length; i++) parent[i] = i;
+        Map<ComparableIdentity.Key, Integer> owners = new HashMap<>();
+        subjectKeys.forEach(key -> owners.put(key, subject));
+        for (int i = 0; i < rows.size(); i++) {
+            for (var key : rows.get(i).keys()) {
+                Integer previous = owners.putIfAbsent(key, i);
+                if (previous != null) parent[root(parent, previous)] = root(parent, i);
+            }
         }
+
+        Comparator<Ranked> order = Comparator.comparingDouble(Ranked::score).reversed()
+            .thenComparing(Ranked::stage)
+            .thenComparing(r -> r.candidate().areaSqm().subtract(ref.areaSqm()).abs())
+            .thenComparing(r -> r.candidate().sourceKind())
+            .thenComparing(r -> r.candidate().candidateId());
+        int subjectRoot = root(parent, subject);
+        Map<Integer, Ranked> winners = new HashMap<>();
+        Set<String> eligible = new HashSet<>(), selfMatches = new HashSet<>();
+        for (int i = 0; i < rows.size(); i++) {
+            Ranked row = rows.get(i);
+            eligible.add(row.candidate().candidateId());
+            int group = root(parent, i);
+            if (group == subjectRoot) selfMatches.add(row.candidate().candidateId());
+            else winners.merge(group, row, (a, b) -> order.compare(a, b) <= 0 ? a : b);
+        }
+        return new Deduped(winners.values().stream().sorted(order).toList(),
+            new DedupeStats(eligible.size(), selfMatches.size(), eligible.size() - selfMatches.size() - winners.size()));
     }
 
-    // --------------------------------------------------------------- reference
+    private static int root(int[] parent, int item) {
+        while (parent[item] != item) {
+            parent[item] = parent[parent[item]];
+            item = parent[item];
+        }
+        return item;
+    }
 
-    private ComparableDtos.Reference reference(ComparableDtos.Request request) {
-        if (request.propertyId() != null && !request.propertyId().isBlank()) {
-            String id = ApiInputs.uuid(request.propertyId());
-            Property property = properties.findByIdAndDeletedAtIsNull(id)
-                .filter(item -> item.status == Property.Status.PUBLISHED)
-                .filter(item -> item.transactionType == Property.Transaction.SALE)
-                .filter(item -> item.priceUnit == Property.PriceUnit.TOTAL)
+    private Reference reference(Request request, Purpose purpose) {
+        String id = ComparableIdentity.text(request.propertyId());
+        if (id != null) {
+            Instant now = Instant.now();
+            Property property = properties.findByIdAndDeletedAtIsNull(ApiInputs.uuid(id))
+                .filter(item -> item.status == Property.Status.PUBLISHED && item.deletedAt == null)
+                .filter(item -> item.expiresAt == null || item.expiresAt.isAfter(now))
+                .filter(item -> item.transactionType == Property.Transaction.SALE
+                    && item.priceUnit == Property.PriceUnit.TOTAL && "VND".equals(item.currency))
                 .orElseThrow(ApiInputs::missing);
-            return new ComparableDtos.Reference(
-                property.id, property.propertyType.name(), property.district, property.ward,
-                property.areaSqm, property.price, (int) (property.bedrooms == null ? 0 : property.bedrooms), null);
+            return checkedReference(property.id, property.propertyType == null ? null : property.propertyType.name(),
+                property.district, property.ward, property.areaSqm, purpose == Purpose.SIMILAR_LISTING ? property.price : null,
+                property.bedrooms == null ? null : property.bedrooms.intValue(), null,
+                property.projectId == null ? null : new PhysicalFeatures(null, null, property.projectId));
         }
-        String district = trimmed(request.district());
-        if (district == null) throw ApiInputs.bad("Cần chọn địa bàn (quận/huyện) cho bất động sản tham chiếu.");
-        String type = normalizeType(request.propertyType());
-        if (!eligibility.supportedType(type)) {
+        return checkedReference(null, request.propertyType(), request.district(), request.ward(), request.areaSqm(),
+            purpose == Purpose.SIMILAR_LISTING ? request.priceVnd() : null, request.bedrooms(), request.floors(),
+            request.physicalFeatures());
+    }
+
+    private Reference checkedReference(String id, String type, String district, String ward, BigDecimal area,
+                                       BigDecimal price, Integer bedrooms, Integer floors, PhysicalFeatures physicalFeatures) {
+        String locality = ComparableIdentity.text(district), normalizedType = normalizeType(type);
+        if (locality == null) throw ApiInputs.bad("Cần chọn địa bàn (quận/huyện) cho bất động sản tham chiếu.");
+        if (!eligibility.supportedType(normalizedType)) {
             throw ApiInputs.bad("Loại bất động sản phải là HOUSE, APARTMENT, LAND hoặc VILLA.");
         }
-        if (!eligibility.plausibleArea(request.areaSqm())) {
-            throw ApiInputs.bad("Diện tích tham chiếu phải từ 5 đến 50.000 m².");
+        if (!eligibility.plausibleArea(area)) throw ApiInputs.bad("Diện tích tham chiếu phải từ 5 đến 50.000 m².");
+        if (price != null && !eligibility.plausiblePrice(price)) {
+            throw ApiInputs.bad("Giá tham chiếu phải trong khoảng 200 triệu đến 1.000 tỷ VND.");
         }
-        return new ComparableDtos.Reference(null, type, district, trimmed(request.ward()),
-            request.areaSqm(), request.priceVnd(),
-            request.bedrooms(), request.floors());
+        return new Reference(id, normalizedType, locality, ComparableIdentity.text(ward), area, price, bedrooms, floors, physicalFeatures);
     }
 
-    private static ComparableSimilarityScorer.Input input(ComparableDtos.Reference ref) {
-        return new ComparableSimilarityScorer.Input(
-            ref.district(), ref.ward(), normalizeType(ref.propertyType()),
-            ref.areaSqm(), ref.priceVnd(), ref.bedrooms(), ref.floors(), null);
-    }
-
-    /** Same district first, then its neighbours - the widest tier we will ever search. */
-    static List<String> searchDistricts(String district) {
-        List<String> out = new ArrayList<>();
-        String own = trimmed(district);
-        if (own == null) return out;
-        out.add(own);
-        for (String neighbour : ComparableSimilarityScorer.neighboursOf(own)) {
-            if (out.size() >= MAX_DISTRICTS) break;
-            if (!out.contains(neighbour)) out.add(neighbour);
-        }
-        return out;
-    }
-
-    private static Stage stageOf(String refDistrict, String refWard, String district, String ward) {
-        String own = trimmed(refDistrict);
-        if (own == null || district == null) return Stage.NONE;
-        // The two tables disagree on casing, and TiniX ward is often NULL.
-        boolean sameDistrict = own.equalsIgnoreCase(district.strip());
-        if (!sameDistrict) {
-            return ComparableSimilarityScorer.areNeighbours(own, district.strip()) ? Stage.ADJACENT : Stage.NONE;
-        }
-        String refW = trimmed(refWard), rowW = trimmed(ward);
-        return refW != null && refW.equalsIgnoreCase(rowW) ? Stage.WARD : Stage.DISTRICT;
-    }
-
-    // ------------------------------------------------------------------ utils
-
-    private static int limit(Integer requested) {
-        if (requested == null) return MAX_RESULTS;
-        if (requested < 1 || requested > MAX_RESULTS) {
-            throw ApiInputs.bad("limit phải từ 1 đến " + MAX_RESULTS + ".");
-        }
-        return requested;
+    private static BigDecimal buyerBudget(Request request, Purpose purpose) {
+        if (purpose != Purpose.BUYER_BUDGET_SEARCH) return null;
+        BigDecimal budget = request.buyerBudgetVnd() == null ? request.priceVnd() : request.buyerBudgetVnd();
+        if (budget == null || budget.signum() <= 0) throw ApiInputs.bad("Cần ngân sách mua hợp lệ.");
+        return budget;
     }
 
     private static String normalizeType(String type) {
         return type == null ? null : type.strip().toUpperCase(Locale.ROOT);
     }
 
+    private static boolean sameLocality(String a, String b) {
+        return a.equalsIgnoreCase(ComparableIdentity.text(b));
+    }
+
     private static String externalCategory(String type) {
-        return switch (type == null ? "" : type) {
-            case "HOUSE", "VILLA" -> "Nhà ở";
+        return switch (type) {
+            case "HOUSE" -> "Nhà ở";
             case "LAND" -> "Đất nền";
             case "APARTMENT" -> "Căn hộ chung cư";
             default -> null;
         };
     }
 
-    private static String trimmed(String value) {
-        if (value == null) return null;
-        String out = value.strip();
-        return out.isEmpty() ? null : out;
-    }
-
     private static BigDecimal differencePct(BigDecimal reference, BigDecimal candidate) {
-        if (reference == null || candidate == null || reference.signum() <= 0) return null;
-        return candidate.subtract(reference)
-            .multiply(new BigDecimal("100"))
-            .divide(reference, 1, RoundingMode.HALF_UP);
+        if (reference == null) return null;
+        return candidate.subtract(reference).movePointRight(2).divide(reference, 1, RoundingMode.HALF_UP);
     }
 
-    /** TiniX stores these as DOUBLE; round half up so 3.4 floors is not silently 3. */
     private static Integer wholeOrNull(BigDecimal value) {
         return value == null ? null : value.setScale(0, RoundingMode.HALF_UP).intValue();
     }
 
-    private static double round(double value) {
-        return new BigDecimal(value).setScale(4, RoundingMode.HALF_UP).doubleValue();
-    }
-
-    private static List<String> warnings(List<ComparableDtos.Candidate> ranked, String type) {
+    private static List<String> warnings(List<Candidate> ranked, String type, boolean incomplete) {
         List<String> out = new ArrayList<>();
-        if (ranked.isEmpty()) {
-            out.add("Không tìm thấy bất động sản tương đồng nào trong dữ liệu hiện có. "
-                  + "Hãy nới diện tích hoặc chọn địa bàn khác.");
+        if (incomplete) {
+            out.add("SCAN_LIMIT_REACHED: Đã đến giới hạn đọc ứng viên. Kết quả chỉ dựa trên phần dữ liệu đã quét.");
+        } else if (ranked.isEmpty()) {
+            out.add("Không tìm thấy bất động sản tương đồng nào trong dữ liệu hiện có. Hãy nới diện tích hoặc chọn địa bàn khác.");
         }
-        boolean tinix = ranked.stream().anyMatch(c -> c.sourceKind() == ComparableDtos.SourceKind.TINIX_RESEARCH);
-        if (tinix) {
+        if (ranked.stream().anyMatch(c -> c.sourceKind() == SourceKind.TINIX_RESEARCH)) {
             out.add(ComparableSourceClassifier.TINIX_ATTRIBUTION);
-            out.add("Dòng TiniX là dữ liệu nghiên cứu, không phải tin đang rao bán; "
-                  + "không có thông tin liên hệ và không xác minh được tình trạng giao dịch.");
+            out.add("Dòng TiniX là dữ liệu nghiên cứu, không phải tin đang rao bán; không có thông tin liên hệ và không xác minh được tình trạng giao dịch.");
         }
-        if (ranked.stream().anyMatch(c -> "EXTERNAL_LISTING".equals(c.sourceKind().name())
-                && c.listingUrl() == null)) {
+        if (ranked.stream().anyMatch(c -> c.sourceKind() == SourceKind.EXTERNAL_LISTING && c.listingUrl() == null)) {
             out.add("Một số tin bên ngoài không có liên kết gốc hợp lệ nên chỉ hiển thị dạng tham khảo.");
         }
         if ("LAND".equals(type) && ranked.stream().anyMatch(c -> c.bedrooms() != null)) {
             out.add("Đất nền thường không có số phòng ngủ; các trường trống được bỏ khỏi điểm tương đồng.");
         }
+        for (int i = 0; i < ranked.size(); i++) {
+            for (int j = i + 1; j < ranked.size(); j++) {
+                Candidate a = ranked.get(i), b = ranked.get(j);
+                if (close(a.areaSqm(), b.areaSqm(), "0.02") && close(a.askingPriceVnd(), b.askingPriceVnd(), "0.03")) {
+                    out.add("POSSIBLE_SAME_ENTITY: " + a.candidateId() + " / " + b.candidateId());
+                }
+            }
+        }
         return List.copyOf(out);
     }
 
-    private record Ranked(ComparableDtos.Candidate candidate, Stage stage, double score) {}
+    private static boolean close(BigDecimal a, BigDecimal b, String tolerance) {
+        return a.subtract(b).abs().compareTo(a.max(b).multiply(new BigDecimal(tolerance))) <= 0;
+    }
 
-    private static final class Scored {
-        private final List<Ranked> items = new ArrayList<>();
-        void add(Ranked value) { items.add(value); }
-        /** Different sources share ids only by accident; this only dedupes the wide re-scan. */
-        boolean contains(String candidateId) {
-            return items.stream().anyMatch(r -> r.candidate().candidateId().equals(candidateId));
+    private record Ranked(Candidate candidate, Stage stage, double score, Set<ComparableIdentity.Key> keys) {}
+    private record Deduped(List<Ranked> rows, DedupeStats stats) {}
+
+    private static final class Scan {
+        private static final int REFILL_FACTOR = 3;
+        private final Map<SourceKind, Cap> caps = new EnumMap<>(SourceKind.class);
+        private final Set<String> retrieved = new HashSet<>();
+
+        private <T> List<T> fetch(SourceKind source, int cap, IntFunction<List<T>> query, Function<T, String> id) {
+            List<T> initial = query.apply(cap);
+            // Both queries have an identical stable sort and eligibility predicate.
+            int maximum = cap * REFILL_FACTOR;
+            List<T> expanded = initial.size() < cap ? initial : query.apply(maximum + 1);
+            boolean complete = expanded.size() <= maximum;
+            caps.merge(source, new Cap(cap, maximum, complete),
+                (previous, current) -> new Cap(cap, maximum, previous.complete() && current.complete()));
+            List<T> scanned = complete ? expanded : expanded.subList(0, maximum);
+            scanned.forEach(row -> retrieved.add(id.apply(row)));
+            return scanned;
         }
     }
+
+    private record Listing(String id, SourceKind kind, String sourceLabel, String type, String district, String ward,
+                           BigDecimal area, BigDecimal price, Integer bedrooms, Integer floors, BigDecimal frontage,
+                           BigDecimal roadWidth, String projectId, String quality, String url, String license, String attribution,
+                           Set<ComparableIdentity.Key> keys) {}
 }

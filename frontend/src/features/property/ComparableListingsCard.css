@@ -27,4 +27,9 @@
 .cmp-attribution{margin-top:.4rem;font-size:.68rem;color:#74521e}
 .cmp-warnings{margin-top:.8rem;list-style:disc;padding-left:1.2rem;font-size:.72rem;color:#74521e}
 .cmp-eligible{margin-top:.8rem;font-size:.7rem;color:#7a8798}
+.cmp-cohort{margin-top:.75rem;padding:.75rem;background:#f7f5f0;border-radius:.7rem;font-size:.8rem;color:#354761;overflow-wrap:anywhere}
+.cmp-cohort>p+p{margin-top:.2rem}
+.cmp-lookup{min-height:2.75rem;max-width:100%;margin-top:.5rem;color:#1d4a80;text-align:left}
+.cmp-count,.cmp-sim,.cmp-eligible{color:#536178}
+.cmp-warnings{overflow-wrap:anywhere}
 @media(max-width:760px){.cmp-list{grid-template-columns:1fr}}

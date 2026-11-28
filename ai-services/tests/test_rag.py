@@ -24,10 +24,13 @@ class RagSecurityTest(unittest.TestCase):
         backend, knowledge, retrieval, llm = Mock(), Mock(), Mock(), Mock()
         knowledge.load.return_value = {"summary": {"catalogVersion": "UNIT_FIXTURE"}, "contentHash": "unit", "documents": []}
         backend.amenity_summary.return_value = {"catalogVersion": "UNIT_FIXTURE"}
-        backend.recommend.return_value = {"method": "HEURISTIC_V1_1", "topProperties": [], "topAreas": [], "warnings": []}
+        backend.settings.backend_url = "http://127.0.0.1:8080"
+        backend.recommend.return_value = {"method": "HEURISTIC_V1_1", "topAreas": [], "warnings": [],
+            "topProperties": [{"id": "external:unit", "priceVnd": 1, "areaSqm": 1, "score": 1,
+                               "source": {"kind": "EXTERNAL", "recordKey": "unit"}}]}
         retrieval.search.return_value = []
         llm.plan.return_value = '{"factIds":[],"answer":"đã xác minh, được công nhận công khai, 预算"}'
-        result = ChatOrchestrator(backend, Mock(), knowledge, retrieval, llm).chat(ChatRequest(question="kiểm thử tiện ích", budgetVnd=10))
+        result = ChatOrchestrator(backend, Mock(), knowledge, retrieval, llm).chat(ChatRequest(question="Tìm bất động sản tại Đà Nẵng", budgetVnd=10))
         llm.plan.assert_called_once()
         self.assertEqual(result.generationMode, "EVIDENCE_ONLY")
         self.assertNotIn("预算", result.answer)
@@ -40,7 +43,8 @@ class RagSecurityTest(unittest.TestCase):
         backend.recommend.return_value = {"topProperties": [{"id": "property:unit", "priceVnd": 1, "areaSqm": 1, "source": {"kind": "PROPERTY", "recordKey": "unit"}}]}
         repository.lookup.return_value = [{"id": "unit", "price": 2, "area_sqm": 1}]
         with self.assertRaises(GroundingError):
-            ChatOrchestrator(backend, repository, knowledge, Mock(), llm).chat(ChatRequest(question="kiểm thử", budgetVnd=10))
+            ChatOrchestrator(backend, repository, knowledge, Mock(), llm).chat(ChatRequest(question="Tìm bất động sản", budgetVnd=10))
+        repository.lookup.assert_called_once_with(["unit"])
         llm.plan.assert_not_called()
 
     def test_no_download_without_explicit_local_paths(self):
@@ -74,7 +78,7 @@ class RagSecurityTest(unittest.TestCase):
                 Settings(backend_url=other)
 
     def test_sql_injection_is_rejected_before_connect(self):
-        repository = PublishedPropertyRepository(Settings(sql_enabled=True, db_user="test", db_password="test"))
+        repository = PublishedPropertyRepository(Settings(sql_enabled=True, sql_database="smartprop_staging", db_user="test", db_password="test"))
         with self.assertRaises(GroundingError):
             repository.lookup(["x' OR 1=1 --"])
 

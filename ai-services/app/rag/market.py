@@ -2,7 +2,7 @@
 import re
 from decimal import Decimal
 from urllib.parse import urlencode
-from .intent import fold
+from .intent import fold, purchase_price_question
 from .knowledge import digest
 from .schemas import Citation
 
@@ -26,7 +26,9 @@ def market_query(question,previous=None,kind=None,*,price_statistics=True):
     if not price_statistics:return query,None
     query.setdefault("transactionType","SALE")
     if query["transactionType"]=="SALE":query.setdefault("priceUnit","TOTAL")
-    if re.search(r"\b(?:thue|cho thue)\b",q) or query.get("transactionType")=="RENT" and "priceUnit" not in query:
+    if purchase_price_question(q):
+        query.update(transactionType="SALE", priceUnit="TOTAL")
+    elif re.search(r"\b(?:thue|cho thue)\b",q) or query.get("transactionType")=="RENT" and "priceUnit" not in query:
         unit="PER_MONTH" if re.search(r"thang",q) else "PER_YEAR" if re.search(r"nam",q) else "PER_DAY" if re.search(r"ngay",q) else None
         if unit is None:
             query["transactionType"]="RENT";query.pop("priceUnit",None)
