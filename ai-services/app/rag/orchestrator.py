@@ -40,21 +40,6 @@ def number(value):
     return format(Decimal(str(value)), "f").rstrip("0").rstrip(".") if "." in format(Decimal(str(value)), "f") else format(Decimal(str(value)), "f")
 
 
-def within_area(criteria, area):
-    """Same bound semantics as the Backend recommendation filter (strict or inclusive)."""
-    value = Decimal(str(area))
-    low, high = criteria.get("minAreaSqm"), criteria.get("maxAreaSqm")
-    if low is not None:
-        low = Decimal(str(low))
-        if (value <= low) if criteria.get("minAreaExclusive") else (value < low):
-            return False
-    if high is not None:
-        high = Decimal(str(high))
-        if (value >= high) if criteria.get("maxAreaExclusive") else (value > high):
-            return False
-    return True
-
-
 def budget_from_question(question):
     parsed = parse_budget(question)
     return parsed.maximum if parsed.status == "VALID" else None

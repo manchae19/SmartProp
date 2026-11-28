@@ -13,7 +13,7 @@ export default function BuyerSearchResults({search,historical,sessionId,footer})
  return <section className="buyer-search-results land-results" aria-label="Kết quả tìm kiếm theo ngân sách"><div className="land-results-grid">
   <div className="land-cards">{rows.map((row,index)=><article key={row.key} className={'land-card'+(selected?.sourceCode===row.land?.sourceCode?' is-active':'')}>
    <h3>{index+1}. {row.title}</h3>
-   <p className="land-kind">{row.source==='SMARTPROP'?'Tin đăng SmartProp':'Dữ liệu đất Hòa Xuân'}</p>
+   <p className="land-kind">{row.source==='SMARTPROP'?'Tin đăng SmartProp':'Dữ liệu đất Hòa Xuân (demo)'}</p>
    <p className="land-location">{row.location}</p><p className="land-area">Diện tích: {formatArea(row.area)}</p>
    <p className="land-price"><strong>{row.land?.priceDescription||formatVnd(row.price)}</strong></p>
    {row.land?.flood?.display&&<p className="land-flood">Ngập: {row.land.flood.display}{row.land.flood.isDemoAssumption?' · chưa xác minh thực tế':''}</p>}

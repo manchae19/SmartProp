@@ -13,7 +13,7 @@ function LandCard({row,index,active,onShow}) {
   <div className="land-actions"><button type="button" onClick={()=>onShow(row)} aria-pressed={active}>Xem vị trí và đường bao</button><a href={landDetailPath(row)} target="_blank" rel="noopener noreferrer" className="land-detail-link">Xem chi tiết ↗</a></div>
  </article>;
 }
-function ProfileField({label,value,demo}) {return <div><dt>{label}</dt><dd>{landDisplayValue(value)??'Chưa xác minh'}</dd></div>}
+function ProfileField({label,value,demo}) {return <div><dt>{label}</dt><dd>{landDisplayValue(value)??'Chưa xác minh'}{demo&&value!=null&&value!==''&&<span className="land-demo-tag"> · Giả định</span>}</dd></div>}
 export function SelectedLand({row}) {
  const [selectedId,setSelectedId]=useState(row.landId);
  const pickOnMap=useCallback(feature=>{const id=feature.sourceCode||feature.landId||feature.id;if(id)setSelectedId(id)},[]);

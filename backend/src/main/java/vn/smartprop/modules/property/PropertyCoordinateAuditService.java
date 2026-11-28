@@ -45,7 +45,7 @@ public class PropertyCoordinateAuditService {
         if (property.location == null) return PropertyCoordinateAudit.Status.absent();
         var v = validate(property);
         return PropertyCoordinateAudit.derive("UNKNOWN", "UNKNOWN", null, "UNVERIFIED",
-            null, null, v.status().name(), "Existing listing pin; provenance and precision unverified", 0, null);
+            null, null, null, v.status().name(), "Existing listing pin; provenance and precision unverified", 0, null);
     }
 
     /** Standard V1..V23 lineage has no V26 audit table; dependent features fail closed. */

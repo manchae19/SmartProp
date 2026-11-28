@@ -115,13 +115,13 @@ def respond(bot,request,context,turn):
  if not state.get('type'):
   state.update(pending=True,pagingActive=False)
   return packet('Bạn muốn tìm loại tài sản nào?',quickReplies=['Đất ở','Đất nông nghiệp','Nhà','Căn hộ','Tất cả'])
- if not state.get('location'):
-  state.update(pending=True,pagingActive=False)
-  return packet('Bạn muốn tìm ở khu vực nào?',quickReplies=['Hòa Xuân','Đà Nẵng',*DISTRICTS[:6]])
  outside=requested_location(request.question)
  if outside and outside not in [fold(x) for x in DISTRICTS] and outside not in ('hoa xuan','cam le'):
   state['pagingActive']=False
   return packet('Chưa có nguồn tìm kiếm được hỗ trợ cho địa bàn bạn vừa nêu. Tôi không thay thế bằng kết quả Đà Nẵng.')
+ if not state.get('location'):
+  state.update(pending=True,pagingActive=False)
+  return packet('Bạn muốn tìm ở khu vực nào?',quickReplies=['Hòa Xuân','Đà Nẵng',*DISTRICTS[:6]])
  if not state.get('maxPrice'):
   state.update(pending=True,pagingActive=False)
   return packet('Ngân sách tối đa của bạn là bao nhiêu?')

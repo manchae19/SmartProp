@@ -674,17 +674,6 @@ class BackendTools:
         return {"items": results, "total": total, "complete": complete, "pagesRead": page}
 
 
-def _public_text(value, max_length=1000):
-    """Owner-written text shown in chat: no markup, contact details or internal markers."""
-    text = re.sub(r"<[^>]*>", " ", str(value or ""))
-    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[redacted-email]", text)
-    text = re.sub(r"(?<!\d)(?:\+84|0)(?:[\s.-]?\d){8,10}(?!\d)", "[redacted-phone]", text)
-    text = re.sub(r"\b(?:UNVERIFIED|INTERNAL_RESEARCH|INTERNAL_DEMO|TINIX_AI|HYBRID_ELIGIBLE_RESEARCH|sampleListingCount|raw_payload)\b",
-                  "[redacted]", text, flags=re.IGNORECASE)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text[:max_length]
-
-
 class PublishedPropertyRepository:
     """Only the publication projection already used by Hybrid V1.1; no crawler table access."""
     def __init__(self, settings):
