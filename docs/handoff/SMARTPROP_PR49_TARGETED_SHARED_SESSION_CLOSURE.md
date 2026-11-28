@@ -40,6 +40,29 @@ Combined runtime dùng archive của PR #49 source tree, PR #48 reviewed backend
 
 Chromium xác nhận password confirmation, linking, cùng-session refresh, JWT Spring ký và quyền gọi profile, Web Locks queue trong browser, cùng-user khác session làm stale response trả `SESSION_CHANGED`, cross-tab login/logout, callback bị thu hồi, Google Sign-In sau linking, cookie flags và account/listing/favorite/history ownership. Các lượt đầu đã chạy qua OAuth gốc nhưng báo lỗi trong phần chờ của assertion bổ sung. Lượt cuối sửa async polling trong fixture và chạy lại toàn bộ. Launcher dừng đúng fixture và cả hai port đều được xác nhận đã đóng.
 
+## Reactive UI authorization closure
+
+Source commit đã kiểm thử `52b8fd87d0fdb65f643b8f5cc8d37993760087a2`, tree `dce41bc691a4ad9ab4df58ab61294b24bf3819b0`. Các ca mới dừng response bằng deferred barriers để tái lập thứ tự đổi quyền và hoàn thành request.
+
+- **Market Analytics** xóa research đang hiển thị, abort research request, bỏ opt-in và chuyển sang SAFE khi auth transition bắt đầu hoặc generation thay đổi. Failed login hay phục hồi thông tin cũ cần opt-in lại. Renewal cùng session giữ kết quả và request đang chạy.
+- **Comparable WP‑02** dùng cùng projected scope cho trang trực tiếp và các lookup nhúng. Role, account status, auth transition và generation tham gia kiểm tra scope. Locked account và transition không gửi request mới. Response cũ bị loại cả khi revoke và restore trước lần render kế tiếp.
+- **Các consumer gần kề**. Google Linking đã dùng generation và transition qua auth API. Market Insights và Top Searched Areas chỉ gọi SAFE. Unified Advisor và Advisor legacy có cùng khoảng trống ở research scope nên được vá tại gate hiện hữu. Unified Advisor dùng abort riêng cho research; Advisor legacy abort capability probe và loại response cũ bằng sequence guard, giữ SAFE hoạt động. Audit cũng ghi nhận AdminLayout lấy số liệu dashboard lúc mount, với route và API kiểm quyền riêng. Lượt này không thay đổi lifecycle toàn khu admin hoặc các route owner-only.
+
+| Fresh check | Kết quả | Log trong `.smartprop/` |
+| --- | --- | --- |
+| Original PR #48, Git blob `850c4f051059a2868495d4f0ff91d921e28977e9` | 7/7 | `pr49-ui-pr48-7.log` |
+| Shared-session/HTTP | 65/65 | `pr49-ui-shared.log` |
+| Market và Unified Advisor targeted | 24/24 | `pr49-ui-targeted.log` |
+| Frontend recursive | 247/247 | `pr49-ui-frontend.log` |
+| Chromium WP‑02 | 12/12, bổ sung assertion cho BROKER/ADMIN, account lock, generation và restore | `pr49-ui-wp02.log` |
+| Chromium PR #49 | Market g1/g2/g3/g13 và g8/g12 6/6; route/viewport smoke 11/11 | `pr49-ui-market-browser.log`, `pr49-ui-pages.log` |
+| Hai browser harness PR #48 với HTTP fixture | Google Linking 8/8, session-scope 5/5 | `pr49-ui-pr40-google-link.log`, `pr49-ui-pr48-session-scope.log` |
+| Vite và asset audit | 269 modules, 146 tệp dist; 5 ảnh bị loại vắng mặt và 30 approved assets khớp byte | `pr49-ui-vite.log`, `pr49-ui-assets.log` |
+
+Tất cả lệnh ở bảng exit 0. Các bộ Node có 0 failed, cancelled hoặc skipped. Các test mục tiêu đã nằm trong frontend recursive.
+
+`REUSED_EVIDENCE` cho 316/316 Spring và controlled OAuth HTTPS runtime ở tree `6e4c3a7b09497da9dc7ce68fbaf53c028e119617`. Manifest SHA‑256 của hai archive kết hợp xác nhận HTTP client, auth API, router, app entry, Login/Google/Account views, OAuth harness, provisioning script, dependency lock và toàn bộ backend/PR #48 OAuth overlay giống nhau. Delta chỉ có các UI nghiên cứu/Comparable, fixture regression của chúng và tài liệu. Hai browser harness PR #48 đã chạy mới trên archive kết hợp với tree reactive. Không khởi động lại MySQL fixture và chưa xác minh Google OAuth thực hoặc deployment.
+
 ## Delivery
 
-`PR49_REMOTE_DELIVERY_BLOCKED`. Đang chờ chủ sở hữu xác nhận credential đã thay thế hoặc GitHub CLI đã được xác thực an toàn. Local commits được bảo toàn. Không sử dụng PAT đã lộ. Chưa push, chưa cập nhật PR body và chưa xác minh remote HEAD cho commit mới.
+Delivery ban đầu đã hoàn tất bằng OAuth GitHub. Local, remote branch và Draft PR #49 được xác minh ở `6e6b059ecc0f8ff5e93941974ef33103b1e25f87`; PR body đã được đọc lại để xác minh nội dung. Phiên này tiếp tục từ đúng SHA đó, giữ PR #49 Draft và đưa bản vá reactive lên cùng nhánh qua fast-forward. Main, PR #48 và PR #37 gốc giữ nguyên. [PR #49](https://github.com/manchae19/SmartProp/pull/49)

@@ -1,90 +1,22 @@
-# PR48 shared session contract (handoff, not merged)
+# PR #48 và PR #49 — Hợp đồng shared session
 
-This is the pre-closure handoff. The [PR #49 closure report](SMARTPROP_PR49_TARGETED_SHARED_SESSION_CLOSURE.md) records the implemented generation, credential-free scope and combined tests.
+Main baseline `1c67a279a8ff6f6939767e82bb31b17584610864`. PR #48 được kiểm theo `287b4b2d032a3d22581fd993e212366c452d7c3a`. PR #49 sở hữu một triển khai HTTP/session tại `frontend/src/shared/lib/httpClient.js` và một session store tại `frontend/src/features/auth/api.js`. PR #48 giữ backend OAuth và Google Linking UI trên nhánh riêng. [Báo cáo và bằng chứng tích hợp](SMARTPROP_PR49_TARGETED_SHARED_SESSION_CLOSURE.md)
 
-**PR37 HEAD:** `0fdf48f` → this change · **PR48 reviewed SHA:** `287b4b2` · **main:** `1c67a27`
+## Identity, generation và credential
 
-PR48 is **not** merged into PR37 and its branch was not modified. This document defines the single
-bounded session architecture both branches must share, and records the compatibility tests that
-already pass against PR37's client using synthetic tokens only.
+- `authGeneration` là bộ đếm **phía frontend** trên session store. Nó tăng khi phạm vi phiên hoặc authority thay đổi. JWT do Spring cấp mang `iss`, `sub`, `jti` và `ver`. Spring xác minh JWT và tiếp tục quyết định quyền truy cập. Frontend dùng claims để kiểm tra continuity trong scope đã nhận từ luồng xác thực.
+- Cùng `sub/jti/ver` và authority qua refresh hợp lệ giữ nguyên `authGeneration`. Một thay đổi `ver`, role hoặc account status loại response nhạy cảm đã bắt đầu trước đó. Khác `sub/jti` hoặc token thiếu claims hợp lệ thu hồi scope cũ. Có thể bắt đầu scope khác qua login hoặc cookie initialization riêng.
+- `scopeGen` tăng khi có credential write bên ngoài HTTP client. External A → X → A không khôi phục scope đã hết hiệu lực. `credentialGen` đếm các lần client cài credential, gồm renewal và khởi tạo. Client giữ một current credential và một snapshot credential gần nhất để nhận diện external writes.
+- `sessionScope()` trả `epoch`, `identityEpoch`, `credentialGen`, `scopeGen`, `authGeneration` và cờ `authenticated`. Hàm này không chứa credential hay lịch sử token.
+- Khóa của refresh flight gồm `epoch`, `identityEpoch`, `scopeGen`, `credentialGen` và `allowNewIdentity`. Chỉ flight đang sở hữu reference được xóa reference. Initialization kiểm tra epoch, identity, scope và credential gốc trước khi nhận profile, đổi status hoặc xử lý terminal error.
 
-## 1. One implementation, two responsibilities
+## Ownership và lỗi HTTP
 
-| Concern | Owner |
-|---|---|
-| Bounded session/credential scope, request continuity, refresh flights, abort, write replay policy | `frontend/src/shared/lib/httpClient.js` (PR37) |
-| Google linking flow, `authGeneration` bookkeeping, JWT `sub/jti/ver` decoding for UI | PR48 |
+- Login, logout và Google completion đặt `authTransition=true` và tăng generation trước async work. Chỉ operation đang sở hữu transition được kết thúc nó. Failed login có thể giữ credential trước đó trong scope mới. Work cũ vẫn bị loại.
+- BroadcastChannel gửi action `login` hoặc `logout`. Tab khác xóa scope cũ và lấy credential qua cookie restoration nếu có refresh. Web Locks điều phối refresh và thay đổi cookie khi được hỗ trợ.
+- 401 muộn có thể dùng credential đã refresh trong cùng session để thử lại safe GET/HEAD/OPTIONS. Phản hồi từ credential cũ không expire credential mới. Current-session 401 vẫn theo policy của route. Lỗi mật khẩu/validation của Google Linking giữ phiên hiện tại. Write bất định trả `AUTH_RETRY_REQUIRED` và yêu cầu người dùng chủ động gửi lại. AbortSignal không expire phiên.
+- Market và các Advisor research surfaces bỏ dữ liệu research, hủy request hoặc probe theo cơ chế sẵn có và tắt opt-in khi scope đổi hoặc đang auth transition. Comparable ẩn hoặc vô hiệu hóa kết quả của scope cũ, chặn gọi khi account bị khóa hoặc không còn role phù hợp và yêu cầu truy vấn mới sau khi quyền trở lại. Các UI giữ scope khi JWT đổi qua verified same-session renewal. Backend authorization giữ nguyên.
 
-There must not be a second session implementation. PR48 should keep using `createHttpClient` and
-store its generation on the same `session` store.
+## Tích hợp và tái kiểm thử
 
-## 2. State kept by the client (bounded, no token history)
-
-```
-epoch            session replacement / logout
-identityEpoch    status, actor id, role, account status, authGeneration
-credentialGen    verified credential renewals (refresh only, never session creation)
-scopeGen         every credential write the client did not perform (discontinuity)
-currentCredential the single credential the client installed (or null after an external write)
-```
-
-`client.sessionScope()` returns exactly those values plus `token`/`authenticated`, so PR48 can assert
-alignment instead of guessing. It never exposes history.
-
-## 3. Contract rules
-
-1. **Continuity** requires the credential generation to have moved *and* the live token to equal
-   `currentCredential`. Holds across A→B→C→…; fails for any credential this client did not install.
-2. **External replacement is terminal for in-flight work.** The synchronous store subscription
-   detects it, nulls `currentCredential` and bumps `scopeGen`, so A→X→A (same token restored) is
-   still `SESSION_CHANGED`, and a later valid refresh cannot re-validate an obsolete scope.
-3. **Session creation** (login, Google completion, and PR48's `authGeneration` bump) invalidates the
-   epoch/identity: requests from the previous session never survive, even for the same account.
-4. **Renewal vs new session.** A refresh keeps `authGeneration`; a new session increments it. The
-   client treats `authGeneration` as part of identity, which is what gives same-account new-session
-   isolation without a second implementation.
-5. **Refresh result identity.** Renewing an authenticated session rejects a payload for a different
-   `sub`; only initial cookie restoration may establish an identity.
-6. **Flight ownership.** A flight is keyed by `epoch:identityEpoch:token`; only the owning flight
-   clears the shared reference, so an older flight finishing first cannot release a newer one.
-7. **JWT is UI-only.** `sub/jti/ver` are decoded for continuity and display; authorization remains
-   server-authoritative. `ver` changes that accompany a role/status change invalidate restricted
-   responses via `identityEpoch`.
-8. **Writes are never replayed.** A POST that hits 401 still returns `AUTH_RETRY_REQUIRED`.
-9. **Abort** stays external-signal driven; cancellation never logs out.
-10. **JWT continuity (implemented)**: `sub` change or `jti` change inside a renewal is a different
-    session; a `ver` change is a legitimate server re-issue. Opaque tokens keep the structural checks.
-11. **Credential privacy (implemented)**: `sessionScope()` returns generations and flags only, never
-    the token, and no token history is retained.
-12. **Open**: `authTransition` must be raised before the login round-trip, pending linking responses
-    must be retired at that instant, and a late response must never expire a session that a later
-    refresh already renewed.
-
-## 4. Compatibility tests (synthetic fixtures, no PR48 code imported)
-
-`frontend/tests/googleLinkSessionContract.test.mjs` builds unsigned fixtures of the PR48 payload
-shape (`{iss:'smartprop', sub, jti, ver, iat}`) and asserts:
-
-- `authGeneration` participates in identity: same account + new generation ⇒ `SESSION_CHANGED`.
-- A new `jti` inside the same generation is still an external replacement ⇒ `SESSION_CHANGED`.
-- A `ver` bump with a role change invalidates a restricted in-flight response.
-- A verified refresh keeps `jti` and `authGeneration` (renewal ≠ new session).
-- `sessionScope()` exposes one bounded scope and no token history.
-- Logout clears the credential and invalidates pending work.
-
-## 5. Integration steps for PR48 (when it merges)
-
-1. Keep `createHttpClient` as the only session/HTTP implementation.
-2. Store the server-issued `authGeneration` on the same `session` store; bump it on login, Google
-   completion and cross-tab session replacement.
-3. Do not decode the JWT for authorization decisions; keep the backend authoritative.
-4. Re-run `frontend/tests/googleLinkSessionContract.test.mjs` plus `httpClient*` suites after rebase.
-5. Anything that needs a "new session, same user" signal should use `authGeneration`, not a token
-   comparison.
-
-## 6. Known limitations
-
-- Cross-tab coordination still relies on the store subscription; there is no BroadcastChannel
-  handshake, and this contract does not add one.
-- `authGeneration` is only honoured when PR48 actually writes it; with PR37 alone the client behaves
-  exactly as before.
+Dùng worktree cô lập ở đúng SHA PR #48. Giữ backend, Google Linking view và callback route của PR #48. Dùng shared HTTP client, auth API và các test từ PR #49; áp riêng hunk navigation bỏ profile response obsolete. Chạy bộ PR #48 nguyên bản, HTTP client, frontend và hai Chromium fixture scripts. Nếu thay đổi shared HTTP client, auth API hoặc OAuth execution path thì chạy lại `run-pr48-runtime.ps1` với MySQL Standard V23 và signed OIDC trên HTTPS loopback. PR #49 có hướng dẫn theo SHA và cách chạy trong PR body. [PR #49](https://github.com/manchae19/SmartProp/pull/49)
