@@ -50,6 +50,13 @@ import vn.smartprop.modules.user.UserRepository;
 @EnabledIfEnvironmentVariable(named = "DB_URL", matches = ".+")
 class CoordinateProvenanceIT {
 
+    @org.springframework.test.context.bean.override.convention.TestBean(name="newsSchemaCapabilities",
+        methodName="vn.smartprop.database.IsolatedCoordinateFixture#capability", enforceOverride=true)
+    vn.smartprop.database.NewsSchemaCapabilities fixtureCapability;
+    @org.springframework.test.context.bean.override.convention.TestBean(name="validateSelectedMigrationLineage",
+        methodName="vn.smartprop.database.IsolatedCoordinateFixture#lineage", enforceOverride=true)
+    org.springframework.beans.factory.InitializingBean fixtureLineage;
+
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
     @Autowired JdbcTemplate jdbc;
@@ -61,6 +68,7 @@ class CoordinateProvenanceIT {
 
     @BeforeEach
     void setUp() {
+        vn.smartprop.testing.IsolatedDatabaseTestSafety.require(jdbc);
         List<User> staff = users.findAll().stream()
             .filter(u -> u.deletedAt == null && u.status == User.Status.ACTIVE)
             .toList();

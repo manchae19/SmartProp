@@ -148,3 +148,7 @@ ai-services/tests/seed_*.py
 # Coordinate provenance audit: read-only findings on where the 152 listing
 # coordinates came from. No PII, no credentials, no coordinate changes.
 !/docs/SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md
+
+# News Backend V1: schema, API contract, source rights, ingestion, security,
+# test results and PR #37 integration plan. No secrets, no PII.
+!/docs/SMARTPROP_NEWS_BACKEND_V1_IMPLEMENTATION.md
