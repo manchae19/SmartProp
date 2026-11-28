@@ -117,3 +117,46 @@ không đổi tầng transport.
 - Backend: **271 test, 0 failure** (`mvnw -o test`, BUILD SUCCESS).
 - FastAPI WP04 (contract + HTTP + matrix parity): **51 passed**; benchmark 105 case, digest
   `9eedb3c7c3668f61` không đổi.
+
+---
+
+## B4 hardening + B5 integration (final)
+
+### Provenance defect fixed
+`explanationModel` spread `PROVENANCE_LABELS[state]` over the row, overwriting the feature label.
+The view model now carries `featureName / featureLabel / state / stateLabel / note`, and the panel
+renders “Diện tích — Bạn đã cung cấp”. `UNVERIFIED` is in both the flagged filter and the summary.
+All 22 production features appear exactly once (asserted by test, not by counting DOM nodes).
+
+### Contract hardening
+Rejects: unsupported version, method, target or output space; `ABSENT`/`INVALID` sent by upstream;
+non-finite or missing numbers; duplicate/unknown feature names; non-string limitations; malformed or
+unknown group values (never silently dropped); group totals that disagree with the contributions;
+provenance that is incomplete, unknown, or inconsistent with a factor. Additivity keeps the reviewed
+`1e-5` relative tolerance. A calibration/adjusted-price mismatch against the displayed prediction is
+surfaced as a caution instead of being hidden.
+
+### Waterfall
+Cumulative SVG retained; the numeric table now ends with reconstructed total and predicted margin
+(incl. residual), and the calibration bridge shows base price, naive price, policy, factor and final
+price. Calibration is never plotted as a contribution.
+
+### B5 integration
+`ValuationPanel.jsx`, `PostValuationPanel.jsx`, `AdvisorEvidencePanel.jsx` render the shared panel
+bound to the authoritative prediction. Spring's numeric-string price is normalised with
+`normalizeVnd` (numbers and numeric strings accepted; null/empty/invalid rejected, never zero).
+Legacy SHAP renders only when there is no new explanation, so nothing is double counted.
+
+### Verification
+- frontend `node --test`: **208 passed**
+- WP-04 browser (11 cases × 320/390/768/1440, real viewports, details opened before measuring):
+  **484/484**
+- three-surface runner: 5 passed, 1 skipped (advisor route needs an authenticated session)
+- Python WP-04: **51 passed**; benchmark 105 cases / 15 extras, digest `9eedb3c7c3668f61` unchanged
+- Java: **285 passed**; FastAPI serial: **1230 passed / 20 skipped**
+- artifacts 4/4 hashes re-checked in this run
+
+### Open for B6
+Real FastAPI → Tomcat → React runtime parity, see `SMARTPROP_WP04_B6_RUNTIME_VALIDATION_PLAN.md`.
+Posting and Advisor surfaces are integrated and build-verified but their authenticated routes were
+not exercised in the browser.
