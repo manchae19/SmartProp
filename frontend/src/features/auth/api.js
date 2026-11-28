@@ -87,24 +87,29 @@ export async function completeGoogleLogin() {
   const result = await client.google();
   return result.user;
 }
+function requireLinkSession() {
+  const snapshot = session.getSnapshot();
+  if (snapshot.status !== 'AUTHENTICATED' || !snapshot.token) {
+    throw Object.assign(Error('Bạn cần đăng nhập SmartProp để liên kết Google.'), { code: 'UNAUTHENTICATED' });
+  }
+  return snapshot.token;
+}
+
+async function postGoogleLink(path, body) {
+  const token = requireLinkSession();
+  const csrf = await api('/auth/csrf', { authenticated: false });
+  if (requireLinkSession() !== token) {
+    throw Object.assign(Error('Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại.'), { code: 'SESSION_CHANGED' });
+  }
+  return api(path, { method: 'POST', body, headers: { [csrf.headerName]: csrf.token } });
+}
+
 export const googleLinkStatus = () => api('/auth/google/link/status');
 export async function startGoogleLink(currentPassword) {
   if (!refreshEnabled) throw Object.assign(Error('Phiên làm mới đăng nhập chưa được bật ở frontend. Vui lòng cấu hình VITE_ENABLE_REFRESH=true rồi tải lại trang.'), { code: 'FEATURE_DISABLED' });
-  const csrf = await api('/auth/csrf', { authenticated: false });
-  return api('/auth/google/link/start', {
-    method: 'POST',
-    body: { currentPassword },
-    headers: { [csrf.headerName]: csrf.token }
-  });
+  return postGoogleLink('/auth/google/link/start', { currentPassword });
 }
 export async function completeGoogleLink() {
-  await initializeAuth({ force: true });
-  if (session.getSnapshot().status !== 'AUTHENTICATED' || !session.getSnapshot().token) {
-    throw Object.assign(Error('Phiên SmartProp đã hết hạn. Vui lòng đăng nhập lại trước khi hoàn tất liên kết.'), { code: 'UNAUTHENTICATED' });
-  }
-  const csrf = await api('/auth/csrf', { authenticated: false });
-  return api('/auth/google/link/complete', {
-    method: 'POST',
-    headers: { [csrf.headerName]: csrf.token }
-  });
+  if (session.getSnapshot().status === 'INITIALIZING') await initializeAuth();
+  return postGoogleLink('/auth/google/link/complete');
 }

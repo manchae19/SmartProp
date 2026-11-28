@@ -60,9 +60,9 @@ public class GoogleLinkService {
 
     @Transactional
     public void complete(GoogleLinkFlowStore.Ticket ticket, Jwt jwt) {
-        if (ticket.userId() != safeUserId(jwt) || !ticket.sessionId().equals(jwt.getId()))
-            throw new ApiException(401, "GOOGLE_LINK_SESSION_MISMATCH", "Phiên đăng nhập đã thay đổi. Vui lòng bắt đầu liên kết lại.");
         User user = requireLiveSession(jwt, true);
+        if (ticket.userId() != user.id || !ticket.sessionId().equals(jwt.getId()))
+            throw new ApiException(409, "GOOGLE_LINK_SESSION_MISMATCH", "Phiên đăng nhập đã thay đổi. Vui lòng bắt đầu liên kết lại.");
         List<Long> owners = jdbc.query("SELECT user_id FROM user_external_identities WHERE provider='GOOGLE' AND subject_id=?",
             (row, index) -> row.getLong(1), ticket.profile().subject());
         if (!owners.isEmpty()) {
@@ -85,6 +85,8 @@ public class GoogleLinkService {
         User user = (lock ? users.lockById(userId) : users.findById(userId)).orElse(null);
         if (user == null || user.deletedAt != null || user.status != User.Status.ACTIVE)
             throw new ApiException(401, "UNAUTHENTICATED", "Phiên đăng nhập đã hết hạn hoặc bị thu hồi.");
+        if (jwt.getId() == null || jwt.getId().isBlank())
+            throw new ApiException(401, "UNAUTHENTICATED", "Phiên đăng nhập không hợp lệ.");
         AuthSession session = (lock ? sessions.lockById(jwt.getId()) : sessions.findById(jwt.getId())).orElse(null);
         Object version = jwt.getClaim("ver");
         if (session == null || !session.userId.equals(user.id) || !sessionPolicy.valid(session, user)

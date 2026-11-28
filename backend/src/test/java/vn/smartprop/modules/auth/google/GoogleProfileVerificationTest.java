@@ -22,6 +22,20 @@ class GoogleProfileVerificationTest {
         assertThrows(OAuth2AuthenticationException.class, () -> GoogleProfile.verified(token("client", false, NOW.plusSeconds(60)), "client", NOW));
     }
 
+    @Test void verifiesAuthorizedPartyWhenPresentOrRequired() {
+        var original = token("client", true, NOW.plusSeconds(60));
+        var claims = new java.util.HashMap<>(original.getClaims());
+        claims.put("aud", List.of("client", "another-client"));
+        assertThrows(OAuth2AuthenticationException.class, () -> GoogleProfile.verified(
+            new OidcIdToken("test-token", original.getIssuedAt(), original.getExpiresAt(), claims), "client", NOW));
+        claims.put("azp", "another-client");
+        assertThrows(OAuth2AuthenticationException.class, () -> GoogleProfile.verified(
+            new OidcIdToken("test-token", original.getIssuedAt(), original.getExpiresAt(), claims), "client", NOW));
+        claims.put("azp", "client");
+        assertEquals("google-sub", GoogleProfile.verified(
+            new OidcIdToken("test-token", original.getIssuedAt(), original.getExpiresAt(), claims), "client", NOW).subject());
+    }
+
     private OidcIdToken token(String audience, boolean verified, Instant expires) {
         Instant issued = NOW.minusSeconds(10);
         Map<String, Object> claims = Map.of("iss", "https://accounts.google.com", "sub", "google-sub",

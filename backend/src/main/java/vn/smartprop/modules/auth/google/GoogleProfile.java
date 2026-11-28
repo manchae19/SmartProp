@@ -7,6 +7,9 @@ import org.springframework.security.oauth2.core.*;
 public record GoogleProfile(String subject,String email,String name) {
     public static GoogleProfile verified(OidcIdToken token,String clientId,Instant now){
         if(token==null||!Set.of("https://accounts.google.com","accounts.google.com").contains(String.valueOf(token.getIssuer()))||token.getAudience()==null||!token.getAudience().contains(clientId)||token.getExpiresAt()==null||!token.getExpiresAt().isAfter(now)||token.getIssuedAt()==null||token.getIssuedAt().isAfter(now.plusSeconds(60))||!Boolean.TRUE.equals(token.getEmailVerified())||token.getSubject()==null||!token.getSubject().matches("[A-Za-z0-9_-]{1,255}"))throw invalid();
+        Object authorizedParty = token.getClaims().get("azp");
+        if ((token.getAudience().size() > 1 || token.getClaims().containsKey("azp"))
+            && !clientId.equals(authorizedParty)) throw invalid();
         String email=token.getEmail();if(email==null||email.length()>254||!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+"))throw invalid();
         String name=Optional.ofNullable(token.getFullName()).filter(v->!v.isBlank()).orElse(email.split("@",2)[0]).replaceAll("[\\p{Cntrl}]","").strip();if(name.length()>100)name=name.substring(0,100);
         return new GoogleProfile(token.getSubject(),vn.smartprop.modules.auth.AuthService.email(email),name);

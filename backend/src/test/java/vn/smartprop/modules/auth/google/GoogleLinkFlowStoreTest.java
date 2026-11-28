@@ -40,9 +40,10 @@ class GoogleLinkFlowStoreTest {
         store.save(authorization, authorizeRequest, new MockHttpServletResponse());
         assertSame(authorization, store.load(request(flowCookie, state)));
 
-        assertSame(authorization, store.remove(request(flowCookie, state), new MockHttpServletResponse()));
+        var callback = request(flowCookie, state);
+        assertSame(authorization, store.remove(callback, new MockHttpServletResponse()));
         MockHttpServletResponse ticketResponse = new MockHttpServletResponse();
-        store.handoff(new GoogleProfile("google-subject", "person@example.test", "Person"), request(flowCookie, state), ticketResponse);
+        store.handoff(new GoogleProfile("google-subject", "person@example.test", "Person"), callback, ticketResponse);
         String ticketHeader = lastCookie(ticketResponse);
         String ticketCookie = cookieValue(ticketHeader);
         assertTrue(ticketHeader.contains("SameSite=Lax"));
@@ -106,7 +107,9 @@ class GoogleLinkFlowStoreTest {
         assertNotNull(authorization);
         assertEquals("link", authorization.getAttribute("smartprop_flow"));
         assertTrue(authorization.getAdditionalParameters().containsKey("code_challenge"));
-        assertTrue(authorization.getAdditionalParameters().containsKey("code_challenge_method"));
+        assertEquals("S256", authorization.getAdditionalParameters().get("code_challenge_method"));
+        assertNotNull(authorization.getAttributes().get("nonce"));
+        assertNotNull(authorization.getAdditionalParameters().get("nonce"));
     }
 
     @Test void callbackTicketCannotBeReplayedConcurrently() throws Exception {
@@ -114,9 +117,10 @@ class GoogleLinkFlowStoreTest {
         store.begin(5L, "session", response);
         String flow = cookieValue(response.getHeader("Set-Cookie"));
         store.save(authorization("state"), request(flow, null), new MockHttpServletResponse());
-        store.remove(request(flow, "state"), new MockHttpServletResponse());
+        var callback = request(flow, "state");
+        store.remove(callback, new MockHttpServletResponse());
         MockHttpServletResponse handoff = new MockHttpServletResponse();
-        store.handoff(new GoogleProfile("sub", "p@example.test", "P"), request(flow, "state"), handoff);
+        store.handoff(new GoogleProfile("sub", "p@example.test", "P"), callback, handoff);
         String ticket = cookieValue(lastCookie(handoff));
 
         CountDownLatch ready = new CountDownLatch(2), go = new CountDownLatch(1);
@@ -130,6 +134,28 @@ class GoogleLinkFlowStoreTest {
         Thread first = new Thread(completion), second = new Thread(completion);
         first.start(); second.start(); ready.await(); go.countDown(); first.join(); second.join();
         assertEquals(1, accepted.get());
+    }
+
+    @Test void preservesCallbackBindingOnlyInTheRequestThatConsumedIt() {
+        var response = new MockHttpServletResponse();
+        store.begin(5L, "session", response);
+        String flow = cookieValue(response.getHeader("Set-Cookie"));
+        var authorization = authorization("expected-state");
+        store.save(authorization, request(flow, null), new MockHttpServletResponse());
+        assertNull(store.remove(request(flow, null), new MockHttpServletResponse()));
+        assertNull(store.remove(request(flow, "different-state"), new MockHttpServletResponse()));
+        var callback = request(flow, "expected-state");
+        assertSame(authorization, store.remove(callback, new MockHttpServletResponse()));
+        var replay = request(flow, "expected-state");
+        assertNull(store.remove(replay, new MockHttpServletResponse()));
+        var profile = new GoogleProfile("subject", "fixture@example.test", "Fixture");
+        assertThrows(vn.smartprop.common.ApiException.class, () -> store.handoff(profile, replay, new MockHttpServletResponse()));
+        var handoff = new MockHttpServletResponse();
+        store.handoff(profile, callback, handoff);
+        clock.advanceSeconds(60);
+        var error = assertThrows(vn.smartprop.common.ApiException.class,
+            () -> store.consumeTicket(requestWithTicket(cookieValue(lastCookie(handoff))), new MockHttpServletResponse()));
+        assertEquals(410, error.status);
     }
 
     private OAuth2AuthorizationRequest authorization(String state) {

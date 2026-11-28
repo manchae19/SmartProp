@@ -43,7 +43,10 @@ public class GoogleLinkController {
     }
 
     @GetMapping("/status")
-    public GoogleLinkService.Status status(@AuthenticationPrincipal Jwt jwt) { return service.status(jwt); }
+    public Map<String, Boolean> status(@AuthenticationPrincipal Jwt jwt, HttpServletResponse response) {
+        response.setHeader("Cache-Control", "no-store");
+        return Map.of("linked", service.status(jwt).linked(), "available", settings.configured() && refresh.enabled());
+    }
 
     @PostMapping("/start")
     public Map<String, String> start(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody StartRequest body,
@@ -51,6 +54,7 @@ public class GoogleLinkController {
         if (!settings.configured() || !refresh.enabled()) throw new ApiException(503, "FEATURE_DISABLED", "Google Sign-In chưa được cấu hình đầy đủ trên máy chủ.");
         cookies.origin(request);
         limits.check("google:link:start:" + jwt.getId(), 5, 300);
+        limits.check("google:link:password:" + jwt.getSubject(), 5, 300);
         var binding = service.begin(jwt, body.currentPassword());
         flows.begin(binding.userId(), binding.sessionId(), response);
         return Map.of("authorizationPath", "/auth/oauth2/link/authorize/google");
@@ -59,6 +63,8 @@ public class GoogleLinkController {
     @PostMapping("/complete")
     public Map<String, Boolean> complete(@AuthenticationPrincipal Jwt jwt, HttpServletRequest request, HttpServletResponse response) {
         cookies.origin(request);
+        if (!settings.configured() || !refresh.enabled())
+            throw new ApiException(503, "FEATURE_DISABLED", "Liên kết Google chưa được bật.");
         limits.check("google:link:complete:" + jwt.getId(), 5, 300);
         var ticket = flows.consumeTicket(request, response);
         service.complete(ticket, jwt);

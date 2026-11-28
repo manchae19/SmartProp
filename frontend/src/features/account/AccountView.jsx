@@ -37,6 +37,7 @@ function useAccountViewState(inputProps, forwardedRef) {
   const [currentPassword] = useState(() => createStateStore("")),
     [googleLinkPassword] = useState(() => createStateStore("")),
     [googleLinked] = useState(() => createStateStore(null)),
+    [googleLinkAvailable] = useState(() => createStateStore(false)),
     [googleLinkBusy] = useState(() => createStateStore(false)),
     [googleLinkError] = useState(() => createStateStore("")),
     [newPassword] = useState(() => createStateStore("")),
@@ -48,6 +49,7 @@ function useAccountViewState(inputProps, forwardedRef) {
   useSyncExternalStore(currentPassword.subscribe, currentPassword.getSnapshot);
   useSyncExternalStore(googleLinkPassword.subscribe, googleLinkPassword.getSnapshot);
   useSyncExternalStore(googleLinked.subscribe, googleLinked.getSnapshot);
+  useSyncExternalStore(googleLinkAvailable.subscribe, googleLinkAvailable.getSnapshot);
   useSyncExternalStore(googleLinkBusy.subscribe, googleLinkBusy.getSnapshot);
   useSyncExternalStore(googleLinkError.subscribe, googleLinkError.getSnapshot);
   const [busy] = useState(() => createStateStore(false)),
@@ -135,10 +137,13 @@ function useAccountViewState(inputProps, forwardedRef) {
       fill(user);
       loaded.set(true);
       try {
-        googleLinked.set((await googleLinkStatus()).linked === true);
+        const status = await googleLinkStatus();
+        googleLinked.set(status.linked === true);
+        googleLinkAvailable.set(status.available === true && refreshEnabled);
         googleLinkError.set("");
       } catch (statusError) {
         googleLinked.set(null);
+        googleLinkAvailable.set(false);
         googleLinkError.set(errorText(statusError));
       }
       await loadPreferences();
@@ -236,16 +241,20 @@ function useAccountViewState(inputProps, forwardedRef) {
     }
   }
   async function linkGoogle() {
-    if (busy.getSnapshot() || googleLinkBusy.getSnapshot() || googleLinked.getSnapshot() === true) return;
+    if (busy.getSnapshot() || googleLinkBusy.getSnapshot() || googleLinked.getSnapshot() === true || !googleLinkAvailable.getSnapshot()) return;
     googleLinkError.set("");
     if (!googleLinkPassword.getSnapshot()) {
       googleLinkError.set("Vui lòng nhập mật khẩu hiện tại để xác nhận liên kết.");
       return;
     }
     googleLinkBusy.set(true);
+    const password = googleLinkPassword.getSnapshot();
+    googleLinkPassword.set("");
     try {
-      const result = await startGoogleLink(googleLinkPassword.getSnapshot());
-      googleLinkPassword.set("");
+      const result = await startGoogleLink(password);
+      if (result?.authorizationPath !== "/auth/oauth2/link/authorize/google") {
+        throw Error("Không thể mở bước xác thực Google.");
+      }
       const base = (import.meta.env?.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
       window.location.assign(base + result.authorizationPath);
     } catch (linkError) {
@@ -288,6 +297,7 @@ function useAccountViewState(inputProps, forwardedRef) {
     currentPassword: currentPassword.getSnapshot(),
     googleLinkPassword: googleLinkPassword.getSnapshot(),
     googleLinked: googleLinked.getSnapshot(),
+    googleLinkAvailable: googleLinkAvailable.getSnapshot(),
     googleLinkBusy: googleLinkBusy.getSnapshot(),
     googleLinkError: googleLinkError.getSnapshot(),
     newPassword: newPassword.getSnapshot(),
@@ -561,7 +571,7 @@ export default React.forwardRef(function AccountView(props, ref) {
           <h3 id="google-link-heading" className="text-lg font-semibold">{"Liên kết tài khoản Google"}</h3>
           <p className="mt-2 text-sm leading-6 text-brand-muted">{"Dùng Google để đăng nhập vào chính tài khoản SmartProp này. Việc liên kết yêu cầu mật khẩu hiện tại và không thay đổi email hoặc quyền tài khoản."}</p>
           {view.googleLinkError ? <p role="alert" className="account-notice account-error mt-4" data-sp-c8811dc0="">{view.googleLinkError}</p> : null}
-          {view.googleLinked === true ? <p role="status" className="account-notice account-success mt-4" data-sp-c8811dc0="">{"Đã liên kết Google với tài khoản SmartProp này."}</p> : view.googleLinked === false ? <><p role="status" className="mt-4 text-sm text-brand-muted">{"Chưa liên kết Google với tài khoản SmartProp này."}</p><form className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" onSubmit={$event => {
+          {view.googleLinked === true ? <p role="status" className="account-notice account-success mt-4" data-sp-c8811dc0="">{"Đã liên kết Google với tài khoản SmartProp này."}</p> : view.googleLinked === false && !view.googleLinkAvailable ? <p role="status" className="mt-4 text-sm text-brand-muted">Liên kết Google hiện chưa khả dụng.</p> : view.googleLinked === false ? <><p role="status" className="mt-4 text-sm text-brand-muted">{"Chưa liên kết Google với tài khoản SmartProp này."}</p><form className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" onSubmit={$event => {
             $event.preventDefault();
             return view.linkGoogle?.($event);
           }} data-sp-c8811dc0="">

@@ -9,7 +9,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assumptions;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.testcontainers.DockerClientFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.aop.framework.ProxyFactory;
@@ -22,8 +28,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import vn.smartprop.common.ApiException;
 import vn.smartprop.modules.auth.AuthSession;
 import vn.smartprop.modules.auth.SessionPolicy;
@@ -31,25 +35,62 @@ import vn.smartprop.modules.auth.SessionRepository;
 import vn.smartprop.modules.user.User;
 import vn.smartprop.modules.user.UserRepository;
 
-/** Writes only to the disposable Testcontainers database; this never uses the configured SmartProp datasource. */
-@Testcontainers(disabledWithoutDocker = true)
+/** Defaults to disposable Testcontainers. A standalone test server requires a matching fixture marker. */
 class GoogleLinkServiceIntegrationTest {
-    @Container static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.46")
-        .withDatabaseName("smartprop_link_test").withUsername("link_test").withPassword("isolated-test-password");
-
+    private static MySQLContainer<?> container;
+    private static DriverManagerDataSource source;
     private JdbcTemplate jdbc;
-    private DriverManagerDataSource source;
     private Clock clock;
 
+    @BeforeAll static void connectOnlyToFixture() {
+        String target = System.getenv("SMARTPROP_PR40_TEST_DB");
+        if (target == null) {
+            Assumptions.assumeTrue(DockerClientFactory.instance().isDockerAvailable(), "Requires isolated MySQL");
+            container = new MySQLContainer<>("mysql:8.0.46")
+                .withDatabaseName("smartprop_link_test").withUsername("link_test").withPassword("isolated-test-password");
+            container.start();
+            source = new DriverManagerDataSource(container.getJdbcUrl(), container.getUsername(), container.getPassword());
+            return;
+        }
+        var match = java.util.regex.Pattern.compile("([1-9][0-9]{4})/smartprop_pr40_test").matcher(target);
+        if (!match.matches() || Integer.parseInt(match.group(1)) > 65535)
+            throw new IllegalArgumentException("Expected dedicated high-port loopback MySQL fixture");
+        String proof = System.getenv("SMARTPROP_PR40_FIXTURE_MARKER");
+        if (proof == null || !proof.matches("[a-f0-9]{32}")) throw new IllegalArgumentException("Missing fixture marker");
+        source = new DriverManagerDataSource("jdbc:mysql://127.0.0.1:" + target
+            + "?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false", "root", "");
+        String actual = new JdbcTemplate(source).queryForObject("SELECT marker FROM pr40_isolation_marker", String.class);
+        assertEquals(proof, actual, "Refusing to write without the marker created by the fixture launcher");
+    }
+
+    @AfterAll static void stopContainer() {
+        if (container != null) container.stop();
+    }
+
     @BeforeEach void createIsolatedSchema() {
-        source = new DriverManagerDataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
         jdbc = new JdbcTemplate(source);
-        jdbc.execute("DROP TABLE IF EXISTS user_external_identities");
-        jdbc.execute("DROP TABLE IF EXISTS users");
-        jdbc.execute("CREATE TABLE users (id BIGINT NOT NULL PRIMARY KEY) ENGINE=InnoDB");
-        jdbc.execute("CREATE TABLE user_external_identities (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT NOT NULL, provider VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, subject_id VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL, created_at DATETIME(6) NOT NULL, UNIQUE KEY uq_external_subject (provider,subject_id), UNIQUE KEY uq_external_user_provider (user_id,provider), CONSTRAINT fk_external_identity_owner FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT, CONSTRAINT ck_external_provider CHECK (provider='GOOGLE')) ENGINE=InnoDB");
-        jdbc.update("INSERT INTO users(id) VALUES(1),(2)");
+        jdbc.execute("DROP TABLE IF EXISTS user_avatars, user_external_identities, fixture_listings, fixture_favorites, users");
+        jdbc.execute("CREATE TABLE users (id BIGINT NOT NULL PRIMARY KEY, email VARCHAR(254), password_hash VARCHAR(100), role VARCHAR(20), status VARCHAR(20), full_name VARCHAR(100)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE fixture_listings (id BIGINT NOT NULL PRIMARY KEY, owner_id BIGINT NOT NULL, FOREIGN KEY(owner_id) REFERENCES users(id)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE fixture_favorites (user_id BIGINT NOT NULL, listing_id BIGINT NOT NULL, PRIMARY KEY(user_id,listing_id)) ENGINE=InnoDB");
+        new ResourceDatabasePopulator(new ClassPathResource("database/migrations/V15__profile_avatar_and_google_identity.sql")).execute(source);
+        jdbc.update("INSERT INTO users VALUES(1,'a@example.test','fixture-hash','BROKER','ACTIVE','Owner'),(2,'b@example.test','other-hash','BUYER','ACTIVE','Buyer')");
+        jdbc.update("INSERT INTO fixture_listings VALUES(15,1)");
+        jdbc.update("INSERT INTO fixture_favorites VALUES(1,15)");
         clock = Clock.fixed(Instant.parse("2026-11-24T00:00:00Z"), ZoneOffset.UTC);
+    }
+
+    @Test void preservesAccountAndRelatedData() {
+        var accounts = jdbc.queryForList("SELECT * FROM users ORDER BY id");
+        var listings = jdbc.queryForList("SELECT * FROM fixture_listings");
+        var favorites = jdbc.queryForList("SELECT * FROM fixture_favorites");
+        var profile = new GoogleProfile("fresh-subject", "b@example.test", "Another name");
+        serviceFor(1, "session-1").complete(new GoogleLinkFlowStore.Ticket(profile, 1L, "session-1"), jwt(1, "session-1"));
+
+        assertEquals(accounts, jdbc.queryForList("SELECT * FROM users ORDER BY id"));
+        assertEquals(listings, jdbc.queryForList("SELECT * FROM fixture_listings"));
+        assertEquals(favorites, jdbc.queryForList("SELECT * FROM fixture_favorites"));
+        assertEquals(1L, jdbc.queryForObject("SELECT user_id FROM user_external_identities WHERE provider='GOOGLE' AND subject_id='fresh-subject'", Long.class));
     }
 
     @Test void rollsBackIdentityWhenRuntimeFailureOccursAfterInsert() {
@@ -93,6 +134,7 @@ class GoogleLinkServiceIntegrationTest {
         GoogleLinkService service = serviceFor(1L, "session-1");
         var ticket = new GoogleLinkFlowStore.Ticket(new GoogleProfile("orphan", "one@example.test", "One"), 1L, "session-1");
         // The service's owner comes from the authenticated repository. Remove it from the isolated DB to exercise the FK.
+        jdbc.update("DELETE FROM fixture_listings WHERE owner_id=1");
         jdbc.update("DELETE FROM users WHERE id=1");
         ApiException conflict = assertThrows(ApiException.class, () -> service.complete(ticket, jwt(1L, "session-1")));
         assertEquals("GOOGLE_IDENTITY_CONFLICT", conflict.code);
