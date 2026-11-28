@@ -5,10 +5,18 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /** Only observed listing identities can exclude or combine rows. */
 final class ComparableIdentity {
+    private static final String LISTING_ID = "(?:[0-9]+|[0-9a-fA-F]{8}-[0-9a-fA-F-]{27})";
+    private static final Pattern DETAIL_ROUTE =
+        Pattern.compile("(?:^|/)(?:listings?|propert(?:y|ies)|tin-dang)/" + LISTING_ID + "/?$");
+    private static final Pattern LISTING_PARAM =
+        Pattern.compile("(?i)(?:^|&)(?:listing(?:_?id)?|property_?id)=" + LISTING_ID + "(?:&|$)");
+    private static final Pattern DETAIL_QUERY_ROUTE =
+        Pattern.compile("(?i)/(?:detail|listing|property|tin-dang)/?$");
     private ComparableIdentity() {}
 
     record Key(String namespace, String source, String value) {}
@@ -61,8 +69,14 @@ final class ComparableIdentity {
                 query = Arrays.stream(query.split("&", -1)).filter(ComparableIdentity::identifyingParameter)
                     .collect(Collectors.joining("&"));
             }
+            String fragment = uri.getRawFragment();
+            String fragmentRoute = fragment == null ? "" : fragment.split("\\?", 2)[0];
+            boolean detailQuery = DETAIL_QUERY_ROUTE.matcher(path).find()
+                && query != null && LISTING_PARAM.matcher(query).find();
+            if (!detailQuery && !DETAIL_ROUTE.matcher(path).find() && !DETAIL_ROUTE.matcher(fragmentRoute).find()) return null;
             return scheme + "://" + host.toLowerCase(Locale.ROOT) + (port == -1 ? "" : ":" + port)
-                + path + (query == null || query.isEmpty() ? "" : "?" + query);
+                + path + (query == null || query.isEmpty() ? "" : "?" + query)
+                + (fragment == null ? "" : "#" + fragment);
         } catch (IllegalArgumentException ex) {
             return null;
         }

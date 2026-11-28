@@ -132,8 +132,14 @@ public final class AdvisorDtos {
         int candidateCount,
         String searchStage,
         List<ComparableItem> comparables,
-        List<String> warnings
-    ) {}
+        List<String> warnings,
+        vn.smartprop.comparable.ComparableDtos.Evidence cohort
+    ) {
+        public ComparableEvidence(String status, int candidateCount, String searchStage,
+                                  List<ComparableItem> comparables, List<String> warnings) {
+            this(status, candidateCount, searchStage, comparables, warnings, null);
+        }
+    }
 
     public record AdvisedProperty(
         String id,
@@ -160,6 +166,7 @@ public final class AdvisorDtos {
         LocationIntelligence locationIntelligence,
         ComparableEvidence comparableEvidence,
         ValuationEvidence valuationEvidence,
+        ComparableEvidence valuationComparableEvidence,
         List<String> warnings
     ) {}
 

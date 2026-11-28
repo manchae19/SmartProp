@@ -22,7 +22,12 @@ public class ComparableCandidateRepository {
                            BigDecimal bedrooms, BigDecimal roadWidthM, String duplicateGroup) {}
 
     public record PropertyRow(String id, String propertyType, String district, String ward,
-                              BigDecimal areaSqm, BigDecimal priceVnd, Integer bedrooms) {}
+                              BigDecimal areaSqm, BigDecimal priceVnd, Integer bedrooms, String projectId) {
+        public PropertyRow(String id, String propertyType, String district, String ward,
+                           BigDecimal areaSqm, BigDecimal priceVnd, Integer bedrooms) {
+            this(id, propertyType, district, ward, areaSqm, priceVnd, bedrooms, null);
+        }
+    }
 
     public record ExternalRow(long id, String source, String propertyType, String district,
                               BigDecimal areaSqm, BigDecimal priceVnd, String qualityStatus, String detailUrl,
@@ -97,7 +102,7 @@ public class ComparableCandidateRepository {
 
     public List<PropertyRow> propertyCandidates(Search search, int cap) {
         String sql = """
-            SELECT p.id, p.property_type, p.district, p.ward, p.area_sqm, p.price, p.bedrooms
+            SELECT p.id, p.property_type, p.district, p.ward, p.area_sqm, p.price, p.bedrooms, p.project_id
             FROM properties p WHERE
             """ + PROPERTY_ELIGIBLE + """
             AND CAST(p.property_type AS BINARY) = CAST(:type AS BINARY)
@@ -107,7 +112,8 @@ public class ComparableCandidateRepository {
             + " ORDER BY ABS(p.area_sqm - :area), p.id ASC LIMIT :cap";
         return jdbc.query(sql, params(search, cap), (rs, i) -> new PropertyRow(
             rs.getString("id"), rs.getString("property_type"), rs.getString("district"), rs.getString("ward"),
-            rs.getBigDecimal("area_sqm"), rs.getBigDecimal("price"), rs.getObject("bedrooms", Integer.class)));
+            rs.getBigDecimal("area_sqm"), rs.getBigDecimal("price"), rs.getObject("bedrooms", Integer.class),
+            rs.getString("project_id")));
     }
 
     private static String locality(String table, String ward) {

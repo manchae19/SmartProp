@@ -4,6 +4,8 @@ import React, { useRef, useState, useSyncExternalStore, useEffect } from "react"
 import { api } from "../auth/api.js";
 import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
 import AdvancedValuationFields from "./AdvancedValuationFields.jsx";
+import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
+import { valuationComparableBody } from '../property/comparables.js';
 function usePostValuationPanelState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
@@ -215,5 +217,7 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       <p className="mt-5 text-xs text-brand-navy/60 leading-relaxed">
         {"Thông tin tham khảo, không phải kết quả thẩm định chính thức. Không có kết quả vẫn có thể lưu hoặc gửi tin."}
       </p>
+      <ComparableEvidenceLookup body={view.state.result?.available ? valuationComparableBody(view.input?.body) : null}
+        title="Đối chiếu định giá bằng tin đăng" />
     </section></>;
 });

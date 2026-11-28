@@ -93,6 +93,7 @@ class ComparableSyntheticMysqlIT {
             (908,'A','Đất nền',?,80,3000000000,'VALID','', 'bad',NULL,'VERIFIED',JSON_ARRAY(),FALSE,FALSE,'SALE'),
             (909,'A','Nhà ở',?,80,3000000000,'VALID','', 'bad','','VERIFIED',JSON_ARRAY(),TRUE,FALSE,'SALE')
             """, DISTRICT, DISTRICT, DISTRICT, DISTRICT, DISTRICT, DISTRICT, DISTRICT, DISTRICT, DISTRICT);
+        jdbc.execute("ALTER TABLE properties ADD COLUMN project_id CHAR(36)");
     }
 
     @Test
@@ -124,6 +125,29 @@ class ComparableSyntheticMysqlIT {
         assertThat(buyer.comparables()).extracting(Candidate::candidateId)
             .containsExactly("property:wrong-ward", "property:valid-a", "external:903", "external:904");
         assertThat(buyer.eligibleCountsBySource()).containsOnlyKeys("SMARTPROP", "EXTERNAL_LISTING");
+    }
+
+    @Test
+    void refillPassesDuplicateHeavyAndCanonicalSelfMatchPrefixes() {
+        jdbc.update("""
+            INSERT INTO external_listings
+            WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM seq WHERE n<820)
+            SELECT 2000+n, 'A', 'Nhà ở', IF(n<=410,'Liên Chiểu','Ngũ Hành Sơn'), IF(MOD(n-1,410)<405,80,81),
+                3000000000, 'VALID',
+                IF(MOD(n-1,410)<405,'https://example.test/listings/77', CONCAT('https://example.test/listings/',n+100)),
+                CAST(n AS CHAR), NULL, 'VERIFIED', JSON_ARRAY(), FALSE, FALSE, 'SALE' FROM seq
+            """);
+        var service = new ComparableRankingService(repo, new ComparableEligibilityService(), mock(PropertyRepository.class), false);
+        var subject = new SubjectIdentity(null, null, null, null, "https://example.test/listings/77?utm_source=search");
+        var canonical = service.rank(new Request(null, "HOUSE", "Liên Chiểu", null, REF_AREA, null, null, null, 5,
+            false, Purpose.VALUATION_SUPPORT, null, subject));
+        assertThat(canonical.comparables()).extracting(Candidate::candidateId)
+            .containsExactly("external:2406","external:2407","external:2408","external:2409","external:2410");
+        var duplicates = service.rank(new Request(null, "HOUSE", "Ngũ Hành Sơn", null, REF_AREA, null, null, null, 5,
+            false, Purpose.VALUATION_SUPPORT, null, null));
+        assertThat(duplicates.comparables()).extracting(Candidate::candidateId)
+            .containsExactly("external:2411","external:2816","external:2817","external:2818","external:2819");
+        assertThat(duplicates.warnings()).noneMatch(w -> w.startsWith("SCAN_LIMIT_REACHED"));
     }
 
     private static ComparableCandidateRepository.Search search(String ward, String propertyId, BigDecimal maxPrice) {

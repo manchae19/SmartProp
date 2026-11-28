@@ -106,11 +106,11 @@ class ComparablePhaseBTest {
     @Test
     void mergesOnlyTrustedAliasesAndFlagsAreaPriceTwinsWithoutDroppingThem() {
         var rows = new ArrayList<>(List.of(
-            external(1, "A", "42", "g1", "https://a.example/Case?listing=1", 80),
+            external(1, "A", "42", "g1", "https://a.example/Detail?listing=1", 80),
             external(2, "A", "42", "g2", null, 82),
             external(3, "A", "other", "g2", null, 81),
             external(4, "B", "42", "g1", "https://b.example/path", 80),
-            external(5, "C", null, null, "HTTPS://A.EXAMPLE:443/Case?listing=1&utm_medium=x#photo", 81),
+            external(5, "C", null, null, "HTTPS://A.EXAMPLE:443/Detail?listing=1&utm_medium=x", 81),
             external(6, "A", "", " ", null, 80),
             external(7, "A", " ", "", "", 80),
             external(8, "A", "only-repost", null, "https://a.example/Case?listing=8", 80)));
@@ -122,20 +122,90 @@ class ComparablePhaseBTest {
         Collections.reverse(rows);
         assertThat(service.rank(query)).isEqualTo(first);
 
-        var subject = new SubjectIdentity(1L, "A", "42", null, "https://a.example/Case?listing=1");
+        var subject = new SubjectIdentity(1L, "A", "42", null, "https://a.example/Detail?listing=1");
         var excluded = service.rank(request(null, null, null, Purpose.VALUATION_SUPPORT, null, subject));
         assertThat(ids(excluded)).containsExactly("external:4", "external:6", "external:7", "external:8");
     }
 
     @Test
     void keepsCanonicalUrlIdentityConservative() {
-        assertThat(ComparableIdentity.canonicalUrl(" HTTPS://Homes.EXAMPLE:443/Case?id=12&utm_medium=x#photo "))
-            .isEqualTo("https://homes.example/Case?id=12");
-        assertThat(ComparableIdentity.canonicalUrl("https://homes.example/Case?id=13"))
-            .isNotEqualTo(ComparableIdentity.canonicalUrl("https://homes.example/case?id=13"));
-        for (String url : List.of("", " ", "https:///bad", "javascript:alert(0)", "https://user@homes.example/")) {
+        assertThat(ComparableIdentity.canonicalUrl(" HTTPS://Homes.EXAMPLE:443/Detail?listingId=12&id=7&utm_medium=x#photo "))
+            .isEqualTo("https://homes.example/Detail?listingId=12&id=7#photo");
+        assertThat(ComparableIdentity.canonicalUrl("https://homes.example/Detail?listing=13"))
+            .isNotEqualTo(ComparableIdentity.canonicalUrl("https://homes.example/detail?listing=13"));
+        assertThat(ComparableIdentity.canonicalUrl("https://homes.example/#/listing/13"))
+            .isNotEqualTo(ComparableIdentity.canonicalUrl("https://homes.example/#/listing/14"));
+        for (String url : List.of("", " ", "https:///bad", "javascript:alert(0)", "https://user@homes.example/",
+                "https://homes.example/", "https://homes.example/listings", "https://homes.example/category?id=123",
+                "https://homes.example/landing?utm_source=123#map", "https://homes.example/category?listingId=42")) {
             assertThat(ComparableIdentity.canonicalUrl(url)).isNull();
         }
+    }
+
+    @Test
+    void sharedGenericLinksCannotMergeDistinctRecordsAcrossProviders() {
+        when(repository.externalCandidates(any(), anyString(), anyInt())).thenReturn(List.of(
+            external(1, "A", "42", null, "https://homes.example/", 80),
+            external(2, "B", "42", null, "https://homes.example/", 80),
+            external(3, "A", "43", null, "https://homes.example/category?id=42", 80),
+            external(4, "B", "43", null, "https://homes.example/category?id=42", 80),
+            external(5, "B", "44", null, "https://homes.example/landing", 80)));
+        var result = service.rank(request(null, null, null, Purpose.VALUATION_SUPPORT, null, null));
+        assertThat(ids(result)).containsExactly("external:1", "external:2", "external:3", "external:4", "external:5");
+    }
+
+    @Test
+    void canonicalSelfMatchFillingTheHardLimitIsReportedAsIncomplete() {
+        var duplicates = java.util.stream.LongStream.rangeClosed(1, 1201)
+            .mapToObj(id -> external(id, "A", null, null, "https://homes.example/listings/77", 80)).toList();
+        when(repository.externalCandidates(any(), anyString(), anyInt()))
+            .thenAnswer(call -> duplicates.subList(0, call.getArgument(2)));
+        var subject = new SubjectIdentity(null, null, null, null, "https://homes.example/listings/77");
+        var result = service.rank(request(null, null, null, Purpose.VALUATION_SUPPORT, null, subject));
+        assertThat(ids(result)).isEmpty();
+        assertThat(result.warnings()).anyMatch(w -> w.startsWith("SCAN_LIMIT_REACHED"));
+        assertThat(result.evidence().scanComplete()).isFalse();
+        assertThat(result.evidence().status()).isEqualTo(EvidenceStatus.INSUFFICIENT_EVIDENCE);
+        assertThat(result.evidence().dedupe().exactSelfExcluded()).isEqualTo(1200);
+        verify(repository, times(2)).externalCandidates(any(), anyString(), anyInt());
+    }
+
+    @Test
+    void cohortStatisticsUseEligibleUniqueRowsOutsideTheReturnedSample() {
+        when(repository.propertyCandidates(any(), anyInt())).thenReturn(List.of(
+            property("1", "HOUSE", DISTRICT, null, 80, "2000000000"),
+            property("2", "HOUSE", DISTRICT, null, 80, "4000000000"),
+            property("3", "HOUSE", DISTRICT, null, 80, "6000000000"),
+            property("4", "HOUSE", DISTRICT, null, 100, "8000000000"),
+            property("5", "HOUSE", DISTRICT, null, 100, "10000000000"),
+            property("6", "HOUSE", DISTRICT, null, 100, "12000000000"),
+            property("6", "HOUSE", DISTRICT, null, 100, "12000000000"),
+            property("outside", "HOUSE", "Thanh Khê", null, 80, "19000000000")));
+        var request = new Request(null, "HOUSE", DISTRICT, null, bd("80"), null, null, null, 2,
+            false, Purpose.VALUATION_SUPPORT, null, null);
+        var result = service.rank(request);
+        Evidence evidence = result.evidence();
+        assertThat(ids(result)).containsExactly("property:1", "property:2");
+        assertThat(evidence.purpose()).isEqualTo(Purpose.VALUATION_SUPPORT);
+        assertThat(evidence.retrievedCandidateCount()).isEqualTo(7);
+        assertThat(evidence.uniqueEligibleCandidateCount()).isEqualTo(6);
+        assertThat(evidence.returnedSampleCount()).isEqualTo(2);
+        assertThat(evidence.status()).isEqualTo(EvidenceStatus.AVAILABLE);
+        assertThat(evidence.scannedCohortAskingPrice().medianPriceVnd()).isEqualByComparingTo("7000000000");
+        assertThat(evidence.scannedCohortAskingPrice().medianPricePerSqmVnd()).isEqualByComparingTo("77500000");
+        assertThat(evidence.provenance()).doesNotContainKey(SourceKind.TINIX_RESEARCH);
+    }
+
+    @Test
+    void smallCohortReturnsRowsAndSuppressesBothMedians() {
+        when(repository.propertyCandidates(any(), anyInt())).thenReturn(List.of(
+            property("one", "HOUSE", DISTRICT, null, 80, "2000000000")));
+        var result = service.rank(request(null, null, null, Purpose.VALUATION_SUPPORT, null, null));
+        assertThat(ids(result)).containsExactly("property:one");
+        assertThat(result.evidence().status()).isEqualTo(EvidenceStatus.INSUFFICIENT_EVIDENCE);
+        assertThat(result.evidence().scannedCohortAskingPrice().observations()).isEqualTo(1);
+        assertThat(result.evidence().scannedCohortAskingPrice().medianPriceVnd()).isNull();
+        assertThat(result.evidence().scannedCohortAskingPrice().medianPricePerSqmVnd()).isNull();
     }
 
     private static Request request(String id, String ward, String price, Purpose purpose, String budget, SubjectIdentity subject) {

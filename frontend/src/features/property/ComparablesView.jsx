@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useSyncExternalStore } from 'react'
 import { errorText, session } from '../auth/api.js'
 import ComparableListingsCard from './ComparableListingsCard.jsx'
 import { COMPARABLE_DISTRICTS, buildComparableBody, isForbidden, loadComparables } from './comparables.js'
@@ -8,9 +8,10 @@ const TYPES = [
   { value: 'Nhà ở', label: 'Nhà ở / Nhà phố' },
   { value: 'Đất nền', label: 'Đất nền' },
   { value: 'Căn hộ chung cư', label: 'Căn hộ chung cư' },
+  { value: 'VILLA', label: 'Biệt thự' },
 ]
 
-const EMPTY_FORM = { propertyType: 'Nhà ở', district: 'Hải Châu', ward: '', areaSqm: '', priceVnd: '', bedrooms: '', floors: '' }
+const EMPTY_FORM = { purpose: 'SIMILAR_LISTING', propertyType: 'Nhà ở', district: 'Hải Châu', ward: '', areaSqm: '', priceVnd: '', bedrooms: '', floors: '' }
 
 /**
  * Direct comparable lookup. Requires BROKER/ADMIN on the server; a 403 is shown
@@ -22,14 +23,16 @@ export default function ComparablesView() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [forbidden, setForbidden] = useState(false)
+  const current = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const formKey = JSON.stringify(form)
 
   const patch = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
   async function submit(event) {
-    event.preventDefault()
+    event?.preventDefault()
     // Anonymous callers get a clear notice instead of letting the global 401
     // handler bounce them to /login; the server gate is unchanged (BROKER/ADMIN).
-    if (!session.token) {
+    if (!current.token || !['BROKER', 'ADMIN'].includes(current.user?.role)) {
       setResult(null)
       setError('')
       setForbidden(true)
@@ -40,7 +43,7 @@ export default function ComparablesView() {
     setForbidden(false)
     try {
       const body = buildComparableBody(form)
-      setResult(await loadComparables(body))
+      setResult({ token: current.token, formKey, data: await loadComparables(body) })
     } catch (failure) {
       setResult(null)
       if (isForbidden(failure)) setForbidden(true)
@@ -53,14 +56,19 @@ export default function ComparablesView() {
   return (
     <section className="cmpv-section" data-comparables-view>
       <div className="cmpv-container">
-        <p className="cmpv-eyebrow">COMPARABLE LISTINGS</p>
         <h1 className="cmpv-title">Tìm bất động sản tương đồng</h1>
         <p className="cmpv-sub">
-          Xếp hạng theo độ tương đồng vị trí · diện tích · loại hình · giá, dựa trên dữ liệu MySQL thật.
-          <strong> Không phải định giá giao dịch.</strong>
+          Tìm tin theo địa bàn, loại hình và diện tích. Chọn mục đích để áp dụng tiêu chí giá phù hợp.
         </p>
 
         <form className="cmpv-form" onSubmit={submit}>
+          <label>Mục đích
+            <select value={form.purpose} onChange={(e) => patch('purpose', e.target.value)}>
+              <option value="SIMILAR_LISTING">Tìm tin tương đồng theo giá rao</option>
+              <option value="BUYER_BUDGET_SEARCH">Tìm theo ngân sách mua</option>
+              <option value="VALUATION_SUPPORT">Đối chiếu định giá độc lập</option>
+            </select>
+          </label>
           <label>Loại BĐS
             <select value={form.propertyType} onChange={(e) => patch('propertyType', e.target.value)}>
               {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -77,9 +85,9 @@ export default function ComparablesView() {
           <label>Diện tích (m²)
             <input type="number" min="5" max="50000" step="0.1" value={form.areaSqm} onChange={(e) => patch('areaSqm', e.target.value)} placeholder="vd: 80" />
           </label>
-          <label>Giá tham chiếu (VND)
+          {form.purpose !== 'VALUATION_SUPPORT' ? <label>{form.purpose === 'BUYER_BUDGET_SEARCH' ? 'Ngân sách tối đa (VND)' : 'Giá rao tham chiếu (VND)'}
             <input type="number" min="0" step="1000000" value={form.priceVnd} onChange={(e) => patch('priceVnd', e.target.value)} placeholder="tuỳ chọn" />
-          </label>
+          </label> : null}
           <label>Phòng ngủ
             <input type="number" min="0" step="1" value={form.bedrooms} onChange={(e) => patch('bedrooms', e.target.value)} placeholder="tuỳ chọn" />
           </label>
@@ -95,7 +103,7 @@ export default function ComparablesView() {
           loading={busy}
           error={error}
           forbidden={forbidden}
-          result={result}
+          result={current.token && current.token === result?.token && formKey === result.formKey ? result.data : null}
           onRetry={submit}
         />
       </div>

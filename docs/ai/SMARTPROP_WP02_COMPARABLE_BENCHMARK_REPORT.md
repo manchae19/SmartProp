@@ -173,3 +173,11 @@ Python 3.11.9 · exit 0 · hai lần chạy cùng cấu hình cho digest **giố
 - Chưa có labeled pairs thật ⇒ chưa đặt ngưỡng auto-merge T3.
 - Không đo SQL/index/latency; **không** có `EXPLAIN PASS`.
 - `asOf`/historical chưa mô phỏng; chưa chạy trên dữ liệu thật.
+
+## 16. Phase B5–B8 fresh fixture evidence
+
+The Python surrogate rerun used 28 cohorts at both k values with the fixed seed 20261127. BF_REALISTIC P@k was 0.550 (k=5, digest bdf107ddaf34ba57) and 0.514 (k=10, digest 0a245e32e091e2ce). Both runs and the assertion suite exited zero. Each run reproduced 2 trusted matches, 0 false merges and 1 unresolved duplicate in the pair fixture. BF matched 56/56 pools, ranks and scores across price perturbations, with score drift 0. Buyer budget violations were zero.
+
+Production Java code was tested independently. Coverage sensitivity on observed versus sparse fixtures changed the relative order between the 5% and 25% penalties. The implementation keeps coverage separate from the similarity score. Java tests also exercise purpose boundaries, URL false merges, scan-limit reporting and medians from the deduplicated eligible cohort. MySQL 8.0.46 fixture queries verify strict locality and eligibility, live expiry, deterministic order, budget, price independence and refill past duplicate-heavy and canonical self-match prefixes.
+
+Synthetic outcomes describe the named fixtures. The API response remains capped at five. The k=10 surrogate run is a stress test and supplies no estimate of production SQL performance or market precision.
