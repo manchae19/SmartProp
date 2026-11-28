@@ -45,7 +45,7 @@ Không nhận query bắt buộc. Trả `Source[]` trực tiếp, không bọc t
 
 Dataset rỗng trả `items: []`, tổng số phần tử/trang bằng 0 và `sources: []`. Không tạo fixture content trong môi trường dùng chung.
 
-Trước Local V28 hoặc khi schema/constraint không hợp lệ, cả ba News endpoint trả HTTP 503 với mã `NEWS_SCHEMA_UNAVAILABLE`. Error envelope: `{code, message, fields, timestamp}`. Query sai trả HTTP 400 cùng error envelope. Không retry vô hạn; giữ trạng thái graceful degradation.
+Khi lineage hợp lệ nhưng chưa hỗ trợ News (Standard V23 hoặc Advisor read-only Local V21/V26/V27), cả ba News endpoint trả HTTP 503 với mã `NEWS_SCHEMA_UNAVAILABLE`. Error envelope: `{code, message, fields, timestamp}`. Query sai trả HTTP 400 cùng error envelope. Không retry vô hạn; giữ trạng thái graceful degradation.
 
 Public chỉ nhận bài `VISIBLE` của source đang enabled, được đánh dấu `APPROVED`, và có `rightsReference` chứa ký tự không phải whitespace. Reference không tự chứng minh quyền sử dụng; source review vẫn thuộc quy trình riêng. Summary bị ẩn nếu quyền không cho phép; ảnh publisher không được phát hành trong DTO.
 
@@ -54,3 +54,5 @@ Frontend cần tiếp tục dùng URL sanitizer hiện có cho article/source li
 ## Validation đã thực hiện
 
 Chrome kiểm thử PR #37 gọi Spring backend thật trên fixture MySQL synthetic cô lập, gồm dataset rỗng và backend outage. Bằng chứng tương ứng trong `.scratch/evidence/chrome-real-integration.json` và `.scratch/evidence/chrome-error-state.json`; fixture synthetic không đại diện cho nội dung báo chí thật. Frontend PR37 65/65 là `REUSED_EVIDENCE` trong follow-up này vì không đổi frontend/API contract.
+
+Schema không xác định, lineage/history/checksum sai, schema bị hỏng hoặc constraint V28 sai phải **fail startup**; không mô tả các trường hợp này là application vẫn chạy và trả controlled503. Local/Staging full-mode đòi V28 hoàn chỉnh. Fresh PR41 nghiệm thu trên approved baseline b49a98f có News API/browser compatibility cho detached PR37@151a07b; xem `docs/SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md`.

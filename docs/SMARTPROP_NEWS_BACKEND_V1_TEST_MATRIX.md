@@ -1,54 +1,35 @@
-# PR #41 — Ma trận kiểm thử cuối
+# PR #41 — Ma trận nghiệm thu fresh
 
-## Fresh validation
+Approved baseline `b49a98fc333cbda1ff38d5511259a5329881812e`; source HEAD `abf0e3a19018e35e93c113e9e1f625ed0148507d`; tree `8125ae0d3e048ff6da3457c5e3b35538da8b2a00`. Nội dung ứng dụng khớp cây backend regression `72d34aebc86799d04ee98826c064ebad31e7f821`. Sáu file test/fixture thay đổi và các runtime liên quan đã được kiểm thử.
 
-| Suite | Kết quả | Command/evidence |
-|---|---:|---|
-| Backend unit + integration/local + concurrency + coordinate + V28 verifier | **FRESH_PASS 614/614**, 0 lỗi/bỏ qua | Runner `.scratch/tools/pr41-run-tests.ps1`, profile test-only PR41; `.scratch/evidence/integrated-backend-final-test-scope-guard.log` |
-| Advisor Local V21/V26/V27 read-only, Local/Staging full-mode pending refusal, V27 Hibernate checks, V28 capability, identity guards | **FRESH_PASS 13/13** | `mvnw ... test -Dtest=AdvisorReadOnlyRuntimeIT`; `.scratch/evidence/advisor-final-runtime-pass.log`; Spring Boot/Hibernate và HTTP thật |
-| Standard V23, dev, prod, dev+prod | **FRESH_PASS 8/8** | `mvnw ... test -Dtest=NewsStandardV23IT,NewsStandardDevIT,NewsStandardProdIT,NewsStandardCombinedIT`; `.scratch/evidence/standard-v23-final-post-fixture-guard.log` |
-| V28 constraint verifier: exact, normalized, missing, ambiguous, wrong table/type, unenforced, weakened/malformed | **FRESH_PASS 19/19** | MySQL 8 isolated; `.scratch/evidence/v28-verifier-mysql-final2.log` |
-| Google Account Linking | **FRESH_PASS 1/1** | `.scratch/evidence/pr48-google-link-runtime-standard-v23.log`; isolated Standard V23, real Spring/Chrome/OIDC |
-| Package production | **FRESH_PASS** | `mvnw clean -Dmaven.test.skip=true package`; `.scratch/evidence/backend-clean-package-final-fixture-guard.log`; JAR không có test profile/class/fixture |
+| Suite | PASS | SKIP | Phân loại / raw log |
+|---|---:|---:|---|
+|Backend integrated|640|0|UNIT_AND_REAL_SPRING_HIBERNATE_MYSQL; `.scratch/evidence/baseline-b49/backend-rerun.log`|
+|Standard V23/profile matrix|8|0|REAL_SPRING_HIBERNATE_MYSQL; `.scratch/evidence/baseline-b49/standard.log`|
+|Portable Coordinate and isolation|47|0|REAL_SPRING_HIBERNATE_MYSQL; `.scratch/evidence/baseline-b49/portable.log`|
+|Google Linking browser runtime|1|0|REAL_CHROME_SPRING_MYSQL_SYNTHETIC_SIGNED_OIDC; `.scratch/evidence/baseline-b49/google-runtime.log`|
+|WP02 Comparable and Advisor outage|4|0|REAL_MYSQL_AND_REAL_OFFLINE_AI_DESTINATION; `.scratch/evidence/baseline-b49/wp02-runtime.log`|
+|V1.3/WP04/security/shadow|101|0|REAL_PINNED_MODEL_FASTAPI_IN_PROCESS_AND_OWNED_HTTP; `.scratch/evidence/baseline-b49/python312-model.log`|
+|Candidate frontend|348|0|FRONTEND_UNIT_CONTRACT; `.scratch/evidence/baseline-b49/frontend.log`|
+|PR37 frontend|65|0|FRONTEND_UNIT_CONTRACT; `.scratch/evidence/baseline-b49/pr37-frontend.log`|
+|News candidate browser|12|0|REAL_CHROME_SPRING_MYSQL_SYNTHETIC_NEWS; `.scratch/evidence/baseline-b49/candidate-news-browser.log`|
+|News PR37 browser|12|0|REAL_CHROME_SPRING_MYSQL_SYNTHETIC_NEWS; `.scratch/evidence/baseline-b49/news-browser-final.log`|
+|Controlled News503 and retry|6|0|REAL_CHROME_STANDARD_V23_HTTP503; `.scratch/evidence/baseline-b49/news-controlled503-final.log`|
+|WP04 HTTP|157|0|REAL_FASTAPI_AND_VITE_PROXY_HTTP; `.scratch/evidence/baseline-b49/wp04-runtime-final.log`|
+|WP04 three valuation surfaces|298|0|REAL_CHROME_REACT_SPRING_FASTAPI_MYSQL; `.scratch/evidence/baseline-b49/wp04-runtime-surfaces-final.log`|
+|WP04 failure isolation|11|0|MIXED_REAL_HTTP_HELD_RESPONSE_MOCKED_MUTATIONS_REAL_PROCESS_OUTAGE; `.scratch/evidence/baseline-b49/wp04-failure-isolation-final.log`|
+|WP04 component geometry|484|0|MOCKED_COMPONENT_REAL_CHROME_VIEWPORT; `.scratch/evidence/baseline-b49/wp04-component.log`|
+|WP04 Advisor components|30|0|MOCKED_COMPONENT_WITH_LINKED_ROUTE_FAILURE_EVIDENCE; `.scratch/evidence/baseline-b49/wp04-surfaces-final.log`|
+|Reactive authorization and shared session|3|0|MIXED_REAL_MYSQL_SESSION_AND_SYNTHETIC_RESPONSE; `.scratch/evidence/baseline-b49/wp04-reactive-authorization-final.log`|
+|Session scope browser|5|0|MOCKED_HTTP_REAL_CHROME; `.scratch/evidence/baseline-b49/session-browser.log`|
+|Source HEAD real-model smoke|157|0|REAL_MODEL_HTTP_ON_COMMITTED_SOURCE_HEAD; `.scratch/evidence/baseline-b49/final-head-smoke/wp04-http.log`|
 
-## Fresh evidence đã có trước lượt cuối
+Python union theo exact testcase identity:1.136PASS,0FAIL/ERROR,1SKIP (optional offline planning dataset). Không cộng các suite lặp vào tổng. RAG/context/routing41modules chạy serial với network guard; model/WP04101cases rerun bằng Python3.12/XGBoost3.4.1 giải quyết toàn bộ model-related skips/failures.
 
-| Suite | Kết quả | Evidence |
-|---|---:|---|
-| WP02 comparable runtime trên fixture được cấp | **FRESH_PASS 3/3** | `.scratch/evidence/` WP02 fixture logs |
-| Coordinate portability + guard trên hai fixture độc lập | **FRESH_PASS 47 test**, gồm 39 provenance + 8 safety | `.scratch/evidence/targeted/portable-coordinate-final.log` và 3311 evidence |
-| V26→V27→V28 và V27→V28 migration path | **FRESH_PASS** | `.scratch/evidence/v28/` migration evidence; Flyway validate và checksum khớp |
-| Browser News integration + outage | **FRESH_PASS 12 scenario + outage**, synthetic dataset, real Spring/MySQL | `.scratch/evidence/chrome-real-integration.json`, `chrome-error-state.json` |
+Production build: `backend/mvnw.cmd -o -B -DskipTests clean package` exit0; Vite candidate và PR37 builds exit0. Security scan1.388files/0findings; npm audit0vulnerabilities. Fresh upgrade paths V26→V27→V28 và V27→V28 PASS. Artifact8/8 trước/sau; price invariance44/44,0VND drift.
 
-## Evidence tái sử dụng và chưa hoàn tất
+Advisor actual13; historical26 là aggregate. Verifier actual4methods; historical19 là aggregate4+7+8.640 bao gồm các suite này. Component/mock checks không thay real runtime. Không có mandatory gate dùng historical REUSED_EVIDENCE.
 
-| Hạng mục | Trạng thái | Phạm vi |
-|---|---|---|
-| Frontend PR41 | **REUSED_EVIDENCE 93/93** | Không có frontend/API contract change |
-| Frontend PR37 | **REUSED_EVIDENCE 65/65** | Không sửa branch PR37, không đổi contract |
-| Chrome screenshots/E2E và frontend production builds trên integrated baseline | **REUSED_EVIDENCE** | Không ghi FRESH_PASS cho lượt này |
-| RAG Python regression | **FRESH_PASS 976 passed**, 0 failures/errors, 73 subtests; `.scratch/evidence/rag-final-post-deps-clean.log`. Python V1.3 model tests are **NOT_RUN** because the required model artifact is absent.
-| Freshness theo latest `origin/main` | **BLOCKED** | Remote main mới `b49a98f` chưa được phê duyệt để tích hợp; branch vẫn chứa main đã duyệt `0e9053f` |
-| Native DB dùng chung 3306/3307, live RSS, duyệt nguồn thật | **NOT_RUN** | Bị cấm trong phạm vi PR #41 |
+Full commands/timings/classifications và price corpus results: [acceptance.json](pr41-evidence/acceptance.json). Raw evidence/timings và final delivery SHA/tree/remote confirmation: `.scratch/evidence/pr41-final-validation-manifest.md`.
 
-## Database isolation
-
-Runtime PR41 chỉ dùng `127.0.0.1:3311/pr41_local`, identity được kiểm tra từ manifest do provisioner độc lập tạo: port, schema, UUID, datadir, PID/owner, config hash và JDBC URL. `SMARTPROP_TEST_FIXTURE_AUTHORIZATION` chỉ truyền bằng environment process; không lưu trong Git hoặc log. Driver evidence không ghi destination protected. Không load `.env` dùng chung. Fixture khác cho Google và portability có datadir/UUID/schema riêng.
-
-## Migration integrity
-
-- Không thay migration SQL hoặc Flyway history V13–V28; không tạo V29.
-- V27 checksum `-1622560226`; V28 checksum `-1006687404`.
-- Không repair, auto-baseline hay migrate shared database.
-- Negative constraint tests thay đổi DDL trên fixture synthetic riêng và phục hồi trong `finally`.
-- Không sửa legacy rights, không tạo rightsReference giả, không tự duyệt source.
-
-## Lệnh chính
-
-```powershell
-./backend/mvnw.cmd -f backend/pom.xml test '-Dtest=AdvisorReadOnlyRuntimeIT'
-./backend/mvnw.cmd -f backend/pom.xml test '-Dtest=NewsStandardV23IT,NewsStandardDevIT,NewsStandardProdIT,NewsStandardCombinedIT'
-./backend/mvnw.cmd -f backend/pom.xml clean '-Dmaven.test.skip=true' package
-```
-
-Các lệnh runtime chỉ chạy sau pre-connection guard và xác nhận manifest. Không chạy chúng với JDBC URL/profile mặc định hoặc `.env` chung.
+`LIVE_INGESTION_DISABLED` · `SOURCE_RIGHTS_APPROVAL_PENDING`.

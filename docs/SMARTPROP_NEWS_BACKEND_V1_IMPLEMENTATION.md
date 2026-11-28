@@ -2,8 +2,7 @@
 
 Ngày cập nhật: 2026-11-28. Branch: `feature/news-backend-v1`.
 
-Main được nhóm trưởng duyệt và tích hợp: `0e9053f0c4085351a7d429f81995f6895ad80e33`.
-Trong lúc hoàn tất PR #41, `origin/main` tiến tới `b49a98fc333cbda1ff38d5511259a5329881812e` qua PR #50. SHA mới chưa được duyệt để tích hợp.
+Main frozen được nhóm trưởng duyệt và đã normal-merge: `b49a98fc333cbda1ff38d5511259a5329881812e`. Source HEAD `abf0e3a19018e35e93c113e9e1f625ed0148507d`; product source không đổi so với cây integrated regression.
 
 ## Release boundaries
 
@@ -59,6 +58,8 @@ SQL/checksum V13–V28 giữ nguyên so với reviewed PR41 HEAD. V27 Flyway che
 
 ## Validation và trạng thái
 
-Kết quả thực tế và nhãn `FRESH_PASS` / `REUSED_EVIDENCE` / `NOT_RUN` nằm trong [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md) và [final report](SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md). Frontend, browser và production builds không bị thay đổi thì ghi `REUSED_EVIDENCE`, không ghi fresh.
+Fresh integrated acceptance đã hoàn tất trên approved frozen baseline: backend640, Standard8, portable47, Google real browser1, WP02 runtime4; Python union1.136PASS/0FAIL/ERROR/1optionalSKIP; model101/101. WP04 ba surfaces298checks và real HTTP157checks; giá44cases không drift. Candidate frontend348, PR37frontend65, News/browser, builds và security đều có fresh evidence.
 
-Trạng thái **VALIDATION_PARTIAL**: RAG suites passed; Python V1.3 model tests lack the real artifact, and latest `origin/main` has overlapping unapproved changes. The approved main SHA `0e9053f` is an ancestor of the candidate. No approval or merge was performed.
+Official ZIP đạt8/8 integrity, model chạy bằng Python3.12/XGBoost3.4.1 pinned; không đổi artifact/calibration. Fixture marker đã tách để giữ Standard historyV1–V23, không auto-baseline; quyền marker tạm được thu hồi trước runtime. Sáu thay đổi mới chỉ thuộc test runners/fixtures.
+
+Xem [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md), [final report](SMARTPROP_NEWS_BACKEND_V1_FINAL_REPORT.md) và [machine-readable acceptance](pr41-evidence/acceptance.json). Final delivery/remote proof được ghi sau push trong PR41/local final manifest. Không approve, merge hoặc deploy.
