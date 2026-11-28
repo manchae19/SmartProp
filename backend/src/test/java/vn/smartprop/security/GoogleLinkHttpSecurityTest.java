@@ -77,12 +77,23 @@ class GoogleLinkHttpSecurityTest {
     @MockitoBean RefreshService refresh;
     private static final AtomicLong TEST_USER_IDS = new AtomicLong(40L);
     private String bearer;
+    private User actor;
+    @Autowired CounterClock counterClock;
+
+    static final class CounterClock extends Clock {
+        private Instant instant = Instant.now();
+        void advanceSeconds(long seconds) { instant = instant.plusSeconds(seconds); }
+        @Override public java.time.ZoneId getZone() { return java.time.ZoneOffset.UTC; }
+        @Override public Clock withZone(java.time.ZoneId zone) { return Clock.fixed(instant, zone); }
+        @Override public Instant instant() { return instant; }
+    }
 
     @TestConfiguration
     static class Beans {
-        @Bean Clock clock() { return Clock.systemUTC(); }
+        @Bean @org.springframework.context.annotation.Primary Clock clock() { return Clock.systemUTC(); }
         @Bean LoginThrottle loginThrottle(ObjectMapper mapper) { return new LoginThrottle(mapper); }
-        @Bean RequestLimits requestLimits() { return new RequestLimits(); }
+        @Bean CounterClock counterClock() { return new CounterClock(); }
+        @Bean RequestLimits requestLimits(CounterClock clock) { return new RequestLimits(clock); }
     }
 
     @BeforeEach void fixtureSession() {
@@ -92,6 +103,12 @@ class GoogleLinkHttpSecurityTest {
         user.status = User.Status.ACTIVE;
         user.tokenVersion = 1;
         when(users.findById(user.id)).thenReturn(Optional.of(user));
+        actor = user;
+        bearer = issueToken(user);
+        when(refresh.enabled()).thenReturn(true);
+    }
+
+    private String issueToken(User user) {
         AuthSession session = new AuthSession();
         session.id = java.util.UUID.randomUUID().toString();
         session.userId = user.id;
@@ -100,8 +117,7 @@ class GoogleLinkHttpSecurityTest {
         when(sessions.findById(session.id)).thenReturn(Optional.of(session));
         var claims = JwtClaimsSet.builder().issuer("smartprop").subject(user.id.toString()).id(session.id)
             .claim("ver", 1).issuedAt(Instant.now().minusSeconds(5)).expiresAt(Instant.now().plusSeconds(600)).build();
-        bearer = "Bearer " + encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
-        when(refresh.enabled()).thenReturn(true);
+        return "Bearer " + encoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
     }
 
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder protectedPost(String path) throws Exception {
@@ -130,7 +146,7 @@ class GoogleLinkHttpSecurityTest {
     }
 
     @Test void expiredTicketPreservesValidSession() throws Exception {
-        when(flows.consumeTicket(any(), any())).thenThrow(new ApiException(410, "GOOGLE_LINK_EXPIRED", "Expired"));
+        when(flows.consumeTicket(any(), any(), any(), any())).thenThrow(new ApiException(410, "GOOGLE_LINK_EXPIRED", "Expired"));
         when(service.status(any())).thenReturn(new GoogleLinkService.Status(false));
         mvc.perform(protectedPost(LINK + "/complete").header("Origin", ORIGIN).header("Authorization", bearer))
             .andExpect(status().isGone()).andExpect(jsonPath("$.code").value("GOOGLE_LINK_EXPIRED"));
@@ -154,7 +170,7 @@ class GoogleLinkHttpSecurityTest {
     @Test void limitsPasswordConfirmationAndCompletionIndependently() throws Exception {
         when(service.begin(any(), eq("wrong-fixture")))
             .thenThrow(new ApiException(400, "WRONG_PASSWORD", "Wrong password"));
-        when(flows.consumeTicket(any(), any()))
+        when(flows.consumeTicket(any(), any(), any(), any()))
             .thenThrow(new ApiException(410, "GOOGLE_LINK_EXPIRED", "Expired"));
         for (int attempt = 0; attempt < 5; attempt++) {
             mvc.perform(protectedPost(LINK + "/start").header("Origin", ORIGIN).header("Authorization", bearer)
@@ -166,7 +182,16 @@ class GoogleLinkHttpSecurityTest {
             .contentType(MediaType.APPLICATION_JSON).content(BODY))
             .andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"));
         mvc.perform(protectedPost(LINK + "/complete").header("Origin", ORIGIN).header("Authorization", bearer))
-            .andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"));
+            .andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "300"));
+        String secondSession = issueToken(actor);
+        mvc.perform(protectedPost(LINK + "/start").header("Origin", ORIGIN).header("Authorization", secondSession)
+            .contentType(MediaType.APPLICATION_JSON).content(BODY))
+            .andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "300"));
+        counterClock.advanceSeconds(300);
+        mvc.perform(protectedPost(LINK + "/start").header("Origin", ORIGIN).header("Authorization", secondSession)
+            .contentType(MediaType.APPLICATION_JSON).content(BODY)).andExpect(status().isBadRequest());
+        mvc.perform(protectedPost(LINK + "/complete").header("Origin", ORIGIN).header("Authorization", bearer))
+            .andExpect(status().isGone());
     }
 
     @Test void limitsAuthorizationAndKeepsCallbackDestinationFixed() throws Exception {
@@ -178,7 +203,9 @@ class GoogleLinkHttpSecurityTest {
         for (int attempt = 0; attempt < 10; attempt++) {
             mvc.perform(get(authorize)).andExpect(status().isUnauthorized());
         }
-        mvc.perform(get(authorize)).andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"));
+        mvc.perform(get(authorize)).andExpect(status().isTooManyRequests()).andExpect(header().string("Retry-After", "60"));
+        counterClock.advanceSeconds(60);
+        mvc.perform(get(authorize)).andExpect(status().isUnauthorized());
     }
 
 }

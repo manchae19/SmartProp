@@ -150,4 +150,13 @@ class GoogleLinkServiceTest {
         verify(jdbc, never()).update(anyString(), any(Object[].class));
     }
 
+    @Test void previouslyIssuedTicketCannotBeUsedAfterSessionRevocation() {
+        var ticket = new GoogleLinkFlowStore.Ticket(
+            new GoogleProfile("subject", "owner@example.test", "Owner"), 42L, session.id);
+        session.revoked = true;
+        when(policy.valid(session, user)).thenReturn(false);
+        assertEquals(401, assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).status);
+        verifyNoInteractions(jdbc);
+    }
+
 }

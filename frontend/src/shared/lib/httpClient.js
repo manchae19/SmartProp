@@ -1,3 +1,15 @@
+// Compare server-issued access claims for UI continuity only. The server authorizes every request.
+function accessSession(token) {
+  try {
+    const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const { iss, sub, jti, ver } = JSON.parse(atob(payload));
+    if (iss === "smartprop" && typeof sub === "string" && typeof jti === "string" && jti && Number.isInteger(ver)) {
+      return JSON.stringify([sub, jti, ver]);
+    }
+  } catch { /* Unrecognized token formats cannot attest session continuity. */ }
+  return null;
+}
+
 // Access tokens stay in memory. Refresh credentials are sent only as HttpOnly cookies.
 export function createHttpClient({
   baseUrl,
@@ -16,33 +28,65 @@ export function createHttpClient({
     initialized = false,
     epoch = 0;
   const state = (status, error = null) => {
-    session.edit(draft => draft.status = status);
-    session.edit(draft => draft.error = error);
+    session.edit(draft => {
+      draft.status = status;
+      draft.error = error;
+    });
     onState(status, error);
   };
   const terminal = e => e?.status === 401 && e?.code !== "AUTH_RETRY_REQUIRED" || e?.status === 403 && e?.code === "ACCOUNT_LOCKED";
   function invalidate() {
     epoch++;
+    session.edit(draft => { draft.authGeneration = epoch; });
+  }
+  function beginAuthChange() {
+    epoch++;
+    session.edit(draft => {
+      draft.authGeneration = epoch;
+      draft.authTransition = true;
+    });
+    return epoch;
+  }
+  function finishAuthChange(current) {
+    if (current === epoch && session.getSnapshot().authTransition) {
+      session.edit(draft => { draft.authTransition = false; });
+    }
   }
   function expire(redirect = true) {
     invalidate();
     clear();
-    session.edit(draft => draft.token = null);
-    session.edit(draft => draft.user = null);
+    session.edit(draft => {
+      draft.token = null;
+      draft.user = null;
+      draft.authTransition = false;
+    });
     initialized = true;
     state("UNAUTHENTICATED");
     if (redirect) expired();
   }
   function unavailable(e) {
+    invalidate();
     state("UNAVAILABLE", e?.message || "Không thể kiểm tra phiên. Vui lòng thử lại.");
   }
-  function accept(result, current) {
+  function accept(result, current, refreshing = false) {
     if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), {
       code: "SESSION_CHANGED"
     });
-    session.edit(draft => draft.token = result.accessToken);
-    session.edit(draft => draft.user = result.user);
-    state("AUTHENTICATED");
+    const previous = session.getSnapshot();
+    if (refreshing && previous.token) {
+      const prior = accessSession(previous.token);
+      const next = accessSession(result.accessToken);
+      if (previous.user?.id !== result.user?.id || ((prior || next) && prior !== next)) epoch++;
+    }
+    session.edit(draft => {
+      draft.token = result.accessToken;
+      draft.user = result.user;
+      draft.authGeneration = epoch;
+      draft.authTransition = false;
+      draft.status = "AUTHENTICATED";
+      draft.error = null;
+    });
+    onState("AUTHENTICATED", null);
     initialized = true;
     return result;
   }
@@ -99,22 +143,25 @@ export function createHttpClient({
     authenticated: false
   });
   function rotate() {
-    if (refreshFlight) return refreshFlight;
+    if (refreshFlight?.epoch === epoch) return refreshFlight.promise;
     const current = epoch,
       run = async () => {
         const c = await csrf();
+        if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), { code: "SESSION_CHANGED" });
         return accept(await send("/auth/refresh", {
           method: "POST",
           authenticated: false,
           headers: {
             [c.headerName]: c.token
           }
-        }), current);
+        }), current, true);
       };
-    refreshFlight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
-      refreshFlight = null;
+    const flight = { epoch: current };
+    flight.promise = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
+      if (refreshFlight === flight) refreshFlight = null;
     });
-    return refreshFlight;
+    refreshFlight = flight;
+    return flight.promise;
   }
   async function request(path, options = {}) {
     const sentToken = session.getSnapshot().token,
@@ -146,7 +193,9 @@ export function createHttpClient({
             sessionRecovered: true
           });
           try {
-            return await send(path, options);
+            const result = await send(path, options);
+            if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), { code: "SESSION_CHANGED" });
+            return result;
           } catch (next) {
             if (current === epoch && terminal(next)) expire();
             throw next;
@@ -160,11 +209,12 @@ export function createHttpClient({
   function initialize({
     force = false
   } = {}) {
-    if (initialization) return initialization;
+    if (initialization?.epoch === epoch) return initialization.promise;
     if (initialized && !force) return Promise.resolve(session.getSnapshot().status);
     const current = epoch;
     state("INITIALIZING");
-    initialization = (async () => {
+    const flight = { epoch: current };
+    flight.promise = (async () => {
       try {
         if (session.getSnapshot().token) {
           try {
@@ -187,57 +237,59 @@ export function createHttpClient({
       }
       return session.getSnapshot().status;
     })().finally(() => {
-      initialization = null;
+      if (initialization === flight) initialization = null;
     });
-    return initialization;
+    initialization = flight;
+    return flight.promise;
   }
   async function login(body) {
-    invalidate();
-    const current = epoch;
-    return accept(await send("/auth/login", {
-      method: "POST",
-      authenticated: false,
-      body,
-      headers: refreshEnabled ? {
-        "X-Refresh-Session": "true"
-      } : {}
-    }), current);
+    const current = beginAuthChange();
+    try {
+      return accept(await send("/auth/login", {
+        method: "POST",
+        authenticated: false,
+        body,
+        headers: refreshEnabled ? { "X-Refresh-Session": "true" } : {}
+      }), current);
+    } finally {
+      finishAuthChange(current);
+    }
   }
   async function logout() {
-    if (refreshEnabled) {
-      const c = await csrf(),
-        options = {
-          method: "POST",
-          headers: {
-            [c.headerName]: c.token
-          }
-        };
-      try {
-        await send("/auth/logout", options);
-      } catch (e) {
-        if (e.status !== 401) throw e;
-        await send("/auth/logout", {
-          ...options,
-          authenticated: false
-        });
-      }
-    } else await send("/auth/logout", {
-      method: "POST"
-    });
-    expire(false);
-    initialized = true;
+    const current = beginAuthChange();
+    try {
+      if (refreshEnabled) {
+        const c = await csrf();
+        if (current !== epoch) return false;
+        const options = { method: "POST", headers: { [c.headerName]: c.token } };
+        try {
+          await send("/auth/logout", options);
+        } catch (e) {
+          if (e.status !== 401) throw e;
+          if (current !== epoch) return false;
+          await send("/auth/logout", { ...options, authenticated: false });
+        }
+      } else await send("/auth/logout", { method: "POST" });
+      if (current !== epoch) return false;
+      expire(false);
+      return true;
+    } finally {
+      finishAuthChange(current);
+    }
   }
   async function google() {
-    invalidate();
-    const current = epoch,
-      c = await csrf();
-    return accept(await send("/auth/oauth2/complete", {
-      method: "POST",
-      authenticated: false,
-      headers: {
-        [c.headerName]: c.token
-      }
-    }), current);
+    const current = beginAuthChange();
+    try {
+      const c = await csrf();
+      if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), { code: "SESSION_CHANGED" });
+      return accept(await send("/auth/oauth2/complete", {
+        method: "POST",
+        authenticated: false,
+        headers: { [c.headerName]: c.token }
+      }), current);
+    } finally {
+      finishAuthChange(current);
+    }
   }
   return {
     request,

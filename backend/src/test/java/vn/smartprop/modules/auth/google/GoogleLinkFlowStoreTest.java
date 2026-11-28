@@ -47,8 +47,8 @@ class GoogleLinkFlowStoreTest {
         String ticketHeader = lastCookie(ticketResponse);
         String ticketCookie = cookieValue(ticketHeader);
         assertTrue(ticketHeader.contains("SameSite=Lax"));
-        assertEquals(77L, store.consumeTicket(requestWithTicket(ticketCookie), new MockHttpServletResponse()).userId());
-        assertThrows(RuntimeException.class, () -> store.consumeTicket(requestWithTicket(ticketCookie), new MockHttpServletResponse()));
+        assertEquals(77L, store.consumeTicket(requestWithTicket(ticketCookie), new MockHttpServletResponse(), "77", "session-uuid").userId());
+        assertThrows(RuntimeException.class, () -> store.consumeTicket(requestWithTicket(ticketCookie), new MockHttpServletResponse(), "77", "session-uuid"));
     }
 
     @Test void rejectsStateMismatchAndExpiredFlow() {
@@ -127,7 +127,7 @@ class GoogleLinkFlowStoreTest {
         AtomicInteger accepted = new AtomicInteger();
         Runnable completion = () -> {
             ready.countDown();
-            try { go.await(); store.consumeTicket(requestWithTicket(ticket), new MockHttpServletResponse()); accepted.incrementAndGet(); }
+            try { go.await(); store.consumeTicket(requestWithTicket(ticket), new MockHttpServletResponse(), "5", "session"); accepted.incrementAndGet(); }
             catch (RuntimeException ignored) { }
             catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); }
         };
@@ -154,8 +154,74 @@ class GoogleLinkFlowStoreTest {
         store.handoff(profile, callback, handoff);
         clock.advanceSeconds(60);
         var error = assertThrows(vn.smartprop.common.ApiException.class,
-            () -> store.consumeTicket(requestWithTicket(cookieValue(lastCookie(handoff))), new MockHttpServletResponse()));
+            () -> store.consumeTicket(requestWithTicket(cookieValue(lastCookie(handoff))), new MockHttpServletResponse(), "5", "session"));
         assertEquals(410, error.status);
+    }
+
+    @Test void newerStartRetiresOldCallbackEvenDuringTokenExchange() {
+        String old = begin(5L, "session");
+        store.save(authorization("old"), request(old, null), new MockHttpServletResponse());
+        var callback = request(old, "old");
+        assertNotNull(store.remove(callback, new MockHttpServletResponse()));
+        String next = begin(5L, "session");
+
+        assertNull(store.remove(request(old, "old"), new MockHttpServletResponse()));
+        assertThrows(vn.smartprop.common.ApiException.class,
+            () -> store.handoff(profile(), callback, new MockHttpServletResponse()));
+        store.fail(callback, new MockHttpServletResponse());
+        assertTrue(store.hasPendingStart(request(next, null)));
+    }
+
+    @Test void overlappingTabsRetireOldTicketButLeaveOtherSessionsAndAccountsAlone() {
+        String old = issueTicket(5L, "first-browser", "old");
+        String secondBrowser = issueTicket(5L, "second-browser", "second-browser");
+        String otherAccount = issueTicket(6L, "other-account", "other-account");
+        String next = issueTicket(5L, "first-browser", "next");
+
+        var expired = assertThrows(vn.smartprop.common.ApiException.class,
+            () -> store.consumeTicket(requestWithTicket(old), new MockHttpServletResponse(), "5", "first-browser"));
+        assertEquals(410, expired.status);
+        for (String[] incorrect : new String[][] {{"5", "second-browser"}, {"6", "first-browser"}}) {
+            var response = new MockHttpServletResponse();
+            var mismatch = assertThrows(vn.smartprop.common.ApiException.class,
+                () -> store.consumeTicket(requestWithTicket(next), response, incorrect[0], incorrect[1]));
+            assertEquals(409, mismatch.status);
+            assertNull(response.getHeader("Set-Cookie"));
+        }
+        assertEquals(5L, store.consumeTicket(requestWithTicket(next), new MockHttpServletResponse(), "5", "first-browser").userId());
+        assertEquals(5L, store.consumeTicket(requestWithTicket(secondBrowser), new MockHttpServletResponse(), "5", "second-browser").userId());
+        assertEquals(6L, store.consumeTicket(requestWithTicket(otherAccount), new MockHttpServletResponse(), "6", "other-account").userId());
+    }
+
+    @Test void cancellationRetiresOnlyTheConsumedFlow() {
+        String raw = begin(5L, "session");
+        store.save(authorization("cancelled"), request(raw, null), new MockHttpServletResponse());
+        var callback = request(raw, "cancelled");
+        assertNotNull(store.remove(callback, new MockHttpServletResponse()));
+        store.fail(callback, new MockHttpServletResponse());
+        assertThrows(vn.smartprop.common.ApiException.class,
+            () -> store.handoff(profile(), callback, new MockHttpServletResponse()));
+        assertTrue(store.hasPendingStart(request(begin(5L, "session"), null)));
+    }
+
+    private String begin(long user, String sessionId) {
+        var response = new MockHttpServletResponse();
+        store.begin(user, sessionId, response);
+        return cookieValue(lastCookie(response));
+    }
+
+    private String issueTicket(long user, String sessionId, String state) {
+        String raw = begin(user, sessionId);
+        store.save(authorization(state), request(raw, null), new MockHttpServletResponse());
+        var callback = request(raw, state);
+        assertNotNull(store.remove(callback, new MockHttpServletResponse()));
+        var response = new MockHttpServletResponse();
+        store.handoff(profile(), callback, response);
+        return cookieValue(lastCookie(response));
+    }
+
+    private GoogleProfile profile() {
+        return new GoogleProfile("fixture-subject", "fixture@example.test", "Test");
     }
 
     private OAuth2AuthorizationRequest authorization(String state) {

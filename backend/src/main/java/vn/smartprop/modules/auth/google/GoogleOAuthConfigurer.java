@@ -60,9 +60,31 @@ public class GoogleOAuthConfigurer {
             @Override public void saveAuthorizedClient(OAuth2AuthorizedClient client,Authentication principal,HttpServletRequest request,HttpServletResponse response){}
             @Override public void removeAuthorizedClient(String id,Authentication principal,HttpServletRequest request,HttpServletResponse response){}
         };
-        http.addFilterBefore(new OncePerRequestFilter(){@Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain)throws ServletException,IOException{
-            String path=request.getRequestURI();if(path.equals("/api/v1/auth/oauth2/authorize/google")||path.equals("/api/v1/auth/oauth2/link/authorize/google"))try{boolean isLink=path.contains("/link/");limits.check((isLink?"google:link:authorize:":"google:start:")+request.getRemoteAddr(),10,60);if(!settings.secure&&(!java.util.Set.of("127.0.0.1","localhost").contains(request.getServerName())||!java.util.Set.of("127.0.0.1","::1","0:0:0:0:0:0:0:1").contains(request.getRemoteAddr())))throw ApiInputs.forbidden();if(isLink){String origin=request.getHeader("Origin"),fetchSite=request.getHeader("Sec-Fetch-Site");if(origin!=null&&!settings.frontendOrigin.equals(origin)||"cross-site".equalsIgnoreCase(fetchSite))throw ApiInputs.forbidden();if(!linking.hasPendingStart(request))throw new ApiException(401,"GOOGLE_LINK_REQUIRED","Vui lòng bắt đầu liên kết từ phần Bảo mật của tài khoản SmartProp.");}}catch(ApiException error){response.setStatus(error.status);response.setContentType("application/json");response.setCharacterEncoding("UTF-8");response.setHeader("Cache-Control","no-store");if(error instanceof RequestLimits.Exceeded limit)response.setHeader("Retry-After",String.valueOf(limit.retryAfter));json.writeValue(response.getWriter(),Errors.body(error.code,error.getMessage()));return;}chain.doFilter(request,response);
-        }},OAuth2AuthorizationRequestRedirectFilter.class);
+        http.addFilterBefore(new OncePerRequestFilter() {
+            @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+                throws ServletException, IOException {
+                String path = request.getRequestURI();
+                boolean isLink = path.equals("/api/v1/auth/oauth2/link/authorize/google");
+                if (!isLink && !path.equals("/api/v1/auth/oauth2/authorize/google")) {
+                    chain.doFilter(request, response);
+                    return;
+                }
+                try {
+                    validateAuthorizationStart(request, isLink);
+                    // A concurrent start may supersede this flow between precheck and repository save.
+                    chain.doFilter(request, response);
+                } catch (ApiException error) {
+                    if (response.isCommitted()) throw error;
+                    response.setStatus(error.status);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.setHeader("Cache-Control", "no-store");
+                    if (error instanceof RequestLimits.Exceeded limit)
+                        response.setHeader("Retry-After", String.valueOf(limit.retryAfter));
+                    json.writeValue(response.getWriter(), Errors.body(error.code, error.getMessage()));
+                }
+            }
+        }, OAuth2AuthorizationRequestRedirectFilter.class);
         var diagnostics=new TokenExchangeDiagnostics(json);
         var configuredDelegate=tokenClients.getIfAvailable();
         final var delegate=configuredDelegate==null?diagnosticDefaultTokenClient(diagnostics):configuredDelegate;
@@ -75,6 +97,19 @@ public class GoogleOAuthConfigurer {
             .successHandler((request,response,authentication)->{boolean isLink=store.isLinkCallbackFlow(request);try{var user=(OidcUser)authentication.getPrincipal();var profile=GoogleProfile.verified(user.getIdToken(),settings.clientId,clock.instant());if(isLink){linking.handoff(profile,request,response);response.sendRedirect(settings.frontendOrigin+"/auth/google/link/complete");}else{store.handoff(profile,response);response.sendRedirect(settings.frontendOrigin+"/auth/google/complete");}SecurityContextHolder.clearContext();}catch(OAuth2AuthenticationException failure){audit(failure);if(isLink)linking.fail(request,response);SecurityContextHolder.clearContext();response.sendRedirect(settings.frontendOrigin+(isLink?"/auth/google/link/complete?status=failed":"/login?reason=google-failed"));}catch(RuntimeException failure){if(isLink)linking.fail(request,response);SecurityContextHolder.clearContext();response.sendRedirect(settings.frontendOrigin+(isLink?"/auth/google/link/complete?status=failed":"/login?reason=google-failed"));}})
             .failureHandler((request,response,error)->{boolean isLink=store.isLinkCallbackFlow(request);audit(error);if(isLink)linking.fail(request,response);SecurityContextHolder.clearContext();response.setHeader("Cache-Control","no-store");response.setHeader("Referrer-Policy","no-referrer");response.sendRedirect(settings.frontendOrigin+(isLink?"/auth/google/link/complete?status=failed":"/login?reason=google-failed"));}));
     }
+    private void validateAuthorizationStart(HttpServletRequest request, boolean isLink) {
+        limits.check((isLink ? "google:link:authorize:" : "google:start:") + request.getRemoteAddr(), 10, 60);
+        if (!settings.secure && (!java.util.Set.of("127.0.0.1", "localhost").contains(request.getServerName())
+            || !java.util.Set.of("127.0.0.1", "::1", "0:0:0:0:0:0:0:1").contains(request.getRemoteAddr())))
+            throw ApiInputs.forbidden();
+        if (!isLink) return;
+        String origin = request.getHeader("Origin");
+        if ((origin != null && !settings.frontendOrigin.equals(origin))
+            || "cross-site".equalsIgnoreCase(request.getHeader("Sec-Fetch-Site"))) throw ApiInputs.forbidden();
+        if (!linking.hasPendingStart(request))
+            throw new ApiException(401, "GOOGLE_LINK_REQUIRED", "Vui lòng bắt đầu liên kết từ phần Bảo mật của tài khoản SmartProp.");
+    }
+
     private static OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> diagnosticDefaultTokenClient(TokenExchangeDiagnostics diagnostics){
         var client=new DefaultAuthorizationCodeTokenResponseClient();
         var rest=new RestTemplate(java.util.List.of(new FormHttpMessageConverter(),new OAuth2AccessTokenResponseHttpMessageConverter()));

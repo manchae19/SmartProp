@@ -23,17 +23,26 @@ public class GoogleLinkFlowStore {
 
     public record Binding(long userId, String sessionId) {}
     public record Ticket(GoogleProfile profile, long userId, String sessionId) {}
-    private static final class Pending {
+    private static final class Flow {
         final Binding binding;
-        final Instant expires;
+        final String handle;
+        Instant expires;
         OAuth2AuthorizationRequest request;
-        Pending(Binding binding, Instant expires) { this.binding = binding; this.expires = expires; }
+        String state;
+        String ticketHandle;
+
+        Flow(Binding binding, String handle, Instant expires) {
+            this.binding = binding;
+            this.handle = handle;
+            this.expires = expires;
+        }
     }
-    private record Handoff(Ticket ticket, Instant expires) {}
+    private record Handoff(Ticket ticket, Flow flow) {}
 
     private final Clock clock;
     private final boolean secure;
-    private final Map<String, Pending> pending = new HashMap<>();
+    private final Map<Binding, Flow> latest = new HashMap<>();
+    private final Map<String, Flow> pending = new HashMap<>();
     private final Map<String, String> stateHandles = new HashMap<>();
     private final Map<String, Handoff> handoffs = new HashMap<>();
 
@@ -44,9 +53,16 @@ public class GoogleLinkFlowStore {
 
     private void prune() {
         Instant now = clock.instant();
-        pending.entrySet().removeIf(entry -> !entry.getValue().expires.isAfter(now));
-        stateHandles.entrySet().removeIf(entry -> !pending.containsKey(entry.getValue()));
-        handoffs.entrySet().removeIf(entry -> !entry.getValue().expires.isAfter(now));
+        for (var flow : latest.values().stream().filter(flow -> !flow.expires.isAfter(now)).toList()) {
+            discard(flow);
+        }
+    }
+
+    private void discard(Flow flow) {
+        latest.remove(flow.binding, flow);
+        pending.remove(flow.handle);
+        if (flow.state != null) stateHandles.remove(flow.state, flow.handle);
+        if (flow.ticketHandle != null) handoffs.remove(flow.ticketHandle);
     }
 
     private String cookie(HttpServletRequest request, String name) {
@@ -64,9 +80,17 @@ public class GoogleLinkFlowStore {
 
     public synchronized void begin(long userId, String sessionId, HttpServletResponse response) {
         prune();
-        if (pending.size() >= 1000) throw new ApiException(429, "RATE_LIMITED", "Vui lòng thử lại sau.");
+        Binding binding = new Binding(userId, sessionId);
+        Flow previous = latest.get(binding);
+        if (previous != null) {
+            discard(previous);
+            if (previous.ticketHandle != null) setCookie(response, TICKET_COOKIE, "", 0, "Lax");
+        }
+        if (latest.size() >= 1000) throw new ApiException(429, "RATE_LIMITED", "Vui lòng thử lại sau.");
         String raw = SecretTokens.random();
-        pending.put(SecretTokens.hash(raw), new Pending(new Binding(userId, sessionId), clock.instant().plusSeconds(TTL_SECONDS)));
+        var flow = new Flow(binding, SecretTokens.hash(raw), clock.instant().plusSeconds(TTL_SECONDS));
+        latest.put(binding, flow);
+        pending.put(flow.handle, flow);
         setCookie(response, FLOW_COOKIE, raw, TTL_SECONDS, "Lax");
     }
 
@@ -81,7 +105,7 @@ public class GoogleLinkFlowStore {
     public synchronized boolean hasPendingStart(HttpServletRequest request) {
         prune();
         String raw = cookie(request, FLOW_COOKIE);
-        Pending value = raw == null ? null : pending.get(SecretTokens.hash(raw));
+        Flow value = raw == null ? null : pending.get(SecretTokens.hash(raw));
         return value != null && value.request == null;
     }
 
@@ -95,7 +119,7 @@ public class GoogleLinkFlowStore {
     public synchronized OAuth2AuthorizationRequest load(HttpServletRequest request) {
         prune();
         String raw = cookie(request, FLOW_COOKIE);
-        Pending value = raw == null ? null : pending.get(SecretTokens.hash(raw));
+        Flow value = raw == null ? null : pending.get(SecretTokens.hash(raw));
         if (value == null || value.request == null || !SecretTokens.equal(value.request.getState(), request.getParameter("state"))) return null;
         return value.request;
     }
@@ -103,58 +127,62 @@ public class GoogleLinkFlowStore {
     public synchronized void save(OAuth2AuthorizationRequest request, HttpServletRequest httpRequest, HttpServletResponse response) {
         prune();
         String raw = cookie(httpRequest, FLOW_COOKIE);
-        Pending value = raw == null ? null : pending.get(SecretTokens.hash(raw));
-        if (request == null || value == null || !isLinkRequest(request)) {
-            if (value != null) pending.remove(SecretTokens.hash(raw));
-            clearFlow(response);
-            return;
-        }
+        Flow value = raw == null ? null : pending.get(SecretTokens.hash(raw));
+        if (request == null || value == null || !isLinkRequest(request))
+            throw new ApiException(410, "GOOGLE_LINK_EXPIRED", "Yêu cầu liên kết đã hết hạn. Vui lòng bắt đầu lại.");
         if (value.request != null)
             throw new ApiException(409, "GOOGLE_LINK_ALREADY_STARTED", "Yêu cầu liên kết đã được khởi tạo.");
         value.request = request;
-        stateHandles.put(request.getState(), SecretTokens.hash(raw));
-        setCookie(response, FLOW_COOKIE, raw, Math.max(1, (int) (value.expires.getEpochSecond() - clock.instant().getEpochSecond())), "Lax");
+        value.state = request.getState();
+        stateHandles.put(value.state, value.handle);
     }
 
     public synchronized OAuth2AuthorizationRequest remove(HttpServletRequest request, HttpServletResponse response) {
         OAuth2AuthorizationRequest result = load(request);
         if (result == null) return null;
         String handle = SecretTokens.hash(cookie(request, FLOW_COOKIE));
-        Pending binding = pending.remove(handle);
+        Flow flow = pending.remove(handle);
         stateHandles.remove(result.getState());
-        request.setAttribute(CONSUMED_FLOW, binding);
-        clearFlow(response);
+        request.setAttribute(CONSUMED_FLOW, flow);
         return result;
     }
 
-    public synchronized void clearFlow(HttpServletResponse response) { setCookie(response, FLOW_COOKIE, "", 0, "Lax"); }
-
-    /** Consume the state-to-session binding exactly once after Spring has validated OAuth state and OIDC. */
+    /** The current flow is checked again after token exchange, which can overlap a new start in another tab. */
     public synchronized void handoff(GoogleProfile profile, HttpServletRequest request, HttpServletResponse response) {
         prune();
-        Pending binding = (Pending) request.getAttribute(CONSUMED_FLOW);
+        Flow flow = (Flow) request.getAttribute(CONSUMED_FLOW);
         request.removeAttribute(CONSUMED_FLOW);
-        if (binding == null || !binding.expires.isAfter(clock.instant()))
+        if (flow == null || latest.get(flow.binding) != flow)
             throw new ApiException(410, "GOOGLE_LINK_EXPIRED", "Yêu cầu liên kết đã hết hạn. Vui lòng bắt đầu lại.");
-        if (handoffs.size() >= 1000) throw new ApiException(429, "RATE_LIMITED", "Vui lòng thử lại sau.");
         String raw = SecretTokens.random();
-        handoffs.put(SecretTokens.hash(raw), new Handoff(new Ticket(profile, binding.binding.userId(), binding.binding.sessionId()), clock.instant().plusSeconds(60)));
+        flow.ticketHandle = SecretTokens.hash(raw);
+        flow.expires = clock.instant().plusSeconds(60);
+        var ticket = new Ticket(profile, flow.binding.userId(), flow.binding.sessionId());
+        handoffs.put(flow.ticketHandle, new Handoff(ticket, flow));
         setCookie(response, TICKET_COOKIE, raw, 60, "Lax");
     }
 
-    public synchronized Ticket consumeTicket(HttpServletRequest request, HttpServletResponse response) {
+    public synchronized Ticket consumeTicket(HttpServletRequest request, HttpServletResponse response,
+                                             String userId, String sessionId) {
         prune();
         String raw = cookie(request, TICKET_COOKIE);
-        Handoff handoff = raw == null ? null : handoffs.remove(SecretTokens.hash(raw));
-        setCookie(response, TICKET_COOKIE, "", 0, "Lax");
-        if (handoff == null || !handoff.expires().isAfter(clock.instant()))
+        Handoff handoff = raw == null ? null : handoffs.get(SecretTokens.hash(raw));
+        if (handoff == null)
             throw new ApiException(410, "GOOGLE_LINK_EXPIRED", "Yêu cầu liên kết đã hết hạn. Vui lòng bắt đầu lại.");
+        var flow = handoff.flow();
+        if (!Long.toString(flow.binding.userId()).equals(userId) || !flow.binding.sessionId().equals(sessionId))
+            throw new ApiException(409, "GOOGLE_LINK_SESSION_MISMATCH", "Phiên đăng nhập đã thay đổi. Vui lòng bắt đầu liên kết lại.");
+        discard(flow);
+        setCookie(response, TICKET_COOKIE, "", 0, "Lax");
+        String flowCookie = cookie(request, FLOW_COOKIE);
+        if (flowCookie != null && flow.handle.equals(SecretTokens.hash(flowCookie)))
+            setCookie(response, FLOW_COOKIE, "", 0, "Lax");
         return handoff.ticket();
     }
 
     public synchronized void fail(HttpServletRequest request, HttpServletResponse response) {
-        // The authorization repository consumes a matching callback before token exchange.
-        // An invalid callback must not discard another browser's pending flow.
+        Flow flow = (Flow) request.getAttribute(CONSUMED_FLOW);
         request.removeAttribute(CONSUMED_FLOW);
+        if (flow != null && latest.get(flow.binding) == flow) discard(flow);
     }
 }

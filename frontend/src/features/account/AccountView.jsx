@@ -3,7 +3,7 @@ import { createStateStore } from "../../shared/state/createStateStore.js";
 import React, { useState, useSyncExternalStore, useEffect, useRef } from "react";
 import { SiteLink } from "../../app/navigation.jsx";
 import { useAppNavigation } from "../../app/navigation.jsx";
-import { api, loadProfile, logout as revokeSession, clearSession, session, errorText, googleLinkStatus, startGoogleLink, refreshEnabled } from "../auth/api.js";
+import { api, loadProfile, logout as revokeSession, clearSession, session, errorText, getGoogleLinkScope, assertGoogleLinkScope, googleLinkStatus, startGoogleLink, refreshEnabled } from "../auth/api.js";
 import BrokerApplicationCard from "../broker/BrokerApplicationCard.jsx";
 import ValuationHistory from "../prediction/ValuationHistory.jsx";
 import UserAvatar from "../../shared/components/UserAvatar.jsx";
@@ -14,7 +14,8 @@ import LifestyleFields, { emptyLifestyle } from "./LifestyleFields.jsx";
 function useAccountViewState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
   _propsLatest.current = inputProps;
-  useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot);
+  const linkScope = getGoogleLinkScope(auth);
   const router = useAppNavigation(),
     [form] = useState(() => createStateStore({
       fullName: "",
@@ -136,16 +137,6 @@ function useAccountViewState(inputProps, forwardedRef) {
       const user = await loadProfile();
       fill(user);
       loaded.set(true);
-      try {
-        const status = await googleLinkStatus();
-        googleLinked.set(status.linked === true);
-        googleLinkAvailable.set(status.available === true && refreshEnabled);
-        googleLinkError.set("");
-      } catch (statusError) {
-        googleLinked.set(null);
-        googleLinkAvailable.set(false);
-        googleLinkError.set(errorText(statusError));
-      }
       await loadPreferences();
     } catch (e) {
       error.set(errorText(e));
@@ -241,7 +232,7 @@ function useAccountViewState(inputProps, forwardedRef) {
     }
   }
   async function linkGoogle() {
-    if (busy.getSnapshot() || googleLinkBusy.getSnapshot() || googleLinked.getSnapshot() === true || !googleLinkAvailable.getSnapshot()) return;
+    if (linkScope == null || busy.getSnapshot() || googleLinkBusy.getSnapshot() || googleLinked.getSnapshot() === true || !googleLinkAvailable.getSnapshot()) return;
     googleLinkError.set("");
     if (!googleLinkPassword.getSnapshot()) {
       googleLinkError.set("Vui lòng nhập mật khẩu hiện tại để xác nhận liên kết.");
@@ -251,13 +242,15 @@ function useAccountViewState(inputProps, forwardedRef) {
     const password = googleLinkPassword.getSnapshot();
     googleLinkPassword.set("");
     try {
-      const result = await startGoogleLink(password);
+      const result = await startGoogleLink(password, linkScope);
+      assertGoogleLinkScope(linkScope);
       if (result?.authorizationPath !== "/auth/oauth2/link/authorize/google") {
         throw Error("Không thể mở bước xác thực Google.");
       }
       const base = (import.meta.env?.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
       window.location.assign(base + result.authorizationPath);
     } catch (linkError) {
+      if (linkScope !== getGoogleLinkScope()) return;
       googleLinkError.set(errorText(linkError));
       googleLinkBusy.set(false);
     }
@@ -283,6 +276,19 @@ function useAccountViewState(inputProps, forwardedRef) {
       busy.set(false);
     }
   }
+  useEffect(() => {
+    if (linkScope == null) return;
+    let active = true;
+    googleLinkStatus(linkScope).then(status => {
+      if (!active || linkScope !== getGoogleLinkScope()) return;
+      googleLinked.set(status.linked === true);
+      googleLinkAvailable.set(status.available === true && refreshEnabled);
+    }).catch(statusError => {
+      if (!active || linkScope !== getGoogleLinkScope()) return;
+      googleLinkError.set(errorText(statusError));
+    });
+    return () => { active = false; };
+  }, [linkScope]);
   useEffect(() => {
     const result = load();
     if (result && typeof result.then === "function") result.catch(console.error);
@@ -337,6 +343,11 @@ function useAccountViewState(inputProps, forwardedRef) {
   };
 }
 export default React.forwardRef(function AccountView(props, ref) {
+  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot);
+  return <AccountContent key={getGoogleLinkScope(auth) ?? 'no-session'} {...props} ref={ref} />;
+});
+
+const AccountContent = React.forwardRef(function AccountContent(props, ref) {
   const view = useAccountViewState(props, ref);
   return <><div data-ui-view="AccountView" aria-busy={view.loading} data-sp-c8811dc0="" {...view.rootAttributes} className={classNames(["account-page sp-container py-8 sm:py-12", view.rootAttributes.className])}>
       <div className="page-intro-banner mb-7" data-sp-c8811dc0="">

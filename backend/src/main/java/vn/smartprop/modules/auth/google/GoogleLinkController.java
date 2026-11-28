@@ -66,7 +66,7 @@ public class GoogleLinkController {
         if (!settings.configured() || !refresh.enabled())
             throw new ApiException(503, "FEATURE_DISABLED", "Liên kết Google chưa được bật.");
         limits.check("google:link:complete:" + jwt.getId(), 5, 300);
-        var ticket = flows.consumeTicket(request, response);
+        var ticket = flows.consumeTicket(request, response, jwt.getSubject(), jwt.getId());
         service.complete(ticket, jwt);
         response.setHeader("Cache-Control", "no-store");
         return Map.of("linked", true);

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHttpClient } from '../src/shared/lib/httpClient.js';
 import { createStateStore } from '../src/shared/state/createStateStore.js';
-import { errorText } from '../src/features/auth/api.js';
+import { errorText, getGoogleLinkScope } from '../src/features/auth/api.js';
 
 test('refresh restores SmartProp JWT after OAuth redirect before linking completion', async () => {
   const session = createStateStore({ token: null, user: null, status: 'INITIALIZING', error: null });
@@ -115,3 +115,67 @@ function failure(status, body) {
     json: async () => body
   };
 }
+
+
+function fixtureToken(userId, sessionId, issuedAt, version = 0) {
+  const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return encode({ alg: 'fixture' }) + '.' +
+    encode({ iss: 'smartprop', sub: String(userId), jti: sessionId, ver: version, iat: issuedAt }) + '.fixture';
+}
+
+test('ordinary rotation preserves the linking scope and a different same-user session replaces it', async () => {
+  const user = { id: 42, status: 'ACTIVE' };
+  const session = createStateStore({ token: null, user: null, status: 'INITIALIZING', authGeneration: 0 });
+  let result = { user, accessToken: fixtureToken(42, 'first-fixture-session', 1) };
+  let refill = false;
+  const http = createHttpClient({
+    baseUrl: '', session, refreshEnabled: true,
+    fetcher: async path => {
+      if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-TOKEN', token: 'fixture' });
+      if (path === '/auth/refresh') return json(result);
+      if (refill) { refill = false; return failure(401, {}); }
+      return json(user);
+    }
+  });
+  await http.initialize();
+  const scope = getGoogleLinkScope(session.getSnapshot());
+  result = { user, accessToken: fixtureToken(42, 'first-fixture-session', 2) };
+  refill = true;
+  await http.request('/users/me');
+  assert.equal(getGoogleLinkScope(session.getSnapshot()), scope);
+
+  result = { user, accessToken: fixtureToken(42, 'different-fixture-session', 3) };
+  refill = true;
+  await assert.rejects(http.request('/users/me'), { code: 'SESSION_CHANGED' });
+  assert.notEqual(getGoogleLinkScope(session.getSnapshot()), scope);
+});
+
+test('same-account login retires pending responses immediately and does not expose linking while transitioning', async () => {
+  const user = { id: 42, status: 'ACTIVE' };
+  const session = createStateStore({ token: fixtureToken(42, 'initial', 1), user, status: 'AUTHENTICATED', authGeneration: 0 });
+  let resolveStatus;
+  let resolveLogin;
+  const http = createHttpClient({
+    baseUrl: '', session,
+    fetcher: async path => new Promise(resolve => {
+      if (path === '/auth/login') resolveLogin = resolve;
+      else resolveStatus = resolve;
+    })
+  });
+  const oldStatus = http.request('/auth/google/link/status');
+  const login = http.login({});
+  assert.equal(getGoogleLinkScope(session.getSnapshot()), null);
+  resolveStatus(json({ linked: true }));
+  await assert.rejects(oldStatus, { code: 'SESSION_CHANGED' });
+  resolveLogin(json({ user, accessToken: fixtureToken(42, 'new-login', 2) }));
+  await login;
+  assert.notEqual(getGoogleLinkScope(session.getSnapshot()), 0);
+});
+
+test('unavailable, locked and unauthenticated snapshots have no linking scope', () => {
+  const active = { status: 'AUTHENTICATED', user: { id: 1, status: 'ACTIVE' }, token: 'fixture', authGeneration: 4 };
+  assert.equal(getGoogleLinkScope(active), 4);
+  assert.equal(getGoogleLinkScope({ ...active, status: 'UNAVAILABLE' }), null);
+  assert.equal(getGoogleLinkScope({ ...active, status: 'UNAUTHENTICATED' }), null);
+  assert.equal(getGoogleLinkScope({ ...active, user: { id: 1, status: 'LOCKED' } }), null);
+});
