@@ -77,7 +77,8 @@ readiness-polled, writes `frontend/tests/wp04/browser/reports/wp04-runtime.json`
 ## 7. What actually ran, and what is blocked
 
 Executed: real FastAPI up, four property types through the direct service and through the Vite
-`/api/ai` proxy, contract + additivity + price invariance checks. **149/149 passed.**
+`/api/ai` proxy, contract + additivity + price invariance checks, now with strict status codes,
+documented 4xx rejections and exact provenance identities. **157/157 passed.**
 
 Blocked: Spring Boot posting preview and Advisor. Reason: every committed Spring profile binds to
 `127.0.0.1:3306` or `127.0.0.1:3307` (protected group databases). Provisioning a throwaway MySQL

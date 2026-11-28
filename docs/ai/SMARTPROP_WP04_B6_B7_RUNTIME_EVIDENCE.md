@@ -71,3 +71,60 @@ No migration, no model change, no data change.
 
 Not deployed. Production deployment needs separate deployment verification. WP-04 must not change
 the V1.3 point prediction, must not enable V6 fallback and must not introduce telemetry.
+
+---
+
+## Final closure pass
+
+### Strict price contract
+`normalizeVnd` used `Number()` and accepted `>= 0`. Replaced by:
+
+- `vndDigits(value)` — canonical positive-integer digits for a JSON number **or** a Spring decimal
+  string; rejects 0, negatives, fractions, hex, scientific notation, empty strings, objects,
+  `NaN`/`Infinity` and anything beyond the JavaScript safe-integer range (kept exact as digits
+  instead of being rounded).
+- `normalizeVnd(value)` — numeric form, only when exactly representable.
+- `sameVnd(a, b)` — exact digit comparison.
+
+The panel now receives the **original** price representation from `PostValuationPanel` and
+`AdvisorEvidencePanel` (not a pre-normalised value), so a supplied-but-invalid price is detected.
+Consistency is **exact integer equality** against `calibration.adjusted_price_vnd`; the previous
+relative tolerance is gone. The approved `1e-5` SHAP reconstruction tolerance is unchanged.
+
+### Corrected runtime harness
+`runtime.mjs` now:
+
+- fails closed unless `WP04_AI_BASE` and `WP04_PROXY_BASE` are explicit loopback origins;
+- applies bounded timeouts to every request;
+- asserts `status === 200` **and** a parsed body (not "body parsed");
+- requires documented `4xx` for invalid input — a `5xx` no longer counts as a rejection;
+- compares the exact 22 provenance **identities** and validates every provenance state;
+- compares decoded JSON structurally and does not claim byte equality.
+
+### Mocked three-surface browser
+`surfaces.mjs` no longer builds a one-factor AVAILABLE payload (which violated the six-factor
+contract). It mounts the real `AdvisorEvidencePanel` with the committed V1.3 fixtures and asserts:
+six contribution rows, 22 provenance rows, calibration bridge, cumulative waterfall SVG, no legacy
+SHAP duplication, both Comparable evidence sections, feature coverage, and the unavailable /
+malformed / legacy states. Results: **30 passed, 0 failed, 3 NOT_RUN** — the three authenticated
+route interactions are recorded as NOT_RUN, never as passes.
+
+### Fresh counts (this pass)
+
+| Suite | Result |
+|---|---|
+| WP-04 frontend tests (`node --test tests/wp04/*.test.js`) | 85 passed |
+| Full frontend recursive (`npm test`) | **239 passed, 0 failed** |
+| Component browser (11 cases × 4 viewports) | **484/484** |
+| Mocked three-surface browser | 30 passed / 0 failed / 3 not run |
+| Real runtime (FastAPI + Vite proxy, 4 property types) | **157/157** |
+| Vite production build | PASS |
+| Artifacts | 4/4 hashes unchanged |
+| `backend/src`, `ai-services`, migrations | 0 changed |
+
+### Remaining blocker
+Spring Boot posting-preview and Advisor runtime gates are **BLOCKED**. Prerequisites exist
+(`application-standard-migrations.yml`, portable `mysqld`, port 3407 free, no protected port used),
+but provisioning a throwaway Standard V23 fixture, seeding synthetic publisher/buyer/ADMIN accounts
+and driving two authenticated routes was not completed in this session. No MySQL instance, Tomcat
+or Spring process was started, so nothing is left running and no protected database was touched.

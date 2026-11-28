@@ -157,15 +157,40 @@ const isNonNegativeFinite = (value) => isFiniteNumber(value) && value >= 0;
  * Boot serialises BigInteger as a numeric string. Anything else (null, "", NaN, Infinity,
  * negative) is rejected instead of being coerced to 0.
  */
-export function normalizeVnd(value) {
+/**
+ * Canonical VND digits for an authoritative prediction.
+ *
+ * FastAPI sends a positive JSON integer; Spring serialises BigInteger as a positive decimal
+ * string. Anything else - zero, negative, fractional, hexadecimal, scientific notation, empty
+ * string, object, NaN/Infinity - is not a price. Integers beyond the JavaScript safe range stay
+ * exact as digit strings so they are compared precisely instead of being rounded.
+ */
+export function vndDigits(value) {
   if (typeof value === "number") {
-    return Number.isFinite(value) && value >= 0 ? value : null;
+    if (!Number.isSafeInteger(value) || value <= 0) return null;
+    return String(value);
   }
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value.trim());
-    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  if (typeof value === "string") {
+    const text = value.trim();
+    if (!/^[1-9]\d{0,29}$/.test(text)) return null;
+    return text.replace(/^0+(?=\d)/, "");
   }
   return null;
+}
+
+/** Numeric form, only when it can be represented exactly. */
+export function normalizeVnd(value) {
+  const digits = vndDigits(value);
+  if (digits === null) return null;
+  const asNumber = Number(digits);
+  return Number.isSafeInteger(asNumber) ? asNumber : null;
+}
+
+/** Exact comparison of two price representations. */
+export function sameVnd(left, right) {
+  const a = vndDigits(left);
+  const b = vndDigits(right);
+  return a !== null && b !== null && a === b;
 }
 
 export function formatVnd(value) {
@@ -464,10 +489,13 @@ export function validateExplanation(raw, options = {}) {
   }
 
   // optional consistency check against the authoritative prediction being displayed
-  const priceVnd = options.priceVnd;
-  const adjusted = calibration.adjusted_price_vnd;
-  const priceConsistent = !(isFiniteNumber(priceVnd) && isNonNegativeFinite(adjusted)
-    && Math.abs(priceVnd - adjusted) > Math.max(1, Math.abs(priceVnd) * 1e-6));
+  // Exact integer equality: the same VND price must be the same integer, and one VND apart is a
+  // different prediction. Digit comparison keeps large values exact.
+  const suppliedDigits = options.priceVnd === undefined || options.priceVnd === null
+    ? null : vndDigits(options.priceVnd);
+  const adjustedDigits = vndDigits(calibration.adjusted_price_vnd);
+  const priceConsistent = !(suppliedDigits !== null && adjustedDigits !== null
+    && suppliedDigits !== adjustedDigits);
 
   const groups = Object.entries(raw.grouped_contributions)
     .map(([name, value]) => ({
@@ -496,7 +524,7 @@ export function validateExplanation(raw, options = {}) {
       calibration: {
         policy: calibration.policy,
         factor: calibration.factor,
-        adjustedPriceVnd: adjusted,
+        adjustedPriceVnd: calibration.adjusted_price_vnd,
       },
       factors,
       groups,

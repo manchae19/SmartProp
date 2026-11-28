@@ -21,7 +21,7 @@ import {
   formatBillion,
   formatLog,
   formatVnd,
-  normalizeVnd,
+  vndDigits,
   summarizeProvenance,
   validateExplanation,
 } from "./explanationModel.js";
@@ -393,12 +393,13 @@ export function ValuationExplanationPanel({
   // belongs to a different valuation. When they disagree we keep the price and drop the
   // attribution instead of showing contributions from another prediction.
   const priceSupplied = predictedPriceVnd !== null && predictedPriceVnd !== undefined
-    && String(predictedPriceVnd).trim() !== "";
-  const authoritativePrice = normalizeVnd(predictedPriceVnd);
-  // A price was given but is not a usable V1.3 price (0, negative, "0x1f", NaN, Infinity, ...):
-  // the attribution cannot be tied to it, so it is treated exactly like a mismatch.
-  const priceUnusable = priceSupplied && authoritativePrice === null;
-  const result = validateExplanation(explanation, { priceVnd: authoritativePrice });
+    && !(typeof predictedPriceVnd === "string" && predictedPriceVnd.trim() === "");
+  const priceDigits = vndDigits(predictedPriceVnd);
+  // A price was given but is not a usable V1.3 price (0, negative, fractional, "0x1f",
+  // scientific notation, NaN, Infinity, object): the attribution cannot be tied to it, so it is
+  // treated exactly like a mismatch. The raw value is never coerced first.
+  const priceUnusable = priceSupplied && priceDigits === null;
+  const result = validateExplanation(explanation, { priceVnd: priceDigits });
   const view = result.view;
   const priceMismatch = result.status === STATUS.AVAILABLE
     && (priceUnusable || view.priceConsistent === false);

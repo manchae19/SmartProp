@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { visibleAdvisorComparables } from './advisorAnalysis.js'
 import ComparableListingsCard from '../property/ComparableListingsCard.jsx'
 import ValuationExplanationPanel from './ValuationExplanationPanel.js'
-import { normalizeVnd } from './explanationModel.js'
 import { evidenceSections } from './advisorEvidenceModel.js'
 
 const money = (value) =>
@@ -46,7 +45,7 @@ export default function AdvisorEvidencePanel({ valuation, comparable, valuationC
           {sections.showExplanation ? (
             <ValuationExplanationPanel
               explanation={valuation.explanation}
-              predictedPriceVnd={normalizeVnd(valuation.predictedAskingPriceVnd)}
+              predictedPriceVnd={valuation.predictedAskingPriceVnd}
               modelVersion={valuation.modelVersion}
               surface="advisor"
               className="mt-3"

@@ -14,8 +14,22 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const AI = process.env.WP04_AI_BASE || "http://127.0.0.1:8000";
-const PROXY = process.env.WP04_PROXY_BASE || "http://127.0.0.1:5199/api/ai";
+const AI = process.env.WP04_AI_BASE || "";
+const PROXY = process.env.WP04_PROXY_BASE || "";
+const TIMEOUT_MS = Number(process.env.WP04_RUNTIME_TIMEOUT_MS || 20000);
+const LOOPBACK = /^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}(\/[^\s]*)?$/;
+
+function requireEndpoint(name, value) {
+  if (!value) {
+    check(`${name} configured`, false, `set ${name} to the isolated loopback base URL`);
+    return false;
+  }
+  if (!LOOPBACK.test(value)) {
+    check(`${name} is loopback`, false, `${name} must be an explicit 127.0.0.1 origin`);
+    return false;
+  }
+  return true;
+}
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = JSON.parse(readFileSync(
   join(here, "..", "fixtures", "explanation-samples.json"), "utf8"));
@@ -40,6 +54,7 @@ async function post(base, path, body) {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   const text = await response.text();
   let json = null;
@@ -49,7 +64,7 @@ async function post(base, path, body) {
 
 function verifyContract(name, body, expectedPrice) {
   const tag = `${name}`;
-  check(`${tag} HTTP 200`, body.json !== null, body.status);
+  check(`${tag} HTTP 200`, body.status === 200 && body.json !== null, `status ${body.status}`);
   if (!body.json) return;
   const data = body.json;
 
@@ -71,7 +86,20 @@ function verifyContract(name, body, expectedPrice) {
   check(`${tag} output space`, exp.output_space === "LOG1P_PRICE_VND", exp.output_space);
   check(`${tag} exactly 6 factors`, Array.isArray(exp.factors) && exp.factors.length === 6,
     exp.factors?.length);
-  check(`${tag} 22 provenance features`, Object.keys(exp.feature_provenance || {}).length === 22);
+  const PROVENANCE_KEYS = ["area", "frontage_sqrt_area_ratio", "floor_count", "bedroom_count",
+    "bathroom_count", "has_floor", "has_bedroom", "has_bathroom", "frontage_width", "road_width",
+    "has_frontage", "has_road_width", "has_project", "raw_project_name", "has_street", "has_ward",
+    "district", "ward", "raw_street_name", "normalized_type", "raw_house_direction",
+    "raw_balcony_direction"];
+  const provenanceKeys = Object.keys(exp.feature_provenance || {}).sort();
+  check(`${tag} exact 22 provenance identities`,
+    provenanceKeys.length === PROVENANCE_KEYS.length
+      && provenanceKeys.every((key, index) => key === [...PROVENANCE_KEYS].sort()[index]),
+    provenanceKeys.join(","));
+  const knownStates = ["OBSERVED", "DERIVED", "DEFAULTED", "MISSING", "MISSING_INVALID",
+    "NOT_APPLICABLE", "UNKNOWN_CATEGORY", "UNVERIFIED"];
+  check(`${tag} every provenance state is recognised`,
+    Object.values(exp.feature_provenance || {}).every((state) => knownStates.includes(state)));
   check(`${tag} calibration policy`, exp.calibration?.policy === "duan_by_band",
     exp.calibration?.policy);
   check(`${tag} calibration price equals the prediction`,
@@ -93,9 +121,13 @@ function verifyContract(name, body, expectedPrice) {
 }
 
 async function main() {
+  const aiOk = requireEndpoint("WP04_AI_BASE", AI);
+  const proxyOk = requireEndpoint("WP04_PROXY_BASE", PROXY);
+  if (!aiOk || !proxyOk) { report(); return; }
   let health;
   try {
-    health = await fetch(`${AI}/health`).then((r) => r.json());
+    health = await fetch(`${AI}/health`, { signal: AbortSignal.timeout(TIMEOUT_MS) })
+      .then((r) => r.json());
   } catch (error) {
     check("FastAPI reachable", false, String(error.message || error));
     report();
@@ -116,19 +148,24 @@ async function main() {
     if (direct.json && viaProxy.json) {
       check(`${name} proxy returns the same prediction`,
         direct.json.predicted_asking_price_vnd === viaProxy.json.predicted_asking_price_vnd);
-      check(`${name} proxy preserves the explanation contract`,
+      // structural equality of the decoded JSON; raw bytes may legitimately differ
+      const structural = (value) => JSON.stringify(value, Object.keys(value || {}).sort());
+      check(`${name} proxy preserves the explanation structurally`,
         JSON.stringify(direct.json.explanation) === JSON.stringify(viaProxy.json.explanation),
-        "explanation differs across the proxy");
+        "decoded explanation differs across the proxy");
+      void structural;
     }
   }
 
   // invalid input must be rejected by the real service, not silently valued
   const invalid = await post(AI, "/predict", { category: "Nhà ở", location_feature: "Cẩm Lệ",
     area_sqm: 0 });
-  check("invalid numeric input is rejected", invalid.status >= 400, invalid.status);
+  check("invalid numeric input is rejected with 4xx",
+    invalid.status >= 400 && invalid.status < 500, `status ${invalid.status}`);
   const badLocation = await post(AI, "/predict", { category: "Nhà ở",
     location_feature: "Hà Nội", area_sqm: 100 });
-  check("unsupported location is rejected", badLocation.status >= 400, badLocation.status);
+  check("unsupported location is rejected with 4xx",
+    badLocation.status >= 400 && badLocation.status < 500, `status ${badLocation.status}`);
 
   report();
 }

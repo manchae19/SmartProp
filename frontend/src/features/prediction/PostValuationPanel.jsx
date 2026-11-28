@@ -5,7 +5,6 @@ import { api } from "../auth/api.js";
 import { categoryFor, valuationInput, createPreviewState, exactVnd } from "./valuation.js";
 import AdvancedValuationFields from "./AdvancedValuationFields.jsx";
 import ValuationExplanationPanel from "./ValuationExplanationPanel.js";
-import { normalizeVnd } from "./explanationModel.js";
 import ComparableEvidenceLookup from '../property/ComparableEvidenceLookup.jsx';
 import { valuationComparableBody } from '../property/comparables.js';
 function usePostValuationPanelState(inputProps, forwardedRef) {
@@ -149,7 +148,7 @@ export default React.forwardRef(function PostValuationPanel(props, ref) {
       {view.state.result?.available ? (
         <ValuationExplanationPanel
           explanation={view.state.result.explanation}
-          predictedPriceVnd={normalizeVnd(view.state.result.predictedAskingPriceVnd)}
+          predictedPriceVnd={view.state.result.predictedAskingPriceVnd}
           modelVersion={view.state.result.modelVersion}
           surface="preview"
           className="mt-4"

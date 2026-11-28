@@ -197,3 +197,14 @@ and the component suite (484 checks) carries the rendering evidence. Counts: 4 p
 See `SMARTPROP_WP04_B6_B7_RUNTIME_EVIDENCE.md`. Real FastAPI + Vite proxy: **149/149**. Spring
 posting/Advisor runtime **BLOCKED** on an isolated MySQL instance (existing profiles target the
 protected 3306/3307).
+
+---
+
+## Strict price closure (final)
+
+`vndDigits`/`normalizeVnd`/`sameVnd` replace the old `Number()`-based normaliser. Prices must be
+positive integers (JSON number or Spring decimal string); zero, negatives, fractions, hex,
+scientific notation, empty strings, objects, `NaN`/`Infinity` and unsafe integers are rejected, and
+values beyond the safe range are compared as exact digit strings rather than rounded. The panel is
+given the original representation so a malformed supplied value cannot slip through coercion, and
+consistency is exact integer equality with no relative tolerance.

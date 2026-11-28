@@ -1,9 +1,9 @@
 {
   "ai": "http://127.0.0.1:8000",
   "proxy": "http://127.0.0.1:5199/api/ai",
-  "at": "2026-11-28T06:37:34.683Z",
-  "total": 149,
-  "passed": 149,
+  "at": "2026-11-28T06:58:57.500Z",
+  "total": 157,
+  "passed": 157,
   "failed": 0,
   "notRun": [
     {
@@ -38,7 +38,7 @@
     {
       "name": "HOUSE direct HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "HOUSE direct model_version v1.3",
@@ -91,7 +91,12 @@
       "detail": "6"
     },
     {
-      "name": "HOUSE direct 22 provenance features",
+      "name": "HOUSE direct exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "HOUSE direct every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -123,7 +128,7 @@
     {
       "name": "HOUSE via vite proxy HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "HOUSE via vite proxy model_version v1.3",
@@ -176,7 +181,12 @@
       "detail": "6"
     },
     {
-      "name": "HOUSE via vite proxy 22 provenance features",
+      "name": "HOUSE via vite proxy exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "HOUSE via vite proxy every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -211,14 +221,14 @@
       "detail": ""
     },
     {
-      "name": "HOUSE proxy preserves the explanation contract",
+      "name": "HOUSE proxy preserves the explanation structurally",
       "ok": true,
-      "detail": "explanation differs across the proxy"
+      "detail": "decoded explanation differs across the proxy"
     },
     {
       "name": "LAND direct HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "LAND direct model_version v1.3",
@@ -271,7 +281,12 @@
       "detail": "6"
     },
     {
-      "name": "LAND direct 22 provenance features",
+      "name": "LAND direct exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "LAND direct every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -303,7 +318,7 @@
     {
       "name": "LAND via vite proxy HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "LAND via vite proxy model_version v1.3",
@@ -356,7 +371,12 @@
       "detail": "6"
     },
     {
-      "name": "LAND via vite proxy 22 provenance features",
+      "name": "LAND via vite proxy exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "LAND via vite proxy every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -391,14 +411,14 @@
       "detail": ""
     },
     {
-      "name": "LAND proxy preserves the explanation contract",
+      "name": "LAND proxy preserves the explanation structurally",
       "ok": true,
-      "detail": "explanation differs across the proxy"
+      "detail": "decoded explanation differs across the proxy"
     },
     {
       "name": "APARTMENT direct HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "APARTMENT direct model_version v1.3",
@@ -451,7 +471,12 @@
       "detail": "6"
     },
     {
-      "name": "APARTMENT direct 22 provenance features",
+      "name": "APARTMENT direct exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "APARTMENT direct every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -483,7 +508,7 @@
     {
       "name": "APARTMENT via vite proxy HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "APARTMENT via vite proxy model_version v1.3",
@@ -536,7 +561,12 @@
       "detail": "6"
     },
     {
-      "name": "APARTMENT via vite proxy 22 provenance features",
+      "name": "APARTMENT via vite proxy exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "APARTMENT via vite proxy every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -571,14 +601,14 @@
       "detail": ""
     },
     {
-      "name": "APARTMENT proxy preserves the explanation contract",
+      "name": "APARTMENT proxy preserves the explanation structurally",
       "ok": true,
-      "detail": "explanation differs across the proxy"
+      "detail": "decoded explanation differs across the proxy"
     },
     {
       "name": "VILLA direct HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "VILLA direct model_version v1.3",
@@ -631,7 +661,12 @@
       "detail": "6"
     },
     {
-      "name": "VILLA direct 22 provenance features",
+      "name": "VILLA direct exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "VILLA direct every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -663,7 +698,7 @@
     {
       "name": "VILLA via vite proxy HTTP 200",
       "ok": true,
-      "detail": "200"
+      "detail": "status 200"
     },
     {
       "name": "VILLA via vite proxy model_version v1.3",
@@ -716,7 +751,12 @@
       "detail": "6"
     },
     {
-      "name": "VILLA via vite proxy 22 provenance features",
+      "name": "VILLA via vite proxy exact 22 provenance identities",
+      "ok": true,
+      "detail": "area,bathroom_count,bedroom_count,district,floor_count,frontage_sqrt_area_ratio,frontage_width,has_bathroom,has_bedroom,has_floor,has_frontage,has_project,has_road_width,has_street,has_ward,normalized_type,raw_balcony_di"
+    },
+    {
+      "name": "VILLA via vite proxy every provenance state is recognised",
       "ok": true,
       "detail": ""
     },
@@ -751,19 +791,19 @@
       "detail": ""
     },
     {
-      "name": "VILLA proxy preserves the explanation contract",
+      "name": "VILLA proxy preserves the explanation structurally",
       "ok": true,
-      "detail": "explanation differs across the proxy"
+      "detail": "decoded explanation differs across the proxy"
     },
     {
-      "name": "invalid numeric input is rejected",
+      "name": "invalid numeric input is rejected with 4xx",
       "ok": true,
-      "detail": "422"
+      "detail": "status 422"
     },
     {
-      "name": "unsupported location is rejected",
+      "name": "unsupported location is rejected with 4xx",
       "ok": true,
-      "detail": "422"
+      "detail": "status 422"
     }
   ]
 }
