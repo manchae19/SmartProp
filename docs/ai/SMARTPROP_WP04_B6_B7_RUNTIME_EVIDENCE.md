@@ -1,5 +1,7 @@
 # WP-04 B6/B7 — runtime evidence report
 
+> The [WP04 final acceptance](wp04-evidence/README.md) supersedes the earlier sessions in this log.
+
 Sanitised. No tokens, credentials, protected data or user records.
 
 ## 1. Environment
@@ -554,6 +556,6 @@ The first disposable datadir hit a Flyway deadline during V23. A retry against t
 
 ### Reproduction and limits
 
-From the isolated worktree, use the local fixture launcher `.smartprop/wp04-final/stack.py` with the verified Python interpreter and `--mysql-bin`. It uses loopback MySQL/Spring/FastAPI/Vite on ports 54041–54044 and generates fixture credentials at startup. From `frontend/`, run the Node scripts under `tests/wp04/browser/` in this order: `reactive-authorization.mjs`, `failure-isolation.mjs`, `runtime-surfaces.mjs`, and `surfaces.mjs`. Set `WP04_APP`, `WP04_API`, `WP04_AI`, fixture account environment variables, `WP04_RUNTIME_FILE`, `WP04_FAILURE_REPORT`, `WP04_AUTH_REPORT` and Chromium paths from the checked runtime manifest. The outage uses the launcher-owned control files. The component runner consumes that run's failure report. Evidence and exit files are in `.smartprop/wp04-final/`. Do not copy credentials into documentation.
+From the isolated worktree, use the [published fixture launcher](../../frontend/tests/wp04/browser/tools/README.md) with the verified Python interpreter and `--mysql-bin`. It uses loopback MySQL/Spring/FastAPI/Vite on ports 54041–54044 and generates fixture credentials at startup. From `frontend/`, run the Node scripts under `tests/wp04/browser/` in this order: `reactive-authorization.mjs`, `failure-isolation.mjs`, `runtime-surfaces.mjs`, and `surfaces.mjs`. Set `WP04_APP`, `WP04_API`, `WP04_AI`, fixture account environment variables, `WP04_RUNTIME_FILE`, `WP04_FAILURE_REPORT`, `WP04_AUTH_REPORT` and Chromium paths from the checked runtime manifest. The outage uses the launcher-owned control files. The component runner consumes that run's failure report. Evidence and exit files are in `.smartprop/wp04-final/`. Do not copy credentials into documentation.
 
 `AdvisorControllerLiveIT` remains excluded because it asserts legacy V6 and enables TiniX. The applicable MySQL run was `AdvisorPartialResultLiveIT,ComparableSyntheticMysqlIT`. The suite used only synthetic properties/accounts and did not read research datasets or protected databases. Production deployment, real Google OAuth, and deployed DB grants/views are outside this acceptance. The owned fixture stopped with zero remaining listeners and the mentor demo retained its five listener PIDs. The no-DB Spring suite used `mvnw.cmd -o -B test`. The SQL suites used `mvnw.cmd -o -B -Dtest=AdvisorPartialResultLiveIT,ComparableSyntheticMysqlIT test` after ownership verification.
