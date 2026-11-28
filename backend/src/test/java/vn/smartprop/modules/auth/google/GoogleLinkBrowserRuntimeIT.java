@@ -70,10 +70,10 @@ class GoogleLinkBrowserRuntimeIT {
             + "/smartprop_pr48_runtime?connectionTimeZone=UTC&allowPublicKeyRetrieval=true&useSSL=false";
         var dataSource = new DriverManagerDataSource(url, "pr48_fixture", password);
         verifyIdentity(new JdbcTemplate(dataSource), port, marker);
-        // V0 only acknowledges the isolation marker. The complete, unchanged standard SQL follows.
+        // A provisioned Standard fixture must have the complete SQL lineage; never auto-baseline.
         Flyway.configure().dataSource(dataSource)
             .locations("classpath:database/migrations", "classpath:database/research-migrations/poi")
-            .baselineVersion("0").baselineOnMigrate(true).cleanDisabled(true).createSchemas(false).load().migrate();
+            .baselineOnMigrate(false).cleanDisabled(true).createSchemas(false).load().migrate();
 
         boolean secure = System.getenv("PR48_TLS_CERT") != null;
         String origin = (secure ? "https" : "http") + "://127.0.0.1:" + front;

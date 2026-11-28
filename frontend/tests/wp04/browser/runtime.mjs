@@ -172,7 +172,7 @@ async function main() {
 
 function report() {
   const failed = results.filter((item) => !item.ok);
-  const outDir = join(here, "reports");
+  const outDir = process.env.WP04_OUTPUT_DIR || join(here, "reports");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "wp04-runtime.json"), JSON.stringify({
     ai: AI, proxy: PROXY, at: new Date().toISOString(),
