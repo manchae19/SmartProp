@@ -67,8 +67,11 @@ export default React.forwardRef(function ProjectsView(props, ref) {
                   {"Xem thông tin dự án ↗"}
                 </span>
               </SiteLink>)}
-          </div> : !view.state.error ? <div className="mt-6 rounded-panel border border-brand-line bg-brand-card p-8 text-sm text-brand-muted">
-            {"Chưa có dự án được công bố trên SmartProp."}
+          </div> : !view.state.error ? <div className="projects-empty mt-6 rounded-panel border border-brand-line bg-brand-card p-8 text-sm text-brand-muted">
+            <span className="projects-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M4 21V5h10v16M14 10h6v11M2 21h20M8 9h2M8 13h2M8 17h2M17 14h1M17 18h1" /></svg>
+            </span>
+            <h3>Chưa có dự án được công bố trên SmartProp</h3>
           </div> : null}
         <Pagination state={view.state} />
       </section>

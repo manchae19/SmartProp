@@ -8,7 +8,7 @@ function usePaginationState(inputProps, forwardedRef) {
 }
 export default React.forwardRef(function Pagination(props, ref) {
   const view = usePaginationState(props, ref);
-  return <>{view.state.totalPages > 1 ? <div className="flex justify-center items-center gap-5 py-6 text-xs text-[var(--ui-accent)]">
+  return <>{view.state.totalPages > 1 ? <div className="listing-pagination flex justify-center items-center gap-5 py-6 text-xs text-[var(--ui-accent)]">
         <button disabled={view.state.busy || !view.state.page} className="rounded-full border px-4 py-2 bg-brand-card disabled:opacity-40" onClick={$event => {
         view.state.load(view.state.page - 1);
       }}>

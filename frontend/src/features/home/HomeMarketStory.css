@@ -1,0 +1,57 @@
+/* Simulation presentation is scoped to the Homepage; calculations stay unchanged. */
+#market .light-demo>summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 26px; list-style: none; }
+#market .light-demo>summary::-webkit-details-marker { display: none; }
+#market .market-story-title { font-size: 17px; font-weight: 700; }
+#market .market-story-meta { display: block; margin-top: 5px; color: #10615d; font-size: 12px; font-weight: 550; }
+#market .market-story-toggle { display: inline-flex; align-items: center; gap: 12px; flex-shrink: 0; color: #142b45; font-size: 12px; }
+#market .market-story-chevron { width: 8px; height: 8px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform 180ms ease; }
+#market .light-demo[open] .market-story-chevron { transform: rotate(225deg); }
+#market .light-demo[open]>summary { border-bottom: 1px solid #d7e0e8; border-radius: 16px 16px 0 0; }
+#market #market-demo { padding: 30px 26px; border-radius: 0 0 16px 16px; background: #f4f7fa; color: #142b45; }
+#market #market-demo>div { padding: 0; }
+#market #market-demo h2 { font-size: clamp(26px,2.6vw,38px); color: #142b45; letter-spacing: -.035em; }
+#market #market-demo h2 span { color: #142b45; }
+#market #market-demo>div>div:first-child>div:first-child>p { color: #50667c; }
+#market #market-demo>div>div:first-child>div:first-child>p>span { color: #10615d; background: #d9f0ed; padding: 2px 7px; border-radius: 5px; }
+#market #market-demo button { color: #142b45; background: #fff; border: 1px solid #d7e0e8; transition: background-color 180ms ease,border-color 180ms ease; }
+#market #market-demo button:hover { border-color: #168f89; background: #eef5f6; }
+#market #market-demo button[aria-pressed=true] { background: #142b45; border-color: #142b45; color: #fff; }
+#market #market-demo button:focus-visible { outline: 2px solid #168f89; outline-offset: 3px; }
+#market .story-kpis>div { min-width: 0; background: #142b45; border-color: #142b45; box-shadow: 0 5px 14px #10243b0d; }
+#market .story-kpis>div p { color: #fff; }
+#market .story-kpis>div p:first-child { color: #dce7f0; }
+#market .story-kpis>div:nth-child(2) { background: #d9f0ed; border-color: #168f8933; }
+#market .story-kpis>div:nth-child(3) { background: #f7ebd1; border-color: #d9ad5559; }
+#market .story-kpis>div:not(:first-child) p { color: #142b45; }
+#market .story-kpis>div p:nth-child(2) { font-variant-numeric: tabular-nums; font-size: clamp(24px,2.3vw,30px); }
+#market .story-kpis>div:nth-child(2)::after { content: 'Dữ liệu mô phỏng'; display: block; margin-top: 5px; color: #10615d; font-size: 11px; }
+#market .story-chart { background: #fff; border-color: #d7e0e8; }
+#market .story-chart svg { min-width: 0; }
+#market .story-chart svg line { stroke: #d7e0e8; }
+#market .story-chart svg text { fill: #50667c; }
+#market .story-chart svg polyline[stroke="#8BB5CA"] { stroke: #142b45; }
+#market .story-chart svg polyline[stroke="#a5dbdc"] { stroke: #168f89; stroke-dasharray: 9 3; }
+#market .story-chart svg polyline[stroke="#9ABFAE"] { stroke: #a67a2a; stroke-dasharray: 3 4; }
+#market .story-legend>div { color: #50667c; }
+#market .story-legend strong { color: #142b45; }
+#market .story-legend>div>span[style*="139, 181, 202"] { background: #142b45!important; }
+#market .story-legend>div>span[style*="165, 219, 220"] { background: #168f89!important; }
+#market .story-legend>div>span[style*="154, 191, 174"] { background: #a67a2a!important; }
+#market .story-comparison { min-width: 0; background: #e9eef4; color: #142b45; border: 1px solid #d7e0e8; }
+#market .story-comparison>p { color: #50667c; }
+#market .story-comparison>div>div { padding-bottom: 12px; border-bottom: 1px solid #d7e0e8; }
+#market .story-comparison>div>div:hover { background: #ffffff60; }
+#market .story-comparison>div>div>div:first-child>span:last-child { color: #142b45; font-variant-numeric: tabular-nums; text-align: right; }
+#market .story-comparison>div>div>div:last-child { background: #d7e0e8; }
+#market .story-comparison>div>div>div:last-child>div { background: #168f89; }
+@media(max-width:639px) {
+ #market .light-demo>summary { padding: 18px; gap: 12px; }
+ #market .market-story-title { font-size: 15px; }
+ #market .market-story-toggle { font-size: 11px; gap: 8px; }
+ #market #market-demo { padding: 24px 16px; }
+ #market .story-chart { padding: 16px 12px; }
+ #market .story-chart [role=group] { gap: 4px; }
+ #market .story-chart button { padding-inline: 10px; }
+ #market .story-chart svg text { font-size: 24px; }
+}
+@media(prefers-reduced-motion:reduce) { #market .market-story-chevron,#market #market-demo button,#market .story-comparison>div>div>div:last-child>div { transition: none; } }

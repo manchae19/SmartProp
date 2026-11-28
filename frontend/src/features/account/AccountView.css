@@ -1,3 +1,108 @@
-
+﻿
 .account-page[data-sp-c8811dc0]{max-width:1220px;color:var(--ui-accent)}.account-eyebrow[data-sp-c8811dc0]{font-size:12px;letter-spacing:.16em;font-weight:650;color:var(--ui-accent)}.account-card[data-sp-c8811dc0]{padding:28px;border:1px solid var(--ui-border);border-radius:24px;background:var(--ui-surface);box-shadow:0 2px 10px #00000014}.profile-overview[data-sp-c8811dc0]{display:grid;grid-template-columns:1fr auto;align-items:center;gap:32px;border-top:3px solid var(--ui-border)}.profile-actions[data-sp-c8811dc0]{display:grid;gap:12px}.account-chip[data-sp-c8811dc0]{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--ui-surface);font-size:13px;font-weight:550}.account-section-heading[data-sp-c8811dc0]{display:flex;align-items:flex-start;gap:14px;margin-bottom:26px}.account-section-heading h2[data-sp-c8811dc0]{font-size:22px;font-weight:650;line-height:1.4}.account-section-heading p[data-sp-c8811dc0]{font-size:14px;color:var(--ui-accent);line-height:1.7;margin-top:5px}.account-section-icon[data-sp-c8811dc0]{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--ui-surface);flex-shrink:0}.account-field[data-sp-c8811dc0]{display:flex;min-width:0;flex-direction:column;gap:8px;font-size:14px;font-weight:550}.account-field small[data-sp-c8811dc0]{font-size:13px;line-height:1.6;font-weight:400;color:var(--ui-accent)}.account-field input[data-sp-c8811dc0]{min-height:48px}.account-tabs[data-sp-c8811dc0]{display:flex;flex-wrap:wrap;gap:6px;padding:5px;border-radius:14px;background:var(--ui-surface);width:fit-content}.account-tabs button[data-sp-c8811dc0],.account-tabs a[data-sp-c8811dc0]{padding:10px 16px;border-radius:10px;font-size:14px;font-weight:550}.account-tabs button[aria-pressed=true][data-sp-c8811dc0]{background:var(--ui-surface);box-shadow:0 2px 10px #00000014}.account-tool[data-sp-c8811dc0]{display:flex;align-items:center;gap:14px;border:1px solid var(--ui-border);padding:18px;border-radius:16px;transition:background .15s}.account-tool[data-sp-c8811dc0]:hover{background:var(--ui-surface)}.account-tool strong[data-sp-c8811dc0]{display:block;font-size:15px;font-weight:600}.account-tool small[data-sp-c8811dc0]{display:block;font-size:13px;line-height:1.6;color:var(--ui-accent);margin-top:4px}.account-notice[data-sp-c8811dc0]{padding:14px 18px;border:1px solid var(--ui-border);border-radius:14px;font-size:14px;line-height:1.7;background:var(--ui-surface)}.account-error[data-sp-c8811dc0]{color:var(--ui-error-text);background:var(--ui-error-bg);border-color:var(--ui-error-border)}.account-success[data-sp-c8811dc0]{color:var(--ui-success-text);background:var(--ui-success-bg);border-color:var(--ui-success-border)}.account-page section[id][data-sp-c8811dc0]{scroll-margin-top:calc(var(--sp-header-height) + 24px)}.account-page[data-sp-c8811dc0] :focus-visible{outline:3px solid var(--ui-border);outline-offset:3px}@media(max-width:767px){.profile-overview[data-sp-c8811dc0]{grid-template-columns:1fr;gap:24px}.profile-actions[data-sp-c8811dc0]{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}.account-card[data-sp-c8811dc0]{padding:22px}.profile-actions .sp-button[data-sp-c8811dc0]{font-size:13px;padding-inline:12px}}@media(max-width:420px){.profile-actions[data-sp-c8811dc0]{grid-template-columns:1fr}.account-card[data-sp-c8811dc0]{padding:20px}.account-section-heading h2[data-sp-c8811dc0]{font-size:21px}}
 
+
+/* Premium Personal Account — phase 1: scoped identity and existing banner. */
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page {
+  --account-navy:#142b45; --account-teal:#168f89; --account-border:#d5e3e7;
+  color:#142b45; padding-bottom:40px;
+}
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner { background:#10243b; border-color:#294c70; border-radius:20px; box-shadow:0 6px 24px #10243b0c; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner::before { opacity:.85; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner::after { background:linear-gradient(90deg,#10243b 0%,#142b45f5 30%,#294c70c9 56%,#294c7040 85%,#294c701a); }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner h1 { color:#fff; font-weight:780; border-left:3px solid #d9ad55; padding-left:14px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner > p { color:#dce7f0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner > p:first-child { color:#d9ad55; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-card { background:#fff; border-color:#d5e3e7; border-radius:20px; box-shadow:0 4px 20px #10243b07; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .profile-overview { background:#fff; border-top:3px solid #d9ad55; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .user-avatar { border:2px solid #d9ad5570; border-radius:50%; background:#e7f3f2; color:#142b45; box-shadow:0 3px 12px #10243b0c; overflow:hidden; flex-shrink:0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #profile-name { color:#142b45; font-weight:750; line-height:1.3; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-eyebrow { color:#168f89; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-chip { background:#f3f6f9; border:1px solid #d5e3e7; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-button { min-height:44px; border-radius:12px; transition:background-color 200ms,border-color 200ms; white-space:normal; text-align:center; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-button-primary { background:#142b45; border-color:#142b45; color:#fff; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-button-primary:not(:disabled):hover { background:#294c70; border-color:#294c70; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-button-secondary { background:#f3f6f9; color:#142b45; border-color:#d5e3e7; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-button-secondary:not(:disabled):hover { background:#e7f3f2; border-color:#168f8960; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page button:disabled { opacity:.5; cursor:not-allowed; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :focus-visible { outline:3px solid #168f89; outline-offset:3px; }
+
+/* Phase 2: optional profile fields, preferences and explicit privacy choice. */
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-heading { gap:12px; margin-bottom:24px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-heading h2 { color:#142b45; font-weight:750; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-heading p { color:#526b7d; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-icon { background:#e7f3f2; color:#168f89; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(.account-field,.lifestyle-fields label) { color:#142b45; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-input { min-width:0; min-height:46px; border:1px solid #d5e3e7; border-radius:12px; background:#f3f6f9; color:#142b45; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-input:focus { border-color:#168f89; outline:2px solid #168f8940; outline-offset:2px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-input[readonly] { color:#526b7d; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(.account-field small,.lifestyle-fields p,.lifestyle-fields small) { color:#526b7d; line-height:1.7; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-fields { border-color:#d5e3e7; gap:18px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-fields > legend { color:#142b45; font-weight:700; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-groups { gap:16px; align-items:stretch; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-groups fieldset { padding:14px; gap:6px; border:1px solid #d5e3e7; border-radius:16px; background:#fff; align-content:start; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-groups legend { color:#142b45; border-left:2px solid #168f89; padding-inline:8px; line-height:1.5; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-check { padding:9px 10px; border:1px solid transparent; border-radius:9px; font-weight:400; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-check:has(input:checked) { background:#e7f3f2; border-color:#168f8940; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page input[type=checkbox] { width:18px; height:18px; accent-color:#168f89; flex-shrink:0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-fields > .lifestyle-check { padding:15px; background:#e7f3f2; border-color:#168f8960; font-weight:600; line-height:1.7; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-fields > .sp-button { justify-self:start; color:#a3313b; border-color:#a3313b50; background:#fff; margin-top:4px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-fields > .sp-button:not(:disabled):hover { background:#fff1f2; border-color:#a3313b; }
+@media (hover:hover) { html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-groups .lifestyle-check:hover { background:#e7f3f280; } }
+
+/* Phase 3: existing security controls; sessions remain a route link. */
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs { max-width:100%; background:#f3f6f9; border:1px solid #d5e3e7; gap:5px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs :is(button,a) { display:inline-flex; align-items:center; justify-content:center; min-height:44px; color:#142b45; transition:background-color 200ms,color 200ms; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs button[aria-pressed=true] { background:#142b45; color:#fff; box-shadow:0 2px 6px #10243b16; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs :is(button:not([aria-pressed=true]),a):hover { background:#e7f3f2; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #security-settings > .border-t { border-color:#d5e3e7; line-height:1.7; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #security-settings a.underline { color:#168f89; text-underline-offset:4px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #security-settings label:has(> input[type=checkbox]) { border-color:#d5e3e7; gap:16px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #security-settings button.underline { min-height:44px; text-underline-offset:4px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-notice:not(.account-error):not(.account-success) { background:#f3f6f9; border-color:#d5e3e7; color:#38546b; }
+
+
+/* Phase 4: account-only styling for reused management and history cards. */
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(#property-management,#valuation-history) > section { margin-top:0; padding:28px; background:#fff; border:1px solid #d5e3e7; border-radius:20px; box-shadow:0 4px 20px #10243b07; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(#broker-card-title,#history-heading) { color:#142b45; font-weight:750; border-left:3px solid #d9ad55; padding-left:12px; line-height:1.4; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #property-management .tracking-widest { color:#168f89; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #valuation-history .border-dashed { background:#f3f6f9; border-color:#d5e3e7; border-radius:16px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #valuation-history [data-testid=history-item] { background:#f3f6f9; border:1px solid #d5e3e7; color:#142b45; overflow-wrap:anywhere; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #valuation-history a.underline { color:#168f89; text-underline-offset:4px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool { background:#fff; border-color:#d5e3e7; border-radius:16px; padding:18px; min-width:0; color:#142b45; transition:transform 200ms,box-shadow 200ms,border-color 200ms,background-color 200ms; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool > svg { color:#168f89; flex-shrink:0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool strong { font-weight:700; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool small { color:#526b7d; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #account-tools > button { color:#a3313b; min-height:44px; text-underline-offset:4px; border-radius:8px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #account-tools > button:not(:disabled):hover { color:#805319; }
+@media (hover:hover) { html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool:hover { transform:translateY(-2px); background:#f3f6f9; border-color:#168f8960; box-shadow:0 5px 16px #10243b0a; } }
+
+/* Phase 5: narrow screens, keyboard access and reduced motion. */
+html[data-ui-theme=slate] body:has([data-ui-view=AccountView].account-page) { min-width:0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(section,form,.profile-actions,.avatar-editor) { min-width:0; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(h2,p,.account-chip,.account-field,.lifestyle-check) { overflow-wrap:anywhere; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #personal-information > form > div:last-child { padding-right:76px; }
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #account-tools > button { margin-right:66px; }
+@media (max-width:767px) {
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .profile-actions { align-items:start; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(#property-management,#valuation-history) > section { padding:22px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-heading { gap:10px; margin-bottom:20px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-section-heading h2 { font-size:21px; }
+}
+@media (max-width:600px) {
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner::after { background:linear-gradient(90deg,#10243bf5,#142b45e6 48%,#294c70b3); }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .sp-input { font-size:16px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .lifestyle-groups fieldset { padding:12px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs { width:100%; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tabs :is(button,a) { flex:1 1 auto; padding-inline:10px; font-size:13px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page #personal-information > form > div:last-child { padding-right:66px; }
+}
+@media (max-width:420px) {
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(.account-card,#property-management > section,#valuation-history > section) { padding:20px 16px; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool { padding:14px; gap:10px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page :is(button,a,.account-tool) { transition:none; }
+  html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .account-tool:hover { transform:none; }
+}
+html[data-ui-theme=slate] body [data-ui-view=AccountView].account-page .page-intro-banner > p.account-eyebrow:first-child:not(:last-child) { color:#d9ad55; }

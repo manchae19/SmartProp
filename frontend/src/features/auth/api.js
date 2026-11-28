@@ -4,22 +4,17 @@ export const session = createStateStore({
   token: null,
   user: null,
   status: 'INITIALIZING',
-  error: null
+  error: null,
+  authGeneration: 0,
+  authTransition: false
 });
 export const refreshEnabled = import.meta.env?.VITE_ENABLE_REFRESH === 'true';
 const baseUrl = (import.meta.env?.VITE_API_BASE_URL || '/api/v1').replace(/\/$/, '');
-let client;
-export function clearSession() {
-  client?.invalidate();
-  session.edit(draftValue => draftValue["token"] = null);
-  session.edit(draftValue => draftValue["user"] = null);
-  session.edit(draftValue => draftValue["status"] = 'UNAUTHENTICATED');
-  session.edit(draftValue => draftValue["error"] = null);
+function clearLegacyCredentials() {
   globalThis.localStorage?.removeItem('token');
   globalThis.localStorage?.removeItem('role');
 }
-globalThis.localStorage?.removeItem('token');
-globalThis.localStorage?.removeItem('role');
+clearLegacyCredentials();
 let activityPending = true;
 if (typeof window !== 'undefined') {
   for (const event of ['pointerdown', 'keydown']) window.addEventListener(event, e => {
@@ -33,21 +28,25 @@ const activity = () => {
   activityPending = false;
   return pending;
 };
-client = createHttpClient({
+const client = createHttpClient({
   baseUrl,
   session,
   refreshEnabled,
-  clear: clearSession,
+  clear: clearLegacyCredentials,
   expired: () => window.dispatchEvent(new Event('smartprop:session-expired')),
   activity,
   lock: globalThis.navigator?.locks ? run => navigator.locks.request('smartprop-refresh', run) : null
 });
-// Cross-tab logout sends no credentials, token or profile. Web Locks serializes cookie rotation.
+export const clearSession = () => client.clearSession();
+// Cross-tab messages carry only the action. Tabs restore credentials through the server cookie.
 const channel = typeof window !== 'undefined' && window.location && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('smartprop-session') : null;
 if (channel) channel.onmessage = e => {
   if (e.data === 'logout') {
     clearSession();
     window.dispatchEvent(new Event('smartprop:session-expired'));
+  } else if (e.data === 'login' && refreshEnabled) {
+    clearSession();
+    void client.initialize({ force: true });
   }
 };
 export const api = (path, options) => client.request(path, options);
@@ -65,6 +64,7 @@ export async function login(email, password, rememberMe = false) {
       password,
       rememberMe
     });
+  channel?.postMessage("login");
   return result.user;
 }
 export const register = body => api('/auth/register', {
@@ -76,8 +76,11 @@ export const register = body => api('/auth/register', {
   authenticated: false
 });
 export async function loadProfile() {
-  session.edit((resolvedValue => draftValue => draftValue["user"] = resolvedValue)(await api('/users/me')));
-  return session.getSnapshot().user;
+  const generation = session.getSnapshot().authGeneration;
+  const user = await api('/users/me');
+  if (generation !== session.getSnapshot().authGeneration) throw sessionChanged();
+  session.edit(draft => { draft.user = user; });
+  return user;
 }
 export async function logout() {
   await client.logout();
@@ -85,5 +88,45 @@ export async function logout() {
 }
 export async function completeGoogleLogin() {
   const result = await client.google();
+  channel?.postMessage("login");
   return result.user;
 }
+export function getGoogleLinkScope(snapshot = session.getSnapshot()) {
+  return snapshot.status === 'AUTHENTICATED' && !snapshot.authTransition
+    && snapshot.token && snapshot.user?.id != null
+    && (!snapshot.user.status || snapshot.user.status === 'ACTIVE')
+    ? snapshot.authGeneration : null;
+}
+
+function sessionChanged() {
+  return Object.assign(Error('Phiên đăng nhập đã thay đổi. Vui lòng thực hiện lại.'), { code: 'SESSION_CHANGED' });
+}
+
+export function assertGoogleLinkScope(scope) {
+  if (scope == null || scope !== getGoogleLinkScope()) throw sessionChanged();
+}
+
+async function requestGoogleLink(path, scope, method, body) {
+  assertGoogleLinkScope(scope);
+  try {
+    let options;
+    if (method === 'POST') {
+      const csrf = await api('/auth/csrf', { authenticated: false });
+      assertGoogleLinkScope(scope);
+      options = { method, body, headers: { [csrf.headerName]: csrf.token } };
+    }
+    const result = await api(path, options);
+    assertGoogleLinkScope(scope);
+    return result;
+  } catch (error) {
+    assertGoogleLinkScope(scope);
+    throw error;
+  }
+}
+
+export const googleLinkStatus = scope => requestGoogleLink('/auth/google/link/status', scope);
+export function startGoogleLink(currentPassword, scope) {
+  if (!refreshEnabled) throw Object.assign(Error('Phiên làm mới đăng nhập chưa được bật ở frontend. Vui lòng cấu hình VITE_ENABLE_REFRESH=true rồi tải lại trang.'), { code: 'FEATURE_DISABLED' });
+  return requestGoogleLink('/auth/google/link/start', scope, 'POST', { currentPassword });
+}
+export const completeGoogleLink = scope => requestGoogleLink('/auth/google/link/complete', scope, 'POST');

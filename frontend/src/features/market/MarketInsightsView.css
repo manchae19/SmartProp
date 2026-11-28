@@ -30,3 +30,194 @@
   border-color: var(--ui-border);
 }
 
+
+/* Phase 1: presentation isolated to the Market Hero and district selector. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] .market-intro-banner {
+ background-color:#142b45;background-image:linear-gradient(90deg,#142b45 0%,#142b45f5 28%,#294c70d9 50%,#294c7066 72%,#10243b33 100%),url('/images/home/banner.png');color:#fff;border-color:#294c70;
+ &>div[aria-hidden=true]{display:none}
+ &>div.relative.pb-8{border-color:#dce7f033}
+ & h1,& h1 span{color:#fff;font-weight:750;line-height:1.2}
+ & .max-w-3xl>div{color:#d9ad55;font-weight:650;letter-spacing:.18em}
+ & .max-w-3xl>p{color:#dce7f0;line-height:1.75}
+ & .market-hero-metric{background:#142b45d9!important;border:1px solid #dce7f04d!important;box-shadow:0 4px 16px #10243b1a!important;border-radius:16px;padding:14px 16px;min-width:0}
+ & .market-hero-metric p{color:#dce7f0}
+ & .market-hero-metric p:nth-child(2){color:#fff;font-weight:750}
+ & .market-hero-metric p:nth-child(3),& .market-hero-metric p:nth-child(3) span{color:#dce7f0}
+ & .market-district-selector>div:first-child{color:#dce7f0}
+ & .market-district-selector>div:first-child :is(p,span){color:#dce7f0}
+ & .market-district-selector button{background:#142b45cc;border:1px solid #dce7f059;color:#fff;min-width:0;transition:background-color 200ms ease,border-color 200ms ease,box-shadow 200ms ease}
+ & .market-district-selector button span{color:#dce7f0}
+ & .market-district-selector button>div>span:first-child{color:#fff}
+ & .market-district-selector button>div>span:last-child{background:#dce7f04d;flex-shrink:0}
+ & .market-district-selector button[aria-pressed=true]{background:#142b45;border-color:#d9ad55;box-shadow:inset 0 -2px #d9ad55,0 4px 14px #10243b26}
+ & .market-district-selector button[aria-pressed=true]>div>span:last-child{background:#d9ad55;outline:2px solid #d9ad5540;outline-offset:2px}
+ & .market-district-selector button:hover:not([aria-pressed=true]){background:#168f89cc;border-color:#dce7f0aa}
+ & .market-district-selector button:focus-visible{outline:3px solid #d9ad55;outline-offset:3px}
+ & .market-hero-source{font-size:11px;line-height:1.7;color:#dce7f0;margin:14px 0 0;max-width:850px}
+}
+@media(max-width:700px){html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] .market-intro-banner{background-image:linear-gradient(90deg,#142b45fa,#294c70d9 65%,#294c7099),url('/images/home/banner.png'); & .market-hero-metric{padding:12px;flex:1;min-width:0} & .market-hero-metric p{overflow-wrap:anywhere}}}
+@media(prefers-reduced-motion:reduce){html body [data-ui-view=MarketInsightsView] .market-district-selector button{transition:none}}
+
+/* Phase 2: only the overview pair; shared map components stay unchanged. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] #overview {
+ --ui-accent:#142b45;--ui-muted:#647c8f;--ui-border:#d5e3e7;--ui-surface:#fff;--ui-soft:#f3f6f9;
+ scroll-margin-top:calc(var(--sp-header-height,64px) + 96px);
+ &>.market-overview-card,&>.market-spatial-card{background:#fff;border:1px solid #d5e3e7;border-radius:20px;box-shadow:0 5px 20px #10243b0d;min-width:0}
+ & .market-overview-card>div:first-child{border-color:#d5e3e7;border-left:3px solid #d9ad55;padding-left:14px}
+ & h2,& h2 span{color:#142b45;font-weight:750;line-height:1.3}
+ & .market-overview-card>div:first-child>p{color:#647c8f}
+ & .market-analysis-cards>div{background:#f3f6f9;border:1px solid #d5e3e7;border-left:3px solid #168f8959;border-radius:16px}
+ & .market-analysis-cards>div>div{color:#142b45;line-height:1.6;align-items:flex-start}
+ & .market-analysis-cards svg{color:#168f89;flex-shrink:0;margin-top:2px}
+ & .market-analysis-cards p{color:#38546b;line-height:1.85}
+ & .market-overview-stats{align-items:stretch}
+ & .market-overview-stats>div{background:#f3f6f9;border:1px solid #d5e3e7;border-radius:16px;min-width:0;padding:16px;display:flex;flex-direction:column}
+ & .market-overview-stats>div:nth-child(3),& .market-overview-stats>div:nth-child(6){background:#e7f3f24d;border-top:2px solid #168f8959}
+ & .market-overview-stats>div>p:first-child{color:#526b7d;font-size:10px;line-height:1.7;letter-spacing:.06em}
+ & .market-overview-stats>div>p:nth-child(2){color:#142b45;font-weight:750;line-height:1.5;font-size:18px;overflow-wrap:anywhere;margin-block:8px}
+ & .market-overview-stats>div>p:last-child{color:#526b7d;font-weight:500;line-height:1.7;font-size:11px;margin-top:auto;overflow-wrap:anywhere}
+ &>.market-spatial-card{border-color:#168f8940;background:#f3f6f9}
+ & .market-spatial-card>div:first-child{align-items:flex-start}
+ & .market-spatial-card>div:first-child>div>p{color:#168f89;font-weight:750;letter-spacing:.14em}
+ & .market-spatial-card h3{color:#142b45;font-weight:750;line-height:1.5}
+ & .market-spatial-card>div:first-child>span{background:#e7f3f2;color:#126a68;border:1px solid #168f8933;line-height:1.5;flex-shrink:0;text-align:center}
+ & .market-spatial-card>div:nth-child(2){border-color:#168f8959;border-radius:16px;box-shadow:0 4px 14px #10243b0d}
+ & .market-spatial-card>div:last-child{color:#526b7d;gap:12px;line-height:1.7;border-color:#d5e3e7;align-items:flex-start}
+ & .market-spatial-card>div:last-child>a{color:#168f89;flex-shrink:0;text-underline-offset:4px}
+ & .market-spatial-card>div:last-child>a:hover{color:#142b45;text-decoration:underline}
+ & .market-spatial-card :focus-visible{outline:3px solid #168f89;outline-offset:3px}
+ & .price-pin{background:#fff;color:#142b45;border:1px solid #d5e3e7;padding:6px 10px;font-size:12px;line-height:1.5;box-shadow:0 3px 10px #10243b26}
+ & .price-pin.selected{background:#e7f3f2;color:#142b45;border-color:#168f89;outline-color:#168f8933}
+ & .price-pin:hover{background:#e7f3f2;border-color:#168f89}
+ & .price-pin:after{border-width:1px;border-color:#d5e3e7}
+ & .map-controls button{width:38px;height:38px;background:#fff;color:#142b45;border:1px solid #d5e3e7;box-shadow:0 2px 6px #10243b0d}
+ & .map-controls button:hover:not(:disabled){background:#e7f3f2;color:#168f89}
+ & .map-attribution{color:#294c70;background:#ffffffed;font-size:11px;line-height:1.5}
+}
+@media(max-width:540px){html body [data-ui-view=MarketInsightsView] #overview{ & .market-overview-stats>div{padding:12px} & .market-overview-stats>div>p:nth-child(2){font-size:16px} & .market-spatial-card>div:last-child{flex-wrap:wrap} & .market-spatial-card>div:first-child{gap:8px} & .market-spatial-card>div:first-child>span{font-size:10px;padding:6px 8px}}}
+@media(prefers-reduced-motion:reduce){html body [data-ui-view=MarketInsightsView] #overview .price-pin{transition:none}}
+
+/* Phase 3: planning presentation only, keeping the existing accordion state. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] #planning {
+ background:#fff;border:1px solid #d5e3e7;border-radius:22px;box-shadow:0 5px 20px #10243b0d;scroll-margin-top:calc(var(--sp-header-height,64px) + 96px);
+ & .planning-source-note{font-size:11px;line-height:1.7;color:#647c8f;background:#f3f6f9;border-radius:10px;padding:10px 12px;margin-bottom:20px}
+ &>div:first-of-type{border-color:#d5e3e7;gap:20px}
+ &>div:first-of-type>div{border-left:3px solid #d9ad55;padding-left:14px}
+ & h2,& h2 span{color:#142b45;font-weight:750;line-height:1.3}
+ &>div:first-of-type>div>p{color:#647c8f;letter-spacing:.16em;line-height:1.7}
+ &>div:first-of-type>p{color:#526b7d;line-height:1.75}
+ & .space-y-4>div:has(>button[aria-controls]){border-color:#d5e3e7;border-radius:16px;transition:none}
+ & button[aria-controls]{background:#f3f6f9;color:#142b45;padding:16px 20px;gap:16px;line-height:1.65;font-weight:700;transition:background-color 180ms ease}
+ & button[aria-controls]>div{min-width:0;align-items:flex-start}
+ & button[aria-controls]>div>span:first-child{background:#fff;color:#294c70;border-color:#d5e3e7;flex-shrink:0;line-height:1.5}
+ & button[aria-controls]>span{flex-shrink:0;color:#168f89;transition:transform 180ms ease}
+ & button[aria-expanded=true]{background:#e7f3f2;box-shadow:inset 3px 0 #168f89}
+ & button[aria-controls]:hover{background:#e7f3f2}
+ & button[aria-controls]:focus-visible{outline:3px solid #168f89;outline-offset:-4px}
+ & [role=region]{background:#fff;color:#38546b;border-color:#d5e3e7;line-height:1.75}
+ & [role=region] strong{color:#142b45}
+ & [role=region] .grid>div{background:#fff;border:1px solid #d5e3e7;border-radius:16px;min-width:0;line-height:1.75;box-shadow:0 2px 8px #10243b05;transition:box-shadow 180ms ease}
+ & [role=region] .grid>div:hover{box-shadow:0 5px 16px #10243b0d}
+ & [role=region] .grid p{color:#526b7d;line-height:1.75;overflow-wrap:anywhere}
+ & [role=region] .grid p.font-bold{color:#142b45;font-weight:700}
+ & [data-planning-status]{background:#f3f6f9;color:#294c70;border:1px solid #d5e3e7;line-height:1.6;letter-spacing:.04em;max-width:100%;overflow-wrap:anywhere}
+ & [data-planning-status="Đang triển khai"],& [data-planning-status="Giai đoạn cuối"],& [data-planning-status="Hoàn thiện 95%"],& [data-planning-status="Đang mở rộng"],& [data-planning-status="Đang tăng tốc"]{background:#fff1d7;color:#805319;border-color:#e8c17a}
+ & [data-planning-status="Hoàn thành"],& [data-planning-status="Đã hoàn thành"],& [data-planning-status="Đã vận hành"],& [data-planning-status="Vận hành tốt"]{background:#e7f3f2;color:#126a68;border-color:#168f8933}
+}
+@media(max-width:540px){html body [data-ui-view=MarketInsightsView] #planning{ & button[aria-controls]{padding:14px 12px;gap:10px} & button[aria-controls]>div{gap:10px} & [role=region]{padding:18px 14px} & .planning-source-note{margin-bottom:16px}}}
+@media(prefers-reduced-motion:reduce){html body [data-ui-view=MarketInsightsView] #planning :is(button,[role=region] .grid>div){transition:none}}
+
+/* Phase 4: price analytics and static AI insights, scoped to this section. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] #price-trend {
+ scroll-margin-top:calc(var(--sp-header-height,64px) + 96px);
+ & .market-price-chart{background:#fff;border:1px solid #d5e3e7;border-radius:22px;box-shadow:0 5px 20px #10243b0d;min-width:0}
+ & .market-price-chart>div:first-child{border-color:#d5e3e7}
+ & .market-price-chart>div:first-child>div:first-child{border-left:3px solid #d9ad55;padding-left:14px}
+ & .market-price-chart h3,& .market-price-chart h3 span{color:#142b45;font-weight:750;line-height:1.35}
+ & .market-price-chart>div:first-child p{color:#526b7d;line-height:1.75}
+ & .chart-time-selector{background:#f3f6f9;border-color:#d5e3e7;flex-wrap:wrap;border-radius:18px;max-width:100%}
+ & .chart-time-selector button{color:#142b45;min-height:36px;transition:background-color 180ms ease}
+ & .chart-time-selector button[aria-pressed=true]{background:#142b45;color:#fff;box-shadow:inset 0 -2px #d9ad55}
+ & .chart-time-selector button:hover:not([aria-pressed=true]){background:#e7f3f2}
+ & .chart-segment{background:#fff;border-color:#d5e3e7;color:#142b45;min-height:36px;line-height:1.5}
+ & .chart-segment[aria-pressed=true]{background:#f3f6f9;border-color:#294c7070}
+ & .chart-segment[aria-pressed=false]{background:#fff;color:#647c8f;opacity:.75;text-decoration:line-through}
+ & .chart-segment:hover{background:#e7f3f2}
+ & .market-price-chart :focus-visible{outline:3px solid #168f89;outline-offset:3px}
+ & .chart-scroll{scrollbar-width:thin;scrollbar-color:#aac9c5 #f3f6f9;padding-bottom:6px}
+ & .chart-scroll .grid-lines line{stroke:#d5e3e7;stroke-opacity:.65}
+ & .chart-scroll text{fill:#526b7d}
+ & .chart-scroll path{transition:none}
+ & .chart-scroll rect:focus-visible{outline:1px solid #168f89;outline-offset:-1px}
+ & .chart-tooltip{left:clamp(8px,var(--tooltip-x),calc(100% - 248px));width:240px;max-width:calc(100% - 16px);transition:none}
+ & .chart-tooltip>div{background:#fff;color:#142b45;border:1px solid #d5e3e7;border-radius:14px;box-shadow:0 8px 24px #10243b26;padding:12px;min-width:0}
+ & .chart-tooltip p,& .chart-tooltip span{color:#142b45}
+ & .chart-tooltip>div>p{border-color:#d5e3e7;flex-wrap:wrap;gap:4px}
+ & .chart-tooltip .space-y-2>div{gap:8px;font-size:11px}
+ & .price-data-note,& .ai-data-note{font-size:11px;line-height:1.75;color:#526b7d;background:#f3f6f9;padding:10px 12px;border-radius:10px;margin-block:12px}
+ & .market-ai-insights{background:#f3f6f9;background-image:none;border:1px solid #d5e3e7;border-radius:22px;box-shadow:0 5px 20px #10243b0d}
+ & .market-ai-insights>div[aria-hidden=true]{display:none}
+ & .market-ai-insights>div:nth-child(2){border-color:#d5e3e7}
+ & .market-ai-insights>div:nth-child(2)>div>div{background:#e7f3f2;color:#126a68;border-color:#168f8933}
+ & .market-ai-insights .animate-pulse{animation:none;background:#168f89}
+ & .market-ai-insights h3,& .market-ai-insights h3 span{color:#142b45;font-weight:750;line-height:1.4}
+ & .market-ai-insights a{background:#142b45;color:#fff;border:1px solid #142b45;line-height:1.6}
+ & .market-ai-insights a>span:last-child{color:#d9ad55}
+ & .market-ai-insights a:hover{background:#294c70}
+ & .market-ai-insights a:focus-visible{outline:3px solid #168f89;outline-offset:3px}
+ & .market-ai-insights>.grid>div{background:#fff;border:1px solid #d5e3e7;border-radius:16px;box-shadow:0 2px 8px #10243b05;min-width:0;backdrop-filter:none}
+ & .market-ai-insights>.grid>div>div{color:#142b45;line-height:1.6;align-items:flex-start}
+ & .market-ai-insights>.grid svg{color:#168f89;margin-top:2px}
+ & .market-ai-insights>.grid p{color:#38546b;line-height:1.8}
+}
+@media(max-width:540px){html body [data-ui-view=MarketInsightsView] #price-trend{ & .chart-time-selector{gap:4px} & .chart-time-selector button{padding-inline:10px;font-size:11px} & .market-ai-insights a{max-width:100%;white-space:normal}}}
+@media(prefers-reduced-motion:reduce){html body [data-ui-view=MarketInsightsView] #price-trend *{transition:none!important;animation:none!important}}
+
+/* Phase 5: listings and district showcase only. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] :is(#listings,#neighboring){background:#fff;border:1px solid #d5e3e7;border-radius:22px;box-shadow:0 5px 20px #10243b0d;scroll-margin-top:calc(var(--sp-header-height,64px) + 96px)}
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] #listings {
+ &>div:first-child{border-color:#d5e3e7;gap:20px}
+ &>div:first-child>div{border-left:3px solid #d9ad55;padding-left:14px}
+ & h2,& h2 span{color:#142b45;font-weight:750;line-height:1.35}
+ &>div:first-child p{color:#647c8f;line-height:1.75}
+ &>div:first-child>a,&>div.text-center>a{background:#142b45;color:#fff;line-height:1.6}
+ &>div:first-child>a:hover{background:#294c70}
+ &>div:first-child>a>span:last-child{color:#d9ad55}
+ & .property-card{display:flex;flex-direction:column;min-width:0}
+ & .property-main{flex:1}
+ & .property-image{aspect-ratio:16/10;height:auto;overflow:hidden}
+ & .property-actions{display:grid;gap:8px;padding:14px;margin-top:auto}
+ & .market-card-action{background:#fff;border:1px solid #d5e3e7;color:#142b45;border-radius:10px;white-space:normal}
+ & .market-card-action:hover,& .market-card-action[aria-pressed=true]{background:#e7f3f2;color:#126a68;border-color:#168f8966}
+ & :focus-visible{outline:3px solid #168f89;outline-offset:3px}
+}
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView] #neighboring {
+ & .district-data-note{background:#f3f6f9;color:#647c8f;font-size:11px;line-height:1.75;padding:10px 12px;border-radius:10px;margin:0 0 24px}
+ & .top-searched-areas>div:first-child>div{border-left:3px solid #d9ad55;padding-left:14px}
+ & h2,& h2 span{color:#142b45;font-weight:750;line-height:1.35}
+ & .top-searched-areas>div:first-child p{color:#647c8f}
+ & .top-searched-areas>div:first-child>a{color:#168f89;line-height:1.7}
+ & article{background:#142b45;border:1px solid #d5e3e7;border-radius:20px;box-shadow:0 4px 14px #10243b12;transition:transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease}
+ & article:hover{transform:translateY(-3px);box-shadow:0 10px 24px #10243b26;border-color:#d9ad5570}
+ & article img{transform:none;transition:none}
+ & article>div[aria-hidden=true]{background:linear-gradient(180deg,#10243b08 0%,#10243b1a 30%,#10243b99 62%,#10243bf5 100%)}
+ & article>div:last-child{color:#fff}
+ & article h3,& article h3:hover{color:#fff;line-height:1.35}
+ & article>div:last-child p{color:#dce7f0;line-height:1.6}
+ & article>div:last-child>span{background:#ffffff1a;color:#fff;border-color:#ffffff66}
+ & article>div:nth-last-child(2)>span{background:#142b45e6;color:#fff;border-color:#ffffff4d;line-height:1.6}
+ & article>div:nth-last-child(2)>span span{color:#fff}
+ & article>div:nth-last-child(3)>span{background:#fffffff0;color:#142b45;border-color:#d5e3e7;line-height:1.6}
+ & article:focus-visible,& a:focus-visible{outline:3px solid #168f89;outline-offset:4px}
+ & .district-image-fallback{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(135deg,#142b45,#294c70 60%,#168f89);color:#dce7f080}
+}
+@media(min-width:768px) and (max-width:1100px){html body [data-ui-view=MarketInsightsView] #listings>.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){html body [data-ui-view=MarketInsightsView] #neighboring{ & article>div.top-3\.5{position:relative;top:auto;left:auto;right:auto;display:inline-flex;margin:12px 0 0 12px;max-width:calc(100% - 24px)} & article h3{font-size:18px}}}
+@media(prefers-reduced-motion:reduce){html body [data-ui-view=MarketInsightsView] #neighboring article{transition:none;transform:none}}
+@media(max-width:1200px){html body [data-ui-view=MarketInsightsView] #neighboring article>div.top-3\.5{position:relative;top:auto;left:auto;right:auto;display:inline-flex;margin:12px 0 0 12px;max-width:calc(100% - 24px)}}
+@media(max-width:540px){html body [data-ui-view=MarketInsightsView] #neighboring article>div.top-4{position:relative;top:auto;left:auto;right:auto;display:flex;width:fit-content;margin:14px 0 0 14px;max-width:calc(100% - 28px)}}
+
+/* Phase 6: balanced transition to the shared Signature footer. */
+html[data-ui-theme=slate] body [data-ui-view=MarketInsightsView]{padding-bottom:40px}
+/* 390px at browser zoom 125% has a 312px CSS viewport. */
+html body:has([data-ui-view=MarketInsightsView]){min-width:0}
