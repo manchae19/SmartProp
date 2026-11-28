@@ -1,86 +1,505 @@
 {
   "app": "http://127.0.0.1:5180",
   "api": "http://127.0.0.1:8080",
-  "at": "2026-11-28T08:36:50.163Z",
-  "total": 15,
-  "passed": 2,
-  "failed": 13,
-  "skipped": 0,
+  "at": "2026-11-28T08:56:07.025Z",
+  "total": 99,
+  "passed": 98,
+  "failed": 1,
   "results": [
     {
-      "name": "real broker login",
+      "name": "WP04_APP is loopback",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180"
+    },
+    {
+      "name": "WP04_API is loopback",
+      "ok": true,
+      "detail": "http://127.0.0.1:8080"
+    },
+    {
+      "name": "fixture credentials provided",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "valuation@320 real predict call",
-      "ok": false,
-      "detail": ""
+      "name": "standalone@1280 predict 200",
+      "ok": true,
+      "detail": "200"
     },
     {
-      "name": "valuation@320 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
+      "name": "standalone@1280 model v1.3",
+      "ok": true,
+      "detail": "v1.3"
     },
     {
-      "name": "valuation@390 real predict call",
-      "ok": false,
-      "detail": ""
+      "name": "standalone@1280 positive integer price",
+      "ok": true,
+      "detail": "6605239848"
     },
     {
-      "name": "valuation@390 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
-    },
-    {
-      "name": "valuation@768 real predict call",
-      "ok": false,
-      "detail": ""
-    },
-    {
-      "name": "valuation@768 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
-    },
-    {
-      "name": "valuation@1440 real predict call",
-      "ok": false,
-      "detail": ""
-    },
-    {
-      "name": "valuation@1440 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
-    },
-    {
-      "name": "advisor@390 real consult call",
-      "ok": false,
-      "detail": ""
-    },
-    {
-      "name": "advisor@390 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
-    },
-    {
-      "name": "advisor@1440 real consult call",
-      "ok": false,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1440 interaction",
-      "ok": false,
-      "detail": "locator.waitFor: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"valuation-explanation-panel\"]').first() to be visible\u001b[22m\n"
-    },
-    {
-      "name": "posting route renders",
+      "name": "standalone@1280 estimated price visible",
       "ok": true,
       "detail": ""
     },
     {
-      "name": "posting preview interaction",
+      "name": "standalone@1280 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "standalone@1280 price text",
+      "ok": true,
+      "detail": "6,61 tỷ"
+    },
+    {
+      "name": "standalone@1280 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "standalone@1280 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "standalone@1280 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1280 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@1280 workflow",
       "ok": false,
-      "detail": "posting draft state is not reachable from a cold route without a persisted draft"
+      "detail": "locator.click: Timeout 15000ms exceeded."
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "advisor@1280 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@1280 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@1280 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@1280 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@1280 price text",
+      "ok": true,
+      "detail": "5,13 tỷ"
+    },
+    {
+      "name": "advisor@1280 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@1280 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@1280 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 comparable evidence shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 predict 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "standalone@320 model v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "standalone@320 positive integer price",
+      "ok": true,
+      "detail": "6605239848"
+    },
+    {
+      "name": "standalone@320 estimated price visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "standalone@320 price text",
+      "ok": true,
+      "detail": "6,61 tỷ"
+    },
+    {
+      "name": "standalone@320 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "standalone@320 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "standalone@320 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 predict 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "standalone@390 model v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "standalone@390 positive integer price",
+      "ok": true,
+      "detail": "6605239848"
+    },
+    {
+      "name": "standalone@390 estimated price visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "standalone@390 price text",
+      "ok": true,
+      "detail": "6,61 tỷ"
+    },
+    {
+      "name": "standalone@390 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "standalone@390 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "standalone@390 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@390 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 predict 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "standalone@768 model v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "standalone@768 positive integer price",
+      "ok": true,
+      "detail": "6605239848"
+    },
+    {
+      "name": "standalone@768 estimated price visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "standalone@768 price text",
+      "ok": true,
+      "detail": "6,61 tỷ"
+    },
+    {
+      "name": "standalone@768 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "standalone@768 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "standalone@768 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 predict 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "standalone@1440 model v1.3",
+      "ok": true,
+      "detail": "v1.3"
+    },
+    {
+      "name": "standalone@1440 positive integer price",
+      "ok": true,
+      "detail": "6605239848"
+    },
+    {
+      "name": "standalone@1440 estimated price visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "standalone@1440 price text",
+      "ok": true,
+      "detail": "6,61 tỷ"
+    },
+    {
+      "name": "standalone@1440 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "standalone@1440 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "standalone@1440 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@1440 no page error",
+      "ok": true,
+      "detail": ""
     }
   ]
 }

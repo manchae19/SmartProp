@@ -274,3 +274,45 @@ Version `1.0`; method `XGBOOST_NATIVE_TREESHAP`; target `ASKING_PRICE_VND`; outp
 MISSING_INVALID, NOT_APPLICABLE, UNKNOWN_CATEGORY, UNVERIFIED; reconstruction tolerance
 `1e-5 * max(1, abs(predicted_margin_log))`. Explanation generation runs inside `PredictorV1_3.predict`
 after the unchanged point prediction; a failure downgrades the explanation and never alters the price.
+
+---
+
+## Current-main integration and repaired browser harness
+
+### Main integrated
+
+`origin/main` = `d6be176f6c7fa27a1f33836e627965104f6a8d27` (PR49 merged) was merged into this branch
+with a normal merge commit (`48c872a`, then this branch's own commits). No rebase, no force-push.
+PR49's shared HTTP client and auth modules are present after the merge; WP-04's explanation
+components, `vndDigits` validation and benchmark are unchanged by it.
+
+### Harness defects fixed (from review §3)
+
+- **Authentication**: the app removes legacy `localStorage` token/role, so credentials are no longer
+  injected. The runner now drives `/login?next=%2Fpost` with `#email-input` / `#password-input`, a
+  real submit, a real `POST /api/v1/auth/login` assertion and an in-UI session confirmation. Fixture
+  email/password come from `WP04_FIXTURE_EMAIL` / `WP04_FIXTURE_PASSWORD`; `WP04_APP` and `WP04_API`
+  must match `http://127.0.0.1:<port>`. No JWT or password is logged.
+- **Advisor route**: `/advisor/analysis` with the heading “Tư vấn bất động sản đa bằng chứng” and the
+  real `.advisor-page` form; `/advisor` (legacy) is not used.
+- **Valuation inputs**: real category/location options and an area inside 20–1000 m².
+- **No swallowed failures**: required fills/selects are no longer wrapped in catch-and-ignore, and
+  requests, responses and failures are recorded with event-driven waits instead of fixed sleeps.
+
+### Result: 98/99 checks passed, 1 workflow unreached
+
+| Surface | Result |
+|---|---|
+| Standalone `/valuation` at 320/390/768/1440 + 1280 | **PASS** — real `POST /api/ai/predict` 200, `model_version=v1.3`, positive integer price, explanation panel AVAILABLE, six factor rows, 22 provenance rows, calibration bridge, no overflow, no page error |
+| Unified Advisor `/advisor/analysis` | **PASS** — real `POST /api/v1/advisor/consult` 200, SAFE, recommendations present, valuation explanation AVAILABLE, comparable evidence shown, payload contains no `researchReference:true` / `includeResearch:true` |
+| Posting preview `/post` | **NOT REACHED** — after the login the SPA navigation into the posting workflow could not be located (`click` timeout); a full page load to `/post` drops the in-memory token and redirects to `/login`, and refresh restoration is disabled in this fixture (`REFRESH_ENABLED=false`) |
+
+So `WP04_REAL_THREE_SURFACE_BROWSER_PASS` is **not** satisfied: two of three surfaces pass with real
+network evidence, the posting workflow does not.
+
+### Predictor-facing facts, unchanged
+
+Producer emits **AVAILABLE** / **UNAVAILABLE** only; `explanation_version=1.0`;
+`XGBOOST_NATIVE_TREESHAP`; `ASKING_PRICE_VND`; `LOG1P_PRICE_VND`; 22 feature identities; provenance
+states OBSERVED, DERIVED, DEFAULTED, MISSING, MISSING_INVALID, NOT_APPLICABLE, UNKNOWN_CATEGORY,
+UNVERIFIED; reconstruction tolerance `1e-5 * max(1, abs(predicted_margin_log))`.
