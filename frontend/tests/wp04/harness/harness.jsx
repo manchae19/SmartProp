@@ -14,7 +14,15 @@ import { createRoot } from "react-dom/client";
 import { ValuationExplanationPanel } from "../../../src/features/prediction/ValuationExplanationPanel.js";
 import samples from "../fixtures/explanation-samples.json";
 
-const state = new URLSearchParams(window.location.search).get("state") || "available";
+const params = new URLSearchParams(window.location.search);
+const state = params.get("state") || "available";
+const forcedWidth = Number(params.get("width")) || 0;
+if (forcedWidth) {
+  document.documentElement.style.width = `${forcedWidth}px`;
+  document.body.style.width = `${forcedWidth}px`;
+  document.body.style.margin = "0";
+}
+
 const house = samples.HOUSE;
 
 function payloadFor(name) {

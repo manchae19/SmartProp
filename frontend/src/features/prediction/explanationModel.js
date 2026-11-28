@@ -70,6 +70,31 @@ export const PROVENANCE_LABELS = {
   },
 };
 
+export const FEATURE_LABELS = {
+  area: "Diện tích",
+  floor_count: "Số tầng",
+  frontage_width: "Chiều rộng mặt tiền",
+  road_width: "Chiều rộng đường",
+  bedroom_count: "Số phòng ngủ",
+  bathroom_count: "Số phòng tắm",
+  has_floor: "Cờ có số tầng",
+  has_frontage: "Cờ có mặt tiền",
+  has_road_width: "Cờ có chiều rộng đường",
+  has_bedroom: "Cờ có phòng ngủ",
+  has_bathroom: "Cờ có phòng tắm",
+  has_project: "Cờ có dự án",
+  has_street: "Cờ có tuyến đường",
+  has_ward: "Cờ có phường/xã",
+  frontage_sqrt_area_ratio: "Tỉ lệ mặt tiền trên căn bậc hai diện tích",
+  normalized_type: "Loại bất động sản",
+  district: "Quận/Huyện",
+  ward: "Phường/Xã",
+  raw_street_name: "Tuyến đường",
+  raw_project_name: "Dự án",
+  raw_house_direction: "Hướng nhà",
+  raw_balcony_direction: "Hướng ban công",
+};
+
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
 
@@ -230,6 +255,7 @@ export function validateExplanation(raw) {
 
   const provenance = Object.entries(raw.feature_provenance).map(([feature, state]) => ({
     feature,
+    label: FEATURE_LABELS[feature] || feature,
     state,
     ...(PROVENANCE_LABELS[state] || PROVENANCE_LABELS.UNVERIFIED),
   }));
