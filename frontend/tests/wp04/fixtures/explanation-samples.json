@@ -1,0 +1,541 @@
+{
+  "HOUSE": {
+    "input": {
+      "category": "Nhà ở",
+      "location_feature": "Cẩm Lệ",
+      "area_sqm": 100.0,
+      "rooms": 3
+    },
+    "predicted_asking_price_vnd": 5749775772,
+    "calibration_factor": 1.05621,
+    "explanation": {
+      "explanation_version": "1.0",
+      "status": "AVAILABLE",
+      "method": "XGBOOST_NATIVE_TREESHAP",
+      "target": "ASKING_PRICE_VND",
+      "output_space": "LOG1P_PRICE_VND",
+      "predicted_margin_log": 22.417736053466797,
+      "base_value_log": 22.889129638671875,
+      "base_price_vnd": 8722132856,
+      "naive_price_vnd": 5443761185,
+      "calibration": {
+        "policy": "duan_by_band",
+        "factor": 1.0562138153756986,
+        "adjusted_price_vnd": 5749775772
+      },
+      "factors": [
+        {
+          "feature_name": "ward",
+          "label_vi": "Phường/Xã",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.16570010781288147,
+          "contribution_log_display": -0.1657,
+          "multiplicative_factor": 0.8473,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "area",
+          "label_vi": "Diện tích",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.15546247363090515,
+          "contribution_log_display": -0.1555,
+          "multiplicative_factor": 0.856019,
+          "direction": "DECREASE",
+          "group": "AREA",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "normalized_type",
+          "label_vi": "Loại bất động sản",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": 0.12504442036151886,
+          "contribution_log_display": 0.125,
+          "multiplicative_factor": 1.133199,
+          "direction": "INCREASE",
+          "group": "PROPERTY_TYPE",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "district",
+          "label_vi": "Quận/Huyện",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.11449208110570908,
+          "contribution_log_display": -0.1145,
+          "multiplicative_factor": 0.891819,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "raw_street_name",
+          "label_vi": "Tuyến đường",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.06194381043314934,
+          "contribution_log_display": -0.0619,
+          "multiplicative_factor": 0.939936,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "raw_house_direction",
+          "label_vi": "Hướng nhà",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.0324505977332592,
+          "contribution_log_display": -0.0325,
+          "multiplicative_factor": 0.96807,
+          "direction": "DECREASE",
+          "group": "DIRECTION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        }
+      ],
+      "other_contribution_log": -0.06639167734920193,
+      "grouped_contributions": {
+        "ACCESS": 0.0017213278742929106,
+        "AREA": -0.15845405543223023,
+        "DIRECTION": -0.03462226572446525,
+        "LOCATION": -0.366764159349259,
+        "PROJECT": 0.0007717660046182573,
+        "PROPERTY_TYPE": 0.12504442036151886,
+        "STRUCTURE": -0.03909336143806286
+      },
+      "feature_provenance": {
+        "area": "OBSERVED",
+        "floor_count": "MISSING",
+        "frontage_width": "MISSING",
+        "road_width": "MISSING",
+        "bedroom_count": "OBSERVED",
+        "bathroom_count": "MISSING",
+        "has_floor": "DERIVED",
+        "has_frontage": "DERIVED",
+        "has_road_width": "DERIVED",
+        "has_bedroom": "DERIVED",
+        "has_bathroom": "DERIVED",
+        "has_project": "DERIVED",
+        "has_street": "DERIVED",
+        "has_ward": "DERIVED",
+        "frontage_sqrt_area_ratio": "DERIVED",
+        "normalized_type": "OBSERVED",
+        "district": "OBSERVED",
+        "ward": "MISSING",
+        "raw_street_name": "MISSING",
+        "raw_project_name": "MISSING",
+        "raw_house_direction": "MISSING",
+        "raw_balcony_direction": "MISSING"
+      },
+      "limitations": [
+        "Giá dự đoán là giá rao bán ước tính trên thị trường, không phải giá giao dịch công chứng.",
+        "Giá giao dịch thực tế trên thị trường thường có biên độ thương lượng tùy theo vị trí, pháp lý và thỏa thuận giữa các bên.",
+        "Một số đặc điểm chưa được cung cấp, không áp dụng hoặc do hệ thống giả định; kết quả có thể bị ảnh hưởng bởi cơ chế xử lý dữ liệu thiếu.",
+        "Giải thích này mô tả hành vi của mô hình với dữ liệu đã nhập, không phải quan hệ nhân quả và không phải khoảng tin cậy."
+      ]
+    }
+  },
+  "LAND": {
+    "input": {
+      "category": "Đất nền",
+      "location_feature": "Cẩm Lệ",
+      "area_sqm": 120.0,
+      "road_width_m": 5.5,
+      "frontage_width_m": 6.0
+    },
+    "predicted_asking_price_vnd": 4059447662,
+    "calibration_factor": 1.04092,
+    "explanation": {
+      "explanation_version": "1.0",
+      "status": "AVAILABLE",
+      "method": "XGBOOST_NATIVE_TREESHAP",
+      "target": "ASKING_PRICE_VND",
+      "output_space": "LOG1P_PRICE_VND",
+      "predicted_margin_log": 22.08420753479004,
+      "base_value_log": 22.889129638671875,
+      "base_price_vnd": 8722132856,
+      "naive_price_vnd": 3899864066,
+      "calibration": {
+        "policy": "duan_by_band",
+        "factor": 1.0409202971498728,
+        "adjusted_price_vnd": 4059447662
+      },
+      "factors": [
+        {
+          "feature_name": "ward",
+          "label_vi": "Phường/Xã",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.21129442751407623,
+          "contribution_log_display": -0.2113,
+          "multiplicative_factor": 0.809536,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "district",
+          "label_vi": "Quận/Huyện",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.17616680264472961,
+          "contribution_log_display": -0.1762,
+          "multiplicative_factor": 0.838478,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "normalized_type",
+          "label_vi": "Loại bất động sản",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.08789744228124619,
+          "contribution_log_display": -0.0879,
+          "multiplicative_factor": 0.915855,
+          "direction": "DECREASE",
+          "group": "PROPERTY_TYPE",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "raw_street_name",
+          "label_vi": "Tuyến đường",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.08648695051670074,
+          "contribution_log_display": -0.0865,
+          "multiplicative_factor": 0.917148,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "area",
+          "label_vi": "Diện tích",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.0853707417845726,
+          "contribution_log_display": -0.0854,
+          "multiplicative_factor": 0.918172,
+          "direction": "DECREASE",
+          "group": "AREA",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "raw_house_direction",
+          "label_vi": "Hướng nhà",
+          "input_state": "NOT_APPLICABLE",
+          "contribution_log_raw": -0.050147343426942825,
+          "contribution_log_display": -0.0501,
+          "multiplicative_factor": 0.951089,
+          "direction": "DECREASE",
+          "group": "DIRECTION",
+          "context_note_vi": "Đặc điểm này không áp dụng cho loại bất động sản đang định giá."
+        }
+      ],
+      "other_contribution_log": -0.10758414649171755,
+      "grouped_contributions": {
+        "ACCESS": -0.0906547803842841,
+        "AREA": -0.06869697198271751,
+        "DIRECTION": -0.05372384772635996,
+        "LOCATION": -0.5109635137487203,
+        "PROJECT": -0.001355557527858764,
+        "PROPERTY_TYPE": -0.08789744228124619,
+        "STRUCTURE": 0.008344258991201059
+      },
+      "feature_provenance": {
+        "area": "OBSERVED",
+        "floor_count": "NOT_APPLICABLE",
+        "frontage_width": "OBSERVED",
+        "road_width": "OBSERVED",
+        "bedroom_count": "NOT_APPLICABLE",
+        "bathroom_count": "NOT_APPLICABLE",
+        "has_floor": "DERIVED",
+        "has_frontage": "DERIVED",
+        "has_road_width": "DERIVED",
+        "has_bedroom": "DERIVED",
+        "has_bathroom": "DERIVED",
+        "has_project": "DERIVED",
+        "has_street": "DERIVED",
+        "has_ward": "DERIVED",
+        "frontage_sqrt_area_ratio": "DERIVED",
+        "normalized_type": "OBSERVED",
+        "district": "OBSERVED",
+        "ward": "MISSING",
+        "raw_street_name": "MISSING",
+        "raw_project_name": "MISSING",
+        "raw_house_direction": "NOT_APPLICABLE",
+        "raw_balcony_direction": "MISSING"
+      },
+      "limitations": [
+        "Giá dự đoán là giá rao bán ước tính trên thị trường, không phải giá giao dịch công chứng.",
+        "Giá giao dịch thực tế trên thị trường thường có biên độ thương lượng tùy theo vị trí, pháp lý và thỏa thuận giữa các bên.",
+        "Một số đặc điểm chưa được cung cấp, không áp dụng hoặc do hệ thống giả định; kết quả có thể bị ảnh hưởng bởi cơ chế xử lý dữ liệu thiếu.",
+        "Giải thích này mô tả hành vi của mô hình với dữ liệu đã nhập, không phải quan hệ nhân quả và không phải khoảng tin cậy."
+      ]
+    }
+  },
+  "APARTMENT": {
+    "input": {
+      "category": "Căn hộ chung cư",
+      "location_feature": "Hải Châu",
+      "area_sqm": 75.0,
+      "rooms": 2
+    },
+    "predicted_asking_price_vnd": 4532858277,
+    "calibration_factor": 1.04092,
+    "explanation": {
+      "explanation_version": "1.0",
+      "status": "AVAILABLE",
+      "method": "XGBOOST_NATIVE_TREESHAP",
+      "target": "ASKING_PRICE_VND",
+      "output_space": "LOG1P_PRICE_VND",
+      "predicted_margin_log": 22.19451332092285,
+      "base_value_log": 22.889129638671875,
+      "base_price_vnd": 8722132856,
+      "naive_price_vnd": 4354664127,
+      "calibration": {
+        "policy": "duan_by_band",
+        "factor": 1.0409202971498728,
+        "adjusted_price_vnd": 4532858277
+      },
+      "factors": [
+        {
+          "feature_name": "area",
+          "label_vi": "Diện tích",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.32781556248664856,
+          "contribution_log_display": -0.3278,
+          "multiplicative_factor": 0.720496,
+          "direction": "DECREASE",
+          "group": "AREA",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "normalized_type",
+          "label_vi": "Loại bất động sản",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.12518613040447235,
+          "contribution_log_display": -0.1252,
+          "multiplicative_factor": 0.882333,
+          "direction": "DECREASE",
+          "group": "PROPERTY_TYPE",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "ward",
+          "label_vi": "Phường/Xã",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.09373374283313751,
+          "contribution_log_display": -0.0937,
+          "multiplicative_factor": 0.910525,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "raw_street_name",
+          "label_vi": "Tuyến đường",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.0754396989941597,
+          "contribution_log_display": -0.0754,
+          "multiplicative_factor": 0.927336,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "bedroom_count",
+          "label_vi": "Số phòng ngủ",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": -0.055602312088012695,
+          "contribution_log_display": -0.0556,
+          "multiplicative_factor": 0.945915,
+          "direction": "DECREASE",
+          "group": "STRUCTURE",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "district",
+          "label_vi": "Quận/Huyện",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": 0.045696161687374115,
+          "contribution_log_display": 0.0457,
+          "multiplicative_factor": 1.046756,
+          "direction": "INCREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        }
+      ],
+      "other_contribution_log": -0.06253641447256086,
+      "grouped_contributions": {
+        "ACCESS": -0.004880947480160103,
+        "AREA": -0.33882267866283655,
+        "DIRECTION": -0.011653494089841843,
+        "LOCATION": -0.12848876044154167,
+        "PROJECT": -0.019452819833531976,
+        "PROPERTY_TYPE": -0.12518613040447235,
+        "STRUCTURE": -0.06613286867923307
+      },
+      "feature_provenance": {
+        "area": "OBSERVED",
+        "floor_count": "NOT_APPLICABLE",
+        "frontage_width": "NOT_APPLICABLE",
+        "road_width": "NOT_APPLICABLE",
+        "bedroom_count": "OBSERVED",
+        "bathroom_count": "MISSING",
+        "has_floor": "DERIVED",
+        "has_frontage": "DERIVED",
+        "has_road_width": "DERIVED",
+        "has_bedroom": "DERIVED",
+        "has_bathroom": "DERIVED",
+        "has_project": "DERIVED",
+        "has_street": "DERIVED",
+        "has_ward": "DERIVED",
+        "frontage_sqrt_area_ratio": "DERIVED",
+        "normalized_type": "OBSERVED",
+        "district": "OBSERVED",
+        "ward": "MISSING",
+        "raw_street_name": "MISSING",
+        "raw_project_name": "MISSING",
+        "raw_house_direction": "NOT_APPLICABLE",
+        "raw_balcony_direction": "MISSING"
+      },
+      "limitations": [
+        "Giá dự đoán là giá rao bán ước tính trên thị trường, không phải giá giao dịch công chứng.",
+        "Giá giao dịch thực tế trên thị trường thường có biên độ thương lượng tùy theo vị trí, pháp lý và thỏa thuận giữa các bên.",
+        "Một số đặc điểm chưa được cung cấp, không áp dụng hoặc do hệ thống giả định; kết quả có thể bị ảnh hưởng bởi cơ chế xử lý dữ liệu thiếu.",
+        "Giải thích này mô tả hành vi của mô hình với dữ liệu đã nhập, không phải quan hệ nhân quả và không phải khoảng tin cậy."
+      ]
+    }
+  },
+  "VILLA": {
+    "input": {
+      "category": "Nhà ở",
+      "location_feature": "Sơn Trà",
+      "area_sqm": 150.0,
+      "house_subtype": "villa",
+      "floors": 3,
+      "rooms": 4
+    },
+    "predicted_asking_price_vnd": 15693880409,
+    "calibration_factor": 1.06776,
+    "explanation": {
+      "explanation_version": "1.0",
+      "status": "AVAILABLE",
+      "method": "XGBOOST_NATIVE_TREESHAP",
+      "target": "ASKING_PRICE_VND",
+      "output_space": "LOG1P_PRICE_VND",
+      "predicted_margin_log": 23.410974502563477,
+      "base_value_log": 22.889129638671875,
+      "base_price_vnd": 8722132856,
+      "naive_price_vnd": 14697959367,
+      "calibration": {
+        "policy": "duan_by_band",
+        "factor": 1.0677591369960766,
+        "adjusted_price_vnd": 15693880409
+      },
+      "factors": [
+        {
+          "feature_name": "area",
+          "label_vi": "Diện tích",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": 0.26998817920684814,
+          "contribution_log_display": 0.27,
+          "multiplicative_factor": 1.309949,
+          "direction": "INCREASE",
+          "group": "AREA",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "district",
+          "label_vi": "Quận/Huyện",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": 0.20118878781795502,
+          "contribution_log_display": 0.2012,
+          "multiplicative_factor": 1.222856,
+          "direction": "INCREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "normalized_type",
+          "label_vi": "Loại bất động sản",
+          "input_state": "OBSERVED",
+          "contribution_log_raw": 0.08576831221580505,
+          "contribution_log_display": 0.0858,
+          "multiplicative_factor": 1.089554,
+          "direction": "INCREASE",
+          "group": "PROPERTY_TYPE",
+          "context_note_vi": "Thông tin do người dùng cung cấp."
+        },
+        {
+          "feature_name": "ward",
+          "label_vi": "Phường/Xã",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.08202877640724182,
+          "contribution_log_display": -0.082,
+          "multiplicative_factor": 0.921245,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "raw_street_name",
+          "label_vi": "Tuyến đường",
+          "input_state": "MISSING",
+          "contribution_log_raw": -0.026467792689800262,
+          "contribution_log_display": -0.0265,
+          "multiplicative_factor": 0.973879,
+          "direction": "DECREASE",
+          "group": "LOCATION",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        },
+        {
+          "feature_name": "road_width",
+          "label_vi": "Chiều rộng đường",
+          "input_state": "MISSING",
+          "contribution_log_raw": 0.015199090354144573,
+          "contribution_log_display": 0.0152,
+          "multiplicative_factor": 1.015315,
+          "direction": "INCREASE",
+          "group": "ACCESS",
+          "context_note_vi": "Thông tin này chưa được cung cấp; mô hình dùng cơ chế xử lý dữ liệu thiếu."
+        }
+      ],
+      "other_contribution_log": 0.05819254011839803,
+      "grouped_contributions": {
+        "ACCESS": 0.027313416152537684,
+        "AREA": 0.27051257714629173,
+        "DIRECTION": -0.009950298262992874,
+        "LOCATION": 0.10926552792079747,
+        "PROJECT": 0.013555115787312388,
+        "PROPERTY_TYPE": 0.08576831221580505,
+        "STRUCTURE": 0.02537568965635728
+      },
+      "feature_provenance": {
+        "area": "OBSERVED",
+        "floor_count": "OBSERVED",
+        "frontage_width": "MISSING",
+        "road_width": "MISSING",
+        "bedroom_count": "OBSERVED",
+        "bathroom_count": "MISSING",
+        "has_floor": "DERIVED",
+        "has_frontage": "DERIVED",
+        "has_road_width": "DERIVED",
+        "has_bedroom": "DERIVED",
+        "has_bathroom": "DERIVED",
+        "has_project": "DERIVED",
+        "has_street": "DERIVED",
+        "has_ward": "DERIVED",
+        "frontage_sqrt_area_ratio": "DERIVED",
+        "normalized_type": "OBSERVED",
+        "district": "OBSERVED",
+        "ward": "MISSING",
+        "raw_street_name": "MISSING",
+        "raw_project_name": "MISSING",
+        "raw_house_direction": "MISSING",
+        "raw_balcony_direction": "MISSING"
+      },
+      "limitations": [
+        "Giá dự đoán là giá rao bán ước tính trên thị trường, không phải giá giao dịch công chứng.",
+        "Giá giao dịch thực tế trên thị trường thường có biên độ thương lượng tùy theo vị trí, pháp lý và thỏa thuận giữa các bên.",
+        "Một số đặc điểm chưa được cung cấp, không áp dụng hoặc do hệ thống giả định; kết quả có thể bị ảnh hưởng bởi cơ chế xử lý dữ liệu thiếu.",
+        "Giải thích này mô tả hành vi của mô hình với dữ liệu đã nhập, không phải quan hệ nhân quả và không phải khoảng tin cậy."
+      ]
+    }
+  }
+}
