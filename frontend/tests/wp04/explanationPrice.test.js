@@ -234,3 +234,25 @@ test("a price above Number.MAX_SAFE_INTEGER renders exactly", () => {
   const expected = `${whole},${cents.toString().padStart(2, "0")} tỷ`;
   assert.equal(text, expected, text);
 });
+
+// ---------------------------------------------------------------- exact secondary VND text
+const renderedVnd = (html) => {
+  const matches = [...html.matchAll(/data-testid="explanation-price-vnd"[^>]*>([^<]*)</g)];
+  return matches.length ? matches[0][1].trim() : "";
+};
+
+test("the secondary amount renders exact VND for a canonical digit string", () => {
+  const html = render({ predictedPriceVnd: "5476531536", modelVersion: "v1.3", explanation: house() });
+  assert.equal(renderedVnd(html), "5.476.531.536 ₫");
+});
+
+test("the secondary amount renders exact VND for a .00 string", () => {
+  const html = render({ predictedPriceVnd: "5476531536.00", modelVersion: "v1.3", explanation: house() });
+  assert.equal(renderedVnd(html), "5.476.531.536 ₫");
+});
+
+test("the secondary amount is exact for integers above Number.MAX_SAFE_INTEGER", () => {
+  const digits = "1234567890123456789";
+  const html = render({ predictedPriceVnd: digits, modelVersion: "v1.3", explanation: house() });
+  assert.equal(renderedVnd(html), "1.234.567.890.123.456.789 ₫");
+});

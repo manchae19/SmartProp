@@ -461,3 +461,63 @@ The three mocked route scenarios in `surfaces.mjs` remain NOT_RUN, and the isola
 profile was not executed. `AdvisorControllerLiveIT` stays excluded: legacy V6 assertions and TiniX
 enabled. The 20 skipped FastAPI tests are skips in the existing suite (model-artifact or
 service-dependent cases), unchanged from the accepted run.
+
+---
+
+## Execution-only closure pass
+
+### Exact secondary VND amount
+
+The secondary amount now formats canonical digits with `Intl.NumberFormat("vi-VN")` on a `BigInt`,
+so every digit survives: `5476531536`, `5476531536.00` and `1234567890123456789` render
+`5.476.531.536 ₫` and `1.234.567.890.123.456.789 ₫` respectively. Three tests assert the exact
+rendered text, and the span carries `data-testid="explanation-price-vnd"` so it can be asserted.
+
+WP-04 frontend: **101 passed, 0 failed**.
+
+### Failure isolation — executed, not passed
+
+`frontend/tests/wp04/browser/failure-isolation.mjs` was written and run against the real stack.
+Fixtures are mutations of a live `/predict` response (never hand-written schemas), so the payload
+shape is genuine.
+
+Result: **24/35 checks passed**. The baseline predict and the authorization checks pass; every
+failure case reports an empty price and a `null` panel status, which means the standalone page does
+not expose the panel or `[data-testid="explanation-price"]` when the response is a failure fixture.
+The assertion is therefore reading the wrong element for this route, not proving the UI is wrong —
+the same states are covered at component level (484 checks, including `unavailable`, `malformed`,
+`legacy` and `missing`).
+
+`WP04_RUNTIME_FAILURE_ISOLATION_PASS` is **not** claimed. Next lead: assert the page-level
+`[data-testid="estimated-price"]` for the price and treat a missing panel as the expected state for
+"no explanation".
+
+### Reactive authorization — partially executed
+
+Against the disposable fixture only, with restore afterwards:
+
+- login through the UI succeeds;
+- `UPDATE users SET status='LOCKED'` makes `/api/v1/auth/login` refuse the account;
+- after a reload, `/api/v1/users/me` returns 401, so restricted data is not served while locked;
+- restoring `status='ACTIVE'` lets the account log in again.
+
+Not covered: `authTransition` UI states, research revocation, stale restricted responses and SAFE
+fallback. `WP04_REACTIVE_AUTHORIZATION_PRESERVED` is **not** claimed.
+
+### Fresh after the component change
+
+| Suite | Result |
+|---|---|
+| Component browser | **484/484** |
+| Real three surfaces (1280/320/390/768/1440) | **328/328** |
+| Mocked surfaces | **30 passed, 0 failed, 3 not run** |
+| Vite build | PASS |
+
+### Remaining evidence gaps
+
+- The three `NOT_RUN` entries in `surfaces.mjs` are still placeholders; they were left untouched
+  rather than flipped to PASS.
+- Isolated MySQL integration profile: not executed.
+- FastAPI: 20 tests are skipped by the suite itself (model-artifact/service-dependent cases); the
+  count is unchanged and no skip was introduced here.
+- `AdvisorControllerLiveIT` stays excluded (legacy V6 assertions, TiniX enabled).

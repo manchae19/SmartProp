@@ -81,6 +81,11 @@ function formatBillionDigits(digits) {
   return cents ? `${whole},${cents} tỷ` : `${whole} tỷ`;
 }
 
+/** Exact VND text from canonical digits, keeping every digit through BigInt. */
+function formatVndDigits(digits) {
+  return `${new Intl.NumberFormat("vi-VN").format(BigInt(digits))} ₫`;
+}
+
 function priceBlock({ predictedPriceVnd, modelVersion }) {
   const digits = vndDigits(predictedPriceVnd);
   const hasPrice = digits !== null;
@@ -101,8 +106,11 @@ function priceBlock({ predictedPriceVnd, modelVersion }) {
       : "—",
     ),
     hasPrice
-      ? h("span", { className: "min-w-0 text-xs break-words text-brand-navy/60" },
-          formatVnd(predictedPriceVnd))
+      ? h("span", {
+    "data-testid": "explanation-price-vnd",
+    className: "min-w-0 text-xs break-words text-brand-navy/60",
+  },
+          digits !== null ? formatVndDigits(digits) : formatVnd(predictedPriceVnd))
       : null,
     h(
       "span",
