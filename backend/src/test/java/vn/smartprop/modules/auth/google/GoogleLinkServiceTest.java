@@ -118,4 +118,36 @@ class GoogleLinkServiceTest {
         ApiException error = assertThrows(ApiException.class, () -> service.complete(ticket, jwt));
         assertEquals("GOOGLE_IDENTITY_CONFLICT", error.code);
     }
+
+    @Test void rejectsCompletionAfterAccountIsDisabledDeletedOrChangesTokenVersion() {
+        var ticket = new GoogleLinkFlowStore.Ticket(
+            new GoogleProfile("subject", "owner@example.test", "Owner"), 42L, session.id);
+        user.status = User.Status.LOCKED;
+        assertEquals(401, assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).status);
+        user.status = User.Status.ACTIVE;
+        user.deletedAt = clock.instant();
+        assertEquals(401, assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).status);
+        user.deletedAt = null;
+        user.tokenVersion++;
+        assertEquals(401, assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).status);
+        verifyNoInteractions(jdbc);
+    }
+
+    @Test void rejectsAnotherUserEvenWhenTicketSessionMatches() {
+        var ticket = new GoogleLinkFlowStore.Ticket(
+            new GoogleProfile("subject", "owner@example.test", "Owner"), 43L, session.id);
+        assertEquals("GOOGLE_LINK_SESSION_MISMATCH",
+            assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).code);
+        verifyNoInteractions(jdbc);
+    }
+
+    @Test void returnsExistingLinkWithoutCreatingAnotherAssociation() {
+        when(jdbc.query(anyString(), any(RowMapper.class), any(Object[].class))).thenReturn(List.of(42L));
+        var ticket = new GoogleLinkFlowStore.Ticket(
+            new GoogleProfile("subject", "owner@example.test", "Owner"), 42L, session.id);
+        assertEquals("GOOGLE_ALREADY_LINKED",
+            assertThrows(ApiException.class, () -> service.complete(ticket, jwt)).code);
+        verify(jdbc, never()).update(anyString(), any(Object[].class));
+    }
+
 }

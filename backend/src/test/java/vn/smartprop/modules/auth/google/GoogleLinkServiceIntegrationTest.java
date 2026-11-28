@@ -69,14 +69,16 @@ class GoogleLinkServiceIntegrationTest {
 
     @BeforeEach void createIsolatedSchema() {
         jdbc = new JdbcTemplate(source);
-        jdbc.execute("DROP TABLE IF EXISTS user_avatars, user_external_identities, fixture_listings, fixture_favorites, users");
+        jdbc.execute("DROP TABLE IF EXISTS user_avatars, user_external_identities, fixture_listings, fixture_favorites, fixture_valuations, users");
         jdbc.execute("CREATE TABLE users (id BIGINT NOT NULL PRIMARY KEY, email VARCHAR(254), password_hash VARCHAR(100), role VARCHAR(20), status VARCHAR(20), full_name VARCHAR(100)) ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE fixture_listings (id BIGINT NOT NULL PRIMARY KEY, owner_id BIGINT NOT NULL, FOREIGN KEY(owner_id) REFERENCES users(id)) ENGINE=InnoDB");
         jdbc.execute("CREATE TABLE fixture_favorites (user_id BIGINT NOT NULL, listing_id BIGINT NOT NULL, PRIMARY KEY(user_id,listing_id)) ENGINE=InnoDB");
+        jdbc.execute("CREATE TABLE fixture_valuations (id BIGINT NOT NULL PRIMARY KEY, user_id BIGINT NOT NULL, price DECIMAL(18,2), FOREIGN KEY(user_id) REFERENCES users(id)) ENGINE=InnoDB");
         new ResourceDatabasePopulator(new ClassPathResource("database/migrations/V15__profile_avatar_and_google_identity.sql")).execute(source);
         jdbc.update("INSERT INTO users VALUES(1,'a@example.test','fixture-hash','BROKER','ACTIVE','Owner'),(2,'b@example.test','other-hash','BUYER','ACTIVE','Buyer')");
         jdbc.update("INSERT INTO fixture_listings VALUES(15,1)");
         jdbc.update("INSERT INTO fixture_favorites VALUES(1,15)");
+        jdbc.update("INSERT INTO fixture_valuations VALUES(21,1,2000000000.00)");
         clock = Clock.fixed(Instant.parse("2026-11-24T00:00:00Z"), ZoneOffset.UTC);
     }
 
@@ -84,12 +86,14 @@ class GoogleLinkServiceIntegrationTest {
         var accounts = jdbc.queryForList("SELECT * FROM users ORDER BY id");
         var listings = jdbc.queryForList("SELECT * FROM fixture_listings");
         var favorites = jdbc.queryForList("SELECT * FROM fixture_favorites");
+        var valuations = jdbc.queryForList("SELECT * FROM fixture_valuations");
         var profile = new GoogleProfile("fresh-subject", "b@example.test", "Another name");
         serviceFor(1, "session-1").complete(new GoogleLinkFlowStore.Ticket(profile, 1L, "session-1"), jwt(1, "session-1"));
 
         assertEquals(accounts, jdbc.queryForList("SELECT * FROM users ORDER BY id"));
         assertEquals(listings, jdbc.queryForList("SELECT * FROM fixture_listings"));
         assertEquals(favorites, jdbc.queryForList("SELECT * FROM fixture_favorites"));
+        assertEquals(valuations, jdbc.queryForList("SELECT * FROM fixture_valuations"));
         assertEquals(1L, jdbc.queryForObject("SELECT user_id FROM user_external_identities WHERE provider='GOOGLE' AND subject_id='fresh-subject'", Long.class));
     }
 
@@ -135,6 +139,7 @@ class GoogleLinkServiceIntegrationTest {
         var ticket = new GoogleLinkFlowStore.Ticket(new GoogleProfile("orphan", "one@example.test", "One"), 1L, "session-1");
         // The service's owner comes from the authenticated repository. Remove it from the isolated DB to exercise the FK.
         jdbc.update("DELETE FROM fixture_listings WHERE owner_id=1");
+        jdbc.update("DELETE FROM fixture_valuations WHERE user_id=1");
         jdbc.update("DELETE FROM users WHERE id=1");
         ApiException conflict = assertThrows(ApiException.class, () -> service.complete(ticket, jwt(1L, "session-1")));
         assertEquals("GOOGLE_IDENTITY_CONFLICT", conflict.code);
