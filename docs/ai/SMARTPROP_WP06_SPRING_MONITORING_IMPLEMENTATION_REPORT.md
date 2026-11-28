@@ -96,7 +96,7 @@ Diff không đổi valuation, Advisor và security handlers, V1.3, migrations, C
 
 | Remote | SHA | Ranh giới khi tích hợp sau |
 | --- | --- | --- |
-| WP-04 | `ca9b75b666f8ba3271bbebade5c5c0ba23267aef` | Thay đổi `valuation.py`, `predictor_v1_3.py`, `explanation_v1_3.py`, `AdvisorValuationAdapter.java`, `ValuationService.java`. Điều kiện chính trước runtime wiring. |
+| WP-04 | `58081b4fe4e347adbb313e0d3ccc03d7f4fe514d` | Thay đổi `valuation.py`, `predictor_v1_3.py`, `explanation_v1_3.py`, `AdvisorValuationAdapter.java`, `ValuationService.java` so với main. Commit mới so với SHA producer đã audit `ca9b75b6` chỉ bổ sung báo cáo fixture và blocker migration V2 ở nhánh WP-04. Source producer và mapping provenance giữ nguyên. |
 | WP-05 | `a0a5d88db1a77bc3dc55f9981dd313faa52f5b8b` | Optional interval và giới hạn calibration. |
 | PR #37 | `151a07b4472ea0fd3134fb50f4f3de757e83d46f` | Giữ route và behavior UI. |
 | PR #48 | `287b4b2d032a3d22581fd993e212366c452d7c3a` | Session/auth riêng; dashboard kế thừa revocation ở B6. |
