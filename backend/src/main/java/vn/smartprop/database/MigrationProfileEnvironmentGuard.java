@@ -22,7 +22,7 @@ public class MigrationProfileEnvironmentGuard implements EnvironmentPostProcesso
     public static String expectedLocalUrl(Environment env){return staging(env)?STAGING_URL:LOCAL_URL;}
     public static void check(ConfigurableEnvironment env){
         Set<String> profiles=new HashSet<>(List.of(env.getActiveProfiles()));
-        boolean local=profiles.contains(LOCAL)||profiles.contains(STAGING),standard=profiles.contains(STANDARD);
+        boolean local=isLocal(env),standard=profiles.contains(STANDARD);
         if(!local&&!standard)return;
         if(profiles.size()!=1)throw new IllegalStateException("Select exactly one explicit migration profile; do not combine it with dev or another lineage.");
         String location="classpath:database/"+(local?"legacy-hybrid-local":"migrations")+",classpath:database/research-migrations"+(local?"":"/poi");

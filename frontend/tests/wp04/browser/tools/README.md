@@ -1,6 +1,6 @@
 # WP04 disposable runtime
 
-Run from an isolated Windows worktree containing the WP04 branch. Use JDK 21, Node 24 with the frontend dependencies, MySQL 8.0 executables, a Python 3.11+ environment with the repository's AI dependencies, and Chromium with Playwright. The launcher expects a local copy of the four V1.3 files pinned by `ai-services/artifacts/v1_3.manifest.json`. It checks byte sizes and SHA-256 before starting services. Supply a local artifact directory with `--artifacts` if it lives outside `ai-services/artifacts/v1_3`.
+Run from an isolated Windows worktree containing the WP04 branch. Use JDK 21, Node 24 with the frontend dependencies, MySQL 8.0 executables, a Python 3.12+ environment with the repository's AI dependencies, and Chromium with Playwright. The launcher expects a local copy of the four V1.3 files pinned by `ai-services/artifacts/v1_3.manifest.json`. It checks byte sizes and SHA-256 before starting services. Supply a local artifact directory with `--artifacts` if it lives outside `ai-services/artifacts/v1_3`.
 
 ## Start
 
@@ -15,7 +15,7 @@ if ($buildExit -ne 0) { throw 'Spring Boot package failed' }
 python -X utf8 -B frontend/tests/wp04/browser/tools/fixture_runtime.py --mysql-bin $mysqlBin
 ```
 
-Leave that terminal running. The launcher binds MySQL, Spring, FastAPI and Vite to loopback on ports 54041–54044 and checks that the unused proxy ports 54045–54046 are free. It initializes a new datadir, checks process ownership and database identity, applies the existing SQL to V23 and seeds only synthetic accounts and listings. It creates all credentials at startup. `.smartprop/wp04-fixture/runtime.json` contains listener metadata and paths to the per-run private fixture files. Keep that directory local.
+Leave that terminal running. The launcher binds MySQL, Spring, FastAPI and Vite to loopback on ports 54041–54044 and checks that the unused proxy ports 54045–54046 are free. It initializes a new datadir, checks process ownership and database identity, applies the existing SQL to V23 and seeds only synthetic accounts and listings. The pre-migration identity marker uses a separate schema so the application schema stays empty until Flyway applies V1?V23 with auto-baseline disabled. The temporary marker SELECT grant is revoked before runtime; the normal fixture marker is then created in the application schema. Python 3.12 or newer is required by the pinned XGBoost 3.4.1 package. It creates all credentials at startup. `.smartprop/wp04-fixture/runtime.json` contains listener metadata and paths to the per-run private fixture files. Keep that directory local.
 
 ## Browser validation
 

@@ -1,0 +1,1251 @@
+{
+  "status": "FRESH_VALIDATION_COMPLETE",
+  "repository": "manchae19/SmartProp",
+  "pr": 41,
+  "branch": "feature/news-backend-v1",
+  "approvedBaseline": "b49a98fc333cbda1ff38d5511259a5329881812e",
+  "normalMergeCommit": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+  "regressionTree": "72d34aebc86799d04ee98826c064ebad31e7f821",
+  "sourceCommit": "abf0e3a19018e35e93c113e9e1f625ed0148507d",
+  "sourceTree": "8125ae0d3e048ff6da3457c5e3b35538da8b2a00",
+  "deliveryCommit": "resolve final PR41 head; private final manifest records full delivery commit/tree after push",
+  "sourceEquivalence": "All application/migration subtrees unchanged from b6d1f4f. Only six fixture/runner files changed; affected runtime paths were rerun; final HEAD HTTP smoke passed.",
+  "suites": [
+    {
+      "name": "Backend integrated",
+      "status": "FRESH_PASS",
+      "passed": 640,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "backend/mvnw.cmd -o -B test -Dtest=*Test,AdvisorReadOnlyRuntimeIT,NewsLocalLineageIT,NewsStagingConfigurationIT,NewsBrokenSchemaRuntimeIT,IsolatedDatabaseSafetyIT,NewsApiIT,NewsAdminConcurrentIT,NewsConcurrencyIT,NewsFencingIT,NewsSafetyGateIT,NewsReleaseLockIT,NewsLiveIngestionIT,NewsDatabaseConstraintsIT,NewsSourceRightsIT,NewsFeedFetcherIT,NewsBodyTimeoutIT,CoordinateProvenanceIT",
+      "classification": "UNIT_AND_REAL_SPRING_HIBERNATE_MYSQL",
+      "rawEvidence": ".scratch/evidence/baseline-b49/backend-rerun.log",
+      "logSha256": "8efc71ed0815bfe59ed32b4b2f9f639848626c75ebd86b9effddca816b958358",
+      "logCreatedUtc": "2026-11-28T15:31:10.996830+00:00",
+      "logLastWriteUtc": "2026-11-28T15:32:45.602696+00:00",
+      "notes": "Product tree at b6d1f4f; same application subtrees at source HEAD. First run639/640 failed for missing negative-checksum runner configuration; rerun640/640. No assertions relaxed.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "hybrid-local-existing-v13-pr41-isolated",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Standard V23/profile matrix",
+      "status": "FRESH_PASS",
+      "passed": 8,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "backend/mvnw.cmd -o -B test -Dtest=NewsStandardV23IT,NewsStandardDevIT,NewsStandardProdIT,NewsStandardCombinedIT",
+      "classification": "REAL_SPRING_HIBERNATE_MYSQL",
+      "rawEvidence": ".scratch/evidence/baseline-b49/standard.log",
+      "logSha256": "8da67860c9489a94acfff2dcc2045e4d3da0e3b23dae914bac6d5f8c823286ac",
+      "logCreatedUtc": "2026-11-28T15:34:12.972538+00:00",
+      "logLastWriteUtc": "2026-11-28T15:35:18.334016+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Portable Coordinate and isolation",
+      "status": "FRESH_PASS",
+      "passed": 47,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "backend/mvnw.cmd -o -B test -Dtest=CoordinateProvenanceIT,IsolatedDatabaseSafetyIT -Dspring.datasource.url=<independent3312manifestURL>",
+      "classification": "REAL_SPRING_HIBERNATE_MYSQL",
+      "rawEvidence": ".scratch/evidence/baseline-b49/portable.log",
+      "logSha256": "98d0afc944fc6a125acc810dd30fa41e42fb55f279ac478a5a691280de1f6e89",
+      "logCreatedUtc": "2026-11-28T15:59:22.389318+00:00",
+      "logLastWriteUtc": "2026-11-28T16:00:21.433665+00:00",
+      "notes": "39 Coordinate +8 safety on second independent fixture; do not add duplicate3311 cases into a unique test total.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "hybrid-local-existing-v13-pr41-isolated",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Google Linking browser runtime",
+      "status": "FRESH_PASS",
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "backend/mvnw.cmd -o -B test -Dtest=GoogleLinkBrowserRuntimeIT",
+      "classification": "REAL_CHROME_SPRING_MYSQL_SYNTHETIC_SIGNED_OIDC",
+      "rawEvidence": ".scratch/evidence/baseline-b49/google-runtime.log",
+      "logSha256": "53d27767a14f97a97b8af556b944e6f92e41d7b913336fb5ef84376f56c6d7c2",
+      "logCreatedUtc": "2026-11-28T16:03:28.561040+00:00",
+      "logLastWriteUtc": "2026-11-28T16:04:29.370311+00:00",
+      "notes": "Explicit PR48_RUNTIME authorization; loopback, Secure=false; production cookie rules also covered by unit tests. No real Google credentials.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP02 Comparable and Advisor outage",
+      "status": "FRESH_PASS",
+      "passed": 4,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "backend/mvnw.cmd -o -B test -Dtest=AdvisorPartialResultLiveIT,ComparableSyntheticMysqlIT",
+      "classification": "REAL_MYSQL_AND_REAL_OFFLINE_AI_DESTINATION",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp02-runtime.log",
+      "logSha256": "9a11c4e89f6177a8d9e85401017836824947853b52ca50d99962195f51e39712",
+      "logCreatedUtc": "2026-11-28T16:05:15.354798+00:00",
+      "logLastWriteUtc": "2026-11-28T16:05:42.218234+00:00",
+      "notes": "3 Comparable +1 partial-result test; no fabricated valuation price.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "V1.3/WP04/security/shadow",
+      "status": "FRESH_PASS",
+      "passed": 101,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "Python3.12 -X utf8 -B tests/run_isolated.py -p no:cacheprovider -q tests/test_v1_3_api.py tests/test_v1_3_unit.py tests/test_v1_3_capabilities.py tests/test_v1_3_preview_api.py tests/test_v6_v1_3_contract.py tests/test_valuation_shap_contract.py tests/test_v6_shap_labels.py tests/test_wp04_explanation_contract.py tests/test_wp04_explanation_http.py tests/test_wp04_matrix_parity.py tests/test_security_audit.py tests/test_shadow_mode.py",
+      "classification": "REAL_PINNED_MODEL_FASTAPI_IN_PROCESS_AND_OWNED_HTTP",
+      "rawEvidence": ".scratch/evidence/baseline-b49/python312-model.log",
+      "logSha256": "343201b91de6fbf3e0b749fd8ec610f59939cdacad64734a04dd4b2efeed45fd",
+      "logCreatedUtc": "2026-11-28T16:12:32.381767+00:00",
+      "logLastWriteUtc": "2026-11-28T16:13:19.516928+00:00",
+      "notes": "9 subtests also passed; offline network guard retained. Resolves all4 failures and48 model-related skips in first run.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "isolated test runner; see raw evidence",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Candidate frontend",
+      "status": "FRESH_PASS",
+      "passed": 348,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node --test (cwd=frontend, integrated candidate)",
+      "classification": "FRONTEND_UNIT_CONTRACT",
+      "rawEvidence": ".scratch/evidence/baseline-b49/frontend.log",
+      "logSha256": "79cda606a31ccaebc3e4d6646b50e7921be1f3114fdc4eec3cc5a63a91eff704",
+      "logCreatedUtc": "2026-11-28T15:27:31.210524+00:00",
+      "logLastWriteUtc": "2026-11-28T15:27:33.497855+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "isolated test runner; see raw evidence",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "PR37 frontend",
+      "status": "FRESH_PASS",
+      "passed": 65,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node --test (cwd=.scratch/pr37-integration/frontend, detached151a07b)",
+      "classification": "FRONTEND_UNIT_CONTRACT",
+      "rawEvidence": ".scratch/evidence/baseline-b49/pr37-frontend.log",
+      "logSha256": "e1d59de5a4947ac10f05239a587bbd7b12618f18371dc15e6f49e516bc6373b2",
+      "logCreatedUtc": "2026-11-28T15:28:36.645523+00:00",
+      "logLastWriteUtc": "2026-11-28T15:28:37.783583+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "isolated test runner; see raw evidence",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "News candidate browser",
+      "status": "FRESH_PASS",
+      "passed": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node .scratch/tools/b49-candidate-news-browser.mjs",
+      "classification": "REAL_CHROME_SPRING_MYSQL_SYNTHETIC_NEWS",
+      "rawEvidence": ".scratch/evidence/baseline-b49/candidate-news-browser.log",
+      "logSha256": "91f3ae1a53c63734575a97c8100261ba8d391d5aac11911ba9c39cee5993b466",
+      "logCreatedUtc": "2026-11-28T16:04:40.939795+00:00",
+      "logLastWriteUtc": "2026-11-28T16:05:08.890871+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "hybrid-local-existing-v13-pr41-isolated",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "News PR37 browser",
+      "status": "FRESH_PASS",
+      "passed": 12,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node .scratch/tools/b49-news-browser.mjs",
+      "classification": "REAL_CHROME_SPRING_MYSQL_SYNTHETIC_NEWS",
+      "rawEvidence": ".scratch/evidence/baseline-b49/news-browser-final.log",
+      "logSha256": "91f3ae1a53c63734575a97c8100261ba8d391d5aac11911ba9c39cee5993b466",
+      "logCreatedUtc": "2026-11-28T16:02:23.969939+00:00",
+      "logLastWriteUtc": "2026-11-28T16:02:53.370674+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "hybrid-local-existing-v13-pr41-isolated",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Controlled News503 and retry",
+      "status": "FRESH_PASS",
+      "passed": 6,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node .scratch/tools/b49-news-503.cjs",
+      "classification": "REAL_CHROME_STANDARD_V23_HTTP503",
+      "rawEvidence": ".scratch/evidence/baseline-b49/news-controlled503-final.log",
+      "logSha256": "2d6ed9c3d32a78d2a5bae72a1d1cce0bdf5da8afe6c55cd535188b9b737bc6b7",
+      "logCreatedUtc": "2026-11-28T16:14:42.003675+00:00",
+      "logLastWriteUtc": "2026-11-28T16:14:47.676131+00:00",
+      "notes": "All3 public APIs checked; both frontends at1440/768/390; actual retry request503.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP04 HTTP",
+      "status": "FRESH_PASS",
+      "passed": 157,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/runtime.mjs",
+      "classification": "REAL_FASTAPI_AND_VITE_PROXY_HTTP",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-runtime-final.log",
+      "logSha256": "038f3f7766a0405223c86e4260a1c43686e11905b498f21c386c5c6d3c91798d",
+      "logCreatedUtc": "2026-11-28T16:13:09.696635+00:00",
+      "logLastWriteUtc": "2026-11-28T16:13:10.244666+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP04 three valuation surfaces",
+      "status": "FRESH_PASS",
+      "passed": 298,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/runtime-surfaces.mjs",
+      "classification": "REAL_CHROME_REACT_SPRING_FASTAPI_MYSQL",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-runtime-surfaces-final.log",
+      "logSha256": "f8a58ae5e7fdd53227a0cb91e7de82482cce35795e700e3ce16279f1d239ba6a",
+      "logCreatedUtc": "2026-11-28T16:13:10.246954+00:00",
+      "logLastWriteUtc": "2026-11-28T16:13:43.380950+00:00",
+      "notes": "Standalone, posting preview, Advisor; actual v1.3/AVAILABLE; both Comparable fields, coverage, SAFE/budget assertions.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP04 failure isolation",
+      "status": "FRESH_PASS",
+      "passed": 11,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/failure-isolation.mjs",
+      "classification": "MIXED_REAL_HTTP_HELD_RESPONSE_MOCKED_MUTATIONS_REAL_PROCESS_OUTAGE",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-failure-isolation-final.log",
+      "logSha256": "9be83499d16262347bb22a05ae35f7b518fdeec59e3f9cc54a01581902a9aafd",
+      "logCreatedUtc": "2026-11-28T16:13:43.384952+00:00",
+      "logLastWriteUtc": "2026-11-28T16:14:09.090771+00:00",
+      "notes": "Individual classifications retained in wp04-failure.json; true owned FastAPI stop/recovery with differentPID.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP04 component geometry",
+      "status": "FRESH_PASS",
+      "passed": 484,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/run.mjs",
+      "classification": "MOCKED_COMPONENT_REAL_CHROME_VIEWPORT",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-component.log",
+      "logSha256": "f96c996c6911611f2e30eaecae7e6566824542e5ad0ca18721bf135d202bca95",
+      "logCreatedUtc": "2026-11-28T16:05:56.848462+00:00",
+      "logLastWriteUtc": "2026-11-28T16:06:29.094368+00:00",
+      "notes": "11 states at320/390/768/1440; no use as substitute for real-model surfaces.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "WP04 Advisor components",
+      "status": "FRESH_PASS",
+      "passed": 30,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/surfaces.mjs",
+      "classification": "MOCKED_COMPONENT_WITH_LINKED_ROUTE_FAILURE_EVIDENCE",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-surfaces-final.log",
+      "logSha256": "e0be55ad5d414581eb1376d79419a598e9c6d19cc99c71e0cc4e106b7c058c01",
+      "logCreatedUtc": "2026-11-28T16:14:09.095782+00:00",
+      "logLastWriteUtc": "2026-11-28T16:14:11.767543+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Reactive authorization and shared session",
+      "status": "FRESH_PASS",
+      "passed": 3,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/reactive-authorization.mjs",
+      "classification": "MIXED_REAL_MYSQL_SESSION_AND_SYNTHETIC_RESPONSE",
+      "rawEvidence": ".scratch/evidence/baseline-b49/wp04-reactive-authorization-final.log",
+      "logSha256": "838d3ff75875fbff0e44f597b78bbec2303765ae00540d0c9a8b46c251a25619",
+      "logCreatedUtc": "2026-11-28T16:12:48.244770+00:00",
+      "logLastWriteUtc": "2026-11-28T16:13:09.683069+00:00",
+      "notes": "Locked account restored; late research response discarded; signed claims, Web Locks, refresh, same-account replacement, logout.401 and research payload mutations explicitly mocked.",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "standard-migrations (dev/prod combinations in Standard matrix)",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Session scope browser",
+      "status": "FRESH_PASS",
+      "passed": 5,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/browser/pr48-session-scope.cjs",
+      "classification": "MOCKED_HTTP_REAL_CHROME",
+      "rawEvidence": ".scratch/evidence/baseline-b49/session-browser.log",
+      "logSha256": "9f6be9b9fabb6ff5b71c7a68a2f873b3098ea49327840d0af9035d69d20b08b4",
+      "logCreatedUtc": "2026-11-28T15:31:41.189173+00:00",
+      "logLastWriteUtc": "2026-11-28T15:31:55.048287+00:00",
+      "notes": "",
+      "executionHead": "b6d1f4fcc96aabbcb2c8e2f1ef24a87cfa1b6f83",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "isolated test runner; see raw evidence",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    },
+    {
+      "name": "Source HEAD real-model smoke",
+      "status": "FRESH_PASS",
+      "passed": 157,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "command": "node frontend/tests/wp04/browser/runtime.mjs",
+      "classification": "REAL_MODEL_HTTP_ON_COMMITTED_SOURCE_HEAD",
+      "rawEvidence": ".scratch/evidence/baseline-b49/final-head-smoke/wp04-http.log",
+      "logSha256": "038f3f7766a0405223c86e4260a1c43686e11905b498f21c386c5c6d3c91798d",
+      "logCreatedUtc": "2026-11-28T16:20:15.810080+00:00",
+      "logLastWriteUtc": "2026-11-28T16:20:16.180065+00:00",
+      "notes": "Executed after source commitabf0e3a; not added again into unique coverage totals.",
+      "executionHead": "abf0e3a19018e35e93c113e9e1f625ed0148507d",
+      "applicationContent": "No application source or migration change between integrated regression and source HEAD; fixture/runner changes validated separately.",
+      "runtimeProfile": "isolated test runner; see raw evidence",
+      "timingSource": "Log creation and last-write timestamps; actual JUnit/runner times retained in raw evidence."
+    }
+  ],
+  "pythonUniqueCases": {
+    "pass": 1136,
+    "fail": 0,
+    "error": 0,
+    "skip": 1
+  },
+  "pythonSkipReason": "One optional offline real planning dataset is not distributed with application source; synthetic planning/context tests passed.",
+  "artifactIntegrity": {
+    "source": "https://drive.google.com/file/d/1fJ68IgkqSXJyQJKfjTcno-vbNw9yXswU/view",
+    "zipName": "SmartProp_V1.3_Official_Artifacts.zip",
+    "zipSha256": "658d6d3925892f801fcec22bd4950de1829de5668ce5ffdc2cc6fe45e9fbc32b",
+    "baselinePins": "b49a98fc333cbda1ff38d5511259a5329881812e:docs/ai/wp04-evidence/acceptance.json",
+    "sourceChecks": 8,
+    "destinationBeforeChecks": 8,
+    "destinationAfterChecks": 8,
+    "sourceZipUnchanged": true,
+    "files": [
+      {
+        "name": "calibration.json",
+        "bytes": 547,
+        "sha256": "17632bdf4d578723a5c336b7c7e3aed6021dbb68f38985b763839a763fbfe645",
+        "verified": true
+      },
+      {
+        "name": "artifact_manifest.json",
+        "bytes": 1078,
+        "sha256": "419599ecbefbe24bbbc1754a0224a7c25747ac3a08827d4e14ea62a5e41f2dce",
+        "verified": true
+      },
+      {
+        "name": "feature_schema.json",
+        "bytes": 24257,
+        "sha256": "84be275b12b3c426497c00be80eed621d7323ac2a2abcb282752c7a89361e7ea",
+        "verified": true
+      },
+      {
+        "name": "model.json",
+        "bytes": 28512676,
+        "sha256": "3c56b6937902d9f736f9eb0278683f0c5ab8af027f5ea12b1a4072abff840a03",
+        "verified": true
+      }
+    ]
+  },
+  "priceInvariance": {
+    "status": "FRESH_PASS",
+    "referenceCode": "b49a98fc333cbda1ff38d5511259a5329881812e",
+    "method": "Separate baseline archive and candidate predictor execution; official artifacts identical; approved WP04 parity cases plus deterministic type/area/district matrix",
+    "corpusSha256": "3f95a8d78adaea1382e7af4ce55c7e330e69c2a18603ccc00528dd62d0e85c44",
+    "cases": [
+      {
+        "case": "house",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "rooms": 3
+        },
+        "referencePrice": 5749775772,
+        "candidatePrice": 5749775772,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 120.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 4059447662,
+        "candidatePrice": 4059447662,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Hải Châu",
+          "area_sqm": 75.0,
+          "rooms": 2
+        },
+        "referencePrice": 4532858277,
+        "candidatePrice": 4532858277,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 150.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 15693880409,
+        "candidatePrice": 15693880409,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "ward-prefixed",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "ward": "Phường 1"
+        },
+        "referencePrice": 8309070991,
+        "candidatePrice": 8309070991,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "ward-missing",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0
+        },
+        "referencePrice": 6605239848,
+        "candidatePrice": 6605239848,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "ward-unknown",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "ward": "phường không tồn tại xyz"
+        },
+        "referencePrice": 8309070991,
+        "candidatePrice": 8309070991,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "street-unknown",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "street_name": "Đường Không Tồn Tại 123"
+        },
+        "referencePrice": 6792890019,
+        "candidatePrice": 6792890019,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area60-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 60.0,
+          "rooms": 3
+        },
+        "referencePrice": 3816124861,
+        "candidatePrice": 3816124861,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area60-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 60.0,
+          "rooms": 3
+        },
+        "referencePrice": 4882201535,
+        "candidatePrice": 4882201535,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area60-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 60.0,
+          "rooms": 3
+        },
+        "referencePrice": 5815976876,
+        "candidatePrice": 5815976876,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area100-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "rooms": 3
+        },
+        "referencePrice": 5749775772,
+        "candidatePrice": 5749775772,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area100-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 100.0,
+          "rooms": 3
+        },
+        "referencePrice": 7537868983,
+        "candidatePrice": 7537868983,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area100-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 100.0,
+          "rooms": 3
+        },
+        "referencePrice": 9299029019,
+        "candidatePrice": 9299029019,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area180-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 180.0,
+          "rooms": 3
+        },
+        "referencePrice": 13410456711,
+        "candidatePrice": 13410456711,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area180-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 180.0,
+          "rooms": 3
+        },
+        "referencePrice": 18388224552,
+        "candidatePrice": 18388224552,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "house-area180-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 180.0,
+          "rooms": 3
+        },
+        "referencePrice": 21908911944,
+        "candidatePrice": 21908911944,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area60-district0",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 60.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 2934265225,
+        "candidatePrice": 2934265225,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area60-district1",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Hải Châu",
+          "area_sqm": 60.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 4196792812,
+        "candidatePrice": 4196792812,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area60-district2",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 60.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 4918860380,
+        "candidatePrice": 4918860380,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area100-district0",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 3960656119,
+        "candidatePrice": 3960656119,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area100-district1",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Hải Châu",
+          "area_sqm": 100.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 6202942290,
+        "candidatePrice": 6202942290,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area100-district2",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 100.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 7755578681,
+        "candidatePrice": 7755578681,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area180-district0",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 180.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 7913387323,
+        "candidatePrice": 7913387323,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area180-district1",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Hải Châu",
+          "area_sqm": 180.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 13965962693,
+        "candidatePrice": 13965962693,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "land-area180-district2",
+        "input": {
+          "category": "Đất nền",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 180.0,
+          "road_width_m": 5.5,
+          "frontage_width_m": 6.0
+        },
+        "referencePrice": 15653850322,
+        "candidatePrice": 15653850322,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area60-district0",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 60.0,
+          "rooms": 2
+        },
+        "referencePrice": 3053592455,
+        "candidatePrice": 3053592455,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area60-district1",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Hải Châu",
+          "area_sqm": 60.0,
+          "rooms": 2
+        },
+        "referencePrice": 3701114431,
+        "candidatePrice": 3701114431,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area60-district2",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 60.0,
+          "rooms": 2
+        },
+        "referencePrice": 4324277222,
+        "candidatePrice": 4324277222,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area100-district0",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "rooms": 2
+        },
+        "referencePrice": 4112323845,
+        "candidatePrice": 4112323845,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area100-district1",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Hải Châu",
+          "area_sqm": 100.0,
+          "rooms": 2
+        },
+        "referencePrice": 5438412827,
+        "candidatePrice": 5438412827,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area100-district2",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 100.0,
+          "rooms": 2
+        },
+        "referencePrice": 6867013486,
+        "candidatePrice": 6867013486,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area180-district0",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 180.0,
+          "rooms": 2
+        },
+        "referencePrice": 9886915074,
+        "candidatePrice": 9886915074,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area180-district1",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Hải Châu",
+          "area_sqm": 180.0,
+          "rooms": 2
+        },
+        "referencePrice": 13474092850,
+        "candidatePrice": 13474092850,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "apartment-area180-district2",
+        "input": {
+          "category": "Căn hộ chung cư",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 180.0,
+          "rooms": 2
+        },
+        "referencePrice": 15789117918,
+        "candidatePrice": 15789117918,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area60-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 60.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 4044647281,
+        "candidatePrice": 4044647281,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area60-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 60.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 5105984193,
+        "candidatePrice": 5105984193,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area60-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 60.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 6112939352,
+        "candidatePrice": 6112939352,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area100-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 100.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 5781403033,
+        "candidatePrice": 5781403033,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area100-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 100.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 7448629301,
+        "candidatePrice": 7448629301,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area100-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 100.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 9434232246,
+        "candidatePrice": 9434232246,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area180-district0",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Cẩm Lệ",
+          "area_sqm": 180.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 14937293229,
+        "candidatePrice": 14937293229,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area180-district1",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Hải Châu",
+          "area_sqm": 180.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 20049552672,
+        "candidatePrice": 20049552672,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      },
+      {
+        "case": "villa-area180-district2",
+        "input": {
+          "category": "Nhà ở",
+          "location_feature": "Sơn Trà",
+          "area_sqm": 180.0,
+          "house_subtype": "villa",
+          "floors": 3,
+          "rooms": 4
+        },
+        "referencePrice": 24141577847,
+        "candidatePrice": 24141577847,
+        "differenceVnd": 0,
+        "modelVersion": "v1.3",
+        "explanationStatus": "AVAILABLE"
+      }
+    ]
+  },
+  "migrationIntegrity": {
+    "reviewedHead": "da1d8c34c4303c84996f2f78212793c1f57a4228",
+    "unchangedVersions": "V13-V28",
+    "v27Checksum": -1622560226,
+    "v28Checksum": -1006687404,
+    "noV29": true,
+    "standardTarget": 23,
+    "legacyLocalStagingTarget": 28,
+    "freshUpgradePaths": [
+      "V26->V27->V28",
+      "V27->V28"
+    ],
+    "invalidApprovedRowsBeforeMigration": 0,
+    "flywayRepair": false,
+    "historyRewrite": false,
+    "autoBaseline": false
+  },
+  "readonlyIntegrity": {
+    "snapshotPairs": 14,
+    "allUnchanged": true,
+    "coverage": "Full ordered Flyway history and CHECKSUM TABLE EXTENDED for every base table; real read-only INSERT rejection"
+  },
+  "security": {
+    "scanner": "repository heuristic rules via .scratch/tools/b49-security-scan.mjs",
+    "command": "node .scratch/tools/b49-security-scan.mjs",
+    "scope": "tracked + untracked application source; excludes private fixture runtime .smartprop, PR41 venv/cache ai-services/.scratch, verified untracked model artifacts; staged inventory; heuristic scan, not full history or certified SCA",
+    "scannedFiles": 1388,
+    "findings": 0,
+    "severity": "none",
+    "exitCode": 0,
+    "npmAuditVulnerabilities": 0,
+    "limitation": "Heuristic source scan and npm audit, not full-history or certified SCA",
+    "evidence": ".scratch/evidence/baseline-b49/security-scan-delivery.json"
+  },
+  "productionPackage": {
+    "status": "FRESH_PASS",
+    "jarSha256": "e551084681ffe1b237577f4bbe1d1c1309ec221f4c135920c8f8f569e4dd8990",
+    "jarBytes": 74529359,
+    "excludedTestFixtures": true,
+    "excludedPrivateIdentity": true,
+    "findings": []
+  },
+  "runtimeBoundaries": {
+    "protectedDatabasePorts": [
+      3306,
+      3307
+    ],
+    "protectedConnectionsAttempted": false,
+    "fixtures": "Explicit authorized3311/3312 manifests; dedicated Google high-port fixture; dedicated WP04 launcher high-port fixture. Full private process/config/UUID proof retained locally.",
+    "liveIngestion": "LIVE_INGESTION_DISABLED",
+    "sourceRights": "SOURCE_RIGHTS_APPROVAL_PENDING",
+    "noModelTraining": true,
+    "noArtifactCommit": true,
+    "noOtherWorkspaceMutations": true
+  },
+  "countClarifications": {
+    "advisor": "13 actual cases. Historical26 was13 Advisor+7 broken-schema+1 Local+1 Staging+4 lineage aggregate; not26 Advisor tests.",
+    "constraintVerifier": "4 verifier test methods. Historical19 was4 verifier+7 broken-schema+8 safety aggregate; these are included in640, not19 unique verifier methods.",
+    "counts": "Do not sum repeated runs, smoke checks, parameter iterations or subtests as independent unique tests."
+  },
+  "limitations": [
+    "Optional planning dataset1SKIP; not a mandatory model or WP04 skip.",
+    "External RAG/Google/publisher services are not contacted; specified synthetic/stub architecture retained.",
+    "DNS rebinding and304 logging race remain accepted V1 limitations/backlog.",
+    "No approval, merge, force push, deployment or unapproved main integration."
+  ],
+  "runtimeDependencies": {
+    "java": "OpenJDK21.0.13+9",
+    "node": "22.20.0",
+    "vite": "8.3.3",
+    "chrome": "158.0.8127.38",
+    "mysql": "8.0.46",
+    "ragPython": "3.11.9",
+    "modelPython": "3.12.10 isolated embedded distribution signed by Python Software Foundation",
+    "modelPythonPackages": {
+      "accelerate": "1.15.0",
+      "annotated-doc": "0.0.7",
+      "annotated-types": "0.8.0",
+      "anyio": "4.16.0",
+      "attrs": "26.1.0",
+      "bitsandbytes": "0.50.2",
+      "certifi": "2026.11.20",
+      "charset-normalizer": "3.5.3",
+      "click": "8.5.1",
+      "cloudpickle": "3.1.3",
+      "colorama": "0.4.6",
+      "faiss-cpu": "1.15.1",
+      "fastapi": "0.143.3",
+      "filelock": "4.3.2",
+      "fsspec": "2026.9.0",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.29.0",
+      "huggingface_hub": "0.36.2",
+      "idna": "3.20",
+      "iniconfig": "2.3.1",
+      "Jinja2": "3.1.6",
+      "joblib": "1.6.0",
+      "MarkupSafe": "3.0.4",
+      "mpmath": "1.3.0",
+      "narwhals": "2.29.0",
+      "networkx": "3.7",
+      "numpy": "2.5.3",
+      "opentelemetry-api": "1.45.2",
+      "packaging": "26.4",
+      "pandas": "3.1.1",
+      "pillow": "13.0.0",
+      "pluggy": "1.7.0",
+      "psutil": "7.2.2",
+      "pydantic": "2.14.1",
+      "pydantic_core": "2.50.1",
+      "Pygments": "2.21.0",
+      "PyMySQL": "1.2.4",
+      "pypdf": "7.2.0",
+      "pytest": "9.2.0",
+      "pytest-subtests": "0.15.0",
+      "python-dateutil": "4.0.0",
+      "PyYAML": "6.0.4",
+      "regex": "2026.11.25",
+      "requests": "2.34.2",
+      "safetensors": "0.8.0",
+      "scikit-learn": "1.9.1",
+      "scipy": "1.18.1",
+      "sentence-transformers": "5.7.0",
+      "setuptools": "84.2.1",
+      "starlette": "1.10.0",
+      "sympy": "1.14.0",
+      "threadpoolctl": "3.8.0",
+      "tokenizers": "0.22.2",
+      "torch": "2.15.0",
+      "tqdm": "4.70.1",
+      "transformers": "4.57.6",
+      "typing_extensions": "4.16.0",
+      "typing-inspection": "0.4.5",
+      "tzdata": "2026.6",
+      "urllib3": "2.8.0",
+      "uvicorn": "0.54.0",
+      "xgboost": "3.4.1"
+    }
+  },
+  "builds": [
+    {
+      "name": "Backend production",
+      "command": "backend/mvnw.cmd -o -B -DskipTests clean package",
+      "exitCode": 0,
+      "evidence": ".scratch/evidence/baseline-b49/package.log"
+    },
+    {
+      "name": "Candidate frontend production",
+      "command": "node node_modules/vite/bin/vite.js build (cwd=frontend)",
+      "exitCode": 0,
+      "evidence": ".scratch/evidence/baseline-b49/frontend-build-rerun.log"
+    },
+    {
+      "name": "PR37 production",
+      "command": "node node_modules/vite/bin/vite.js build (cwd=.scratch/pr37-integration/frontend)",
+      "exitCode": 0,
+      "evidence": ".scratch/evidence/baseline-b49/pr37-build.log"
+    }
+  ]
+}

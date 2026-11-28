@@ -190,12 +190,14 @@ def run(args):
             raise RuntimeError('MySQL datadir/port check failed')
         mysql_verified=True
         pid_proof['mysql']={'pid':int(owner),'launcher_pid':db.pid,'uuid':server_uuid,'datadir':str(data)}
-        assertion=f'SELECT marker FROM {SCHEMA}.wp04_isolation_marker;'
+        assertion='SELECT marker FROM wp04_fixture_identity.wp04_isolation_marker;'
         sql(f"""CREATE DATABASE {SCHEMA} CHARACTER SET utf8mb4;
 CREATE USER 'wp04_fixture'@'{HOST}' IDENTIFIED BY '{database_password}';
 GRANT ALL ON {SCHEMA}.* TO 'wp04_fixture'@'{HOST}';
-CREATE TABLE {SCHEMA}.wp04_isolation_marker(marker VARCHAR(32) NOT NULL);
-INSERT INTO {SCHEMA}.wp04_isolation_marker VALUES('{marker}');
+CREATE DATABASE wp04_fixture_identity CHARACTER SET utf8mb4;
+CREATE TABLE wp04_fixture_identity.wp04_isolation_marker(marker VARCHAR(32) NOT NULL);
+INSERT INTO wp04_fixture_identity.wp04_isolation_marker VALUES('{marker}');
+GRANT SELECT ON wp04_fixture_identity.* TO 'wp04_fixture'@'{HOST}';
 CREATE DATABASE wp02_phase_b_fixture CHARACTER SET utf8mb4;""")
         if sql(assertion)!=marker:
             raise RuntimeError('MySQL marker check failed')
@@ -227,6 +229,8 @@ CREATE DATABASE wp02_phase_b_fixture CHARACTER SET utf8mb4;""")
                 cwd=ROOT,env=clean_env(migration_env),stdout=log,stderr=subprocess.STDOUT,timeout=360,creationflags=enabled)
         if migration.returncode:
             raise RuntimeError('Disposable Flyway migration failed; see migrations.log')
+        sql(f"REVOKE SELECT ON wp04_fixture_identity.* FROM 'wp04_fixture'@'{HOST}';")
+        sql(f"CREATE TABLE {SCHEMA}.wp04_isolation_marker(marker VARCHAR(32) NOT NULL); INSERT INTO {SCHEMA}.wp04_isolation_marker VALUES('{marker}');")
         spring=start('spring',[java,'-jar',jar,
             '--server.address='+HOST,f'--server.port={PORT["spring"]}','--spring.profiles.active=standard-migrations',
             '--spring.flyway.enabled=false',

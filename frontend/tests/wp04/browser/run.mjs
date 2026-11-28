@@ -29,7 +29,7 @@ const WIDTHS = [320, 390, 768, 1440];
 
 const here = dirname(fileURLToPath(import.meta.url));
 const results = [];
-const shots = join(here, "..", "..", "..", "docs", "ai", "browser", "wp04");
+const shots = process.env.WP04_OUTPUT_DIR || join(here, "..", "..", "..", "docs", "ai", "browser", "wp04");
 
 function record(name, ok, detail = "") {
   results.push({ name, ok: Boolean(ok), detail: String(detail).slice(0, 220) });
@@ -208,7 +208,7 @@ async function main() {
   }
 
   const failed = results.filter((item) => !item.ok);
-  const outDir = join(here, "reports");
+  const outDir = process.env.WP04_OUTPUT_DIR || join(here, "reports");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "wp04-browser.json"), JSON.stringify({
     base: BASE, at: new Date().toISOString(), cases, widths,

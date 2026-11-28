@@ -26,7 +26,7 @@ public class MigrationLineageConfiguration {
             }
             var history=jdbc.queryForList("SELECT version,type,checksum,success FROM flyway_schema_history ORDER BY installed_rank");
             checkHistory(history,local,env.getProperty("app.local-lineage.require-complete",Boolean.class,true));
-            if(local)checkLocalIdentity(jdbc,MigrationProfileEnvironmentGuard.staging(env));
+            if(local) checkLocalIdentity(jdbc,MigrationProfileEnvironmentGuard.staging(env));
             boolean complete=env.getProperty("app.local-lineage.require-complete",Boolean.class,true);
             Flyway flyway=Flyway.configure().dataSource(source)
                 .locations("classpath:database/"+(local?"legacy-hybrid-local":"migrations"),"classpath:database/research-migrations"+(local?"":"/poi"))
@@ -58,7 +58,7 @@ public class MigrationLineageConfiguration {
         boolean legacy=history.stream().anyMatch(r->"14".equals(r.get("version"))&&Objects.equals(r.get("checksum"),-1382804267));
         if(!local){if(legacy)throw new IllegalStateException("Crawler14 history requires explicit hybrid-local-existing-v13 profile.");return;}
         if(history.size()<2||!"13".equals(history.get(0).get("version"))||!"BASELINE".equals(history.get(0).get("type"))||!legacy)throw new IllegalStateException("Expected Local BASELINE13/original crawler14 history.");
-        var allowed=List.of("13","14","17","18","19","20","21","22","23","24","25","26");
+        var allowed=List.of("13","14","17","18","19","20","21","22","23","24","25","26","27","28");
         for(int i=0;i<history.size();i++){
             var row=history.get(i);Object success=row.get("success");
             if(i>=allowed.size()||!allowed.get(i).equals(row.get("version"))||!(Boolean.TRUE.equals(success)||Integer.valueOf(1).equals(success))||i>0&&!"SQL".equals(row.get("type")))throw new IllegalStateException("Unexpected/failed Local migration history; stop without repair.");
@@ -66,15 +66,17 @@ public class MigrationLineageConfiguration {
         if(complete&&history.size()<4)throw new IllegalStateException("Local V17/V18 pending. Review and approve the dedicated completion script before enabling full Backend.");
     }
     static void checkPendingLocalMigrations(List<String> pending,boolean complete,boolean tinixEnabled){
-        var allowed=Set.of("17","18","19","20","21","22","23","24","25","26");
-        var allowedWhenComplete=Set.of("19","20","21","22","23","24","25","26");
+        var allowed=Set.of("17","18","19","20","21","22","23","24","25","26","27","28");
+        var allowedWhenComplete=Set.of("19","20","21","22","23","24","25","26","27","28");
         if(pending.stream().anyMatch(version->!allowed.contains(version)
             ||complete&&!allowedWhenComplete.contains(version)
             ||"19".equals(version)&&tinixEnabled))throw new IllegalStateException("Unexpected pending Local migration; review the location.");
     }
     static void checkRuntimePendingLocalMigrations(List<String> pending,boolean requireComplete){
+        if(requireComplete&&(pending.contains("27")||pending.contains("28")))throw new IllegalStateException(
+            "Local News schema migration is pending; use the separately reviewed Flyway workflow.");
         if(requireComplete&&pending.contains("26"))throw new IllegalStateException(
             "Local V26 coordinate provenance is pending; stop Backend and run the separately reviewed Flyway migration workflow.");
     }
-    static String target(boolean local){return local?"26":"23";}
+    static String target(boolean local){return local?"28":"23";}
 }

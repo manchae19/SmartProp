@@ -160,3 +160,6 @@ ai-services/tests/seed_*.py
 
 # Local process registry, logs and generated cache; never shared via Git.
 /.local-run/
+# News Backend V1: schema, API contract, source rights, ingestion, security,
+# test results and PR #37 integration plan. No secrets, no PII.
+!/docs/SMARTPROP_NEWS_BACKEND_V1_IMPLEMENTATION.md
