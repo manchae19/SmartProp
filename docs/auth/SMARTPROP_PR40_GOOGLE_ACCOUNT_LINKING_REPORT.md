@@ -154,3 +154,44 @@ Các mốc lỗi ban đầu của harness gồm cấu hình proxy HTTPS, so sán
 **PR48_READY_FOR_FINAL_INDEPENDENT_REVIEW**
 
 **WAITING_FOR_PR48_MERGE_AUTHORIZATION**
+
+## 7. Tích hợp main sau PR #49
+
+Ngày 28/11/2026. GitHub xác nhận PR #48 mở ở trạng thái Draft, head `287b4b2d032a3d22581fd993e212366c452d7c3a`, nhánh `integration/pr40-google-link-20261128`. Main được fetch và xác minh tại `d6be176f6c7fa27a1f33836e627965104f6a8d27`.
+
+Commit nguồn đã kiểm thử `e61e9701d21ddbe56907279abf13fabb26fb6c24`, tree `4b290ff8116d507336c529cab0867afda6d9f60c`. Đây là merge commit có hai parent lần lượt là head PR #48 và main được duyệt. Commit bàn giao sau đó chỉ cập nhật báo cáo này. Mô tả PR ghi SHA và tree của cả hai commit.
+
+### Giải quyết conflict và phạm vi
+
+- Giữ nguyên byte Git của `frontend/src/shared/lib/httpClient.js` và `frontend/src/features/auth/api.js` từ main. Bản PR #49 đã cung cấp `getGoogleLinkScope`, `startGoogleLink` và `completeGoogleLink`. Kiến trúc dùng một HTTP client và một session store, hỗ trợ single-flight refresh, Web Locks, BroadcastChannel, `authGeneration` và `authTransition`. Phản hồi obsolete bị loại theo scope. Chỉ các request đọc an toàn đủ điều kiện mới được retry. Request ghi cần thao tác gửi lại rõ ràng.
+- Giữ route `/auth/google/link/complete`, form xác nhận mật khẩu và màn hình callback của PR #48. Router tích hợp giữ xử lý profile điều hướng từ main. Backend Google Linking và bảy ca regression gốc giữ nguyên.
+- Market, Comparable và Advisor giữ cơ chế thu hồi quyền, loại phản hồi stale và đường dẫn public SAFE từ main. Kiểm tra Git xác nhận `ai-services/` và `database/` giống main.
+
+### Kết quả chạy trên cây tích hợp
+
+| Kiểm thử | Kết quả | Exit | Log |
+| --- | --- | ---: | --- |
+| Shared HTTP/session | 65 pass, 0 fail/skip | 0 | `pr48-shared.log` |
+| Bảy ca nguyên bản PR #48 | 7 pass, 0 fail/skip | 0 | `pr48-original7.log` |
+| Market và Advisor reactive authorization | 24 pass, 0 fail/skip | 0 | `pr48-reactive.log` |
+| Frontend recursive | 247 pass, 0 fail/skip | 0 | `pr48-frontend.log` |
+| Google Linking Chromium với HTTP fixture | 8 kịch bản ở 1440/390 px | 0 | `pr40-browser.log` |
+| Account/session transition Chromium với HTTP fixture | 5 kịch bản | 0 | `pr48-session-browser.log` |
+| WP02 Chromium với HTTP fixture | 12/12 nhóm | 0 | `pr48-wp02.log` |
+| Full Spring Boot với isolated MySQL và controlled OAuth | 316 pass, 0 fail/error/skip | 0 | `pr48-backend-runtime.log` |
+| Vite production build | 270 modules | 0 | `pr48-build.log` |
+| Asset audit | 147 tệp kiểm tra, 5 ảnh hạn chế vắng mặt, 30 asset duyệt khớp byte | 0 | `pr48-assets.log` |
+| V1.3 artifacts | 8/8 kiểm tra SHA-256 và kích thước trên hai bản artifact | 0 | `pr48-artifacts.json` |
+
+Bộ Spring gồm 44 ca Google Linking, OIDC và CSRF, trong đó có 4 ca SQL MySQL và 1 ca browser runtime chạy Spring/Tomcat và schema chuẩn V1–V23 trên MySQL riêng. Các số targeted nằm trong suite tổng tương ứng. Lượt mở WP02 đầu dừng ở cấu hình do thiếu biến `WP02_CHROMIUM`. Lượt chọn đúng Chromium và thư mục frontend chạy đủ 12 nhóm.
+
+Lệnh Node chạy trong `frontend/`: `npm test`, `node --test tests/httpClient*.test.mjs tests/googleLinkSession*.test.mjs tests/pr49SharedAuthTransitions.test.mjs`, `node --test tests/googleLinkSession.test.mjs`, `node --test tests/marketAnalyticsSession.test.mjs tests/unifiedAdvisorSession.test.mjs`, `npm run build` và `node e2e/pr37-dist-assets.mjs`. Lệnh WP02 là `node tests/browser/wp02-browser.mjs` với `WP02_CHROMIUM` trỏ đến Edge cục bộ. Hai browser runner Google dùng `pr40-google-link.cjs` và `pr48-session-scope.cjs`. Spring chạy qua `frontend/tests/browser/run-pr48-runtime.ps1 -FullRegression` với MySQL và HTTPS loopback trên cổng 53983/53985. Log và các mã thoát nằm trong `.smartprop/` của worktree `pr48-final-main`.
+
+### Bằng chứng bảo mật và giới hạn
+
+- Xác nhận mật khẩu hiện tại, PKCE S256, state, OIDC issuer/signature/nonce, CSRF, scope tài khoản và session, vé chỉ dùng một lần và kiểm tra quyền phía server. Trùng Google subject bị từ chối. Trùng email giữa hai tài khoản không tự liên kết. Đối chiếu trong MySQL giữ nguyên tin, yêu thích và lịch sử định giá.
+- Controlled OAuth qua Chromium xác nhận sai mật khẩu trả 400, phiên sống được khôi phục qua callback, cookie có Secure/HttpOnly/SameSite, replay trả 410 và callback đến sau logout bị chặn. Kiểm thử Java và browser fixture bổ sung account lock, session replacement, stale completion và renewal. `pr48-controlled-oauth.log` chỉ ghi method, route và status.
+- Google OAuth thật, Caddy production và DB triển khai chưa được xác minh. Store pending flow/ticket nằm trong bộ nhớ, có TTL và thuộc phạm vi một instance. Fixture full-stack vẫn có HTTP 503 trên GET broker application, đã có trong lần kiểm tra PR #49 trước đó. Luồng liên kết, quyền, dữ liệu và các assertion OAuth đều đạt.
+- Fixture đã dừng các listener của mình, năm listener mentor demo vẫn nguyên. Không đổi migration, weights, main hoặc worktree song song. Không triển khai.
+
+Nguồn sẵn sàng cho review độc lập. PR duy trì Draft và chờ quyết định merge của chủ sở hữu.
