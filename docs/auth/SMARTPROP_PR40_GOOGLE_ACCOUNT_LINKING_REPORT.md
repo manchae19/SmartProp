@@ -98,3 +98,59 @@ MySQL fixture xác nhận số lượng và giá trị các dòng tài khoản, 
 - Chờ review độc lập, OAuth thật và xác minh runtime trước khi đổi trạng thái PR hoặc triển khai. Người review có thể bắt đầu từ diff `1c67a27...HEAD`, sau đó dùng kịch bản browser và bảng test trên.
 
 **WAITING_FOR_PR40_FINAL_REVIEW**
+
+
+## 6. Nghiệm thu sửa đổi PR #48
+
+Ngày 28/11/2026. Bản review ban đầu `3ab750b8f458a4fec074ef1c8a2f6057fb0c16bc`. Main được duyệt và xác minh lại tại `1c67a279a8ff6f6939767e82bb31b17584610864`. Kiểm thử bản code cuối ở `4b04d643047dbe5a7bd09bbc9cb5466e4e9dab12`. Commit bàn giao tiếp theo cập nhật báo cáo. SHA local/remote đầy đủ được ghi trong mô tả PR. [PR #48](https://github.com/manchae19/SmartProp/pull/48)
+
+| Finding | Sửa và bằng chứng |
+| --- | --- |
+| P2-01 – Phản hồi cũ theo phiên | `httpClient.js` đánh dấu thế hệ xác thực trong bộ nhớ. Refresh cùng subject, session và token version giữ nguyên phạm vi. Logout, đăng nhập lại cùng người, đổi người, đổi phiên qua refresh, mất xác thực và khóa tài khoản làm mất phạm vi cũ khi client xử lý trạng thái tương ứng. `AccountView.jsx`, `auth/api.js` và `GoogleLinkCompleteView.jsx` bỏ phản hồi, lỗi và chuyển hướng đến muộn. 401 đến từ access token cũ không hủy phiên cùng thế hệ đã refresh thành công. Request ghi cần người dùng gửi lại nếu credential cũ bị từ chối. |
+| P2-02 – Runtime tích hợp | Chromium và React chạy qua proxy HTTPS loopback đến Spring Boot/Tomcat và MySQL 8.0.43 cô lập. Spring sử dụng bảng và repository thật trên schema chuẩn V1–V23. Provider kiểm thử dùng endpoint loopback, ký RSA và xác minh PKCE S256, code, redirect URI. App xác minh OIDC qua Spring. |
+| P2-03 – Nhiều luồng | Mỗi cặp account/session có một luồng mới nhất. Sau xác nhận mật khẩu thành công, start mới hủy yêu cầu, callback đang trao đổi token và vé chưa tiêu thụ của luồng cũ. Callback bị hủy chỉ dọn chính luồng đã nhận. Ticket được tiêu thụ nguyên tử và yêu cầu đúng account/session. Tab cùng phiên dùng chung quy tắc, phiên hoặc tài khoản khác độc lập. Nếu complete đã nhận và tiêu thụ vé trước start mới, transaction đã bắt đầu tiếp tục theo kiểm tra phiên hiện tại. |
+| Rate limit | Giữ 5 start và 5 complete trên mỗi phiên trong 300 giây, 5 lượt xác nhận mật khẩu trên mỗi tài khoản trong 300 giây và 10 authorize trên mỗi IP trong 60 giây. Đồng hồ kiểm thử xác nhận 429, Retry-After, giới hạn chung khi đổi phiên và chấp nhận lại sau khi hết cửa sổ. |
+
+### Bằng chứng runtime và cookie
+
+- Chromium đăng nhập bằng tài khoản SmartProp đã có mật khẩu. Sai mật khẩu trả 400, giữ phiên và không tạo cookie luồng. Mật khẩu đúng dẫn qua CSRF cookie/header, callback đúng origin và phục hồi đúng ID phiên trước khi gọi complete.
+- Browser xác nhận cookie luồng và vé có HttpOnly, SameSite=Lax, Path=/api/v1/auth, Secure trên HTTPS và Max-Age lần lượt 300 và 60 giây. Complete xóa cả hai cookie và POST lại trả 410. Unit test dùng đồng hồ để xác nhận hết hạn.
+- Google Sign-In thử nghiệm đăng nhập lại theo subject đã liên kết. Email của provider trùng một tài khoản SmartProp khác. Hai tài khoản vẫn độc lập, dữ liệu hồ sơ, role, password hash, quan hệ chủ tin, tin yêu thích và lịch sử định giá không đổi.
+- Ca thứ ba giữ callback tại provider cho đến khi phiên SmartProp đã bị logout qua HTTP. Callback đến sau thu hồi, refresh trả 401, giao diện yêu cầu bắt đầu lại, không gửi POST complete và không ghi thêm danh tính. Unit test độc lập xác nhận service cũng từ chối hoàn tất với phiên đã bị thu hồi.
+- Launcher kiểm tra cổng loopback, listener PID và datadir trước khi tạo schema. Harness kiểm tra lại JDBC URL, tên schema, MySQL UUID, datadir, cổng, user chỉ dùng cho schema thử và marker trước khi migrate. Dùng dữ liệu tổng hợp mới. Bốn ca SQL V15 tối giản và ca full-schema chạy trên hai schema riêng của cùng MySQL cô lập.
+
+### Kết quả trên bản chốt
+
+| Bộ kiểm thử | PASS | FAIL | SKIP | Exit |
+| --- | ---: | ---: | ---: | ---: |
+| Spring Boot Maven, gồm OIDC, Phase 0, auth/refresh, WP-02, MySQL và runtime | 316 | 0 | 0 | 0 |
+| Fixture MySQL V15 tối giản, đã tính trong 316 | 4 | 0 | 0 | 0 |
+| Chromium + Spring + MySQL + provider kiểm thử qua HTTPS, đã tính trong 316 | 1 | 0 | 0 | 0 |
+| Node frontend recursive | 161 | 0 | 0 | 0 |
+| Chromium React với API fixture, 8 ca desktop/mobile và 5 ca chuyển phiên | 13 | 0 | 0 | 0 |
+| Vite production build | Hoàn tất | 0 | 0 | 0 |
+| RAG fixture checkpoint và nhiều lượt | 26 | 0 | 0 | 0 |
+
+Các mốc lỗi ban đầu của harness gồm cấu hình proxy HTTPS, so sánh geometry kiểu byte array và đồng bộ thời điểm callback thu hồi. Bộ kết quả trên lấy từ lần chạy hoàn tất sau khi sửa các lỗi fixture. Full FastAPI live, WP-02 live IT và runtime production chưa chạy. Runtime OAuth dùng provider loopback và key ký sinh tại chỗ. Google thật vẫn ở trạng thái `PR40_REAL_GOOGLE_OAUTH_NOT_RUN`. Việc đối chiếu đủ bốn tệp artifact inference V1.3 vẫn ở trạng thái `PR40_V1_3_ARTIFACT_INTEGRITY_PENDING`. Manifest và cây AI/migration giống main.
+
+### Đối chiếu nhánh song song
+
+| Nhánh | Remote HEAD đối chiếu | Đường dẫn chồng lấn với PR #48 |
+| --- | --- | --- |
+| WP-04 Explainable AI | `074bb7333b93651d8f0bd8cae5b4a01cf63f3834` | Không có |
+| WP-05 Prediction Interval | `a0a5d88db1a77bc3dc55f9981dd313faa52f5b8b` | Không có |
+| WP-06 Model Monitoring | Chưa thấy HEAD hoặc PR tương ứng ở remote | Chưa xác minh |
+| PR #37 | `151a07b4472ea0fd3134fb50f4f3de757e83d46f` | Router |
+| PR #41 | `da1d8c34c4303c84996f2f78212793c1f57a4228` | SecurityConfig |
+| PR #43 | `f59edf223c98249ee6104c367c34537bd851aea5` | README, router, httpClient |
+
+### Chạy lại và nghiệm thu thật
+
+- Chạy `frontend/tests/browser/run-pr48-runtime.ps1` từ root, truyền `-MySqlBin`, `-PlaywrightCore` và `-BrowserExecutable` trỏ đến các công cụ đã có. Thêm `-OpenSsl` để kiểm tra TLS/Secure và `-FullRegression` để chạy cùng suite Maven. Các cổng mặc định cao và có thể đổi bằng `-MySqlPort` và `-FrontendPort`. Launcher tạo và dừng MySQL cô lập. Chỉ dùng các thư mục và log sinh ra từ máy thử nghiệm.
+- Chạy `npm test` và `npm run build` trong frontend. Từ root chạy `node frontend/tests/browser/pr40-google-link.cjs` và `node frontend/tests/browser/pr48-session-scope.cjs` với Playwright/Chromium đã có. Lệnh RAG fixture giữ như mục 5.
+- Khi chủ sở hữu duyệt cấu hình và tài khoản Google test, đăng ký đúng callback Web application, dùng cùng HTTPS origin, bật refresh trên cả FE/BE và đặt OAuth secret riêng tại backend. Dùng tài khoản SmartProp tổng hợp đã có mật khẩu. Kiểm tra liên kết, hủy, đăng xuất và đăng nhập bằng Google theo subject trên DB thử riêng. Chỉ ghi mã trạng thái, kết quả, phiên bản chạy và phép so sánh bảo toàn dữ liệu.
+- Rollback như mục 5. Store vẫn trong bộ nhớ và có TTL. Restart làm hết hiệu lực luồng tạm. Nhiều instance cần thiết kế store dùng chung đã được review. Release vẫn chờ Google OAuth thật và xác minh môi trường triển khai.
+
+**PR48_READY_FOR_FINAL_INDEPENDENT_REVIEW**
+
+**WAITING_FOR_PR48_MERGE_AUTHORIZATION**
