@@ -179,3 +179,32 @@ test('unavailable, locked and unauthenticated snapshots have no linking scope', 
   assert.equal(getGoogleLinkScope({ ...active, status: 'UNAUTHENTICATED' }), null);
   assert.equal(getGoogleLinkScope({ ...active, user: { id: 1, status: 'LOCKED' } }), null);
 });
+
+
+test('an old access-token response does not expire a successfully refreshed linking session', async () => {
+  const user = { id: 42, status: 'ACTIVE' };
+  const session = createStateStore({ token: fixtureToken(42, 'first-session', 1), user, status: 'AUTHENTICATED', authGeneration: 0 });
+  let finishFirstStatus;
+  let reads = 0;
+  let profileAttempts = 0;
+  const http = createHttpClient({
+    baseUrl: '', session, refreshEnabled: true,
+    fetcher: async path => {
+      if (path === '/auth/google/link/status') {
+        if (++reads === 1) return new Promise(resolve => { finishFirstStatus = resolve; });
+        return json({ linked: true });
+      }
+      if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-TOKEN', token: 'fixture' });
+      if (path === '/auth/refresh') return json({ user, accessToken: fixtureToken(42, 'first-session', 2) });
+      if (++profileAttempts === 1) return failure(401, {});
+      return json(user);
+    }
+  });
+  const scope = getGoogleLinkScope(session.getSnapshot());
+  const old = http.request('/auth/google/link/status');
+  await http.request('/users/me');
+  finishFirstStatus(failure(401, {}));
+  assert.deepEqual(await old, { linked: true });
+  assert.equal(getGoogleLinkScope(session.getSnapshot()), scope);
+  assert.equal(reads, 2);
+});

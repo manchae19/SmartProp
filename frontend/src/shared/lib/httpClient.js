@@ -174,7 +174,9 @@ export function createHttpClient({
       return result;
     } catch (e) {
       if (options.authenticated !== false && terminal(e)) {
-        if (refreshEnabled && sentToken && current === epoch && !path.startsWith("/auth/")) {
+        const latestToken = session.getSnapshot().token;
+        const replacedAccessToken = e.status === 401 && latestToken && latestToken !== sentToken;
+        if (refreshEnabled && sentToken && current === epoch && (!path.startsWith("/auth/") || replacedAccessToken)) {
           try {
             if (session.getSnapshot().token === sentToken) await rotate();
             if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), {

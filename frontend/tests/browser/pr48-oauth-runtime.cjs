@@ -157,26 +157,26 @@ let step = 'startup';
     await page.waitForURL(url => url.pathname !== '/login');
     await page.goto(origin + '/account');
     await form.locator('input[type=password]').fill(process.env.PR48_REVOKE_PASSWORD);
-    let revoked = false;
     let completionRequests = 0;
     page.on('request', request => {
       if (new URL(request.url()).pathname === completionPath) completionRequests++;
     });
-    await ctx.route(url => url.pathname === '/api/v1/auth/oauth2/callback/google', async route => {
-      // Revoke through the ordinary cookie-authenticated logout endpoint before forwarding the callback.
-      const challenge = await ctx.request.get(origin + '/api/v1/auth/csrf', { headers: { Origin: origin } });
-      assert.equal(challenge.status(), 200);
-      const csrf = await challenge.json();
-      const loggedOut = await ctx.request.post(origin + '/api/v1/auth/logout', {
-        headers: { Origin: origin, [csrf.headerName]: csrf.token }
-      });
-      assert.equal(loggedOut.status(), 204);
-      revoked = true;
-      await route.fallback();
-    }, { times: 1 });
+    const aboutToRevoke = waitApi('/api/v1/auth/google/link/start');
     await form.getByRole('button', { name: 'Liên kết Google' }).click();
+    assert.equal((await aboutToRevoke).status(), 200);
+    // The fixture provider holds its third callback until this real session is revoked.
+    const challenge = await ctx.request.get(origin + '/api/v1/auth/csrf', { headers: { Origin: origin } });
+    assert.equal(challenge.status(), 200);
+    const csrf = await challenge.json();
+    const loggedOut = await ctx.request.post(origin + '/api/v1/auth/logout', {
+      headers: { Origin: origin, [csrf.headerName]: csrf.token }
+    });
+    assert.equal(loggedOut.status(), 204);
+    const provider = new URL(process.env.PR48_LOOPBACK_PROVIDER);
+    assert.ok(provider.hostname === 'localhost' && provider.protocol === 'http:');
+    const released = await ctx.request.post(new URL('/release-revoked-callback', provider).href);
+    assert.equal(released.status(), 200);
     await page.getByRole('alert').filter({ hasText: 'Phiên đăng nhập đã thay đổi' }).waitFor();
-    assert.ok(revoked);
     assert.equal(completionRequests, 0);
 
     console.log('PASS actual browser, Spring OAuth/Tomcat, MySQL and controlled signed OIDC, Secure=' + secure);

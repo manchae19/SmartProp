@@ -1,7 +1,8 @@
 package vn.smartprop.modules.auth.google;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
@@ -22,6 +23,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class GoogleLinkLocalOidcProvider implements AutoCloseable {
@@ -32,6 +36,8 @@ final class GoogleLinkLocalOidcProvider implements AutoCloseable {
     private final String client, secret, redirect, subject;
     private final Map<String, Authorization> codes = new ConcurrentHashMap<>();
     private final AtomicInteger exchanges = new AtomicInteger();
+    private final CountDownLatch releaseCallback = new CountDownLatch(1);
+    private final java.util.concurrent.ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     private record Authorization(String nonce, String challenge) {}
 
@@ -42,7 +48,16 @@ final class GoogleLinkLocalOidcProvider implements AutoCloseable {
         this.subject = subject;
         key = new RSAKeyGenerator(2048).keyID("pr48-fixture-key").generate();
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.setExecutor(executor);
         server.createContext("/authorize", this::authorize);
+        server.createContext("/release-revoked-callback", request -> {
+            if (!"POST".equals(request.getRequestMethod())) {
+                send(request, 405, Map.of("error", "invalid_request"));
+                return;
+            }
+            releaseCallback.countDown();
+            send(request, 200, Map.of("ready", true));
+        });
         server.createContext("/token", this::token);
         server.createContext("/keys", request -> send(request, 200, Map.of("keys", java.util.List.of(key.toPublicJWK().toJSONObject()))));
         server.start();
@@ -62,6 +77,17 @@ final class GoogleLinkLocalOidcProvider implements AutoCloseable {
             || !challenge.matches("[A-Za-z0-9_-]{43}") || codes.size() >= 10) {
             send(request, 400, Map.of("error", "invalid_request"));
             return;
+        }
+        if (exchanges.get() == 2) {
+            try {
+                if (!releaseCallback.await(18, TimeUnit.SECONDS)) {
+                    send(request, 503, Map.of("error", "fixture_timeout"));
+                    return;
+                }
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                return;
+            }
         }
         String code = UUID.randomUUID().toString();
         codes.put(code, new Authorization(nonce, challenge));
@@ -117,5 +143,8 @@ final class GoogleLinkLocalOidcProvider implements AutoCloseable {
         try (var body = request.getResponseBody()) { body.write(content); }
     }
 
-    @Override public void close() { server.stop(0); }
+    @Override public void close() {
+        server.stop(0);
+        executor.shutdownNow();
+    }
 }

@@ -1,6 +1,7 @@
 package vn.smartprop.modules.auth.google;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
@@ -123,11 +124,13 @@ class GoogleLinkBrowserRuntimeIT {
             """, UUID.randomUUID().toString(), owner.id, UUID.randomUUID().toString(), "0".repeat(64));
         var before = snapshots();
 
+        Path browserLog = Path.of(required("PR48_STORAGE_ROOT")).getParent().resolve("browser-runtime.log");
         var runner = new ProcessBuilder("node", "frontend/tests/browser/pr48-oauth-runtime.cjs")
-            .directory(Path.of("..").toRealPath().toFile()).inheritIO();
+            .directory(Path.of("..").toRealPath().toFile()).redirectErrorStream(true).redirectOutput(browserLog.toFile());
         runner.environment().put("PR48_BACKEND_PORT", Integer.toString(backendPort));
         runner.environment().put("PR48_EXPECTED_EMAIL", EMAIL);
         runner.environment().put("PR48_FIXTURE_PASSWORD", PASSWORD);
+        runner.environment().put("PR48_LOOPBACK_PROVIDER", provider.origin());
         runner.environment().put("PR48_REVOKE_EMAIL", GoogleLinkLocalOidcProvider.EMAIL);
         runner.environment().put("PR48_REVOKE_PASSWORD", SECOND_PASSWORD);
         for (String field : List.of("PR48_DB_PASSWORD", "PR48_DB_MARKER", "SMARTPROP_PR40_FIXTURE_MARKER"))
@@ -135,6 +138,10 @@ class GoogleLinkBrowserRuntimeIT {
         Process browser = runner.start();
         try {
             assertTrue(browser.waitFor(100, TimeUnit.SECONDS), "Browser fixture timed out");
+            try (var diagnostics = Files.lines(browserLog)) {
+                diagnostics.filter(line -> line.startsWith("fixture HTTP ") || line.startsWith("OAuth fixture failed")
+                    || line.startsWith("PASS actual") || line.startsWith("fixture request failed")).forEach(System.out::println);
+            }
             assertEquals(0, browser.exitValue(), "Browser fixture failed");
         } finally {
             if (browser.isAlive()) browser.destroyForcibly();
