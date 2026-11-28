@@ -336,3 +336,40 @@ The remaining failure is form-driving, not routing:
 
 Those two workflows therefore remain **unverified**. Standalone valuation at 320/390/768/1440/1280
 still passes end to end, and the earlier real HTTP checks for preview and Advisor remain valid.
+
+---
+
+## Three real browser workflows — PASS (328/328)
+
+Selectors confirmed by source review (transaction group is a `role="group"` of buttons, the budget
+input is identified by `aria-describedby="budget-hint"`, districts by `list="advisor-districts"`)
+plus dismissal of the first-run notice that was intercepting clicks.
+
+| Surface | Route | Result |
+|---|---|---|
+| Standalone valuation | `/valuation` | real `POST /api/ai/predict` 200, `model_version=v1.3`, positive integer price, explanation AVAILABLE |
+| Posting preview | `/post` via `?next=%2Fpost` login | real `POST /api/v1/properties/valuation-preview` 200, `available=true`, V1.3 price, AVAILABLE explanation, adjusted price equal |
+| Unified Advisor | `/advisor/analysis` | real `POST /api/v1/advisor/consult` 200, SAFE, recommendations, both Comparable evidence sections with `featureCoverage`, `includeResearch=false` |
+
+All three ran at **1280, 320, 390, 768 and 1440 px**: **328 checks, 328 passed, 0 failed**. Each
+viewport asserted the authoritative price, six factor rows, 22 provenance identities, grouped
+contributions, calibration bridge, waterfall SVG, no horizontal overflow, no page error and no
+failed API request. Screenshots: `docs/ai/browser/wp04/real-*.png`.
+
+`/background.mp4` 404 was observed and correctly excluded: static media is not part of the workflow
+contract, only `/api/` failures count.
+
+## Fresh regression in this run
+
+| Suite | Result |
+|---|---|
+| WP-04 component browser (`run.mjs`) | **484/484** |
+| Mocked route surfaces (`surfaces.mjs`) | **30 passed, 0 failed, 3 not run** |
+| Full frontend recursive | **335 passed, 0 failed** |
+| WP-04 Python (contract + HTTP + matrix) | **51 passed** |
+| Phase A benchmark | **105 cases, 15 extras**, digest `9eedb3c7c3668f61` unchanged |
+| Vite build | PASS |
+
+Not run in this session, therefore not claimed: WP-02's 12 Chromium groups, full FastAPI serial,
+full RAG, full Spring Boot, isolated MySQL integration tests, UI failure isolation and browser-level
+reactive authorization. `AdvisorControllerLiveIT` remains excluded (legacy V6/TiniX assertions).

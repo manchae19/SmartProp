@@ -1,6 +1,6 @@
 {
-  "base": "http://127.0.0.1:5199/tests/wp04/harness/",
-  "at": "2026-11-28T08:57:22.167Z",
+  "base": "http://127.0.0.1:5180/tests/wp04/harness/",
+  "at": "2026-11-28T09:31:15.714Z",
   "cases": [
     "house",
     "land",
@@ -20,229 +20,2429 @@
     768,
     1440
   ],
-  "total": 44,
-  "passed": 0,
-  "failed": 44,
+  "total": 484,
+  "passed": 484,
+  "failed": 0,
   "results": [
     {
-      "name": "house@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=house\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
     },
     {
-      "name": "house@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=house\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
     },
     {
-      "name": "house@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=house\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
     },
     {
-      "name": "house@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=house\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 no clipped text",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "land@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=land\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04/"
+      "name": "house@320 no JS error",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "land@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=land\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04/"
+      "name": "house@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "land@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=land\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04/"
+      "name": "house@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
     },
     {
-      "name": "land@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=land\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04/"
+      "name": "house@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
     },
     {
-      "name": "apartment@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=apartment\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
     },
     {
-      "name": "apartment@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=apartment\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
     },
     {
-      "name": "apartment@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=apartment\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
     },
     {
-      "name": "apartment@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=apartment\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
     },
     {
-      "name": "villa@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=villa\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
     },
     {
-      "name": "villa@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=villa\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
     },
     {
-      "name": "villa@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=villa\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
     },
     {
-      "name": "villa@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=villa\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp04"
+      "name": "house@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
     },
     {
-      "name": "missing@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=missing\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
     },
     {
-      "name": "missing@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=missing\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 no clipped text",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "missing@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=missing\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 no JS error",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "missing@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=missing\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "unverified@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unverified\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests"
+      "name": "house@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
     },
     {
-      "name": "unverified@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unverified\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests"
+      "name": "house@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
     },
     {
-      "name": "unverified@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unverified\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests"
+      "name": "house@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
     },
     {
-      "name": "unverified@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unverified\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests"
+      "name": "house@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
     },
     {
-      "name": "partial@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=partial\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
     },
     {
-      "name": "partial@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=partial\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
     },
     {
-      "name": "partial@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=partial\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
     },
     {
-      "name": "partial@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=partial\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp"
+      "name": "house@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
     },
     {
-      "name": "unavailable@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unavailable\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/test"
+      "name": "house@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
     },
     {
-      "name": "unavailable@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unavailable\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/test"
+      "name": "house@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
     },
     {
-      "name": "unavailable@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unavailable\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/test"
+      "name": "house@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
     },
     {
-      "name": "unavailable@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=unavailable\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/test"
+      "name": "house@768 no clipped text",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "not-supported@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=not-supported\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/te"
+      "name": "house@768 no JS error",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "not-supported@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=not-supported\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/te"
+      "name": "house@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
     },
     {
-      "name": "not-supported@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=not-supported\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/te"
+      "name": "house@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
     },
     {
-      "name": "not-supported@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=not-supported\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/te"
+      "name": "house@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
     },
     {
-      "name": "legacy@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=legacy\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp0"
+      "name": "house@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
     },
     {
-      "name": "legacy@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=legacy\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp0"
+      "name": "house@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
     },
     {
-      "name": "legacy@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=legacy\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp0"
+      "name": "house@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
     },
     {
-      "name": "legacy@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=legacy\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/wp0"
+      "name": "house@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
     },
     {
-      "name": "malformed@320 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=malformed\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
     },
     {
-      "name": "malformed@390 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=malformed\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
     },
     {
-      "name": "malformed@768 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=malformed\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
     },
     {
-      "name": "malformed@1440 crashed",
-      "ok": false,
-      "detail": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:5199/tests/wp04/harness/?case=malformed\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:5199/tests/"
+      "name": "house@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "house@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "house@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "house@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "house@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "house@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "house@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "house@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "house@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "house@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "house@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "house@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "house@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "land@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "land@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "land@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "land@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "land@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "land@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "land@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "land@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "land@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "land@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "land@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "land@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "land@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "land@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "land@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "land@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "land@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "land@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "land@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "land@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "land@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "land@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "land@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "land@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "land@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "land@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "land@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "land@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "land@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "land@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "land@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "land@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "land@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "land@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "land@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "land@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "land@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "land@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "land@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "land@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "land@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "land@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "land@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "land@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "land@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "apartment@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "apartment@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "apartment@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "apartment@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "apartment@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "apartment@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "apartment@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "apartment@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "apartment@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "apartment@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "apartment@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "apartment@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "apartment@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "apartment@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "apartment@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "apartment@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "apartment@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "apartment@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "apartment@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "apartment@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "apartment@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "apartment@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "apartment@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "apartment@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "apartment@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "apartment@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "apartment@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "apartment@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "apartment@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "apartment@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "apartment@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "apartment@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "apartment@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "apartment@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "apartment@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "apartment@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "apartment@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "apartment@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "apartment@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "apartment@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "apartment@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "apartment@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "apartment@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "apartment@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "apartment@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "villa@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "villa@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "villa@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "villa@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "villa@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "villa@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "villa@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "villa@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "villa@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "villa@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "villa@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "villa@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "villa@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "villa@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "villa@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "villa@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "villa@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "villa@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "villa@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "villa@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "villa@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "villa@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "villa@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "villa@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "villa@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "villa@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "villa@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "villa@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "villa@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "villa@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "villa@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "villa@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "villa@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "villa@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "villa@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "villa@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "villa@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "villa@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "villa@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "villa@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "villa@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "villa@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "villa@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "villa@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "villa@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "missing@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "missing@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "missing@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "missing@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "missing@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "missing@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "missing@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "missing@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "missing@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "missing@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "missing@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "missing@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "missing@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "missing@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "missing@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "missing@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "missing@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "missing@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "missing@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "missing@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "missing@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "missing@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "missing@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "missing@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "missing@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "missing@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "missing@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "missing@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "missing@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "missing@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "missing@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "missing@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "missing@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "missing@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "missing@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "missing@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "missing@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "missing@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "missing@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "missing@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "missing@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "missing@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "unverified@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "unverified@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "unverified@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "unverified@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@320 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "unverified@320 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "unverified@320 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unverified@320 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "unverified@320 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "unverified@320 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "unverified@320 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "unverified@320 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "unverified@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "unverified@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "unverified@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "unverified@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@390 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "unverified@390 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "unverified@390 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unverified@390 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "unverified@390 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "unverified@390 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "unverified@390 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "unverified@390 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "unverified@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "unverified@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "unverified@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "unverified@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@768 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "unverified@768 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "unverified@768 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unverified@768 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "unverified@768 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "unverified@768 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "unverified@768 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "unverified@768 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "unverified@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "unverified@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "unverified@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "unverified@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unverified@1440 status is AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "unverified@1440 22 provenance rows",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "unverified@1440 provenance rows visible and inside",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unverified@1440 group values visible and inside",
+      "ok": true,
+      "detail": "7"
+    },
+    {
+      "name": "unverified@1440 waterfall rows visible",
+      "ok": true,
+      "detail": "11"
+    },
+    {
+      "name": "unverified@1440 waterfall svg rendered",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "unverified@1440 calibration values visible",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "unverified@1440 keyboard focus is visible",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "partial@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "partial@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "partial@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "partial@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@320 status is PARTIAL",
+      "ok": true,
+      "detail": "PARTIAL"
+    },
+    {
+      "name": "partial@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "partial@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "partial@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "partial@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@390 status is PARTIAL",
+      "ok": true,
+      "detail": "PARTIAL"
+    },
+    {
+      "name": "partial@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "partial@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "partial@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "partial@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@768 status is PARTIAL",
+      "ok": true,
+      "detail": "PARTIAL"
+    },
+    {
+      "name": "partial@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "partial@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "partial@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "partial@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "partial@1440 status is PARTIAL",
+      "ok": true,
+      "detail": "PARTIAL"
+    },
+    {
+      "name": "unavailable@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "unavailable@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "unavailable@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "unavailable@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@320 status is UNAVAILABLE",
+      "ok": true,
+      "detail": "UNAVAILABLE"
+    },
+    {
+      "name": "unavailable@320 no waterfall for unavailable",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unavailable@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "unavailable@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "unavailable@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "unavailable@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@390 status is UNAVAILABLE",
+      "ok": true,
+      "detail": "UNAVAILABLE"
+    },
+    {
+      "name": "unavailable@390 no waterfall for unavailable",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unavailable@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "unavailable@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "unavailable@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "unavailable@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@768 status is UNAVAILABLE",
+      "ok": true,
+      "detail": "UNAVAILABLE"
+    },
+    {
+      "name": "unavailable@768 no waterfall for unavailable",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "unavailable@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "unavailable@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "unavailable@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "unavailable@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "unavailable@1440 status is UNAVAILABLE",
+      "ok": true,
+      "detail": "UNAVAILABLE"
+    },
+    {
+      "name": "unavailable@1440 no waterfall for unavailable",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "not-supported@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "not-supported@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "not-supported@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "not-supported@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@320 status is NOT_SUPPORTED",
+      "ok": true,
+      "detail": "NOT_SUPPORTED"
+    },
+    {
+      "name": "not-supported@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "not-supported@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "not-supported@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "not-supported@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@390 status is NOT_SUPPORTED",
+      "ok": true,
+      "detail": "NOT_SUPPORTED"
+    },
+    {
+      "name": "not-supported@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "not-supported@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "not-supported@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "not-supported@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@768 status is NOT_SUPPORTED",
+      "ok": true,
+      "detail": "NOT_SUPPORTED"
+    },
+    {
+      "name": "not-supported@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "not-supported@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "not-supported@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "not-supported@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "not-supported@1440 status is NOT_SUPPORTED",
+      "ok": true,
+      "detail": "NOT_SUPPORTED"
+    },
+    {
+      "name": "legacy@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "legacy@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "legacy@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "legacy@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@320 status is ABSENT",
+      "ok": true,
+      "detail": "ABSENT"
+    },
+    {
+      "name": "legacy@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "legacy@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "legacy@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "legacy@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@390 status is ABSENT",
+      "ok": true,
+      "detail": "ABSENT"
+    },
+    {
+      "name": "legacy@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "legacy@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "legacy@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "legacy@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@768 status is ABSENT",
+      "ok": true,
+      "detail": "ABSENT"
+    },
+    {
+      "name": "legacy@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "legacy@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "legacy@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "legacy@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "legacy@1440 status is ABSENT",
+      "ok": true,
+      "detail": "ABSENT"
+    },
+    {
+      "name": "malformed@320 real viewport applied",
+      "ok": true,
+      "detail": "320"
+    },
+    {
+      "name": "malformed@320 no document overflow",
+      "ok": true,
+      "detail": "320/320"
+    },
+    {
+      "name": "malformed@320 section does not scroll internally",
+      "ok": true,
+      "detail": "288/288"
+    },
+    {
+      "name": "malformed@320 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@320 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@320 status is INVALID",
+      "ok": true,
+      "detail": "INVALID"
+    },
+    {
+      "name": "malformed@320 no fabricated waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "malformed@390 real viewport applied",
+      "ok": true,
+      "detail": "390"
+    },
+    {
+      "name": "malformed@390 no document overflow",
+      "ok": true,
+      "detail": "390/390"
+    },
+    {
+      "name": "malformed@390 section does not scroll internally",
+      "ok": true,
+      "detail": "358/358"
+    },
+    {
+      "name": "malformed@390 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@390 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@390 status is INVALID",
+      "ok": true,
+      "detail": "INVALID"
+    },
+    {
+      "name": "malformed@390 no fabricated waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "malformed@768 real viewport applied",
+      "ok": true,
+      "detail": "768"
+    },
+    {
+      "name": "malformed@768 no document overflow",
+      "ok": true,
+      "detail": "768/768"
+    },
+    {
+      "name": "malformed@768 section does not scroll internally",
+      "ok": true,
+      "detail": "736/736"
+    },
+    {
+      "name": "malformed@768 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@768 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@768 status is INVALID",
+      "ok": true,
+      "detail": "INVALID"
+    },
+    {
+      "name": "malformed@768 no fabricated waterfall",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "malformed@1440 real viewport applied",
+      "ok": true,
+      "detail": "1440"
+    },
+    {
+      "name": "malformed@1440 no document overflow",
+      "ok": true,
+      "detail": "1440/1440"
+    },
+    {
+      "name": "malformed@1440 section does not scroll internally",
+      "ok": true,
+      "detail": "1408/1408"
+    },
+    {
+      "name": "malformed@1440 no clipped text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@1440 no JS error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "malformed@1440 status is INVALID",
+      "ok": true,
+      "detail": "INVALID"
+    },
+    {
+      "name": "malformed@1440 no fabricated waterfall",
+      "ok": true,
+      "detail": "0"
     }
   ]
 }

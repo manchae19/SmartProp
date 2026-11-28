@@ -1,10 +1,10 @@
 {
   "app": "http://127.0.0.1:5180",
   "api": "http://127.0.0.1:8080",
-  "at": "2026-11-28T09:17:34.334Z",
-  "total": 86,
-  "passed": 84,
-  "failed": 2,
+  "at": "2026-11-28T09:30:36.010Z",
+  "total": 328,
+  "passed": 328,
+  "failed": 0,
   "results": [
     {
       "name": "WP04_APP is loopback",
@@ -82,6 +82,11 @@
       "detail": ""
     },
     {
+      "name": "standalone@1280 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "standalone@1280 no NaN/Infinity",
       "ok": true,
       "detail": ""
@@ -95,46 +100,6 @@
       "name": "standalone@1280 no page error",
       "ok": true,
       "detail": ""
-    },
-    {
-      "name": "login response 200",
-      "ok": true,
-      "detail": "200"
-    },
-    {
-      "name": "session confirmed in the UI",
-      "ok": true,
-      "detail": "1"
-    },
-    {
-      "name": "posting@1280 landed on /post",
-      "ok": true,
-      "detail": "http://127.0.0.1:5180/post"
-    },
-    {
-      "name": "posting@1280 workflow",
-      "ok": false,
-      "detail": "locator.selectOption: Error: Element is not a <select> element"
-    },
-    {
-      "name": "login response 200",
-      "ok": true,
-      "detail": "200"
-    },
-    {
-      "name": "session confirmed in the UI",
-      "ok": true,
-      "detail": "1"
-    },
-    {
-      "name": "advisor@1280 unified advisor heading",
-      "ok": true,
-      "detail": ""
-    },
-    {
-      "name": "advisor@1280 workflow",
-      "ok": false,
-      "detail": "locator.fill: Timeout 30000ms exceeded."
     },
     {
       "name": "standalone@320 predict 200",
@@ -193,6 +158,11 @@
     },
     {
       "name": "standalone@320 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@320 explanation groups",
       "ok": true,
       "detail": ""
     },
@@ -272,6 +242,11 @@
       "detail": ""
     },
     {
+      "name": "standalone@390 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "standalone@390 no NaN/Infinity",
       "ok": true,
       "detail": ""
@@ -343,6 +318,11 @@
     },
     {
       "name": "standalone@768 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone@768 explanation groups",
       "ok": true,
       "detail": ""
     },
@@ -422,6 +402,11 @@
       "detail": ""
     },
     {
+      "name": "standalone@1440 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
       "name": "standalone@1440 no NaN/Infinity",
       "ok": true,
       "detail": ""
@@ -433,6 +418,1231 @@
     },
     {
       "name": "standalone@1440 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@1280 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
+      "name": "posting@1280 transaction buttons",
+      "ok": true,
+      "detail": "Đăng bán|Cho thuê"
+    },
+    {
+      "name": "posting@1280 sale pressed",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@1280 preview 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "posting@1280 available",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@1280 positive integer price",
+      "ok": true,
+      "detail": "5476531536"
+    },
+    {
+      "name": "posting@1280 explanation AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@1280 adjusted price matches",
+      "ok": true,
+      "detail": "5476531536/5476531536"
+    },
+    {
+      "name": "posting@1280 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@1280 price text",
+      "ok": true,
+      "detail": "—"
+    },
+    {
+      "name": "posting@1280 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "posting@1280 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "posting@1280 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1280 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@320 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
+      "name": "posting@320 transaction buttons",
+      "ok": true,
+      "detail": "Đăng bán|Cho thuê"
+    },
+    {
+      "name": "posting@320 sale pressed",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@320 preview 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "posting@320 available",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@320 positive integer price",
+      "ok": true,
+      "detail": "5476531536"
+    },
+    {
+      "name": "posting@320 explanation AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@320 adjusted price matches",
+      "ok": true,
+      "detail": "5476531536/5476531536"
+    },
+    {
+      "name": "posting@320 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@320 price text",
+      "ok": true,
+      "detail": "—"
+    },
+    {
+      "name": "posting@320 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "posting@320 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "posting@320 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@320 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@390 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
+      "name": "posting@390 transaction buttons",
+      "ok": true,
+      "detail": "Đăng bán|Cho thuê"
+    },
+    {
+      "name": "posting@390 sale pressed",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@390 preview 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "posting@390 available",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@390 positive integer price",
+      "ok": true,
+      "detail": "5476531536"
+    },
+    {
+      "name": "posting@390 explanation AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@390 adjusted price matches",
+      "ok": true,
+      "detail": "5476531536/5476531536"
+    },
+    {
+      "name": "posting@390 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@390 price text",
+      "ok": true,
+      "detail": "—"
+    },
+    {
+      "name": "posting@390 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "posting@390 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "posting@390 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@390 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@768 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
+      "name": "posting@768 transaction buttons",
+      "ok": true,
+      "detail": "Đăng bán|Cho thuê"
+    },
+    {
+      "name": "posting@768 sale pressed",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@768 preview 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "posting@768 available",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@768 positive integer price",
+      "ok": true,
+      "detail": "5476531536"
+    },
+    {
+      "name": "posting@768 explanation AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@768 adjusted price matches",
+      "ok": true,
+      "detail": "5476531536/5476531536"
+    },
+    {
+      "name": "posting@768 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@768 price text",
+      "ok": true,
+      "detail": "—"
+    },
+    {
+      "name": "posting@768 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "posting@768 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "posting@768 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@768 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "login response 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "session confirmed in the UI",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "posting@1440 landed on /post",
+      "ok": true,
+      "detail": "http://127.0.0.1:5180/post"
+    },
+    {
+      "name": "posting@1440 transaction buttons",
+      "ok": true,
+      "detail": "Đăng bán|Cho thuê"
+    },
+    {
+      "name": "posting@1440 sale pressed",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@1440 preview 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "posting@1440 available",
+      "ok": true,
+      "detail": "true"
+    },
+    {
+      "name": "posting@1440 positive integer price",
+      "ok": true,
+      "detail": "5476531536"
+    },
+    {
+      "name": "posting@1440 explanation AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@1440 adjusted price matches",
+      "ok": true,
+      "detail": "5476531536/5476531536"
+    },
+    {
+      "name": "posting@1440 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "posting@1440 price text",
+      "ok": true,
+      "detail": "—"
+    },
+    {
+      "name": "posting@1440 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "posting@1440 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "posting@1440 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting@1440 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@1280 request includeResearch false",
+      "ok": true,
+      "detail": "{\"includeResearch\":false}"
+    },
+    {
+      "name": "advisor@1280 request propertyType HOUSE",
+      "ok": true,
+      "detail": "HOUSE"
+    },
+    {
+      "name": "advisor@1280 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@1280 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@1280 comparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@1280 valuationComparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@1280 featureCoverage present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 price headline shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 heading: Tin tương đồng theo giá rao",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 heading: Đối chiếu định giá bằng tin đăng",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@1280 price text",
+      "ok": true,
+      "detail": "4,77 tỷ"
+    },
+    {
+      "name": "advisor@1280 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@1280 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@1280 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1280 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@320 request includeResearch false",
+      "ok": true,
+      "detail": "{\"includeResearch\":false}"
+    },
+    {
+      "name": "advisor@320 request propertyType HOUSE",
+      "ok": true,
+      "detail": "HOUSE"
+    },
+    {
+      "name": "advisor@320 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@320 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@320 comparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@320 valuationComparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@320 featureCoverage present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 price headline shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 heading: Tin tương đồng theo giá rao",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 heading: Đối chiếu định giá bằng tin đăng",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@320 price text",
+      "ok": true,
+      "detail": "4,77 tỷ"
+    },
+    {
+      "name": "advisor@320 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@320 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@320 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@320 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@390 request includeResearch false",
+      "ok": true,
+      "detail": "{\"includeResearch\":false}"
+    },
+    {
+      "name": "advisor@390 request propertyType HOUSE",
+      "ok": true,
+      "detail": "HOUSE"
+    },
+    {
+      "name": "advisor@390 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@390 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@390 comparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@390 valuationComparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@390 featureCoverage present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 price headline shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 heading: Tin tương đồng theo giá rao",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 heading: Đối chiếu định giá bằng tin đăng",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@390 price text",
+      "ok": true,
+      "detail": "4,77 tỷ"
+    },
+    {
+      "name": "advisor@390 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@390 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@390 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@390 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@768 request includeResearch false",
+      "ok": true,
+      "detail": "{\"includeResearch\":false}"
+    },
+    {
+      "name": "advisor@768 request propertyType HOUSE",
+      "ok": true,
+      "detail": "HOUSE"
+    },
+    {
+      "name": "advisor@768 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@768 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@768 comparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@768 valuationComparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@768 featureCoverage present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 price headline shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 heading: Tin tương đồng theo giá rao",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 heading: Đối chiếu định giá bằng tin đăng",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@768 price text",
+      "ok": true,
+      "detail": "4,77 tỷ"
+    },
+    {
+      "name": "advisor@768 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@768 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@768 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@768 no failed API request",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 unified advisor heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 consult 200",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "advisor@1440 request includeResearch false",
+      "ok": true,
+      "detail": "{\"includeResearch\":false}"
+    },
+    {
+      "name": "advisor@1440 request propertyType HOUSE",
+      "ok": true,
+      "detail": "HOUSE"
+    },
+    {
+      "name": "advisor@1440 SAFE mode",
+      "ok": true,
+      "detail": "SAFE"
+    },
+    {
+      "name": "advisor@1440 has recommendation",
+      "ok": true,
+      "detail": "5"
+    },
+    {
+      "name": "advisor@1440 comparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@1440 valuationComparableEvidence section",
+      "ok": true,
+      "detail": "AVAILABLE/3"
+    },
+    {
+      "name": "advisor@1440 featureCoverage present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 price headline shown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 heading: Tin tương đồng theo giá rao",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 heading: Đối chiếu định giá bằng tin đăng",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 explanation panel visible",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 AVAILABLE",
+      "ok": true,
+      "detail": "AVAILABLE"
+    },
+    {
+      "name": "advisor@1440 price text",
+      "ok": true,
+      "detail": "4,77 tỷ"
+    },
+    {
+      "name": "advisor@1440 technical section exists",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 waterfall rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 six factor rows",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "name": "advisor@1440 22 provenance entries",
+      "ok": true,
+      "detail": "22"
+    },
+    {
+      "name": "advisor@1440 calibration bridge",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 explanation groups",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 no NaN/Infinity",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 no research disclosure",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 no overflow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 no page error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor@1440 no failed API request",
       "ok": true,
       "detail": ""
     }

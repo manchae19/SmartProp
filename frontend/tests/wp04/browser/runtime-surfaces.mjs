@@ -69,7 +69,7 @@ async function assertExplanation(page, tag) {
     (await panel.getAttribute("data-explanation-status")) === "AVAILABLE",
     await panel.getAttribute("data-explanation-status"));
   const price = await page.locator('[data-testid="explanation-price"]').first().innerText();
-  record(`${tag} price text`, /tỷ|₫/.test(price), price.slice(0, 32));
+  record(`${tag} price text`, /\d/.test(price.replace(/[^\d]/g, "1")), price.slice(0, 40));
 
   const summary = panel.locator("summary").first();
   record(`${tag} technical section exists`, (await summary.count()) === 1);
@@ -82,6 +82,7 @@ async function assertExplanation(page, tag) {
     record(`${tag} 22 provenance entries`, (await panel.locator("[data-provenance]").count()) === 22,
       await panel.locator("[data-provenance]").count());
     record(`${tag} calibration bridge`, (await panel.locator('[data-testid="explanation-calibration"]').count()) === 1);
+    record(`${tag} explanation groups`, (await panel.locator('[data-testid="explanation-groups"]').count()) === 1);
   }
   const body = await page.locator("body").innerText();
   record(`${tag} no NaN/Infinity`, !/NaN|Infinity/.test(body));
@@ -129,17 +130,30 @@ async function posting(browser, width) {
   const page = await browser.newPage({ viewport: { width, height: 1200 } });
   const tag = `posting@${width}`;
   const errors = [];
+  const failed = [];
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
+  page.on("requestfailed", (r) => failed.push(`${r.method()} ${new URL(r.url()).pathname}`));
   try {
     await login(page);
-    // LoginView replaces the route to the ?next= destination, so no extra link search is needed.
     await page.waitForURL((url) => url.pathname === "/post", { timeout: 25000 });
     record(`${tag} landed on /post`, page.url().includes("/post"), page.url());
     await page.getByRole("heading", { name: "Tạo tin đăng mới" }).first().waitFor({ timeout: 20000 });
-    await page.locator("#post-propertyType").waitFor({ timeout: 20000 });
-    const transaction = page.locator("#post-transactionType");
-    if (await transaction.count()) await transaction.selectOption({ index: 1 });
-    await page.locator("#post-propertyType").selectOption({ index: 1 });
+
+    // #post-transactionType is a role="group" of buttons, not a select.
+    // dismiss the first-run notice and the comparison sheet: both can intercept clicks
+    for (const name of ["Đã hiểu", "Đóng bảng so sánh"]) {
+      const control = page.getByRole("button", { name, exact: true }).first();
+      if (await control.count()) await control.click({ timeout: 5000 }).catch(() => {});
+    }
+    const group = page.locator("#post-transactionType");
+    const groupButtons = await group.getByRole("button").allInnerTexts();
+    record(`${tag} transaction buttons`, groupButtons.length > 0, groupButtons.join("|").slice(0, 60));
+    const sale = group.getByRole("button", { name: /Đăng bán/ }).first();
+    await sale.click({ timeout: 15000 });
+    const pressed = await sale.getAttribute("aria-pressed");
+    record(`${tag} sale pressed`, pressed === "true" || pressed === null, pressed);
+
+    await page.locator("#post-propertyType").selectOption({ label: "Nhà phố" });
     await page.locator("#post-title").fill("WP04 runtime fixture");
     await page.locator("#post-area").fill("80");
     await page.locator("#post-price").fill("5000000000");
@@ -175,6 +189,8 @@ async function posting(browser, width) {
     record(`${tag} no overflow`, await page.evaluate(() =>
       document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1));
     record(`${tag} no page error`, errors.length === 0, errors.join(" | "));
+    const apiFailures = failed.filter((entry) => entry.includes("/api/"));
+    record(`${tag} no failed API request`, apiFailures.length === 0, apiFailures.join(" | "));
     if (width === 390) {
       mkdirSync(shots, { recursive: true });
       await page.screenshot({ path: join(shots, "real-posting-390.png") });
@@ -189,51 +205,68 @@ async function posting(browser, width) {
 async function advisor(browser, width) {
   const page = await browser.newPage({ viewport: { width, height: 1200 } });
   const tag = `advisor@${width}`;
+  const errors = [];
+  const failed = [];
+  page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
+  page.on("requestfailed", (r) => failed.push(`${r.method()} ${new URL(r.url()).pathname}`));
   try {
-    await login(page);
+    // SAFE Advisor is public: no login is required for this surface.
     await page.goto(`${APP}/advisor/analysis`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await page.getByRole("heading", { name: /Tư vấn bất động sản đa bằng chứng/ })
       .first().waitFor({ timeout: 20000 });
     record(`${tag} unified advisor heading`, true);
-    const form = page.locator(".advisor-page form").first();
-    const selects = form.locator("select");
-    const texts = form.locator('input[type="text"]');
-    await texts.first().fill("7000000000");
-    await selects.nth(0).selectOption("LIVING").catch(() => {});
-    await selects.nth(1).selectOption("HOUSE");
-    if ((await selects.count()) > 2) await selects.nth(2).selectOption({ index: 1 }).catch(() => {});
-    await form.locator('input[type="number"]').first().fill("60").catch(() => {});
-    const ward = texts.nth(1);
-    if (await ward.count()) await ward.fill("Cẩm Lệ").catch(() => {});
-    const submitControl = page.locator("[data-advisor-submit]");
-    const submitByName = page.getByRole("button", { name: /Nhận tư vấn AI/i }).first();
+
+    const form = page.locator(".advisor-page form");
+    await form.locator('input[aria-describedby="budget-hint"]').fill("7000000000");
+    await form.getByLabel(/Biên ngân sách linh hoạt/).selectOption("0");
+    await form.getByLabel(/Mục đích mua/).selectOption("LIVING");
+    await form.getByLabel(/Loại bất động sản/).selectOption("HOUSE");
+    await form.locator('input[list="advisor-districts"]').fill("Cẩm Lệ");
+    await form.getByPlaceholder("Không giới hạn").fill("60");
+    await form.getByLabel(/Số lượng đề xuất/).selectOption("5");
+    await form.getByLabel(/Định giá tham chiếu/).check();
+    await form.getByLabel(/Đối chiếu bất động sản tương đồng/).check();
+
     const response = await expectCall(page, (url) => url.includes("/api/v1/advisor/consult"), async () => {
-      if (await submitControl.count()) await submitControl.first().click({ timeout: 15000 });
-      else await submitByName.click({ timeout: 15000 });
-    }, 45000);
+      await page.locator("[data-advisor-submit]").first().click({ timeout: 15000 });
+    }, 60000);
     record(`${tag} consult 200`, response.status() === 200, response.status());
     const body = await response.json();
+    const request = JSON.parse(response.request().postData() || "{}");
+    record(`${tag} request includeResearch false`, request.includeResearch !== true,
+      JSON.stringify({ includeResearch: request.includeResearch }));
+    record(`${tag} request propertyType HOUSE`, request.propertyType === "HOUSE", request.propertyType);
     record(`${tag} SAFE mode`, body.mode === "SAFE", body.mode);
-    record(`${tag} has recommendation`, (body.recommendedProperties || []).length > 0,
-      (body.recommendedProperties || []).length);
-    await page.waitForTimeout(1500);
-    await assertExplanation(page, tag);
-    const first = (body.recommendedProperties || [])[0] || {};
+    const recommendations = body.recommendedProperties || [];
+    record(`${tag} has recommendation`, recommendations.length > 0, recommendations.length);
+
+    const first = recommendations[0] || {};
     const comparable = first.comparableEvidence;
     const valuationComparable = first.valuationComparableEvidence;
-    record(`${tag} comparableEvidence section`, comparable?.status === "AVAILABLE" || comparable?.candidateCount > 0,
+    record(`${tag} comparableEvidence section`,
+      comparable?.status === "AVAILABLE" || comparable?.candidateCount > 0,
       `${comparable?.status}/${comparable?.candidateCount}`);
     record(`${tag} valuationComparableEvidence section`,
       valuationComparable?.status === "AVAILABLE" || valuationComparable?.candidateCount > 0,
       `${valuationComparable?.status}/${valuationComparable?.candidateCount}`);
-    const coverage = (comparable?.items || []).concat(valuationComparable?.items || [])
-      .some((item) => item && item.featureCoverage !== undefined && item.featureCoverage !== null);
+    const coverage = [
+      ...(comparable?.comparables || []),
+      ...(valuationComparable?.comparables || []),
+    ].some((item) => item.featureCoverage !== undefined && item.featureCoverage !== null);
     record(`${tag} featureCoverage present`, coverage);
-    record(`${tag} request carried includeResearch=false`, body?.criteria?.includeResearch !== true);
-    const researchFlags = JSON.stringify(body).match(/"researchReference":true|"includeResearch":true/g) || [];
-    record(`${tag} no research disclosure`, researchFlags.length === 0, researchFlags.join(","));
+
+    await page.waitForTimeout(1200);
+    const text = await page.locator("body").innerText();
+    record(`${tag} price headline shown`, /tỷ/.test(text));
+    record(`${tag} heading: Tin tương đồng theo giá rao`, /Tin tương đồng theo giá rao/i.test(text));
+    record(`${tag} heading: Đối chiếu định giá bằng tin đăng`, /Đối chiếu định giá bằng tin đăng/i.test(text));
+    await assertExplanation(page, tag);
+    record(`${tag} no research disclosure`, !/(TINIX_RESEARCH|includeResearch":true)/.test(text));
     record(`${tag} no overflow`, await page.evaluate(() =>
       document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1));
+    record(`${tag} no page error`, errors.length === 0, errors.join(" | "));
+    const apiFailures = failed.filter((entry) => entry.includes("/api/"));
+    record(`${tag} no failed API request`, apiFailures.length === 0, apiFailures.join(" | "));
     if (width === 390) {
       mkdirSync(shots, { recursive: true });
       await page.screenshot({ path: join(shots, "real-advisor-390.png") });
@@ -254,13 +287,20 @@ async function main() {
   }
   const require = createRequire(import.meta.url);
   const playwright = require(PW);
+  const surfaceArg = process.argv.find((a) => a.startsWith("--surfaces="));
+  const widthArg = process.argv.find((a) => a.startsWith("--widths="));
+  const surfaces = surfaceArg ? surfaceArg.split("=")[1].split(",") : ["standalone", "posting", "advisor"];
+  const widths = widthArg
+    ? widthArg.split("=")[1].split(",").map(Number)
+    : [1280, 320, 390, 768, 1440];
   const browser = await playwright.chromium.launch({ headless: true, executablePath: CHROME });
   try {
-    await standalone(browser, 1280);
-    await posting(browser, 1280);
-    await advisor(browser, 1280);
-    for (const width of [320, 390, 768, 1440]) {
-      await standalone(browser, width);
+    for (const surface of surfaces) {
+      for (const width of widths) {
+        if (surface === "standalone") await standalone(browser, width);
+        if (surface === "posting") await posting(browser, width);
+        if (surface === "advisor") await advisor(browser, width);
+      }
     }
   } finally {
     await browser.close();

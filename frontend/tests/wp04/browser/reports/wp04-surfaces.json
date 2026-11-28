@@ -1,6 +1,6 @@
 {
-  "base": "http://127.0.0.1:5199",
-  "at": "2026-11-28T07:01:14.662Z",
+  "base": "http://127.0.0.1:5180",
+  "at": "2026-11-28T09:31:20.208Z",
   "fixtureSource": "tests/wp04/fixtures/explanation-samples.json",
   "totals": {
     "total": 33,
