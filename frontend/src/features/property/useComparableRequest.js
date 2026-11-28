@@ -1,21 +1,21 @@
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createStateStore } from '../../shared/state/createStateStore.js'
+import { hasActiveSession, sameRestrictedSession } from '../../shared/lib/restrictedSession.js'
 import { session } from '../auth/api.js'
 import { isForbidden } from './comparables.js'
 
-function readAccess() {
-  const { status, token, user } = session.getSnapshot()
-  return {
-    key: JSON.stringify([status, token, user?.id, user?.role]),
-    authorized: status === 'AUTHENTICATED' && Boolean(token) && ['BROKER', 'ADMIN'].includes(user?.role),
-  }
+function readAccess(snapshot) {
+  return { authorized: hasActiveSession(snapshot) && ['BROKER', 'ADMIN'].includes(snapshot.user?.role) }
 }
 
 // A new snapshot invalidates the old one even if revocation and restoration are batched.
-const accessStore = createStateStore(readAccess())
+let previousSession = session.getSnapshot()
+const accessStore = createStateStore(readAccess(previousSession))
 const unsubscribe = session.subscribe(() => {
-  const next = readAccess()
-  if (next.key !== accessStore.getSnapshot().key) accessStore.set(next)
+  const next = session.getSnapshot()
+  const changed = !sameRestrictedSession(previousSession, next)
+  previousSession = next
+  if (changed) accessStore.set(readAccess(next))
 })
 import.meta.hot?.dispose(unsubscribe)
 

@@ -1,4 +1,5 @@
 import { createStateStore } from '../../shared/state/createStateStore.js'
+import { sameRestrictedSession } from '../../shared/lib/restrictedSession.js'
 import { isMarketResearchAdmin, loadMarketAnalytics, requestsMarketResearch } from './marketAnalytics.js'
 
 export const EMPTY_MARKET_FILTERS = Object.freeze({
@@ -13,16 +14,11 @@ function publicFilters(filters) {
   }
 }
 
-function actorId(user) {
-  return user?.id ?? user?.userId ?? user?.sub ?? user?.email
-}
-
 function sameResearchSession(previous, next) {
   const wasAdmin = isMarketResearchAdmin(previous)
   const isAdmin = isMarketResearchAdmin(next)
   if (!wasAdmin || !isAdmin) return wasAdmin === isAdmin
-  return previous.token === next.token && actorId(previous.user) === actorId(next.user)
-    && previous.user.status === next.user.status
+  return sameRestrictedSession(previous, next)
 }
 
 export function createMarketAnalyticsController({ api, session, errorText = e => e?.message || '' }) {

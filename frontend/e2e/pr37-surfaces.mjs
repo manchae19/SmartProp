@@ -400,6 +400,23 @@ export function surfaceGroups(base) {
       assert.equal(await toggle.isChecked(), true)
       await page.locator('option[value=TINIX_RESEARCH]').waitFor({ state: 'attached' })
       await responsive(page, 'market-analytics', [['heading', title], ['research toggle', toggle], ['statistic', research]])
+      const beforeTransition = restricted().length
+      await page.evaluate(() => window.pr37Fixture.authorization({ transition: true }))
+      await toggle.waitFor({ state: 'hidden' })
+      await research.waitFor({ state: 'hidden' })
+      await safe.waitFor()
+      await page.evaluate(() => window.pr37Fixture.authorization({ transition: false }))
+      await toggle.waitFor()
+      assert.equal(await toggle.isChecked(), false)
+      assert.equal(restricted().length, beforeTransition)
+      await submitResearch(200)
+      await research.waitFor()
+      await page.evaluate(() => window.pr37Fixture.authorization({ transition: false, replaceScope: true }))
+      await research.waitFor({ state: 'hidden' })
+      await safe.waitFor()
+      assert.equal(await toggle.isChecked(), false)
+      await submitResearch(200)
+      await research.waitFor()
       for (const next of [
         { role: 'BUYER' }, { role: 'ADMIN', revision: 2 }, { role: 'ADMIN', actor: 2 },
         { role: 'ADMIN', accountStatus: 'LOCKED' }, {},

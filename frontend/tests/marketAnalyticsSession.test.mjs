@@ -1,6 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createStateStore } from '../src/shared/state/createStateStore.js'
+import { createHttpClient } from '../src/shared/lib/httpClient.js'
+import { sessionJwt } from './fixtures/sessionJwt.mjs'
 import { createMarketAnalyticsController } from '../src/features/market/marketAnalyticsState.js'
 import { marketResponse } from '../e2e/pr37-market-fixture.mjs'
 
@@ -27,6 +29,7 @@ function setup(t, initial, onResearch = async () => marketResponse({ research: t
 }
 
 for (const [name, initial] of [['anonymous', guest], ['BUYER', buyer], ['BROKER', broker],
+  ['login in progress', { ...admin, authTransition: true }],
   ['unavailable', { ...admin, status: 'UNAVAILABLE' }],
   ['locked', { ...admin, user: { ...admin.user, status: 'LOCKED' } }]]) {
   test(name + ' can only request SAFE even if a caller tries to opt in', async t => {
@@ -75,6 +78,7 @@ for (const status of [401, 403]) {
 const transitions = [
   ['same-token role downgrade', buyer],
   ['same-user token replacement', { ...admin, token: 'fixture-b' }],
+  ['same-user generation replacement with identical token', { ...admin, authGeneration: 5 }],
   ['ADMIN A to ADMIN B', { ...admin, user: { ...admin.user, id: 2 } }],
   ['logout', guest],
   ['session unavailable', { ...admin, status: 'UNAVAILABLE' }],
@@ -120,4 +124,62 @@ test('a public response with research metadata is discarded', async t => {
   await tick()
   assert.equal(controller.getSnapshot().data, null)
   assert.match(controller.getSnapshot().error, /nghiên cứu không được phép/)
+})
+
+test('login removes displayed and pending research, and failed login does not restore opt-in', async t => {
+  let releaseLogin, releaseResearch
+  const loginReply = new Promise(resolve => { releaseLogin = resolve })
+  const lateResearch = new Promise(resolve => { releaseResearch = resolve })
+  const result = marketResponse({ research: true, sufficient: true })
+  let queries = 0
+  const { session, controller, calls, state } = setup(t, { ...admin, authGeneration: 4 },
+    () => ++queries === 1 ? Promise.resolve(result) : lateResearch)
+  const client = createHttpClient({ baseUrl: '', session, fetcher: () => loginReply })
+  await controller.setResearchEnabled(true)
+  assert.equal(state().data.meta.researchIncluded, true)
+  const pending = controller.patchFilter('source', 'TINIX_RESEARCH')
+  const signal = calls.at(-1).signal
+
+  const login = assert.rejects(client.login({}), { code: 'INVALID_CREDENTIALS' })
+  assert.equal(session.getSnapshot().authTransition, true)
+  assert.equal(state().canRequestResearch, false)
+  assert.equal(state().data, null)
+  assert.equal(signal.aborted, true)
+  assert.equal(state().filters.source, 'ALL')
+  assert.equal(calls.at(-1).authenticated, false)
+  releaseLogin(Response.json({ code: 'INVALID_CREDENTIALS' }, { status: 401 }))
+  await login
+  assert.equal(session.getSnapshot().token, admin.token)
+  assert.equal(state().canRequestResearch, true)
+  assert.equal(state().filters.includeResearch, false)
+  releaseResearch(result)
+  assert.equal(await pending, null)
+  assert.equal(state().data.meta.researchIncluded, false)
+  assert.deepEqual(calls.map(call => call.research), [false, true, true, false])
+})
+
+test('verified same-session JWT renewal retains displayed and pending research', async t => {
+  const token = sessionJwt(1, 'market-session', 1)
+  const replacement = sessionJwt(1, 'market-session', 2)
+  let releaseResearch, requests = 0
+  const lateResearch = new Promise(resolve => { releaseResearch = resolve })
+  const result = marketResponse({ research: true, sufficient: true })
+  const { session, controller, calls, state } = setup(t, { ...admin, authGeneration: 4, token },
+    () => ++requests === 1 ? Promise.resolve(result) : lateResearch)
+  const client = createHttpClient({ baseUrl: '', session, refreshEnabled: true, fetcher: async (url, options) => {
+    if (url === '/auth/csrf') return Response.json({ token: 'fixture', headerName: 'X-CSRF-TOKEN' })
+    if (url === '/auth/refresh') return Response.json({ accessToken: replacement, user: admin.user })
+    return options.headers.Authorization === 'Bearer ' + replacement
+      ? Response.json(admin.user) : Response.json({}, { status: 401 })
+  } })
+  await controller.setResearchEnabled(true)
+  const pending = controller.patchFilter('district', 'Hòa Vang')
+  await client.request('/users/me')
+  assert.equal(session.getSnapshot().authGeneration, 4)
+  assert.equal(session.getSnapshot().token, replacement)
+  assert.equal(calls.at(-1).signal.aborted, false)
+  assert.equal(state().data.meta.researchIncluded, true)
+  releaseResearch(result)
+  assert.equal((await pending).meta.researchIncluded, true)
+  assert.deepEqual(calls.map(call => call.research), [false, true, true])
 })

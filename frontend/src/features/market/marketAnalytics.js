@@ -2,6 +2,7 @@
 // The backend aggregates real MySQL rows; this module only shapes the request,
 // validates the contract and formats numbers. No value here is mock data.
 import { api } from '../auth/api.js'
+import { hasActiveSession } from '../../shared/lib/restrictedSession.js'
 
 export const PUBLIC_ANALYSIS_SOURCES = Object.freeze({
   ALL: 'Tất cả nguồn công khai',
@@ -17,8 +18,7 @@ export const ANALYSIS_SOURCES = Object.freeze({
 })
 
 export function isMarketResearchAdmin(snap) {
-  return snap?.status === 'AUTHENTICATED' && Boolean(snap.token)
-    && snap.user?.role === 'ADMIN' && (snap.user.status == null || snap.user.status === 'ACTIVE')
+  return hasActiveSession(snap) && snap.user?.role === 'ADMIN'
 }
 
 export const PROPERTY_TYPES = {

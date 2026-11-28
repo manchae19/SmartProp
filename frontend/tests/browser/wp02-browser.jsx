@@ -57,6 +57,8 @@ window.fetch = async (resource, options = {}) => {
     payload = { categories: [{category:'Nhà ở', locations:[district]}] }
   } else if (url.pathname.endsWith('/valuation-preview')) {
     payload = estimate
+  } else if (url.pathname.endsWith('/recommendations/research/config')) {
+    payload = { enabled: true }
   } else if (url.pathname.endsWith('/properties/' + id)) {
     payload = house
   } else if (url.pathname.endsWith('/points-of-interest')) {
@@ -75,6 +77,7 @@ const {default: Listing} = await import('/src/features/property/ListingDetailVie
 const {default: Valuation} = await import('/src/features/prediction/ValuationPanel.jsx')
 const {default: Post} = await import('/src/features/prediction/PostValuationPanel.jsx')
 const {default: Advisor} = await import('/src/features/prediction/AdvisorResults.jsx')
+const {default: LegacyAdvisor} = await import('/src/features/prediction/AdvisorView.jsx')
 const root = createRoot(document.querySelector('#root'))
 const render = (component, content) => root.render(<MemoryRouter key={component} initialEntries={['/listing/' + id]}>
   <Routes><Route path="/listing/:id" element={content}/></Routes></MemoryRouter>)
@@ -82,6 +85,13 @@ window.setFixtureSession = (role = 'BROKER', status = 'AUTHENTICATED', actor = 1
   session.set({token:'synthetic-fixture', user:{id:actor, role}, status})
 window.broker = () => window.setFixtureSession()
 window.logoutFixture = () => session.set({token:null, user:null, status:'UNAUTHENTICATED'})
+window.editFixtureAuthorization = ({ transition, accountStatus, sameAccountReplacement }) => {
+  session.edit(draft => {
+    if (transition != null) draft.authTransition = transition
+    if (accountStatus != null) draft.user.status = accountStatus
+    if (sameAccountReplacement) draft.authGeneration = (draft.authGeneration ?? 0) + 1
+  })
+}
 window.lookupCriteria = areaSqm => render('lookup', <Lookup title="Đối chiếu fixture"
   body={{purpose:'VALUATION_SUPPORT', propertyType:'HOUSE', district, areaSqm, limit:5}}/>)
 window.releaseComparable = async () => {
@@ -102,5 +112,6 @@ window.showFixture = (component, authorized = true) => {
     valuationLocation:district, district, bedrooms:3, price:'7500000000'}}/>)
   if (component === 'advisor') render(component, <Advisor result={sample} canViewResearch={false}/>)
   if (component === 'internal') render(component, <Advisor result={internal} canViewResearch={authorized}/>)
+  if (component === 'legacy') render(component, <LegacyAdvisor/>)
 }
 window.showFixture('direct')
