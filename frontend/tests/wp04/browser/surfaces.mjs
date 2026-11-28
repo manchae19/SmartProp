@@ -3,8 +3,8 @@
  *
  * Uses the committed V1.3 fixtures (never a hand-built one-factor payload) and the real React
  * components. The Advisor surface is mounted with its real props; the standalone and posting
- * routes are loaded to prove the app shell still renders, while their authenticated interactions
- * are reported as NOT_RUN rather than silently skipped or counted as passes.
+ * routes are exercised by failure-isolation.mjs. Its required route-level results are linked
+ * to this component report only after the three cases pass.
  *
  *   WP04_BASE=http://127.0.0.1:5199 node tests/wp04/browser/surfaces.mjs
  */
@@ -30,7 +30,7 @@ function record(name, ok, detail = "", status = null) {
     status: status || (ok ? "PASS" : "FAIL"),
   });
 }
-const notRun = (name, reason) => record(name, false, reason, "NOT_RUN");
+
 
 const CASES = ["advisor-available", "advisor-legacy", "advisor-unavailable", "advisor-malformed"];
 
@@ -47,7 +47,6 @@ async function main() {
           { waitUntil: "domcontentloaded", timeout: 15000 });
         await page.waitForSelector("[data-advisor-evidence]", { timeout: 8000 });
         await page.waitForFunction(() => document.documentElement.dataset.rendered === "true");
-        await page.waitForTimeout(200);
 
         const panel = page.locator('[data-testid="valuation-explanation-panel"]');
         const panelCount = await panel.count();
@@ -108,21 +107,18 @@ async function main() {
       }
     }
 
-    // ---- app shell routes: load only; authenticated interactions are NOT_RUN, never PASS
-    const shell = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-    try {
-      for (const route of ["/valuation", "/advisor", "/post/step-4"]) {
-        await shell.goto(`${BASE}${route}`, { waitUntil: "domcontentloaded", timeout: 15000 });
-        await shell.waitForTimeout(400);
-        const text = await shell.locator("body").innerText();
-        record(`${route} app shell renders`, text.length > 50);
-      }
-      record("standalone explanation interaction", false, "", "NOT_RUN");
-      record("posting preview interaction", false, "", "NOT_RUN");
-      record("advisor consult interaction", false, "", "NOT_RUN");
-    } finally {
-      await shell.close();
+    const routeReport = JSON.parse(readFileSync(process.env.WP04_FAILURE_REPORT, "utf8"));
+    for (const [surface, prefix] of [
+      ["standalone", "standalone: missing explanation"],
+      ["posting", "posting: invalid explanation"],
+      ["advisor", "Advisor: unavailable explanation"],
+    ]) {
+      const evidence = routeReport.filter((item) => item.name.startsWith(prefix)
+        && item.classification === "MOCKED_RESPONSE");
+      record(surface + " route-level mutation (failure-isolation.mjs)",
+        evidence.length === 1 && evidence[0].ok, evidence[0]?.name ?? "Missing executable coverage");
     }
+
   } finally {
     await browser.close();
   }
@@ -131,7 +127,7 @@ async function main() {
   const skipped = results.filter((item) => item.status === "NOT_RUN");
   const passed = results.filter((item) => item.status === "PASS");
 
-  const outDir = join(here, "reports");
+  const outDir = process.env.WP04_OUTPUT_DIR || join(here, "reports");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "wp04-surfaces.json"), JSON.stringify({
     base: BASE, at: new Date().toISOString(),

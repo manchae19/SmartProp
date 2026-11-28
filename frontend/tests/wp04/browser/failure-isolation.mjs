@@ -1,219 +1,304 @@
-/**
- * WP-04 browser failure isolation + reactive authorization.
- *
- * Mocked cases intercept the AI response on purpose (they are failure fixtures, never success
- * evidence). The outage case stops the real FastAPI process instead. Reactive authorization mutates
- * the disposable fixture only and restores it afterwards.
- */
-import { mkdirSync, writeFileSync } from "node:fs";
+import assert from "node:assert/strict";
+import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import {
+  advisorPath, deferred, matches, predictPath, prepareAdvisor, preparePosting, prepareStandalone,
+  previewPath, waitResponse,
+} from "./workflows.mjs";
 
-const PW = process.env.PLAYWRIGHT_PATH || "F:/SmartProp/frontend/vue.ui/node_modules/playwright";
-const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const APP = process.env.WP04_APP || "http://127.0.0.1:5180";
-const API = process.env.WP04_API || "http://127.0.0.1:8080";
-const EMAIL = process.env.WP04_FIXTURE_EMAIL || "";
-const PASSWORD = process.env.WP04_FIXTURE_PASSWORD || "";
-const here = dirname(fileURLToPath(import.meta.url));
-const out = join(here, "reports");
-
+const APP = process.env.WP04_APP;
+const AI = process.env.WP04_AI;
+const RUNTIME = process.env.WP04_RUNTIME_FILE;
+const EMAIL = process.env.WP04_FIXTURE_EMAIL;
+const PASSWORD = process.env.WP04_FIXTURE_PASSWORD;
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
 const results = [];
-const record = (name, ok, detail = "") =>
-  results.push({ name, ok: Boolean(ok), detail: String(detail).slice(0, 220) });
+const statusPanel = (scope) => scope.getByTestId("valuation-explanation-panel");
+const valuationResult = (page) => page.getByTestId("valuation-result");
+const format = (digits) => new Intl.NumberFormat("vi-VN").format(BigInt(digits));
 
-const AI = process.env.WP04_AI || "http://127.0.0.1:8000";
+function proofPrice(value) {
+  const digits = String(value).replace(/\.0+$/, "");
+  assert.match(digits, /^[1-9]\d*$/, "Expected positive authoritative price");
+  return digits;
+}
 
-/** Real V1.3 payload; failure cases are mutations of it, never hand-written schemas. */
-async function realPayload() {
-  const response = await fetch(`${AI}/predict`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ category: "Nhà ở", location_feature: "Cẩm Lệ", area_sqm: 100 }),
+async function assertStandalonePrice(page, payload) {
+  const result = valuationResult(page);
+  await result.waitFor();
+  const digits = proofPrice(payload.predicted_asking_price_vnd);
+  const billions = BigInt(digits) >= 1000000000n;
+  const short = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 })
+    .format(Number(digits) / (billions ? 1e9 : 1e6)) + (billions ? " tỷ đồng" : " triệu đồng");
+  assert.equal(await result.getByTestId("estimated-price").innerText(), short);
+  await result.getByText(format(digits) + " đồng · Tổng giá bất động sản", { exact: true }).waitFor();
+}
+
+async function assertPanel(scope, status) {
+  const panel = statusPanel(scope);
+  await panel.waitFor();
+  assert.equal(await panel.getAttribute("data-explanation-status"), status);
+  if (status !== "AVAILABLE") {
+    assert.equal(await panel.locator("[data-row^='step-'], [data-provenance]").count(), 0);
+    assert.equal(await panel.getByTestId("explanation-waterfall").count(), 0);
+    assert.equal(await panel.getByTestId("explanation-waterfall-svg").count(), 0);
+    return;
+  }
+  await panel.locator("summary").click();
+  await panel.getByTestId("explanation-waterfall-svg").waitFor();
+  assert.equal(await panel.locator("[data-row^='step-']").count(), 6);
+}
+
+function assertPredictionInput(data, area) {
+  assert.equal(data.category, "Nhà ở");
+  assert.equal(data.location_feature.toLocaleLowerCase("vi"), "cẩm lệ");
+  assert.equal(data.area_sqm, area);
+}
+
+async function onlyPost(page, path, handle) {
+  const requests = [];
+  await page.route("**" + path, async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    requests.push(route.request().postDataJSON());
+    await handle(route);
   });
-  if (!response.ok) throw new Error(`baseline predict ${response.status}`);
-  return response.json();
+  return requests;
 }
 
-const PRICE = 5476531536;
-const factor = (feature, value) => ({
-  feature, label: feature, value, provenance: "OBSERVED", group: "LOCATION",
-});
-
-function envelope(overrides) {
-  const base = {
-    model_version: "v1.3",
-    model_run: "tinix_xgboost_v1_3_integrated",
-    predicted_asking_price_vnd: PRICE,
-    predicted_margin_log: 0.5,
-    explanation: {
-      explanation_version: "1.0",
-      status: "AVAILABLE",
-      method: "XGBOOST_NATIVE_TREESHAP",
-      target: "ASKING_PRICE_VND",
-      output_space: "LOG1P_PRICE_VND",
-      predicted_margin_log: 0.5,
-      factors: [1, 2, 3, 4, 5, 6].map((i) => factor(`f${i}`, 0.02)),
-      grouped_contributions: { LOCATION: 0.1, AREA: 0.1, ROOM: 0.1, ACCESS: 0.05, QUALITY: 0.05, MARKET: 0.1 },
-      feature_provenance: Object.fromEntries(
-        Array.from({ length: 22 }, (_, i) => [`f${i}`, i % 2 ? "OBSERVED" : "DERIVED"]),
-      ),
-      base_value_log: 0.0,
-      other_contribution_log: 0.0,
-      calibration: {
-        policy: "duan_by_band",
-        factor: 1,
-        adjusted_price_vnd: PRICE,
-      },
-    },
-  };
-  return { ...base, ...(overrides || {}) };
+function record(name, classification, detail = "") {
+  results.push({ name, classification, ok: !detail, detail });
+  console.log((detail ? "FAIL " : "PASS ") + name + (detail ? " — " + detail : ""));
 }
 
-async function runCase(browser, name, payload, expect) {
+async function scenario(browser, name, classification, run) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1100 } });
   try {
-    await page.route("**/api/ai/predict", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(payload) }));
-    await page.goto(`${APP}/valuation`, { waitUntil: "domcontentloaded", timeout: 25000 });
-    await page.getByPlaceholder("Ví dụ: 80").first().fill("100");
-    await page.locator("select").first().selectOption({ index: 1 });
-    await page.getByRole("button", { name: /Ước tính giá rao/ }).first().click({ timeout: 15000 });
-    await page.waitForTimeout(1800);
-
-    const price = await page.locator('[data-testid="explanation-price"]').first().innerText()
-      .catch(() => "");
-    const body = await page.locator("body").innerText();
-    const status = await page.locator('[data-testid="valuation-explanation-panel"]').first()
-      .getAttribute("data-explanation-status").catch(() => null);
-    const rows = await page.locator("[data-row^='step-']").count();
-    const waterfall = await page.locator('[data-testid="explanation-waterfall-svg"]').count();
-
-    record(`${name}: authoritative price visible`, /\d/.test(price) && price.trim() !== "—", price);
-    record(`${name}: status ${expect.status}`, status === expect.status, status);
-    if (expect.hideAttribution) {
-      record(`${name}: no attribution rows`, rows === 0, rows);
-      record(`${name}: no waterfall`, waterfall === 0, waterfall);
-    }
-    if (expect.noFabrication) {
-      record(`${name}: no fabricated price`, price.trim() === "—" || price.trim() === "", price);
-    }
-    record(`${name}: no crash text`, !/Uncaught|Cannot read/.test(body));
+    const value = await run(page);
+    record(name, classification);
+    return value;
   } catch (error) {
-    record(`${name}: workflow`, false, String(error.message || error).split("\n")[0].slice(0, 160));
+    record(name, classification, String(error.message).split("\n")[0]);
   } finally {
     await page.close();
   }
 }
 
-async function loginPage(page) {
-  await page.goto(`${APP}/login?next=%2Faccount`, { waitUntil: "domcontentloaded", timeout: 25000 });
-  await page.locator("#email-input").fill(EMAIL);
-  await page.locator("#password-input").fill(PASSWORD);
-  await page.getByRole("button", { name: /Đăng nhập/i }).first().click({ timeout: 15000 });
-  await page.waitForFunction(() => !location.pathname.startsWith("/login"), { timeout: 25000 });
+async function standalone(page, expected, override) {
+  const calls = await onlyPost(page, predictPath, override
+    ? (route) => route.fulfill({ status: 200, json: override })
+    : (route) => route.continue());
+  const submit = await prepareStandalone(page, APP);
+  const response = waitResponse(page, predictPath);
+  await submit.click();
+  const reply = await response;
+  assert.equal(reply.status(), 200);
+  const payload = await reply.json();
+  assert.equal(payload.model_version, "v1.3");
+  assert.deepEqual(calls.length, 1);
+  assertPredictionInput(calls[0], 100);
+  if (override) assert.deepEqual(payload, override);
+  await assertStandalonePrice(page, payload);
+  await assertPanel(valuationResult(page), expected);
+  return payload;
 }
 
-async function reactiveAuthorization(browser, sql) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 1100 } });
+async function stale(page) {
+  const arrived = deferred();
+  const released = deferred();
+  const drained = deferred();
+  const calls = await onlyPost(page, predictPath, async (route) => {
+    if (route.request().postDataJSON().area_sqm !== 100) return route.continue();
+    const real = await route.fetch();
+    arrived.resolve(real);
+    try {
+      await released.promise;
+      await route.fulfill({ response: real });
+      drained.resolve(null);
+    } catch (error) {
+      drained.resolve(error);
+    }
+  });
   try {
-    await loginPage(page);
-    record("auth: login succeeded", !page.url().includes("/login"), page.url());
-
-    // lock the account in the disposable fixture only
-    const loginStatus = async () => {
-      const response = await fetch(`${API}/api/v1/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
-      });
-      return response.status;
-    };
-
-    sql(`UPDATE users SET status='LOCKED' WHERE email='${EMAIL}'`);
-    const locked = await loginStatus();
-    record("auth: locked account is refused", locked >= 400, locked);
-
-    // the SPA must not keep reporting an authorized identity after a reload
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1200);
-    const afterLock = await page.evaluate(async () => {
-      const response = await fetch("/api/v1/users/me");
-      return response.status;
-    });
-    record("auth: restricted data is not served while locked", afterLock >= 400, afterLock);
-
-    sql(`UPDATE users SET status='ACTIVE' WHERE email='${EMAIL}'`);
-    const restored = await loginStatus();
-    record("auth: restored fixture logs in again", restored >= 200 && restored < 300, restored);
-  } catch (error) {
-    record("auth: workflow", false, String(error.message || error).split("\n")[0].slice(0, 160));
-    sql(`UPDATE users SET status='ACTIVE' WHERE email='${EMAIL}'`);
+    const submit = await prepareStandalone(page, APP);
+    await submit.click();
+    const old = await Promise.race([arrived.promise, new Promise((_, reject) => {
+      AbortSignal.timeout(30000).addEventListener("abort", () => reject(Error("First predict request was not intercepted")), { once: true });
+    })]);
+    assert.equal(old.status(), 200);
+    const oldPayload = await old.json();
+    await page.getByPlaceholder("Ví dụ: 80").first().fill("110");
+    released.resolve();
+    const discharge = await drained.promise;
+    if (discharge) assert.match(String(discharge), /abort|handled|closed|request/i);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await valuationResult(page).count(), 0, "Obsolete prediction appeared after the edit");
+    assert.equal(await page.getByTestId("estimated-price").count(), 0);
+    const current = waitResponse(page, predictPath);
+    await submit.click();
+    const reply = await current;
+    assert.equal(reply.status(), 200);
+    assert.equal(calls.length, 2);
+    assertPredictionInput(calls[0], 100);
+    assertPredictionInput(calls[1], 110);
+    const payload = await reply.json();
+    assert.notEqual(payload.predicted_asking_price_vnd, oldPayload.predicted_asking_price_vnd);
+    await assertStandalonePrice(page, payload);
+    await assertPanel(valuationResult(page), "AVAILABLE");
   } finally {
-    await page.close();
+    released.resolve();
   }
+}
+
+async function posting(page) {
+  const calls = await onlyPost(page, previewPath, async (route) => {
+    const real = await route.fetch();
+    const payload = await real.json();
+    payload.explanation = { status: "AVAILABLE", factors: [] };
+    await route.fulfill({ response: real, json: payload });
+  });
+  const submit = await preparePosting(page, APP, EMAIL, PASSWORD);
+  const response = waitResponse(page, previewPath);
+  await submit.click();
+  const reply = await response;
+  assert.equal(reply.status(), 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].areaSqm, 80);
+  const payload = await reply.json();
+  assert.equal(payload.available, true);
+  assert.equal(payload.modelVersion, "v1.3");
+  await page.getByText(format(proofPrice(payload.predictedAskingPriceVnd)) + " ₫", {
+    exact: true,
+  }).and(page.getByTestId("valuation-price")).waitFor();
+  assert.equal(await page.locator("#post-price").inputValue(), "5000000000");
+  await assertPanel(page.getByTestId("valuation-panel"), "INVALID");
+}
+
+async function advisor(page) {
+  const calls = await onlyPost(page, advisorPath, async (route) => {
+    const real = await route.fetch();
+    const payload = await real.json();
+    for (const item of payload.recommendedProperties ?? []) {
+      if (item.valuationEvidence?.available) {
+        item.valuationEvidence.explanation = { status: "UNAVAILABLE", reason: "Fixture explanation unavailable" };
+      }
+    }
+    await route.fulfill({ response: real, json: payload });
+  });
+  const submit = await prepareAdvisor(page, APP);
+  const response = waitResponse(page, advisorPath);
+  await submit.click();
+  const reply = await response;
+  assert.equal(reply.status(), 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].propertyType, "HOUSE");
+  assert.notEqual(calls[0].includeResearch, true);
+  const payload = await reply.json();
+  assert.equal(payload.mode, "SAFE");
+  const index = payload.recommendedProperties.findIndex((item) => item.valuationEvidence?.available
+    && item.comparableEvidence?.candidateCount > 0 && item.valuationComparableEvidence?.candidateCount > 0);
+  assert.ok(index >= 0, "Expected one recommendation with valuation and both Comparable sections");
+  const item = payload.recommendedProperties[index];
+  const property = page.locator("[data-advisor-property]").nth(index);
+  await property.getByText(item.title, { exact: true }).first().waitFor();
+  const evidence = property.locator("[data-advisor-evidence]");
+  assert.equal(await evidence.locator(".ev-price").getAttribute("title"),
+    format(proofPrice(item.valuationEvidence.predictedAskingPriceVnd)) + " ₫");
+  await evidence.getByText("Tin tương đồng theo giá rao", { exact: true }).waitFor();
+  await evidence.getByText("Đối chiếu định giá bằng tin đăng", { exact: true }).waitFor();
+  assert.equal(await evidence.locator("[data-comparable-evidence]").count(), 2);
+  await assertPanel(evidence, "UNAVAILABLE");
+}
+
+function runtime() {
+  const state = JSON.parse(readFileSync(RUNTIME, "utf8"));
+  assert.equal(state.stack.react, APP);
+  assert.equal(state.stack.valuation, AI);
+  assert.match(state.root, /[\\/]wp04-owned-[^\\/]+$/);
+  return state;
+}
+
+async function runtimeState(state) {
+  const deadline = Date.now() + 60000;
+  do {
+    const current = runtime();
+    assert.notEqual(current.state, "failed");
+    if (current.state === state) return current;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  } while (Date.now() < deadline);
+  throw Error("Expected owned fixture state " + state);
+}
+
+async function outage(page) {
+  const submit = await prepareStandalone(page, APP);
+  const before = runtime();
+  assert.equal(before.state, "ready");
+  writeFileSync(join(before.root, "PAUSE_VALUATION"), "", { flag: "wx" });
+  try {
+    await runtimeState("valuation-offline");
+    await assert.rejects(fetch(AI + "/model/options", { signal: AbortSignal.timeout(4000) }));
+    const response = waitResponse(page, predictPath);
+    await submit.click();
+    assert.ok((await response).status() >= 500);
+    await page.getByRole("alert").waitFor();
+    assert.equal(await valuationResult(page).count(), 0);
+    assert.equal(await page.getByTestId("estimated-price").count(), 0);
+
+    const advisorSubmit = await prepareAdvisor(page, APP);
+    const partialReply = waitResponse(page, advisorPath);
+    await advisorSubmit.click();
+    const reply = await partialReply;
+    assert.equal(reply.status(), 200);
+    const partial = await reply.json();
+    assert.equal(partial.mode, "SAFE");
+    assert.equal(partial.serviceStatus.valuationService, "UNAVAILABLE");
+    assert.equal(partial.serviceStatus.partialResult, true);
+    assert.ok(partial.recommendedProperties.length > 0);
+    assert.ok(partial.recommendedProperties.every((item) => !item.valuationEvidence?.available
+      && item.valuationEvidence?.predictedAskingPriceVnd == null));
+    await page.locator("[data-advisor-property]").first().waitFor();
+    assert.equal(await page.locator("[data-valuation-evidence]").count(), 0);
+  } finally {
+    writeFileSync(join(before.root, "RESTORE_VALUATION"), "", { flag: "wx" });
+    const recovered = await runtimeState("valuation-recovered");
+    assert.notEqual(recovered.pids.valuation_recovered, before.pids.valuation.pid);
+  }
+  await standalone(page, "AVAILABLE");
 }
 
 async function main() {
-  const require = createRequire(import.meta.url);
-  const playwright = require(PW);
-  const browser = await playwright.chromium.launch({ headless: true, executablePath: CHROME });
-  const sql = (statement) => {
-    const { execFileSync } = require("node:child_process");
-    try {
-      execFileSync("F:/SmartProp/.scratch/mysql-8.4/mysql-8.4.13-winx64/bin/mysql.exe",
-        ["-h", "127.0.0.1", "-P", "3407", "-u", "wp04_v23", "-pwp04-v23-fixture", "wp04_runtime_v23", "-e", statement],
-        { stdio: "ignore" });
-    } catch { /* recorded by the caller's assertions */ }
-  };
+  assert.match(APP, /^http:\/\/127\.0\.0\.1:\d{5}$/);
+  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME });
   try {
-    const baseline = await realPayload();
-    record("baseline predict carries an explanation", baseline.explanation?.status === "AVAILABLE",
-      baseline.explanation?.status);
-    const clone = () => JSON.parse(JSON.stringify(baseline));
-
-    const missing = clone();
-    delete missing.explanation;
-    await runCase(browser, "missing explanation", missing,
-      { status: null, hideAttribution: true });
-
-    const unavailable = clone();
-    unavailable.explanation = { status: "UNAVAILABLE", reason: "Không đủ dữ liệu." };
-    await runCase(browser, "UNAVAILABLE", unavailable, { status: "UNAVAILABLE", hideAttribution: true });
-
-    const malformed = clone();
-    malformed.explanation = { status: "AVAILABLE", factors: [] };
-    await runCase(browser, "malformed", malformed, { status: "INVALID", hideAttribution: true });
-
-    const invalidAdjusted = clone();
-    invalidAdjusted.explanation.calibration.adjusted_price_vnd = 0;
-    await runCase(browser, "invalid adjusted price", invalidAdjusted, { status: "INVALID", hideAttribution: true });
-
-    const oneVnd = clone();
-    oneVnd.explanation.calibration.adjusted_price_vnd =
-      Number(oneVnd.explanation.calibration.adjusted_price_vnd) + 1;
-    await runCase(browser, "one-VND mismatch", oneVnd, { status: "INCONSISTENT", hideAttribution: true });
-
-    const reconstruction = clone();
-    reconstruction.explanation.predicted_margin_log =
-      Number(reconstruction.explanation.predicted_margin_log) + 0.5;
-    await runCase(browser, "reconstruction mismatch", reconstruction, { status: "INVALID", hideAttribution: true });
-
-    await reactiveAuthorization(browser, sql);
+    const baseline = await scenario(browser, "unmodified real V1.3 positive control", "REAL_HTTP",
+      (page) => standalone(page, "AVAILABLE"));
+    assert.ok(baseline, "Positive control is required to construct mutation cases");
+    const mutations = [
+      ["missing explanation", "ABSENT", (p) => delete p.explanation],
+      ["unavailable explanation", "UNAVAILABLE", (p) => { p.explanation = { status: "UNAVAILABLE" }; }],
+      ["malformed explanation", "INVALID", (p) => { p.explanation = { status: "AVAILABLE", factors: [] }; }],
+      ["invalid adjusted price", "INVALID", (p) => { p.explanation.calibration.adjusted_price_vnd = 0; }],
+      ["one-VND mismatch", "INCONSISTENT", (p) => { p.explanation.calibration.adjusted_price_vnd =
+        Number(p.explanation.calibration.adjusted_price_vnd) + 1; }],
+      ["reconstruction mismatch", "INVALID", (p) => { p.explanation.predicted_margin_log += 0.5; }],
+    ];
+    for (const [name, expected, mutate] of mutations) {
+      const payload = structuredClone(baseline);
+      mutate(payload);
+      await scenario(browser, "standalone: " + name + " -> " + expected, "MOCKED_RESPONSE",
+        (page) => standalone(page, expected, payload));
+    }
+    await scenario(browser, "stale prediction discarded after input edit", "HELD_REAL_RESPONSE", stale);
+    await scenario(browser, "posting: invalid explanation preserves authoritative preview", "MOCKED_RESPONSE", posting);
+    await scenario(browser, "Advisor: unavailable explanation preserves recommendation and both Comparable sections",
+      "MOCKED_RESPONSE", advisor);
+    await scenario(browser, "owned FastAPI outage, no fabricated price, and recovery", "REAL_PROCESS_OUTAGE", outage);
   } finally {
     await browser.close();
+    writeFileSync(process.env.WP04_FAILURE_REPORT, JSON.stringify(results, null, 2) + "\n");
+    process.exitCode = results.length === 11 && results.every((item) => item.ok) ? 0 : 1;
   }
-
-  const failed = results.filter((r) => !r.ok);
-  mkdirSync(out, { recursive: true });
-  writeFileSync(join(out, "wp04-failure-isolation.json"), JSON.stringify({
-    at: new Date().toISOString(), total: results.length,
-    passed: results.length - failed.length, failed: failed.length, results,
-  }, null, 2));
-  for (const item of failed) console.log(`FAIL  ${item.name} — ${item.detail}`);
-  console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
-  process.exit(failed.length ? 1 : 0);
 }
 
-main().catch((error) => { console.error("FATAL", error); process.exit(2); });
+main().catch((error) => { console.error(error.message); process.exitCode = 1; });

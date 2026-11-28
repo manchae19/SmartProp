@@ -12,6 +12,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  advisorPath, predictPath, prepareAdvisor, preparePosting, prepareStandalone, previewPath, waitResponse,
+} from "./workflows.mjs";
 
 const PW = process.env.PLAYWRIGHT_PATH || "F:/SmartProp/frontend/vue.ui/node_modules/playwright";
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
@@ -20,7 +23,7 @@ const API = process.env.WP04_API || "";
 const EMAIL = process.env.WP04_FIXTURE_EMAIL || "";
 const PASSWORD = process.env.WP04_FIXTURE_PASSWORD || "";
 const here = dirname(fileURLToPath(import.meta.url));
-const shots = join(here, "..", "..", "..", "..", "docs", "ai", "browser", "wp04");
+const shots = process.env.WP04_OUTPUT_DIR || join(here, "..", "..", "..", "..", "docs", "ai", "browser", "wp04");
 
 const results = [];
 const record = (name, ok, detail = "") =>
@@ -33,32 +36,6 @@ function preflight() {
     record(`${label} is loopback`, LOOPBACK.test(value), value);
   }
   record("fixture credentials provided", Boolean(EMAIL && PASSWORD));
-}
-
-/** Event-driven wait for a specific request, resolved with its response. */
-function expectCall(page, matcher, action, timeout = 30000) {
-  const response = page.waitForResponse(
-    (r) => matcher(r.url()) && r.request().method() === "POST",
-    { timeout },
-  );
-  return action().then(() => response);
-}
-
-async function login(page) {
-  await page.goto(`${APP}/login?next=%2Fpost`, { waitUntil: "domcontentloaded", timeout: 25000 });
-  await page.locator("#email-input").fill(EMAIL);
-  await page.locator("#password-input").fill(PASSWORD);
-  const login = expectCall(page, (url) => url.includes("/auth/login"), async () => {
-    await page.getByRole("button", { name: /Đăng nhập/i }).first().click({ timeout: 15000 });
-  });
-  const response = await login;
-  record("login response 200", response.status() === 200, response.status());
-  await page.waitForFunction(() => !location.pathname.startsWith("/login"), { timeout: 25000 });
-  await page.waitForTimeout(600);
-  // The SPA authenticates with a Bearer token it keeps in memory, so a bare fetch would 401.
-  // Confirm the session through the rendered UI instead.
-  const signOutVisible = await page.getByRole("button", { name: /Đăng xuất|Tài khoản/i }).count();
-  record("session confirmed in the UI", signOutVisible > 0, signOutVisible);
 }
 
 async function assertExplanation(page, tag) {
@@ -79,7 +56,7 @@ async function assertExplanation(page, tag) {
   record(`${tag} technical section exists`, (await summary.count()) === 1);
   if (await summary.count()) {
     await summary.click({ timeout: 10000 });
-    await page.waitForTimeout(400);
+    await panel.getByTestId("explanation-waterfall-svg").waitFor();
     record(`${tag} waterfall rows`, (await panel.locator('[data-testid="explanation-waterfall"]').count()) === 1);
     record(`${tag} six factor rows`, (await panel.locator("[data-row^='step-']").count()) === 6,
       await panel.locator("[data-row^='step-']").count());
@@ -98,16 +75,10 @@ async function standalone(browser, width) {
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
   const tag = `standalone@${width}`;
   try {
-    await page.goto(`${APP}/valuation`, { waitUntil: "domcontentloaded", timeout: 25000 });
-    await page.waitForResponse((r) => r.url().includes("/model/options"), { timeout: 20000 });
-    await page.getByPlaceholder("Ví dụ: 80").first().fill("100");
-    const category = page.locator("select").first();
-    await category.selectOption({ label: "Nhà ở" });
-    const location = page.locator("select").nth(1);
-    await location.selectOption({ label: "Cẩm Lệ" });
-    const response = await expectCall(page, (url) => url.includes("/api/ai/predict"), async () => {
-      await page.getByRole("button", { name: /Ước tính giá rao/ }).first().click({ timeout: 15000 });
-    });
+    const submit = await prepareStandalone(page, APP);
+    const pending = waitResponse(page, predictPath);
+    await submit.click();
+    const response = await pending;
     record(`${tag} predict 200`, response.status() === 200, response.status());
     const body = await response.json();
     record(`${tag} model v1.3`, body.model_version === "v1.3", body.model_version);
@@ -138,46 +109,10 @@ async function posting(browser, width) {
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
   page.on("requestfailed", (r) => failed.push(`${r.method()} ${new URL(r.url()).pathname}`));
   try {
-    await login(page);
-    await page.waitForURL((url) => url.pathname === "/post", { timeout: 25000 });
-    record(`${tag} landed on /post`, page.url().includes("/post"), page.url());
-    await page.getByRole("heading", { name: "Tạo tin đăng mới" }).first().waitFor({ timeout: 20000 });
-
-    // #post-transactionType is a role="group" of buttons, not a select.
-    // dismiss the first-run notice and the comparison sheet: both can intercept clicks
-    for (const name of ["Đã hiểu", "Đóng bảng so sánh"]) {
-      const control = page.getByRole("button", { name, exact: true }).first();
-      if (await control.count()) await control.click({ timeout: 5000 }).catch(() => {});
-    }
-    const group = page.locator("#post-transactionType");
-    const groupButtons = await group.getByRole("button").allInnerTexts();
-    record(`${tag} transaction buttons`, groupButtons.length > 0, groupButtons.join("|").slice(0, 60));
-    const sale = group.getByRole("button", { name: /Đăng bán/ }).first();
-    await sale.click({ timeout: 15000 });
-    const pressed = await sale.getAttribute("aria-pressed");
-    record(`${tag} sale pressed`, pressed === "true" || pressed === null, pressed);
-
-    await page.locator("#post-propertyType").selectOption({ label: "Nhà phố" });
-    await page.locator("#post-title").fill("WP04 runtime fixture");
-    await page.locator("#post-area").fill("80");
-    await page.locator("#post-price").fill("5000000000");
-
-    await page.locator(".valuation-optional summary").first().click({ timeout: 15000 });
-    const locationSelect = page.locator('[data-testid="valuation-location"]');
-    await locationSelect.waitFor({ timeout: 20000 });
-    await page.waitForFunction(() => {
-      const select = document.querySelector('[data-testid="valuation-location"]');
-      return select && select.options.length > 1;
-    }, { timeout: 20000 });
-    const labels = await locationSelect.locator("option").allInnerTexts();
-    const camLe = labels.find((label) => /Cẩm Lệ/.test(label));
-    if (camLe) await locationSelect.selectOption({ label: camLe });
-    else await locationSelect.selectOption({ index: 1 });
-
-    const response = await expectCall(page,
-      (url) => url.includes("/api/v1/properties/valuation-preview"), async () => {
-        await page.locator('[data-testid="valuation-preview"]').click({ timeout: 15000 });
-      }, 45000);
+    const submit = await preparePosting(page, APP, EMAIL, PASSWORD);
+    const pending = waitResponse(page, previewPath);
+    await submit.click();
+    const response = await pending;
     record(`${tag} preview 200`, response.status() === 200, response.status());
     const body = await response.json();
     record(`${tag} available`, body.available === true, body.available);
@@ -214,26 +149,10 @@ async function advisor(browser, width) {
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 120)));
   page.on("requestfailed", (r) => failed.push(`${r.method()} ${new URL(r.url()).pathname}`));
   try {
-    // SAFE Advisor is public: no login is required for this surface.
-    await page.goto(`${APP}/advisor/analysis`, { waitUntil: "domcontentloaded", timeout: 25000 });
-    await page.getByRole("heading", { name: /Tư vấn bất động sản đa bằng chứng/ })
-      .first().waitFor({ timeout: 20000 });
-    record(`${tag} unified advisor heading`, true);
-
-    const form = page.locator(".advisor-page form");
-    await form.locator('input[aria-describedby="budget-hint"]').fill("7000000000");
-    await form.getByLabel(/Biên ngân sách linh hoạt/).selectOption("0");
-    await form.getByLabel(/Mục đích mua/).selectOption("LIVING");
-    await form.getByLabel(/Loại bất động sản/).selectOption("HOUSE");
-    await form.locator('input[list="advisor-districts"]').fill("Cẩm Lệ");
-    await form.getByPlaceholder("Không giới hạn").fill("60");
-    await form.getByLabel(/Số lượng đề xuất/).selectOption("5");
-    await form.getByLabel(/Định giá tham chiếu/).check();
-    await form.getByLabel(/Đối chiếu bất động sản tương đồng/).check();
-
-    const response = await expectCall(page, (url) => url.includes("/api/v1/advisor/consult"), async () => {
-      await page.locator("[data-advisor-submit]").first().click({ timeout: 15000 });
-    }, 60000);
+    const submit = await prepareAdvisor(page, APP);
+    const pending = waitResponse(page, advisorPath);
+    await submit.click();
+    const response = await pending;
     record(`${tag} consult 200`, response.status() === 200, response.status());
     const body = await response.json();
     const request = JSON.parse(response.request().postData() || "{}");
@@ -259,7 +178,7 @@ async function advisor(browser, width) {
     ].some((item) => item.featureCoverage !== undefined && item.featureCoverage !== null);
     record(`${tag} featureCoverage present`, coverage);
 
-    await page.waitForTimeout(1200);
+    await page.locator("[data-advisor-property]").first().waitFor();
     const text = await page.locator("body").innerText();
     record(`${tag} price headline shown`, /tỷ/.test(text));
     record(`${tag} heading: Tin tương đồng theo giá rao`, /Tin tương đồng theo giá rao/i.test(text));
@@ -311,7 +230,7 @@ async function main() {
   }
 
   const failed = results.filter((item) => !item.ok);
-  const outDir = join(here, "reports");
+  const outDir = process.env.WP04_OUTPUT_DIR || join(here, "reports");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "wp04-runtime-browser.json"), JSON.stringify({
     app: APP, api: API, at: new Date().toISOString(),
