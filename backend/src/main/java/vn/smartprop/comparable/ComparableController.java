@@ -65,7 +65,7 @@ public class ComparableController {
             : new ComparableDtos.Request(
                 body.propertyId(), body.propertyType(), body.district(), body.ward(),
                 body.areaSqm(), body.priceVnd(), body.bedrooms(), body.floors(), body.limit(),
-                wantsResearch ? Boolean.TRUE : Boolean.FALSE);
+                wantsResearch, body.purpose(), body.buyerBudgetVnd(), body.subjectIdentity(), body.physicalFeatures());
         return wantsResearch ? service.rankResearch(effective) : service.rank(effective);
     }
 
