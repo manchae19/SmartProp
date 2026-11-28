@@ -80,14 +80,17 @@ async function profile(page) {
 async function lockActiveSession(browser) {
   const sql = guardedSql();
   const page = await browser.newPage();
-  const query = "SELECT id,status,role,token_version,IFNULL(locked_at,''),IFNULL(lock_reason,'') FROM users WHERE email='" + admin + "';";
+  const query = "SELECT id,status,role,token_version,IFNULL(locked_at,''),IFNULL(lock_reason,''),"
+    + "DATE_FORMAT(updated_at,'%Y-%m-%d %H:%i:%s.%f') FROM users WHERE email='" + admin + "';";
   const raw = sql(query);
-  const [id, originalStatus, role] = raw.split("\t");
+  const [id, originalStatus, role, , , , updatedAt] = raw.split("\t");
   assert.match(id, /^\d+$/);
   assert.equal(originalStatus, "ACTIVE");
   assert.equal(role, "ADMIN");
-  const setStatus = (status) => assert.equal(sql("UPDATE users SET status='" + status
-    + "' WHERE id=" + id + "; SELECT ROW_COUNT();"), "1");
+  assert.match(updatedAt, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}$/);
+  const setStatus = (status, timestamp = "") => assert.equal(sql("UPDATE users SET status='" + status + "'"
+    + (timestamp ? ", updated_at='" + timestamp + "'" : "")
+    + " WHERE id=" + id + "; SELECT ROW_COUNT();"), "1");
   let locked = false;
   try {
     await login(page, app, admin, password);
@@ -106,7 +109,7 @@ async function lockActiveSession(browser) {
     await page.waitForURL((url) => url.pathname === "/login");
     assert.equal(await page.getByText(admin, { exact: true }).count(), 0);
   } finally {
-    if (locked || sql(query).split("\t")[1] === "LOCKED") setStatus(originalStatus);
+    if (locked || sql(query).split("\t")[1] === "LOCKED") setStatus(originalStatus, updatedAt);
     assert.equal(sql(query), raw, "Fixture account state restoration did not match");
     await page.close();
   }

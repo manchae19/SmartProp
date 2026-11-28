@@ -209,7 +209,7 @@ async function advisor(page) {
   await property.getByText(item.title, { exact: true }).first().waitFor();
   const evidence = property.locator("[data-advisor-evidence]");
   assert.equal(await evidence.locator(".ev-price").getAttribute("title"),
-    format(proofPrice(item.valuationEvidence.predictedAskingPriceVnd)) + " ₫");
+    format(proofPrice(item.valuationEvidence.predictedAskingPriceVnd)) + " VNĐ");
   await evidence.getByText("Tin tương đồng theo giá rao", { exact: true }).waitFor();
   await evidence.getByText("Đối chiếu định giá bằng tin đăng", { exact: true }).waitFor();
   assert.equal(await evidence.locator("[data-comparable-evidence]").count(), 2);
