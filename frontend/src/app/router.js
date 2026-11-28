@@ -170,6 +170,7 @@ async function authorize(to) {
   try {
     await loadProfile();
   } catch (error) {
+    if (error.code === 'SESSION_CHANGED') return false;
     if (error.status === 401) return {
       path: '/login',
       query: {

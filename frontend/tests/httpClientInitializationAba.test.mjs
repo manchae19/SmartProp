@@ -7,6 +7,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createStateStore } from '../src/shared/state/createStateStore.js'
 import { createHttpClient } from '../src/shared/lib/httpClient.js'
+import { sessionJwt } from './fixtures/sessionJwt.mjs'
 
 const json = (body, status = 200) => Response.json(body, { status })
 const deferred = () => {
@@ -15,6 +16,10 @@ const deferred = () => {
   return { promise, resolve }
 }
 const actor = { id: 'fixture-user', role: 'ADMIN', status: 'ACTIVE' }
+const tokenA = sessionJwt(actor.id, 'main-fixture-session', 1)
+const tokenB = sessionJwt(actor.id, 'main-fixture-session', 2)
+const tokenY = sessionJwt(actor.id, 'main-fixture-session', 3)
+const tokenX = sessionJwt(actor.id, 'main-fixture-session', 4)
 
 function setup(fetcher, initial = { token: null, user: null, status: 'INITIALIZING' }) {
   const session = createStateStore(initial)
@@ -34,13 +39,13 @@ const authRoutes = (handle) => async (url, options) => {
 // ---------------------------------------------------------------- initialization
 test('init: a valid access token becomes an authenticated session', async () => {
   const { client, session } = setup(authRoutes({
-    refresh: () => json({ accessToken: 'fixture-b', user: actor }),
+    refresh: () => json({ accessToken: tokenB, user: actor }),
     business: () => json(actor),
-  }), { token: 'fixture-a', user: actor, status: 'INITIALIZING' })
+  }), { token: tokenA, user: actor, status: 'INITIALIZING' })
 
   await client.initialize()
   assert.equal(session.getSnapshot().status, 'AUTHENTICATED')
-  assert.equal(session.getSnapshot().token, 'fixture-a', 'no unnecessary rotation')
+  assert.equal(session.getSnapshot().token, tokenA, 'no unnecessary rotation')
 })
 
 test('init: an expired token recovers through one refresh', async () => {
@@ -48,14 +53,14 @@ test('init: an expired token recovers through one refresh', async () => {
   const { client, session } = setup(authRoutes({
     refresh: () => {
       refreshes += 1
-      return json({ accessToken: 'fixture-b', user: actor })
+      return json({ accessToken: tokenB, user: actor })
     },
     business: () => json({ message: 'expired' }, 401),
-  }), { token: 'fixture-a', user: actor, status: 'INITIALIZING' })
+  }), { token: tokenA, user: actor, status: 'INITIALIZING' })
 
   await client.initialize()
   assert.equal(refreshes, 1)
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
   assert.equal(session.getSnapshot().status, 'AUTHENTICATED')
 })
 
@@ -90,7 +95,7 @@ test('init: an account switch during initialization is not overwritten', async (
       return json({ accessToken: 'fixture-old-result', user: actor })
     },
     business: () => json({ message: 'expired' }, 401),
-  }), { token: 'fixture-a', user: actor, status: 'INITIALIZING' })
+  }), { token: tokenA, user: actor, status: 'INITIALIZING' })
 
   const initialized = client.initialize()
   await new Promise(resolve => setTimeout(resolve, 5))
@@ -110,7 +115,7 @@ test('init: an account switch during initialization is not overwritten', async (
 function abaClient() {
   const release = deferred()
   const { client, session } = setup(authRoutes({
-    refresh: () => json({ accessToken: 'fixture-y', user: actor }),
+    refresh: () => json({ accessToken: tokenY, user: actor }),
     business: async (path, options) => {
       const auth = options.headers.Authorization
       if (path === '/slow') {
@@ -118,11 +123,11 @@ function abaClient() {
         return json({ ok: true, auth })
       }
       if (path === '/data') {
-        return auth === 'Bearer fixture-y' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+        return auth === `Bearer ${tokenY}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
       }
       return json({ message: 'expired' }, 401)
     },
-  }), { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' })
+  }), { token: tokenA, user: actor, status: 'AUTHENTICATED' })
   return { client, session, release }
 }
 
@@ -131,7 +136,7 @@ test('ABA: A -> X -> A still invalidates the pending request', async () => {
   const pending = client.request('/slow', { method: 'GET' })
 
   session.edit(draft => { draft.token = 'fixture-x' })   // external replacement
-  session.edit(draft => { draft.token = 'fixture-a' })   // external restoration
+  session.edit(draft => { draft.token = tokenA })   // external restoration
 
   release.resolve()
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
@@ -141,9 +146,9 @@ test('ABA: a later valid refresh cannot revalidate an obsolete scope', async () 
   const { client, session, release } = abaClient()
   const pending = client.request('/slow', { method: 'GET' })
 
-  session.edit(draft => { draft.token = 'fixture-x' })   // external
+  session.edit(draft => { draft.token = tokenX })   // external
   await client.request('/data', { method: 'GET' })       // verified X -> Y
-  assert.equal(session.getSnapshot().token, 'fixture-y')
+  assert.equal(session.getSnapshot().token, tokenY)
 
   release.resolve()
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
@@ -157,18 +162,18 @@ test('ABA: replacement and restoration during the CSRF request rejects the refre
       await csrfGate.promise
       return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
     }
-    if (path === '/auth/refresh') return json({ accessToken: 'fixture-y', user: actor })
+    if (path === '/auth/refresh') return json({ accessToken: tokenY, user: actor })
     return json({ message: 'expired' }, 401)
-  }, { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' })
+  }, { token: tokenA, user: actor, status: 'AUTHENTICATED' })
 
   const pending = client.request('/data', { method: 'GET' })
   await new Promise(resolve => setTimeout(resolve, 5))
   session.edit(draft => { draft.token = 'fixture-x' })
-  session.edit(draft => { draft.token = 'fixture-a' })
+  session.edit(draft => { draft.token = tokenA })
   csrfGate.resolve()
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
-  assert.equal(session.getSnapshot().token, 'fixture-a', 'no refresh result was installed')
+  assert.equal(session.getSnapshot().token, tokenA, 'no refresh result was installed')
 })
 
 test('ABA: replacement and restoration during the refresh response rejects it', async () => {
@@ -176,40 +181,40 @@ test('ABA: replacement and restoration during the refresh response rejects it', 
   const { client, session } = setup(authRoutes({
     refresh: async () => {
       await gate.promise
-      return json({ accessToken: 'fixture-y', user: actor })
+      return json({ accessToken: tokenY, user: actor })
     },
     business: () => json({ message: 'expired' }, 401),
-  }), { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' })
+  }), { token: tokenA, user: actor, status: 'AUTHENTICATED' })
 
   const pending = client.request('/data', { method: 'GET' })
   await new Promise(resolve => setTimeout(resolve, 5))
   session.edit(draft => { draft.token = 'fixture-x' })
-  session.edit(draft => { draft.token = 'fixture-a' })
+  session.edit(draft => { draft.token = tokenA })
   gate.resolve()
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
-  assert.equal(session.getSnapshot().token, 'fixture-a')
+  assert.equal(session.getSnapshot().token, tokenA)
 })
 
 test('ABA: replacement and restoration before the GET retry rejects the retry', async () => {
   const delayed = deferred()
   const { client, session } = setup(authRoutes({
-    refresh: () => json({ accessToken: 'fixture-b', user: actor }),
+    refresh: () => json({ accessToken: tokenB, user: actor }),
     business: async (path, options) => {
       const auth = options.headers.Authorization
       if (path === '/late') {
-        if (auth === 'Bearer fixture-b') return json({ ok: true })
+        if (auth === `Bearer ${tokenB}`) return json({ ok: true })
         await delayed.promise
         return json({ message: 'expired' }, 401)
       }
       return json({ message: 'expired' }, 401)
     },
-  }), { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' })
+  }), { token: tokenA, user: actor, status: 'AUTHENTICATED' })
 
   const pending = client.request('/late', { method: 'GET' })
   await new Promise(resolve => setTimeout(resolve, 5))
   session.edit(draft => { draft.token = 'fixture-x' })   // external
-  session.edit(draft => { draft.token = 'fixture-b' })   // external restore of the refreshed token
+  session.edit(draft => { draft.token = tokenB })   // external restore of the refreshed token
   delayed.resolve()
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })

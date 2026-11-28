@@ -3,9 +3,12 @@ import assert from 'node:assert/strict'
 import { getEventListeners } from 'node:events'
 import { createStateStore } from '../src/shared/state/createStateStore.js'
 import { createHttpClient } from '../src/shared/lib/httpClient.js'
+import { sessionJwt } from './fixtures/sessionJwt.mjs'
 
 const actor = { id: 'fixture-user', role: 'ADMIN', status: 'ACTIVE' }
-const active = { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' }
+const tokenA = sessionJwt(actor.id, 'main-fixture-session', 1)
+const tokenB = sessionJwt(actor.id, 'main-fixture-session', 2)
+const active = { token: tokenA, user: actor, status: 'AUTHENTICATED' }
 const json = (body, status = 200) => Response.json(body, { status })
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
 const deferred = () => {
@@ -101,7 +104,7 @@ test('HTTP 403 authorization denial is returned and ordinary successes clear the
 
 for (const [name, response, change] of [
   ['epoch invalidation drops data', json({ private: true }), fx => fx.client.invalidate()],
-  ['same-actor token replacement drops data', json({ private: true }), fx => fx.session.set({ ...active, token: 'fixture-b' })],
+  ['same-actor token replacement drops data', json({ private: true }), fx => fx.session.set({ ...active, token: tokenB })],
   ['role change drops data', json({ private: true }), fx => fx.session.set({ ...active, user: { ...actor, role: 'BUYER' } })],
   ['old-account 401 cannot expire the new account', json({}, 401), fx => fx.session.set({ ...active, user: { ...actor, id: 'fixture-other' } })],
 ]) {
@@ -129,9 +132,9 @@ function refreshFixture({ delayRefresh = false, delayRetry = false } = {}) {
     if (path === '/auth/refresh') {
       refreshStarted.resolve()
       if (delayRefresh) await refreshResponse.promise
-      return json({ accessToken: 'fixture-b', user: actor })
+      return json({ accessToken: tokenB, user: actor })
     }
-    if (options.headers.Authorization !== 'Bearer fixture-b') return json({}, 401)
+    if (options.headers.Authorization !== `Bearer ${tokenB}`) return json({}, 401)
     retryStarted.resolve()
     if (delayRetry) await retryResponse.promise
     return json({ refreshed: true })
@@ -181,9 +184,11 @@ test('refresh finishing after same-user token replacement cannot overwrite the s
   await fx.refreshStarted.promise
   const replacement = { ...active, token: 'fixture-replacement' }
   fx.session.set(replacement)
+  const replacementScope = fx.session.getSnapshot()
   fx.refreshResponse.resolve()
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
-  assert.equal(fx.session.getSnapshot(), replacement)
+  assert.equal(fx.session.getSnapshot(), replacementScope)
+  assert.equal(replacementScope.token, replacement.token)
   assert.equal(fx.paths.filter(path => path === '/private').length, 1)
   assert.deepEqual(fx.effects, { expired: 0, cleared: 0 })
 })

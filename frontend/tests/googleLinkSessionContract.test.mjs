@@ -10,20 +10,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createStateStore } from '../src/shared/state/createStateStore.js'
 import { createHttpClient } from '../src/shared/lib/httpClient.js'
+import { sessionJwt as fixtureToken } from './fixtures/sessionJwt.mjs'
 
 const json = (body, status = 200) => Response.json(body, { status })
 const deferred = () => {
   let resolve
   const promise = new Promise(done => { resolve = done })
   return { promise, resolve }
-}
-
-/** Synthetic, unsigned JWT with the payload shape PR #48 stores. */
-function fixtureToken(sub, jti, iat, ver = 0) {
-  const payload = Buffer.from(JSON.stringify({
-    iss: 'smartprop', sub: String(sub), jti, ver, iat,
-  })).toString('base64url')
-  return `eyJhbGciOiJub25lIn0.${payload}.fixture`
 }
 
 const user = (id, role = 'BUYER', status = 'ACTIVE') => ({ id, role, status })

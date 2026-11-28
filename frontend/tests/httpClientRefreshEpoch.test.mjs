@@ -10,9 +10,15 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createStateStore } from '../src/shared/state/createStateStore.js'
 import { createHttpClient } from '../src/shared/lib/httpClient.js'
+import { sessionJwt } from './fixtures/sessionJwt.mjs'
 
 const actor = { id: 'fixture-user', role: 'ADMIN', status: 'ACTIVE' }
-const active = { token: 'fixture-a', user: actor, status: 'AUTHENTICATED' }
+const tokenA = sessionJwt(actor.id, 'main-fixture-session', 1)
+const tokenB = sessionJwt(actor.id, 'main-fixture-session', 2)
+const tokenC = sessionJwt(actor.id, 'main-fixture-session', 3)
+const newStart = sessionJwt('new-user', 'new-fixture-session', 1)
+const newResultToken = sessionJwt('new-user', 'new-fixture-session', 2)
+const active = { token: tokenA, user: actor, status: 'AUTHENTICATED' }
 const json = (body, status = 200) => Response.json(body, { status })
 
 const deferred = () => {
@@ -47,7 +53,7 @@ function makeFetcher(handle) {
     }
     if (path === '/auth/refresh') {
       calls.refresh += 1
-      return json({ accessToken: 'fixture-b', user: { ...actor } })
+      return json({ accessToken: tokenB, user: { ...actor } })
     }
     calls.business.push({ path, method: options.method, authorization: options.headers.Authorization })
     return handle(path, options, calls)
@@ -61,7 +67,7 @@ test('A: two concurrent GETs with a shared refresh both recover, with one refres
   let firstOne = true
 
   const { fetcher, calls } = makeFetcher(async (path, options) => {
-    if (options.headers.Authorization === 'Bearer fixture-b') return json({ path, ok: true })
+    if (options.headers.Authorization === `Bearer ${tokenB}`) return json({ path, ok: true })
     if (path === '/one') {
       firstOne = false
       return json({ message: 'expired' }, 401)
@@ -81,7 +87,7 @@ test('A: two concurrent GETs with a shared refresh both recover, with one refres
 
   assert.equal(second.ok, true)
   assert.equal(calls.refresh, 1, 'exactly one refresh')
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
   assert.equal(session.getSnapshot().status, 'AUTHENTICATED')
   assert.deepEqual(effects, { expired: 0, cleared: 0 }, 'no logout')
   assert.equal(firstOne, false)
@@ -96,7 +102,7 @@ test('B: a successful GET that completes after a legitimate refresh is not a ses
       return json({ path, ok: true, auth: options.headers.Authorization })
     }
     if (path === '/trigger') {
-      return options.headers.Authorization === 'Bearer fixture-b'
+      return options.headers.Authorization === `Bearer ${tokenB}`
         ? json({ ok: true })
         : json({ message: 'expired' }, 401)
     }
@@ -107,7 +113,7 @@ test('B: a successful GET that completes after a legitimate refresh is not a ses
   const slow = client.request('/slow', { method: 'GET' })
   await client.request('/trigger', { method: 'GET' })   // performs the refresh
 
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
   release.resolve()
 
   const result = await slow
@@ -125,7 +131,7 @@ test('C: a confirmed successful mutation is returned even if credentials rotated
       return json({ path, created: true, auth: options.headers.Authorization })
     }
     if (path === '/trigger') {
-      return options.headers.Authorization === 'Bearer fixture-b'
+      return options.headers.Authorization === `Bearer ${tokenB}`
         ? json({ ok: true })
         : json({ message: 'expired' }, 401)
     }
@@ -139,10 +145,10 @@ test('C: a confirmed successful mutation is returned even if credentials rotated
 
   const result = await mutation
   assert.equal(result.created, true)
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
   const posts = calls.business.filter(call => call.method === 'POST')
   assert.equal(posts.length, 1, 'a mutation is never replayed automatically')
-  assert.equal(posts[0].authorization, 'Bearer fixture-a', 'sent with the original credentials')
+  assert.equal(posts[0].authorization, `Bearer ${tokenA}`, 'sent with the original credentials')
   assert.deepEqual(effects, { expired: 0, cleared: 0 })
 })
 
@@ -159,7 +165,7 @@ test('D: a POST that receives 401 still requires an explicit resubmission', asyn
     { code: 'AUTH_RETRY_REQUIRED', sessionRecovered: true },
   )
   assert.equal(calls.refresh, 1)
-  assert.equal(session.getSnapshot().token, 'fixture-b', 'session was recovered')
+  assert.equal(session.getSnapshot().token, tokenB, 'session was recovered')
   assert.equal(effects.expired, 0, 'recovery is not a logout')
   assert.equal(calls.business.filter(call => call.method === 'POST').length, 1, 'no replay')
 })
@@ -216,7 +222,7 @@ test('G: external cancellation during a shared refresh keeps abort semantics', a
     return json({})
   })
   const hanging = makeFetcher(async (path, options) => {
-    if (options.headers['X-CSRF-Token']) { await gate.promise; return json({ accessToken: 'fixture-b', user: { ...actor } }) }
+    if (options.headers['X-CSRF-Token']) { await gate.promise; return json({ accessToken: tokenB, user: { ...actor } }) }
     return json({})
   })
 
@@ -224,7 +230,7 @@ test('G: external cancellation during a shared refresh keeps abort semantics', a
   const { client, effects } = setup(async (url, options) => {
     const path = new URL(url).pathname
     if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf-fixture' })
-    if (path === '/auth/refresh') { await gate.promise; return json({ accessToken: 'fixture-b', user: { ...actor } }) }
+    if (path === '/auth/refresh') { await gate.promise; return json({ accessToken: tokenB, user: { ...actor } }) }
     return json({ message: 'expired' }, 401)
   })
 
@@ -284,7 +290,7 @@ test('J: pending requests started at generation B survive a B->C refresh', async
   // working across B->C. This is the case the old verifiedTokens Set broke.
   const releaseGet = deferred()
   const releasePost = deferred()
-  const issued = ['fixture-b', 'fixture-c']
+  const issued = [tokenB, tokenC]
   const business = []
 
   const { client, session, effects } = setup(async (url, options) => {
@@ -303,31 +309,31 @@ test('J: pending requests started at generation B survive a B->C refresh', async
       return json({ created: true, auth })
     }
     if (path === '/trigger-one') {
-      return auth === 'Bearer fixture-b' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+      return auth === `Bearer ${tokenB}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
     }
     if (path === '/trigger-two') {
-      return auth === 'Bearer fixture-c' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+      return auth === `Bearer ${tokenC}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
     }
     return json({ message: 'expired' }, 401)
   })
 
   await client.request('/trigger-one', { method: 'GET' })     // A -> B
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
 
   const pendingGet = client.request('/slow-get', { method: 'GET' })
   const pendingPost = client.request('/slow-post', { method: 'POST', body: {} })
 
   await client.request('/trigger-two', { method: 'GET' })     // B -> C
-  assert.equal(session.getSnapshot().token, 'fixture-c')
+  assert.equal(session.getSnapshot().token, tokenC)
 
   releaseGet.resolve()
   releasePost.resolve()
 
   const getResult = await pendingGet
   const postResult = await pendingPost
-  assert.equal(getResult.auth, 'Bearer fixture-b', 'GET kept its original credentials')
+  assert.equal(getResult.auth, `Bearer ${tokenB}`, 'GET kept its original credentials')
   assert.equal(postResult.created, true)
-  assert.equal(postResult.auth, 'Bearer fixture-b', 'POST kept its original credentials')
+  assert.equal(postResult.auth, `Bearer ${tokenB}`, 'POST kept its original credentials')
   assert.equal(business.filter(call => call.method === 'POST').length, 1, 'no POST replay')
   assert.deepEqual(effects, { expired: 0, cleared: 0 }, 'no logout')
   assert.equal(session.getSnapshot().status, 'AUTHENTICATED')
@@ -335,7 +341,7 @@ test('J: pending requests started at generation B survive a B->C refresh', async
 
 test('J2: a delayed 401 from generation B after C is installed still recovers', async () => {
   const delayed = deferred()
-  const issued = ['fixture-b', 'fixture-c']
+  const issued = [tokenB, tokenC]
   let refreshes = 0
 
   const { client, session, effects } = setup(async (url, options) => {
@@ -347,15 +353,15 @@ test('J2: a delayed 401 from generation B after C is installed still recovers', 
     }
     const auth = options.headers.Authorization
     if (path === '/late') {
-      if (auth === 'Bearer fixture-c') return json({ ok: true, auth })
+      if (auth === `Bearer ${tokenC}`) return json({ ok: true, auth })
       await delayed.promise
       return json({ message: 'expired' }, 401)
     }
     if (path === '/trigger-one') {
-      return auth === 'Bearer fixture-b' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+      return auth === `Bearer ${tokenB}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
     }
     if (path === '/trigger-two') {
-      return auth === 'Bearer fixture-c' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+      return auth === `Bearer ${tokenC}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
     }
     if (path === '/late-retry') return json({ ok: true, auth })
     return json({ message: 'expired' }, 401)
@@ -370,7 +376,7 @@ test('J2: a delayed 401 from generation B after C is installed still recovers', 
   assert.equal(result.ok, true)
   assert.equal(refreshes, 2, 'the delayed 401 must not start a third refresh')
   assert.deepEqual(effects, { expired: 0, cleared: 0 })
-  assert.equal(session.getSnapshot().token, 'fixture-c')
+  assert.equal(session.getSnapshot().token, tokenC)
 })
 
 test('K: an externally replaced token invalidates an in-flight request', async () => {
@@ -381,7 +387,7 @@ test('K: an externally replaced token invalidates an in-flight request', async (
       return json({ ok: true, auth: options.headers.Authorization })
     }
     if (path === '/trigger') {
-      return options.headers.Authorization === 'Bearer fixture-b'
+      return options.headers.Authorization === `Bearer ${tokenB}`
         ? json({ ok: true })
         : json({ message: 'expired' }, 401)
     }
@@ -391,10 +397,10 @@ test('K: an externally replaced token invalidates an in-flight request', async (
   const { client, session } = setup(fetcher)
   const slow = client.request('/slow', { method: 'GET' })
   await client.request('/trigger', { method: 'GET' })       // verified A -> B
-  assert.equal(session.getSnapshot().token, 'fixture-b')
+  assert.equal(session.getSnapshot().token, tokenB)
 
   // nobody in this client produced C: it is an arbitrary replacement
-  session.edit(draft => { draft.token = 'fixture-c' })
+  session.edit(draft => { draft.token = tokenC })
   release.resolve()
 
   await assert.rejects(slow, { code: 'SESSION_CHANGED' })
@@ -409,23 +415,23 @@ test('L: a delayed 401 never retries with an unrelated replacement token', async
     if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
     if (path === '/auth/refresh') {
       refreshes += 1
-      return json({ accessToken: 'fixture-b', user: { ...actor } })
+      return json({ accessToken: tokenB, user: { ...actor } })
     }
     const auth = options.headers.Authorization
     if (path === '/late') {
-      if (auth === 'Bearer fixture-b') return json({ ok: true, auth })
+      if (auth === `Bearer ${tokenB}`) return json({ ok: true, auth })
       await delayed.promise
       return json({ message: 'expired' }, 401)
     }
     if (path === '/trigger') {
-      return auth === 'Bearer fixture-b' ? json({ ok: true }) : json({ message: 'expired' }, 401)
+      return auth === `Bearer ${tokenB}` ? json({ ok: true }) : json({ message: 'expired' }, 401)
     }
     return json({ message: 'expired' }, 401)
   })
 
   const late = client.request('/late', { method: 'GET' })
   await client.request('/trigger', { method: 'GET' })        // verified A -> B
-  session.edit(draft => { draft.token = 'fixture-c' })       // arbitrary replacement
+  session.edit(draft => { draft.token = tokenC })       // arbitrary replacement
   delayed.resolve()
 
   await assert.rejects(late, { code: 'SESSION_CHANGED' })
@@ -449,7 +455,7 @@ test('M: a role revocation during a pending refresh cannot overwrite the session
     }
     if (path === '/auth/refresh') {
       await refreshGate.promise
-      return json({ accessToken: 'fixture-b', user: { ...actor } })
+      return json({ accessToken: tokenB, user: { ...actor } })
     }
     return fetcher(url, options)
   })
@@ -464,7 +470,7 @@ test('M: a role revocation during a pending refresh cannot overwrite the session
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
   assert.equal(session.getSnapshot().user.role, 'USER', 'obsolete refresh must not restore ADMIN')
-  assert.equal(session.getSnapshot().token, 'fixture-a', 'token was not rotated')
+  assert.equal(session.getSnapshot().token, tokenA, 'token was not rotated')
 })
 
 test('N: multiple waiters all reject when identity changes mid-refresh', async () => {
@@ -472,7 +478,7 @@ test('N: multiple waiters all reject when identity changes mid-refresh', async (
   const { fetcher } = makeFetcher(async (path, options) => {
     if (path === '/one' || path === '/two') return json({ message: 'expired' }, 401)
     if (path === '/trigger') {
-      return options.headers.Authorization === 'Bearer fixture-b'
+      return options.headers.Authorization === `Bearer ${tokenB}`
         ? json({ ok: true })
         : json({ message: 'expired' }, 401)
     }
@@ -484,7 +490,7 @@ test('N: multiple waiters all reject when identity changes mid-refresh', async (
     if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
     if (path === '/auth/refresh') {
       await gate.promise
-      return json({ accessToken: 'fixture-b', user: { ...actor } })
+      return json({ accessToken: tokenB, user: { ...actor } })
     }
     return fetcher(url, options)
   })
@@ -518,12 +524,12 @@ test('O: an obsolete refresh cannot overwrite a new session, and the new one rec
         return json({ accessToken: 'fixture-old-result', user: oldActor })
       }
       await newGate.promise
-      return json({ accessToken: 'fixture-new-result', user: newActor })
+      return json({ accessToken: newResultToken, user: newActor })
     }
     const auth = options.headers.Authorization
     if (path === '/old') return json({ message: 'expired' }, 401)
     if (path === '/new') {
-      return auth === 'Bearer fixture-new-result'
+      return auth === `Bearer ${newResultToken}`
         ? json({ ok: true, auth })
         : json({ message: 'expired' }, 401)
     }
@@ -534,7 +540,7 @@ test('O: an obsolete refresh cannot overwrite a new session, and the new one rec
   await new Promise(resolve => setTimeout(resolve, 5))
 
   // a different account signs in while the old refresh is pending
-  session.edit(draft => { draft.token = 'fixture-new'; draft.user = newActor })
+  session.edit(draft => { draft.token = newStart; draft.user = newActor })
   const newRequest = client.request('/new', { method: 'GET' })   // starts its own flight
 
   oldGate.resolve()                                              // old flight finishes first
@@ -544,10 +550,10 @@ test('O: an obsolete refresh cannot overwrite a new session, and the new one rec
   const recovered = await newRequest
 
   assert.equal(recovered.ok, true, 'the new session request recovers instead of being rejected')
-  assert.equal(recovered.auth, 'Bearer fixture-new-result')
+  assert.equal(recovered.auth, `Bearer ${newResultToken}`)
   assert.equal(refreshes, 2)
   assert.equal(session.getSnapshot().user.id, 'new-user')
-  assert.equal(session.getSnapshot().token, 'fixture-new-result')
+  assert.equal(session.getSnapshot().token, newResultToken)
 })
 
 test('P: only the owning refresh flight clears the shared reference', async () => {
@@ -567,11 +573,11 @@ test('P: only the owning refresh flight clears the shared reference', async () =
         return json({ accessToken: 'fixture-old-result', user: oldActor })
       }
       await newGate.promise
-      return json({ accessToken: 'fixture-new-result', user: newActor })
+      return json({ accessToken: newResultToken, user: newActor })
     }
     const auth = options.headers.Authorization
     if (path === '/new-request' || path === '/join') {
-      return auth === 'Bearer fixture-new-result'
+      return auth === `Bearer ${newResultToken}`
         ? json({ ok: true, auth })
         : json({ message: 'expired' }, 401)
     }
@@ -581,7 +587,7 @@ test('P: only the owning refresh flight clears the shared reference', async () =
   const oldRequest = client.request('/old-request', { method: 'GET' })
   await new Promise(resolve => setTimeout(resolve, 5))
 
-  session.edit(draft => { draft.token = 'fixture-new'; draft.user = newActor })
+  session.edit(draft => { draft.token = newStart; draft.user = newActor })
   const newRequest = client.request('/new-request', { method: 'GET' })
   await new Promise(resolve => setTimeout(resolve, 5))
   const joined = client.request('/join', { method: 'GET' })   // must join the new flight
@@ -596,7 +602,7 @@ test('P: only the owning refresh flight clears the shared reference', async () =
   assert.equal(newResult.ok, true)
   assert.equal(joinedResult.ok, true, 'the third request joined the surviving flight')
   assert.equal(refreshes, 2, 'exactly one refresh for the new session')
-  assert.equal(session.getSnapshot().token, 'fixture-new-result')
+  assert.equal(session.getSnapshot().token, newResultToken)
   assert.equal(session.getSnapshot().user.id, 'new-user')
 })
 
@@ -605,14 +611,14 @@ test('Q: renewing an authenticated session cannot install another account', asyn
     const path = new URL(url).pathname
     if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
     if (path === '/auth/refresh') {
-      return json({ accessToken: 'fixture-b', user: { ...actor, id: 'someone-else' } })
+      return json({ accessToken: tokenB, user: { ...actor, id: 'someone-else' } })
     }
     return json({ message: 'expired' }, 401)
   })
 
   await assert.rejects(client.request('/one', { method: 'GET' }), { code: 'SESSION_CHANGED' })
-  assert.equal(session.getSnapshot().token, 'fixture-a', 'the foreign credential was not installed')
-  assert.equal(session.getSnapshot().user.id, 'fixture-user')
+  assert.equal(session.getSnapshot().token, null, 'the old scope was retired without installing the foreign credential')
+  assert.equal(session.getSnapshot().user, null)
 })
 
 test('R: continuity survives many rotations without retaining history', async () => {
@@ -624,7 +630,7 @@ test('R: continuity survives many rotations without retaining history', async ()
     if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
     if (path === '/auth/refresh') {
       refreshes += 1
-      return json({ accessToken: `fixture-gen-${refreshes}`, user: { ...actor } })
+      return json({ accessToken: sessionJwt(actor.id, 'main-fixture-session', 100 + refreshes), user: { ...actor } })
     }
     const auth = options.headers.Authorization
     if (path === '/slow') {
@@ -645,9 +651,9 @@ test('R: continuity survives many rotations without retaining history', async ()
     await client.request('/trigger', { method: 'GET' })
   }
   assert.equal(refreshes, 5)
-  assert.equal(session.getSnapshot().token, 'fixture-gen-5')
+  assert.equal(session.getSnapshot().token, sessionJwt(actor.id, 'main-fixture-session', 105))
 
   release.resolve()
   const result = await slow
-  assert.equal(result.auth, 'Bearer fixture-a', 'the original request kept its credentials')
+  assert.equal(result.auth, `Bearer ${tokenA}`, 'the original request kept its credentials')
 })

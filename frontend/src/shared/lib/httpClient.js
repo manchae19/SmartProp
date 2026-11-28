@@ -6,47 +6,33 @@ function sessionChanged() {
   return Object.assign(Error("Phiên đã thay đổi."), { code: "SESSION_CHANGED" });
 }
 
-function sameActor(previous, next) {
-  const identity = user => user?.id ?? user?.userId ?? user?.sub ?? user?.email;
-  return previous.status === next.status
-    && identity(previous.user) === identity(next.user)
-    && previous.user?.role === next.user?.role
-    && previous.user?.status === next.user?.status;
+function authorityOf(user) {
+  return JSON.stringify([user?.id ?? user?.userId ?? user?.sub ?? user?.email, user?.role, user?.status]);
 }
 
-/**
- * Server-issued session claims, used ONLY to keep the UI consistent. Authorization stays with the
- * server: every request is still authorized by the backend, and nothing here grants access.
- *
- * Returns a stable "sub|jti|ver" string, or null when the token is opaque/unparseable.
- */
+function sameActor(previous, next) {
+  return previous.status === next.status && authorityOf(previous.user) === authorityOf(next.user);
+}
+
+// Claims from the auth response fence UI continuity. The backend validates the JWT and access.
 function accessSession(token) {
   if (typeof token !== "string" || !token) return null;
   const parts = token.split(".");
-  if (parts.length < 2) return null;
+  if (parts.length !== 3 || !parts.every(part => part.length % 4 !== 1 && /^[A-Za-z0-9_-]+$/.test(part))) return null;
   try {
-    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const decode = part => JSON.parse(atob(part.replace(/-/g, "+").replace(/_/g, "/")));
+    const header = decode(parts[0]);
+    if (typeof header?.alg !== "string" || !header.alg || header.alg === "none") return null;
+    const payload = decode(parts[1]);
     const { iss, sub, jti, ver } = payload || {};
     if (iss === "smartprop" && typeof sub === "string" && sub
-      && typeof jti === "string" && jti && Number.isInteger(ver)) {
-      return JSON.stringify([sub, jti, ver]);
+      && typeof jti === "string" && jti && Number.isSafeInteger(ver) && ver >= 0) {
+      return { sub, jti, ver };
     }
   } catch {
     // opaque or malformed token: no claims to compare
   }
   return null;
-}
-
-/** Same user and same server session (jti), regardless of ver. */
-function sameServerSession(left, right) {
-  if (!left || !right) return null;
-  try {
-    const a = JSON.parse(left);
-    const b = JSON.parse(right);
-    return a[0] === b[0] && a[1] === b[1];
-  } catch {
-    return null;
-  }
 }
 
 function identityOf(snapshot) {
@@ -55,9 +41,8 @@ function identityOf(snapshot) {
     // PR48 keeps a session generation on the store; including it makes a same-account new session
     // a different identity, which is exactly what the shared contract requires.
     snapshot?.authGeneration ?? null,
-    snapshot?.user?.id ?? snapshot?.user?.userId ?? snapshot?.user?.sub ?? snapshot?.user?.email ?? null,
-    snapshot?.user?.role ?? null,
-    snapshot?.user?.status ?? null,
+    snapshot?.authTransition === true,
+    authorityOf(snapshot?.user),
   ]);
 }
 
@@ -92,7 +77,6 @@ export function createHttpClient({
   timeoutForPath = path => path === "/recommendations/research" ? 180000 : path === "/geocoding/search" ? 20000 : 15000
 }) {
   let refreshFlight = null,
-    refreshFlightKey = null,
     initialization = null,
     initialized = false,
     epoch = 0,
@@ -102,28 +86,33 @@ export function createHttpClient({
     // an external replacement (even for the same actor, even if the old token is later restored)
     // drops `currentCredential`, so nothing matches and continuity is broken immediately.
     currentCredential = session.getSnapshot().token || null,
+    lastObservedToken = currentCredential,
     credentialGen = 0,
     // Incremented on every credential write this client did not perform. Requests capture it and
     // reject when it moved, so an external A -> X -> A round-trip cannot restore continuity even
     // though the final token equals the original one.
     scopeGen = 0,
-    // rotations: monotonic count of verified refreshes (refreshes only - never session creation).
-    rotations = 0,
     // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
     // briefly restored cannot make a restricted response look current again.
     identityEpoch = 0,
-    lastIdentity = identityOf(session.getSnapshot());
+    lastIdentity = identityOf(session.getSnapshot()),
+    lastAuthority = authorityOf(session.getSnapshot().user),
+    lastGeneration = session.getSnapshot().authGeneration;
   // Set while this client itself writes the credential, so our own refresh is not mistaken for an
   // external replacement. The subscription is synchronous, so the check happens in the same tick.
   let applyingInternalCredential = false;
-  function installCredential(token) {
+  function installCredential(token, edit) {
+    currentCredential = token;
+    lastObservedToken = token;
     applyingInternalCredential = true;
     try {
-      session.edit(draft => draft.token = token);
+      session.edit(draft => {
+        draft.token = token;
+        edit(draft);
+      });
     } finally {
       applyingInternalCredential = false;
     }
-    currentCredential = token;
   }
   if (typeof session.subscribe === "function") {
     session.subscribe(() => {
@@ -133,76 +122,84 @@ export function createHttpClient({
         lastIdentity = next;
         identityEpoch += 1;
       }
-      if (!applyingInternalCredential && snapshot.token !== currentCredential) {
+      const token = snapshot.token || null;
+      const authority = authorityOf(snapshot.user);
+      const external = !applyingInternalCredential;
+      const replacedToken = external && token !== lastObservedToken;
+      const replacedAuthority = external && authority !== lastAuthority;
+      const needsGeneration = (replacedToken || replacedAuthority) && lastGeneration === snapshot.authGeneration;
+      if (replacedToken) {
         // Someone else wrote the credential: stop trusting it for continuity and mark the whole
         // scope as discontinuous. A later internal refresh does not undo this.
         currentCredential = null;
         credentialGen += 1;
         scopeGen += 1;
       }
+      lastObservedToken = token;
+      lastAuthority = authority;
+      lastGeneration = snapshot.authGeneration;
+      if (needsGeneration) session.edit(advanceGeneration);
     });
   }
   const state = (status, error = null) => {
-    session.edit(draft => draft.status = status);
-    session.edit(draft => draft.error = error);
+    session.edit(draft => {
+      draft.status = status;
+      draft.error = error;
+    });
     onState(status, error);
   };
   const terminal = e => e?.status === 401 && e?.code !== "AUTH_RETRY_REQUIRED" || e?.status === 403 && e?.code === "ACCOUNT_LOCKED";
+  function advanceGeneration(draft) {
+    draft.authGeneration = (draft.authGeneration ?? 0) + 1;
+  }
   function invalidate() {
     epoch++;
-    // PR48 reads authGeneration/authTransition from the same store for UI continuity.
-    session.edit(draft => { draft.authGeneration = epoch; });
+    initialized = false;
+    session.edit(draft => {
+      advanceGeneration(draft);
+      draft.authTransition = false;
+    });
   }
   function beginAuthChange() {
     epoch++;
     session.edit(draft => {
-      draft.authGeneration = epoch;
+      advanceGeneration(draft);
       draft.authTransition = true;
     });
+    return epoch;
   }
   function finishAuthChange(current) {
     if (current === epoch) session.edit(draft => { draft.authTransition = false; });
   }
-  function expire(redirect = true) {
-    invalidate();
-    clear();
-    session.edit(draft => draft.token = null);
-    session.edit(draft => {
+  function expire(redirect = true, { reinitialize = false } = {}) {
+    epoch++;
+    initialized = !reinitialize;
+    installCredential(null, draft => {
       draft.user = null;
-      draft.authGeneration = epoch;
+      draft.status = "UNAUTHENTICATED";
+      draft.error = null;
+      advanceGeneration(draft);
       draft.authTransition = false;
     });
-    initialized = true;
-    state("UNAUTHENTICATED");
+    clear();
+    onState("UNAUTHENTICATED", null);
     if (redirect) expired();
   }
   function unavailable(e) {
     state("UNAVAILABLE", e?.message || "Không thể kiểm tra phiên. Vui lòng thử lại.");
   }
-  /**
-   * @param {boolean} verified true only for a refresh this client performed and scope-checked.
-   *   Session creation (login, Google completion) is NOT a rotation: it starts a new session, so
-   *   it invalidates the epoch and clears the verified chain instead of extending it.
-   */
-  function accept(result, current, { verified = false } = {}) {
+  function accept(result, current, { replaceScope = false } = {}) {
     if (current !== epoch) throw sessionChanged();
-    installCredential(result.accessToken);
-    session.edit(draft => draft.user = result.user);
-    if (verified) {
-      credentialGen += 1;
-      rotations += 1;
-    } else {
-      // Session creation starts a new scope: nothing from the previous session may be reused.
-      invalidate();
-      credentialGen += 1;
-    }
-    session.edit(draft => {
-      // a verified renewal stays inside the same session generation
-      if (!verified) draft.authGeneration = epoch;
-      draft.authTransition = false;
-    });
-    state("AUTHENTICATED");
+    if (replaceScope) epoch++;
+    credentialGen++;
     initialized = true;
+    installCredential(result.accessToken, draft => {
+      draft.user = result.user;
+      draft.status = "AUTHENTICATED";
+      draft.error = null;
+      if (replaceScope) advanceGeneration(draft);
+    });
+    onState("AUTHENTICATED", null);
     return result;
   }
   async function send(path, {
@@ -272,11 +269,11 @@ export function createHttpClient({
    */
   function rotate({ allowNewIdentity = false } = {}) {
     const startedSnapshot = session.getSnapshot();
+    if (startedSnapshot.authTransition) return Promise.reject(sessionChanged());
     // A flight is only reusable inside the exact session scope it was started in; a new session
     // must never join an obsolete refresh that belongs to the previous one.
-    const flightKey = `${epoch}:${identityEpoch}:${scopeGen}:${startedSnapshot.token}`;
-    if (refreshFlight && refreshFlightKey === flightKey) return refreshFlight;
-    let claimsVerChanged = false;
+    const flightKey = `${epoch}:${identityEpoch}:${scopeGen}:${credentialGen}:${allowNewIdentity}`;
+    if (refreshFlight?.key === flightKey) return refreshFlight.promise;
     const current = epoch,
       startedIdentity = identityEpoch,
       startedScopeGen = scopeGen,
@@ -300,41 +297,27 @@ export function createHttpClient({
           }
         });
         ensureRefreshScope();
-        // Renewing an existing authenticated session must not install a response that belongs to
-        // a different account. Initial restoration is allowed to establish the identity.
-        if (!allowNewIdentity && started.user) {
-          const mine = identityOf({ status: "AUTHENTICATED", user: started.user });
-          const theirs = identityOf({ status: "AUTHENTICATED", user: result.user });
-          if (mine !== theirs) throw sessionChanged();
+        if (allowNewIdentity) return accept(result, current, { replaceScope: true });
+        const before = accessSession(started.token);
+        const after = accessSession(result?.accessToken);
+        const actor = result?.user?.id ?? result?.user?.userId ?? result?.user?.sub;
+        if (!before || !after || before.sub !== after.sub || before.jti !== after.jti
+            || actor == null || String(actor) !== after.sub) {
+          // A different or unprovable session requires an explicit initialization of the cookie.
+          expire(false, { reinitialize: true });
+          throw sessionChanged();
         }
-        // A renewal may rotate the access token, but it must stay inside the same server session.
-        // A different `sub` is another account; a different `jti` is another session for the same
-        // account. Neither is an ordinary credential renewal. A changed `ver` IS legitimate: the
-        // server re-issued the claims (e.g. role change), so the identity epoch must move.
-        if (!allowNewIdentity) {
-          const before = accessSession(started.token);
-          const after = accessSession(result.accessToken);
-          if (before && after) {
-            const [oldSub, oldJti, oldVer] = JSON.parse(before);
-            const [newSub, newJti, newVer] = JSON.parse(after);
-            if (oldSub !== newSub) throw sessionChanged();
-            if (oldJti !== newJti) throw sessionChanged();
-            if (oldVer !== newVer) claimsVerChanged = true;
-          }
-        }
-        return accept(result, current, { verified: true });
+        const accessChanged = before.ver !== after.ver || !sameActor(started, { ...started, user: result.user });
+        return accept(result, current, { replaceScope: accessChanged });
       };
-    refreshFlightKey = flightKey;
-    const flight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
+    const flight = { key: flightKey };
+    flight.promise = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
       // Only the owning flight may clear the shared reference; a newer session's flight must
       // survive an older one finishing first.
-      if (refreshFlight === flight) {
-        refreshFlight = null;
-        refreshFlightKey = null;
-      }
+      if (refreshFlight === flight) refreshFlight = null;
     });
     refreshFlight = flight;
-    return flight;
+    return flight.promise;
   }
   async function request(path, options = {}) {
     const started = session.getSnapshot();
@@ -344,6 +327,7 @@ export function createHttpClient({
     const startedScopeGen = scopeGen;
     const authenticated = options.authenticated !== false;
     const redirect = options.redirectOnSessionExpiry !== false;
+    if (authenticated && started.authTransition) throw sessionChanged();
     /**
      * A response is stale when the session was replaced, the actor/role/status changed, or the
      * token was replaced by something this client did not refresh itself. A token that changed
@@ -375,17 +359,11 @@ export function createHttpClient({
     } catch (e) {
       ensureCurrent(started);
       if (authenticated && terminal(e)) {
-        if (refreshEnabled && started.token && e.status === 401 && !path.startsWith("/auth/")) {
-          let refreshed = null;
-          // Another request may already have completed the refresh while this response was in
-          // flight; in that case reuse it instead of rotating a second time.
-          const latestSnapshot = session.getSnapshot();
-          const alreadyRotated = credentialGen !== startedCredentialGen
-            && latestSnapshot.token !== started.token
-            && latestSnapshot.token === currentCredential
-            && sameActor(started, latestSnapshot);
+        // ensureCurrent has already verified that any changed credential came from our own refresh.
+        const alreadyRotated = started.token !== session.getSnapshot().token;
+        if (refreshEnabled && started.token && e.status === 401 && (alreadyRotated || !path.startsWith("/auth/"))) {
           try {
-            if (!alreadyRotated) refreshed = await waitForRefresh(rotate(), options.signal);
+            if (!alreadyRotated) await waitForRefresh(rotate(), options.signal);
           } catch (next) {
             if (next.code !== "REQUEST_ABORTED" && next.code !== "SESSION_CHANGED") {
               ensureCurrent(started);
@@ -394,8 +372,7 @@ export function createHttpClient({
             throw next;
           }
           const retryScope = session.getSnapshot();
-          ensureCurrent(retryScope);
-          if (refreshed && retryScope.token !== refreshed.accessToken) throw sessionChanged();
+          ensureCurrent(started);
           // Renew credentials but require explicit resubmission for writes; never duplicate an uncertain mutation.
           if (!["GET", "HEAD", "OPTIONS"].includes((options.method || "GET").toUpperCase())) throw Object.assign(Error("Phiên đã được gia hạn. Vui lòng thực hiện lại thao tác vừa gửi."), {
             status: 401,
@@ -408,11 +385,11 @@ export function createHttpClient({
             return result;
           } catch (next) {
             ensureCurrent(retryScope);
-            if (terminal(next)) expire(redirect);
+            if (terminal(next) && retryScope.token === session.getSnapshot().token) expire(redirect);
             throw next;
           }
         }
-        expire(redirect);
+        if (!alreadyRotated) expire(redirect);
       }
       throw e;
     }
@@ -420,8 +397,10 @@ export function createHttpClient({
   function initialize({
     force = false
   } = {}) {
-    if (initialization) return initialization;
+    if (session.getSnapshot().authTransition) return Promise.resolve(session.getSnapshot().status);
+    if (initialization?.stillCurrent()) return initialization.promise;
     if (initialized && !force) return Promise.resolve(session.getSnapshot().status);
+    state("INITIALIZING");
     const current = epoch;
     // Captured before any async work: `started` used to be an undeclared rotate()-local name.
     const startedSnapshot = session.getSnapshot();
@@ -433,25 +412,33 @@ export function createHttpClient({
       && identityEpoch === startedIdentity
       && scopeGen === startedScopeGen
       && (session.getSnapshot().token ?? null) === (startedToken ?? null);
-    state("INITIALIZING");
-    const initializationFlight = (async () => {
+    const flight = { stillCurrent };
+    flight.promise = (async () => {
       try {
-        if (session.getSnapshot().token) {
+        if (startedToken) {
           try {
             const profile = await send("/users/me");
             if (stillCurrent()) {
-              session.edit(draft => draft.user = profile);
-              state("AUTHENTICATED");
+              session.edit(draft => {
+                draft.user = profile;
+                draft.status = "AUTHENTICATED";
+                draft.error = null;
+              });
+              initialized = true;
+              onState("AUTHENTICATED", null);
             }
           } catch (e) {
             if (!terminal(e) || !refreshEnabled) throw e;
             if (!stillCurrent()) throw sessionChanged();
             // An existing access token means an existing session: the renewal must not adopt a
             // different account. Without a token this is cookie-based restoration.
-            await rotate({ allowNewIdentity: !startedSnapshot.token });
+            await rotate();
           }
         } else if (refreshEnabled) await rotate({ allowNewIdentity: true });
-        else if (current === epoch) state("UNAUTHENTICATED");
+        else if (stillCurrent()) {
+          initialized = true;
+          state("UNAUTHENTICATED");
+        }
       } catch (e) {
         if (stillCurrent()) {
           if (terminal(e)) expire(false);else if (e.code !== "SESSION_CHANGED") unavailable(e);
@@ -462,58 +449,67 @@ export function createHttpClient({
       return session.getSnapshot().status;
     })().finally(() => {
       // only the owning initialization may clear the shared reference
-      if (initialization === initializationFlight) initialization = null;
+      if (initialization === flight) initialization = null;
     });
-    initialization = initializationFlight;
-    return initialization;
+    initialization = flight;
+    return flight.promise;
   }
-  async function login(body) {
-    invalidate();
-    const current = epoch;
-    return accept(await send("/auth/login", {
+  async function changeAuthentication(operation) {
+    const current = beginAuthChange();
+    const ensureOwner = () => {
+      if (current !== epoch) throw sessionChanged();
+    };
+    const run = () => {
+      ensureOwner();
+      return operation(current, ensureOwner);
+    };
+    try {
+      // Cookie mutations share the existing refresh lock when the browser supports it.
+      return await (lock ? lock(run) : run());
+    } finally {
+      finishAuthChange(current);
+    }
+  }
+  function login(body) {
+    return changeAuthentication(async current => accept(await send("/auth/login", {
       method: "POST",
       authenticated: false,
       body,
-      headers: refreshEnabled ? {
-        "X-Refresh-Session": "true"
-      } : {}
-    }), current);
+      headers: refreshEnabled ? { "X-Refresh-Session": "true" } : {}
+    }), current));
   }
-  async function logout() {
-    if (refreshEnabled) {
-      const c = await csrf(),
-        options = {
+  function logout() {
+    return changeAuthentication(async (_, ensureOwner) => {
+      if (refreshEnabled) {
+        const c = await csrf();
+        ensureOwner();
+        const options = {
           method: "POST",
-          headers: {
-            [c.headerName]: c.token
-          }
+          headers: { [c.headerName]: c.token }
         };
-      try {
-        await send("/auth/logout", options);
-      } catch (e) {
-        if (e.status !== 401) throw e;
-        await send("/auth/logout", {
-          ...options,
-          authenticated: false
-        });
-      }
-    } else await send("/auth/logout", {
-      method: "POST"
+        try {
+          await send("/auth/logout", options);
+        } catch (e) {
+          if (e.status !== 401) throw e;
+          ensureOwner();
+          await send("/auth/logout", { ...options, authenticated: false });
+        }
+      } else await send("/auth/logout", { method: "POST" });
+      ensureOwner();
+      expire(false);
+      return true;
     });
-    expire(false);
-    initialized = true;
   }
-  async function google() {
-    invalidate();
-    const current = epoch,
-      c = await csrf();
-    return accept(await send("/auth/oauth2/complete", {
-      method: "POST",
-      authenticated: false,
-      headers: {
-        [c.headerName]: c.token
-      }
-    }), current);
+  function google() {
+    return changeAuthentication(async (current, ensureOwner) => {
+      const c = await csrf();
+      ensureOwner();
+      return accept(await send("/auth/oauth2/complete", {
+        method: "POST",
+        authenticated: false,
+        headers: { [c.headerName]: c.token }
+      }), current);
+    });
   }
   /** Read-only bounded scope, for the shared-session contract and diagnostics. */
   function sessionScope() {
@@ -535,6 +531,7 @@ export function createHttpClient({
     google,
     logout,
     invalidate,
+    clearSession: () => expire(false, { reinitialize: true }),
     initialize,
     unavailable,
     restore: async () => {
