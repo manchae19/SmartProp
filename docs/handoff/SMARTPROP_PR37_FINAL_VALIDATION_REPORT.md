@@ -200,3 +200,60 @@ the old condition, so an in-flight request could bind to credentials this client
 Note on scope: g1–g3 exercise anonymous market behaviour only. The authenticated research
 authorization path is verified **by g13**, which requires the fixture-only build served by
 `e2e/pr37-preview.mjs` (synthetic session entry), not the plain dev server.
+
+---
+
+## Refresh continuity — bounded generation model (supersedes the token Set)
+
+**Defect in the previous fix:** `verifiedTokens.has(latest.token) && !verifiedTokens.has(snapshot.token)`
+required the *old* token to be absent from the set, so a second legitimate refresh B→C was rejected
+because B was already recorded. It also kept an unbounded history of access tokens.
+
+**Replacement (still confined to `frontend/src/shared/lib/httpClient.js`):**
+
+- **Bounded state**: `currentCredential` (the one credential this client installed) plus
+  `credentialGen` (a counter). No history is retained.
+- **Continuity rule** in `ensureCurrent`: a token change is tolerated only when the generation moved
+  since the request started **and** the live token still equals `currentCredential`. This holds for
+  any generation (A→B→C…), and fails as soon as the credential is not ours.
+- **External replacement detection**: the synchronous session subscription compares the live token
+  with `currentCredential`; our own writes are flagged so they are not misread. An external write
+  nulls `currentCredential` and advances the generation, so continuity breaks immediately — even for
+  the same actor, and even if the original token is later restored.
+- **Session creation** (login, Google completion) invalidates the epoch and advances the generation;
+  it is never counted as a rotation.
+- **Flight ownership**: the `finally` block only clears the shared reference when the completing
+  flight is still the owner, so an older flight finishing first cannot release a newer session's.
+  Flights are keyed by `epoch:identityEpoch:token`.
+- **Refresh result identity**: renewing an already-authenticated session rejects a refresh payload
+  for a different account; only initial cookie restoration may establish a new identity.
+- `rotate()` validates `identityEpoch` before CSRF, after CSRF and after the refresh response.
+
+### Tests (`frontend/tests/httpClientRefreshEpoch.test.mjs`, 19 cases)
+
+New/rewritten: **J** pending GET *and* POST started at generation B survive B→C (GET succeeds,
+confirmed POST succeeds, one POST only, no `SESSION_CHANGED`, no logout) · **J2** a delayed 401 from
+B after C is installed recovers with exactly two refreshes · **K** external replacement after a
+verified refresh is rejected · **L** delayed 401 after external replacement neither retries with the
+foreign token nor refreshes again · **M** revocation while CSRF/refresh pendings cannot overwrite
+the session · **N** multiple waiters all reject when identity changes · **O** old refresh answers
+late with the old actor while a new session's refresh answers with the new actor: the old request is
+rejected, the **new request recovers**, and the final token/actor are the new session's · **P** only
+the owning flight clears the shared reference, and a third request joins the surviving flight
+(exactly one refresh for the new session) · **Q** renewing an authenticated session rejects a payload
+for another account without installing it · **R** five consecutive rotations keep an in-flight
+request valid with no retained history. A–I unchanged.
+
+### Fresh verification (this run, exit codes)
+
+| Suite | Result |
+|---|---|
+| `node --test tests/httpClient*.test.mjs` | **36 tests, 36 pass, 0 fail**, exit 0 |
+| `npm test` | **213 tests, 213 pass, 0 fail**, exit 0 |
+| WP-02 Chromium | **12 groups PASS**, exit 0 |
+| PR #37 g1, g2, g3, g13 (fixture preview) | **4/4 groups**, exit 0 |
+| Account / login / navigation smoke | PASS, exit 0 |
+| Vite production build | PASS (2.26s) |
+
+g1–g3 remain anonymous market checks; the authenticated research authorization path is covered by
+**g13**, which needs the fixture-only dist from `e2e/pr37-preview.mjs`.

@@ -58,22 +58,43 @@ export function createHttpClient({
     initialization = null,
     initialized = false,
     epoch = 0,
-    // Tokens this client obtained from a refresh it performed and scope-verified. A request may
-    // only survive a token change when the new token is one of these; an arbitrary replacement
-    // (another tab, an external writer, a stolen session) is not in the chain and is rejected.
-    verifiedTokens = new Set(),
+    // Bounded credential state: the credential this client currently trusts plus a generation
+    // counter. No history of past tokens is kept. A request may survive a token change only when
+    // the credential generation moved AND the live token still equals the credential we installed;
+    // an external replacement (even for the same actor, even if the old token is later restored)
+    // drops `currentCredential`, so nothing matches and continuity is broken immediately.
+    currentCredential = session.getSnapshot().token || null,
+    credentialGen = 0,
     // rotations: monotonic count of verified refreshes (refreshes only - never session creation).
     rotations = 0,
     // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
     // briefly restored cannot make a restricted response look current again.
     identityEpoch = 0,
     lastIdentity = identityOf(session.getSnapshot());
+  // Set while this client itself writes the credential, so our own refresh is not mistaken for an
+  // external replacement. The subscription is synchronous, so the check happens in the same tick.
+  let applyingInternalCredential = false;
+  function installCredential(token) {
+    applyingInternalCredential = true;
+    try {
+      session.edit(draft => draft.token = token);
+    } finally {
+      applyingInternalCredential = false;
+    }
+    currentCredential = token;
+  }
   if (typeof session.subscribe === "function") {
     session.subscribe(() => {
-      const next = identityOf(session.getSnapshot());
+      const snapshot = session.getSnapshot();
+      const next = identityOf(snapshot);
       if (next !== lastIdentity) {
         lastIdentity = next;
         identityEpoch += 1;
+      }
+      if (!applyingInternalCredential && snapshot.token !== currentCredential) {
+        // Someone else wrote the credential: stop trusting it for continuity.
+        currentCredential = null;
+        credentialGen += 1;
       }
     });
   }
@@ -105,14 +126,15 @@ export function createHttpClient({
    */
   function accept(result, current, { verified = false } = {}) {
     if (current !== epoch) throw sessionChanged();
-    session.edit(draft => draft.token = result.accessToken);
+    installCredential(result.accessToken);
     session.edit(draft => draft.user = result.user);
     if (verified) {
-      verifiedTokens.add(result.accessToken);
+      credentialGen += 1;
       rotations += 1;
     } else {
+      // Session creation starts a new scope: nothing from the previous session may be reused.
       invalidate();
-      verifiedTokens.clear();
+      credentialGen += 1;
     }
     state("AUTHENTICATED");
     initialized = true;
@@ -179,7 +201,11 @@ export function createHttpClient({
   const csrf = () => send("/auth/csrf", {
     authenticated: false
   });
-  function rotate() {
+  /**
+   * @param {{allowNewIdentity?: boolean}} options allowNewIdentity is true only for the initial
+   *   cookie-based restoration, where the session is created rather than renewed.
+   */
+  function rotate({ allowNewIdentity = false } = {}) {
     const startedSnapshot = session.getSnapshot();
     // A flight is only reusable inside the exact session scope it was started in; a new session
     // must never join an obsolete refresh that belongs to the previous one.
@@ -205,19 +231,32 @@ export function createHttpClient({
           }
         });
         ensureRefreshScope();
+        // Renewing an existing authenticated session must not install a response that belongs to
+        // a different account. Initial restoration is allowed to establish the identity.
+        if (!allowNewIdentity && started.user) {
+          const mine = identityOf({ status: "AUTHENTICATED", user: started.user });
+          const theirs = identityOf({ status: "AUTHENTICATED", user: result.user });
+          if (mine !== theirs) throw sessionChanged();
+        }
         return accept(result, current, { verified: true });
       };
     refreshFlightKey = flightKey;
-    refreshFlight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
-      refreshFlight = null;
-      refreshFlightKey = null;
+    const flight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
+      // Only the owning flight may clear the shared reference; a newer session's flight must
+      // survive an older one finishing first.
+      if (refreshFlight === flight) {
+        refreshFlight = null;
+        refreshFlightKey = null;
+      }
     });
-    return refreshFlight;
+    refreshFlight = flight;
+    return flight;
   }
   async function request(path, options = {}) {
     const started = session.getSnapshot();
     const current = epoch;
     const startedIdentity = identityEpoch;
+    const startedCredentialGen = credentialGen;
     const authenticated = options.authenticated !== false;
     const redirect = options.redirectOnSessionExpiry !== false;
     /**
@@ -233,11 +272,14 @@ export function createHttpClient({
       if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
       if (!sameActor(snapshot, latest)) throw sessionChanged();
       if (snapshot.token !== latest.token) {
-        // Only a token produced by our own verified refresh may replace the one we sent with.
-        // An externally written token - even for the same actor - is a different credential.
-        const supersededByVerified = verifiedTokens.has(latest.token)
-          && !verifiedTokens.has(snapshot.token);
-        if (!supersededByVerified) throw sessionChanged();
+        // Continuity requires (a) a verified refresh happened since this request started and
+        // (b) the live token is still exactly the credential this client installed. That holds for
+        // any generation (A->B->C), and fails for an external replacement because it nulls
+        // `currentCredential`, even when the actor is unchanged or the old token returns.
+        const renewedByUs = credentialGen !== startedCredentialGen
+          && currentCredential !== null
+          && latest.token === currentCredential;
+        if (!renewedByUs) throw sessionChanged();
       }
     };
     try {
@@ -252,8 +294,9 @@ export function createHttpClient({
           // Another request may already have completed the refresh while this response was in
           // flight; in that case reuse it instead of rotating a second time.
           const latestSnapshot = session.getSnapshot();
-          const alreadyRotated = verifiedTokens.has(latestSnapshot.token)
+          const alreadyRotated = credentialGen !== startedCredentialGen
             && latestSnapshot.token !== started.token
+            && latestSnapshot.token === currentCredential
             && sameActor(started, latestSnapshot);
           try {
             if (!alreadyRotated) refreshed = await waitForRefresh(rotate(), options.signal);
@@ -306,7 +349,7 @@ export function createHttpClient({
             }
           } catch (e) {
             if (!terminal(e) || !refreshEnabled) throw e;
-            await rotate();
+            await rotate({ allowNewIdentity: started.user === null });
           }
         } else if (refreshEnabled) await rotate();else if (current === epoch) state("UNAUTHENTICATED");
       } catch (e) {
