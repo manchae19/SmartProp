@@ -33,3 +33,18 @@ Main có PR #44/#45/#46/#47. Trong lúc audit, WP‑04 B6 và PR #37 integration
 ## Rollback và evidence
 
 Tắt flags theo producer/exporter/UI, dùng previous schema compatible khi được phê duyệt. Ghi discontinuity và suppress alerts cho window lẫn phiên bản. Revert monitoring-only commit theo plan giữ point, artifacts, config auth và migrations. Giữ Caddy actual runtime, live MySQL/grants/views chưa xác minh. Checkpoint cục bộ giữ exact revision, artifact comparison và reproducibility output. [Research audit](SMARTPROP_WP06_MODEL_MONITORING_RESEARCH_REPORT.md) · [Metric contract](SMARTPROP_WP06_MODEL_MONITORING_METRIC_CONTRACT.md) · [Benchmark](SMARTPROP_WP06_MODEL_MONITORING_BENCHMARK_REPORT.md).
+
+## B0/B1 checkpoint và map B2
+
+B0 chốt registry/thời điểm đếm từ [metric contract](SMARTPROP_WP06_MODEL_MONITORING_METRIC_CONTRACT.md), privacy và W20. B1 cô lập trong `ai-services/app/monitoring`, config mặc định disabled và được gọi chỉ từ test/profile synthetic trong phiên này. Không đăng ký routes hay startup hooks. [Báo cáo triển khai](SMARTPROP_WP06_TELEMETRY_CORE_IMPLEMENTATION_REPORT.md).
+
+| Insertion point khi được duyệt B2 | Evidence cần thu |
+| --- | --- |
+| `ai-services/main.py` `create_app/lifespan` (24–57) | Instantiate dark-off recorder per worker, observe existing V1.3 model load duration/integrity một lần, never load extra model. Define controlled UTC rotations, close producer interrupt ledger on graceful stop. Dự kiến preserve separate legacy state behavior. |
+| `ai-services/main.py` `validation_error` (69) và `app/api/valuation.py` `predictor_for`, `health`, `model_options`, `_validate_location` | Map allowlisted 422/admission/model availability/health/options. Lấy trusted surface origin sau B4. Không ghi raw error/body. Check timeout/cancel observability, classify endpoint failure đúng boundary. |
+| `app/api/valuation.py` `predict` (150), `predict_v1_3_preview` (191) và `app/api/valuation_v1_3.py` `v1_3_predict` (150) | Observe prediction/validation disposition sau parse, tách primary-serving với diagnostic population. Correlation nguồn Stage B4. Count request đến AI và genuine invocation riêng. Không đổi response/schema. |
+| `app/models/xgboost/predictor_v1_3.py` `predict_from_v6_payload` (295), `predict` (119), `transform` call (~156), `model.predict` (~159), calibration (~212–231) | Capture adapter/transform/point/calibration timings và clean valid finite output. Count booster invocation một lần, separate calibration validity, no synthetic values. B3 bổ sung flags quanh boundary transform của 22 features. |
+| WP‑04 explanation producer và three projections sau integration | Status, reconstruction pass/fail đã tính với tolerance `1e−5`, metadata version và timing. Chỉ tích hợp sau khi review merge status, auth và producer contract. Hiện TreeSHAP inline trên main, chưa được dùng B1 để suy độc lập failure isolation. Fallback legacy must remain as specified by WP‑04. |
+| WP‑05 optional interval adapter | `NOT_ENABLED` trong pilot cho đến khi WP‑05 có artifact/labels được duyệt. Zero empirical coverage claims. Any availability/width collection waits appropriate WP‑05 stage. |
+
+B2/B3 tiếp tục chờ phê duyệt. Các báo cáo branch khác là tham chiếu read-only.
