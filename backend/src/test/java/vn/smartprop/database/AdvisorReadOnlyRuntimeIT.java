@@ -38,6 +38,7 @@ class AdvisorReadOnlyRuntimeIT {
             jdbc.update("INSERT INTO users(email,password_hash,full_name,role,status,created_at,updated_at,notification_preferences) "
                 +"SELECT ?, 'synthetic-unusable', ?, ?, 'ACTIVE', UTC_TIMESTAMP(6), UTC_TIMESTAMP(6), JSON_OBJECT() "
                 +"WHERE NOT EXISTS(SELECT 1 FROM users WHERE email=?)",email,"SYNTHETIC ADVISOR P1 "+role,role,email);
+            jdbc.update("UPDATE auth_sessions s JOIN users u ON u.id=s.user_id SET s.revoked=1 WHERE u.email=? AND s.revoked=0 AND (s.expires_at<=UTC_TIMESTAMP(6) OR (u.role='ADMIN' AND COALESCE(s.last_used_at,s.created_at)<=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 MINUTE)))",email);
             jdbc.update("INSERT INTO auth_sessions(id,user_id,created_at,expires_at,revoked,last_used_at) "
                 +"SELECT UUID(),u.id,UTC_TIMESTAMP(6),DATE_ADD(UTC_TIMESTAMP(6),INTERVAL 8 HOUR),0,UTC_TIMESTAMP(6) "
                 +"FROM users u WHERE u.email=? AND NOT EXISTS(SELECT 1 FROM auth_sessions s WHERE s.user_id=u.id AND s.revoked=0)",email);
@@ -62,7 +63,7 @@ class AdvisorReadOnlyRuntimeIT {
             "--app.recommendation.allow-unverified-external=false","--app.email.enabled=false","--app.email.worker-enabled=false"));
     }
     ConfigurableApplicationContext start(List<String> args) {
-        return new SpringApplicationBuilder(vn.smartprop.SmartPropApplication.class,AdvisorFixtureRuntimeConfiguration.class).run(args.toArray(String[]::new));
+        return new SpringApplicationBuilder(vn.smartprop.SmartPropApplication.class).run(args.toArray(String[]::new));
     }
     Map<String,Object> snapshot(JdbcTemplate jdbc) {
         var history=jdbc.queryForList("SELECT * FROM flyway_schema_history ORDER BY installed_rank");
@@ -94,12 +95,13 @@ class AdvisorReadOnlyRuntimeIT {
         var advisor=call(context,"/api/v1/advisor/consult",null,"{\"budgetVnd\":4000000000,\"purpose\":\"LIVING\",\"propertyType\":\"HOUSE\",\"includeResearch\":false,\"includeValuation\":false,\"includeComparables\":false}");
         assertEquals(200,advisor.statusCode(),advisor.body());assertEquals("SAFE",json.readTree(advisor.body()).path("mode").asText());
         for(String path:List.of("/api/v1/news","/api/v1/news/featured","/api/v1/news/sources")) {
-            var response=call(context,path,null,null);assertEquals(news?200:503,response.statusCode(),response.body());
+            var response=call(context,path,null,null);assertEquals(news?200:503,response.statusCode(),path+" response="+response.body());
             if(!news)assertTrue(response.body().contains("NEWS_SCHEMA_UNAVAILABLE"));
         }
         assertEquals(401,call(context,"/api/v1/admin/news/sources",null,null).statusCode());
         for(String role:List.of("BUYER","BROKER"))assertEquals(403,call(context,"/api/v1/admin/news/sources",token(context,jdbc,role),null).statusCode());
-        assertEquals(news?200:503,call(context,"/api/v1/admin/news/sources",token(context,jdbc,"ADMIN"),null).statusCode());
+        var adminResponse=call(context,"/api/v1/admin/news/sources",token(context,jdbc,"ADMIN"),null);
+        assertEquals(news?200:503,adminResponse.statusCode(),"admin news response="+adminResponse.body());
     }
     @ParameterizedTest @ValueSource(ints={21,26,27})
     void advisorReadOnlyRetainsHttp200AndNews503(int version)throws Exception {
@@ -156,7 +158,7 @@ class AdvisorReadOnlyRuntimeIT {
     @Test void appliedV28RightsConstraintMustRemainEnforced()throws Exception {
         var f=fixture("pr41_local");var admin=inspection(f);
         admin.execute("ALTER TABLE news_sources ALTER CHECK ck_news_sources_approved_reference NOT ENFORCED");
-        try{refused("v28-disabled-check",f,arguments(f,true,MigrationProfileEnvironmentGuard.LOCAL),"Required V28 rights constraint is missing");}
+        try{refused("v28-disabled-check",f,arguments(f,true,MigrationProfileEnvironmentGuard.LOCAL),"unenforced");}
         finally{admin.execute("ALTER TABLE news_sources ALTER CHECK ck_news_sources_approved_reference ENFORCED");}
     }
     @Test void invalidReadOnlyGuardsFailBeforeConnection()throws Exception {

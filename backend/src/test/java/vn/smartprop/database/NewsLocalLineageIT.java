@@ -14,15 +14,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles(MigrationProfileEnvironmentGuard.PR41_ISOLATED)
+@ActiveProfiles(Pr41TestFixture.PROFILE)
 @EnabledIfEnvironmentVariable(named="PR41_LOCAL_V28_TEST",matches="true")
 class NewsLocalLineageIT {
     @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired jakarta.persistence.EntityManagerFactory emf;
     @Test void completedLegacyLineageStartsWithFullHibernateValidationAndExactIdentity() throws Exception {
-        MigrationLineageConfiguration.checkPr41IsolatedIdentity(jdbc);assertTrue(emf.isOpen());
-        try(var connection=jdbc.getDataSource().getConnection()){assertEquals(MigrationProfileEnvironmentGuard.PR41_URL,connection.getMetaData().getURL());}
+        vn.smartprop.testing.IsolatedDatabaseTestSafety.require(jdbc);assertTrue(emf.isOpen());
+        try(var connection=jdbc.getDataSource().getConnection()){
+            var properties=new java.util.Properties();
+            try(var stream=java.nio.file.Files.newInputStream(java.nio.file.Path.of(System.getenv("SMARTPROP_TEST_FIXTURE_MANIFEST")))){properties.load(stream);}
+            assertEquals(properties.getProperty("jdbcUrl"),connection.getMetaData().getURL());
+        }
         var rows=jdbc.queryForList("SELECT version,type,checksum,success FROM flyway_schema_history ORDER BY installed_rank");
         MigrationLineageConfiguration.checkHistory(rows,true,true);
         assertEquals(java.util.List.of("13","14","17","18","19","20","21","22","23","24","25","26","27","28"),rows.stream().map(row->row.get("version")).toList());

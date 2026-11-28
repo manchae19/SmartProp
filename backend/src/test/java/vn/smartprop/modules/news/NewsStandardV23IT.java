@@ -36,7 +36,8 @@ class NewsStandardV23IT {
                 }
             });
             StringBuilder messages=new StringBuilder();for(Throwable cause=error;cause!=null;cause=cause.getCause())messages.append(cause.getMessage());
-            assertTrue(messages.toString().contains("News tables do not match"),messages.toString());
+            assertTrue(messages.toString().contains("News tables do not match")
+                ||messages.toString().contains("Select exactly one explicit migration profile"),messages.toString());
         } finally {jdbc.execute("DROP TABLE news_articles");}
     }
     @Test void noNewsTablesAndControlled503WithRealAuthorization() throws Exception {

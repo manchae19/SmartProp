@@ -26,10 +26,7 @@ public class MigrationLineageConfiguration {
             }
             var history=jdbc.queryForList("SELECT version,type,checksum,success FROM flyway_schema_history ORDER BY installed_rank");
             checkHistory(history,local,env.getProperty("app.local-lineage.require-complete",Boolean.class,true));
-            if(local){
-                if(MigrationProfileEnvironmentGuard.pr41Isolated(env)) checkPr41IsolatedIdentity(jdbc);
-                else checkLocalIdentity(jdbc,MigrationProfileEnvironmentGuard.staging(env));
-            }
+            if(local) checkLocalIdentity(jdbc,MigrationProfileEnvironmentGuard.staging(env));
             boolean complete=env.getProperty("app.local-lineage.require-complete",Boolean.class,true);
             Flyway flyway=Flyway.configure().dataSource(source)
                 .locations("classpath:database/"+(local?"legacy-hybrid-local":"migrations"),"classpath:database/research-migrations"+(local?"":"/poi"))
@@ -56,18 +53,6 @@ public class MigrationLineageConfiguration {
             String normalized=datadir==null?"":datadir.replace('\\','/');
             if(!normalized.endsWith(MigrationProfileEnvironmentGuard.STAGING_DATADIR_SUFFIX))throw new IllegalStateException("Staging must use the isolated datadir; refusing "+datadir);
         }
-    }
-    /** Dedicated approved test instance; existing Local/Staging identity checks remain unchanged. */
-    static void checkPr41IsolatedIdentity(JdbcTemplate jdbc){
-        Integer port=jdbc.queryForObject("SELECT @@port",Integer.class);
-        String schema=jdbc.queryForObject("SELECT DATABASE()",String.class);
-        String uuid=jdbc.queryForObject("SELECT @@server_uuid",String.class);
-        String datadir=jdbc.queryForObject("SELECT @@datadir",String.class);
-        String normalized=datadir==null?"":datadir.replace('\\','/');
-        if(!Integer.valueOf(3311).equals(port)||!"pr41_local".equals(schema)
-            ||!MigrationProfileEnvironmentGuard.PR41_SERVER_UUID.equals(uuid)
-            ||!MigrationProfileEnvironmentGuard.PR41_DATADIR.equals(normalized))
-            throw new IllegalStateException("Wrong PR41 isolated database identity; refusing startup.");
     }
     static void checkHistory(List<Map<String,Object>> history,boolean local,boolean complete){
         boolean legacy=history.stream().anyMatch(r->"14".equals(r.get("version"))&&Objects.equals(r.get("checksum"),-1382804267));

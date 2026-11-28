@@ -4,7 +4,7 @@ import javax.sql.DataSource;
 import java.nio.file.*;
 import java.util.*;
 import org.flywaydb.core.Flyway;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.beans.factory.InitializingBean;
@@ -15,7 +15,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 /** Explicit isolated simulation: replace only deployment identity binding, keep real policy,
  * ordered/pending/checksum validation, real capability resolution and Hibernate validation. */
-@TestConfiguration(proxyBeanMethods=false)
+@AutoConfiguration
 @ConditionalOnProperty(name="smartprop.test.native-profile")
 public class AdvisorFixtureRuntimeConfiguration {
     @Bean static BeanFactoryPostProcessor isolatedRuntimeBinding() {

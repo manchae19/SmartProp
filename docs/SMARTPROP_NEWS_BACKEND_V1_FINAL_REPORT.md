@@ -1,58 +1,54 @@
-# PR #41 — Targeted final review fixes
+# PR #41 — Báo cáo hoàn tất News Backend V1
 
-## P1 Advisor compatibility addendum
+## Trạng thái hiện tại
 
-This addendum records the focused follow-up on top of the fetched `origin/main` merge at
-`a0e38349807b23fa071d0779d0a6211be9f3fb99`. The resulting code is validated against actual
-Local V21, V26, V27 and V28 lineage and schema capability before Hibernate validates the
-entity model. V21/V26 omit only the absent News tables from Hibernate validation; V27 validates
-all three News tables while News API remains unavailable; only V28 with the enforced rights
-constraint enables News API. Unknown Local versions and invalid histories/checksums fail closed.
+Candidate đã tích hợp main đúng SHA được nhóm trưởng phê duyệt `0e9053f0c4085351a7d429f81995f6895ad80e33`. Trong lần xác minh cuối, `origin/main` đã tiến lên `b49a98fc333cbda1ff38d5511259a5329881812e` qua PR #50. Main mới sửa trùng ba file đang có trong cây PR41: `AdvisorDtos.java`, `AdvisorValuationAdapter.java`, và `ValuationService.java`. SHA mới nằm ngoài phê duyệt hiện có; không tự merge thêm thay đổi đó. Vì vậy chưa tuyên bố `PR41_READY_FOR_FINAL_INDEPENDENT_REVIEW`; cần xác nhận main baseline mới trước khi đóng gate cuối.
 
-Fresh evidence on this follow-up: `AdvisorReadOnlyRuntimeIT` 13/13, Standard V23 runtime 2/2,
-and `ValuationServiceTest` 12/12. The Advisor suite verifies HTTP 200 for the read-only Advisor,
-News API 503 for V21/V26/V27, strict Local/Staging policy-simulation rejection while V27/V28 are pending,
-Hibernate rejection of a broken V27 column, V28 availability, checksum/history/constraint
-refusal, read-only session behavior, and protected/fallback destination rejection before JDBC.
-Database snapshots matched before/after runtime. The test-only guarded driver recorded no
-physical destination outside the authorized 3311 fixture. The Spring app booted with a test-only
-simulation profile that invokes the real Local/Staging guard against the explicit policy values;
-native shared profile endpoints 3306 and 3307 were not contacted.
+Giữ nguyên `LIVE_INGESTION_DISABLED` và `SOURCE_RIGHTS_APPROVAL_PENDING`. Không có RSS thật được tải, nguồn báo thật được duyệt, hay quyền sử dụng được giả lập.
 
-V13–V28 migration SQL and Flyway history were not changed; V27 checksum remains
-`-1622560226` and V28 remains `-1006687404`. This follow-up adds no migration. Frontend PR41
-93/93, PR37 65/65, Chrome E2E and production builds remain **REUSED_EVIDENCE** because this
-follow-up changes no frontend/API contract. `LIVE_INGESTION_DISABLED` and
-`SOURCE_RIGHTS_APPROVAL_PENDING` remain in force.
+## Tích hợp và thay đổi
 
-Reviewed starting HEAD: `765cc5e1ea1fc68cc90ea601912c74144731202a`.
-Only the requested1 P1 and2 P2 are addressed. Final acceptance is recorded against the
-committed HEAD in `.scratch/evidence/targeted/final-validation.json`; never infer a gate
-from this report alone. No approve/merge or changes to other branches.
+- Normal merge của main được duyệt `0e9053f`; ancestry đã xác minh trước khi main tiếp tục tiến lên.
+- V28 verifier kiểm tra đúng schema hiện tại, `news_sources`, loại `CHECK`, trạng thái `ENFORCED`, và cấu trúc biểu thức chính xác. Metadata sai bảng, sai loại, không enforce, sai toán tử/cột/literal, thiếu hoặc mơ hồ đều fail closed. Parser chấp nhận một số cách chuẩn hóa metadata MySQL mà không bỏ qua nội dung literal.
+- Capability được xác định từ lineage, checksum và schema trước Hibernate validation. Local V21/V26 chỉ lọc ba bảng News chưa có; V27 xác thực đủ ba bảng nhưng News API vẫn 503; V28 hợp lệ mới bật News. Standard V23, schema lạ và schema thiếu/sai giữ hành vi fail closed.
+- Fixture profile dành cho PR41 được chuyển khỏi `src/main/resources` sang `src/test/resources`. Guard độc lập, manifest authorization, lineage/checksum và Hibernate validation vẫn giữ nguyên. Production JAR được clean-package và xác nhận không chứa profile, manifest, fixture hay test class.
+- Bộ test Advisor làm mới phiên Admin tổng hợp stale theo timeout idle 30 phút; không thay đổi logic xác thực production.
+- Admin feature/publication updates dùng UPDATE mục tiêu, kiểm tra affected rows và đọc lại; concurrency chạy trên transaction thật với latch/barrier, kiểm tra SQL và hai thứ tự commit.
+- Bộ fixture dùng manifest provisioner độc lập; không hardcode identity tác giả trong shared `CoordinateProvenanceIT`.
 
-| Item | Result and evidence |
+## Validation có bằng chứng
+
+| Hạng mục | Kết quả |
 |---|---|
-| A. Standard runtime fix | `NewsSchemaCapabilities` validates actual ordered history/checksums and table capability before the Hibernate customizer is created. Standard23 excludes only the3 absent News tables; unknown/partial schema refuses startup. |
-| B. Dev/prod | Real Spring/Hibernate matrix: standard-migrations, dev, prod, dev+prod; News public503, Guest401, User/Broker403, valid Admin503. Property create/detail/search smoke under Standard/dev/prod.11 tests,0 failures/skips. |
-| C. Local/Staging | Full News validation remains enabled.5 real-runtime tests: Local, staging configuration imported under the strict approved3311 profile, missing table, missing column and disabled CHECK. Native Local3306/Staging3307 identity guards unchanged; no3306/3307 connection. Existing strict/pending V26/V27/V28 regression remains in full unit suite. |
-| D. Concurrent decisions | Targeted repository UPDATE writes only featured+updated_at or publication_status+updated_at; affected-row check retains404; clear context and reread prevent stale response. |
-| E. Actual SQL/transactions |5 Admin tests: two overlapping real transactions, latches, both commit orders, stale article snapshots and source identity bulk hide; captured SQL and public list/featured exclusion assertions. No arbitrary sleep. |
-| F. Portable safety | Independent provisioner manifest authorizes destination, port/schema/UUID/datadir and process ownership/config/start time. Shared Coordinate test has no author paths/UUID/schema. Test-only bootstrap retains strict history/checksum/Hibernate validation. |
-| G. Coordinate regression |39/39 on original3311 and39/39 on separately provisioned3312;8 safety tests on each,0 skip. Negative UUID/schema/datadir/destination/owner/authorization/protected-port cases refuse access. |
-| H. Backend | Full fresh backend521 tests (337 unit +184 integration/runtime),0 fail/error/skip; separate Standard11, Local/staging5 and portable fixture47. Logs/exit codes and tested final SHA in final manifest. Backend production package checked separately. |
-| I. Migration integrity | No migration SQL V13–V28 changes, noV29, no repair/history edits. V27=-1622560226, V28=-1006687404; Flyway validates unchanged resources. An older V27 checksum must stop deployment for review, never repair. |
-| J. PR37 compatibility | DTO/frontend/public contract unchanged. Frontend PR41 93/93, PR37 65/65, Chrome real E2E and frontend builds are **REUSED_EVIDENCE** from reviewed HEAD765cc5e, not fresh PASS. |
-| K. Delivery | Historical delivery evidence above predates the latest main merge and is superseded for this follow-up. Latest `origin/main` is `a0e38349807b23fa071d0779d0a6211be9f3fb99`; PR44's 34 merged files have no overlap with this follow-up's changed files. Final branch/remote verification is recorded after push. |
-| L. Limits | LIVE_INGESTION_DISABLED; SOURCE_RIGHTS_APPROVAL_PENDING. DNS rebinding remains V1 limitation;304 logging race stays backlog beforeV1.1. No live RSS or real-source approval. |
+| Full backend regression sau thay đổi cuối | **FRESH_PASS** 614/614, 0 fail/error/skip; `.scratch/evidence/integrated-backend-final-test-scope-guard.log` |
+| Advisor read-only + Local/Staging policy simulation | **FRESH_PASS** 13/13, Spring Boot/Hibernate runtime; `.scratch/evidence/advisor-final-runtime-pass.log` |
+| Standard V23 và profile dev/prod/combined | **FRESH_PASS** 8/8; `.scratch/evidence/standard-v23-final-post-fixture-guard.log` |
+| V28 constraint MySQL negatives/normalization | **FRESH_PASS** 19/19 trên fixture cô lập; `.scratch/evidence/v28-verifier-mysql-final2.log` |
+| Google Account Linking runtime | **FRESH_PASS** 1/1 trên fixture Standard riêng, Chrome/OIDC; `.scratch/evidence/pr48-google-link-runtime-standard-v23.log` |
+| Production backend JAR | **FRESH_PASS**, clean package và kiểm tra loại trừ test-only resource; `.scratch/evidence/backend-clean-package-final-fixture-guard.log` |
+| Frontend PR41 | **REUSED_EVIDENCE** 93/93; không đổi frontend/API contract |
+| Frontend PR37 | **REUSED_EVIDENCE** 65/65; không đổi frontend/API contract |
+| Chrome E2E, outage, frontend production builds | **REUSED_EVIDENCE** từ integrated baseline đã kiểm chứng; không tính là fresh |
+| RAG / Python AI regression | **FRESH_PASS** 976 passed, 0 failed/errors, 73 subtests passed; `.scratch/evidence/rag-final-post-deps-clean.log`. Python V1.3 model API/unit tests are **NOT_RUN** because the real `artifacts/v1_3/model.json` is absent; no model was fabricated.
+| `origin/main` mới nhất | `b49a98f` chưa được tích hợp vì ngoài SHA phê duyệt `0e9053f` |
 
-The gate list above belongs to the earlier reviewed HEAD and is not evidence for the post-merge
-follow-up by itself. For this follow-up, emit only after commit, push and remote readback:
-ADVISOR_READ_ONLY_V21_V26_V27_RUNTIME_PASS, HIBERNATE_V27_SCHEMA_VALIDATION_PASS,
-LOCAL_STAGING_PENDING_MIGRATION_REFUSAL_PASS, V28_RIGHTS_CONSTRAINT_CAPABILITY_PASS,
-FIXTURE_PRECONNECTION_ISOLATION_PASS, MERGED_MAIN_OVERLAP_CHECK_PASS,
-REMOTE_HEAD_VERIFIED, READY_FOR_LAST_P1_REVIEW.
+Các bằng chứng trước đó trên cùng code candidate gồm 3/3 WP02 comparable runtime, 47 test regression portable/coordinate, Chrome real News integration 12 scenario + outage, và V26→V27→V28 cùng V27→V28 trên MySQL isolated. Raw evidence không được commit.
 
-See [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md) and
-[fixture provisioning](testing/ISOLATED_DATABASE_FIXTURES.md). Raw logs, backups, manifests,
-tokens and fixtures stay outside Git. Final evidence distinguishes FRESH_PASS, REUSED_EVIDENCE,
-FAIL, BLOCKED and NOT_RUN. The original workspace/main/stashes remain intact.
+## Migration và database
+
+Không sửa SQL hoặc history V13–V28; không tạo V29, không Flyway repair/baseline, không migration DB dùng chung. Checksum V27 `-1622560226`; V28 `-1006687404`. Dữ liệu được kiểm tra trước V28, không tạo `rightsReference` giả và không tự duyệt nguồn. Kiểm thử chỉ dùng MySQL riêng 127.0.0.1:3311; port 3306/3307 không được kết nối. Server UUID, datadir, schema, JDBC URL, process owner và config hash được đối chiếu với fixture manifest độc lập.
+
+| Gate cuối | Trạng thái |
+|---|---|
+| Approved main SHA `0e9053f` tích hợp | PASS |
+| V27/V28 schema capability và fail-closed | PASS theo fresh runtime/integration evidence |
+| Database isolation, no protected-port connection | PASS theo fixture manifest và driver evidence |
+| Migration integrity/checksum | PASS |
+| Backend regression, Advisor, Standard V23, production package | PASS |
+| RAG fresh regression | PASS: 976 passed, 0 failures/errors; Python V1.3 endpoint tests remain NOT_RUN because the model artifact is absent.
+| Latest `origin/main` integrated | Chờ phê duyệt SHA mới; không tự tích hợp |
+| Push/final remote head | Chưa chốt trong báo cáo này |
+
+RAG fresh regression đã PASS. Trạng thái vẫn VALIDATION_PARTIAL cho đến khi nhóm trưởng quyết định về `origin/main` `b49a98f`, vì SHA đó có overlap chưa được duyệt để tích hợp. Chưa tuyên bố READY_FOR_FINAL_INDEPENDENT_REVIEW. Không approve hoặc merge PR #41.
+
+Xem [test matrix](SMARTPROP_NEWS_BACKEND_V1_TEST_MATRIX.md), [implementation](SMARTPROP_NEWS_BACKEND_V1_IMPLEMENTATION.md), và [PR #37 handoff](handoff/SMARTPROP_PR37_NEWS_BACKEND_HANDOFF.md). Evidence manifest cuối được ghi dưới `.scratch/evidence/`; không commit log thô, credential, manifest riêng tư hoặc dữ liệu fixture.

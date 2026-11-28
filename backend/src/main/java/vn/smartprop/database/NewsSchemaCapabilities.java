@@ -44,26 +44,25 @@ public record NewsSchemaCapabilities(boolean newsEnabled, boolean validateNewsTa
             throw new IllegalStateException("Local News schema migration is pending; use the separately reviewed Flyway workflow.");
         Integer objects = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name IN ('news_sources','news_articles','news_ingestion_runs')", Integer.class);
         Integer tables = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE' AND table_name IN ('news_sources','news_articles','news_ingestion_runs')", Integer.class);
-        Integer checked = jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_name='ck_news_sources_approved_reference' AND enforced='YES'", Integer.class);
+        Integer namedConstraints = NewsRightsConstraintVerifier.countNamed(jdbc);
         if (!local) {
-            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(checked))
+            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(namedConstraints))
                 throw new IllegalStateException("News tables do not match the validated Standard schema lineage.");
             return new NewsSchemaCapabilities(false, false);
         }
         if ("21".equals(version) || "26".equals(version)) {
-            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(checked))
+            if (!Integer.valueOf(0).equals(objects) || !Integer.valueOf(0).equals(namedConstraints))
                 throw new IllegalStateException("News tables do not match the validated Local V" + version + " lineage.");
             return new NewsSchemaCapabilities(false, false);
         }
         if (!Integer.valueOf(3).equals(objects) || !Integer.valueOf(3).equals(tables))
             throw new IllegalStateException("News tables do not match the validated Local V" + version + " lineage.");
         if ("27".equals(version)) {
-            if (!Integer.valueOf(0).equals(checked))
+            if (!Integer.valueOf(0).equals(namedConstraints))
                 throw new IllegalStateException("V27 cannot contain the V28 rights constraint.");
             return new NewsSchemaCapabilities(false, true);
         }
-        if (!Integer.valueOf(1).equals(checked))
-            throw new IllegalStateException("Required V28 rights constraint is missing or unenforced.");
+        NewsRightsConstraintVerifier.requireValid(jdbc);
         return new NewsSchemaCapabilities(true, true);
     }
 }
