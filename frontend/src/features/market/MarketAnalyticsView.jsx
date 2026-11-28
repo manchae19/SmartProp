@@ -9,7 +9,6 @@ import {
   formatBillion,
   formatCount,
   formatPerSqm,
-  marketResearchActorKey,
 } from './marketAnalytics.js'
 import { createMarketAnalyticsController } from './marketAnalyticsState.js'
 import './MarketAnalyticsView.css'
@@ -23,19 +22,17 @@ const BASE_DISTRICTS = ['Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành S�
  * /properties/market-analytics API (asked-for, median-based, no forecasting);
  * nothing here is mock or hardcoded market data.
  *
- * Research controls (`TINIX_RESEARCH` and `includeResearch`) are rendered ONLY
- * when the reactive session belongs to an active ADMIN AND server-side Market
- * research is enabled. Losing authorization immediately revokes research state.
+ * An active ADMIN can explicitly opt in. TiniX results and filters appear
+ * only after the server has authorized a research request.
  */
 export default function MarketAnalyticsView() {
   const [controller] = useState(() => createMarketAnalyticsController({ api, session, errorText }))
-  const auth = useSyncExternalStore(session.subscribe, session.getSnapshot)
   const state = useSyncExternalStore(controller.subscribe, controller.getSnapshot)
-  const { filters, data, busy, error, researchAvailable } = state
+  const { filters, data, busy, error, researchAvailable, researchError, canRequestResearch } = state
 
   useEffect(() => controller.mount(), [controller])
 
-  const canViewResearch = researchAvailable === true && marketResearchActorKey(auth) !== ''
+  const canViewResearch = canRequestResearch && researchAvailable
   const visibleData = data && (!data.meta?.researchIncluded || canViewResearch) ? data : null
   const sourceChoices = canViewResearch ? ANALYSIS_SOURCES : PUBLIC_ANALYSIS_SOURCES
 
@@ -98,25 +95,26 @@ export default function MarketAnalyticsView() {
                 ))}
               </select>
             </label>
-            {canViewResearch ? (
+            {canRequestResearch ? (
               <label className="ma-check" data-ma-research-toggle>
                 <input
                   type="checkbox"
                   checked={filters.includeResearch === true}
-                  onChange={(e) => controller.patchFilter('includeResearch', e.target.checked)}
+                  onChange={(e) => controller.setResearchEnabled(e.target.checked)}
                 />
-                <span>Bao gồm dữ liệu nghiên cứu TiniX (CC BY-NC 4.0)</span>
+                <span>Yêu cầu dữ liệu nghiên cứu</span>
               </label>
             ) : null}
           </div>
         </div>
 
+        {researchError ? <p role="status" className="ma-status" data-ma-research-error>{researchError}</p> : null}
         {busy ? (
           <p role="status" className="ma-status" data-ma-loading>Đang tổng hợp dữ liệu thị trường…</p>
         ) : error ? (
           <p role="alert" className="ma-error" data-ma-error>
             {error}
-            <button type="button" onClick={() => controller.load(filters)}>Thử lại</button>
+            <button type="button" onClick={controller.retry}>Thử lại</button>
           </p>
         ) : null}
 

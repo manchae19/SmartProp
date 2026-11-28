@@ -16,13 +16,9 @@ export const ANALYSIS_SOURCES = Object.freeze({
   TINIX_RESEARCH: 'TiniX — nghiên cứu',
 })
 
-export function marketResearchActorKey(snap) {
-  if (!snap || snap.status !== 'AUTHENTICATED' || !snap.token) return ''
-  if (snap.user?.role !== 'ADMIN') return ''
-  if (snap.user?.status && snap.user.status !== 'ACTIVE') return ''
-  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? snap.token ?? ''
-  const normalized = String(identity).trim()
-  return normalized ? `ADMIN:${normalized}` : ''
+export function isMarketResearchAdmin(snap) {
+  return snap?.status === 'AUTHENTICATED' && Boolean(snap.token)
+    && snap.user?.role === 'ADMIN' && (snap.user.status == null || snap.user.status === 'ACTIVE')
 }
 
 export const PROPERTY_TYPES = {
@@ -77,8 +73,9 @@ export function validateMarketAnalytics(data, options = {}) {
   }
   if (!data.meta.researchIncluded) {
     if (data.meta.researchLicense != null
+        || requestsMarketResearch(data.meta.filters)
         || data.monthly.length > 0
-        || data.bySource.some((s) => s?.source === 'TINIX_RESEARCH' || s?.researchReference === true)
+        || data.bySource.some((s) => s?.source === 'TINIX_RESEARCH' || s?.researchReference === true || s?.license != null)
         || data.meta.dataQualityWarnings.some((w) => typeof w === 'string' && (w.includes('TINIX') || w.includes('CC BY-NC')))) {
       throw new Error('Phản hồi chế độ công khai chứa siêu dữ liệu nghiên cứu TiniX không hợp lệ.')
     }
@@ -108,15 +105,16 @@ export async function loadMarketAnalytics(filters = {}, client = api, options = 
     throw err
   }
   if (wantsResearch && typeof options.getSession === 'function') {
-    const snap = options.getSession()
-    if (!marketResearchActorKey(snap)) {
+    if (!isMarketResearchAdmin(options.getSession())) {
       const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ.')
       err.status = 403
       throw err
     }
   }
   const query = buildAnalyticsQuery(filters, { allowResearch: wantsResearch })
-  const requestOptions = { authenticated: wantsResearch }
+  // Research is optional on this public route. An expired session still clears,
+  // but the view can fall back to SAFE instead of redirecting to the login screen.
+  const requestOptions = { authenticated: wantsResearch, redirectOnSessionExpiry: false }
   if (options.signal) requestOptions.signal = options.signal
   const data = await client('/properties/market-analytics?' + query, requestOptions)
   return validateMarketAnalytics(data, { allowResearch: wantsResearch })

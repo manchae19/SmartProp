@@ -44,30 +44,31 @@ await context.route('**/api/v1/**', route => route.fulfill({
 }))
 
 const PAGES = [
-  ['/home', 'Home'],
-  ['/listings', 'Listings'],
-  ['/market', 'Market'],
-  ['/market-analytics', 'Market Analytics'],
-  ['/news', 'News'],
-  ['/projects', 'Projects'],
-  ['/map', 'Map'],
-  ['/valuation', 'Valuation'],
+  ['/home', /Hiểu vị trí.*Chọn không gian/],
+  ['/listings', /Không gian sống dành riêng/],
+  ['/market', /Hồ sơ thị trường/],
+  ['/market-analytics', 'Thống kê giá rao theo dữ liệu thực'],
+  ['/news', 'Tin tức bất động sản & góc nhìn thị trường.'],
+  ['/projects', 'Dự án bất động sản'],
+  ['/map', 'Bản đồ bất động sản'],
+  ['/valuation', 'Tham khảo giá trước khi quyết định'],
 ]
 
 console.log('\n=== Các trang chính render được khi API lỗi ===')
-for (const [path, label] of PAGES) {
+for (const [path, name] of PAGES) {
   const errors = []
   const onError = error => errors.push(error.message)
   page.on('pageerror', onError)
   try {
     await page.goto(`${BASE}${path}`, { waitUntil: 'networkidle', timeout: 30000 })
-    const body = await page.locator('body').textContent()
-    const hasContent = Boolean(body && body.trim().length > 50)
+    const welcome = page.getByRole('button', { name: 'Đóng thông báo' })
+    if (await welcome.isVisible()) await welcome.click()
+    const visible = await page.getByRole('heading', { level: 1, name }).isVisible()
     const fatal = errors.filter(e => !/Failed to load resource|503|net::ERR/i.test(e))
-    check(`${label} (${path})`, hasContent && fatal.length === 0,
-      fatal.slice(0, 1).join(' | ') || (hasContent ? '' : 'trang trống'))
+    check(path, visible && fatal.length === 0,
+      fatal.slice(0, 1).join(' | ') || (visible ? '' : 'thiếu tiêu đề mong đợi'))
   } catch (e) {
-    check(`${label} (${path})`, false, e.message.slice(0, 80))
+    check(path, false, e.message.slice(0, 80))
   } finally {
     page.off('pageerror', onError)
   }

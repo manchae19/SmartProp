@@ -40,8 +40,8 @@
    - Giữ route `/admin/coordinate-review` (`AdminCoordinateReviewView.jsx`) trong `frontend/src/app/router.js`.
    - Không hiển thị điểm ghim hoặc tiện ích khoảng cách khi `canShowReferenceMap` / `canAnalyzeDistance` trả `false`.
 2. **Phase 0 Research Data Isolation & Reactive Session (`MarketAnalyticsView.jsx`, `UnifiedAdvisorView.jsx`)**:
-   - `MarketAnalyticsView.jsx` bắt buộc giữ kết nối `useSyncExternalStore(session.subscribe, session.getSnapshot)` thông qua `createMarketAnalyticsController` (`marketAnalyticsState.js`).
-   - Không lộ tùy chọn `TINIX_RESEARCH` hoặc checkbox `includeResearch` cho khách ẩn danh, `BUYER`, `BROKER`, hoặc khi máy chủ tắt `app.market.research-enabled`.
+   - `MarketAnalyticsView.jsx` dùng `useSyncExternalStore` với `createMarketAnalyticsController` (`marketAnalyticsState.js`), còn controller theo dõi phiên bằng `session.subscribe` và `session.getSnapshot`.
+   - Chỉ ADMIN có phiên hoạt động được chủ động gửi yêu cầu nghiên cứu. Tùy chọn `TINIX_RESEARCH` chỉ xuất hiện sau khi backend cho phép yêu cầu đó. Backend tắt research hoặc từ chối thì UI trở về SAFE.
    - Mọi sự kiện mất quyền (`logout`, hết hạn phiên, đổi tài khoản, `401`/`403`) phải lập tức hủy request đang bay, xóa dữ liệu research trên UI và chặn kết quả trả muộn.
 3. **Market Data Honesty (`/market`, `/market/:district`, `TopSearchedAreas.jsx`)**:
    - Giữ đủ **7** quận/huyện Đà Nẵng (bao gồm `Hòa Vang` / `hoa-vang`); `getDistrictProfile` phải trả `null` với slug lạ, không bao giờ fallback sang `Sơn Trà`.
@@ -49,3 +49,5 @@
 4. **XGBoost V1.3 Only & Asset Allowlist (`publicAssets.mjs`)**:
    - Mọi luồng định giá mới chỉ gọi `XGBoost V1.3` (không fallback V6, không tạo giá tĩnh).
    - Không đưa lại `media/areas/*.webp` vào `frontend/build/publicAssets.mjs` cho đến khi có hồ sơ chứng minh tác giả gốc và giấy phép phân phối lại hợp lệ.
+
+Kết quả fresh và giới hạn runtime của vòng sửa cuối được ghi trong [báo cáo nghiệm thu PR #37](SMARTPROP_PR37_FINAL_VALIDATION_REPORT.md).

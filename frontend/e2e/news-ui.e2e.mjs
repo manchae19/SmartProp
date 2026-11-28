@@ -55,8 +55,8 @@ await context.route('**/api/v1/news**', route => route.fulfill({
 
 console.log('\n=== 1. Trang News tải được khi API lỗi ===')
 await page.goto(`${BASE}/news`, { waitUntil: 'networkidle', timeout: 30000 })
-const heading = await page.locator('h1').first().textContent().catch(() => '')
-check('trang News render tiêu đề', Boolean(heading && heading.trim()), heading || 'không có h1')
+const heading = page.getByRole('heading', { level: 1, name: 'Tin tức bất động sản & góc nhìn thị trường.' })
+check('trang News render tiêu đề', await heading.isVisible(), 'thiếu tiêu đề News')
 
 console.log('\n=== 2. Hiển thị trạng thái lỗi, không crash ===')
 const alert = page.locator('[role="alert"]').first()
@@ -83,8 +83,8 @@ check('không có pageerror', fatal.length === 0, fatal.slice(0, 2).join(' | '))
 
 console.log('\n=== 6. Trang Home vẫn tải được ===')
 await page.goto(`${BASE}/home`, { waitUntil: 'networkidle', timeout: 30000 })
-const homeHeading = await page.locator('h1, h2').first().textContent().catch(() => '')
-check('trang Home render', Boolean(homeHeading && homeHeading.trim()))
+const homeHeading = page.getByRole('heading', { level: 1, name: /Hiểu vị trí.*Chọn không gian/ })
+check('trang Home render', await homeHeading.isVisible())
 
 console.log('\n=== 7. Responsive mobile ===')
 await page.setViewportSize({ width: 390, height: 844 })

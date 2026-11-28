@@ -1,3 +1,36 @@
+function abortError() {
+  return Object.assign(Error("Yêu cầu đã bị hủy."), { name: "AbortError", code: "REQUEST_ABORTED" });
+}
+
+function sessionChanged() {
+  return Object.assign(Error("Phiên đã thay đổi."), { code: "SESSION_CHANGED" });
+}
+
+function sameActor(previous, next) {
+  const identity = user => user?.id ?? user?.userId ?? user?.sub ?? user?.email;
+  return previous.status === next.status
+    && identity(previous.user) === identity(next.user)
+    && previous.user?.role === next.user?.role
+    && previous.user?.status === next.user?.status;
+}
+
+async function waitForRefresh(flight, signal) {
+  if (!signal) return flight;
+  if (signal.aborted) throw abortError();
+  let onAbort;
+  try {
+    return await Promise.race([
+      flight,
+      new Promise((_, reject) => {
+        onAbort = () => reject(abortError());
+        signal.addEventListener("abort", onAbort, { once: true });
+      })
+    ]);
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+  }
+}
+
 // Access tokens stay in memory. Refresh credentials are sent only as HttpOnly cookies.
 export function createHttpClient({
   baseUrl,
@@ -37,9 +70,7 @@ export function createHttpClient({
     state("UNAVAILABLE", e?.message || "Không thể kiểm tra phiên. Vui lòng thử lại.");
   }
   function accept(result, current) {
-    if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), {
-      code: "SESSION_CHANGED"
-    });
+    if (current !== epoch) throw sessionChanged();
     session.edit(draft => draft.token = result.accessToken);
     session.edit(draft => draft.user = result.user);
     state("AUTHENTICATED");
@@ -54,6 +85,7 @@ export function createHttpClient({
     headers: extra = {},
     signal: externalSignal = null
   } = {}) {
+    if (externalSignal?.aborted) throw abortError();
     const headers = {
         Accept: "application/json",
         ...extra
@@ -66,10 +98,7 @@ export function createHttpClient({
     if (!Number.isFinite(duration) || duration < 1 || duration > 180000) throw Error("Invalid bounded request timeout");
     const controller = new AbortController(),
       onExternalAbort = () => controller.abort();
-    if (externalSignal) {
-      if (externalSignal.aborted) controller.abort();
-      else externalSignal.addEventListener("abort", onExternalAbort, { once: true });
-    }
+    externalSignal?.addEventListener("abort", onExternalAbort, { once: true });
     const timeout = setTimeout(() => controller.abort(), duration);
     try {
       const response = await fetcher(baseUrl + path, {
@@ -81,7 +110,9 @@ export function createHttpClient({
           credentials: "include"
         } : {})
       });
+      if (controller.signal.aborted) throw controller.signal.reason;
       const data = response.status === 204 ? null : response.ok && responseType === "blob" ? await response.blob() : await response.json().catch(() => null);
+      if (controller.signal.aborted) throw controller.signal.reason;
       if (!response.ok) {
         const e = Error(data?.message || "Yêu cầu thất bại (" + response.status + ")");
         e.status = response.status;
@@ -93,15 +124,11 @@ export function createHttpClient({
       }
       return data;
     } catch (e) {
-      if (e.status) throw e;
-      if (externalSignal?.aborted) {
-        throw Object.assign(Error("Yêu cầu đã bị hủy."), {
-          name: "AbortError",
-          code: "REQUEST_ABORTED"
-        });
-      }
-      throw Object.assign(Error(e.name === "AbortError" ? "Yêu cầu quá thời gian. Vui lòng thử lại." : "Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối."), {
-        code: e.name === "AbortError" ? "REQUEST_TIMEOUT" : "NETWORK_ERROR"
+      if (externalSignal?.aborted) throw abortError();
+      if (e?.status && !controller.signal.aborted) throw e;
+      const timedOut = controller.signal.aborted || e?.name === "AbortError";
+      throw Object.assign(Error(timedOut ? "Yêu cầu quá thời gian. Vui lòng thử lại." : "Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối."), {
+        code: timedOut ? "REQUEST_TIMEOUT" : "NETWORK_ERROR"
       });
     } finally {
       clearTimeout(timeout);
@@ -114,15 +141,24 @@ export function createHttpClient({
   function rotate() {
     if (refreshFlight) return refreshFlight;
     const current = epoch,
+      started = session.getSnapshot(),
+      ensureRefreshScope = () => {
+        const latest = session.getSnapshot();
+        if (current !== epoch || started.token !== latest.token || !sameActor(started, latest)) throw sessionChanged();
+      },
       run = async () => {
+        ensureRefreshScope();
         const c = await csrf();
-        return accept(await send("/auth/refresh", {
+        ensureRefreshScope();
+        const result = await send("/auth/refresh", {
           method: "POST",
           authenticated: false,
           headers: {
             [c.headerName]: c.token
           }
-        }), current);
+        });
+        ensureRefreshScope();
+        return accept(result, current);
       };
     refreshFlight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
       refreshFlight = null;
@@ -130,28 +166,38 @@ export function createHttpClient({
     return refreshFlight;
   }
   async function request(path, options = {}) {
-    const sentToken = session.getSnapshot().token,
-      current = epoch;
+    const started = session.getSnapshot();
+    const current = epoch;
+    const authenticated = options.authenticated !== false;
+    const redirect = options.redirectOnSessionExpiry !== false;
+    const ensureCurrent = snapshot => {
+      if (options.signal?.aborted) throw abortError();
+      const latest = session.getSnapshot();
+      if (authenticated && (current !== epoch || snapshot.token !== latest.token || !sameActor(snapshot, latest))) {
+        throw sessionChanged();
+      }
+    };
     try {
       const result = await send(path, options);
-      if (options.authenticated !== false && sentToken && current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), {
-        code: "SESSION_CHANGED"
-      });
+      ensureCurrent(started);
       return result;
     } catch (e) {
-      if (options.authenticated !== false && terminal(e)) {
-        if (refreshEnabled && sentToken && current === epoch && !path.startsWith("/auth/")) {
+      ensureCurrent(started);
+      if (authenticated && terminal(e)) {
+        if (refreshEnabled && started.token && e.status === 401 && !path.startsWith("/auth/")) {
+          let refreshed;
           try {
-            if (session.getSnapshot().token === sentToken) await rotate();
-            if (current !== epoch) throw Object.assign(Error("Phiên đã thay đổi."), {
-              code: "SESSION_CHANGED"
-            });
+            refreshed = await waitForRefresh(rotate(), options.signal);
           } catch (next) {
-            if (current === epoch) {
-              if (terminal(next)) expire();else if (next.code !== "SESSION_CHANGED") unavailable(next);
+            if (next.code !== "REQUEST_ABORTED" && next.code !== "SESSION_CHANGED") {
+              ensureCurrent(started);
+              if (terminal(next)) expire(redirect);else unavailable(next);
             }
             throw next;
           }
+          const retryScope = session.getSnapshot();
+          ensureCurrent(retryScope);
+          if (retryScope.token !== refreshed.accessToken || !sameActor(started, retryScope)) throw sessionChanged();
           // Renew credentials but require explicit resubmission for writes; never duplicate an uncertain mutation.
           if (!["GET", "HEAD", "OPTIONS"].includes((options.method || "GET").toUpperCase())) throw Object.assign(Error("Phiên đã được gia hạn. Vui lòng thực hiện lại thao tác vừa gửi."), {
             status: 401,
@@ -159,13 +205,16 @@ export function createHttpClient({
             sessionRecovered: true
           });
           try {
-            return await send(path, options);
+            const result = await send(path, options);
+            ensureCurrent(retryScope);
+            return result;
           } catch (next) {
-            if (current === epoch && terminal(next)) expire();
+            ensureCurrent(retryScope);
+            if (terminal(next)) expire(redirect);
             throw next;
           }
         }
-        if (current === epoch) expire();
+        expire(redirect);
       }
       throw e;
     }
