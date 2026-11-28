@@ -1,5 +1,6 @@
 package vn.smartprop.advisor;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import vn.smartprop.gis.GisDtos.AreaPurposeInsight;
@@ -168,6 +170,53 @@ JsonNode explanation
         }
     }
 
+    public enum EvidenceKind {
+        VALUATION("valuationEvidence"),
+        EXPLANATION("valuationEvidence.explanation"),
+        SIMILAR_LISTING("comparableEvidence"),
+        VALUATION_SUPPORT("valuationComparableEvidence"),
+        LOCATION("locationIntelligence"),
+        RECOMMENDATION("source");
+
+        private final String reference;
+
+        EvidenceKind(String reference) {
+            this.reference = reference;
+        }
+
+        public String reference() {
+            return reference;
+        }
+    }
+
+    public enum EvidenceSource {
+        XGBOOST_V1_3, WP04_TREESHAP, WP02_COMPARABLE, SMARTPROP_GIS_POI,
+        SMARTPROP_LISTING, EXTERNAL_LISTING, TINIX_RESEARCH
+    }
+
+    public enum EvidenceStatus {
+        AVAILABLE, PARTIAL, MISSING, UNAVAILABLE, INVALID, NOT_REQUESTED, INSUFFICIENT_EVIDENCE
+    }
+
+    public enum EvidenceFreshness { UNKNOWN, RECENT, STALE }
+
+    public enum EvidenceLimitation {
+        ESTIMATED_ASKING_PRICE, MODEL_ATTRIBUTION, ASKING_PRICE_ONLY, TOO_FEW_COMPARABLES,
+        COMPARABLE_EXAMPLES_ONLY, AREA_CONTEXT_ONLY, STRAIGHT_LINE_DISTANCE, HEURISTIC_FIT
+    }
+
+    /** Metadata for one existing field on an advised property. */
+    public record Evidence(
+        EvidenceKind kind,
+        EvidenceSource source,
+        EvidenceStatus status,
+        Instant observedAt,
+        Instant generatedAt,
+        EvidenceFreshness freshness,
+        List<EvidenceLimitation> limitations,
+        String reference
+    ) {}
+
     public record AdvisedProperty(
         String id,
         String title,
@@ -194,7 +243,8 @@ JsonNode explanation
         ComparableEvidence comparableEvidence,
         ValuationEvidence valuationEvidence,
         ComparableEvidence valuationComparableEvidence,
-        List<String> warnings
+        List<String> warnings,
+        @JsonInclude(JsonInclude.Include.NON_NULL) List<Evidence> evidence
     ) {}
 
     public record AdvisorResponse(

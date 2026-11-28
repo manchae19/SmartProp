@@ -83,7 +83,7 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi,
                     </div>
                   </div>
 
-                  <p className="ar-price">{money(property.priceVnd)}</p>
+                  <p className="ar-price">{property.researchReference ? 'Giá rao tham chiếu' : 'Giá rao'} · {money(property.priceVnd)}</p>
 
                   {Number.isFinite(Number(property.distanceMeters)) ? (
                     // Nearby results carry a straight-line distance; say so rather than
@@ -106,6 +106,7 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi,
                   ) : null}
 
                   <AdvisorEvidencePanel
+                    evidence={property.evidence}
                     valuation={property.valuationEvidence}
                     comparable={property.comparableEvidence}
                     valuationComparables={property.valuationComparableEvidence}

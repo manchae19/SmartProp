@@ -71,6 +71,7 @@ public class AdvisorOrchestrationService {
     private final AdvisorValuationAdapter valuationAdapter;
     private final AdvisorLocationIntelligenceService locationIntelligenceService;
     private final boolean allowResearchComparables;
+    private final boolean evidenceV2;
 
     @Autowired
     public AdvisorOrchestrationService(
@@ -79,13 +80,26 @@ public class AdvisorOrchestrationService {
             ComparableEligibilityService comparableEligibility,
             AdvisorValuationAdapter valuationAdapter,
             AdvisorLocationIntelligenceService locationIntelligenceService,
-            @Value("${app.advisor.allow-research-comparables:false}") boolean allowResearchComparables) {
+            @Value("${app.advisor.allow-research-comparables:false}") boolean allowResearchComparables,
+            @Value("${advisor.evidence.v2:true}") boolean evidenceV2) {
         this.recommendationService = recommendationService;
         this.comparableService = comparableService;
         this.comparableEligibility = comparableEligibility;
         this.valuationAdapter = valuationAdapter;
         this.locationIntelligenceService = locationIntelligenceService;
         this.allowResearchComparables = allowResearchComparables;
+        this.evidenceV2 = evidenceV2;
+    }
+
+    public AdvisorOrchestrationService(
+            HybridRecommendationService recommendationService,
+            ComparableRankingService comparableService,
+            ComparableEligibilityService comparableEligibility,
+            AdvisorValuationAdapter valuationAdapter,
+            AdvisorLocationIntelligenceService locationIntelligenceService,
+            boolean allowResearchComparables) {
+        this(recommendationService, comparableService, comparableEligibility, valuationAdapter,
+            locationIntelligenceService, allowResearchComparables, true);
     }
 
     public AdvisorOrchestrationService(
@@ -351,7 +365,9 @@ public class AdvisorOrchestrationService {
                 compEvidence,
                 valEvidence,
                 valuationComparables,
-                List.copyOf(itemWarnings)
+                List.copyOf(itemWarnings),
+                evidenceV2 ? AdvisorEvidenceProjection.project(safeSource, valEvidence, compEvidence,
+                    valuationComparables, locationIntel, criteria.includeComparables()) : null
             ));
         }
 

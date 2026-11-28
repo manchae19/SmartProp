@@ -92,6 +92,11 @@ fieldset:disabled{opacity:.7}
 .ev-title{font-size:.78rem;font-weight:700;color:#3d4d63}
 .ev-model-tag{font-size:.68rem;font-weight:600;padding:.12rem .48rem;border-radius:1rem;background:#e8eff7;color:#1d4578}
 .ev-price{font-size:1.1rem;font-weight:700;margin-top:.35rem}
+.ev-details summary{cursor:pointer;font-size:.8rem;font-weight:650;color:#25374d}
+.ev-metadata{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr));gap:.7rem;margin:.6rem 0 0}
+.ev-metadata>div{min-width:0;padding:.45rem .55rem;border:1px solid #e7e1d7;border-radius:.55rem;background:#fff}
+.ev-metadata dt{font-size:.75rem;font-weight:650;color:#25374d}
+.ev-metadata dd{margin:.15rem 0 0;font-size:.72rem;line-height:1.45;color:#475569;overflow-wrap:anywhere}
 .ev-toggle{margin-top:.45rem;font-size:.74rem;text-decoration:underline;text-underline-offset:4px;background:none;border:none;color:#1d4578;cursor:pointer;padding:0}
 .shap-panel{margin-top:.7rem;padding-top:.7rem;border-top:1px dashed #dfd8c8}
 .shap-summary,.shap-meta{font-size:.75rem;line-height:1.65;color:#3d4d63;margin-bottom:.4rem}
