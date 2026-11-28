@@ -198,10 +198,9 @@ def test_matrix_parity_over_full_synthetic_matrix(predictor):
         for extra in extras:
             if extra.expectation != "SUCCESS":
                 continue
-            try:
-                predictor.predict_from_v6_payload(extra.payload)
-            except Exception:  # noqa: BLE001 - unsupported categorical combinations
-                continue
+            # An extra declared SUCCESS must actually succeed; a failure here is a defect,
+            # not something to skip silently.
+            predictor.predict_from_v6_payload(extra.payload)
             production = captured[-1]
             expected = bench.prepare_matrix(
                 extra.payload, predictor.schema, map_v6_to_v1_3, real_transform, pd)[0]
