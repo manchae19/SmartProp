@@ -1,6 +1,7 @@
 import { publicMapPoint, locationLabel } from '../map/locationDisplay.js'
 import { nearbyPlaces, poiHasPoint } from '../map/nearbyPlaces.js'
 import { hasResearchComparableMetadata } from '../property/comparables.js'
+import { hasActiveSession } from '../../shared/lib/restrictedSession.js'
 
 const PURPOSES = new Set(['LIVING', 'INVESTMENT', 'RENTAL'])
 const TYPES = new Set(['ALL', 'HOUSE', 'APARTMENT', 'LAND', 'VILLA', 'ROOM', 'COMMERCIAL'])
@@ -279,10 +280,10 @@ export function validateAdvisorResponse(data, options = {}) {
 }
 
 export function advisorResearchActorKey(snap) {
-  if (!snap || snap.status !== 'AUTHENTICATED' || snap.user?.role !== 'ADMIN') return ''
-  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? snap.token ?? ''
+  if (!hasActiveSession(snap) || snap.user?.role !== 'ADMIN') return ''
+  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? ''
   const normalized = String(identity).trim()
-  return normalized ? `ADMIN:${normalized}` : ''
+  return normalized ? JSON.stringify([normalized, snap.authGeneration ?? null, snap.user.status ?? null]) : ''
 }
 
 export function advisorDistrictSuggestions(baseDistricts, result, canViewResearch = false) {

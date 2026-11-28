@@ -71,3 +71,48 @@ address/pin hydration without losing coordinates.
 - The private-mode test toggles the chat profile mode off/on and inspects request headers: off must have no `Authorization`, on must have Bearer.
 - Chat is public by default; profile/personalization requires an authenticated staging user with consent enabled.
 - Tests are sequential because the RAG service is single-runtime (keep-alive 0).
+## News UI and page smoke (no backend required)
+
+`news-ui.e2e.mjs` and `pages-smoke.e2e.mjs` run against a Vite server.
+They intercept `/api/v1/**` in the browser, so no Spring Boot, database or
+account is needed.
+
+Run `node e2e/news-ui.e2e.mjs` and `node e2e/pages-smoke.e2e.mjs` from
+`frontend`, using the existing Playwright installation. The News script
+checks the unavailable message, retry button, empty article cards and page
+errors. Pages Smoke checks the expected route headings and viewport widths
+when API calls fail.
+
+## PR #37 review regression
+
+Run from `frontend` with the existing Node, Playwright and Chromium runtimes.
+The fixture preview uses the normal Vite build and production CSS. Its alternate
+entry only supplies in-memory synthetic sessions. The local preview has no API
+proxy and browser requests are stubbed or blocked.
+
+```powershell
+# Terminal 1
+node e2e/pr37-preview.mjs
+
+# Terminal 2
+$env:PLAYWRIGHT_PATH = "F:/SmartProp/frontend/vue.ui/node_modules/playwright"
+$env:PLAYWRIGHT_CHROMIUM = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+$env:PR37_BASE = (Get-Content ../.smartprop/pr37-browser-url.txt -Raw).Trim()
+$env:PR37_REPORT = "../.smartprop/pr37-browser-market-news.json"
+node e2e/pr37-validation.e2e.mjs --groups=g1,g2,g3,g4,g5,g6,g7,g13,g14
+$env:PR37_REPORT = "../.smartprop/pr37-browser-core.json"
+node e2e/pr37-validation.e2e.mjs --groups=g8,g9,g10,g11,g12,g15,g16,g17,g18
+$env:SMARTPROP_NEWS_E2E_BASE = $env:PR37_BASE
+$env:SMARTPROP_SMOKE_BASE = $env:PR37_BASE
+node e2e/news-ui.e2e.mjs
+node e2e/pages-smoke.e2e.mjs
+
+# Verify the standard distribution separately
+npm.cmd run build
+node e2e/pr37-dist-assets.mjs
+```
+
+Run `node tests/browser/wp02-browser.mjs` with `WP02_CHROMIUM` set to the
+existing Chromium executable for the 12 WP-02 assertion groups. The fixture-only
+session entry and fixture assets must be absent from the standard `dist`.
+See the [route matrix and limitations](../../docs/handoff/SMARTPROP_PR37_FINAL_VALIDATION_REPORT.md).

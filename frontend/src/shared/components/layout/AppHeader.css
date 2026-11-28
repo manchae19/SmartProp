@@ -1,0 +1,96 @@
+/* Header polish; existing routing, menu breakpoints and scroll state stay intact. */
+html[data-ui-theme=slate] body .app-header {
+  background: rgb(255 255 255 / 96%);
+  border-bottom-color: #d9ad5538;
+  box-shadow: 0 2px 16px #142b4509;
+  transition: background-color 180ms ease, box-shadow 180ms ease;
+}
+html[data-ui-theme=slate] body .app-header[data-scrolled=true] {
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 5px 24px #142b4514;
+}
+.app-header .header-brand { color: #142b45; letter-spacing: -.04em; gap: 12px; }
+html[data-ui-theme=slate] body .app-header .header-brand>span:first-child {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  line-height: 1;
+  border: 1px solid #d9ad55;
+  background: linear-gradient(145deg, #294c70, #142b45 75%);
+  color: #f4efe5;
+  border-radius: 14px;
+  font-weight: 750;
+  box-shadow: inset 0 1px 0 #ffffff26, 0 4px 10px #142b4526;
+}
+.app-header .header-brand>span:last-child { font-size: 22px; font-weight: 750; line-height: 1.2; }
+.app-header .header-brand>span:last-child>span:first-child { color: #d8a94e; }
+.app-header .header-brand>span:last-child>span:last-child { letter-spacing: .015em; font-size: 12px; line-height: 1.4; color: #60758a; }
+.app-header nav[aria-label="Điều hướng chính"]>a {
+  position: relative;
+  white-space: nowrap;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+.app-header nav[aria-label="Điều hướng chính"]>a::after {
+  content: '';
+  position: absolute;
+  inset: auto 12px 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: #d9ad55;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+.app-header nav[aria-label="Điều hướng chính"]>a:hover::after { transform: scaleX(1); }
+html[data-ui-theme=slate] body .app-header nav[aria-label="Điều hướng chính"]>a:hover {
+  background: #f4efe5;
+  color: #142b45;
+}
+html[data-ui-theme=slate] body .app-header nav[aria-label="Điều hướng chính"]>a[aria-current=page] {
+  background: #142b45;
+  color: #fff;
+  box-shadow: inset 0 -2px 0 #d8a94e, 0 2px 5px #203d5d12;
+}
+.app-header nav[aria-label="Điều hướng chính"]>a[aria-current=page]::after { display: none; }
+html[data-ui-theme=slate] body .app-header [data-advisor-header] {
+  background: #d9ad55;
+  border: 1px solid #c49840;
+  border-radius: 12px;
+  color: #142b45 !important;
+  box-shadow: inset 0 1px 0 #ffffff55, 0 4px 12px #142b451a;
+  transition: background-color 180ms ease, box-shadow 180ms ease;
+}
+html[data-ui-theme=slate] body .app-header [data-advisor-header]:hover {
+  background: #e4be74;
+  border-color: #c49840;
+  color: #142b45 !important;
+  box-shadow: 0 4px 12px #203d5d24;
+}
+html[data-ui-theme=slate] body .app-header [data-app-menu-trigger] {
+  background: #fff;
+  border-color: #d7e1e9;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px #203d5d06;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+html[data-ui-theme=slate] body .app-header [data-app-menu-trigger]:hover,
+html[data-ui-theme=slate] body .app-header [data-app-menu-trigger][aria-expanded=true] {
+  background: #f1f5f8;
+  border-color: #90a8bc;
+}
+.app-header>.sp-container>div>a[href="/login"] {
+  padding: 10px 2px;
+  transition: color 180ms ease;
+}
+.app-header>.sp-container>div>a[href="/login"]:hover { color: #315f86; }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .app-header>.sp-container { gap: 10px; }
+  .app-header nav[aria-label="Điều hướng chính"] { gap: 0; }
+  .app-header nav[aria-label="Điều hướng chính"]>a { padding-inline: 7px; font-size: 12px; }
+  .app-header>.sp-container>div { gap: 8px; }
+  .app-header [data-advisor-header] { padding-inline: 13px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-header, .app-header a, .app-header button,
+  .app-header nav[aria-label="Điều hướng chính"]>a::after { transition: none !important; }
+}

@@ -138,7 +138,7 @@ export default React.forwardRef(function MarketIntelligence(props, ref) {
               </button>)}
           </div>
         </div>
-        <div className="mt-9 grid gap-4 sm:grid-cols-3">
+        <div className="story-kpis mt-9 grid gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--ui-border)] bg-brand-card p-6">
             <p className="text-xs font-semibold text-[var(--ui-accent)]">
               {" Giá trung bình theo loại hình "}
@@ -172,8 +172,8 @@ export default React.forwardRef(function MarketIntelligence(props, ref) {
             </p>
           </div>
         </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
-          <div className="min-w-0 rounded-3xl border border-[var(--ui-border)] bg-brand-card p-5 shadow-sm md:p-7">
+        <div className="story-analysis mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+          <div className="story-chart min-w-0 rounded-3xl border border-[var(--ui-border)] bg-brand-card p-5 shadow-sm md:p-7">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h3 className="text-xl font-bold">
@@ -216,7 +216,7 @@ export default React.forwardRef(function MarketIntelligence(props, ref) {
                 }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.marketChart.lines, line => <polyline key={line.name} points={line.points} fill="none" stroke={line.color} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />)}
               </svg>
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+            <div className="story-legend mt-3 flex flex-wrap gap-x-6 gap-y-3">
               {((items, render) => typeof items === "number" ? Array.from({
                 length: Math.max(0, items)
               }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.marketChart.lines, line => <div key={line.name} className="flex items-center gap-2 text-xs text-[var(--ui-accent)]">
@@ -234,7 +234,7 @@ export default React.forwardRef(function MarketIntelligence(props, ref) {
                 </div>)}
             </div>
           </div>
-          <div className="rounded-3xl bg-[var(--ui-soft)] p-6 text-brand-navy shadow-sm md:p-8">
+          <div className="story-comparison rounded-3xl bg-[var(--ui-soft)] p-6 text-brand-navy shadow-sm md:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--ui-ink)]">
               {" District Comparison "}
             </p>

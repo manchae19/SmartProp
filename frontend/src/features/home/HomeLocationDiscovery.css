@@ -1,0 +1,35 @@
+/* Homepage discovery presentation only; shared market content stays unchanged. */
+#market .light-market-note { display: table; padding: 6px 11px; border: 1px solid #168f8933; border-radius: 8px; background: #eef5f6; color: #10615d; font-weight: 650; }
+#market .top-searched-areas>div:first-child { gap: 20px; }
+#market .top-searched-areas>div:first-child>div { border-left: 2px solid #d9ad55; padding-left: 16px; }
+#market .top-searched-areas>div:first-child p { color: #10615d; letter-spacing: .18em; }
+#market .top-searched-areas h2, #market .top-searched-areas h2 span { color: #142b45; font-weight: 700; line-height: 1.25; }
+#market .top-searched-areas>div:first-child>a { color: #142b45; white-space: normal; line-height: 1.6; transition: color 200ms ease; }
+#market .top-searched-areas>div:first-child>a:hover { color: #168f89; }
+#market .top-searched-areas article { border-color: #142b4526; box-shadow: 0 8px 22px #10243b14; transition: border-color 220ms ease, box-shadow 220ms ease; }
+#market .top-searched-areas article:hover { border-color: #168f8980; box-shadow: 0 12px 28px #10243b24; }
+#market .top-searched-areas article>img { transition: transform 550ms ease; }
+#market .top-searched-areas article:hover>img { transform: scale(1.025); }
+#market .top-searched-areas article>div[aria-hidden] { background: linear-gradient(180deg,#10243b08 0%,#10243b00 32%,#142b4540 56%,#10243be8 100%); }
+#market .top-searched-areas>div:last-child>div article>div[aria-hidden] { background: linear-gradient(180deg,#10243b05,#10243b00 30%,#10243bdb 100%); }
+#market .top-searched-areas article>div:not([aria-hidden]):not(:last-child)>span { background: #ffffffed; color: #142b45; border: 1px solid #ffffff80; box-shadow: 0 2px 8px #10243b14; backdrop-filter: blur(8px); }
+#market .top-searched-areas article>div:not([aria-hidden]):not(:last-child)>span svg { color: #168f89; }
+#market .top-searched-areas article>div:not([aria-hidden]):not(:last-child)>span>span:last-child:not(:first-child) { color: #10615d; }
+#market .top-searched-areas article>div:last-child h3 { color: #fff; font-weight: 700; text-shadow: 0 1px 4px #10243b40; }
+#market .top-searched-areas article>div:last-child p { color: #edf4f7; line-height: 1.6; }
+#market .top-searched-areas article>div:last-child>span { background: #ffffffeb; color: #142b45; border-color: #ffffff80; box-shadow: 0 2px 8px #10243b14; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
+#market .top-searched-areas article:hover>div:last-child>span { background: #fff; color: #10615d; border-color: #d9ad55; }
+#market .top-searched-areas :is(article,a):focus-visible { outline: 3px solid #d9ad55; outline-offset: 4px; }
+#market .light-demo { background: #fff; border-color: #d7e0e8; border-radius: 16px; box-shadow: 0 4px 14px #10243b08; }
+#market .light-demo>summary { color: #142b45; font-weight: 600; line-height: 1.6; border-radius: 16px; transition: background-color 200ms ease; }
+#market .light-demo>summary:hover { background: #eef5f6; }
+#market .light-demo>summary::marker { color: #168f89; }
+#market .light-demo>summary:focus-visible { outline: 2px solid #168f89; outline-offset: 3px; }
+@media(max-width:639px) {
+  #market .top-searched-areas article>div:not([aria-hidden]):not(:last-child)>span { font-size: 10px; padding: 5px 8px; }
+  #market .top-searched-areas>div:first-child>div { padding-left: 12px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  #market .top-searched-areas :is(article,img,a), #market .top-searched-areas article>div:last-child>span, #market .light-demo>summary { transition: none; }
+  #market .top-searched-areas article:hover>img { transform: none; }
+}

@@ -16,6 +16,12 @@ export function siteNavigation(filters = {}) {
       path: "/projects"
     }
   }, {
+    key: "news",
+    label: "Tin tức",
+    to: {
+      path: "/news"
+    }
+  }, {
     key: "gis",
     label: "Bản đồ GIS",
     to: listingLink("/map", filters)
@@ -44,11 +50,12 @@ export function activeNavigation(key, route) {
     hash = route.hash || "";
   if (key === "properties") return path === "/listings" || path.startsWith("/listing/") || path === "/home" && ["#properties", "#search"].includes(hash);
   if (key === "projects") return path === "/projects" || path.startsWith("/projects/") || path === "/home" && hash === "#projects";
+  if (key === "news") return path === "/news" || path.startsWith("/news/") || path === "/home" && hash === "#news";
   if (key === "gis") return path === "/map" || path === "/home" && hash === "#gis";
-  if (key === "market") return path === "/market" || path.startsWith("/market/") || path === "/home" && ["#market", "#market-current"].includes(hash);
+  if (key === "market") return path === "/market" || path.startsWith("/market/") || path === "/market-analytics" || path === "/home" && ["#market", "#market-current"].includes(hash);
   if (key === "tools") return path === "/valuation";
   if (key === "advisor") return path === "/advisor" || path.startsWith("/advisor/");
-  return key === "home" && path === "/home" && !["#properties", "#search", "#projects", "#gis", "#market", "#market-current"].includes(hash);
+  return key === "home" && path === "/home" && !["#properties", "#search", "#projects", "#news", "#gis", "#market", "#market-current"].includes(hash);
 }
 export const canPublish = isPublisher;
 export const canAccessAdmin = user => user?.status === "ACTIVE" && user?.role === "ADMIN";
@@ -56,7 +63,7 @@ export const usesPageLayout = path => !["/login", "/register", "/reset-password"
 export function homeSectionId(hash) {
   const id = String(hash || "").replace(/^#/, "");
   if (id === "search" || id === "properties") return "search";
-  return ["home", "properties", "gis", "lifestyle", "market", "market-current", "projects", "account"].includes(id) ? id : null;
+  return ["home", "properties", "gis", "lifestyle", "market", "market-current", "news", "projects", "account"].includes(id) ? id : null;
 }
 export function navigationOffset() {
   if (typeof document === "undefined") return 0;

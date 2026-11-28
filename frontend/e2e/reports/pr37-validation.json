@@ -1,0 +1,291 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "at": "2026-11-28T06:04:38.017Z",
+  "total": 47,
+  "passed": 47,
+  "failed": 0,
+  "results": [
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market/hoa-vang renders Hòa Vang",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market/hoa-vang does not fall back to Sơn Trà title",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market page has a heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market page renders a map container or area list",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "insufficient sample is stated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "no research request while anonymous",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market analytics endpoint was called",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "market analytics is scoped to a district",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "every district-scoped request pins Hòa Vang",
+      "ok": true,
+      "detail": "http://127.0.0.1:4173/api/v1/properties/market-analytics?district=H%C3%B2a+Vang&includeResearch=false | http://127.0.0.1:4173/api/v1/properties/market-analytics?district=H%C3%B2a+Vang&propertyType=LAND&includeResearch=false | http://127.0.0"
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "no fabricated median price for insufficient data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "no AI Valuation label on market statistics",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g1_market_hoa_vang",
+      "name": "group completed",
+      "ok": true,
+      "detail": "1005ms"
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "unknown district does not crash the app",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "unknown district heading never shows Sơn Trà",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "unknown district states it cannot be found",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "unknown district shows a clear state",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "app shell still renders navigation",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g2_unknown_slug",
+      "name": "group completed",
+      "ok": true,
+      "detail": "921ms"
+    },
+    {
+      "group": "g3_research_authorization",
+      "name": "anonymous users see no TiniX research option",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g3_research_authorization",
+      "name": "anonymous users see no research checkbox",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g3_research_authorization",
+      "name": "zero includeResearch=true requests",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g3_research_authorization",
+      "name": "every market request pins includeResearch=false",
+      "ok": true,
+      "detail": "http://127.0.0.1:4173/api/v1/properties/market-analytics?includeResearch=false | http://127.0.0.1:4173/api/v1/properties/market-analytics?district=H%C3%B2a+Vang&includeResearch=false | http://127.0.0.1:4173/api/v1/properties/market-analytic"
+    },
+    {
+      "group": "g3_research_authorization",
+      "name": "group completed",
+      "ok": true,
+      "detail": "912ms"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "no horizontal overflow at 390px",
+      "ok": true,
+      "detail": "{\"scrollWidth\":390,\"clientWidth\":390,\"bodyScroll\":390}"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "primary heading visible at 390px",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "no horizontal overflow at 768px",
+      "ok": true,
+      "detail": "{\"scrollWidth\":768,\"clientWidth\":768,\"bodyScroll\":768}"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "primary heading visible at 768px",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "no horizontal overflow at 1440px",
+      "ok": true,
+      "detail": "{\"scrollWidth\":1440,\"clientWidth\":1440,\"bodyScroll\":1440}"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "primary heading visible at 1440px",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "group": "g4_responsive",
+      "name": "group completed",
+      "ok": true,
+      "detail": "2793ms"
+    },
+    {
+      "group": "g5_news_degradation",
+      "name": "news page survives a 503 upstream",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g5_news_degradation",
+      "name": "news page throws no uncaught error",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g5_news_degradation",
+      "name": "failed news is not fabricated",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g5_news_degradation",
+      "name": "news shows a retry or unavailable affordance",
+      "ok": true,
+      "detail": "\n    Đến nội dung chínhSSmartProp.Không gian sống · Dữ liệu thông minhBất động sảnDự ánTin tứcBản đồ GISThị trường BĐSMớ"
+    },
+    {
+      "group": "g5_news_degradation",
+      "name": "group completed",
+      "ok": true,
+      "detail": "945ms"
+    },
+    {
+      "group": "g6_asset_integrity",
+      "name": "page exposes at most a handful of images",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "group": "g6_asset_integrity",
+      "name": "every rendered image loaded",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g6_asset_integrity",
+      "name": "images carry alt text",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g6_asset_integrity",
+      "name": "group completed",
+      "ok": true,
+      "detail": "950ms"
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "sufficient data renders the district",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "no research data source label for anonymous",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "no affirmative growth claim",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "growth is explicitly disclaimed, not asserted",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "no fabricated liquidity rating",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "no hardcoded growth field in rendered markup",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "no fabricated price history array",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "group": "g7_data_honesty",
+      "name": "group completed",
+      "ok": true,
+      "detail": "954ms"
+    }
+  ]
+}
