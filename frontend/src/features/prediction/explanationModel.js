@@ -172,8 +172,11 @@ export function vndDigits(value) {
   }
   if (typeof value === "string") {
     const text = value.trim();
-    if (!/^[1-9]\d{0,29}$/.test(text)) return null;
-    return text.replace(/^0+(?=\d)/, "");
+    if (/^[1-9]\d{0,29}$/.test(text)) return text;
+    // An exact integer serialised with a zero fraction is the same value; any nonzero
+    // fraction, exponent, sign or separator is rejected.
+    const exact = /^([1-9]\d{0,29})\.0+$/.exec(text);
+    return exact ? exact[1] : null;
   }
   return null;
 }
@@ -497,8 +500,14 @@ export function validateExplanation(raw, options = {}) {
   const suppliedDigits = options.priceVnd === undefined || options.priceVnd === null
     ? null : vndDigits(options.priceVnd);
   const adjustedDigits = vndDigits(calibration.adjusted_price_vnd);
-  const priceConsistent = !(suppliedDigits !== null && adjustedDigits !== null
-    && suppliedDigits !== adjustedDigits);
+  // A supplied point price that cannot be normalised is not verifiable, so it must never be
+  // reported as consistent.
+  const suppliedUnusable = options.priceVnd !== undefined && options.priceVnd !== null
+    && suppliedDigits === null;
+  const priceConsistent = suppliedUnusable
+    ? false
+    : !(suppliedDigits !== null && adjustedDigits !== null
+      && suppliedDigits !== adjustedDigits);
 
   const groups = Object.entries(raw.grouped_contributions)
     .map(([name, value]) => ({

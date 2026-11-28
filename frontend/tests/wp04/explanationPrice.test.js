@@ -11,8 +11,7 @@ import {
   normalizeVnd,
   sameVnd,
   validateExplanation,
-  vndDigits,
-} from "../../src/features/prediction/explanationModel.js";
+  vndDigits } from "../../src/features/prediction/explanationModel.js";
 import { ValuationExplanationPanel } from "../../src/features/prediction/ValuationExplanationPanel.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -196,4 +195,42 @@ test("an UNAVAILABLE explanation still shows a valid point price", () => {
     explanation: { status: "UNAVAILABLE", reason: "Không đủ dữ liệu." },
   });
   assert.match(html, /5,4[0-9]?\s*tỷ/);
+});
+
+// ---------------------------------------------------------------- one normalization contract
+test("a canonical integer point price matches the adjusted price", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = 5476531536;
+  const result = validateExplanation(payload, { priceVnd: 5476531536 });
+  assert.equal(result.status, STATUS.AVAILABLE, result.reason);
+});
+
+test("a zero-fraction decimal point price matches the adjusted price", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = 5476531536;
+  const result = validateExplanation(payload, { priceVnd: "5476531536.00" });
+  assert.equal(result.status, STATUS.AVAILABLE, result.reason);
+  assert.equal(result.view?.priceConsistent, true);
+});
+
+test("a nonzero fraction is not an authoritative price", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = 5476531536;
+  for (const bad of ["5476531536.01", "5476531536.5", "5.476531536e9", "0x5476531536", "+5476531536"]) {
+    assert.equal(vndDigits(bad), null, `accepted ${bad}`);
+    // an unusable point price is never treated as "matches"
+    const result = validateExplanation(payload, { priceVnd: bad });
+    assert.notEqual(result.view?.priceConsistent, true, `claimed a match for ${bad}`);
+  }
+});
+
+test("a price above Number.MAX_SAFE_INTEGER renders exactly", () => {
+  const digits = "1234567890123456789";           // 19 digits, not a safe Number
+  const rendered = render({ predictedPriceVnd: digits, modelVersion: "v1.3", explanation: house() });
+  const text = renderedPrice(rendered);
+  const value = BigInt(digits);
+  const whole = value / 1000000000n;
+  const cents = ((value % 1000000000n) * 100n) / 1000000000n;
+  const expected = `${whole},${cents.toString().padStart(2, "0")} tỷ`;
+  assert.equal(text, expected, text);
 });

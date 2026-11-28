@@ -419,3 +419,45 @@ reconstruction mismatch, stale response, account lock, account replacement/authT
 research revocation, live FastAPI outage through the UI), browser-level reactive authorization, and
 the isolated MySQL integration profile. `AdvisorControllerLiveIT` stays excluded: it asserts the
 legacy V6 contract and enables TiniX, so it is not a V1.3 acceptance test.
+
+---
+
+## One authoritative VND contract
+
+`vndDigits` now accepts a canonical integer **and** the same integer written with a zero fraction
+(`5476531536.00`), normalising both to the same digits. Everything else stays rejected: nonzero
+fractions (`5476531536.01`, `.5`), scientific notation, hexadecimal, signs and malformed text, and
+unsafe JavaScript numbers (`!Number.isSafeInteger`). `ValuationExplanationPanel` no longer carries its
+own normaliser — it uses the same function, so display and validation cannot drift again.
+
+A supplied point price that cannot be normalised is now reported as **not consistent** instead of
+silently consistent, because it cannot be verified against the adjusted price.
+
+Tests (98 total in `tests/wp04/*.test.js`): canonical integer → AVAILABLE; zero-fraction decimal →
+AVAILABLE with `priceConsistent: true`; one-VND mismatch → INCONSISTENT; invalid adjusted price →
+INVALID; UNAVAILABLE explanation with a valid price still renders it; a 19-digit price above
+`Number.MAX_SAFE_INTEGER` renders its exact BigInt value (`1234567890,12 tỷ`), not merely digits.
+
+## Fresh regression
+
+| Suite | Result |
+|---|---|
+| WP-04 frontend | **98 passed, 0 failed** |
+| Full frontend recursive | **345 passed, 0 failed** |
+| Vite build | PASS |
+
+Reused (paths unchanged by this change, logs and exit codes on record): real three-surface browser
+328/328, component browser 484/484, mocked surfaces 30/0/3, Spring 285 with no failures, FastAPI 1230
+passed with 20 skipped, WP-02 12 groups, benchmark digest `9eedb3c7c3668f61`, four artifact hashes.
+
+## Still open
+
+Browser-level failure isolation (missing/unavailable/malformed explanation, one-VND mismatch,
+reconstruction mismatch, stale response, live FastAPI outage) and browser-level reactive
+authorization (account lock, account replacement, `authTransition`, research revocation, stale
+restricted responses, SAFE fallback) have not been executed as browser scenarios; the equivalent
+logic is covered at component level (484 checks) and in unit tests, but that is not the same gate.
+The three mocked route scenarios in `surfaces.mjs` remain NOT_RUN, and the isolated MySQL integration
+profile was not executed. `AdvisorControllerLiveIT` stays excluded: legacy V6 assertions and TiniX
+enabled. The 20 skipped FastAPI tests are skips in the existing suite (model-artifact or
+service-dependent cases), unchanged from the accepted run.

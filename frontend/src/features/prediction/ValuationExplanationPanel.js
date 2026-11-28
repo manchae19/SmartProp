@@ -71,18 +71,6 @@ function statusText(status) {
   }
 }
 
-/** Canonical VND digits for a point price: safe integers and canonical digit strings only. */
-function priceDigits(value) {
-  const digits = vndDigits(value);
-  if (digits) return digits;
-  // Spring may serialise an exact integer as a decimal string with a zero fraction.
-  if (typeof value === "string") {
-    const match = /^([1-9]\d{0,29})\.0+$/.exec(value.trim());
-    if (match) return match[1];
-  }
-  return null;
-}
-
 /** Format canonical digits as tỷ with exact BigInt arithmetic, so long values keep every digit. */
 function formatBillionDigits(digits) {
   const value = BigInt(digits);
@@ -94,7 +82,7 @@ function formatBillionDigits(digits) {
 }
 
 function priceBlock({ predictedPriceVnd, modelVersion }) {
-  const digits = priceDigits(predictedPriceVnd);
+  const digits = vndDigits(predictedPriceVnd);
   const hasPrice = digits !== null;
   return h(
     "div",
