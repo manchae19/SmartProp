@@ -252,7 +252,8 @@ test('H: a different actor with the same token is still a different session', as
 
   const { client, session } = setup(fetcher)
   const pending = client.request('/slow', { method: 'GET' })
-  session.edit(draft => { draft.user = { ...actor, role: 'BROKER' } })
+  // same token, different actor: the credential is reused, the identity is not
+  session.edit(draft => { draft.user = { ...actor, id: 'other-user' } })
   release.resolve()
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
@@ -275,4 +276,204 @@ test('I: logout during an outstanding request rejects it and does not resurrect 
 
   await assert.rejects(pending, { code: 'SESSION_CHANGED' })
   assert.equal(session.getSnapshot().token, null)
+})
+
+// ---------------------------------------------------------------- verified refresh chain
+test('J: a verified refresh keeps an in-flight request valid across multiple rotations', async () => {
+  const release = deferred()
+  let rotations = 0
+  const { fetcher, calls } = makeFetcher(async (path, options) => {
+    const auth = options.headers.Authorization
+    if (path === '/slow') {
+      await release.promise
+      return json({ ok: true, auth })
+    }
+    if (path === '/first') {
+      return auth === 'Bearer fixture-a' ? json({ message: 'expired' }, 401) : json({ ok: true, auth })
+    }
+    if (path === '/second') {
+      return auth === 'Bearer fixture-b' ? json({ message: 'expired' }, 401) : json({ ok: true, auth })
+    }
+    return json({ message: 'expired' }, 401)
+  })
+
+  // refresh yields B then C, both verified by this client
+  const chained = async (url, options) => {
+    const path = new URL(url).pathname
+    if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
+    if (path === '/auth/refresh') {
+      rotations += 1
+      return json({ accessToken: rotations === 1 ? 'fixture-b' : 'fixture-c', user: { ...actor } })
+    }
+    return fetcher(url, options)
+  }
+
+  const { client, session, effects } = setup(chained)
+  const slow = client.request('/slow', { method: 'GET' })
+  await client.request('/first', { method: 'GET' })
+  assert.equal(session.getSnapshot().token, 'fixture-b')
+  await client.request('/second', { method: 'GET' })
+  assert.equal(session.getSnapshot().token, 'fixture-c')
+
+  release.resolve()
+  const result = await slow
+  assert.equal(result.auth, 'Bearer fixture-a', 'sent with the original credentials')
+  void calls
+  assert.equal(rotations, 2, 'two verified refreshes happened')
+  assert.deepEqual(effects, { expired: 0, cleared: 0 })
+})
+
+test('K: an externally replaced token invalidates an in-flight request', async () => {
+  const release = deferred()
+  const { fetcher } = makeFetcher(async (path, options) => {
+    if (path === '/slow') {
+      await release.promise
+      return json({ ok: true, auth: options.headers.Authorization })
+    }
+    if (path === '/trigger') {
+      return options.headers.Authorization === 'Bearer fixture-b'
+        ? json({ ok: true })
+        : json({ message: 'expired' }, 401)
+    }
+    return json({ message: 'expired' }, 401)
+  })
+
+  const { client, session } = setup(fetcher)
+  const slow = client.request('/slow', { method: 'GET' })
+  await client.request('/trigger', { method: 'GET' })       // verified A -> B
+  assert.equal(session.getSnapshot().token, 'fixture-b')
+
+  // nobody in this client produced C: it is an arbitrary replacement
+  session.edit(draft => { draft.token = 'fixture-c' })
+  release.resolve()
+
+  await assert.rejects(slow, { code: 'SESSION_CHANGED' })
+})
+
+test('L: a delayed 401 never retries with an unrelated replacement token', async () => {
+  const delayed = deferred()
+  const { fetcher, calls } = makeFetcher(async (path, options) => {
+    if (path === '/late') {
+      await delayed.promise
+      return json({ message: 'expired' }, 401)
+    }
+    if (path === '/trigger') {
+      return options.headers.Authorization === 'Bearer fixture-b'
+        ? json({ ok: true })
+        : json({ message: 'expired' }, 401)
+    }
+    return json({ message: 'expired' }, 401)
+  })
+
+  const { client, session } = setup(fetcher)
+  const late = client.request('/late', { method: 'GET' })
+  await client.request('/trigger', { method: 'GET' })
+  session.edit(draft => { draft.token = 'fixture-c' })     // arbitrary replacement
+  delayed.resolve()
+
+  await assert.rejects(late, { code: 'SESSION_CHANGED' })
+  // the delayed 401 must not have triggered another refresh
+  assert.equal(calls.refresh, 1, `refresh calls: ${calls.refresh}`)
+})
+
+// ---------------------------------------------------------------- refresh operation scoping
+test('M: a role revocation during a pending refresh cannot overwrite the session', async () => {
+  const csrfGate = deferred()
+  const refreshGate = deferred()
+  const { fetcher } = makeFetcher(async (path) => {
+    if (path === '/one') return json({ message: 'expired' }, 401)
+    return json({ message: 'expired' }, 401)
+  })
+
+  const { client, session } = setup(async (url, options) => {
+    const path = new URL(url).pathname
+    if (path === '/auth/csrf') {
+      await csrfGate.promise
+      return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
+    }
+    if (path === '/auth/refresh') {
+      await refreshGate.promise
+      return json({ accessToken: 'fixture-b', user: { ...actor } })
+    }
+    return fetcher(url, options)
+  })
+
+  const pending = client.request('/one', { method: 'GET' })
+  await new Promise(resolve => setTimeout(resolve, 5))
+
+  // revocation while the CSRF request is still pending
+  session.edit(draft => { draft.user = { ...actor, role: 'USER' } })
+  csrfGate.resolve()
+  refreshGate.resolve()
+
+  await assert.rejects(pending, { code: 'SESSION_CHANGED' })
+  assert.equal(session.getSnapshot().user.role, 'USER', 'obsolete refresh must not restore ADMIN')
+  assert.equal(session.getSnapshot().token, 'fixture-a', 'token was not rotated')
+})
+
+test('N: multiple waiters all reject when identity changes mid-refresh', async () => {
+  const gate = deferred()
+  const { fetcher } = makeFetcher(async (path, options) => {
+    if (path === '/one' || path === '/two') return json({ message: 'expired' }, 401)
+    if (path === '/trigger') {
+      return options.headers.Authorization === 'Bearer fixture-b'
+        ? json({ ok: true })
+        : json({ message: 'expired' }, 401)
+    }
+    return json({ message: 'expired' }, 401)
+  })
+
+  const { client, session } = setup(async (url, options) => {
+    const path = new URL(url).pathname
+    if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
+    if (path === '/auth/refresh') {
+      await gate.promise
+      return json({ accessToken: 'fixture-b', user: { ...actor } })
+    }
+    return fetcher(url, options)
+  })
+
+  const one = client.request('/one', { method: 'GET' })
+  const two = client.request('/two', { method: 'GET' })
+  await new Promise(resolve => setTimeout(resolve, 5))
+  session.edit(draft => { draft.user = { ...actor, role: 'USER' } })
+  gate.resolve()
+
+  const outcomes = await Promise.allSettled([one, two])
+  assert.equal(outcomes.every(item => item.status === 'rejected'), true)
+  assert.equal(session.getSnapshot().user.role, 'USER')
+})
+
+test('O: a new session does not join an obsolete refresh flight', async () => {
+  const gate = deferred()
+  let refreshes = 0
+  const { client, session } = setup(async (url, options) => {
+    const path = new URL(url).pathname
+    if (path === '/auth/csrf') return json({ headerName: 'X-CSRF-Token', token: 'csrf' })
+    if (path === '/auth/refresh') {
+      refreshes += 1
+      await gate.promise
+      return json({ accessToken: 'fixture-b', user: { ...actor } })
+    }
+    if (path === '/one') return json({ message: 'expired' }, 401)
+    if (path === '/two') {
+      // the new session starts fresh: its first call is unauthenticated for the new token
+      return options.headers.Authorization === 'Bearer fixture-new'
+        ? json({ message: 'expired' }, 401)
+        : json({ message: 'expired' }, 401)
+    }
+    return json({ message: 'expired' }, 401)
+  })
+
+  const first = client.request('/one', { method: 'GET' })
+  await new Promise(resolve => setTimeout(resolve, 5))
+
+  // a different account signs in while the old refresh is still pending
+  session.edit(draft => { draft.token = 'fixture-new'; draft.user = { ...actor, id: 'new-user' } })
+  const second = client.request('/two', { method: 'GET' })
+
+  gate.resolve()
+  await assert.rejects(first, { code: 'SESSION_CHANGED' })
+  await assert.rejects(second)
+  assert.equal(refreshes, 2, 'the obsolete flight was not reused')
 })

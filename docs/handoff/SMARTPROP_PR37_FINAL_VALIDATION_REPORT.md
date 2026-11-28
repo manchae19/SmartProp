@@ -141,3 +141,62 @@ already **succeeded** at the backend was reported as failed merely because crede
 
 Integrity: no change under `backend/src`, `ai-services/`, or `db/`; the four V1.3 artifacts hash
 identically (`3c56b693…`, `17632bdf…`, `84be275b…`, `419599ec…`); main and other branches untouched.
+
+---
+
+## Verified refresh continuity — edge-case closure
+
+**Finding (P2, follow-up):** the previous fix accepted *any* token change once `rotations` had
+advanced and the actor matched. That proved "a refresh happened", not "this token came from it".
+After a verified refresh A→B, an externally written token C for the same actor would still satisfy
+the old condition, so an in-flight request could bind to credentials this client never issued.
+
+**Fix (still confined to `frontend/src/shared/lib/httpClient.js`):**
+
+- `verifiedTokens` — the set of access tokens this client obtained from a refresh it performed and
+  scope-verified. A token change is tolerated **only** when the new token is in that chain and the
+  old one is not; anything else is `SESSION_CHANGED`.
+- `accept(result, current, { verified })` — refresh passes `verified: true` and extends the chain;
+  session creation (login, Google completion) now **invalidates the epoch and clears the chain**
+  instead of counting as a rotation. This separates credential renewal from session creation.
+- `rotate()` captures `identityEpoch` and validates it in every `ensureRefreshScope()` step (before
+  CSRF, after CSRF, after refresh), so an obsolete refresh cannot overwrite a session whose
+  identity changed mid-flight.
+- Refresh flights carry a scope key `${epoch}:${identityEpoch}:${token}`; a different session starts
+  its own flight instead of joining an obsolete one.
+
+### New deterministic tests (`frontend/tests/httpClientRefreshEpoch.test.mjs`, 15 cases)
+
+| Case | Assertion |
+|---|---|
+| A | two concurrent GETs share one refresh, both recover, no logout |
+| B | a GET that succeeds after a verified refresh is not `SESSION_CHANGED` |
+| C | a confirmed mutation returns its result; exactly one POST, never replayed |
+| D | POST + 401 still yields `AUTH_RETRY_REQUIRED` with `sessionRecovered` |
+| E | account replacement rejects the stale result |
+| F | role revoked then restored still rejects (identity epoch moved) |
+| G | external abort during a shared refresh → `REQUEST_ABORTED`, no logout |
+| H | **different actor with the same token** → `SESSION_CHANGED` |
+| I | logout mid-flight rejects and does not resurrect the token |
+| J | two verified refreshes in one session keep an in-flight request valid |
+| K | externally replaced token after a verified refresh → `SESSION_CHANGED` |
+| L | a delayed 401 after external replacement does **not** retry with the foreign token and does **not** trigger a second refresh |
+| M | role revocation while CSRF/refresh is pending cannot overwrite the session |
+| N | multiple waiters all reject when identity changes mid-refresh |
+| O | a new session during a shared refresh does not reuse the obsolete flight |
+
+### Fresh verification (this run, with exit codes)
+
+| Suite | Command | Result |
+|---|---|---|
+| httpClient abort + refresh epoch | `node --test tests/httpClient*.test.mjs` | **32 tests, 32 pass, 0 fail**, exit 0 |
+| Full frontend recursive | `npm test` | **209 tests, 209 pass, 0 fail**, exit 0 |
+| WP-02 Chromium (all groups) | `WP02_CHROMIUM=… node tests/browser/wp02-browser.mjs` | **12 groups PASS**, exit 0 |
+| PR #37 market groups | `PR37_BASE=<fixture preview> node e2e/pr37-validation.e2e.mjs --groups=g1,g2,g3,g13` | **4/4 groups**, exit 0 |
+| Authenticated research authorization | same run, `g13_market_authorization` | **PASS** (needs the fixture-only dist from `e2e/pr37-preview.mjs`; g1–g3 alone do not cover it) |
+| Account / login / navigation | `node e2e/pages-smoke.e2e.mjs` | PASS incl. responsive 390/768/1440, exit 0 |
+| Vite production build | `npm run build` | PASS (2.97s) |
+
+Note on scope: g1–g3 exercise anonymous market behaviour only. The authenticated research
+authorization path is verified **by g13**, which requires the fixture-only build served by
+`e2e/pr37-preview.mjs` (synthetic session entry), not the plain dev server.

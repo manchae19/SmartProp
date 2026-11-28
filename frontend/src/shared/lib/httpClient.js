@@ -54,15 +54,18 @@ export function createHttpClient({
   timeoutForPath = path => path === "/recommendations/research" ? 180000 : path === "/geocoding/search" ? 20000 : 15000
 }) {
   let refreshFlight = null,
+    refreshFlightKey = null,
     initialization = null,
     initialized = false,
     epoch = 0,
-    // Monotonic counters kept separate from the token value itself.
-    // rotations: incremented only by a refresh this client performed and verified, so a late
-    //   response can tell "my credentials were renewed" apart from "someone else replaced them".
-    // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
-    //   briefly restored cannot make a restricted response look current again.
+    // Tokens this client obtained from a refresh it performed and scope-verified. A request may
+    // only survive a token change when the new token is one of these; an arbitrary replacement
+    // (another tab, an external writer, a stolen session) is not in the chain and is rejected.
+    verifiedTokens = new Set(),
+    // rotations: monotonic count of verified refreshes (refreshes only - never session creation).
     rotations = 0,
+    // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
+    // briefly restored cannot make a restricted response look current again.
     identityEpoch = 0,
     lastIdentity = identityOf(session.getSnapshot());
   if (typeof session.subscribe === "function") {
@@ -95,11 +98,22 @@ export function createHttpClient({
   function unavailable(e) {
     state("UNAVAILABLE", e?.message || "Không thể kiểm tra phiên. Vui lòng thử lại.");
   }
-  function accept(result, current) {
+  /**
+   * @param {boolean} verified true only for a refresh this client performed and scope-checked.
+   *   Session creation (login, Google completion) is NOT a rotation: it starts a new session, so
+   *   it invalidates the epoch and clears the verified chain instead of extending it.
+   */
+  function accept(result, current, { verified = false } = {}) {
     if (current !== epoch) throw sessionChanged();
     session.edit(draft => draft.token = result.accessToken);
     session.edit(draft => draft.user = result.user);
-    rotations += 1;
+    if (verified) {
+      verifiedTokens.add(result.accessToken);
+      rotations += 1;
+    } else {
+      invalidate();
+      verifiedTokens.clear();
+    }
     state("AUTHENTICATED");
     initialized = true;
     return result;
@@ -166,12 +180,18 @@ export function createHttpClient({
     authenticated: false
   });
   function rotate() {
-    if (refreshFlight) return refreshFlight;
+    const startedSnapshot = session.getSnapshot();
+    // A flight is only reusable inside the exact session scope it was started in; a new session
+    // must never join an obsolete refresh that belongs to the previous one.
+    const flightKey = `${epoch}:${identityEpoch}:${startedSnapshot.token}`;
+    if (refreshFlight && refreshFlightKey === flightKey) return refreshFlight;
     const current = epoch,
-      started = session.getSnapshot(),
+      startedIdentity = identityEpoch,
+      started = startedSnapshot,
       ensureRefreshScope = () => {
         const latest = session.getSnapshot();
-        if (current !== epoch || started.token !== latest.token || !sameActor(started, latest)) throw sessionChanged();
+        if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
+        if (started.token !== latest.token || !sameActor(started, latest)) throw sessionChanged();
       },
       run = async () => {
         ensureRefreshScope();
@@ -185,10 +205,12 @@ export function createHttpClient({
           }
         });
         ensureRefreshScope();
-        return accept(result, current);
+        return accept(result, current, { verified: true });
       };
+    refreshFlightKey = flightKey;
     refreshFlight = Promise.resolve().then(() => lock ? lock(run) : run()).finally(() => {
       refreshFlight = null;
+      refreshFlightKey = null;
     });
     return refreshFlight;
   }
@@ -196,7 +218,6 @@ export function createHttpClient({
     const started = session.getSnapshot();
     const current = epoch;
     const startedIdentity = identityEpoch;
-    const startedRotations = rotations;
     const authenticated = options.authenticated !== false;
     const redirect = options.redirectOnSessionExpiry !== false;
     /**
@@ -205,16 +226,19 @@ export function createHttpClient({
      * because of our own verified refresh keeps the request valid - that is a credential renewal,
      * not a different session.
      */
-    const ensureCurrent = (snapshot, rotationsAt = startedRotations) => {
+    const ensureCurrent = snapshot => {
       if (options.signal?.aborted) throw abortError();
       const latest = session.getSnapshot();
       if (!authenticated) return;
       if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
-      if (snapshot.token !== latest.token
-        && !(rotations > rotationsAt && sameActor(snapshot, latest))) {
-        throw sessionChanged();
-      }
       if (!sameActor(snapshot, latest)) throw sessionChanged();
+      if (snapshot.token !== latest.token) {
+        // Only a token produced by our own verified refresh may replace the one we sent with.
+        // An externally written token - even for the same actor - is a different credential.
+        const supersededByVerified = verifiedTokens.has(latest.token)
+          && !verifiedTokens.has(snapshot.token);
+        if (!supersededByVerified) throw sessionChanged();
+      }
     };
     try {
       const result = await send(path, options);
@@ -227,7 +251,10 @@ export function createHttpClient({
           let refreshed = null;
           // Another request may already have completed the refresh while this response was in
           // flight; in that case reuse it instead of rotating a second time.
-          const alreadyRotated = rotations > startedRotations && sameActor(started, session.getSnapshot());
+          const latestSnapshot = session.getSnapshot();
+          const alreadyRotated = verifiedTokens.has(latestSnapshot.token)
+            && latestSnapshot.token !== started.token
+            && sameActor(started, latestSnapshot);
           try {
             if (!alreadyRotated) refreshed = await waitForRefresh(rotate(), options.signal);
           } catch (next) {
@@ -238,8 +265,7 @@ export function createHttpClient({
             throw next;
           }
           const retryScope = session.getSnapshot();
-          const rotatedAt = rotations;
-          ensureCurrent(retryScope, rotatedAt);
+          ensureCurrent(retryScope);
           if (refreshed && retryScope.token !== refreshed.accessToken) throw sessionChanged();
           // Renew credentials but require explicit resubmission for writes; never duplicate an uncertain mutation.
           if (!["GET", "HEAD", "OPTIONS"].includes((options.method || "GET").toUpperCase())) throw Object.assign(Error("Phiên đã được gia hạn. Vui lòng thực hiện lại thao tác vừa gửi."), {
@@ -249,10 +275,10 @@ export function createHttpClient({
           });
           try {
             const result = await send(path, options);
-            ensureCurrent(retryScope, rotatedAt);
+            ensureCurrent(retryScope);
             return result;
           } catch (next) {
-            ensureCurrent(retryScope, rotatedAt);
+            ensureCurrent(retryScope);
             if (terminal(next)) expire(redirect);
             throw next;
           }
