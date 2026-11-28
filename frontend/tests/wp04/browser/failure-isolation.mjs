@@ -67,6 +67,11 @@ async function onlyPost(page, path, handle) {
   return requests;
 }
 
+function unavailable(explanation) {
+  return { explanation_version: explanation.explanation_version, status: "UNAVAILABLE",
+    limitations: ["Fixture explanation unavailable"] };
+}
+
 function record(name, classification, detail = "") {
   results.push({ name, classification, ok: !detail, detail });
   console.log((detail ? "FAIL " : "PASS ") + name + (detail ? " — " + detail : ""));
@@ -181,7 +186,7 @@ async function advisor(page) {
     const payload = await real.json();
     for (const item of payload.recommendedProperties ?? []) {
       if (item.valuationEvidence?.available) {
-        item.valuationEvidence.explanation = { status: "UNAVAILABLE", reason: "Fixture explanation unavailable" };
+        item.valuationEvidence.explanation = unavailable(item.valuationEvidence.explanation);
       }
     }
     await route.fulfill({ response: real, json: payload });
@@ -276,7 +281,7 @@ async function main() {
     assert.ok(baseline, "Positive control is required to construct mutation cases");
     const mutations = [
       ["missing explanation", "ABSENT", (p) => delete p.explanation],
-      ["unavailable explanation", "UNAVAILABLE", (p) => { p.explanation = { status: "UNAVAILABLE" }; }],
+      ["unavailable explanation", "UNAVAILABLE", (p) => { p.explanation = unavailable(p.explanation); }],
       ["malformed explanation", "INVALID", (p) => { p.explanation = { status: "AVAILABLE", factors: [] }; }],
       ["invalid adjusted price", "INVALID", (p) => { p.explanation.calibration.adjusted_price_vnd = 0; }],
       ["one-VND mismatch", "INCONSISTENT", (p) => { p.explanation.calibration.adjusted_price_vnd =

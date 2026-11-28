@@ -7,6 +7,7 @@ import { advisorPath, deferred, login, prepareAdvisor, waitResponse } from "./wo
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || "playwright");
+const { verifySharedBrowserSession } = require("../../browser/pr49-runtime-session.cjs");
 const app = process.env.WP04_APP;
 const admin = process.env.WP04_ADMIN_EMAIL;
 const buyer = process.env.WP04_BUYER_EMAIL;
@@ -229,6 +230,17 @@ async function replaceAccountDuringResearch(browser) {
   }
 }
 
+async function sharedCrossTabRuntime(browser) {
+  const ctx = await browser.newContext();
+  try {
+    const page = await ctx.newPage();
+    await login(page, app, buyer, password);
+    await verifySharedBrowserSession({ ctx, page, origin: app, email: buyer, password });
+  } finally {
+    await ctx.close();
+  }
+}
+
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME });
 const outcomes = [];
 try {
@@ -236,6 +248,8 @@ try {
     ["active admin locks, shared client denies credential, account restored", "REAL_HTTP_AND_MYSQL", lockActiveSession],
     ["authTransition, account replacement, late research response rejected, SAFE fallback",
       "REAL_SESSION_AND_SAFE_API_WITH_SYNTHETIC_RESEARCH_RESPONSE", replaceAccountDuringResearch],
+    ["PR49 shared-session Web Locks, signed refresh and cross-tab revocation",
+      "REAL_SHARED_CLIENT_AND_SPRING_WITH_401_FIXTURE", sharedCrossTabRuntime],
   ]) {
     try {
       await scenario(browser);
@@ -249,5 +263,5 @@ try {
 } finally {
   await browser.close();
   writeFileSync(process.env.WP04_AUTH_REPORT, JSON.stringify(outcomes, null, 2) + "\n");
-  process.exitCode = outcomes.length === 2 && outcomes.every((item) => item.ok) ? 0 : 1;
+  process.exitCode = outcomes.length === 3 && outcomes.every((item) => item.ok) ? 0 : 1;
 }
