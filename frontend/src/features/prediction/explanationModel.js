@@ -450,7 +450,10 @@ export function validateExplanation(raw, options = {}) {
   if (!SUPPORTED_CALIBRATION_POLICIES.includes(calibration.policy)) {
     return invalid(`Chính sách hiệu chỉnh không được hỗ trợ (${calibration.policy}).`);
   }
-  if (!isNonNegativeFinite(calibration.adjusted_price_vnd)) {
+  // The adjusted price is an authoritative VND amount: it must satisfy the same exact-integer
+  // contract as the prediction, otherwise an invalid value would make adjustedDigits null and
+  // silently bypass the consistency comparison.
+  if (vndDigits(calibration.adjusted_price_vnd) === null) {
     return invalid("Giá sau hiệu chỉnh không hợp lệ.");
   }
   // V1.3 always emits both prices; a payload without them is not a complete explanation

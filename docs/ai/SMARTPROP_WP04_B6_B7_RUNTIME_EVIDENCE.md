@@ -128,3 +128,92 @@ Spring Boot posting-preview and Advisor runtime gates are **BLOCKED**. Prerequis
 but provisioning a throwaway Standard V23 fixture, seeding synthetic publisher/buyer/ADMIN accounts
 and driving two authenticated routes was not completed in this session. No MySQL instance, Tomcat
 or Spring process was started, so nothing is left running and no protected database was touched.
+
+---
+
+## Runtime closure session — actual results
+
+### Configuration precedence (correction)
+
+`application.yml` sets `app.valuation: { enabled: false }` as a literal. That does **not** prevent
+override: Spring Boot resolves `SPRING_APPLICATION_JSON` / system properties / command-line arguments
+above YAML. The earlier claim that the flag "cannot be overridden" was wrong; the successful run used
+
+```
+SPRING_PROFILES_ACTIVE=standard-migrations
+SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3407/wp04_runtime_v23?connectionTimeZone=UTC
+SPRING_DATASOURCE_USERNAME=wp04_v23   (fixture password from the secure fixture store)
+SPRING_APPLICATION_JSON={"app":{"valuation":{"enabled":true,"base-url":"http://127.0.0.1:8000"},
+  "advisor":{"valuation-enabled":true,"valuation-base-url":"http://127.0.0.1:8000",
+  "allow-research-comparables":false}}}
+mvnw -o spring-boot:run
+```
+
+Guard stayed intact: one explicit profile, runtime Flyway disabled, `ddl-auto=validate`, SQL init
+`never`; Flyway validated the 23 migrations before Tomcat started on 8080.
+
+### Fixture
+
+`data-ok`, UUID `54afb557-eb00-11f1-886b-7085c2fe30d2`, port 3407, schema `wp04_runtime_v23`.
+Eight synthetic HOUSE properties seeded (Cẩm Lệ / Hòa Thọ Đông, 78–92 m², 5.15–6.45 B VND, PUBLISHED,
+SALE, VND/TOTAL, SRID 4326 points, unique `WP04-HOUSE-N` listing codes, idempotent upsert).
+Three synthetic accounts (BROKER, BUYER, ADMIN) authenticate through the real `/auth/login`.
+
+### Actual HTTP evidence
+
+`POST /api/v1/properties/valuation-preview` (BROKER, UTF-8 JSON):
+
+```
+available=true  predictedAskingPriceVnd=5749775772
+explanation.status=AVAILABLE  factors=6  provenance=22  policy=duan_by_band
+direct FastAPI /predict            = 5749775772   (exact parity)
+```
+
+`POST /api/v1/advisor/consult` (payload: budget 7.0 B, LIVING, HOUSE, Cẩm Lệ, limit 3,
+includeComparables/includeValuation true, research false):
+
+```
+mode=SAFE  recommended=3  eligibleCandidateCount=8
+valuationEvidence: available=true modelVersion=v1.3 price=4767450210
+                   explanation.status=AVAILABLE factors=6 provenance=22
+                   policy=duan_by_band adjusted_price_vnd=4767450210  (exact parity)
+comparableEvidence:            status=AVAILABLE candidates=3
+valuationComparableEvidence:   status=AVAILABLE candidates=3
+researchReference=false  source.kind=PROPERTY
+```
+
+The Advisor price differs from the posting-preview price because the effective model inputs differ
+(different area/category context); each surface is internally exactly consistent.
+
+### Encoding note (harness, not product)
+
+PowerShell mangled Vietnamese district strings in request bodies, producing
+`available=false` with "khu vực chưa được hỗ trợ" and HTTP 400s. Writing the JSON as UTF-8 (no BOM)
+and posting with `curl.exe --data-binary @file` resolved it. Any future runtime harness must control
+encoding explicitly.
+
+### Code change
+
+`explanationModel.js` now requires `vndDigits(calibration.adjusted_price_vnd) !== null` before an
+AVAILABLE explanation is accepted, so zero, fractional, unsafe, negative, malformed or object
+representations cannot make the consistency comparison vacuous. Canonical digit strings are accepted
+and compared exactly; one VND apart is still a mismatch. WP-04 frontend tests: **88 pass**, build PASS.
+
+### Still open
+
+Three real browser surfaces (standalone, posting, Advisor) against these services, 320/390/768/1440
+responsive checks, failure isolation through the UI, and the full cross-suite regression
+(FastAPI serial, RAG, Java, WP-02 ×12 browser groups, Vite, prediction invariance) were **not** run
+this session and are not claimed.
+
+### WP06 handoff
+
+- Contract: `explanation_version=1.0`, `status` in {AVAILABLE, PARTIAL, UNAVAILABLE, NOT_SUPPORTED},
+  `method=XGBOOST_NATIVE_TREESHAP`, `target=ASKING_PRICE_VND`, `output_space=LOG1P_PRICE_VND`.
+- Provenance states: OBSERVED, DERIVED, DEFAULTED, MISSING, MISSING_INVALID, NOT_APPLICABLE,
+  UNKNOWN_CATEGORY, UNVERIFIED (22 feature keys).
+- Reconstruction tolerance: 1e-5 relative to |predicted_margin_log|.
+- Insertion point: `PredictorV1_3.predict()` returns the explanation next to the unchanged point
+  prediction; explanation failures downgrade to UNAVAILABLE and never alter the price.
+- Known limits: no calibrated confidence, no prediction interval (WP-05), synthetic-fixture runtime
+  only. Reviewed commit: `893eeb9` plus the local runtime-fix commit.

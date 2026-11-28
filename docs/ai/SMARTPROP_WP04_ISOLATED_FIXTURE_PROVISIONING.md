@@ -73,3 +73,15 @@ fixture with `spring.jpa.hibernate.ddl-auto=validate`, runtime Flyway disabled a
 (the `standard-migrations` profile already enforces all three and, unlike the local/staging profiles,
 does not pin the JDBC URL to a protected instance). Synthetic seeding (BROKER, BUYER, ADMIN, published
 properties) and Checkpoints 2–3 (FastAPI + Spring runtime, three browser surfaces) remain.
+
+---
+
+## Seed and runtime note
+
+Eight synthetic HOUSE properties are seeded idempotently (`WP04-HOUSE-1..8`, upsert on the unique
+listing code). `location` is a `POINT` column with **SRID 4326**, and MySQL expects
+`ST_GeomFromText('POINT(latitude longitude)', 4326)` — latitude first. Passing longitude first fails
+with "Latitude 108.19 is out of range".
+
+The fixture was used for real Spring → FastAPI preview and Advisor runs; results are recorded in
+`SMARTPROP_WP04_B6_B7_RUNTIME_EVIDENCE.md`.

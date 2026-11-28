@@ -19,6 +19,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const samples = JSON.parse(readFileSync(join(here, "fixtures/explanation-samples.json"), "utf8"));
 const clone = (value) => JSON.parse(JSON.stringify(value));
 const render = (props) => renderToStaticMarkup(ValuationExplanationPanel(props));
+const house = () => clone(samples.HOUSE.explanation);
 
 // ---------------------------------------------------------------- normalizeVnd
 test("normalizeVnd accepts positive integers and Spring decimal strings", () => {
@@ -116,4 +117,33 @@ test("every committed fixture matches its own authoritative price", () => {
     assert.equal(result.status, STATUS.AVAILABLE, type);
     assert.equal(result.view.priceConsistent, true, type);
   }
+});
+
+// ---------------------------------------------------------------- adjusted price contract
+test("adjusted_price_vnd must be a valid authoritative VND value", () => {
+  for (const bad of [0, -1, 1.5, Number.NaN, Infinity, "abc", "0x15", "", null, {}, [], true]) {
+    const payload = house();
+    payload.calibration.adjusted_price_vnd = bad;
+    const result = validateExplanation(payload);
+    assert.equal(result.status, STATUS.INVALID, `accepted adjusted price ${String(bad)}`);
+    assert.match(result.reason, /Giá sau hiệu chỉnh/);
+  }
+});
+
+test("a canonical digit string adjusted price is accepted and compared exactly", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = String(payload.calibration.adjusted_price_vnd);
+  const ok = validateExplanation(payload, { priceVnd: price }).view;
+  assert.ok(ok);
+  assert.equal(ok.priceConsistent, true);
+
+  const mismatch = validateExplanation(payload, { priceVnd: price + 1 }).view;
+  assert.equal(mismatch.priceConsistent, false, "one VND apart is still a mismatch");
+});
+
+test("an invalid adjusted price cannot silently bypass consistency", () => {
+  const payload = house();
+  payload.calibration.adjusted_price_vnd = Number.NaN;
+  const result = validateExplanation(payload, { priceVnd: price });
+  assert.equal(result.status, STATUS.INVALID, "must reject instead of returning null digits");
 });
