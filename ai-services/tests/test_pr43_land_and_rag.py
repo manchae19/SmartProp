@@ -11,9 +11,10 @@ import json
 import os
 import tempfile
 import unittest
+from copy import copy
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -24,6 +25,7 @@ from app.rag.buyer_search import parse_over_budget_consent
 from app.rag.config import Settings
 from app.rag.land_chat import LandAdvisor, accept_rewrite, colloquial
 from app.rag.schemas import ChatRequest, ChatResponse
+from app.rag.tools import UpstreamError
 import test_rag_multiturn as fixtures
 
 
@@ -481,6 +483,162 @@ class Pr43LandAndRagTests(unittest.TestCase):
         ).evidence["session"]["id"]
         loc_changed = bot.chat(ChatRequest(question="Tìm đất ở Đà Nẵng dưới 3 tỷ", sessionId=sid3), allow_demo=True)
         self.assertTrue(all(r["price"] <= 3_000_000_000 and r["overBudgetVnd"] == 0 for r in loc_changed.evidence["buyerSearch"]["rows"]))
+
+    def test_p1_01_review_round2_strict_consent_matrix_and_state_lifecycle(self):
+        # Parser: no negation, withdrawal, past-tense, hypothetical, question or third-party
+        # statement may ever produce GRANT.
+        never_grant = (
+            "Tìm đất Hòa Xuân dưới 3 tỷ, tôi chưa từng chấp nhận vượt ngân sách",
+            "Tôi không muốn vượt ngân sách",
+            "Tôi chưa đồng ý vượt ngân sách",
+            "Tôi chưa bao giờ đồng ý vượt ngân sách",
+            "Tôi đã từng đồng ý, nhưng bây giờ không",
+            "Nếu tôi đồng ý vượt ngân sách thì sao?",
+            "Tôi có nên chấp nhận vượt ngân sách không?",
+            "Người khác đồng ý vượt ngân sách, còn tôi thì không",
+            "Rút lại đồng ý vượt ngân sách",
+        )
+        for phrase in never_grant:
+            self.assertNotEqual(parse_over_budget_consent(phrase), "GRANT", phrase)
+        for phrase in ("Tôi đồng ý xem nhóm tham khảo vượt ngân sách", "Đồng ý vượt ngân sách"):
+            self.assertEqual(parse_over_budget_consent(phrase), "GRANT", phrase)
+
+        bot, backend, _, _ = fixtures.MultiTurnTests().service(props=[])
+        bot.land_advisor = LandAdvisor(Settings(demo_key=DEMO_KEY), enabled=True,
+                                       engine=FakeLandEngine(count=1, base_price=3_100_000_000))
+
+        def fake_backend_get(method, url):
+            items = [
+                {"id": PROP_UUID_1, "status": "PUBLISHED", "transactionType": "SALE",
+                 "priceUnit": "TOTAL", "currency": "VND", "price": "2900000000",
+                 "areaSqm": 100, "propertyType": "LAND", "landUseType": "RESIDENTIAL",
+                 "district": "Cẩm Lệ", "ward": "Hòa Xuân", "title": "Đất Hòa Xuân 2,9 tỷ"},
+                {"id": PROP_UUID_OVER, "status": "PUBLISHED", "transactionType": "SALE",
+                 "priceUnit": "TOTAL", "currency": "VND", "price": "3200000000",
+                 "areaSqm": 105, "propertyType": "LAND", "landUseType": "RESIDENTIAL",
+                 "district": "Cẩm Lệ", "ward": "Hòa Xuân", "title": "Đất Hòa Xuân 3,2 tỷ"},
+            ]
+            return {"items": items, "totalPages": 1}
+
+        backend._call = MagicMock(side_effect=fake_backend_get)
+        budget = 3_000_000_000
+
+        def rows(question, session_id=None):
+            result = bot.chat(ChatRequest(question=question, sessionId=session_id), allow_demo=True)
+            evidence = result.evidence
+            return evidence, evidence["buyerSearch"]["rows"]
+
+        # A. Reviewed reproduction + every non-consent form keeps the hard budget and returns no over-budget row.
+        for phrase in never_grant:
+            utterance = phrase if "Hòa Xuân" in phrase else f"Tìm đất Hòa Xuân dưới 3 tỷ, {phrase}"
+            evidence, found = rows(utterance)
+            self.assertEqual(evidence["responseKind"], "BUYER_SEARCH", phrase)
+            self.assertTrue(found, phrase)
+            self.assertTrue(all(row["price"] <= budget for row in found), phrase)
+            self.assertTrue(all(row["overBudgetVnd"] == 0 for row in found), phrase)
+
+        # B. Explicit affirmative consent may surface the reference band, saved budget unchanged.
+        granted_evidence, granted_rows = rows("Tìm đất Hòa Xuân dưới 3 tỷ, tôi đồng ý xem nhóm tham khảo vượt ngân sách")
+        granted_session = granted_evidence["session"]["id"]
+        self.assertGreater(max(row["price"] for row in granted_rows), budget)
+        self.assertTrue(any(row["overBudgetVnd"] > 0 for row in granted_rows))
+        self.assertEqual(str(granted_evidence["session"]["context"]["criteria"]["budgetVnd"]), str(budget))
+
+        # C. Criteria change after consent fails closed (location changed without re-consenting).
+        _, changed_rows = rows("Tìm đất ở Đà Nẵng dưới 3 tỷ", granted_session)
+        self.assertTrue(all(row["price"] <= budget and row["overBudgetVnd"] == 0 for row in changed_rows))
+
+        # D. Explicit revocation on a live consent drops the reference band immediately.
+        consent_evidence, _ = rows("Tìm đất Hòa Xuân dưới 3 tỷ, tôi đồng ý vượt ngân sách")
+        revoked_sid = consent_evidence["session"]["id"]
+        _, revoked_rows = rows("Không, tôi rút lại, không đồng ý vượt ngân sách", revoked_sid)
+        self.assertTrue(all(row["price"] <= budget and row["overBudgetVnd"] == 0 for row in revoked_rows))
+
+        # E. Consent is never restored from a checkpoint: a saved checkpoint carrying
+        # allowOverBudget for the same criteria cannot re-arm the reference band.
+        from app.rag import checkpoints as chat_checkpoints
+        from app.rag.session import Context
+        saved = {
+            "budget_vnd": str(budget), "district": "Cẩm Lệ", "turns": 3,
+            "created_at": 1.0, "updated_at": 1.0,
+            "needs": {"buyerSearch": {
+                "type": "LAND", "location": "Hòa Xuân", "district": "Cẩm Lệ",
+                "maxPrice": budget, "minPrice": None, "mode": "MAXIMUM", "area": None,
+                "allowOverBudget": True, "consentScope": {
+                    "type": "LAND", "location": "Hòa Xuân", "district": "Cẩm Lệ", "ward": None,
+                    "maxPrice": budget, "minPrice": None, "mode": "MAXIMUM", "area": None},
+            }},
+        }
+        restored = copy(bot)
+        restored.sessions = chat_checkpoints.CheckpointSessions("a" * 32, saved)
+        resumed = restored.chat(ChatRequest(question="Tìm đất Hòa Xuân dưới 3 tỷ"), allow_demo=True)
+        resumed_rows = resumed.evidence["buyerSearch"]["rows"]
+        self.assertTrue(all(row["price"] <= budget and row["overBudgetVnd"] == 0 for row in resumed_rows))
+        self.assertEqual(str(resumed.evidence["session"]["context"]["criteria"]["budgetVnd"]), str(budget))
+
+    def test_p1_02_review_round2_demo_persistence_and_scope_isolation(self):
+        bot, backend, _, _ = fixtures.MultiTurnTests().service(props=[])
+        bot.land_advisor = LandAdvisor(Settings(demo_key=DEMO_KEY), enabled=True,
+                                       engine=FakeLandEngine(count=1, base_price=3_100_000_000))
+
+        def fake_backend_get(method, url):
+            return {"items": [{
+                "id": PROP_UUID_1, "status": "PUBLISHED", "transactionType": "SALE",
+                "priceUnit": "TOTAL", "currency": "VND", "price": "2400000000",
+                "areaSqm": 100, "propertyType": "LAND", "landUseType": "RESIDENTIAL",
+                "district": "Cẩm Lệ", "ward": "Hòa Xuân", "title": "Đất nền Hòa Xuân thật",
+            }], "totalPages": 1}
+
+        backend._call = MagicMock(side_effect=fake_backend_get)
+        question = "Tìm đất ở Hòa Xuân dưới 3 tỷ"
+
+        # A. Demo turns never touch the account checkpoint store (no GET, no PUT).
+        backend.client = MagicMock()
+        backend.settings = Mock()
+        backend.settings.checkpoint_key = "k" * 40
+
+        def checkpoint_request(method, path, **kwargs):
+            response = Mock()
+            if method == "GET":
+                response.status_code = 404
+            else:
+                response.status_code = 200
+                response.json.return_value = {"id": "a" * 32, "revision": 1}
+            return response
+        backend.client.request.side_effect = checkpoint_request
+        from app.rag import checkpoints as chat_checkpoints
+        demo_result = chat_checkpoints.durable_chat(
+            bot, ChatRequest(question=question), "Bearer token",
+            {"subject": "42"}, allow_demo=True)
+        self.assertEqual(backend.client.request.call_count, 0)
+        demo_sid = demo_result.evidence["session"]["id"]
+        self.assertEqual(demo_result.evidence["session"]["turn"], 1)
+
+        # B. The same session id used by a normal account turn cannot resume demo state.
+        with self.assertRaises(UpstreamError):
+            chat_checkpoints.durable_chat(bot, ChatRequest(question=question, sessionId=demo_sid),
+                                          "Bearer token", {"subject": "42"})
+        normal_sidless = chat_checkpoints.durable_chat(bot, ChatRequest(question=question),
+                                                       "Bearer token", {"subject": "42"})
+        self.assertNotEqual(normal_sidless.evidence["session"]["id"], demo_sid)
+
+        # C. PUBLIC demo session cannot be addressed by a public (non-demo) turn.
+        public_demo = bot.chat(ChatRequest(question=question), allow_demo=True)
+        public_demo_sid = public_demo.evidence["session"]["id"]
+        plain = bot.chat(ChatRequest(question=question, sessionId=public_demo_sid), allow_demo=False)
+        self.assertNotEqual(plain.evidence["session"]["id"], public_demo_sid)
+        self.assertFalse(plain.evidence.get("land") or {})
+        self.assertTrue(all(row["source"] != "LAND_DATA" for row in plain.evidence["buyerSearch"]["rows"]))
+
+        # D. Cross-account demo sessions are separate namespaces.
+        account_demo_a = bot.chat(ChatRequest(question=question), allow_demo=True, account={"subject": "7"})
+        account_demo_b = bot.chat(ChatRequest(question=question, sessionId=account_demo_a.evidence["session"]["id"]),
+                                  allow_demo=True, account={"subject": "8"})
+        self.assertNotEqual(account_demo_b.evidence["session"]["id"], account_demo_a.evidence["session"]["id"])
+
+        # E. Client payload can never declare a trusted scope.
+        with self.assertRaises(Exception):
+            ChatRequest(question=question, scope="ACCOUNT_DEMO:42")
 
     def test_demo_documents_never_emit_source_free_legal_or_flood_safety_claims(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -52,48 +52,86 @@ def _public(backend, filters, ceiling):
 NON_LAND_HOUSE_RE=re.compile(r'\b(nha|can ho|chung cu|biet thu|nha pho|phong tro|mat bang)\b')
 LAND_ASSET_RE=re.compile(r'\b(dat|lo dat|o dat|thua)\b')
 
-_NEGATED_OVER_BUDGET_RE = re.compile(
- r'\b(?:khong|ko|chua|dung|cam|chan|bo|huy|ngung|thoi|tu choi)'
- r'(?:\s+(?:muon|can|nen|the|duoc|he|bao gio|dong y|chap nhan|cho|cho phep|cho xem|xem|lay|them|hien thi|mo rong)){0,4}'
- r'\s+(?:nhom\s+|muc\s+|phan\s+|ket qua\s+)?(?:tham khao\s+)?vuot(?:\s+muc|\s+tran|\s+ngan\s+sach)?\b'
- r'|\b(?:bo|tat|huy)\s+(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
- r'|\b(?:nghiem ngat|tuyet doi)\s+(?:trong|duoi|khong qua|toi da)\s+ngan\s+sach\b'
-)
-_AMBIGUOUS_OVER_BUDGET_RE = re.compile(
- r'\b(?:co the|khong chac|chua chac|phan van|dang nghi|neu|gia su|hay|hoac|lieu|co nen|tuy|xem xet)\b[^.?!]*\bvuot(?:\s+ngan\s+sach)?\b'
- r'|\bvuot(?:\s+ngan\s+sach)?\b[^.?!]*\b(?:hay khong|khong nhi|chua nhi|sao nhi|khong\s*$)'
-)
-_POSITIVE_OVER_BUDGET_RE = re.compile(
- r'\b(?:dong y|chap nhan|cho phep)\s+(?:xem\s+|lay\s+|hien thi\s+|them\s+)?(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
- r'|\b(?:cho xem|hien thi them|them)\s+(?:nhom\s+|muc\s+|phan\s+)?(?:tham khao\s+)?vuot\s+ngan\s+sach\b'
-)
+# Over-budget consent is decided per clause, and every failure mode returns a non-GRANT
+# verdict: negative/withdrawal markers are evaluated BEFORE any affirmative verb, and
+# questions, quotes, hypotheticals, conditionals, third-party statements, past statements
+# and hedges can never produce GRANT. Anything still unclear stays on the hard budget.
+_CLAUSE_SPLIT = re.compile(r'[.!?;:,()\[\]"\u201c\u201d]|\b(?:nhung|ma|tuy nhien|song|vi vay|the nhung)\b')
+_OVER_MENTION = re.compile(r'\bvuot\b')
+_AFFIRMATIVE = ('dong y','chap nhan','cho phep','cho xem','hien thi','xem','lay','them','mo rong','cho toi')
+_NEGATION = ('khong','ko','chua','chang','cha','dung','thoi','ngung','huy','bo','cam','chan','tu choi','rut lai','thu hoi','khong he','khong bao gio','chua bao gio','chua tung')
+_PAST = ('da tung','tung','truoc day','luc truoc','hoi truoc','ngay xua','ngay truoc')
+_HYPOTHETICAL = ('neu','gia su','gia dinh','lieu','co nen','khong chac','chua chac','phan van','dang nghi','hoac','tuy','xem xet','co the','vi du','theo gia dinh','trong truong hop','neu nhu')
+_THIRD_PARTY = ('nguoi khac','nguoi ta','moi nguoi','ban ay','ong ay','ba ay','chu nha','chu dau tu','ho ')
+
+def _mentions(clause: str, tokens) -> bool:
+ """Whole-word/phrase match so a token can never match inside another word."""
+ return any(re.search(r'(?<!\w)' + re.escape(token.strip()) + r'(?!\w)', clause) for token in tokens)
 
 def parse_over_budget_consent(question: str) -> str:
  """Classify over-budget consent into `'GRANT'`, `'DENY'`, `'AMBIGUOUS'`, or `'NONE'`.
 
- Any negation, withdrawal, hedging, conditional, contradiction, or question fails closed
- (`'DENY'` or `'AMBIGUOUS'`), never `'GRANT'`.
+ GRANT requires an explicit affirmative clause. Denial, withdrawal, negation and
+ contradiction are evaluated first and always win; questions, quotes, hypothetical or
+ conditional wording, third-party statements, past-tense recollection and hedges are
+ never treated as consent.
  """
  raw = (question or '').strip()
- n = fold(raw).strip(' !.')
- if not n:
+ if not raw:
   return 'NONE'
- has_neg = bool(_NEGATED_OVER_BUDGET_RE.search(n))
- has_pos = bool(_POSITIVE_OVER_BUDGET_RE.search(n))
- is_question = '?' in raw or bool(re.search(r'\b(?:co\s+.*?\bkhong|phai khong|duoc khong)\b', n))
- has_ambig = bool(_AMBIGUOUS_OVER_BUDGET_RE.search(n)) or (is_question and 'vuot' in n)
- if has_neg:
-  # Check if positive consent also appeared in another clause without negation -> contradiction = AMBIGUOUS (still fail-closed)
-  stripped_neg = _NEGATED_OVER_BUDGET_RE.sub(' ', n)
-  return 'AMBIGUOUS' if _POSITIVE_OVER_BUDGET_RE.search(stripped_neg) else 'DENY'
- if has_ambig:
+ text = fold(raw)
+ if not text:
+  return 'NONE'
+ # An explicit "not any more / now no" withdrawal invalidates prior consent regardless of wording.
+ if re.search(r'\b(?:bay gio|gio|hien tai|hien gio|hien|thoi|sau nay)\b[^.]{0,40}\b(?:khong|ko)\b', text):
+  return 'DENY'
+ # A strict-budget affirmation ("tuyệt đối dưới ngân sách") is a refusal to exceed it.
+ if re.search(r'\b(?:tuyet doi|nghiem ngat)\b[^.]{0,40}\b(?:duoi|trong|khong qua|toi da)\b[^.]{0,20}\bngan sach\b', text):
+  return 'DENY'
+ clauses = [clause.strip() for clause in _CLAUSE_SPLIT.split(text) if clause and clause.strip()]
+ grant = deny = ambiguous = over_seen = False
+ for clause in clauses:
+  has_over = bool(_OVER_MENTION.search(clause))
+  over_seen = over_seen or has_over
+  if not has_over:
+   continue
+  # A trailing "không" is the Vietnamese yes/no question particle, not a negation of the clause.
+  clause_scan = re.sub(r'\bkhong\s*$', '', clause)
+  negated = any(re.search(r'\b' + re.escape(token) + r'\b', clause_scan) for token in _NEGATION)
+  past = _mentions(clause, _PAST)
+  hypothetical = _mentions(clause, _HYPOTHETICAL)
+  third_party = _mentions(clause, _THIRD_PARTY)
+  affirmative = _mentions(clause, _AFFIRMATIVE)
+  first_person = bool(re.search(r'(?<!\w)(?:toi|minh|em|anh|chi)(?!\w)', clause))
+  if negated:
+   deny = True
+  elif past or third_party or hypothetical:
+   ambiguous = True
+  elif affirmative and (first_person or clause.startswith(('dong y','chap nhan','cho phep','cho xem','hien thi','lay','them','mo rong'))):
+   grant = True
+  elif affirmative:
+   ambiguous = True
+  else:
+   ambiguous = True
+ is_question = '?' in raw or bool(re.search(r'\bkhong\s*$', text))
+ if deny and grant:
+  # Contradictory instruction: refuse (AMBIGUOUS), never grant.
   return 'AMBIGUOUS'
- if has_pos:
-  return 'GRANT'
- return 'NONE'
+ if deny:
+  return 'DENY'
+ if ambiguous:
+  return 'AMBIGUOUS'
+ if grant:
+  return 'AMBIGUOUS' if is_question else 'GRANT'
+ return 'NONE' if over_seen else 'NONE'
 
 def _consent_scope(state: dict) -> dict:
- return {k: state.get(k) for k in ('type', 'location', 'district', 'maxPrice', 'minPrice', 'mode', 'area')}
+ return {k: state.get(k) for k in ('type', 'location', 'district', 'ward', 'maxPrice', 'minPrice', 'mode', 'area')}
+
+def _revoke_consent(state: dict) -> None:
+ state['allowOverBudget'] = False
+ state['consentScope'] = None
+ state['pendingOverBudgetScope'] = None
 
 def respond(bot,request,context,turn,*,allow_demo=False):
  n=fold(request.question).strip(' ?!.');existing=context.needs.get('buyerSearch');more=bool(MORE.fullmatch(n))
@@ -114,7 +152,9 @@ def respond(bot,request,context,turn,*,allow_demo=False):
   return None
  # Switching from a land/buyer search to a non-land house/apartment search exits to SmartProp Recommendation.
  if NON_LAND_HOUSE_RE.search(n) and not LAND_ASSET_RE.search(n) and (existing or {}).get('pending')!='type':
-  if isinstance(existing,dict):existing.update(active=False,pending=None,pagingActive=False,visible=[],order=None,offset=0,seen=[],allowOverBudget=False,consentScope=None)
+  if isinstance(existing,dict):
+   existing.update(active=False,pending=None,pagingActive=False,visible=[],order=None,offset=0,seen=[])
+   _revoke_consent(existing)
   land_state=context.needs.get('land')
   if isinstance(land_state,dict):land_state.update(lastDomain=None,selected=None,seen=[],visibleIds=[],projectRows=[])
   if context.needs.get('listOwner') in ('BUYER','LAND'):context.needs['listOwner']='PROPERTY'
@@ -165,16 +205,19 @@ def respond(bot,request,context,turn,*,allow_demo=False):
  area=area_filter(request.question)
  if area:state['area']=area
  current_scope=_consent_scope(state)
+ pending_scope=state.get('pendingOverBudgetScope')
+ if consent_decision=='GRANT' and pending_scope is not None and pending_scope!=current_scope:
+  # A confirmation surfaced for earlier criteria cannot grant consent for new criteria.
+  consent_decision='AMBIGUOUS'
  if consent_decision=='GRANT':
   state['allowOverBudget']=True
   state['consentScope']=current_scope
+  state['pendingOverBudgetScope']=None
  elif consent_decision in ('DENY','AMBIGUOUS'):
-  state['allowOverBudget']=False
-  state['consentScope']=None
+  _revoke_consent(state)
  elif not state.get('allowOverBudget') or state.get('consentScope')!=current_scope:
   # Any change to search criteria invalidates prior over-budget consent (fail-closed).
-  state['allowOverBudget']=False
-  state['consentScope']=None
+  _revoke_consent(state)
  previous={k:v for k,v in (existing or {}).items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
  current={k:v for k,v in state.items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
  if previous!=current or not more:state.update(seen=[],offset=0,order=None)
@@ -231,6 +274,8 @@ def respond(bot,request,context,turn,*,allow_demo=False):
   if row is not None:page.append(row)
  for x in page:
   x['overBudgetVnd']=max(0,x['price']-ceiling);x['overBudgetPercent']=round(x['overBudgetVnd']*100/ceiling,2)
+ # Remember which criteria produced an over-budget confirmation; a later click for other criteria must re-confirm.
+ state['pendingOverBudgetScope']=_consent_scope(state) if any(x['overBudgetVnd'] for x in page) else None
  state['offset']=cursor
  remaining=any(key in by_key for key in keys[cursor:])
  state['visible']=[{'source':x['source'],'id':x['id']} for x in page]

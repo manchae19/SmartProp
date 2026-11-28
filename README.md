@@ -1,4 +1,4 @@
-﻿# SmartProp — Cài đặt, build và chạy dự án
+# SmartProp — Cài đặt, build và chạy dự án
 
 ## Khởi động local thống nhất
 
@@ -524,13 +524,16 @@ Không dùng lock wheel Windows cho Linux. Các dependency/model đã được x
 
 ### 12.3. Reverse proxy đầy đủ
 
-**`ops/Caddyfile` hiện chỉ proxy `/api/*` về Backend. Không dùng nguyên mẫu đó để kết luận chat/định giá đã được nối.** Máy chủ cần các tuyến riêng:
+**`ops/Caddyfile` là cấu hình triển khai hiện tại và đã được kiểm chứng bằng Caddy thật.** Nó chặn mọi route nội bộ (`/api/land`, `/api/v1/*/research`) trước upstream, proxy `/api/chat/health` sang RAG `127.0.0.1:8001`, proxy `/api/chat` sang chat relay `127.0.0.1:8082` và `/api/*` sang Backend `127.0.0.1:8080`; mọi header `X-SmartProp-Demo-Key`/`Forwarded` bị bỏ trước khi tới upstream. Dữ liệu đất demo Hòa Xuân **không** đi qua Caddy công khai — chỉ dùng qua Vite dev proxy trên loopback với `SMARTPROP_INTERNAL_DEMO_KEY`/`RAG_DEMO_KEY`.
 
-| Tuyến công khai | Upstream |
+| Tuyến công khai | Upstream / kết quả |
 |---|---|
 | `/api/v1/*` | Backend `127.0.0.1:8080` |
-| `/api/ai/*` | AI `127.0.0.1:8000`, bỏ prefix `/api/ai` |
+| `/api/ai/*` (nếu dùng chung Caddy) | AI `127.0.0.1:8000`, bỏ prefix `/api/ai` |
 | `/api/chat` | Chat relay `127.0.0.1:8082`, chỉ nhận POST theo contract |
+| `/api/chat/health` | RAG `127.0.0.1:8001` |
+| `/api/land`, `/api/land/*` | **403 tại Caddy**, không bao giờ tới upstream |
+| `/api/v1/recommendations/research`, `/api/v1/amenities/research` | **403 tại Caddy** (chỉ loopback) |
 | Các route React còn lại | Static files; fallback `index.html` |
 
 Chạy relay bằng Node trong service riêng, với environment:
@@ -550,10 +553,10 @@ example.com {
     encode zstd gzip
     route {
         @loopbackOnly {
-            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/*
+            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/* /api/land /api/land/*
         }
         @loopbackVariant {
-            path_regexp loopback_norm (?i)^/+api/+(?:v1/+)?(?:recommendations/+research|amenities/+research)(?:[;/]|$)
+            path_regexp loopback_norm (?i)^/+api/+(?:(?:v1/+)?(?:recommendations/+research|amenities/+research)|land)(?:[;/]|$)
         }
         @ambiguousApiPath {
             expression {http.request.uri}.matches("(?i)^/+api(?:/|%2f|%5c|;)[^?]*(?:%2f|%5c|%2e%2e|\\.\\.|;|//)")
@@ -573,9 +576,23 @@ example.com {
             header Cache-Control "no-store"
             respond `{"code":"FORBIDDEN","message":"Đường dẫn API không hợp lệ."}` 403
         }
+        @chatHealth {
+            path /api/chat/health
+            method GET
+        }
+        handle @chatHealth {
+            uri strip_prefix /api
+            reverse_proxy 127.0.0.1:8001 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
+        }
         @chat path /api/chat
         handle @chat {
-            reverse_proxy 127.0.0.1:8082
+            reverse_proxy 127.0.0.1:8082 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
         }
         handle /api/chat/* {
             respond 404

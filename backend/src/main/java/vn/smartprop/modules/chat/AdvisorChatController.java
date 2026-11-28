@@ -61,16 +61,27 @@ public class AdvisorChatController {
 class AdvisorChatStore {
     private final JdbcTemplate jdbc; private final ObjectMapper mapper;
     AdvisorChatStore(JdbcTemplate jdbc,ObjectMapper mapper){this.jdbc=jdbc;this.mapper=mapper;}
+    /**
+     * Synthetic-demo land turns are never written here any more. Conversations saved before
+     * that boundary existed stay hidden from every account read path, so demo land data cannot
+     * reappear in normal history or be resumed as a normal checkpoint. Read-only filter only:
+     * no production row is modified or deleted.
+     */
+    static final String DEMO_TURN_FILTER =
+        " AND NOT EXISTS (SELECT 1 FROM advisor_chat_turns d WHERE d.conversation_id=c.id AND ("
+        + "JSON_SEARCH(d.response,'one','LAND_DATA') IS NOT NULL"
+        + " OR JSON_SEARCH(d.response,'one','LAND_SEARCH') IS NOT NULL"
+        + " OR JSON_SEARCH(d.response,'one','LAND_OVERVIEW') IS NOT NULL))";
     private static ApiException missing(){return new ApiException(404,"CHAT_NOT_FOUND","Không tìm thấy hội thoại.");}
     private static void id(String id){if(id==null||!id.matches("[a-f0-9]{32}"))throw missing();}
     private JsonNode json(String value){try{return mapper.readTree(value);}catch(Exception e){throw new IllegalStateException("Invalid saved checkpoint");}}
     private Map<String,Object> owned(long actor,String id){
-        id(id);var rows=jdbc.queryForList("SELECT revision,checkpoint FROM advisor_chat_conversations WHERE id=? AND user_id=?",id,actor);
+        id(id);var rows=jdbc.queryForList("SELECT c.revision,c.checkpoint FROM advisor_chat_conversations c WHERE c.id=? AND c.user_id=?"+DEMO_TURN_FILTER,id,actor);
         if(rows.isEmpty())throw missing();return rows.getFirst();
     }
     @Transactional(readOnly=true)
     public List<Map<String,Object>> recent(long actor){
-        return jdbc.queryForList("SELECT id,title,revision,updated_at AS updatedAt FROM advisor_chat_conversations WHERE user_id=? ORDER BY updated_at DESC,id LIMIT 10",actor);
+        return jdbc.queryForList("SELECT c.id,c.title,c.revision,c.updated_at AS updatedAt FROM advisor_chat_conversations c WHERE c.user_id=?"+DEMO_TURN_FILTER+" ORDER BY c.updated_at DESC,c.id LIMIT 10",actor);
     }
     @Transactional(readOnly=true)
     public Map<String,Object> history(long actor,String id){

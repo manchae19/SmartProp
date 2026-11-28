@@ -22,12 +22,17 @@ class AdvisorChatTest {
         when(jdbc.queryForList(anyString(),eq(id),eq(2L))).thenReturn(List.of());
         assertEquals(404,assertThrows(ApiException.class,()->store.history(2,id)).status);
         assertEquals(404,assertThrows(ApiException.class,()->store.checkpoint(2,id)).status);
-        verify(jdbc,times(2)).queryForList(contains("id=? AND user_id=?"),eq(id),eq(2L));
+        verify(jdbc,times(2)).queryForList(contains("c.id=? AND c.user_id=?"),eq(id),eq(2L));
         verifyNoMoreInteractions(jdbc);
     }
     @Test void activityListIsBoundedAndOwnerFiltered() {
         store.recent(4);
-        verify(jdbc).queryForList(contains("WHERE user_id=? ORDER BY updated_at DESC,id LIMIT 10"),eq(4L));
+        verify(jdbc).queryForList(contains("WHERE c.user_id=?"),eq(4L));
+        var sql=org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(jdbc).queryForList(sql.capture(),eq(4L));
+        assertTrue(sql.getValue().contains("ORDER BY c.updated_at DESC,c.id LIMIT 10"));
+        // Demo land conversations stay invisible to account history at the persistence boundary.
+        assertTrue(sql.getValue().contains("JSON_SEARCH")&&sql.getValue().contains("LAND_DATA"));
     }
     @Test void staleRevisionCannotAppendTurn() throws Exception {
         when(jdbc.queryForList(anyString(),eq(id),eq(1L))).thenReturn(List.of(Map.of("revision",2L,"checkpoint","{}")));

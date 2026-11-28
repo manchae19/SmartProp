@@ -59,11 +59,16 @@ def durable_chat(orchestrator, payload, token, account, *, allow_demo=False):
     conversation_id = payload.sessionId or secrets.token_hex(16)
     if not re.fullmatch(r"[a-f0-9]{32}", conversation_id):
         raise UpstreamError(404)
+    if allow_demo:
+        # Synthetic demo turns stay in the process-local demo session store. They are never
+        # read from or written to the account checkpoint store, so they cannot appear in the
+        # account history and cannot be resumed by a normal ACCOUNT/PUBLIC request.
+        local = copy(orchestrator)
+        return local.chat(payload, token=token, account=account, allow_demo=True)
     saved = checkpoint_call(orchestrator.backend, "GET", conversation_id+"/checkpoint", token) if payload.sessionId else None
     local = copy(orchestrator)
     local.sessions = CheckpointSessions(conversation_id, saved["checkpoint"] if saved else None)
-    call_kwargs = {"token": token, "account": account, **({"allow_demo": True} if allow_demo else {})}
-    result = local.chat(payload, **call_kwargs)
+    result = local.chat(payload, token=token, account=account)
     # Backend tools may use Decimal for coordinates or exact money; JSON must retain precision.
     context = json.loads(json.dumps(asdict(local.sessions.context), default=lambda value: str(value) if isinstance(value, Decimal) else _unsupported(value)))
     context.pop("scope",None)

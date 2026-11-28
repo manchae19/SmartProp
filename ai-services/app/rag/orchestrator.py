@@ -58,7 +58,7 @@ from .tools import UpstreamError, _public_text
 def _retire_buyer_and_land(state, *, clear_budget=False):
     buyer = state.get("buyerSearch")
     if isinstance(buyer, dict):
-        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False, consentScope=None)
+        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False, consentScope=None, pendingOverBudgetScope=None)
         if clear_budget:
             buyer.pop("maxPrice", None)
             buyer.pop("minPrice", None)
@@ -401,6 +401,13 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 self.sessions.drop(context)
                 context,session_id,resumed=self.sessions.begin(None,scope=scope)
             context.needs["accountFingerprint"]=current_fingerprint
+        if resumed:
+            # A restored checkpoint can never re-arm an earlier over-budget consent: the user
+            # must affirm it again for the criteria that apply after the restore.
+            for owner in ("buyerSearch",):
+                restored=context.needs.get(owner)
+                if isinstance(restored,dict):
+                    restored.update(allowOverBudget=False,consentScope=None,pendingOverBudgetScope=None)
         # The saved profile must be seeded before any branch can return, otherwise a
         # focused or commute turn runs without the account context it needs.
         if account and not resumed:
