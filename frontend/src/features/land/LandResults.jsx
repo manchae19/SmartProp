@@ -3,13 +3,13 @@ import LandMap from './LandMap.jsx';
 import { PRICE_TYPE_LABEL, formatArea, landDetailPath, validLand, loadRecord, landDisplayValue } from './landApi.js';
 import './LandResults.css';
 
-const KIND_LABEL = { PLANNING_CELL:'Ô quy hoạch',GULAND_PARCEL:'Thửa nguồn Guland',PROJECT_LOT:'Lô dự án',PROJECT_LOT_UNLOCATED:'Lô dự án · chưa định vị' };
+const KIND_LABEL = { PLANNING_CELL:'Ô quy hoạch tham khảo (không phải thửa địa chính)',GULAND_PARCEL:'Thửa nguồn Guland (chưa xác minh địa chính)',PROJECT_LOT:'Lô dự án (chưa xác minh địa chính)',PROJECT_LOT_UNLOCATED:'Lô dự án · chưa định vị' };
 function LandCard({row,index,active,onShow}) {
  return <article className={'land-card'+(active?' is-active':'')} data-land-card={row.sourceCode}>
   <header><span className="land-rank">{index}</span><h3>{row.displayName} · {row.sourceCode}</h3></header>
   <p className="land-kind">{KIND_LABEL[row.kind]}</p><p className="land-location">{row.location}</p>
   <p className="land-area">Diện tích: {formatArea(row.computedAreaSqm)||'Chưa có dữ liệu'}</p>
-  <p className="land-price"><strong>{row.priceDescription||'Chưa có giá'}</strong></p>
+  <p className="land-price"><strong>{landDisplayValue(row.priceDescription)||'Chưa có giá'}</strong>{row.priceType&&PRICE_TYPE_LABEL[row.priceType]&&<span className="land-demo-tag">{PRICE_TYPE_LABEL[row.priceType]}</span>}</p>
   <div className="land-actions"><button type="button" onClick={()=>onShow(row)} aria-pressed={active}>Xem vị trí và đường bao</button><a href={landDetailPath(row)} target="_blank" rel="noopener noreferrer" className="land-detail-link">Xem chi tiết ↗</a></div>
  </article>;
 }

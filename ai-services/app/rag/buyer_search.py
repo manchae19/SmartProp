@@ -49,6 +49,10 @@ def _public(backend, filters, ceiling):
   if not body['items']:return result
  raise UpstreamError(503)
 
+NON_LAND_HOUSE_RE=re.compile(r'\b(nha|can ho|chung cu|biet thu|nha pho|phong tro|mat bang)\b')
+LAND_ASSET_RE=re.compile(r'\b(dat|lo dat|o dat|thua)\b')
+OVER_BUDGET_CONSENT_RE=re.compile(r'\b(chap nhan vuot ngan sach|cho xem vuot ngan sach|them tham khao vuot ngan sach)\b')
+
 def respond(bot,request,context,turn):
  n=fold(request.question).strip(' ?!.');existing=context.needs.get('buyerSearch');more=bool(MORE.fullmatch(n))
  if turn['intent']=='PROPERTY_FOLLOWUP':
@@ -64,7 +68,14 @@ def respond(bot,request,context,turn):
   return None
  # Questions about evidence or an already-selected asset stay in their existing tools.
  if turn['intent'] in ('AREA_AMENITIES','MARKET_ANALYSIS','MARKET_PRICE','MARKET_TREND','PLANNING_QA','LEGAL_QA') or re.search(r'ngap|\blut\b|giay to|phap ly|thuoc du an|lo thu|can thu|lo dau|dien tich bao nhieu|so do|so hong|the chap',n):
-  if existing:existing['pagingActive']=False
+  if isinstance(existing,dict):existing.update(pagingActive=False,pending=None)
+  return None
+ # Switching from a land/buyer search to a non-land house/apartment search exits to SmartProp Recommendation.
+ if NON_LAND_HOUSE_RE.search(n) and not LAND_ASSET_RE.search(n) and (existing or {}).get('pending')!='type':
+  if isinstance(existing,dict):existing.update(active=False,pending=None,pagingActive=False,visible=[],order=None,offset=0,seen=[],allowOverBudget=False)
+  land_state=context.needs.get('land')
+  if isinstance(land_state,dict):land_state.update(lastDomain=None,selected=None,seen=[],visibleIds=[],projectRows=[])
+  if context.needs.get('listOwner') in ('BUYER','LAND'):context.needs['listOwner']='PROPERTY'
   return None
  try:band=budget_band(request.question)
  except ValueError as error:
@@ -72,24 +83,31 @@ def respond(bot,request,context,turn):
   return {'answer':str(error),'properties':[],'citations':[],'responseKind':'BUYER_SEARCH','extra':{'buyerSearch':{'rows':[],'summary':[]}}}
  chosen=next((value for text,value in sorted(TYPES.items(),key=lambda x:-len(x[0])) if re.search(r'\b'+text+r'\b',n)),None)
  search=bool(re.search(r'\b(tim|mua|toi co|ngan sach|xem dat|bat dong san|tin dang)\b',n))
+ pending_stage=(existing or {}).get('pending')
+ active_session=bool((existing or {}).get('active'))
  if request.propertyId or (context.needs.get('focusedPropertyId') and not search):return None
  if more and existing and context.needs.get('land',{}).get('lastDomain') in ('flood','flood_empty'):return None
  if more and existing and not existing.get('pagingActive'):
   return {'answer':'Danh sách tìm kiếm trước đã tạm dừng. Hãy nêu lại yêu cầu tìm tài sản để bắt đầu; tôi không lấy lại trang cũ sau câu hỏi tiện ích hoặc pháp lý.','properties':[],'citations':[],'responseKind':'BUYER_SEARCH','extra':{'buyerSearch':{'rows':[],'summary':[]}}}
  if more and not existing:return None
- if not (more or band or (existing and (chosen or search or existing.get('pending')))):return None
+ if existing and not active_session and not pending_stage and not search:return None
+ if not (more or search or (pending_stage and (chosen or band or 'hoa xuan' in n or any(fold(x) in n for x in DISTRICTS) or 'da nang' in n)) or (active_session and (band or chosen))):return None
  if re.search(r'euro|trieu phu|b2[.\-]|guland',n):
-  if existing:existing['pagingActive']=False
+  if isinstance(existing,dict):existing['pagingActive']=False
   return None
- if re.search(r'gan |di lam|noi lam|ban kinh|thoi gian',n):return None
+ if re.search(r'\b(gan|di lam|noi lam|ban kinh|thoi gian)\b',n):return None
  state=dict(existing or {});state.setdefault('type',None)
  if not state.get('location'):
   if context.district:state.update(location=context.district,district=context.district)
   elif context.ward and fold(context.ward)=='hoa xuan':state['location']='Hòa Xuân'
+ explicit_over_consent=bool(OVER_BUDGET_CONSENT_RE.search(n))
  if band:
   state['maxPrice']=band.get('maxPrice');state['minPrice']=band.get('minPrice')
   state['mode']='EXACT' if re.search(r'\bdung\b',n) else 'APPROXIMATE' if re.search(r'\b(khoang|tam|quanh|xap xi)\b',n) else 'MAXIMUM'
+  state['allowOverBudget']=explicit_over_consent
   if state['maxPrice'] is not None:context.budget_vnd=str(state['maxPrice'])
+ elif explicit_over_consent:
+  state['allowOverBudget']=True
  if chosen:state['type']=chosen
  elif re.search(r'\b(lo dat|tim dat|mua dat|dat duoi|dat khoang)\b',n):state['type']='LAND'
  elif not state.get('type'):
@@ -101,11 +119,14 @@ def respond(bot,request,context,turn):
   if district:state.update(location=district,district=district)
   elif 'da nang' in n:state.update(location='Đà Nẵng',district=None)
  if request.district and not state.get('location'):state.update(location=request.district,district=request.district)
- if request.budgetVnd and not state.get('maxPrice'):state['maxPrice']=int(request.budgetVnd)
+ if request.budgetVnd is not None:
+  req_ceiling=int(request.budgetVnd)
+  state['maxPrice']=min(state['maxPrice'],req_ceiling) if state.get('maxPrice') else req_ceiling
+  if not explicit_over_consent:state['allowOverBudget']=False
  area=area_filter(request.question)
  if area:state['area']=area
- previous={k:v for k,v in (existing or {}).items() if k in ('type','location','district','maxPrice','minPrice','mode','area')}
- current={k:v for k,v in state.items() if k in ('type','location','district','maxPrice','minPrice','mode','area')}
+ previous={k:v for k,v in (existing or {}).items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
+ current={k:v for k,v in state.items() if k in ('type','location','district','maxPrice','minPrice','mode','area','allowOverBudget')}
  if previous!=current or not more:state.update(seen=[],offset=0,order=None)
  def packet(answer,rows=None,**extra):
   context.needs['buyerSearch']=state
@@ -113,20 +134,21 @@ def respond(bot,request,context,turn):
   if state.get('maxPrice') is not None:summary.append(('Ngân sách tối đa: ' if state.get('mode')=='MAXIMUM' else 'Giá đang lọc đến: ')+f"{state['maxPrice']:,}".replace(',','.')+' đồng')
   return {'answer':answer,'properties':[],'citations':[],'responseKind':'BUYER_SEARCH','extra':{'quickReplies':extra.pop('quickReplies',[]),'buyerSearch':{'rows':rows or [],'summary':summary,**extra}}}
  if not state.get('type'):
-  state.update(pending=True,pagingActive=False)
+  state.update(active=True,pending='type',pagingActive=False)
   return packet('Bạn muốn tìm loại tài sản nào?',quickReplies=['Đất ở','Đất nông nghiệp','Nhà','Căn hộ','Tất cả'])
  outside=requested_location(request.question)
  if outside and outside not in [fold(x) for x in DISTRICTS] and outside not in ('hoa xuan','cam le'):
-  state['pagingActive']=False
+  state.update(active=True,pending='location',pagingActive=False)
   return packet('Chưa có nguồn tìm kiếm được hỗ trợ cho địa bàn bạn vừa nêu. Tôi không thay thế bằng kết quả Đà Nẵng.')
  if not state.get('location'):
-  state.update(pending=True,pagingActive=False)
+  state.update(active=True,pending='location',pagingActive=False)
   return packet('Bạn muốn tìm ở khu vực nào?',quickReplies=['Hòa Xuân','Đà Nẵng',*DISTRICTS[:6]])
  if not state.get('maxPrice'):
-  state.update(pending=True,pagingActive=False)
+  state.update(active=True,pending='budget',pagingActive=False)
   return packet('Ngân sách tối đa của bạn là bao nhiêu?')
- state.update(pending=False,pagingActive=True)
- ceiling=state['maxPrice'];reference_ceiling=ceiling*115//100 if state.get('mode','MAXIMUM')=='MAXIMUM' else ceiling
+ state.update(active=True,pending=None,pagingActive=True)
+ ceiling=state['maxPrice']
+ reference_ceiling=ceiling*115//100 if (state.get('mode','MAXIMUM')=='MAXIMUM' and state.get('allowOverBudget') is True) else ceiling
  pool=[];warnings=[]
  if getattr(bot.land_advisor,"enabled",False) and state['type'] in ('LAND','RESIDENTIAL','AGRICULTURE','ALL') and state['location'] in ('Hòa Xuân','Đà Nẵng','Cẩm Lệ'):
   e=bot.land_advisor.engine;group='agriculture' if state['type']=='AGRICULTURE' else 'housing'

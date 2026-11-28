@@ -55,12 +55,59 @@ _LISTING_LOCATION_STATE = (*NEARBY_PENDING, "listingAddressScope", "listingRenta
 from .tools import UpstreamError, _public_text
 
 
+def _retire_buyer_and_land(state, *, clear_budget=False):
+    buyer = state.get("buyerSearch")
+    if isinstance(buyer, dict):
+        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False)
+        if clear_budget:
+            buyer.pop("maxPrice", None)
+            buyer.pop("minPrice", None)
+    land = state.get("land")
+    if isinstance(land, dict):
+        land.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
+        if clear_budget:
+            land.pop("band", None)
+            land.pop("priceTarget", None)
+    state.pop("listOwner", None)
+
+
+_BARE_TYPE_CHIPS = frozenset({
+    "dat o", "dat nong nghiep", "nha", "can ho", "tat ca",
+    "nha pho", "dat nen", "biet thu", "phong tro", "mat bang", "dat",
+})
+_BARE_LOCATION_CHIPS = frozenset({
+    "hoa xuan", "da nang", "toan da nang", "hai chau", "son tra",
+    "thanh khe", "cam le", "ngu hanh son", "lien chieu", "hoa vang",
+})
+_EXPLICIT_PURCHASE_RE = re.compile(
+    r"\b(?:tim|mua|goi y|xem dat|xem nha|xem tin|xem thua|danh sach thua|loc|tu van|toi co)\b"
+)
+
+
 def _listing_continuation(question, state):
     """Return whether a context-only reply has a compatible pending stage."""
     value = " ".join(norm(question).split()).rstrip(".!?")
     pending = state.get("pending")
     commute = commute_destination.stage_of(state)
     nearby_consent = bool(state.get("nearConsentPending") and state.get("pendingNearbyAddress"))
+    buyer_state = state.get("buyerSearch") if isinstance(state.get("buyerSearch"), dict) else {}
+    land_state = state.get("land") if isinstance(state.get("land"), dict) else {}
+    if value in ("xem ket qua khac", "tim lai theo bo loc"):
+        return None if (state.get("listOwner") == "BUYER" and buyer_state.get("pagingActive")) else False
+    if re.fullmatch(r"(?:xem them|tiep|con nua|con khong|con lo nao khac khong)", value):
+        active_buyer = state.get("listOwner") == "BUYER" and bool(buyer_state.get("pagingActive"))
+        active_land = state.get("listOwner") == "LAND" and bool(land_state.get("lastDomain"))
+        return None if (active_buyer or active_land) else False
+    if value in ("dat o", "dat nong nghiep") and buyer_state.get("pending") != "type" and pending != "property_type":
+        return False
+    if value == "hoa xuan" and buyer_state.get("pending") != "location" and pending != "location":
+        return False
+    if state.get("purchaseDeclined"):
+        if value in _BARE_TYPE_CHIPS or value in _BARE_LOCATION_CHIPS:
+            return False
+        if (not re.search(r"\b(?:tim|mua|thue|goi y|xem|loc|cap nhat|doi|gia|thi truong|so sanh|tu van)\b", value)
+                and parse_budget(question).status == "VALID"):
+            return False
     if value in FINISH_INTAKE_REPLIES or value == "giu tieu chi":
         return bool(pending)
     if value == "khong muon cung cap":
@@ -70,7 +117,7 @@ def _listing_continuation(question, state):
     if value in ("mua de o", "mua dau tu", "thue de o") and pending != "purpose":
         return False
     if value in ("bo qua", "huy"):
-        return bool(nearby_consent or state.get("nearbyPoints") or commute or pending)
+        return bool(nearby_consent or state.get("nearbyPoints") or commute or pending or buyer_state.get("pending"))
     if value == "dong y tim vi tri":
         return nearby_consent
     if value == "mo rong ban kinh":
@@ -171,6 +218,11 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             if isinstance(land_state, dict):
                 # Keep filters for an explicit future land search; retire references.
                 land_state.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
+            buyer_state = context.needs.get("buyerSearch")
+            if isinstance(buyer_state, dict):
+                buyer_state.update(pagingActive=False, pending=None, visible=[])
+                if context.needs.get("turnIntent") in ("PROPERTY_SEARCH", "REFINE_SEARCH"):
+                    buyer_state["active"] = False
         # Informational replies may have no search criteria. Only a deliberate
         # transaction switch may replace an established rental purpose.
         if context.purpose == "RENTAL":
@@ -237,8 +289,10 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if criteria.get("purpose") != "RENTAL":
             self._invalidate_listing_location(context, criteria)
             context.needs.pop("purchaseBudgetRequired", None)
+            context.needs.pop("purchaseDeclined", None)
             criteria.pop("budgetVnd", None)
             criteria.pop("minPriceVnd", None)
+        _retire_buyer_and_land(context.needs, clear_budget=True)
         criteria["purpose"] = "RENTAL"
         return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
             answer="Chatbot hiện chỉ hỗ trợ tìm tin mua. Bạn có thể dùng bộ lọc cho thuê tại trang Bất động sản.",
@@ -252,6 +306,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             if context.purpose != "RENTAL":
                 for key in (*_LISTING_LOCATION_STATE, "pending", "guided", "householdMode"):
                     state.pop(key, None)
+                _retire_buyer_and_land(state)
+                state["purchaseDeclined"] = True
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Tôi đã dừng tìm tin mua. Bạn có thể yêu cầu tìm lại khi cần.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
@@ -304,6 +360,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 turn["purpose"] = "LIVING"
             if prior.get("purpose") == "RENTAL":
                 self._invalidate_listing_location(context, prior)
+                _retire_buyer_and_land(state, clear_budget=True)
                 for key in ("budgetVnd", "minPriceVnd"):
                     prior.pop(key, None)
                 prior["purpose"] = turn["purpose"] = turn["purpose"] or "LIVING"
@@ -391,9 +448,12 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 answer="Phiên này không có bước xác nhận phù hợp. Bạn có thể nêu yêu cầu mới.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "NO_PENDING_LISTING_STEP"})
         purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL" and not turn["transactionInformation"]
+        if purchase_allowed and not no_listing_action and continuation is None and _EXPLICIT_PURCHASE_RE.search(norm(request.question)):
+            context.needs.pop("purchaseDeclined", None)
         if not no_listing_action and continuation is None and not turn["transactionInformation"] and transaction != "RENT":
             from .buyer_search import respond as buyer_search
-            buyer_domain = bool(context.needs.get('buyerSearch')) or bool(re.search(r'\b(lo dat|tim dat|mua dat|dat o|dat nong nghiep|tat ca)\b', land_fold(request.question)))
+            existing_buyer = context.needs.get("buyerSearch") if isinstance(context.needs.get("buyerSearch"), dict) else {}
+            buyer_domain = bool(existing_buyer.get("active") or existing_buyer.get("pending")) or bool(re.search(r'\b(lo dat|tim dat|mua dat|dat o|dat nong nghiep|tat ca)\b', land_fold(request.question)))
             buyer_domain = buyer_domain or not context.budget_vnd and bool(re.fullmatch(r'(?:toi co)\s+[0-9.,\s]+(?:ty|ti|trieu)(?:\s+[0-9.,]+\s+trieu)?[.!? ]*', land_fold(request.question)))
             buyer = None if research or not purchase_allowed or not buyer_domain else buyer_search(self, request, context, turn)
             if buyer is not None:

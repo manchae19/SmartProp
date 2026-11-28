@@ -3,9 +3,9 @@ import {SiteLink,useRouteState} from '../../app/navigation.jsx';
 import LandMap from './LandMap.jsx';
 import {formatArea,formatVnd,loadRecord,landFetch,landDisplayValue,PRICE_TYPE_LABEL} from './landApi.js';
 import './LandDetailView.css';
-const KIND={PLANNING_CELL:'Ô quy hoạch · chưa xác nhận phân lô',GULAND_PARCEL:'Thửa theo nguồn Guland',PROJECT_LOT:'Lô thuộc dự án',PROJECT_LOT_UNLOCATED:'Lô dự án · chưa định vị'};
-const AREA={COMPUTED_FROM_PLANNING_CELL:'Tính từ đường bao ô quy hoạch',LISTING:'Theo tin nguồn',SOURCE_PARCEL:'Theo nguồn Guland · chưa xác minh địa chính'};
-const RELATION={DIRECT_SOURCE_MATCH:'Khớp tên đường và địa bàn theo nguồn',SOURCE_TEXT_MENTION:'Nguồn nhắc tuyến đường liên quan',ILLUSTRATIVE_CORRIDOR:'Dải minh họa 80 m · không phải ranh ngập thực đo',USER_APPROVED_DEMO_SCENARIO:'Kịch bản trình diễn · chưa xác minh',UNLOCATED:'Chưa định vị'};
+const KIND={PLANNING_CELL:'Ô quy hoạch tham khảo · không phải thửa địa chính chính thức',GULAND_PARCEL:'Thửa theo nguồn Guland · chưa xác minh địa chính',PROJECT_LOT:'Lô thuộc dự án · chưa xác minh địa chính',PROJECT_LOT_UNLOCATED:'Lô dự án · chưa định vị'};
+const AREA={COMPUTED_FROM_PLANNING_CELL:'Tính từ đường bao ô quy hoạch (không phải diện tích sổ đỏ)',LISTING:'Theo tin nguồn (chưa xác minh đo đạc)',SOURCE_PARCEL:'Theo nguồn Guland · chưa xác minh địa chính'};
+const RELATION={DIRECT_SOURCE_MATCH:'Khớp tên đường và địa bàn theo nguồn',SOURCE_TEXT_MENTION:'Nguồn nhắc tuyến đường liên quan',ILLUSTRATIVE_CORRIDOR:'Dải minh họa 80 m · không phải ranh ngập thực đo',USER_APPROVED_DEMO_SCENARIO:'Giả định kịch bản trình diễn · không xác nhận an toàn ngập',UNLOCATED:'Chưa định vị'};
 function Row({label,value,demo}){return <div className="land-row"><dt>{label}</dt><dd>{value==null||value===''?'Chưa xác minh':landDisplayValue(value)}{demo&&<span className="land-demo-tag">Giả định</span>}</dd></div>}
 function SourceLink({url,children}){return /^https?:\/\//i.test(url||'')?<a href={url} target="_blank" rel="noopener noreferrer">{children||'Mở nguồn ↗'}</a>:null}
 function Overview({record}){
@@ -26,10 +26,11 @@ export default function LandDetailView(){
  return <main className="land-detail">
   <nav className="land-crumbs"><SiteLink to="/advisor/chat">Tư vấn bất động sản</SiteLink><span> / Hòa Xuân / Hồ sơ đất</span></nav>
   <header className="land-head"><div><span className="land-kind-label">{KIND[record.kind]}</span><h1>{record.displayName}</h1><p>{record.location}</p><p className="land-code">{record.sourceCode}</p></div><div className="land-head-value"><strong>{price.display||'Chưa có giá'}</strong><span>{priceTypes||'Chưa có căn cứ giá'}</span><b>{formatArea(c.areaSqm)||'Chưa có diện tích'}</b></div></header>
+  <section className="land-governance-banner" role="note" data-land-governance-notice=""><strong>Cảnh báo dữ liệu giả lập (Demo):</strong> Hồ sơ Hòa Xuân này chỉ phục vụ trình diễn kỹ thuật. Ô quy hoạch không phải thửa địa chính chính thức; các trường giấy tờ, quy hoạch thu hồi, ngập và mức giá giả lập/lịch sử/theo đường không phải xác nhận pháp lý, không xác nhận an toàn ngập và không phải giá thị trường hay giá giao dịch.</section>
   <div className="land-layout"><div className="land-sections">
    <Overview key={record.landId} record={record}/>
    <section aria-labelledby="land-main-title"><h2 id="land-main-title">Thông tin chính</h2><dl>
-    <Row label="Loại đất" value={d.landType}/><Row label="Dự án / đồ án" value={project}/>
+    <Row label="Loại đất" value={d.landType} demo={d.demo}/><Row label="Dự án / đồ án" value={project}/>
     <Row label="Giấy chứng nhận" value={d.ownershipDocument} demo={d.demo&&d.ownershipDocument!=='Chưa xác minh'}/>
     <Row label="Quy hoạch" value={p.sourceLabel}/><Row label="Thu hồi / giải tỏa" value={d.recovery} demo={d.demo&&d.recovery!=='Chưa xác minh'}/>
     <Row label="Ngập" value={f.display} demo={f.isDemoAssumption}/>

@@ -16,7 +16,7 @@ def parcel_row(r):
         planningLabel=r['landLabel'],planningCode='QHDVO' if r['purposeGroup']=='housing' else 'QHNN',
         planningCategory='RESIDENTIAL_PLANNING' if r['purposeGroup']=='housing' else 'AGRICULTURAL_PLANNING',
         planningEvidence=[],runtimeEligible=not r['reviewFlags'],demoPriceVnd=None,searchPriceVnd=r.get('priceVnd'),
-        priceDescription=('Giá chào theo tin: '+money(r['priceVnd'])) if r.get('priceVnd') else 'Chưa có giá',
+        priceDescription=('Giá chào theo tin nguồn: '+money(r['priceVnd'])+' (chưa xác nhận giá thị trường hay giao dịch)') if r.get('priceVnd') else 'Chưa có giá',
         addressEvidence={'location':('Khu vực '+r['road']+', ' if r.get('road') else '')+'Hòa Xuân, Đà Nẵng'},
         recoveryStatus='UNKNOWN',compensationStatus='UNKNOWN',disputeStatus='UNKNOWN',floodEvidence=None,
         geometryClass='SOURCE_REPORTED_PARCEL_NOT_OWNERSHIP_VERIFIED')
@@ -24,14 +24,14 @@ SOURCE_ROWS={r['id']:parcel_row(r) for r in RECORDS if r['purposeGroup'] in ('ho
 def candidate_row(x):
     return dict(x,unlocatedProjectLot=True,mapPositionAvailable=False,displayName=x['block']+' · Lô '+', '.join(map(str,x['lotNumbers'])),
         computedAreaSqm=x['areaSqm'],referencePriceVnd=x['askingPriceVnd'],searchPriceVnd=x['askingPriceVnd'],demoPriceVnd=None,
-        priceDescription=money(x['askingPriceVnd'])+(' (giá chào cũ '+x['sourceDate']+')' if x.get('sourceDate') else ' (giá chào nguồn; chưa rõ ngày)') if x['askingPriceVnd'] else 'Chưa có giá',
+        priceDescription=money(x['askingPriceVnd'])+(' (giá chào lịch sử '+x['sourceDate']+' — không phải giá thị trường hiện tại)' if x.get('sourceDate') else ' (giá chào nguồn chưa rõ ngày — không phải giá thị trường hiện tại)') if x['askingPriceVnd'] else 'Chưa có giá',
         addressEvidence={'location':'Euro Village 2 · Đảo Triệu Phú, Hòa Xuân, Đà Nẵng; chưa định vị riêng từng lô'})
 EXTRAS={x['id']:candidate_row(x) for x in PROJECT_CANDIDATES}
 def enrich(row):
     out=dict(row); ref=ROAD.get(row['id'])
     if ref:
         out.update(roadPriceEvidence=ref,searchPriceVnd=ref['estimatedReferenceVnd'],
-            priceDescription=money(ref['estimatedReferenceVnd'])+' (ước tính theo đường; giá rao tham khảo)',
+            priceDescription=money(ref['estimatedReferenceVnd'])+' (ước tính giá rao tuyến đường lân cận — không phải giá thị trường hay giao dịch)',
             effectivePriceClass='PRELIMINARY_NEARBY_ROAD_ESTIMATE')
     elif row.get('demoPriceVnd') is not None:out['searchPriceVnd']=row['demoPriceVnd']
     return out
@@ -39,12 +39,13 @@ def value(row):return row.get('searchPriceVnd',row.get('referencePriceVnd',row.g
 def profile(row):
     lines=[row['displayName'],'Vị trí: '+row['addressEvidence']['location'],f"Diện tích: {row['computedAreaSqm']:g} m²",'Giá: '+row['priceDescription']]
     if row.get('importedParcel'):
-        lines+=['Loại đất: '+row['landLabel'],'Sổ hồng theo tin: '+row.get('bookTypeSourceReported','chưa có thông tin'),
+        lines+=['Loại đất theo nguồn (chưa xác minh địa chính): '+row['landLabel'],
+            'Thông tin sổ theo lời rao nguồn (chưa xác minh giấy chứng nhận thực tế): '+row.get('bookTypeSourceReported','chưa có thông tin'),
             'Giấy tờ chính chủ, tranh chấp, thu hồi/giải tỏa: chưa xác minh',
             'Quy hoạch theo nguồn: '+(row.get('planningText') or 'Chưa có thông tin áp dụng cho thửa này'),
             'Ô quy hoạch tham chiếu: '+(', '.join(row.get('planningCandidates',[])) or 'chưa nối được'),
             'Nguồn: '+row['sourceUrl']]
-    else:lines+=['Chưa khớp tọa độ/đường bao; không gán vào ô gần đó.','Ngày giá và tình trạng đang bán: chưa xác minh.','Nguồn: '+row['sourceUrl']]
+    else:lines+=['Chưa khớp tọa độ/đường bao; không gán vào ô gần đó.','Ngày giá, giấy chứng nhận và tình trạng đang bán: chưa xác minh.','Nguồn: '+row['sourceUrl']]
     return '\n'.join(lines)
 def selection(q,state,ordinals=None):
     n=fold(q);selected=None

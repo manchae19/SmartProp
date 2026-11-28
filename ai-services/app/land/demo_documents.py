@@ -29,18 +29,19 @@ def annotate(row):
     elif r.get('unlocatedProjectLot'):
         r['floodDisplay']={'display':'Chưa xác định vị trí để đối chiếu','basis':'UNLOCATED','isDemoAssumption':False,'verifiedForThisParcel':False,'physicalFloodStatus':'UNKNOWN'}
     else:
-        r['floodDisplay']={'display':'Không ngập úng — giả định demo','basis':'USER_APPROVED_DEMO_SCENARIO','isDemoAssumption':True,'verifiedForThisParcel':False,'physicalFloodStatus':'UNKNOWN'}
+        r['floodDisplay']={'display':'Chưa có bản ghi ngập trùng tuyến đường nguồn (giả định kịch bản demo — không xác nhận an toàn ngập)','basis':'USER_APPROVED_DEMO_SCENARIO','isDemoAssumption':True,'verifiedForThisParcel':False,'physicalFloodStatus':'UNKNOWN'}
     housing=r.get('purposeGroup')=='housing' or r.get('planningCategory')=='RESIDENTIAL_PLANNING' or r.get('sourceLot') or r.get('unlocatedProjectLot')
     agriculture=r.get('purposeGroup')=='agriculture' or r.get('planningCategory')=='AGRICULTURAL_PLANNING'
     if not housing and not agriculture:return r
     project=project_name(r) if housing else None
     document='Sổ hồng' if project else 'Sổ đỏ'
-    evidence={'document':document,'display':'Được cấp '+document.lower(),'basis':'USER_APPROVED_DEMO_SCENARIO',
+    evidence={'document':document,'display':'Giả định kịch bản demo ('+document.lower()+') — chưa có giấy chứng nhận thực tế được xác minh','basis':'USER_APPROVED_DEMO_SCENARIO',
               'verifiedForThisParcel':False,'isDemoAssumption':True}
-    r['demoPresentation']={'version':'BUYER-DEMO-RULES-20261126','isDemoScenario':True,
-        'projectName':project,'landType':('Đất ở thuộc đất dự án của '+project) if project else 'Đất ở' if housing else 'Đất nông nghiệp',
+    land_type_base=('Nhóm quy hoạch tham khảo: đất ở dự án '+project) if project else 'Nhóm quy hoạch tham khảo: đất ở' if housing else 'Nhóm quy hoạch tham khảo: đất nông nghiệp'
+    r['demoPresentation']={'version':'BUYER-DEMO-RULES-20261128','isDemoScenario':True,
+        'projectName':project,'landType':land_type_base+' (giả định demo, chưa xác minh địa chính)',
         'ownershipDocument':evidence['display'],
-        'recovery':'Hiện tại chưa nằm trong đất quy hoạch của nhà nước' if housing and not project else 'Chưa xác minh',
+        'recovery':'Chưa xác minh quy hoạch thu hồi/giải tỏa (giả định kịch bản demo — không xác nhận không vướng quy hoạch)' if housing and not project else 'Chưa xác minh',
         'dispute':'Chưa xác minh','mortgage':'Chưa xác minh','compensation':'Chưa xác minh'}
     r['certificateDisplay']=evidence
     return r

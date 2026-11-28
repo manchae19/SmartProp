@@ -50,24 +50,26 @@ def record_view(code):
     prices = []
     if r.get("roadPriceEvidence"):
         p = r["roadPriceEvidence"]
-        prices.append({"type": "ROAD_ASKING_ESTIMATE", "label": "Ước tính theo đường (giá rao tham khảo)", "valueVnd": p["estimatedReferenceVnd"],
+        prices.append({"type": "ROAD_ASKING_ESTIMATE", "label": "Ước tính từ giá rao tuyến đường lân cận (không phải giá thị trường hay giá giao dịch)", "valueVnd": p["estimatedReferenceVnd"],
                        "unitPriceMillionPerSqm": p["unitMillionPerSqm"], "date": None, "sampleCount": p["sampleCount"],
                        "confidence": p["confidence"], "sources": p.get("listingUrls") or [p["sourceUrl"]], "warnings": p.get("warnings", [])})
     if r.get("demoPriceVnd"):
-        prices.append({"type": "SIMULATED_DEMO", "label": "Giá mô phỏng (không phải giá thị trường)", "valueVnd": r["demoPriceVnd"],
+        prices.append({"type": "SIMULATED_DEMO", "label": "Giá giả lập demo (không phải giá thị trường hay giá giao dịch)", "valueVnd": r["demoPriceVnd"],
                        "unitPriceVndPerSqm": r.get("demoUnitPriceVndPerSqm"), "date": None, "sources": []})
     if kind.startswith("PROJECT_LOT") and r.get("referencePriceVnd"):
         lot = r.get("sourceLotEvidence") or e.imported.EXTRAS.get(code) or {}
-        prices.append({"type": "HISTORICAL_ASKING", "label": "Giá chào lịch sử theo tin nguồn", "valueVnd": r["referencePriceVnd"],
+        prices.append({"type": "HISTORICAL_ASKING", "label": "Giá chào lịch sử theo tin nguồn (không phải giá thị trường hiện tại hay giá giao dịch)", "valueVnd": r["referencePriceVnd"],
                        "date": lot.get("sourceDate"), "sources": [lot.get("sourceUrl")] if lot.get("sourceUrl") else []})
     if kind == "GULAND_PARCEL" and r.get("priceVnd"):
-        prices.append({"type": "SOURCE_ASKING", "label": "Giá chào theo tin nguồn", "valueVnd": r["priceVnd"], "date": None, "sources": [r.get("sourceUrl")]})
+        prices.append({"type": "SOURCE_ASKING", "label": "Giá chào theo tin nguồn (không phải giá thị trường hay giá giao dịch)", "valueVnd": r["priceVnd"], "date": None, "sources": [r.get("sourceUrl")]})
     sources = []
     for url in [r.get("sourceUrl"), *(x.get("sourceUrl") for x in r.get("planningEvidence", []) if isinstance(x, dict))]:
         if url and url not in sources:
             sources.append(url)
     return {
-        "landId": e.land_id(code), "sourceCode": code, "kind": kind, "dataVersion": "HX-LAND-DEMO-20261126",
+        "landId": e.land_id(code), "sourceCode": code, "kind": kind, "dataVersion": "HX-LAND-DEMO-20261126", "demoOnly": True,
+        "governance": {"containsSyntheticData": True, "publicApproved": False, "officialCadastralParcel": False,
+                       "marketOrTransactionValue": False, "excludedFrom": ["VALUATION", "COMPARABLE", "MARKET"]},
         "displayName": r.get("displayName") or code, "location": (r.get("addressEvidence") or {}).get("location") or "Hòa Xuân, Đà Nẵng",
         "located": kind != "PROJECT_LOT_UNLOCATED",
         "pointOnSurface": r.get("pointOnSurface") if kind != "PROJECT_LOT_UNLOCATED" else None,

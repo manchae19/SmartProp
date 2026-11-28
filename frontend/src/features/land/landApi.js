@@ -6,10 +6,10 @@ const CODE = /^[A-Za-z0-9._-]{1,80}$/;
 export const LAND_KINDS = ['LAND_SEARCH', 'LAND_RECORD', 'LAND_COMPARISON', 'LAND_INFO', 'LAND_CLARIFICATION', 'FLOOD_CATALOG'];
 
 export const PRICE_TYPE_LABEL = {
-  SIMULATED_DEMO: 'Giá giả lập (demo)',
-  ROAD_ASKING_ESTIMATE: 'Ước tính theo đường',
-  HISTORICAL_ASKING: 'Giá chào lịch sử',
-  SOURCE_ASKING: 'Giá chào theo nguồn',
+  SIMULATED_DEMO: 'Giá giả lập (demo · không phải giá thị trường)',
+  ROAD_ASKING_ESTIMATE: 'Ước tính giá rao theo đường (không phải giá giao dịch)',
+  HISTORICAL_ASKING: 'Giá chào lịch sử (không phải giá hiện tại)',
+  SOURCE_ASKING: 'Giá chào theo nguồn (chưa xác nhận giao dịch)',
   NONE: 'Chưa có giá',
 };
 
@@ -77,7 +77,7 @@ export function loadPlanningCells() {
   return planningRequest;
 }
 
-// Compact display wording; provenance and synthetic flags remain explicit.
+// Compact display wording; provenance and synthetic flags remain explicit and are never stripped.
 export function landDisplayValue(value) {
- return typeof value==='string' ? value.replace(/Giá mô phỏng(?: \(không phải giá thị trường\))?/gi,'Giá giả lập (demo)').replace(/\s*[—·-]\s*giả định demo/gi,'') : value;
+ return typeof value==='string' ? value.replace(/Giá mô phỏng(?: \(không phải giá thị trường\))?/gi,'Giá giả lập (demo · không phải giá thị trường)') : value;
 }

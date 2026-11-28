@@ -1,7 +1,13 @@
-"""PR #43 targeted unit and contract tests: Hòa Xuân land routes, feature-off/missing-dataset
-fail-closed behavior, overview cache grounding, LandAdvisor rewrite grammar, buyer_search
-cross-source isolation, and PR #45 transaction invariant preservation.
+"""PR #43 targeted unit and multi-turn regression tests:
+- Hòa Xuân land routes & overview grounding
+- Fail-closed dataset activation & SHA-256 manifest/governance verification
+- Synthetic demo provenance & zero source-free legal/flood/cadastral/price claims
+- Multi-turn buyer & land cancellation (`PURCHASE_DECLINED`), stale quick-reply/paging rejection,
+  and transitions (purchase -> rental, land -> amenities, land -> normal house Recommendation,
+  fresh search after cancellation)
+- Hard budget enforcement across SmartProp and Hòa Xuân land sources (no automatic +15% expansion)
 """
+import hashlib
 import json
 import os
 import tempfile
@@ -14,7 +20,6 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.land import api as land_api, budget_rules, overview as land_overview, paths as land_paths, query_rules
-from app.rag import buyer_search
 from app.rag.api import create_chat_app
 from app.rag.config import Settings
 from app.rag.land_chat import LandAdvisor, accept_rewrite, colloquial
@@ -26,47 +31,57 @@ LAND_UUID_1 = "11111111-2222-3333-4444-555555555555"
 PROP_UUID_1 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
 
+def _make_land_row(code="DN-QH-0001", price=2_500_000_000, area=100.0):
+    return {
+        "id": code,
+        "displayName": f"Ô quy hoạch thử nghiệm {code}",
+        "displayNumber": int(code.split("-")[-1]),
+        "computedAreaSqm": area,
+        "priceDescription": f"{price / 1e9:.2f}".replace(".", ",") + " tỷ (giá giả lập demo — không phải giá thị trường)",
+        "purposeGroup": "housing",
+        "planningLabel": "Đất ở đô thị",
+        "planningCode": "ODT",
+        "planningCategory": "RESIDENTIAL_PLANNING",
+        "pointOnSurface": [108.215, 16.005],
+        "demoPriceVnd": price,
+        "demoUnitPriceVndPerSqm": int(price / area),
+        "effectivePriceClass": "DEMO",
+        "addressEvidence": {"location": "Hòa Xuân, Đà Nẵng"},
+        "demoPresentation": {
+            "landType": "Nhóm quy hoạch tham khảo: đất ở (giả định demo, chưa xác minh địa chính)",
+            "ownershipDocument": "Giả định kịch bản demo (sổ đỏ) — chưa có giấy chứng nhận thực tế được xác minh",
+            "recovery": "Chưa xác minh quy hoạch thu hồi/giải tỏa (giả định kịch bản demo — không xác nhận không vướng quy hoạch)",
+            "dispute": "Chưa xác minh",
+            "mortgage": "Chưa xác minh",
+            "compensation": "Chưa xác minh",
+        },
+        "floodDisplay": {
+            "display": "Chưa có bản ghi ngập trùng tuyến đường nguồn (giả định kịch bản demo — không xác nhận an toàn ngập)",
+            "relation": "USER_APPROVED_DEMO_SCENARIO",
+            "isDemoAssumption": True,
+        },
+        "floodEvidence": {"items": [{"id": "FL-01", "location_text": "Đường 29/3", "publication_date": "2025"}]},
+        "geometry": {"type": "Polygon", "coordinates": [[[108.21, 16.0], [108.22, 16.0], [108.22, 16.01], [108.21, 16.0]]]},
+        "sourceFile": "/private/internal/path.geojson",
+        "reviewFlags": ["INTERNAL_REVIEW_NOTE"],
+    }
+
+
 class FakeLandEngine:
-    def __init__(self):
-        self.rows = {
-            "DN-QH-0001": {
-                "id": "DN-QH-0001",
-                "displayName": "Ô quy hoạch thử nghiệm",
-                "displayNumber": 1,
-                "computedAreaSqm": 100.0,
-                "priceDescription": "2,5 tỷ",
-                "purposeGroup": "housing",
-                "planningLabel": "Đất ở đô thị",
-                "planningCode": "ODT",
-                "planningCategory": "RESIDENTIAL_PLANNING",
-                "pointOnSurface": [108.215, 16.005],
-                "demoPriceVnd": 2_500_000_000,
-                "demoUnitPriceVndPerSqm": 25_000_000,
-                "effectivePriceClass": "DEMO",
-                "addressEvidence": {"location": "Hòa Xuân, Đà Nẵng"},
-                "demoPresentation": {
-                    "landType": "Đất ở đô thị",
-                    "ownershipDocument": "Sổ hồng — giả định demo",
-                    "recovery": "Không thuộc diện thu hồi — giả định demo",
-                    "dispute": "Không có tranh chấp",
-                    "mortgage": "Không thế chấp",
-                    "compensation": "Chưa áp dụng",
-                },
-                "floodDisplay": {
-                    "display": "Có tuyến đường tham chiếu ngập gần khu vực",
-                    "relation": "ILLUSTRATIVE_CORRIDOR",
-                    "isDemoAssumption": True,
-                },
-                "floodEvidence": {"items": [{"id": "FL-01", "location_text": "Đường 29/3", "publication_date": "2025"}]},
-                "geometry": {"type": "Polygon", "coordinates": [[[108.21, 16.0], [108.22, 16.0], [108.22, 16.01], [108.21, 16.0]]]},
-                "sourceFile": "/private/internal/path.geojson",
-                "reviewFlags": ["INTERNAL_REVIEW_NOTE"],
-            }
-        }
-        self.original = [{"id": "DN-QH-0001", "planningCode": "ODT", "planningCategory": "RESIDENTIAL_PLANNING", "computedAreaSqm": 100.0}]
-        self.activeids = {"DN-QH-0001"}
-        self.pricedbyid = {"DN-QH-0001": self.rows["DN-QH-0001"]}
-        self.byid = self.rows
+    def __init__(self, count=1):
+        self.converse_calls = 0
+        self.rows = {}
+        self.original = []
+        self.activeids = set()
+        for idx in range(1, count + 1):
+            code = f"DN-QH-{idx:04d}"
+            price = 2_500_000_000 + (idx - 1) * 50_000_000
+            row = _make_land_row(code, price=price)
+            self.rows[code] = row
+            self.original.append({"id": code, "planningCode": "ODT", "planningCategory": "RESIDENTIAL_PLANNING", "computedAreaSqm": 100.0})
+            self.activeids.add(code)
+        self.pricedbyid = dict(self.rows)
+        self.byid = dict(self.rows)
         self.unified_lots = {}
         self.imported = SimpleNamespace(
             SOURCE_ROWS={},
@@ -82,10 +97,17 @@ class FakeLandEngine:
         return row
 
     def land_id(self, code):
-        return LAND_UUID_1 if code == "DN-QH-0001" else None
+        if code == "DN-QH-0001":
+            return LAND_UUID_1
+        if code in self.rows:
+            n = int(code.split("-")[-1])
+            return f"11111111-2222-3333-4444-{n:012d}"
+        return None
 
     def code_for(self, value):
-        if value in ("DN-QH-0001", LAND_UUID_1):
+        if value in self.rows:
+            return value
+        if value == LAND_UUID_1:
             return "DN-QH-0001"
         return None
 
@@ -93,7 +115,7 @@ class FakeLandEngine:
         return self.rows.get(code)
 
     def health(self):
-        return {"status": "ok", "records": 1}
+        return {"status": "DEMO_ONLY", "records": len(self.rows)}
 
     def neighbors(self, code):
         row = self.rows.get(code)
@@ -115,26 +137,113 @@ class FakeLandEngine:
         return {"type": "FeatureCollection", "features": [], "chosen": chosen}
 
     def converse(self, question, state):
+        self.converse_calls += 1
         if "khong hieu" in question.lower():
             return {"answer": "Tôi chưa hiểu yêu cầu này.", "rows": []}, state or {}
         row = self.rows["DN-QH-0001"]
         return {
-            "answer": "Tìm thấy 1 ô quy hoạch tại Hòa Xuân.",
+            "answer": "Tìm thấy 1 ô quy hoạch tham khảo (không phải thửa địa chính chính thức).",
             "rows": [row],
             "start": 1,
-            "total": 1,
+            "total": len(self.rows),
             "filters": {"maxPrice": 3_000_000_000},
         }, {"lastDomain": "plot", "visibleIds": ["DN-QH-0001"], "seen": ["DN-QH-0001"], "selected": "DN-QH-0001"}
 
 
+def _seed_verified_dataset(raw_root: Path, proc_root: Path, *, version="HX-LAND-DEMO-20261126",
+                           public_approved=False, contains_synthetic=True, demo_approved=True, rights_ref=None):
+    sources = []
+    for rel in land_paths.REQUIRED_RAW_FILES:
+        f = raw_root / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        if rel.endswith("afternoon-import-20261125/manifest.json"):
+            payload = {"version": "IMPORT-20261125", "source": "guland"}
+        elif rel.endswith("flood-catalog-full.json"):
+            payload = {"commit": "abc1234", "records": []}
+        elif rel.endswith("plans.json") or rel.endswith("cells.json"):
+            payload = []
+        else:
+            payload = {"ok": True}
+        raw_bytes = json.dumps(payload).encode("utf-8")
+        f.write_bytes(raw_bytes)
+        sources.append({"path": rel, "bytes": len(raw_bytes), "sha256": hashlib.sha256(raw_bytes).hexdigest()})
+    proc_root.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "version": version,
+        "demoOnly": contains_synthetic,
+        "containsSyntheticData": contains_synthetic,
+        "publicApproved": public_approved,
+        "demoApproved": demo_approved,
+        "rightsApprovalRef": rights_ref,
+        "sources": sources,
+    }
+    (proc_root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+
 class Pr43LandAndRagTests(unittest.TestCase):
-    def test_land_enabled_fails_closed_when_disabled_or_dataset_missing(self):
-        with tempfile.TemporaryDirectory() as empty_dir:
-            with patch.dict(os.environ, {"RAG_LAND_ENABLED": "false", "SMARTPROP_LAND_DATA_DIR": empty_dir}):
+    def test_land_enabled_fails_closed_by_default_and_enforces_manifest_governance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw_dir = Path(tmp) / "raw"
+            proc_dir = Path(tmp) / "proc"
+            _seed_verified_dataset(raw_dir, proc_dir)
+
+            # 1. File presence alone NEVER activates land routes when RAG_LAND_ENABLED is unset!
+            env_base = {
+                "SMARTPROP_LAND_DATA_DIR": str(raw_dir),
+                "SMARTPROP_LAND_PROCESSED_DIR": str(proc_dir),
+                "SMARTPROP_LAND_DATA_VERSION": "HX-LAND-DEMO-20261126",
+            }
+            with patch.dict(os.environ, env_base, clear=False):
+                os.environ.pop("RAG_LAND_ENABLED", None)
+                os.environ.pop("RAG_LAND_DEMO_ENABLED", None)
+                status = land_paths.verify_land_dataset()
+                self.assertFalse(status["ok"])
+                self.assertEqual(status["mode"], "DISABLED")
                 self.assertFalse(land_paths.land_enabled())
-            with patch.dict(os.environ, {"RAG_LAND_ENABLED": "true", "SMARTPROP_LAND_DATA_DIR": empty_dir}):
-                with patch.object(land_paths, "DATA_ROOT", Path(empty_dir)):
-                    self.assertFalse(land_paths.land_enabled())
+
+            # 2. RAG_LAND_ENABLED=true WITHOUT RAG_LAND_DEMO_ENABLED=true fails closed on synthetic unapproved dataset!
+            with patch.dict(os.environ, {**env_base, "RAG_LAND_ENABLED": "true", "RAG_LAND_DEMO_ENABLED": "false"}):
+                status = land_paths.verify_land_dataset()
+                self.assertFalse(status["ok"])
+                self.assertEqual(status["reasons"], ["DATASET_USAGE_NOT_APPROVED"])
+                self.assertFalse(land_paths.land_enabled())
+
+            # 3. Explicit demo opt-in + verified SHA-256 manifest succeeds in SYNTHETIC_DEMO mode:
+            with patch.dict(os.environ, {**env_base, "RAG_LAND_ENABLED": "true", "RAG_LAND_DEMO_ENABLED": "true"}):
+                status = land_paths.verify_land_dataset()
+                self.assertTrue(status["ok"])
+                self.assertEqual(status["mode"], "SYNTHETIC_DEMO")
+                self.assertTrue(land_paths.land_enabled())
+
+                # 4. Tampering with any required raw file fails closed on SHA-256 mismatch:
+                (raw_dir / "outputs/plot-display-labels.json").write_text('{"tampered":true}', encoding="utf-8")
+                tampered = land_paths.verify_land_dataset()
+                self.assertFalse(tampered["ok"])
+                self.assertEqual(tampered["reasons"][0], "RAW_FILE_HASH_MISMATCH")
+
+    def test_demo_documents_never_emit_source_free_legal_or_flood_safety_claims(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            raw_dir = Path(tmp) / "raw"
+            (raw_dir / "outputs/hoa-xuan-enriched-20261122").mkdir(parents=True, exist_ok=True)
+            (raw_dir / "outputs/hoa-xuan-enriched-20261122/plans.json").write_text('[{"id":"P1","name":"Khu đô thị Hòa Xuân"}]', encoding="utf-8")
+            (raw_dir / "outputs/hoa-xuan-enriched-20261122/cells.json").write_text('[{"id":"DN-QH-0001","sourcePlanIds":["P1"]}]', encoding="utf-8")
+            import importlib
+            with patch.object(land_paths, "DATA_ROOT", raw_dir):
+                import app.land.demo_documents as demo_docs
+                importlib.reload(demo_docs)
+                for sample in (
+                    {"id": "DN-QH-0001", "planningCategory": "RESIDENTIAL_PLANNING", "purposeGroup": "housing"},
+                    {"id": "DN-QH-0002", "planningCategory": "RESIDENTIAL_PLANNING", "purposeGroup": "housing", "sourceLot": True},
+                    {"id": "DN-QH-0003", "planningCategory": "AGRICULTURAL_PLANNING", "purposeGroup": "agriculture"},
+                ):
+                    annotated = demo_docs.annotate(sample)
+                    serialized = json.dumps(annotated, ensure_ascii=False)
+                    self.assertNotIn("Được cấp sổ", serialized)
+                    self.assertNotIn("Không ngập úng", serialized)
+                    self.assertNotIn("chưa nằm trong đất quy hoạch của nhà nước", serialized)
+                    self.assertFalse(annotated["floodDisplay"]["verifiedForThisParcel"])
+                    self.assertTrue(annotated["demoPresentation"]["isDemoScenario"])
+                    self.assertIn("giả định", annotated["demoPresentation"]["ownershipDocument"].lower())
 
     def test_chat_app_works_and_omits_land_routes_when_land_disabled(self):
         bot, _, _, _ = fixtures.MultiTurnTests().service(props=[])
@@ -166,7 +275,7 @@ class Pr43LandAndRagTests(unittest.TestCase):
             server_to_server = client.post("/chat", json={"question": "Xin chào"})
             self.assertEqual(server_to_server.status_code, 200)
 
-    def test_land_router_validates_ids_strips_private_keys_and_bounds_flood_ids(self):
+    def test_land_router_validates_ids_exposes_governance_and_strips_private_keys(self):
         fake = FakeLandEngine()
         app = FastAPI()
         with patch.object(land_api, "_engine", return_value=fake):
@@ -177,8 +286,14 @@ class Pr43LandAndRagTests(unittest.TestCase):
             self.assertEqual(ok.status_code, 200)
             body = ok.json()
             self.assertEqual(body["sourceCode"], "DN-QH-0001")
+            self.assertTrue(body["demoOnly"])
+            self.assertFalse(body["governance"]["publicApproved"])
+            self.assertFalse(body["governance"]["officialCadastralParcel"])
+            self.assertFalse(body["governance"]["marketOrTransactionValue"])
+            self.assertEqual(body["governance"]["excludedFrom"], ["VALUATION", "COMPARABLE", "MARKET"])
             self.assertFalse(body["documents"]["verifiedForThisParcel"])
             self.assertFalse(body["flood"]["verifiedForThisParcel"])
+            self.assertIn("không phải giá thị trường", body["price"]["evidence"][0]["label"].lower())
             self.assertNotIn("sourceFile", json.dumps(body))
             self.assertNotIn("reviewFlags", json.dumps(body))
 
@@ -206,7 +321,6 @@ class Pr43LandAndRagTests(unittest.TestCase):
             self.assertIn(first["generationMode"], ("TEMPLATE", "OLLAMA_GROUNDED_CHOICES"))
             self.assertIn("giả lập", first["text"].lower())
 
-            # Tamper with disk cache text -> read_disk must reject it and regenerate grounded text.
             svc2 = land_overview.OverviewService(generator=lambda groups: None, cache_dir=cache_dir)
             files = list(Path(cache_dir).glob("*.json"))
             self.assertEqual(len(files), 1)
@@ -220,22 +334,19 @@ class Pr43LandAndRagTests(unittest.TestCase):
     def test_land_rewrite_grammar_and_domain_separation(self):
         self.assertEqual(colloquial("Tìm đất dưới 2 tỏi ở euro 2"), "Tìm đất dưới 2 tỷ ở Euro Village 2")
         self.assertTrue(accept_rewrite("có miếng đất nào tầm 3 tỷ không", "Tìm đất ở khoảng 3 tỷ"))
-        # Must reject invented numbers, switched Guland family, or dropped legal intent:
         self.assertFalse(accept_rewrite("tìm đất ở Hòa Xuân", "Tìm đất ở dưới 3 tỷ"))
         self.assertFalse(accept_rewrite("tìm đất 3 tỷ", "Xem thửa Guland"))
         self.assertFalse(accept_rewrite("lô này sổ đỏ thế nào", "Tìm đất ở"))
         self.assertFalse(accept_rewrite("lô thứ 2", "Xem lô đất 2"))
 
         advisor = LandAdvisor(Settings(), enabled=True, engine=FakeLandEngine())
-        # Non-Hòa-Xuân SmartProp district stays out of Hòa Xuân land tool:
         self.assertFalse(advisor.wants("Tìm đất nền tại Sơn Trà dưới 4 tỷ", None))
-        # House/apartment search stays out of land tool:
         self.assertFalse(advisor.wants("Tìm căn hộ 2 phòng ngủ dưới 3 tỷ tại Hải Châu", None))
         self.assertTrue(advisor.wants("Tìm đất ở Hòa Xuân dưới 3 tỷ", None))
 
-    def test_buyer_search_merges_sources_caps_overbudget_and_preserves_rental_invariants(self):
+    def test_hard_budget_enforced_across_smartprop_and_land_without_15pct_expansion(self):
         bot, backend, _, _ = fixtures.MultiTurnTests().service(props=[])
-        bot.land_advisor = LandAdvisor(Settings(), enabled=True, engine=FakeLandEngine())
+        bot.land_advisor = LandAdvisor(Settings(), enabled=True, engine=FakeLandEngine(count=1))
         backend._call = MagicMock(return_value={
             "items": [
                 {
@@ -267,28 +378,161 @@ class Pr43LandAndRagTests(unittest.TestCase):
             ],
             "totalPages": 1,
         })
-        res = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 2,4 tỷ"))
-        self.assertEqual(res.evidence["responseKind"], "BUYER_SEARCH")
-        rows = res.evidence["buyerSearch"]["rows"]
-        sources = {r["source"] for r in rows}
-        self.assertEqual(sources, {"SMARTPROP", "LAND_DATA"})
-        smartprop_row = next(r for r in rows if r["source"] == "SMARTPROP")
-        self.assertNotIn("0905123456", smartprop_row["title"])
-        land_row = next(r for r in rows if r["source"] == "LAND_DATA")
-        # 2.5B vs 2.4B ceiling is +4.17% (within +15% reference cap), while stored budget stays 2.4B:
-        self.assertGreater(land_row["overBudgetVnd"], 0)
-        self.assertLessEqual(land_row["overBudgetPercent"], 15)
-        self.assertEqual(str(res.evidence["session"]["context"]["criteria"]["budgetVnd"]), "2400000000")
 
-        # Unsupported locality outside Đà Nẵng is never substituted with Đà Nẵng results:
+        # 1. Below 2.4B: 2.5B land cell MUST NOT be included via automatic +15% expansion!
+        below = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 2,4 tỷ"))
+        self.assertEqual(below.evidence["responseKind"], "BUYER_SEARCH")
+        rows = below.evidence["buyerSearch"]["rows"]
+        self.assertEqual([r["source"] for r in rows], ["SMARTPROP"])
+        self.assertTrue(all(r["price"] <= 2_400_000_000 for r in rows))
+        self.assertTrue(all(r["overBudgetVnd"] == 0 for r in rows))
+        self.assertNotIn("0905123456", rows[0]["title"])
+        self.assertEqual(str(below.evidence["session"]["context"]["criteria"]["budgetVnd"]), "2400000000")
+
+        # 2. Explicit range 2.4B–2.5B includes both SmartProp (2.4B) and Land (2.5B):
+        ranged = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân từ 2,4 đến 2,5 tỷ"))
+        self.assertEqual({r["source"] for r in ranged.evidence["buyerSearch"]["rows"]}, {"SMARTPROP", "LAND_DATA"})
+        self.assertTrue(all(2_400_000_000 <= r["price"] <= 2_500_000_000 for r in ranged.evidence["buyerSearch"]["rows"]))
+
+        # 3. Exact price 2.5B ("đúng 2,5 tỷ") returns only exact 2.5B item:
+        exact = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân đúng 2,5 tỷ"))
+        self.assertEqual([r["price"] for r in exact.evidence["buyerSearch"]["rows"]], [2_500_000_000])
+
+        # 4. Explicit user over-budget consent allows <= +15% reference item visibly separated:
+        consented = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 2,4 tỷ, chấp nhận vượt ngân sách"))
+        consented_rows = consented.evidence["buyerSearch"]["rows"]
+        self.assertEqual({r["source"] for r in consented_rows}, {"SMARTPROP", "LAND_DATA"})
+        land_row = next(r for r in consented_rows if r["source"] == "LAND_DATA")
+        self.assertEqual(land_row["overBudgetVnd"], 100_000_000)
+        self.assertEqual(str(consented.evidence["session"]["context"]["criteria"]["budgetVnd"]), "2400000000")
+
+        # 5. Unsupported locality outside Đà Nẵng is never substituted:
         outside = bot.chat(ChatRequest(question="Tìm đất ở Hội An dưới 3 tỷ"))
-        self.assertEqual(outside.evidence["responseKind"], "BUYER_SEARCH")
         self.assertEqual(outside.evidence["buyerSearch"]["rows"], [])
         self.assertIn("không thay thế", outside.answer.lower())
 
-        # PR #45 rental rejection invariant must still intercept rental land queries:
+        # 6. PR #45 rental rejection invariant intercepts rental land queries:
         rental = bot.chat(ChatRequest(question="Tôi muốn thuê đất ở Hòa Xuân giá 10 triệu/tháng"))
         self.assertEqual(rental.evidence.get("clarification"), "RENTAL_BUDGET_NOT_SUPPORTED")
+
+    def test_purchase_declined_retires_buyer_land_and_blocks_all_stale_actions(self):
+        bot, backend, _, _ = fixtures.MultiTurnTests().service()
+        fake_engine = FakeLandEngine(count=6)
+        bot.land_advisor = LandAdvisor(Settings(), enabled=True, engine=fake_engine)
+        backend._call = MagicMock(return_value={
+            "items": [{
+                "id": PROP_UUID_1, "status": "PUBLISHED", "transactionType": "SALE",
+                "priceUnit": "TOTAL", "currency": "VND", "price": "2400000000",
+                "areaSqm": 100, "propertyType": "LAND", "landUseType": "RESIDENTIAL",
+                "district": "Cẩm Lệ", "ward": "Hòa Xuân", "title": "Đất nền Hòa Xuân",
+            }],
+            "totalPages": 1,
+        })
+
+        def setup_canceled_session():
+            first = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 3 tỷ"))
+            s_id = first.evidence["session"]["id"]
+            self.assertEqual(first.evidence["responseKind"], "BUYER_SEARCH")
+            self.assertEqual(len(first.evidence["buyerSearch"]["rows"]), 5)
+            self.assertIn("Xem kết quả khác", first.evidence["quickReplies"])
+            canceled = bot.chat(ChatRequest(question="Tôi không muốn tìm mua nữa", sessionId=s_id))
+            self.assertEqual(canceled.evidence.get("clarification"), "PURCHASE_DECLINED")
+            self.assertEqual(canceled.recommendedProperties, [])
+            needs = bot.sessions._items[("PUBLIC", s_id)].needs
+            self.assertFalse(needs["buyerSearch"]["active"])
+            self.assertFalse(needs["buyerSearch"]["pagingActive"])
+            self.assertIsNone(needs["buyerSearch"]["pending"])
+            self.assertIsNone(needs["land"]["lastDomain"])
+            self.assertNotIn("listOwner", needs)
+            backend._call.reset_mock()
+            backend.recommend.reset_mock()
+            fake_engine.converse_calls = 0
+            return s_id
+
+        # Step 4: Stale "Xem kết quả khác" + stale type/location/budget quick replies -> zero cards & zero tool calls!
+        for stale in (
+            "Xem kết quả khác",
+            "Xem thêm",
+            "Còn lô nào khác không",
+            "Tìm lại theo bộ lọc",
+            "Đất ở",
+            "Đất nông nghiệp",
+            "Nhà",
+            "Căn hộ",
+            "Tất cả",
+            "Hòa Xuân",
+            "Đà Nẵng",
+            "Cẩm Lệ",
+            "2,5 tỷ",
+            "Dưới 2,5 tỷ",
+        ):
+            sid = setup_canceled_session()
+            res = bot.chat(ChatRequest(question=stale, sessionId=sid))
+            self.assertEqual(res.evidence["session"]["id"], sid, f"Session rolled over on stale: {stale}")
+            self.assertEqual(res.evidence.get("clarification"), "NO_PENDING_LISTING_STEP", f"Failed on stale: {stale}")
+            self.assertEqual(res.recommendedProperties, [], f"Property cards leaked on stale: {stale}")
+            self.assertIsNone(res.evidence.get("buyerSearch"), f"buyerSearch leaked on stale: {stale}")
+            self.assertIsNone(res.evidence.get("land"), f"land leaked on stale: {stale}")
+            self.assertEqual(backend._call.call_count, 0, f"backend._call invoked on stale: {stale}")
+            self.assertEqual(backend.recommend.call_count, 0, f"backend.recommend invoked on stale: {stale}")
+            self.assertEqual(fake_engine.converse_calls, 0, f"land converse invoked on stale: {stale}")
+
+        # Step 5: Explicit fresh search after cancellation works cleanly on the same session
+        sid = setup_canceled_session()
+        fresh = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 2,6 tỷ", sessionId=sid))
+        self.assertEqual(fresh.evidence["responseKind"], "BUYER_SEARCH")
+        self.assertGreater(len(fresh.evidence["buyerSearch"]["rows"]), 0)
+        self.assertTrue(all(r["price"] <= 2_600_000_000 for r in fresh.evidence["buyerSearch"]["rows"]))
+
+    def test_transitions_from_land_search_to_rental_amenities_and_house_recommendation(self):
+        bot, backend, _, _ = fixtures.MultiTurnTests().service()
+        fake_engine = FakeLandEngine(count=6)
+        bot.land_advisor = LandAdvisor(Settings(), enabled=True, engine=fake_engine)
+        backend._call = MagicMock(return_value={"items": [], "totalPages": 1})
+
+        # A. Purchase -> Rental retires buyerSearch & land and blocks stale paging under RENTAL policy:
+        s1 = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 3 tỷ"))
+        sid_rent = s1.evidence["session"]["id"]
+        rent = bot.chat(ChatRequest(question="Đổi sang thuê nhà ở Hải Châu", sessionId=sid_rent))
+        self.assertEqual(rent.evidence.get("clarification"), "RENTAL_BUDGET_NOT_SUPPORTED")
+        backend._call.reset_mock()
+        backend.recommend.reset_mock()
+        fake_engine.converse_calls = 0
+        stale_after_rent = bot.chat(ChatRequest(question="Xem kết quả khác", sessionId=sid_rent))
+        self.assertEqual(stale_after_rent.evidence.get("clarification"), "RENTAL_BUDGET_NOT_SUPPORTED")
+        self.assertEqual(stale_after_rent.recommendedProperties, [])
+        self.assertIsNone(stale_after_rent.evidence.get("buyerSearch"))
+        self.assertIsNone(stale_after_rent.evidence.get("land"))
+        self.assertEqual(backend._call.call_count, 0)
+        self.assertEqual(backend.recommend.call_count, 0)
+        self.assertEqual(fake_engine.converse_calls, 0)
+
+        # B. Land search -> Amenities retires buyerSearch/land paging and blocks stale paging:
+        s2 = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 3 tỷ"))
+        sid_am = s2.evidence["session"]["id"]
+        am = bot.chat(ChatRequest(question="Ở Hải Châu có bệnh viện nào?", sessionId=sid_am))
+        self.assertIn(am.evidence["responseKind"], ("AREA_AMENITIES", "INSUFFICIENT_AMENITY_EVIDENCE"))
+        backend._call.reset_mock()
+        more_am = bot.chat(ChatRequest(question="Xem thêm", sessionId=sid_am))
+        self.assertEqual(more_am.evidence["responseKind"], "AMENITY_PAGE_UNAVAILABLE")
+        stale_buyer_am = bot.chat(ChatRequest(question="Xem kết quả khác", sessionId=sid_am))
+        self.assertEqual(stale_buyer_am.evidence.get("clarification"), "NO_PENDING_LISTING_STEP")
+        self.assertEqual(backend._call.call_count, 0)
+
+        # C. Land search -> Normal house Recommendation exits buyer_search and calls /api/v1/recommendations:
+        s3 = bot.chat(ChatRequest(question="Tìm đất ở Hòa Xuân dưới 3 tỷ"))
+        sid_house = s3.evidence["session"]["id"]
+        backend._call.reset_mock()
+        backend.recommend.reset_mock()
+        house = bot.chat(ChatRequest(question="Tìm nhà ở Thanh Khê dưới 3 tỷ", sessionId=sid_house))
+        self.assertIsNone(house.evidence.get("buyerSearch"))
+        self.assertIsNone(house.evidence.get("land"))
+        self.assertEqual(backend.recommend.call_count, 1)
+        self.assertGreater(len(house.recommendedProperties), 0)
+        backend.recommend.reset_mock()
+        stale_after_house = bot.chat(ChatRequest(question="Xem kết quả khác", sessionId=sid_house))
+        self.assertEqual(stale_after_house.evidence.get("clarification"), "NO_PENDING_LISTING_STEP")
+        self.assertEqual(backend.recommend.call_count, 0)
 
     def test_budget_and_query_rules_edge_cases(self):
         self.assertEqual(budget_rules.budget_band("từ 2 đến 3 tỷ"), {"minPrice": 2_000_000_000, "maxPrice": 3_000_000_000})

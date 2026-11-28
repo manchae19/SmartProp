@@ -1,6 +1,7 @@
 .land-detail{max-width:1440px;margin:auto;padding:24px 20px 56px;color:var(--color-brand-navy);min-width:0}
 .land-crumbs{font-size:.8rem;margin-bottom:18px;color:var(--color-brand-muted)}
-.land-head{display:flex;justify-content:space-between;gap:24px;padding:24px 28px;border:1px solid var(--ui-border);background:var(--ui-surface);border-radius:20px;margin-bottom:22px}
+.land-head{display:flex;justify-content:space-between;gap:24px;padding:24px 28px;border:1px solid var(--ui-border);background:var(--ui-surface);border-radius:20px;margin-bottom:14px}
+.land-governance-banner{padding:12px 18px;margin-bottom:20px;border:1px solid #e2b96f;background:#fff9eb;color:#5c3d00;border-radius:14px;font-size:.82rem;line-height:1.6}
 .land-head h1{font-size:clamp(1.4rem,3vw,2rem);font-weight:750;margin:8px 0;overflow-wrap:anywhere}
 .land-head p,.land-kind-label{font-size:.85rem;color:var(--color-brand-muted)}.land-code{font-size:.75rem!important;margin-top:8px}
 .land-head-value{display:flex;flex-direction:column;gap:8px;max-width:360px;align-self:center}.land-head-value strong{font-size:1.5rem;font-weight:750}.land-head-value span{font-size:.8rem;color:var(--color-brand-muted)}

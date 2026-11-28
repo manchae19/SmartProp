@@ -94,7 +94,7 @@ def route(q,sid,g):
   elif re.search(r'huong|mat tien|ngang|duong .*m5',n):text='Chưa có dữ liệu hướng, mặt tiền hoặc chiều rộng đường được xác minh cho riêng lô này.'
   elif amenity:text='Chưa kết nối dữ liệu tiện ích và khoảng cách cho riêng lô này; chưa xác định được trường học/bệnh viện gần nhất.'
   elif re.search(r'so do|so hong|giay to|giay chung nhan|chinh chu',n):
-   document=r.get('certificateDisplay');text='Giấy tờ chính chủ: '+(document['display']+' — giả định demo, chưa xác minh giấy tờ thực tế của riêng lô' if document and document.get('isDemoAssumption') else document['display'] if document else 'Chưa xác minh')+'.'
+   document=r.get('certificateDisplay');text='Giấy tờ chính chủ: '+(document['display'] if document else 'Chưa xác minh')+'.'
   elif re.search(r'thu hoi|giai toa',n):text='Thu hồi/giải tỏa: '+r.get('demoPresentation',{}).get('recovery','Chưa xác minh')+'.'
   elif re.search(r'dien tich',n):text='Diện tích: '+str(r.get('computedAreaSqm','chưa xác minh'))+' m² theo nguồn; chưa xác minh đo đạc thực tế.'
   elif re.search(r'boi thuong|the chap|tranh chap|phap ly',n):text='Tranh chấp/thế chấp và bồi thường: chưa xác minh.'
@@ -181,10 +181,10 @@ def route(q,sid,g):
  start=s.get('offset',0);page=pool[start:start+5]
  s.update(seen=[r['id'] for r in pool[:start+len(page)]],visibleIds=[r['id'] for r in page],selected=page[0]['id'] if page else None,legal=[])
  if f and f.get('minPrice')==5000000000 and re.search(r'\bduoi\b',n):notes.append('Theo khung giá đã chọn, đang lọc từ 5 tỷ đến '+g['money'](f['maxPrice'])+'.')
- scope='thửa nguồn Guland' if s['scope']=='guland' else 'ô quy hoạch'
+ scope='thửa nguồn Guland (chưa xác minh địa chính)' if s['scope']=='guland' else 'ô quy hoạch tham khảo (không phải thửa địa chính chính thức)'
  text=f'Tìm thấy {len(pool)} {scope} phù hợp.'
  if a:text+=' Diện tích: '+str(a.get('minArea',0))+'–'+str(a.get('maxArea','không giới hạn'))+' m².'
  text+=f' Hiển thị {start+1}–{start+len(page)}.' if page else ' Chưa có kết quả; không tự mở rộng điều kiện.'
- if page and any(r.get('demoPriceVnd') and not r.get('roadPriceEvidence') for r in page):notes.append('Một số kết quả dùng giá mô phỏng, được ghi rõ trên thẻ.')
+ if page and any(r.get('demoPriceVnd') and not r.get('roadPriceEvidence') for r in page):notes.append('Một số kết quả dùng giá giả lập demo (không phải giá thị trường hay giá giao dịch), được ghi rõ trên thẻ.')
  page=[g['summary'](r) if r['id'] in g['byid'] else r for r in page]
  return reply(text+('\n'+'\n'.join(notes) if notes else ''),page,start=start+1,total=len(pool),filters=f,targetPriceVnd=s.get('priceTarget'),areaFilters=a,unappliedConditions=notes,clearPlotSelection=not bool(page))

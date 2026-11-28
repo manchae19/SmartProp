@@ -228,5 +228,8 @@ class LandAdvisor:
                 "floodRecords": flood_records, "floodTotal": result.get("floodTotal"), "floodAllIds": (result.get("floodAllIds") or [])[:200],
                 "rewrittenQuestion": rewritten, "dataVersion": "HX-LAND-DEMO-20261126", "demoOnly": True}
         return {"properties": [], "citations": [], "answer": answer, "responseKind": kind,
-                "limitations": ["Bản demo Hòa Xuân: giá mô phỏng và các giá trị giấy tờ, thu hồi, ngập theo kịch bản demo được ghi rõ; chưa phải xác minh thực tế."],
+                "limitations": [
+                    "Bản demo Hòa Xuân: dữ liệu trình diễn giả lập; các trường giấy tờ, quy hoạch thu hồi, ngập và giá giả lập không phải xác nhận pháp lý hay an toàn thực tế.",
+                    "Ô quy hoạch không phải thửa địa chính chính thức; giá chào cũ, ước tính theo đường và giá giả lập demo không phải giá thị trường hay giá giao dịch.",
+                ],
                 "extra": {"land": land}}

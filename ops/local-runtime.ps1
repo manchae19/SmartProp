@@ -14,7 +14,8 @@ function Start-SpService([string]$Root,[string]$RunDirectory,[string]$Name,[int]
    if($health.Headers['X-SmartProp-Chat-Revision'] -ne (Get-SpRevision $Root)){throw 'RAG code is stale/different. Stop the correct previous RAG process and rerun; no process was killed.'}
    $schema=Invoke-RestMethod "http://127.0.0.1:$Port/openapi.json" -TimeoutSec 5
    $landRoot=if($env:SMARTPROP_LAND_DATA_DIR){$env:SMARTPROP_LAND_DATA_DIR}else{Join-Path $Root ('SMARTPROP_DATA/raw/land_demo_hoa_xuan/'+$(if($env:SMARTPROP_LAND_DATA_VERSION){$env:SMARTPROP_LAND_DATA_VERSION}else{'HX-LAND-DEMO-20261126'}))}
-   if($env:RAG_LAND_ENABLED -notmatch '^(false|0|off)$' -and (Test-Path -LiteralPath $landRoot) -and -not $schema.paths.PSObject.Properties['/land/records/{record_id}/overview']){throw 'RAG is missing the land overview endpoint.'}
+   $landProcessed=if($env:SMARTPROP_LAND_PROCESSED_DIR){$env:SMARTPROP_LAND_PROCESSED_DIR}else{Join-Path $Root ('SMARTPROP_DATA/processed/land_demo_hoa_xuan/'+$(if($env:SMARTPROP_LAND_DATA_VERSION){$env:SMARTPROP_LAND_DATA_VERSION}else{'HX-LAND-DEMO-20261126'}))}
+   if($env:RAG_LAND_ENABLED -match '^(true|1|on)$' -and $env:RAG_LAND_DEMO_ENABLED -match '^(true|1|on)$' -and (Test-Path -LiteralPath $landRoot) -and (Test-Path -LiteralPath (Join-Path $landProcessed 'manifest.json')) -and -not $schema.paths.PSObject.Properties['/land/records/{record_id}/overview']){throw 'RAG is missing the land overview endpoint.'}
   }
   Write-Host "$Name : reused healthy service on $Port (not adopted for stopping)";return
  }

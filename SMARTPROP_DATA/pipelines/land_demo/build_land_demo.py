@@ -85,7 +85,7 @@ write('export/README.json', {'runtime': 'ai-services/app/land reads ' + str(DATA
 write('quarantine.json', quarantine)
 
 rules = json.loads((DATA_ROOT / 'outputs/demo-policy-20261126.json').read_text(encoding='utf-8'))
-rules['flood'] = {'noSourceRecord': 'Không ngập úng — giả định demo', 'relations': ['DIRECT_SOURCE_MATCH', 'SOURCE_TEXT_MENTION', 'ILLUSTRATIVE_CORRIDOR'], 'unlocated': 'Chưa xác định vị trí để đối chiếu', 'corridorMeters': 80, 'corridorIsIllustrative': True}
+rules['flood'] = {'noSourceRecord': 'Chưa có bản ghi ngập trùng tuyến đường nguồn (giả định kịch bản demo — không xác nhận an toàn ngập)', 'relations': ['DIRECT_SOURCE_MATCH', 'SOURCE_TEXT_MENTION', 'ILLUSTRATIVE_CORRIDOR'], 'unlocated': 'Chưa xác định vị trí để đối chiếu', 'corridorMeters': 80, 'corridorIsIllustrative': True}
 rules['compensation'] = 'Chưa xác minh'
 cfg = REPO / 'SMARTPROP_DATA' / 'demo' / 'config' / f'land-demo-rules-{args.version}.json'
 cfg.write_text(json.dumps(rules, ensure_ascii=False, indent=1), encoding='utf-8')
@@ -99,6 +99,8 @@ counts = {'byKind': dict(collections.Counter(KIND.values())),
           'floodCatalog': len(e.FLOOD_CATALOG['records'])}
 manifest = {'version': args.version, 'builtAt': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'raw': str(DATA_ROOT.relative_to(REPO)),
             'rules': str(cfg.relative_to(REPO)), 'counts': counts,
+            'demoOnly': True, 'containsSyntheticData': True, 'publicApproved': False, 'demoApproved': True,
+            'rightsApprovalRef': None, 'excludedFromValuationComparableMarket': True,
             'notCombined': 'Planning cells, Guland parcels and project lots are different entity types; counts are never added into one total of real lots.',
             'processing': ['Planning cells: active = runtime-validated, area > 0', 'Simulated price: only residential cells 60–500 m², deterministic 10–60 million VND/m², labelled SIMULATED_DEMO',
                            'Road estimate replaces simulated price for search where present; simulated value kept in price-evidence', 'Guland: rows with review flags quarantined',

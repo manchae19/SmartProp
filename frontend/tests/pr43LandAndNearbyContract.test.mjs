@@ -38,10 +38,14 @@ function sampleLandRow(overrides = {}) {
 }
 
 test('PR43 landApi: synthetic demo labels remain explicit and validLand enforces strict schema', () => {
-  assert.equal(PRICE_TYPE_LABEL.SIMULATED_DEMO, 'Giá giả lập (demo)');
+  assert.equal(PRICE_TYPE_LABEL.SIMULATED_DEMO, 'Giá giả lập (demo · không phải giá thị trường)');
   assert.equal(
     landDisplayValue('Giá mô phỏng (không phải giá thị trường) — giả định demo'),
-    'Giá giả lập (demo)'
+    'Giá giả lập (demo · không phải giá thị trường) — giả định demo'
+  );
+  assert.ok(
+    landDisplayValue('Giả định kịch bản demo (sổ đỏ) — chưa có giấy chứng nhận thực tế được xác minh').includes('Giả định kịch bản demo'),
+    'landDisplayValue must never strip synthetic demo disclaimers'
   );
   assert.equal(planningGroup('QHCX1', ''), 'green');
   assert.equal(planningGroup('QHNN', ''), 'agriculture');

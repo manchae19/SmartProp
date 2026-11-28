@@ -53,7 +53,7 @@ def purpose(r):
  return 'public'
 def price_text(r):
  if r.get('roadPriceEvidence'):return r['priceDescription']
- if r.get('demoPriceVnd'):return money(r['demoPriceVnd'])
+ if r.get('demoPriceVnd'):return money(r['demoPriceVnd'])+' (giá giả lập demo — không phải giá thị trường)'
  return 'chưa có giá cho ô nhà ở này' if purpose(r)=='housing' else 'không thuộc bộ giá nhà ở'
 def enriched_catalog():return ({'version':'MAP-PRICE-ENRICHED-1','priceRule':'area computed EPSG:32649N × deterministic hypothetical unit price 10–60 million VND/m²; no market basis','sourceCatalog':str(ENRICHED/'runtime-cells.json'),'excluded':'non-residential, overlap flagged, code-spatial conflicts, area outside 60–500 sqm','records':rows})
 unified_lots={x['id']:x for x in json.loads((ROOT/'outputs/hoa-xuan-projects-20261125/unified-lots.json').read_text(encoding='utf-8'))}
@@ -85,7 +85,7 @@ def unified_summary(lot):
  parent=original[byid[lot['planningCellId']]]
  lot=dict(lot);lot['priceEvidence']=resolve_price(lot)
  out=summary(parent)
- out.update(id=lot['id'],displayName=lot['block']+' · Lô '+' và '.join(map(str,lot['lotNumbers'])),sourceLot=True,sourceLotEvidence=lot,pointOnSurface=lot['pointOnSurface'],computedAreaSqm=lot.get('areaSqm',lot.get('combinedAreaSqm')),referencePriceVnd=lot['askingPriceVnd'],demoPriceVnd=None,priceDescription=money(lot['askingPriceVnd'])+' (giá chào cũ '+lot['sourceDate']+')',planningCellId=lot['planningCellId'],planningLabel='Đất ở biệt thự',locationEvidence=lot['locationEvidence'])
+ out.update(id=lot['id'],displayName=lot['block']+' · Lô '+' và '.join(map(str,lot['lotNumbers'])),sourceLot=True,sourceLotEvidence=lot,pointOnSurface=lot['pointOnSurface'],computedAreaSqm=lot.get('areaSqm',lot.get('combinedAreaSqm')),referencePriceVnd=lot['askingPriceVnd'],demoPriceVnd=None,priceDescription=money(lot['askingPriceVnd'])+' (giá chào lịch sử '+lot['sourceDate']+' — không phải giá thị trường hiện tại)',planningCellId=lot['planningCellId'],planningLabel='Đất ở biệt thự',locationEvidence=lot['locationEvidence'])
  out['addressEvidence']={'location':'Euro Village 2, '+lot['block']+', Hòa Xuân, Đà Nẵng; vị trí theo ghim tin nguồn'}
  out['floodEvidence']=None
  return out
@@ -121,7 +121,7 @@ def chat(q,sid):
   if band is not None:candidates=[x for x in candidates if imported.value(x) is not None and band.get('minPrice',0)<=imported.value(x)<=band.get('maxPrice',10**16)]
   if area is not None:candidates=[x for x in candidates if area.get('minArea',0)<=x['computedAreaSqm']<=area.get('maxArea',float('inf'))]
   project_result.update(rows=candidates,sourceLots=[],clearPlotSelection=not bool(candidates))
-  project_result['answer']='Euro Village 2 · Làng Châu Âu 2 · Đảo Triệu Phú\n'+str(len(candidates))+' hồ sơ phù hợp; '+str(sum(bool(x.get('sourceLot')) for x in candidates))+' hồ sơ có ghim nguồn, còn lại chưa định vị. Giá lịch sử hoặc giá chào chưa rõ ngày được ghi riêng; chưa xác nhận đang bán. Cặp 14–15 giữ chung diện tích và giá.\nSổ hồng: Có cấp từng lô — theo thông tin dự án.'
+  project_result['answer']='Euro Village 2 · Làng Châu Âu 2 · Đảo Triệu Phú\n'+str(len(candidates))+' hồ sơ phù hợp; '+str(sum(bool(x.get('sourceLot')) for x in candidates))+' hồ sơ có ghim nguồn, còn lại chưa định vị. Giá chào lịch sử hoặc chưa rõ ngày không phải giá thị trường hiện tại hay giá giao dịch; chưa xác nhận đang bán. Cặp 14–15 giữ chung diện tích và giá.\nGiấy chứng nhận từng lô: chưa xác minh pháp lý thực tế (chỉ có thông tin giới thiệu từ nguồn tin cũ, không xác nhận đã cấp sổ).'
   state['seen']=[r['id'] for r in candidates];state['selected']=state['seen'][0] if state['seen'] else None
   return {'sessionId':sid,**project_result}
  if state.get('selected') in unified_lots and re.search(r'\b(lo|o|dat)\s*(nay|do)\b',n):
@@ -223,9 +223,10 @@ def profile(r):
  p=summary(r) if r['id'] in byid else annotate_demo_document(r)
  demo=p.get('demoPresentation')
  if not demo:return profile_source(r)
- return '\n'.join([p.get('displayName',p['id']),'Vị trí: '+(p.get('addressEvidence') or {}).get('location','Hòa Xuân, Đà Nẵng'),
+ record_nature='Ô quy hoạch tham khảo (không phải thửa địa chính chính thức)' if p['id'] in byid and not p.get('sourceLot') and not p.get('importedParcel') else 'Hồ sơ nguồn tham khảo (chưa xác minh địa chính)'
+ return '\n'.join([p.get('displayName',p['id']),'Bản chất hồ sơ: '+record_nature,'Vị trí: '+(p.get('addressEvidence') or {}).get('location','Hòa Xuân, Đà Nẵng'),
   'Loại đất: '+demo['landType'],'Diện tích: '+str(p['computedAreaSqm'])+' m²',
-  ('Giá tham khảo: ' if p.get('roadPriceEvidence') else 'Giá mô phỏng: ' if p.get('demoPriceVnd') else 'Giá: ')+p.get('priceDescription','Chưa có giá'),
+  ('Giá tham khảo: ' if p.get('roadPriceEvidence') else 'Giá giả lập demo: ' if p.get('demoPriceVnd') else 'Giá: ')+p.get('priceDescription','Chưa có giá'),
   'Giấy tờ chính chủ: '+demo['ownershipDocument'],'Thu hồi/giải tỏa: '+demo['recovery'],
   'Tranh chấp/thế chấp: '+demo['dispute'],'Bồi thường: '+demo['compensation'],'Ngập lụt: '+p.get('floodDisplay',{}).get('display','Chưa xác minh')])
 chat_core=chat
