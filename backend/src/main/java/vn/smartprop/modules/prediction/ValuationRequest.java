@@ -14,6 +14,8 @@ public record ValuationRequest(
     @Size(max=200) String projectName,
     @Min(1) @Max(30) Integer bathrooms,
     @Size(max=50) String houseDirection,
-    @Size(max=50) String balconyDirection) {
+    @Size(max=50) String balconyDirection,
+    @Min(1) @Max(20) Integer floors,
+    @Pattern(regexp = "villa|house_c4", message = "Kiểu nhà chỉ nhận villa hoặc house_c4") String houseSubtype) {
     @Override public String toString(){return "ValuationRequest[redacted]";}
 }

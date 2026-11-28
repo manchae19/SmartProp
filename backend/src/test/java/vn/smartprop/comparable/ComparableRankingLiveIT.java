@@ -60,7 +60,7 @@ class ComparableRankingLiveIT {
         jdbc = new NamedParameterJdbcTemplate(new SingleConnectionDataSource(connection, true));
         ComparableCandidateRepository repository = new ComparableCandidateRepository(jdbc);
         service = new ComparableRankingService(repository, new ComparableEligibilityService(),
-            Mockito.mock(PropertyRepository.class));
+            Mockito.mock(PropertyRepository.class), true);
     }
 
     private static Number scalar(String sql) {
@@ -70,10 +70,13 @@ class ComparableRankingLiveIT {
 
     @Test
     void eligibleCountsMatchTheDocumentedCohort() {
-        Map<String, Integer> counts = service.rank(request("Hải Châu", "HOUSE", "80", "5000000000")).eligibleCountsBySource();
+        Map<String, Integer> counts = service.rankResearch(request("Hải Châu", "HOUSE", "80", "5000000000")).eligibleCountsBySource();
         assertEquals(55816, counts.get("TINIX_RESEARCH"), "TiniX eligible + representative + SALE cohort");
         assertEquals(151, counts.get("SMARTPROP"), "published SmartProp sale listings");
         assertTrue(counts.get("EXTERNAL_LISTING") > 1000, "valid external sale listings");
+
+        Map<String, Integer> pubCounts = service.rank(request("Hải Châu", "HOUSE", "80", "5000000000")).eligibleCountsBySource();
+        assertFalse(pubCounts.containsKey("TINIX_RESEARCH"), "public rank() must never expose TINIX_RESEARCH count");
     }
 
     @Test
@@ -83,7 +86,7 @@ class ComparableRankingLiveIT {
             + "AND transaction_type='SALE' AND is_protected_holdout=1").intValue(),
             "the ranked filter and the holdout flag must be mutually exclusive");
 
-        var response = service.rank(request("Cẩm Lệ", "HOUSE", "90", "6000000000"));
+        var response = service.rankResearch(request("Cẩm Lệ", "HOUSE", "90", "6000000000"));
         assertFalse(response.comparables().isEmpty(), "Cẩm Lệ has eligible houses");
         for (var candidate : response.comparables()) {
             if (candidate.sourceKind() == ComparableDtos.SourceKind.TINIX_RESEARCH) {

@@ -20,6 +20,14 @@ def listing(pid, price, address, title="Nhà"):
 
 
 class ParsingTests(unittest.TestCase):
+    def test_constraint_suffixes_keep_the_full_street_name(self):
+        expected = "300 Hoàng Phương Dung"
+        for suffix in ("diện tích nhỏ hơn 80 m²", "giá dưới 3 tỷ", "ngân sách 3 tỷ",
+                       "giá thuê dưới 10 triệu mỗi tháng", "chỉ ở quận Hải Châu"):
+            for separator in (" ", ", "):
+                with self.subTest(suffix=suffix, separator=separator):
+                    self.assertEqual(addr.address_in(f"Tìm nhà ở {expected}{separator}{suffix}"), expected)
+
     def test_house_number_and_street_are_kept_together(self):
         self.assertEqual(addr.address_in("Tôi muốn tìm nhà ở 300 Dũng Sĩ Thanh Khê"),
                          "300 Dũng Sĩ Thanh Khê")

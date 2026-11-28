@@ -1,4 +1,5 @@
 import { areaInput, typeCodes } from '../property/postForm.js';
+import { advancedValuationPayload } from './advancedValuation.js';
 export const categoryFor = type => ({
   HOUSE: 'Nhà ở',
   VILLA: 'Nhà ở',
@@ -20,8 +21,12 @@ export function valuationInput(draft, location) {
   if (!location) return {
     reason: 'Chọn khu vực tham khảo phù hợp với địa chỉ của tin.'
   };
-  const rooms = String(draft.bedrooms ?? '0');
-  if (propertyType !== 'LAND' && (!/^\d+$/.test(rooms) || Number(rooms) > 30)) return {
+  // Bedrooms là optional. Chuỗi rỗng (người dùng chưa nhập) là MISSING, không phải 0 và
+  // cũng không phải lỗi: gửi null để model giữ nguyên missing-value handling của nó.
+  // Chỉ giá trị đã nhập nhưng vô lý (không phải số nguyên, hoặc > 30) mới là lỗi.
+  const roomsRaw = String(draft.bedrooms ?? '').trim();
+  const roomsProvided = roomsRaw !== '';
+  if (propertyType !== 'LAND' && roomsProvided && (!/^\d+$/.test(roomsRaw) || Number(roomsRaw) > 30)) return {
     reason: 'Số phòng ngủ nằm ngoài phạm vi model (0–30; 0 là chưa khai báo).'
   };
   // Bathrooms is the only optional field the posting form collects that the model also
@@ -30,14 +35,25 @@ export function valuationInput(draft, location) {
   const bathrooms = Number(draft.bathrooms ?? 0);
   const hasBathrooms = propertyType !== 'LAND' && Number.isInteger(bathrooms)
     && bathrooms >= 1 && bathrooms <= 30;
+  // Optional fields the posting form already collects. Each is omitted when blank so
+  // the model keeps it as missing data instead of receiving an invented value.
+  const ward = String(draft.ward || '').trim();
+  const houseDirection = String(draft.direction || '').trim();
+  const optional = {};
+  if (ward) optional.ward = ward.slice(0, 100);
+  if (houseDirection) optional.houseDirection = houseDirection.slice(0, 50);
+  // Advanced valuation-only fields. They live in the draft but are never part of the
+  // posting payload, so they cannot change the asking price the user typed.
+  Object.assign(optional, advancedValuationPayload(draft, draft.propertyType));
   return {
     body: {
       propertyType,
       transactionType: 'SALE',
       areaSqm: Number(area),
       locationFeature: location,
-      bedrooms: propertyType === 'LAND' ? null : Number(rooms),
+      bedrooms: propertyType === 'LAND' || !roomsProvided ? null : Number(roomsRaw),
       ...(hasBathrooms ? { bathrooms } : {}),
+      ...optional,
       title: String(draft.title || ''),
       description: String(draft.description || '')
     }
@@ -122,7 +138,10 @@ export function buildValuationPayload(form, options) {
   if (ward.length > 100) throw new ValuationError('Tên phường/xã tối đa 100 ký tự.');
   if (ward) payload.ward = ward;
   if (form.category !== 'Đất nền' && !isBlank(form.rooms)) {
-    payload.rooms = numeric(form.rooms, 'Số phòng ngủ', 1, 30, true);
+    const rooms = numeric(form.rooms, 'Số phòng ngủ', 0, 30, true);
+    // 0 nghĩa là "chưa khai báo" trên toàn hệ thống, nên nó được chuẩn hoá thành
+    // missing và KHÔNG gửi đi, thay vì trở thành một số phòng ngủ giả.
+    if (rooms !== 0) payload.rooms = rooms;
   }
   if (form.category === 'Nhà ở') {
     if (!isBlank(form.floors)) payload.floors = numeric(form.floors, 'Số tầng nhà', 1, 20);
@@ -153,9 +172,11 @@ export function buildValuationPayload(form, options) {
   const houseDirection = String(form.house_direction ?? '').trim();
   if (houseDirection.length > 50) throw new ValuationError('Hướng nhà tối đa 50 ký tự.');
   if (houseDirection) payload.house_direction = houseDirection;
+  // Hướng ban công chỉ có nghĩa với căn hộ chung cư. Field bị ẩn khi đổi loại BĐS, nhưng
+  // payload vẫn phải tự lọc: giá trị cũ còn sót lại không được đi vào model.
   const balconyDirection = String(form.balcony_direction ?? '').trim();
   if (balconyDirection.length > 50) throw new ValuationError('Hướng ban công tối đa 50 ký tự.');
-  if (balconyDirection) payload.balcony_direction = balconyDirection;
+  if (form.category === 'Căn hộ chung cư' && balconyDirection) payload.balcony_direction = balconyDirection;
   return payload;
 }
 export function formatPrice(vnd) {

@@ -17,10 +17,11 @@ public class PropertyService {
     private final PropertyImageRepository images;
     private final ProjectRepository projects;
     private final AccountAccess access;
+    private final PropertyCoordinateAuditService coordinateAudit;
     @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager entityManager;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private vn.smartprop.modules.project.ProjectManagementRepository projectLifecycle;
-    public PropertyService(PropertyRepository properties,PropertyImageRepository images,ProjectRepository projects,AccountAccess access) {
-        this.properties=properties;this.images=images;this.projects=projects;this.access=access;
+    public PropertyService(PropertyRepository properties,PropertyImageRepository images,ProjectRepository projects,AccountAccess access,PropertyCoordinateAuditService coordinateAudit) {
+        this.properties=properties;this.images=images;this.projects=projects;this.access=access;this.coordinateAudit=coordinateAudit;
     }
     public static boolean visible(Property p,Instant now) { return p.deletedAt==null && p.status==Property.Status.PUBLISHED && (p.expiresAt==null || p.expiresAt.isAfter(now)); }
     public Property existing(String id) { return properties.findByIdAndDeletedAtIsNull(ApiInputs.uuid(id)).orElseThrow(ApiInputs::missing); }
@@ -63,12 +64,20 @@ public class PropertyService {
     @Transactional public PropertyDtos.Managed create(Long actor,PropertyDtos.Write r) {
         access.publisherForUpdate(actor);Property p=new Property();p.id=UUID.randomUUID().toString();p.ownerId=actor;
         p.status=Property.Status.DRAFT;p.contentVersion=1;p.currency="VND";p.city="Da Nang";p.declaredAmenities=JsonNodeFactory.instance.arrayNode();
-        fill(p,r);properties.saveAndFlush(p);entityManager.clear();Property created=properties.findById(p.id).orElseThrow();return managed(created,List.of());
+        fill(p,r);properties.saveAndFlush(p);
+        // Coordinate Provenance V1: ghi audit trong cùng transaction.
+        // Nguồn là UNKNOWN: request chỉ mang lat/lon, không chứng minh được người dùng
+        // đã ghim trên bản đồ hay nhập tay. Chỉ ghi nguồn khi có bằng chứng thực tế.
+        coordinateAudit.record(p,PropertyCoordinateAudit.Source.UNKNOWN,null,actor);
+        entityManager.clear();Property created=properties.findById(p.id).orElseThrow();return managed(created,List.of(),coordinate(created.id));
     }
     @Transactional public PropertyDtos.Managed patch(Long actor,String id,int version,PropertyDtos.Write r) {
         access.publisherForUpdate(actor);Property p=owned(actor,id);if(p.status==Property.Status.HIDDEN) throw ApiInputs.conflict("Tin bị ẩn cần quản trị viên xử lý");
         reserve(p,version);fill(p,r);p.status=Property.Status.DRAFT;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;
-        properties.saveAndFlush(p);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));
+        properties.saveAndFlush(p);
+        // Audit tự supersede bản cũ khi tọa độ hoặc địa chỉ đổi (fingerprint đổi).
+        coordinateAudit.record(p,PropertyCoordinateAudit.Source.UNKNOWN,null,actor);
+        return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),coordinate(p.id));
     }
     @Transactional public PropertyDtos.Managed transition(Long actor,String id,int version,String action) {
         if(!Set.of("submit","close","delete").contains(action))throw ApiInputs.bad("Hành động không hợp lệ");
@@ -81,12 +90,12 @@ public class PropertyService {
         reserve(p,version);
         if(action.equals("submit")) {p.status=Property.Status.PENDING;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;}
         else {p.status=Property.Status.CLOSED;p.closedAt=Instant.now();if(action.equals("delete"))p.deletedAt=Instant.now();}
-        properties.saveAndFlush(p);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));
+        properties.saveAndFlush(p);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),coordinate(p.id));
     }
-    @Transactional(readOnly=true) public PropertyDtos.Managed ownDetail(Long actor,String id) {Property p=owned(actor,id);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
+    @Transactional(readOnly=true) public PropertyDtos.Managed ownDetail(Long actor,String id) {Property p=owned(actor,id);return managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),coordinate(p.id));}
     @Transactional(readOnly=true) public PageResponse<PropertyDtos.Managed> mine(Long actor,int page,int size) {
         access.active(actor);Page<Property> result=properties.findByOwnerIdAndDeletedAtIsNull(actor,ApiInputs.newest(page,size));
-        Map<String,List<PropertyImage>> grouped=imageMap(result.getContent());return PageResponse.of(result.map(p->managed(p,grouped.getOrDefault(p.id,List.of()))));
+        Map<String,List<PropertyImage>> grouped=imageMap(result.getContent());return PageResponse.of(result.map(p->managed(p,grouped.getOrDefault(p.id,List.of()),coordinate(p.id))));
     }
     @Transactional(readOnly=true)
     public PageResponse<PropertyDtos.Managed> mine(Long actor,int page,int size,String keyword,Property.Status status,Property.Type type,String sort) {
@@ -105,7 +114,7 @@ public class PropertyService {
         };
         var result=properties.findAll(filter,ApiInputs.page(page,size,order));
         var grouped=imageMap(result.getContent());
-        return PageResponse.of(result.map(item->managed(item,grouped.getOrDefault(item.id,List.of()))));
+        return PageResponse.of(result.map(item->managed(item,grouped.getOrDefault(item.id,List.of()),coordinate(item.id))));
     }
     public Map<String,List<PropertyImage>> imageMap(List<Property> page) {
         if(page.isEmpty()) return Map.of();Map<String,List<PropertyImage>> result=new HashMap<>();
@@ -113,10 +122,26 @@ public class PropertyService {
         return result;
     }
     public static PropertyDtos.View view(Property p,List<PropertyImage> images) {
+        return view(p,images,PropertyDtos.Coordinate.absent());
+    }
+    public static PropertyDtos.View view(Property p,List<PropertyImage> images,PropertyDtos.Coordinate coordinate) {
         List<String> amenities=new ArrayList<>();if(p.declaredAmenities!=null)p.declaredAmenities.forEach(n->amenities.add(n.asText()));
         return new PropertyDtos.View(p.id,p.projectId,p.title,p.description,p.propertyType,p.transactionType,p.price,p.currency,p.priceUnit,p.areaSqm,p.bedrooms,p.bathrooms,
             p.floor,p.block,p.direction,p.address,p.city,p.district,p.ward,p.location.getY(),p.location.getX(),List.copyOf(amenities),p.status,p.contentVersion,p.publishedAt,p.expiresAt,p.createdAt,p.updatedAt,
-            images.stream().map(i->new PropertyDtos.Image(i.id,"/api/v1/properties/"+p.id+"/images/"+i.id+"/content",i.sortOrder,i.isCover)).toList(),p.getListingCode());
+            images.stream().map(i->new PropertyDtos.Image(i.id,"/api/v1/properties/"+p.id+"/images/"+i.id+"/content",i.sortOrder,i.isCover)).toList(),p.getListingCode(),coordinate);
     }
-    public static PropertyDtos.Managed managed(Property p,List<PropertyImage> images) {return new PropertyDtos.Managed(view(p,images),p.ownerId,p.contactName,p.contactPhone,p.contactEmail);}
+    public static PropertyDtos.Managed managed(Property p,List<PropertyImage> images) {return managed(p,images,PropertyDtos.Coordinate.absent());}
+    public static PropertyDtos.Managed managed(Property p,List<PropertyImage> images,PropertyDtos.Coordinate coordinate) {return new PropertyDtos.Managed(view(p,images,coordinate),p.ownerId,p.contactName,p.contactPhone,p.contactEmail);}
+    /** Coordinate status cho một tin, an toàn khi audit service chưa được cấu hình. */
+    public PropertyDtos.Coordinate coordinate(String propertyId) {
+        if(coordinateAudit==null || !coordinateAudit.available()) return PropertyDtos.Coordinate.absent();
+        return PropertyDtos.Coordinate.of(coordinateAudit.status(propertyId));
+    }
+    public Map<String,PropertyDtos.Coordinate> coordinates(List<String> propertyIds) {
+        if(coordinateAudit==null || !coordinateAudit.available()) return Map.of();
+        var statuses=coordinateAudit.statuses(propertyIds);
+        var result=new HashMap<String,PropertyDtos.Coordinate>();
+        statuses.forEach((id,status)->result.put(id,PropertyDtos.Coordinate.of(status)));
+        return Map.copyOf(result);
+    }
 }

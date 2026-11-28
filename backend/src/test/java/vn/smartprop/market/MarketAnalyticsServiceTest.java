@@ -23,7 +23,8 @@ import vn.smartprop.market.MarketDtos.Stat;
 class MarketAnalyticsServiceTest {
 
     private final MarketAnalyticsRepository repo = mock(MarketAnalyticsRepository.class);
-    private final MarketAnalyticsService service = new MarketAnalyticsService(repo);
+    private final MarketAnalyticsService publicOnlyService = new MarketAnalyticsService(repo);
+    private final MarketAnalyticsService researchEnabledService = new MarketAnalyticsService(repo, true);
 
     private static CohortRow row(String source, String district, String type, String month, double price) {
         return new CohortRow(source, district, "Phước Ninh", type, price, 80.0, month);
@@ -50,37 +51,44 @@ class MarketAnalyticsServiceTest {
     @Test
     @DisplayName("validates property type and source enums")
     void validatesInputs() {
-        assertThrows(ApiException.class, () -> service.analytics(null, null, "HOTEL", null, null));
-        assertThrows(ApiException.class, () -> service.analytics(null, null, null, "FACEBOOK", null));
-        assertThrows(ApiException.class, () -> service.analytics("x".repeat(101), null, null, null, null));
+        assertThrows(ApiException.class, () -> publicOnlyService.analytics(null, null, "HOTEL", null, null));
+        assertThrows(ApiException.class, () -> publicOnlyService.analytics(null, null, null, "FACEBOOK", null));
+        assertThrows(ApiException.class, () -> publicOnlyService.analytics("x".repeat(101), null, null, null, null));
     }
 
     @Test
-    @DisplayName("research defaults OFF (fast public path); explicit true or TINIX source turns it on")
+    @DisplayName("public entrypoint rejects research flags; authorized research entrypoint honors them when enabled")
     void researchDefaults() {
-        assertFalse(service.analytics(null, null, null, null, null).meta().researchIncluded());
-        assertFalse(service.analytics(null, null, null, null, false).meta().researchIncluded());
-        assertTrue(service.analytics(null, null, null, null, true).meta().researchIncluded());
-        assertTrue(service.analytics(null, null, null, "TINIX_RESEARCH", false).meta().researchIncluded());
+        assertFalse(publicOnlyService.analytics(null, null, null, null, null).meta().researchIncluded());
+        assertFalse(publicOnlyService.analytics(null, null, null, null, false).meta().researchIncluded());
+        assertThrows(ApiException.class, () -> publicOnlyService.analytics(null, null, null, null, true));
+        assertThrows(ApiException.class, () -> publicOnlyService.analytics(null, null, null, "TINIX_RESEARCH", false));
+        assertThrows(ApiException.class, () -> publicOnlyService.analyticsResearch(null, null, null, null, true));
+
+        assertTrue(researchEnabledService.analyticsResearch(null, null, null, null, true).meta().researchIncluded());
+        assertTrue(researchEnabledService.analyticsResearch(null, null, null, "TINIX_RESEARCH", false).meta().researchIncluded());
     }
 
     @Test
     @DisplayName("median/quartiles present when sample >= MIN_SAMPLE; suppressed below")
     void sampleSuppression() {
-        Response ok = service.analytics(null, null, null, "SMARTPROP", false);
+        Response ok = publicOnlyService.analytics(null, null, null, "SMARTPROP", false);
         assertNotNull(ok.overall().medianAskingPriceVnd());
         assertEquals("OK", ok.overall().dataStatus());
 
-        Response thin = service.analytics("Hải Châu", null, null, "SMARTPROP", false); // 5 rows
+        Response thin = publicOnlyService.analytics("Hải Châu", null, null, "SMARTPROP", false); // 5 rows
         assertEquals("INSUFFICIENT_DATA", thin.overall().dataStatus());
         assertNull(thin.overall().medianAskingPriceVnd());
         assertTrue(thin.overall().qualityFlags().contains("SMALL_SAMPLE"));
     }
 
     @Test
-    @DisplayName("bySource labels research rows and never marks them as live listings")
+    @DisplayName("bySource omits research metadata in public mode and labels research rows in research mode")
     void sourceLabels() {
-        Response r = service.analytics(null, null, null, null, true);
+        Response pub = publicOnlyService.analytics(null, null, null, null, false);
+        assertTrue(pub.bySource().stream().noneMatch(s -> "TINIX_RESEARCH".equals(s.source()) || s.researchReference()));
+
+        Response r = researchEnabledService.analyticsResearch(null, null, null, null, true);
         var tinix = r.bySource().stream().filter(s -> "TINIX_RESEARCH".equals(s.source())).findFirst().orElseThrow();
         assertTrue(tinix.researchReference());
         assertEquals("CC BY-NC 4.0", tinix.license());
@@ -92,12 +100,12 @@ class MarketAnalyticsServiceTest {
     @Test
     @DisplayName("monthly series is insufficient below 30/point; adequate here; never a forecast")
     void temporalStatus() {
-        Response r = service.analytics(null, null, null, null, true);
+        Response r = researchEnabledService.analyticsResearch(null, null, null, null, true);
         assertEquals("AVAILABLE", r.meta().temporalStatus());
         assertTrue(r.monthly().stream().allMatch(p -> p.period().matches("\\d{4}-\\d{2}")));
         assertTrue(r.meta().dataQualityWarnings().stream().anyMatch(w -> w.startsWith("NO_FORECAST")));
 
-        Response noResearch = service.analytics(null, null, null, null, false);
+        Response noResearch = publicOnlyService.analytics(null, null, null, null, false);
         assertEquals("NOT_REQUESTED", noResearch.meta().temporalStatus());
         assertTrue(noResearch.monthly().isEmpty());
     }
@@ -105,7 +113,7 @@ class MarketAnalyticsServiceTest {
     @Test
     @DisplayName("asking-price and no-forecast warnings are always present")
     void warningsAlwaysPresent() {
-        Response r = service.analytics(null, null, null, null, true);
+        Response r = researchEnabledService.analyticsResearch(null, null, null, null, true);
         assertTrue(r.meta().dataQualityWarnings().stream().anyMatch(w -> w.startsWith("ASKING_PRICE_ONLY")));
         assertEquals("ASKING_SALE_VND_TOTAL", r.meta().priceBasis());
         assertNotNull(r.meta().disclaimer());
@@ -114,7 +122,7 @@ class MarketAnalyticsServiceTest {
     @Test
     @DisplayName("bands are always fully labelled even when empty")
     void bands() {
-        Response r = service.analytics(null, null, null, null, true);
+        Response r = researchEnabledService.analyticsResearch(null, null, null, null, true);
         assertEquals(8, r.priceBands().size());
         assertEquals(7, r.areaBands().size());
         assertEquals("< 1 tỷ", r.priceBands().get(0).label());
@@ -123,11 +131,11 @@ class MarketAnalyticsServiceTest {
     @Test
     @DisplayName("type labels are human readable and source filter narrows")
     void statShapeAndFilter() {
-        Response r = service.analytics(null, null, null, null, true);
+        Response r = researchEnabledService.analyticsResearch(null, null, null, null, true);
         Stat house = r.byPropertyType().stream().filter(s -> "HOUSE".equals(s.key())).findFirst().orElseThrow();
         assertEquals("Nhà ở / Nhà phố", house.label());
 
-        Response onlyTinix = service.analytics(null, null, null, "TINIX_RESEARCH", true);
+        Response onlyTinix = researchEnabledService.analyticsResearch(null, null, null, "TINIX_RESEARCH", true);
         assertEquals(105, onlyTinix.meta().totalSampleCount());
         assertEquals(0, onlyTinix.bySource().stream().filter(s -> "SMARTPROP".equals(s.source())).mapToLong(s -> s.count()).sum());
     }

@@ -587,6 +587,9 @@ export default React.forwardRef(function PostView(props, ref) {
                   }} onConfirm={$event => {
                     return view.confirmLocation?.($event);
                   }} data-sp-b5d4ccf8="" />
+                      <p className="posting-hint" data-sp-coord-hint="">
+                        Vị trí bạn chọn là <strong>vị trí tham khảo</strong> — chưa được xác minh chính xác đến từng thửa đất. Người mua sẽ thấy nhãn này trên tin đăng.
+                      </p>
                     </section>
                   </React.Fragment> : <React.Fragment>
                     <section className="posting-card" data-sp-b5d4ccf8="">

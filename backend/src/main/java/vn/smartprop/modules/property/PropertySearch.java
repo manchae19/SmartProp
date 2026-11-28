@@ -12,7 +12,15 @@ import vn.smartprop.modules.media.PropertyImageRepository;
 @Service
 public class PropertySearch {
     public record Filters(String keyword,String address,Property.Type propertyType,Property.Transaction transactionType,String city,String district,String ward,
-        BigDecimal minPrice,BigDecimal maxPrice,BigDecimal minArea,BigDecimal maxArea,Short bedrooms,String bbox) {}
+        BigDecimal minPrice,BigDecimal maxPrice,BigDecimal minArea,BigDecimal maxArea,
+        boolean minAreaExclusive,boolean maxAreaExclusive,Short bedrooms,String bbox) {
+        public Filters(String keyword,String address,Property.Type propertyType,Property.Transaction transactionType,
+                String city,String district,String ward,BigDecimal minPrice,BigDecimal maxPrice,
+                BigDecimal minArea,BigDecimal maxArea,Short bedrooms,String bbox) {
+            this(keyword,address,propertyType,transactionType,city,district,ward,minPrice,maxPrice,minArea,maxArea,
+                false,false,bedrooms,bbox);
+        }
+    }
     public record Bounds(double west,double south,double east,double north) {}
     private final PropertyRepository properties;private final PropertyService service;private final PropertyImageRepository images;
     public PropertySearch(PropertyRepository properties,PropertyService service,PropertyImageRepository images) {this.properties=properties;this.service=service;this.images=images;}
@@ -33,6 +41,11 @@ public class PropertySearch {
         for(String text:Arrays.asList(f.keyword(),f.city(),f.district(),f.ward()))if(text!=null && text.length()>100)throw ApiInputs.bad("Bộ lọc chuỗi tối đa 100 ký tự");
         for(BigDecimal value:Arrays.asList(f.minPrice(),f.maxPrice(),f.minArea(),f.maxArea()))if(value!=null && value.signum()<0)throw ApiInputs.bad("Bộ lọc giá/diện tích phải không âm");
         if((f.minPrice()!=null&&f.maxPrice()!=null&&f.minPrice().compareTo(f.maxPrice())>0)||(f.minArea()!=null&&f.maxArea()!=null&&f.minArea().compareTo(f.maxArea())>0)||f.bedrooms()!=null&&f.bedrooms()<0)throw ApiInputs.bad("Khoảng lọc không hợp lệ");
+        if ((f.minAreaExclusive() && f.minArea() == null) || (f.maxAreaExclusive() && f.maxArea() == null))
+            throw ApiInputs.bad("Cận diện tích loại trừ phải đi kèm giá trị diện tích");
+        if (f.minArea() != null && f.maxArea() != null && f.minArea().compareTo(f.maxArea()) == 0
+                && (f.minAreaExclusive() || f.maxAreaExclusive()))
+            throw ApiInputs.bad("Khoảng diện tích phải chứa ít nhất một giá trị");
         Bounds box=bounds(f.bbox());
         return (root,query,cb)->{
             List<jakarta.persistence.criteria.Predicate> predicates=new ArrayList<>();
@@ -44,14 +57,22 @@ public class PropertySearch {
             if(f.propertyType()!=null)predicates.add(cb.equal(root.get("propertyType"),f.propertyType()));if(f.transactionType()!=null)predicates.add(cb.equal(root.get("transactionType"),f.transactionType()));
             if(f.city()!=null&&!f.city().isBlank())predicates.add(cb.equal(root.get("city"),f.city()));if(f.district()!=null&&!f.district().isBlank())predicates.add(cb.equal(root.get("district"),f.district()));if(f.ward()!=null&&!f.ward().isBlank())predicates.add(cb.equal(root.get("ward"),f.ward()));
             if(f.minPrice()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("price"),f.minPrice()));if(f.maxPrice()!=null)predicates.add(cb.lessThanOrEqualTo(root.get("price"),f.maxPrice()));
-            if(f.minArea()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("areaSqm"),f.minArea()));if(f.maxArea()!=null)predicates.add(cb.lessThanOrEqualTo(root.get("areaSqm"),f.maxArea()));if(f.bedrooms()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("bedrooms"),f.bedrooms()));
+            if (f.minArea() != null)
+                predicates.add(f.minAreaExclusive() ? cb.greaterThan(root.get("areaSqm"), f.minArea())
+                                                    : cb.greaterThanOrEqualTo(root.get("areaSqm"), f.minArea()));
+            if (f.maxArea() != null)
+                predicates.add(f.maxAreaExclusive() ? cb.lessThan(root.get("areaSqm"), f.maxArea())
+                                                    : cb.lessThanOrEqualTo(root.get("areaSqm"), f.maxArea()));
+            if(f.bedrooms()!=null)predicates.add(cb.greaterThanOrEqualTo(root.get("bedrooms"),f.bedrooms()));
             if(box!=null) {predicates.add(cb.between(cb.function("ST_Longitude",Double.class,root.get("location")),box.west(),box.east()));predicates.add(cb.between(cb.function("ST_Latitude",Double.class,root.get("location")),box.south(),box.north()));}
             return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
         };
     }
     @Transactional(readOnly=true) public PageResponse<PropertyDtos.View> search(Filters filters,int page,int size,String sort) {
         Page<Property> result=properties.findAll(specification(filters,Instant.now()),ApiInputs.page(page,size,sort(sort)));
-        var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,List.of()))));
+        var grouped=service.imageMap(result.getContent());
+        var coordinates=service.coordinates(result.getContent().stream().map(p->p.id).toList());
+        return PageResponse.of(result.map(p->PropertyService.view(p,grouped.getOrDefault(p.id,List.of()),coordinates.getOrDefault(p.id,PropertyDtos.Coordinate.absent()))));
     }
-    @Transactional(readOnly=true) public PropertyDtos.View detail(String id) {Property p=service.publicProperty(id);return PropertyService.view(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
+    @Transactional(readOnly=true) public PropertyDtos.View detail(String id) {Property p=service.publicProperty(id);return PropertyService.view(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),service.coordinate(p.id));}
 }

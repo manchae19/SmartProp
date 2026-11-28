@@ -71,13 +71,23 @@ export function comparableWarnings(response) {
   return Array.isArray(response?.warnings) ? response.warnings.filter((w) => typeof w === 'string') : []
 }
 
-export function validateComparableResponse(data) {
+export function validateComparableResponse(data, options = {}) {
   if (!data || typeof data !== 'object' || !Array.isArray(data.comparables) || !data.reference) {
     throw new Error('Dữ liệu tin tương đồng không hợp lệ.')
   }
+  const allowResearch = options.allowResearch !== undefined ? options.allowResearch === true : true
   for (const candidate of data.comparables) {
     if (typeof candidate.candidateId !== 'string' || !SOURCE_LABELS[candidate.sourceKind]) {
       throw new Error('Dữ liệu tin tương đồng không hợp lệ.')
+    }
+    if (!allowResearch && candidate.sourceKind === 'TINIX_RESEARCH') {
+      throw new Error('Phản hồi chứa dữ liệu nghiên cứu TiniX không được phép ở chế độ công khai.')
+    }
+  }
+  if (!allowResearch) {
+    if (data.eligibleCountsBySource?.TINIX_RESEARCH != null
+        || (Array.isArray(data.warnings) && data.warnings.some((w) => typeof w === 'string' && (w.includes('TiniX') || w.includes('CC BY-NC'))))) {
+      throw new Error('Phản hồi chứa siêu dữ liệu nghiên cứu TiniX không được phép ở chế độ công khai.')
     }
   }
   if (data.comparables.length > 5) throw new Error('Dữ liệu tin tương đồng vượt quá giới hạn 5 kết quả.')
@@ -93,7 +103,8 @@ export function isForbidden(error) {
   return error?.status === 403 || error?.status === 401
 }
 
-export async function loadComparables(body) {
-  const data = await api('/properties/comparables', { method: 'POST', body })
-  return validateComparableResponse(data)
+export async function loadComparables(body, client = api) {
+  const wantsResearch = body?.includeResearch === true
+  const data = await client('/properties/comparables', { method: 'POST', body })
+  return validateComparableResponse(data, { allowResearch: wantsResearch })
 }
