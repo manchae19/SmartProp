@@ -15,6 +15,12 @@ import pandas as pd
 import xgboost as xgb
 
 from app.models.xgboost.adapter_v1_3 import map_v6_to_v1_3, real_feature_input_enabled
+from app.models.xgboost.explanation_v1_3 import (
+    FEATURE_GROUPS,
+    build_explanation,
+    unavailable_explanation,
+    validate_explanation,
+)
 from app.models.xgboost.features_v1_3 import (
     ALL_FEATURES,
     LIMITS,
@@ -116,7 +122,8 @@ class PredictorV1_3:
             "real_feature_input_enabled": real_feature_input_enabled(),
         }
 
-    def predict(self, record: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, record: Dict[str, Any],
+                raw_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Execute in-memory prediction from canonical V1.3 record."""
         # 1. Mandatory fields
         for field in ["area", "normalized_type", "district"]:
@@ -159,59 +166,78 @@ class PredictorV1_3:
         log_pred = float(self.model.predict(X)[0])
         naive_vnd = float(np.expm1(log_pred))
 
-        # Compute native TreeSHAP on active booster
-        booster = self.model.get_booster()
-        dmat = xgb.DMatrix(X, feature_names=list(X.columns))
-        best_iter = getattr(self.model, "best_iteration", None)
-        iter_range = (0, int(best_iter) + 1) if best_iter is not None else (0, 0)
-        contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iter_range)[0]
-        base_log = float(contribs[-1])
-        base_price_vnd = int(np.expm1(base_log))
+        # Native TreeSHAP is defensive: any failure must leave price and calibration intact.
+        shap_ok = True
+        shap_error: str | None = None
+        margin_shap: float | None = None
+        try:
+            # Compute native TreeSHAP on active booster
+            booster = self.model.get_booster()
+            dmat = xgb.DMatrix(X, feature_names=list(X.columns))
+            best_iter = getattr(self.model, "best_iteration", None)
+            iter_range = (0, int(best_iter) + 1) if best_iter is not None else (0, 0)
+            contribs = booster.predict(dmat, pred_contribs=True, iteration_range=iter_range)[0]
+            # Margin from the SAME booster and iteration_range. The sklearn wrapper's
+            # predict() can use a different tree range, so it is not a valid additivity
+            # reference; this value only feeds the explanation check, never the price.
+            margin_shap = float(
+                booster.predict(dmat, output_margin=True, iteration_range=iter_range)[0])
+            base_log = float(contribs[-1])
+            base_price_vnd = int(np.expm1(base_log))
 
-        v1_3_factors = []
-        name_map = {
-            "area": "Diện tích đất/sàn (m²)",
-            "normalized_type": "Loại tài sản",
-            "district": "Quận/Huyện",
-            "ward": "Phường/Xã",
-            "raw_street_name": "Tên tuyến đường",
-            "raw_bedroom_count": "Số phòng ngủ",
-            "bedroom_count": "Số phòng ngủ",
-            "raw_road_width": "Độ rộng đường vào (m)",
-            "road_width": "Độ rộng đường vào (m)",
-            "raw_project_name": "Dự án BĐS",
-            "raw_frontage_width": "Bề ngang mặt tiền (m)",
-            "frontage_width": "Bề ngang mặt tiền (m)",
-            "raw_floor_count": "Số tầng",
-            "floor_count": "Số tầng",
-            "raw_bathroom_count": "Số phòng tắm",
-            "bathroom_count": "Số phòng tắm",
-            "frontage_sqrt_area_ratio": "Tỷ lệ mặt tiền / diện tích",
-        }
-        for name, val in zip(list(X.columns), contribs[:-1]):
-            val_float = float(val)
-            if abs(val_float) < 1e-4:
-                continue
-            impact_pct = round((math.exp(val_float) - 1.0) * 100, 2)
-            direction = "increase" if val_float > 0 else "decrease"
-            label = name_map.get(name, name)
-            note = f"Đóng góp {impact_pct:+.1f}% vào log-price"
-            if name == "ward" and not record.get("ward"):
-                label = "Phường/Xã (đang thiếu)"
-                note = "Giá trị phường/xã không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
-            elif name == "raw_street_name" and not record.get("street_name"):
-                label = "Tên tuyến đường (không có trong input)"
-                note = "Tên đường không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
-            v1_3_factors.append({
-                "feature_name": name,
-                "label": label,
-                "shap_value": round(val_float, 4),
-                "impact_pct": impact_pct,
-                "direction": direction,
-                "context_note": note,
-            })
-        v1_3_factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
-        top_factors = v1_3_factors[:6]
+            v1_3_factors = []
+            name_map = {
+                "area": "Diện tích đất/sàn (m²)",
+                "normalized_type": "Loại tài sản",
+                "district": "Quận/Huyện",
+                "ward": "Phường/Xã",
+                "raw_street_name": "Tên tuyến đường",
+                "raw_bedroom_count": "Số phòng ngủ",
+                "bedroom_count": "Số phòng ngủ",
+                "raw_road_width": "Độ rộng đường vào (m)",
+                "road_width": "Độ rộng đường vào (m)",
+                "raw_project_name": "Dự án BĐS",
+                "raw_frontage_width": "Bề ngang mặt tiền (m)",
+                "frontage_width": "Bề ngang mặt tiền (m)",
+                "raw_floor_count": "Số tầng",
+                "floor_count": "Số tầng",
+                "raw_bathroom_count": "Số phòng tắm",
+                "bathroom_count": "Số phòng tắm",
+                "frontage_sqrt_area_ratio": "Tỷ lệ mặt tiền / diện tích",
+            }
+            for name, val in zip(list(X.columns), contribs[:-1]):
+                val_float = float(val)
+                if abs(val_float) < 1e-4:
+                    continue
+                impact_pct = round((math.exp(val_float) - 1.0) * 100, 2)
+                direction = "increase" if val_float > 0 else "decrease"
+                label = name_map.get(name, name)
+                note = f"Đóng góp {impact_pct:+.1f}% vào log-price"
+                if name == "ward" and not record.get("ward"):
+                    label = "Phường/Xã (đang thiếu)"
+                    note = "Giá trị phường/xã không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
+                elif name == "raw_street_name" and not record.get("street_name"):
+                    label = "Tên tuyến đường (không có trong input)"
+                    note = "Tên đường không có trong input; đây là trạng thái thiếu của model, không phải địa chỉ thực."
+                v1_3_factors.append({
+                    "feature_name": name,
+                    "label": label,
+                    "shap_value": round(val_float, 4),
+                    "impact_pct": impact_pct,
+                    "direction": direction,
+                    "context_note": note,
+                })
+            v1_3_factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)
+            top_factors = v1_3_factors[:6]
+        except Exception as error:  # noqa: BLE001 - SHAP must never break inference
+            shap_ok = False
+            shap_error = type(error).__name__
+            margin_shap = None
+            contribs = None
+            base_log = None
+            base_price_vnd = None
+            v1_3_factors = []
+            top_factors = None
 
         # 5. Price-band Duan Smearing Calibration
         method = self.calibration.get("method", "duan_by_band")
@@ -250,6 +276,62 @@ class PredictorV1_3:
         if record.get("ward") and clean_category(record["ward"]) not in vocabs.get("ward", []):
             warnings.append(f"Phường/xã '{record.get('ward')}' ít dữ liệu hoặc mới; mô hình áp dụng trọng số trung bình.")
 
+        # The legacy block is only trustworthy when the SHAP numbers themselves validate.
+        # A builder-only failure must NOT discard valid native SHAP data.
+        shap_valid = False
+        if shap_ok and contribs is not None:
+            try:
+                _values = [float(c) for c in contribs[:-1]]
+                _groups: dict = {}
+                for _name, _value in zip(X.columns, _values):
+                    _group = FEATURE_GROUPS.get(_name)
+                    if _group:
+                        _groups[_group] = _groups.get(_group, 0.0) + _value
+                shap_valid = not validate_explanation(
+                    features=list(X.columns), contributions=_values,
+                    base_log=base_log,
+                    margin_log=(margin_shap if margin_shap is not None else log_pred),
+                    calibration_factor=float(factor), groups=_groups,
+                    ordered=list(X.columns),
+                    schema_features=list(self.schema["features"]),
+                    prediction_margin_log=log_pred)
+            except Exception:  # noqa: BLE001
+                shap_valid = False
+
+        # WP-04: additive explanation. If SHAP failed above, the explanation is explicitly
+        # UNAVAILABLE - never fabricated - while the price stays valid.
+        if not shap_valid:
+            explanation = unavailable_explanation(
+                f"Không tạo được giải thích SHAP ({shap_error or 'unavailable'})")
+        else:
+            try:
+                provided = [k for k, v in (raw_payload or {}).items() if v is not None]
+                defaulted = []
+                if record.get("road_width_source") in ("assumed", "default"):
+                    defaulted.append("road_width")
+                if record.get("frontage_width_source") in ("assumed", "default"):
+                    defaulted.append("frontage_width")
+                explanation = build_explanation(
+                    features=list(X.columns),
+                    contributions=[float(c) for c in contribs[:-1]],
+                    base_log=base_log,
+                    margin_log=margin_shap if margin_shap is not None else log_pred,
+                    prediction_margin_log=log_pred,
+                    schema_features=list(self.schema["features"]),
+                    naive_price_vnd=int(round(naive_vnd)),
+                    calibration_policy=method,
+                    calibration_factor=float(factor),
+                    calibrated_price_vnd=int(round(calibrated_vnd)),
+                    encoded_row={name: X.iloc[0][name] for name in X.columns},
+                    provided=provided,
+                    model_type=record["normalized_type"],
+                    defaulted=defaulted,
+                    warnings=warnings,
+                )
+            except Exception as error:  # noqa: BLE001
+                explanation = unavailable_explanation(
+                    f"Không tạo được giải thích: {type(error).__name__}")
+
         return {
             "model_version": "v1.3",
             "model_run": "tinix_xgboost_v1_3_integrated",
@@ -283,13 +365,20 @@ class PredictorV1_3:
             "missing_features": missing,
             "warnings": warnings,
             "shap_explanation": {
-                "base_value_log": round(base_log, 4),
+                "base_value_log": round(base_log, 4) if base_log is not None else None,
+                "status": "AVAILABLE" if shap_ok else "UNAVAILABLE",
                 "base_price_vnd": base_price_vnd,
                 "scale": "log(1 + price_vnd)",
                 "top_factors": top_factors,
                 "method": "TreeSHAP (Native Additive Contribution)",
-                "summary_vi": f"Giá cơ sở phân khúc của V1.3 là {round(base_price_vnd / 1e9, 2)} tỷ đồng. Hiệu chỉnh Duan Smearing phân khúc {band_of(calibrated_vnd)} là {round(factor, 4)}x.",
-            },
+                "summary_vi": (
+                    f"Giá cơ sở phân khúc của V1.3 là {round(base_price_vnd / 1e9, 2)} tỷ đồng. "
+                    f"Hiệu chỉnh Duan Smearing phân khúc {band_of(calibrated_vnd)} là "
+                    f"{round(factor, 4)}x." if shap_ok else
+                    "Không tạo được giải thích SHAP cho lần định giá này; "
+                    "giá dự đoán và hệ số hiệu chỉnh vẫn được áp dụng bình thường."),
+            } if shap_valid else None,
+            "explanation": explanation,
         }
 
     def predict_from_v6_payload(self, v6_payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -298,4 +387,4 @@ class PredictorV1_3:
             v6_payload,
             district_vocabulary=self.schema.get("vocabularies", {}).get("district"),
         )
-        return self.predict(v1_3_record)
+        return self.predict(v1_3_record, raw_payload=v6_payload)

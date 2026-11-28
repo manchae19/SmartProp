@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -100,8 +101,21 @@ public final class AdvisorDtos {
         Map<String, Object> featuresUsed,
         List<String> missingFeatures,
         ShapSummary shapExplanation,
-        List<String> warnings
-    ) {}
+        List<String> warnings,
+// WP-04: FastAPI explanation passed through unchanged (null when absent).
+JsonNode explanation
+    ) {
+        /** Backward-compatible: callers that predate WP-04 carry no explanation. */
+        public ValuationEvidence(String status, boolean available, String reason,
+                String modelVersion, String modelRun, BigDecimal predictedAskingPriceVnd,
+                BigDecimal askingVsEstimatePct, String priceBasis,
+                Map<String, Object> featuresUsed, List<String> missingFeatures,
+                ShapSummary shapExplanation, List<String> warnings) {
+            this(status, available, reason, modelVersion, modelRun, predictedAskingPriceVnd,
+                    askingVsEstimatePct, priceBasis, featuresUsed, missingFeatures,
+                    shapExplanation, warnings, null);
+        }
+    }
 
     public record ComparableItem(
         String candidateId,

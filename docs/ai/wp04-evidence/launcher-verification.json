@@ -1,0 +1,33 @@
+{
+    "status":  "PUBLISHED_LAUNCHER_SEPARATELY_VERIFIED",
+    "launcher_git_blob":  "21ea10eee9e5f92f3e57a1132fa01365d3cd0636",
+    "migration_helper_git_blob":  "75e1d39f889d0dffa8e2b232c9a77b3091d69726",
+    "validation":  "Fresh disposable MySQL, Spring Boot, FastAPI and Vite on Windows",
+    "verified_v1_3_artifacts":  4,
+    "standard_sql_versions":  23,
+    "reactive_authorization":  {
+                                   "passed":  3,
+                                   "exit":  0
+                               },
+    "failure_isolation":  {
+                              "passed":  11,
+                              "exit":  0,
+                              "real_process_outage_recovery":  true
+                          },
+    "mocked_surfaces":  {
+                            "passed":  30,
+                            "failed":  0,
+                            "notRun":  0,
+                            "exit":  0
+                        },
+    "preflight":  {
+                      "busy_port_rejected":  true,
+                      "missing_artifacts_rejected":  true,
+                      "active_fixture_preserved":  true
+                  },
+    "cleanup":  {
+                    "exit":  0,
+                    "remaining_fixture_listeners":  0,
+                    "mentor_original_pids_preserved":  5
+                }
+}

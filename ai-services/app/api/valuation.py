@@ -181,6 +181,7 @@ def predict(payload: ValuationRequest, request: Request, background_tasks: Backg
         "features_used": response["features_used"],
         "missing_features": response.get("missing_features", []),
         "warnings": list(response.get("warnings", [])) + street_warnings(payload.street_name),
+        "explanation": response.get("explanation"),
         "shap_explanation": response.get("shap_explanation"),
         "valuation_timestamp": datetime.now(timezone.utc).isoformat(),
         "disclaimer": "Giá rao ước tính từ mô hình V1.3 (Multi-Source Zenodo + TiniX).",
@@ -218,6 +219,7 @@ def predict_v1_3_preview(payload: ValuationRequest, request: Request):
         "features_used": raw_res["features_used"],
         "missing_features": raw_res.get("missing_features", []),
         "warnings": list(raw_res.get("warnings", [])) + street_warnings(payload.street_name),
+        "explanation": raw_res.get("explanation"),
         "shap_explanation": raw_res.get("shap_explanation"),
         "valuation_timestamp": datetime.now(timezone.utc).isoformat(),
         "disclaimer": "Mô hình thử nghiệm nghiên cứu V1.3 (Multi-Source Zenodo + TiniX). Không sử dụng làm định giá giao dịch chính thức."
