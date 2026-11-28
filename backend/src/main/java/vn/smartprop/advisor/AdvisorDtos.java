@@ -124,8 +124,21 @@ public final class AdvisorDtos {
         Map<String, String> scoreBreakdown,
         String listingUrl,
         String datasetLicense,
-        String attribution
-    ) {}
+        String attribution,
+        Double featureCoverage
+    ) {
+        public ComparableItem(String candidateId, String sourceKind, String sourceLabel,
+                              boolean liveListing, boolean researchReference, String verificationStatus,
+                              String propertyType, String district, String ward, BigDecimal areaSqm,
+                              BigDecimal askingPriceVnd, BigDecimal priceDifferencePct, Integer bedrooms,
+                              Integer floors, BigDecimal frontageM, double similarityScore, String scoreType,
+                              Map<String, String> scoreBreakdown, String listingUrl, String datasetLicense,
+                              String attribution) {
+            this(candidateId, sourceKind, sourceLabel, liveListing, researchReference, verificationStatus,
+                propertyType, district, ward, areaSqm, askingPriceVnd, priceDifferencePct, bedrooms, floors,
+                frontageM, similarityScore, scoreType, scoreBreakdown, listingUrl, datasetLicense, attribution, null);
+        }
+    }
 
     public record ComparableEvidence(
         String status,

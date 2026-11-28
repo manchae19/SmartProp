@@ -1,7 +1,8 @@
-import React, { useState, useSyncExternalStore } from 'react'
-import { errorText, session } from '../auth/api.js'
+import React, { useState } from 'react'
+import { errorText } from '../auth/api.js'
 import ComparableListingsCard from './ComparableListingsCard.jsx'
-import { COMPARABLE_DISTRICTS, buildComparableBody, isForbidden, loadComparables } from './comparables.js'
+import { COMPARABLE_DISTRICTS, buildComparableBody, loadComparables } from './comparables.js'
+import { useComparableRequest } from './useComparableRequest.js'
 import './ComparablesView.css'
 
 const TYPES = [
@@ -19,38 +20,16 @@ const EMPTY_FORM = { purpose: 'SIMILAR_LISTING', propertyType: 'Nhà ở', distr
  */
 export default function ComparablesView() {
   const [form, setForm] = useState(EMPTY_FORM)
-  const [result, setResult] = useState(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
-  const [forbidden, setForbidden] = useState(false)
-  const current = useSyncExternalStore(session.subscribe, session.getSnapshot)
-  const formKey = JSON.stringify(form)
+  const { state, run } = useComparableRequest(JSON.stringify(form))
+  const busy = Boolean(state?.loading)
+  const failure = state?.failure
+  const error = failure && (failure.status ? errorText(failure) : failure.message || 'Không thể tìm tin tương đồng.')
 
   const patch = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
-  async function submit(event) {
+  function submit(event) {
     event?.preventDefault()
-    // Anonymous callers get a clear notice instead of letting the global 401
-    // handler bounce them to /login; the server gate is unchanged (BROKER/ADMIN).
-    if (!current.token || !['BROKER', 'ADMIN'].includes(current.user?.role)) {
-      setResult(null)
-      setError('')
-      setForbidden(true)
-      return
-    }
-    setBusy(true)
-    setError('')
-    setForbidden(false)
-    try {
-      const body = buildComparableBody(form)
-      setResult({ token: current.token, formKey, data: await loadComparables(body) })
-    } catch (failure) {
-      setResult(null)
-      if (isForbidden(failure)) setForbidden(true)
-      else setError(failure?.status ? errorText(failure) : failure?.message || 'Không thể tìm tin tương đồng.')
-    } finally {
-      setBusy(false)
-    }
+    return run(() => loadComparables(buildComparableBody(form)))
   }
 
   return (
@@ -102,8 +81,8 @@ export default function ComparablesView() {
         <ComparableListingsCard
           loading={busy}
           error={error}
-          forbidden={forbidden}
-          result={current.token && current.token === result?.token && formKey === result.formKey ? result.data : null}
+          forbidden={state?.forbidden}
+          result={state?.result}
           onRetry={submit}
         />
       </div>

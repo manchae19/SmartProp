@@ -473,7 +473,8 @@ public class AdvisorOrchestrationService {
                 c.scoreBreakdown(),
                 url,
                 c.datasetLicense(),
-                c.attribution()
+                c.attribution(),
+                c.featureCoverage()
             ));
         }
 

@@ -31,3 +31,7 @@ The additive evidence object reports:
 - limitations explain scan bounds and how to interpret the asking-price evidence.
 
 Unified Advisor exposes comparableEvidence for SIMILAR_LISTING and valuationComparableEvidence for independent VALUATION_SUPPORT when requested and a valuation is available. Each can carry the additive cohort object above. The valuation-support cohort is always SAFE. The response and calculation of V1.3, including its explanation contract, stay independent of both comparable results.
+
+Both Advisor evidence lists also expose the nullable `featureCoverage` from the source Candidate. Null or absent coverage indicates that the source supplied no value. `similarityScore` retains its existing value and meaning. The UI presents these two measures independently.
+
+The direct Comparable form and embedded lookup require the current frontend session to be authenticated with role BROKER or ADMIN. A change in session status, token, actor, role or search criteria clears previous results and invalidates requests issued for the previous scope. Restored access requires a new query. Server-side authorization continues to apply to each request.
