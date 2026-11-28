@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-28T06:17:28.112Z",
+  "total": 7,
+  "passed": 5,
+  "failed": 2,
+  "results": [
+    {
+      "name": "standalone route renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "standalone renders the explanation panel",
+      "ok": false,
+      "detail": "1"
+    },
+    {
+      "name": "advisor route renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "advisor surface requires an authenticated session",
+      "ok": true,
+      "detail": "AUTH_REQUIRED"
+    },
+    {
+      "name": "advisor evidence renders the explanation panel",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "posting route loads",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "posting surface keeps a price region",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

@@ -156,6 +156,7 @@ function provenanceSummary(view) {
 
 /** All 22 production features with their Vietnamese label and provenance state. */
 function provenanceRows(provenance) {
+  if (!provenance || provenance.length === 0) return null;
   return h(
     "ul",
     { "data-testid": "explanation-provenance", className: "mt-2 min-w-0 space-y-1 text-[11px]" },
@@ -163,13 +164,19 @@ function provenanceRows(provenance) {
       h(
         "li",
         {
-          key: item.feature,
+          key: item.featureName,
           "data-provenance": item.state,
-          className: "flex min-w-0 flex-wrap items-baseline gap-x-1.5",
+          "data-feature": item.featureName,
+          className: "min-w-0",
         },
-        h("span", { className: "min-w-0 break-words" }, item.label),
-        h("span", { className: "shrink-0 text-brand-navy/60" }, `— ${item.state}`),
-        item.note ? h("span", { className: "min-w-0 break-words text-brand-navy/55" }, item.note) : null,
+        h(
+          "p",
+          { className: "min-w-0 break-words" },
+          h("span", { className: "font-medium" }, item.featureLabel),
+          " — ",
+          h("span", { className: "text-brand-navy/75" }, item.stateLabel),
+        ),
+        h("p", { className: "min-w-0 break-words text-[10px] text-brand-navy/55" }, item.note),
       ),
     ),
   );
@@ -212,6 +219,7 @@ function waterfallSvg(view) {
       preserveAspectRatio: "none",
       style: WATERFALL_STYLE,
     },
+    h("title", null, "Cột cuối là margin dự đoán; tổng tái lập khớp trong dung sai backend."),
     rows.map((row, index) => {
       const y = index * (rowH + gap) + 2;
       const x1 = x(Math.min(row.from, row.to));
@@ -312,8 +320,12 @@ function calibrationBridge(view) {
       "data-testid": "explanation-calibration",
       className: "mt-3 grid min-w-0 grid-cols-1 gap-1 text-[11px] sm:grid-cols-2",
     },
+    h("dt", { className: "text-brand-navy/60" }, "Giá cơ sở của mô hình"),
+    h("dd", { className: "min-w-0 break-words tabular-nums" }, formatVnd(view.basePriceVnd)),
     h("dt", { className: "text-brand-navy/60" }, "Giá trước hiệu chỉnh"),
     h("dd", { className: "min-w-0 break-words tabular-nums" }, formatVnd(view.naivePriceVnd)),
+    h("dt", { className: "text-brand-navy/60" }, "Giá trước hiệu chỉnh (chi tiết)"),
+    h("dd", { className: "min-w-0 break-words tabular-nums" }, `${view.naivePriceVnd ?? "—"}`),
     h("dt", { className: "text-brand-navy/60" }, "Chính sách hiệu chỉnh"),
     h("dd", { className: "min-w-0 break-words" }, view.calibration.policy || "—"),
     h("dt", { className: "text-brand-navy/60" }, "Hệ số hiệu chỉnh"),
@@ -433,6 +445,17 @@ export function ValuationExplanationPanel({
       ? h(
           "div",
           { className: "min-w-0" },
+          view.priceConsistent === false
+            ? h(
+                "p",
+                {
+                  "data-testid": "explanation-price-mismatch",
+                  className: "mt-2 min-w-0 break-words text-[11px] text-amber-700",
+                },
+                "Giá trong phần giải thích không khớp với giá đang hiển thị; "
+                  + "hãy dùng giá của kết quả định giá hiện tại.",
+              )
+            : null,
           groupList(view.groups),
           provenanceSummary(view),
           limitationsList(view.limitations),

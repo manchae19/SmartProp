@@ -1,19 +1,25 @@
 /**
- * WP-04 B4 — explanation contract model.
+ * WP-04 B4/B5 — explanation contract model.
  *
  * Pure logic: validates the backend explanation object and turns it into a stable view model.
  * No React, no browser APIs, so it can be tested with `node --test` and reused by any panel.
  *
  * Rules enforced here:
- *  - Unknown version / status / output space is never silently upgraded to AVAILABLE.
+ *  - Unknown version / method / target / output space is never silently upgraded to AVAILABLE.
+ *  - ABSENT and INVALID are frontend-internal states and are never accepted from upstream.
  *  - Raw contributions are never replaced by the rounded display values.
  *  - Missing numbers are never turned into 0.
+ *  - Malformed group values are rejected, never silently dropped.
  *  - The waterfall must reconstruct the margin within the backend tolerance, or it is refused.
  */
 
 export const SUPPORTED_VERSIONS = ["1.0"];
+export const SUPPORTED_METHOD = "XGBOOST_NATIVE_TREESHAP";
+export const SUPPORTED_TARGET = "ASKING_PRICE_VND";
 export const SUPPORTED_OUTPUT_SPACE = "LOG1P_PRICE_VND";
 export const RECONSTRUCTION_TOLERANCE = 1e-5;
+export const GROUP_TOTAL_TOLERANCE = 1e-5;
+export const TOP_K = 6;
 
 export const STATUS = {
   ABSENT: "ABSENT",
@@ -23,6 +29,14 @@ export const STATUS = {
   NOT_SUPPORTED: "NOT_SUPPORTED",
   INVALID: "INVALID",
 };
+
+/** Statuses the backend is allowed to send. ABSENT/INVALID are frontend-only. */
+export const UPSTREAM_STATUSES = [
+  STATUS.AVAILABLE,
+  STATUS.PARTIAL,
+  STATUS.UNAVAILABLE,
+  STATUS.NOT_SUPPORTED,
+];
 
 export const GROUP_LABELS = {
   LOCATION: "Vị trí",
@@ -35,11 +49,61 @@ export const GROUP_LABELS = {
   OTHER: "Thuộc tính liên quan",
 };
 
+/** Mirrors ai-services explanation_v1_3.FEATURE_GROUPS — production feature -> group. */
+export const FEATURE_GROUPS = {
+  area: "AREA",
+  frontage_sqrt_area_ratio: "AREA",
+  floor_count: "STRUCTURE",
+  bedroom_count: "STRUCTURE",
+  bathroom_count: "STRUCTURE",
+  has_floor: "STRUCTURE",
+  has_bedroom: "STRUCTURE",
+  has_bathroom: "STRUCTURE",
+  frontage_width: "ACCESS",
+  road_width: "ACCESS",
+  has_frontage: "ACCESS",
+  has_road_width: "ACCESS",
+  has_project: "PROJECT",
+  raw_project_name: "PROJECT",
+  has_street: "LOCATION",
+  has_ward: "LOCATION",
+  district: "LOCATION",
+  ward: "LOCATION",
+  raw_street_name: "LOCATION",
+  normalized_type: "PROPERTY_TYPE",
+  raw_house_direction: "DIRECTION",
+  raw_balcony_direction: "DIRECTION",
+};
+
+export const FEATURE_LABELS = {
+  area: "Diện tích",
+  floor_count: "Số tầng",
+  frontage_width: "Chiều rộng mặt tiền",
+  road_width: "Chiều rộng đường",
+  bedroom_count: "Số phòng ngủ",
+  bathroom_count: "Số phòng tắm",
+  has_floor: "Cờ có số tầng",
+  has_frontage: "Cờ có mặt tiền",
+  has_road_width: "Cờ có chiều rộng đường",
+  has_bedroom: "Cờ có phòng ngủ",
+  has_bathroom: "Cờ có phòng tắm",
+  has_project: "Cờ có dự án",
+  has_street: "Cờ có tuyến đường",
+  has_ward: "Cờ có phường/xã",
+  frontage_sqrt_area_ratio: "Tỉ lệ mặt tiền trên căn bậc hai diện tích",
+  normalized_type: "Loại bất động sản",
+  district: "Quận/Huyện",
+  ward: "Phường/Xã",
+  raw_street_name: "Tuyến đường",
+  raw_project_name: "Dự án",
+  raw_house_direction: "Hướng nhà",
+  raw_balcony_direction: "Hướng ban công",
+};
+
+export const EXPECTED_FEATURES = Object.keys(FEATURE_LABELS);
+
 export const PROVENANCE_LABELS = {
-  OBSERVED: {
-    label: "Bạn đã cung cấp",
-    note: "Thông tin do người dùng nhập.",
-  },
+  OBSERVED: { label: "Bạn đã cung cấp", note: "Thông tin do người dùng nhập." },
   DERIVED: {
     label: "Hệ thống tính ra",
     note: "Đặc điểm được tính từ dữ liệu đầu vào, không phải thông tin xác minh trực tiếp.",
@@ -70,33 +134,36 @@ export const PROVENANCE_LABELS = {
   },
 };
 
-export const FEATURE_LABELS = {
-  area: "Diện tích",
-  floor_count: "Số tầng",
-  frontage_width: "Chiều rộng mặt tiền",
-  road_width: "Chiều rộng đường",
-  bedroom_count: "Số phòng ngủ",
-  bathroom_count: "Số phòng tắm",
-  has_floor: "Cờ có số tầng",
-  has_frontage: "Cờ có mặt tiền",
-  has_road_width: "Cờ có chiều rộng đường",
-  has_bedroom: "Cờ có phòng ngủ",
-  has_bathroom: "Cờ có phòng tắm",
-  has_project: "Cờ có dự án",
-  has_street: "Cờ có tuyến đường",
-  has_ward: "Cờ có phường/xã",
-  frontage_sqrt_area_ratio: "Tỉ lệ mặt tiền trên căn bậc hai diện tích",
-  normalized_type: "Loại bất động sản",
-  district: "Quận/Huyện",
-  ward: "Phường/Xã",
-  raw_street_name: "Tuyến đường",
-  raw_project_name: "Dự án",
-  raw_house_direction: "Hướng nhà",
-  raw_balcony_direction: "Hướng ban công",
-};
+export const FLAGGED_STATES = [
+  "MISSING",
+  "MISSING_INVALID",
+  "UNKNOWN_CATEGORY",
+  "NOT_APPLICABLE",
+  "DEFAULTED",
+  "UNVERIFIED",
+];
 
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
+const isText = (value) => typeof value === "string";
+const isPositiveFinite = (value) => isFiniteNumber(value) && value > 0;
+const isNonNegativeFinite = (value) => isFiniteNumber(value) && value >= 0;
+
+/**
+ * Accept the price shapes the two backends really produce: FastAPI sends a JSON number, Spring
+ * Boot serialises BigInteger as a numeric string. Anything else (null, "", NaN, Infinity,
+ * negative) is rejected instead of being coerced to 0.
+ */
+export function normalizeVnd(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  }
+  return null;
+}
 
 export function formatVnd(value) {
   if (!isFiniteNumber(value)) return "—";
@@ -132,11 +199,144 @@ function invalid(reason) {
   return { status: STATUS.INVALID, reason, view: null };
 }
 
+function textList(value) {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) return null;
+  if (!value.every(isText)) return null;
+  return value;
+}
+
+function provenanceEntries(raw) {
+  const map = raw.feature_provenance;
+  if (!isObject(map)) return null;
+  const keys = Object.keys(map);
+  if (keys.length !== EXPECTED_FEATURES.length) return null;
+  for (const feature of EXPECTED_FEATURES) {
+    if (!Object.prototype.hasOwnProperty.call(map, feature)) return null;
+  }
+  if (keys.some((key) => !EXPECTED_FEATURES.includes(key))) return null;
+  if (keys.some((key) => !Object.prototype.hasOwnProperty.call(PROVENANCE_LABELS, map[key]))) {
+    return null;
+  }
+  return keys.map((feature) => ({
+    // feature identity and provenance state stay in separate fields on purpose: the previous
+    // version spread the state labels over the feature label and lost the feature identity.
+    featureName: feature,
+    featureLabel: FEATURE_LABELS[feature],
+    state: map[feature],
+    stateLabel: PROVENANCE_LABELS[map[feature]].label,
+    note: PROVENANCE_LABELS[map[feature]].note,
+  }));
+}
+
+function validateGroups(raw, topSum) {
+  const groups = raw.grouped_contributions;
+  const keys = Object.keys(groups);
+  if (keys.length === 0) return { ok: false, reason: "Thiếu tổng hợp theo nhóm." };
+  for (const key of keys) {
+    if (!Object.prototype.hasOwnProperty.call(GROUP_LABELS, key)) {
+      return { ok: false, reason: `Nhóm không xác định: ${key}.` };
+    }
+    if (!isFiniteNumber(groups[key])) {
+      return { ok: false, reason: `Giá trị nhóm "${key}" không hợp lệ.` };
+    }
+  }
+  const groupedSum = keys.reduce((total, key) => total + groups[key], 0);
+  const expected = topSum + raw.other_contribution_log;
+  const tolerance = GROUP_TOTAL_TOLERANCE * Math.max(1, Math.abs(expected));
+  if (Math.abs(groupedSum - expected) > tolerance) {
+    return { ok: false, reason: "Tổng theo nhóm không khớp với các đóng góp." };
+  }
+  return { ok: true, groupedSum };
+}
+
+function validateFactors(raw, provenanceByName) {
+  const factors = raw.factors;
+  if (!Array.isArray(factors) || factors.length === 0) {
+    return { ok: false, reason: "Danh sách yếu tố ảnh hưởng trống." };
+  }
+  if (factors.length > TOP_K) {
+    return { ok: false, reason: `Danh sách yếu tố vượt quá ${TOP_K}.` };
+  }
+
+  const seen = new Set();
+  const out = [];
+  for (const factor of factors) {
+    if (!isObject(factor)) return { ok: false, reason: "Yếu tố ảnh hưởng không đúng định dạng." };
+    const name = factor.feature_name;
+    if (!isText(name) || !Object.prototype.hasOwnProperty.call(FEATURE_LABELS, name)) {
+      return { ok: false, reason: `Tên đặc trưng không xác định: ${String(name)}.` };
+    }
+    if (seen.has(name)) return { ok: false, reason: `Đặc trưng bị lặp: ${name}.` };
+    seen.add(name);
+
+    if (!isFiniteNumber(factor.contribution_log_raw)) {
+      return { ok: false, reason: `Đóng góp của "${name}" không phải số hợp lệ.` };
+    }
+    const display = factor.contribution_log_display === undefined
+      ? factor.contribution_log_raw
+      : factor.contribution_log_display;
+    if (!isFiniteNumber(display)) {
+      return { ok: false, reason: `Giá trị hiển thị của "${name}" không hợp lệ.` };
+    }
+    if (factor.multiplicative_factor !== undefined
+        && !isPositiveFinite(factor.multiplicative_factor)) {
+      return { ok: false, reason: `Hệ số nhân của "${name}" không hợp lệ.` };
+    }
+    const expectedDirection = directionOf(factor.contribution_log_raw);
+    if (factor.direction !== undefined) {
+      const expected = expectedDirection === "increase" ? "INCREASE"
+        : expectedDirection === "decrease" ? "DECREASE" : "NEUTRAL";
+      if (factor.direction !== expected) {
+        return { ok: false, reason: `Hướng đóng góp của "${name}" không khớp dấu.` };
+      }
+    }
+    const expectedGroup = FEATURE_GROUPS[name];
+    if (factor.group !== undefined && factor.group !== expectedGroup) {
+      return { ok: false, reason: `Nhóm của "${name}" không khớp lược đồ.` };
+    }
+    const state = factor.input_state;
+    if (!isText(state) || !Object.prototype.hasOwnProperty.call(PROVENANCE_LABELS, state)) {
+      return { ok: false, reason: `Nguồn gốc của "${name}" không hợp lệ.` };
+    }
+    const provenanceState = provenanceByName.get(name);
+    if (!provenanceState) {
+      return { ok: false, reason: `Thiếu nguồn gốc cho "${name}".` };
+    }
+    if (provenanceState !== state) {
+      return { ok: false, reason: `Nguồn gốc của "${name}" không nhất quán.` };
+    }
+    for (const field of ["label_vi", "context_note_vi"]) {
+      if (factor[field] !== undefined && !isText(factor[field])) {
+        return { ok: false, reason: `Trường ${field} của "${name}" không phải văn bản.` };
+      }
+    }
+
+    out.push({
+      featureName: name,
+      featureLabel: FEATURE_LABELS[name],
+      label: isText(factor.label_vi) && factor.label_vi ? factor.label_vi : FEATURE_LABELS[name],
+      raw: factor.contribution_log_raw,
+      display,
+      multiplicative: isFiniteNumber(factor.multiplicative_factor)
+        ? factor.multiplicative_factor : null,
+      direction: expectedDirection,
+      directionLabel: directionLabel(factor.contribution_log_raw),
+      group: expectedGroup,
+      groupLabel: GROUP_LABELS[expectedGroup],
+      inputState: state,
+      provenance: PROVENANCE_LABELS[state],
+      note: isText(factor.context_note_vi) ? factor.context_note_vi : "",
+    });
+  }
+  return { ok: true, factors: out };
+}
+
 /**
  * Validate a raw explanation object.
  * Returns { status, reason?, view? } where view is ready for rendering.
  */
-export function validateExplanation(raw) {
+export function validateExplanation(raw, options = {}) {
   if (raw === null || raw === undefined) {
     return {
       status: STATUS.ABSENT,
@@ -144,29 +344,43 @@ export function validateExplanation(raw) {
       view: null,
     };
   }
-  if (typeof raw !== "object" || Array.isArray(raw)) {
-    return { status: STATUS.INVALID, reason: "Dữ liệu giải thích không đúng định dạng." };
+  if (!isObject(raw)) {
+    return invalid("Dữ liệu giải thích không đúng định dạng.");
   }
 
-  const version = raw.explanation_version;
-  if (typeof version !== "string" || !SUPPORTED_VERSIONS.includes(version)) {
-    return invalid(`Phiên bản giải thích không được hỗ trợ (${String(version)}).`);
+  if (!isText(raw.explanation_version) || !SUPPORTED_VERSIONS.includes(raw.explanation_version)) {
+    return invalid(`Phiên bản giải thích không được hỗ trợ (${String(raw.explanation_version)}).`);
+  }
+  if (!UPSTREAM_STATUSES.includes(raw.status)) {
+    return invalid(`Trạng thái giải thích không hợp lệ (${String(raw.status)}).`);
   }
 
-  const status = raw.status;
-  if (!Object.values(STATUS).includes(status) || status === STATUS.INVALID) {
-    return invalid(`Trạng thái giải thích không hợp lệ (${String(status)}).`);
-  }
+  const limitations = textList(raw.limitations);
+  if (limitations === null) return invalid("Danh sách hạn chế không hợp lệ.");
 
-  if (status === STATUS.UNAVAILABLE || status === STATUS.NOT_SUPPORTED) {
-    const limitations = Array.isArray(raw.limitations) ? raw.limitations : [];
+  if (raw.status === STATUS.UNAVAILABLE || raw.status === STATUS.NOT_SUPPORTED) {
     return {
-      status,
+      status: raw.status,
       reason: limitations[0] || "Mô hình không cung cấp được giải thích cho lần định giá này.",
-      view: { status, limitations, points: [], groups: [], factors: [], provenance: [] },
+      view: {
+        status: raw.status,
+        limitations,
+        points: [],
+        groups: [],
+        factors: [],
+        provenance: [],
+        priceConsistent: true,
+      },
     };
   }
 
+  // ---- shared header validation for AVAILABLE and PARTIAL
+  if (raw.method !== SUPPORTED_METHOD) {
+    return invalid(`Phương pháp giải thích không được hỗ trợ (${String(raw.method)}).`);
+  }
+  if (raw.target !== SUPPORTED_TARGET) {
+    return invalid(`Mục tiêu giải thích không được hỗ trợ (${String(raw.target)}).`);
+  }
   if (raw.output_space !== SUPPORTED_OUTPUT_SPACE) {
     return invalid(`Không gian đầu ra không được hỗ trợ (${String(raw.output_space)}).`);
   }
@@ -177,94 +391,89 @@ export function validateExplanation(raw) {
     return invalid("Thiếu base value hợp lệ.");
   }
 
-  if (status === STATUS.PARTIAL) {
+  if (raw.status === STATUS.PARTIAL) {
+    const provenance = provenanceEntries(raw);
     return {
-      status,
-      reason: "Chỉ có một phần giải thích cho lần định giá này.",
+      status: STATUS.PARTIAL,
+      reason: "Chỉ một phần giải thích cho lần định giá này.",
       view: {
-        status,
-        limitations: Array.isArray(raw.limitations) ? raw.limitations : [],
+        status: STATUS.PARTIAL,
+        limitations,
         points: [],
         groups: [],
         factors: [],
-        provenance: [],
+        provenance: provenance || [],
         margin: raw.predicted_margin_log,
         base: raw.base_value_log,
+        priceConsistent: true,
       },
     };
   }
 
   // ---- AVAILABLE: everything below is required
-  if (!isObject(raw.calibration)) return invalid("Thiếu thông tin hiệu chỉnh giá.");
-  if (!isFiniteNumber(raw.calibration.factor) || raw.calibration.factor <= 0) {
+  const calibration = raw.calibration;
+  if (!isObject(calibration)) return invalid("Thiếu thông tin hiệu chỉnh giá.");
+  if (!isPositiveFinite(calibration.factor)) {
     return invalid("Hệ số hiệu chỉnh không hợp lệ.");
+  }
+  if (!isText(calibration.policy) || !calibration.policy.trim()) {
+    return invalid("Chính sách hiệu chỉnh không hợp lệ.");
+  }
+  if (calibration.adjusted_price_vnd !== undefined
+      && !isNonNegativeFinite(calibration.adjusted_price_vnd)) {
+    return invalid("Giá sau hiệu chỉnh không hợp lệ.");
+  }
+  for (const [key, value] of [["base_price_vnd", raw.base_price_vnd],
+    ["naive_price_vnd", raw.naive_price_vnd]]) {
+    if (value !== undefined && !isNonNegativeFinite(value)) {
+      return invalid(`Giá trị ${key} không hợp lệ.`);
+    }
   }
   if (!isFiniteNumber(raw.other_contribution_log)) {
     return invalid("Thiếu đóng góp của các yếu tố còn lại.");
   }
   if (!isObject(raw.grouped_contributions)) return invalid("Thiếu tổng hợp theo nhóm.");
-  if (!isObject(raw.feature_provenance)) return invalid("Thiếu nguồn gốc đặc trưng.");
-  if (!Array.isArray(raw.factors) || raw.factors.length === 0) {
-    return invalid("Danh sách yếu tố ảnh hưởng trống.");
-  }
 
-  const factors = [];
-  for (const factor of raw.factors) {
-    if (!isObject(factor) || typeof factor.feature_name !== "string") {
-      return invalid("Một yếu tố ảnh hưởng có cấu trúc không hợp lệ.");
-    }
-    if (!isFiniteNumber(factor.contribution_log_raw)) {
-      return invalid(`Đóng góp của "${factor.feature_name}" không phải số hợp lệ.`);
-    }
-    factors.push({
-      featureName: factor.feature_name,
-      label: factor.label_vi || factor.feature_name,
-      // raw value is authoritative; the display value is presentation only
-      raw: factor.contribution_log_raw,
-      display: isFiniteNumber(factor.contribution_log_display)
-        ? factor.contribution_log_display
-        : factor.contribution_log_raw,
-      direction: directionOf(factor.contribution_log_raw),
-      directionLabel: directionLabel(factor.contribution_log_raw),
-      group: factor.group || "OTHER",
-      groupLabel: GROUP_LABELS[factor.group] || GROUP_LABELS.OTHER,
-      inputState: factor.input_state || "UNVERIFIED",
-      provenance:
-        PROVENANCE_LABELS[factor.input_state] || PROVENANCE_LABELS.UNVERIFIED,
-      note: factor.context_note_vi || "",
-    });
+  const provenance = provenanceEntries(raw);
+  if (!provenance) {
+    return invalid("Nguồn gốc đặc trưng không đầy đủ hoặc không hợp lệ.");
   }
+  const provenanceByName = new Map(provenance.map((item) => [item.featureName, item.state]));
 
-  const sumFactors = factors.reduce((total, factor) => total + factor.raw, 0);
-  const reconstructed = raw.base_value_log + sumFactors + raw.other_contribution_log;
+  const factorResult = validateFactors(raw, provenanceByName);
+  if (!factorResult.ok) return invalid(factorResult.reason);
+  const factors = factorResult.factors;
+
+  const topSum = factors.reduce((total, factor) => total + factor.raw, 0);
+  if (!Number.isFinite(topSum)) return invalid("Tổng đóng góp không hữu hạn.");
+
+  const groupResult = validateGroups(raw, topSum);
+  if (!groupResult.ok) return invalid(groupResult.reason);
+
+  const reconstructed = raw.base_value_log + topSum + raw.other_contribution_log;
+  if (!Number.isFinite(reconstructed)) return invalid("Không thể tính lại kết quả.");
   const tolerance = RECONSTRUCTION_TOLERANCE * Math.max(1, Math.abs(raw.predicted_margin_log));
   if (Math.abs(raw.predicted_margin_log - reconstructed) > tolerance) {
     return invalid("Không thể kiểm chứng lại kết quả từ các đóng góp.");
   }
 
+  // optional consistency check against the authoritative prediction being displayed
+  const priceVnd = options.priceVnd;
+  const adjusted = calibration.adjusted_price_vnd;
+  const priceConsistent = !(isFiniteNumber(priceVnd) && isNonNegativeFinite(adjusted)
+    && Math.abs(priceVnd - adjusted) > Math.max(1, Math.abs(priceVnd) * 1e-6));
+
   const groups = Object.entries(raw.grouped_contributions)
-    .filter(([, value]) => isFiniteNumber(value))
     .map(([name, value]) => ({
       name,
-      label: GROUP_LABELS[name] || GROUP_LABELS.OTHER,
+      label: GROUP_LABELS[name],
       value,
       direction: directionOf(value),
       directionLabel: directionLabel(value),
     }))
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
-  const provenance = Object.entries(raw.feature_provenance).map(([feature, state]) => ({
-    feature,
-    label: FEATURE_LABELS[feature] || feature,
-    state,
-    ...(PROVENANCE_LABELS[state] || PROVENANCE_LABELS.UNVERIFIED),
-  }));
-
-  const flagged = provenance.filter((item) =>
-    ["MISSING", "MISSING_INVALID", "UNKNOWN_CATEGORY", "NOT_APPLICABLE", "DEFAULTED"].includes(
-      item.state,
-    ),
-  );
+  const flagged = provenance.filter((item) => FLAGGED_STATES.includes(item.state));
 
   return {
     status: STATUS.AVAILABLE,
@@ -279,27 +488,28 @@ export function validateExplanation(raw) {
       basePriceVnd: raw.base_price_vnd,
       naivePriceVnd: raw.naive_price_vnd,
       calibration: {
-        policy: raw.calibration.policy,
-        factor: raw.calibration.factor,
-        adjustedPriceVnd: raw.calibration.adjusted_price_vnd,
+        policy: calibration.policy,
+        factor: calibration.factor,
+        adjustedPriceVnd: adjusted,
       },
       factors,
       groups,
       other: raw.other_contribution_log,
       provenance,
       flagged,
-      limitations: Array.isArray(raw.limitations) ? raw.limitations : [],
-      // waterfall keeps signed log-space contributions; VND is never mixed into this axis
+      limitations,
+      priceConsistent,
       waterfall: {
         base: raw.base_value_log,
         steps: factors.map((factor) => ({
           name: factor.featureName,
-          label: factor.label,
+          label: factor.featureLabel,
           value: factor.raw,
         })),
         other: raw.other_contribution_log,
         total: reconstructed,
         margin: raw.predicted_margin_log,
+        residual: Math.abs(raw.predicted_margin_log - reconstructed),
       },
     },
   };

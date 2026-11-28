@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { visibleAdvisorComparables } from './advisorAnalysis.js'
 import ComparableListingsCard from '../property/ComparableListingsCard.jsx'
+import ValuationExplanationPanel from './ValuationExplanationPanel.js'
+import { normalizeVnd } from './explanationModel.js'
 
 const money = (value) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(Number(value) || 0)
@@ -37,7 +39,16 @@ export default function AdvisorEvidencePanel({ valuation, comparable, valuationC
             <span className="ev-model-tag">Model {valuation.modelVersion}</span>
           </div>
           <p className="ev-price" title={exactMoney(valuation.predictedAskingPriceVnd)}>{money(valuation.predictedAskingPriceVnd)}</p>
-          {shap ? (
+          {valuation.explanation ? (
+            <ValuationExplanationPanel
+              explanation={valuation.explanation}
+              predictedPriceVnd={normalizeVnd(valuation.predictedAskingPriceVnd)}
+              modelVersion={valuation.modelVersion}
+              surface="advisor"
+              className="mt-3"
+            />
+          ) : null}
+          {shap && !valuation.explanation ? (
             <button type="button" className="ev-toggle" data-shap-toggle aria-expanded={openShap} onClick={() => setOpenShap((v) => !v)}>
               {openShap ? 'Ẩn giải thích SHAP' : 'Giải thích TreeSHAP'}
             </button>

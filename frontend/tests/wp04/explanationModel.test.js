@@ -47,10 +47,14 @@ test("positive and negative contributions keep their signed direction", () => {
 test("zero contribution is neutral, not an increase", () => {
   const payload = house();
   const removed = payload.factors[0].contribution_log_raw;
+  const group = payload.factors[0].group;
   payload.factors[0].contribution_log_raw = 0;
   payload.factors[0].contribution_log_display = 0;
-  // move the removed mass into "other" so the reconstruction stays valid
+  payload.factors[0].direction = "NEUTRAL";
+  payload.factors[0].multiplicative_factor = 1;
+  // "other" absorbs the removed mass, so group totals and additivity stay consistent
   payload.other_contribution_log += removed;
+  void group;
   const view = validateExplanation(payload).view;
   assert.ok(view, "a neutral factor must still validate");
   assert.equal(view.factors[0].direction, "neutral");
@@ -73,11 +77,21 @@ test("top-K plus other reconstructs the margin", () => {
 
 test("invalid reconstruction is refused instead of displayed", () => {
   const payload = house();
-  payload.other_contribution_log += 0.5; // breaks additivity
+  // shifting the margin alone leaves groups and contributions self-consistent, so this exercises
+  // the additivity check rather than the group-total check
+  payload.predicted_margin_log += 0.5;
   const result = validateExplanation(payload);
   assert.equal(result.status, STATUS.INVALID);
   assert.equal(result.view, null);
   assert.match(result.reason, /kiểm chứng/);
+});
+
+test("breaking the group totals is refused with the group rule", () => {
+  const payload = house();
+  payload.other_contribution_log += 0.5;
+  const result = validateExplanation(payload);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /Tổng theo nhóm/);
 });
 
 // ---------------------------------------------------------------- 10 groups
@@ -210,4 +224,102 @@ test("raw contribution is not overwritten by the display value", () => {
   const view = validateExplanation(payload).view;
   assert.equal(view.factors[0].raw, payload.factors[0].contribution_log_raw);
   assert.notEqual(view.factors[0].raw, 0.1234);
+});
+
+// ---------------------------------------------------------------- provenance identity
+test("all 22 provenance rows carry a feature label and a state label", () => {
+  const view = validateExplanation(house()).view;
+  assert.equal(view.provenance.length, 22);
+  const names = view.provenance.map((item) => item.featureName);
+  assert.equal(new Set(names).size, 22, "each feature appears exactly once");
+  for (const item of view.provenance) {
+    assert.ok(item.featureLabel, `missing feature label for ${item.featureName}`);
+    assert.ok(item.stateLabel, `missing state label for ${item.featureName}`);
+    assert.notEqual(item.featureLabel, item.stateLabel);
+  }
+  const area = view.provenance.find((item) => item.featureName === "area");
+  assert.equal(area.featureLabel, "Diện tích");
+  assert.equal(area.stateLabel, "Bạn đã cung cấp");
+});
+
+test("derived indicators read as system-computed, not as physical observations", () => {
+  const view = validateExplanation(house()).view;
+  const indicator = view.provenance.find((item) => item.featureName === "has_frontage");
+  assert.ok(indicator);
+  assert.equal(indicator.state, "DERIVED");
+  assert.match(indicator.stateLabel, /Hệ thống tính ra|Chưa cung cấp|Không áp dụng/);
+  assert.match(indicator.note, /không phải thông tin xác minh trực tiếp/);
+});
+
+test("UNVERIFIED appears in the flagged list and the summary", () => {
+  const payload = house();
+  payload.feature_provenance.ward = "UNVERIFIED";
+  const factor = payload.factors.find((item) => item.feature_name === "ward");
+  if (factor) factor.input_state = "UNVERIFIED";
+  const view = validateExplanation(payload).view;
+  assert.ok(view, "explanation should still validate");
+  assert.ok(view.flagged.some((item) => item.state === "UNVERIFIED"));
+  assert.ok(summarizeProvenance(view.provenance).UNVERIFIED >= 1);
+});
+
+test("missing provenance entries are rejected instead of invented", () => {
+  const payload = house();
+  delete payload.feature_provenance.ward;
+  const result = validateExplanation(payload);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /Nguồn gốc/);
+});
+
+test("unknown feature name and duplicated factor are rejected", () => {
+  const unknown = house();
+  unknown.factors[0].feature_name = "not_a_feature";
+  assert.equal(validateExplanation(unknown).status, STATUS.INVALID);
+
+  const duplicate = house();
+  duplicate.factors[1].feature_name = duplicate.factors[0].feature_name;
+  const result = validateExplanation(duplicate);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /lặp/);
+});
+
+test("wrong method, target or output space is rejected", () => {
+  for (const [field, value] of [["method", "SHAP_LINEAR"], ["target", "RENT_VND"],
+    ["output_space", "RAW_VND"]]) {
+    const payload = house();
+    payload[field] = value;
+    assert.equal(validateExplanation(payload).status, STATUS.INVALID, field);
+  }
+});
+
+test("internal statuses are never accepted from upstream", () => {
+  for (const status of ["ABSENT", "INVALID", ""]) {
+    const payload = house();
+    payload.status = status;
+    assert.equal(validateExplanation(payload).status, STATUS.INVALID, status);
+  }
+});
+
+test("malformed group values are rejected, not dropped", () => {
+  const payload = house();
+  payload.grouped_contributions.AREA = "n/a";
+  const result = validateExplanation(payload);
+  assert.equal(result.status, STATUS.INVALID);
+  assert.match(result.reason, /nhóm/);
+});
+
+test("unknown group key is rejected", () => {
+  const payload = house();
+  payload.grouped_contributions.MYSTERY = 1;
+  assert.equal(validateExplanation(payload).status, STATUS.INVALID);
+});
+
+test("calibration price mismatch is surfaced, not silently accepted", () => {
+  const payload = house();
+  const view = validateExplanation(payload, { priceVnd: 1 }).view;
+  assert.ok(view);
+  assert.equal(view.priceConsistent, false);
+  const ok = validateExplanation(payload, {
+    priceVnd: payload.calibration.adjusted_price_vnd,
+  }).view;
+  assert.equal(ok.priceConsistent, true);
 });
