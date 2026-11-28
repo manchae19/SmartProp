@@ -52,7 +52,36 @@ SUPPORTED_DISTRICTS = ["Hải Châu", "Sơn Trà", "Thanh Khê", "Cẩm Lệ", "
 _LISTING_LOCATION_STATE = (*NEARBY_PENDING, "listingAddressScope", "listingRentalBlocked",
                            "commuteDestination", "commuteStage", "commutePoints", "commutePendingAddress",
                            "commutePendingLimit", "commuteResumeSearch", "focusedPropertyId")
-from .tools import UpstreamError
+from .tools import UpstreamError, _public_text
+
+
+def _retire_buyer_and_land(state, *, clear_budget=False):
+    buyer = state.get("buyerSearch")
+    if isinstance(buyer, dict):
+        buyer.update(active=False, pending=None, pagingActive=False, visible=[], order=None, offset=0, seen=[], allowOverBudget=False, consentScope=None, pendingOverBudgetScope=None)
+        if clear_budget:
+            buyer.pop("maxPrice", None)
+            buyer.pop("minPrice", None)
+    land = state.get("land")
+    if isinstance(land, dict):
+        land.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
+        if clear_budget:
+            land.pop("band", None)
+            land.pop("priceTarget", None)
+    state.pop("listOwner", None)
+
+
+_BARE_TYPE_CHIPS = frozenset({
+    "dat o", "dat nong nghiep", "nha", "can ho", "tat ca",
+    "nha pho", "dat nen", "biet thu", "phong tro", "mat bang", "dat",
+})
+_BARE_LOCATION_CHIPS = frozenset({
+    "hoa xuan", "da nang", "toan da nang", "hai chau", "son tra",
+    "thanh khe", "cam le", "ngu hanh son", "lien chieu", "hoa vang",
+})
+_EXPLICIT_PURCHASE_RE = re.compile(
+    r"\b(?:tim|mua|goi y|xem dat|xem nha|xem tin|xem thua|danh sach thua|loc|tu van|toi co)\b"
+)
 
 
 def _listing_continuation(question, state):
@@ -61,6 +90,24 @@ def _listing_continuation(question, state):
     pending = state.get("pending")
     commute = commute_destination.stage_of(state)
     nearby_consent = bool(state.get("nearConsentPending") and state.get("pendingNearbyAddress"))
+    buyer_state = state.get("buyerSearch") if isinstance(state.get("buyerSearch"), dict) else {}
+    land_state = state.get("land") if isinstance(state.get("land"), dict) else {}
+    if value in ("xem ket qua khac", "tim lai theo bo loc"):
+        return None if (state.get("listOwner") == "BUYER" and buyer_state.get("pagingActive")) else False
+    if re.fullmatch(r"(?:xem them|tiep|con nua|con khong|con lo nao khac khong)", value):
+        active_buyer = state.get("listOwner") == "BUYER" and bool(buyer_state.get("pagingActive"))
+        active_land = state.get("listOwner") == "LAND" and bool(land_state.get("lastDomain"))
+        return None if (active_buyer or active_land) else False
+    if value in ("dat o", "dat nong nghiep") and buyer_state.get("pending") != "type" and pending != "property_type":
+        return False
+    if value == "hoa xuan" and buyer_state.get("pending") != "location" and pending != "location":
+        return False
+    if state.get("purchaseDeclined"):
+        if value in _BARE_TYPE_CHIPS or value in _BARE_LOCATION_CHIPS:
+            return False
+        if (not re.search(r"\b(?:tim|mua|thue|goi y|xem|loc|cap nhat|doi|gia|thi truong|so sanh|tu van)\b", value)
+                and parse_budget(question).status == "VALID"):
+            return False
     if value in FINISH_INTAKE_REPLIES or value == "giu tieu chi":
         return bool(pending)
     if value == "khong muon cung cap":
@@ -70,7 +117,7 @@ def _listing_continuation(question, state):
     if value in ("mua de o", "mua dau tu", "thue de o") and pending != "purpose":
         return False
     if value in ("bo qua", "huy"):
-        return bool(nearby_consent or state.get("nearbyPoints") or commute or pending)
+        return bool(nearby_consent or state.get("nearbyPoints") or commute or pending or buyer_state.get("pending"))
     if value == "dong y tim vi tri":
         return nearby_consent
     if value == "mo rong ban kinh":
@@ -102,6 +149,12 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         from .planning_chat import PlanningAdvisor
         settings=getattr(backend,"settings",None)
         self.planning_advisor=PlanningAdvisor(getattr(settings,"planning_snapshot_path",None),enabled=getattr(settings,"planning_enabled",False))
+        import os
+        from .land_chat import LandAdvisor
+        # Hòa Xuân land demo tool (isolated internal SYNTHETIC_DEMO mode only; never PUBLIC_APPROVED).
+        from app.land.paths import land_runtime_mode
+        mode = land_runtime_mode(demo_key=getattr(settings, "demo_key", None) or None)
+        self.land_advisor = LandAdvisor(settings, enabled=(mode == "SYNTHETIC_DEMO"))
 
     def _enrich(self, properties):
         """Attach real image + straight-line POI evidence to visible platform properties.
@@ -154,6 +207,23 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         `properties` is what the user sees; `result_properties` is the full verified
         result set of this turn, which is what the next turn must be able to reference.
         """
+        if extra and extra.get("buyerSearch") is not None:
+            context.needs["listOwner"] = "BUYER"
+        elif extra and extra.get("land") is not None:
+            context.needs["listOwner"] = "LAND"
+        elif responseKind not in ("OUT_OF_SCOPE",) and (
+                properties or response is not None or context.needs.get("turnIntent") in
+                ("PROPERTY_SEARCH", "REFINE_SEARCH", "AREA_AMENITIES", "MARKET_ANALYSIS", "MARKET_PRICE", "MARKET_TREND", "PLANNING_LOOKUP")):
+            context.needs["listOwner"] = "AMENITIES" if context.needs.get("turnIntent") == "AREA_AMENITIES" else "PROPERTY"
+            land_state = context.needs.get("land")
+            if isinstance(land_state, dict):
+                # Keep filters for an explicit future land search; retire references.
+                land_state.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
+            buyer_state = context.needs.get("buyerSearch")
+            if isinstance(buyer_state, dict):
+                buyer_state.update(pagingActive=False, pending=None, visible=[])
+                if context.needs.get("turnIntent") in ("PROPERTY_SEARCH", "REFINE_SEARCH"):
+                    buyer_state["active"] = False
         # Informational replies may have no search criteria. Only a deliberate
         # transaction switch may replace an established rental purpose.
         if context.purpose == "RENTAL":
@@ -166,7 +236,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 p.setdefault("qualityStatus","PLATFORM_PUBLISHED");p.setdefault("verificationStatus","PLATFORM_PUBLISHED")
                 p.setdefault("score",0);p.setdefault("explanations",[]);p.setdefault("warnings",[])
                 p["matchBasis"]="ADDRESS"
-            citations=[Citation(sourceId="property:"+p["source"]["recordKey"],url="/api/v1/properties/"+p["source"]["recordKey"],version=str(p.get("contentVersion") or "1"),contentHash=digest(p),scope="PUBLIC",kind="PROPERTY_DETAIL",title=p["title"]) for p in properties]
+            citations=[Citation(sourceId="property:"+p["source"]["recordKey"],url="/api/v1/properties/"+p["source"]["recordKey"],version=str(p.get("contentVersion") or "1"),contentHash=digest(p),scope="PUBLIC",kind="PROPERTY_DETAIL",title=_public_text(p["title"],255)) for p in properties]
         if properties:
             self._enrich(properties)
         # Only a completed search replaces result references; POI/clarification replies preserve them.
@@ -197,7 +267,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         payload["session"] = {"id": session_id, "turn": context.turns, "context": context.public()}
         if extra:
             payload.update(extra)
-        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE","AREA_AMENITIES","PLANNING_LOOKUP"):
+        if responseKind not in ("FOCUSED_PROPERTY_EVIDENCE","PROPERTY_UNAVAILABLE","OUT_OF_SCOPE") and context.needs.get("active") and context.needs.get("turnIntent") not in ("MARKET_ANALYSIS","MARKET_PRICE","MARKET_TREND","LEGAL_QA","PLANNING_QA","KNOWLEDGE","AREA_AMENITIES","PLANNING_LOOKUP","LAND_LOOKUP","BUYER_SEARCH"):
             needs = projection(context, criteria or {})
             payload["needs"] = needs
             if not payload.get("quickReplies"):
@@ -220,8 +290,10 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
         if criteria.get("purpose") != "RENTAL":
             self._invalidate_listing_location(context, criteria)
             context.needs.pop("purchaseBudgetRequired", None)
+            context.needs.pop("purchaseDeclined", None)
             criteria.pop("budgetVnd", None)
             criteria.pop("minPriceVnd", None)
+        _retire_buyer_and_land(context.needs, clear_budget=True)
         criteria["purpose"] = "RENTAL"
         return self._reply(request, session_id, context, criteria, properties=[], citations=[], research=research,
             answer="Chatbot hiện chỉ hỗ trợ tìm tin mua. Bạn có thể dùng bộ lọc cho thuê tại trang Bất động sản.",
@@ -235,6 +307,8 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             if context.purpose != "RENTAL":
                 for key in (*_LISTING_LOCATION_STATE, "pending", "guided", "householdMode"):
                     state.pop(key, None)
+                _retire_buyer_and_land(state)
+                state["purchaseDeclined"] = True
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
                 answer="Tôi đã dừng tìm tin mua. Bạn có thể yêu cầu tìm lại khi cần.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": transaction})
@@ -287,6 +361,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 turn["purpose"] = "LIVING"
             if prior.get("purpose") == "RENTAL":
                 self._invalidate_listing_location(context, prior)
+                _retire_buyer_and_land(state, clear_budget=True)
                 for key in ("budgetVnd", "minPriceVnd"):
                     prior.pop(key, None)
                 prior["purpose"] = turn["purpose"] = turn["purpose"] or "LIVING"
@@ -305,13 +380,18 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                     responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "PURCHASE_BUDGET_REQUIRED"})
         return None
 
-    def chat(self, request, *, research=False, token=None, account=None):
+    def chat(self, request, *, research=False, token=None, account=None, allow_demo=False):
         # Authorization happens BEFORE corpus retrieval or backend/sql tools.
         if research:
             traced("research_authorization", lambda: self.backend.authorize_research(token))
-        # Session scope comes from the authenticated route, never from the client payload,
-        # so a public caller cannot address (or read) a research context.
-        scope = "INTERNAL_RESEARCH" if research else ("ACCOUNT:"+account["subject"] if account else "PUBLIC")
+        demo_allowed = bool(allow_demo and not research and getattr(self.land_advisor, "enabled", False))
+        # Session scope comes from the authenticated/authorized route, never from the client payload,
+        # so a public caller cannot address (or read) a research or synthetic-demo context.
+        scope = (
+            "INTERNAL_RESEARCH" if research else
+            (("ACCOUNT_DEMO:" if demo_allowed else "ACCOUNT:") + account["subject"]) if account else
+            ("PUBLIC_DEMO" if demo_allowed else "PUBLIC")
+        )
         context, session_id, resumed = traced("session_begin",
             lambda: self.sessions.begin(request.sessionId, scope=scope))
         if account:
@@ -321,10 +401,26 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 self.sessions.drop(context)
                 context,session_id,resumed=self.sessions.begin(None,scope=scope)
             context.needs["accountFingerprint"]=current_fingerprint
+        if resumed:
+            # A restored checkpoint can never re-arm an earlier over-budget consent: the user
+            # must affirm it again for the criteria that apply after the restore.
+            for owner in ("buyerSearch",):
+                restored=context.needs.get(owner)
+                if isinstance(restored,dict):
+                    restored.update(allowOverBudget=False,consentScope=None,pendingOverBudgetScope=None)
         # The saved profile must be seeded before any branch can return, otherwise a
         # focused or commute turn runs without the account context it needs.
         if account and not resumed:
             seed(context,account,SUPPORTED_DISTRICTS)
+        # A continuation belongs to the last displayed tool, even after a failed
+        # transition. Do not resurrect a retired land page or run Recommendation
+        # for a Places continuation that has no provider page token.
+        from .land_chat import fold as land_fold
+        more = re.fullmatch(r"(?:xem them|tiep|con nua|con khong|con lo nao khac khong)[ ?!.]*", land_fold(request.question))
+        if more and context.needs.get("listOwner") == "AMENITIES":
+            context.needs["turnIntent"] = "AREA_AMENITIES"
+            return self._reply(request,session_id,context,context.criteria(),properties=[],citations=[],research=research,
+                answer="Chưa có trang tiện ích tiếp theo trong kết quả hiện tại. Bạn có thể đổi nhóm tiện ích hoặc địa bàn để tra tiếp; tôi không chuyển sang danh sách đất hoặc tin đăng.",responseKind="AMENITY_PAGE_UNAVAILABLE")
         continuation = _listing_continuation(request.question, context.needs)
         address, outside_address = (address_search.split_address(request.question) if continuation is None
                                     else (None, request.question))
@@ -354,12 +450,6 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             if planning is not None:
                 context.needs["turnIntent"]="PLANNING_LOOKUP"
                 return self._reply(request,session_id,context,context.criteria(),research=research,**planning)
-            pending = ("COMMUTE_DESTINATION_REQUIRED"
-                       if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
-            outside=domain_reply(request.question,turn,pending=pending)
-            if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
-                return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
-                    answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
         transaction_reply = self._prepare_listing_transaction(
             request, session_id, context, turn, address_query, transaction, selected,
             text_transaction, structured_purpose, research=research, continuation=continuation,
@@ -371,6 +461,44 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 answer="Phiên này không có bước xác nhận phù hợp. Bạn có thể nêu yêu cầu mới.",
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification": "NO_PENDING_LISTING_STEP"})
         purchase_allowed = transaction == "SALE" and context.purpose != "RENTAL" and not turn["transactionInformation"]
+        if purchase_allowed and not no_listing_action and continuation is None and _EXPLICIT_PURCHASE_RE.search(norm(request.question)):
+            context.needs.pop("purchaseDeclined", None)
+        if not no_listing_action and continuation is None and not turn["transactionInformation"] and transaction != "RENT":
+            from .buyer_search import respond as buyer_search
+            existing_buyer = context.needs.get("buyerSearch") if isinstance(context.needs.get("buyerSearch"), dict) else {}
+            buyer_domain = bool(existing_buyer.get("active") or existing_buyer.get("pending")) or bool(re.search(r'\b(lo dat|tim dat|mua dat|dat o|dat nong nghiep|tat ca)\b', land_fold(request.question)))
+            buyer_domain = buyer_domain or not context.budget_vnd and bool(re.fullmatch(r'(?:toi co)\s+[0-9.,\s]+(?:ty|ti|trieu)(?:\s+[0-9.,]+\s+trieu)?[.!? ]*', land_fold(request.question)))
+            buyer = None if research or not purchase_allowed or not buyer_domain else buyer_search(self, request, context, turn, allow_demo=demo_allowed)
+            if buyer is not None:
+                context.needs["turnIntent"] = "BUYER_SEARCH"
+                state=context.needs["buyerSearch"]
+                criteria={"budgetVnd":state.get("maxPrice"),"propertyType":state.get("type") if state.get("type") in ("HOUSE","APARTMENT") else "LAND" if state.get("type") in ("LAND","RESIDENTIAL","AGRICULTURE") else "ALL","purpose":context.purpose or "LIVING"}
+                if state.get("district"):criteria["district"]=state["district"]
+                return self._reply(request,session_id,context,criteria,research=research,**buyer)
+            land_state = context.needs.get("land")
+            if isinstance(land_state, dict) and (turn["searchChange"] or turn["intent"] == "AREA_AMENITIES") and (
+                    not demo_allowed or not self.land_advisor.wants(
+                        request.question, land_state, focused=bool(request.propertyId or context.needs.get("focusedPropertyId")))):
+                land_state.update(lastDomain=None, selected=None, seen=[], visibleIds=[], projectRows=[])
+                context.needs["listOwner"] = "AMENITIES" if turn["intent"] == "AREA_AMENITIES" else "PROPERTY"
+            if demo_allowed and request.landId and isinstance(land_state, dict) and context.needs.get("listOwner") in ("LAND","BUYER"):
+                selected_code = self.land_advisor.engine.code_for(request.landId)
+                visible = land_state.get("visibleIds", land_state.get("seen", []))
+                if selected_code in visible:
+                    # Browser selection is a reference only; every field is re-read by the engine.
+                    land_state["selected"] = selected_code
+            land = traced("land_tool", lambda: self.land_advisor.reply(
+                request.question, context, focused=bool(request.propertyId or context.needs.get("focusedPropertyId"))
+            )) if demo_allowed else None
+            if land is not None:
+                context.needs["turnIntent"]="LAND_LOOKUP"
+                return self._reply(request,session_id,context,context.criteria(),research=research,**land)
+            pending = ("COMMUTE_DESTINATION_REQUIRED"
+                       if context.needs.get("commuteStage") == commute_destination.ASK_SOURCE else None)
+            outside=domain_reply(request.question,turn,pending=pending)
+            if outside and not (context.needs.get("listingAddressScope") and is_listing_location_edit(request.question)):
+                return self._reply(request,session_id,context,{},properties=[],citations=[],research=research,
+                    answer=outside,responseKind="OUT_OF_SCOPE",extra={"quickReplies":["Tìm nhà theo ngân sách","Phân tích đầu tư căn này" ] if request.propertyId or context.needs.get("focusedPropertyId") else ["Tìm nhà theo ngân sách","Ở Hải Châu có bệnh viện nào?"]})
         if purchase_allowed:
             discovery_reply = self.dispatch_discovery(request, session_id, context, turn, address_query,
                 districts=SUPPORTED_DISTRICTS, research=research, token=token, account=account,
@@ -481,8 +609,12 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                 district=amenity_scope["district"]
         parsed_budget = parse_budget(request.question)
         if turn["budgetMentioned"] and parsed_budget.status == "AMBIGUOUS":
+            answers = {
+                "UNIT_PRICE_NOT_TOTAL": "Bạn đang nêu đơn giá theo m², không phải tổng ngân sách. Tôi không lấy đơn giá làm giá mua tối đa. Bạn nhập tổng số tiền tối đa (ví dụ 2 tỷ 600 triệu) và diện tích mong muốn nhé.",
+                "MISSING_MAXIMUM": "Công cụ tư vấn lọc theo giá mua tối đa, nên mức \"trên …\" chưa đủ để tìm. Bạn cho tôi thêm mức trần, ví dụ từ 5 đến 7 tỷ nhé.",
+            }
             return self._reply(request, session_id, context, prior, properties=[], citations=[], research=research,
-                answer="Tôi chưa xác định rõ giới hạn ngân sách mới nên chưa tìm bằng ngân sách cũ. Bạn nhập mức tối đa, ví dụ 2 tỷ 600 triệu, hoặc khoảng từ 2 đến 3 tỷ nhé.",
+                answer=answers.get(parsed_budget.reason, "Tôi chưa xác định rõ giới hạn ngân sách mới nên chưa tìm bằng ngân sách cũ. Bạn nhập mức tối đa, ví dụ 2 tỷ 600 triệu, hoặc khoảng từ 2 đến 3 tỷ nhé."),
                 responseKind="CLARIFICATION_REQUIRED", extra={"clarification":"BUDGET_AMBIGUOUS", "budgetReason":parsed_budget.reason})
         if (turn["ordinal"] is not None or turn["intent"]=="PROPERTY_FOLLOWUP") and not context.last_property_ids:
             return self._reply(request,session_id,context,prior,properties=[],citations=[],research=research,
@@ -535,6 +667,9 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
             text="Đã cập nhật tiêu chí cho phiên trò chuyện này."
             if budget is not None:text+=" Ngân sách tối đa: "+format_vnd(budget)+"."
             if criteria.get("minPriceVnd"):text+=" Giá tối thiểu: "+format_vnd(criteria["minPriceVnd"])+"."
+            if criteria.get("district"):text+=" Khu vực: "+criteria["district"]+"."
+            area_text=describe_area(criteria)
+            if area_text:text+=" Yêu cầu "+area_text+"."
             text+=" Tôi chưa tự tìm nhà; bạn có thể yêu cầu tìm theo tiêu chí này. Hồ sơ tài khoản không thay đổi."
             return self._reply(request,session_id,context,criteria,properties=[],citations=[],research=research,
                 answer=text,responseKind="CRITERIA_UPDATED",extra={"quickReplies":["Tìm bất động sản theo tiêu chí đã lưu"]})
@@ -673,11 +808,16 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
 
         if turn.get("domain") and turn["intent"]=="PROPERTY_FOLLOWUP":
             topic="quy hoạch" if turn["domain"]=="PLANNING" else "pháp lý"
-            citations=[Citation(sourceId="recommendation:"+p["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(p),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=p["title"]) for p in properties]
+            citations=[Citation(sourceId="recommendation:"+p["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(p),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=_public_text(p["title"],255)) for p in properties]
             return self._reply(request,session_id,context,criteria,properties=properties,citations=citations,research=research,
                 answer="Đã đối chiếu căn đang tham chiếu, nhưng API công khai chưa cung cấp bằng chứng "+topic+" đủ điều kiện. Tôi không coi tin đăng hoặc giá rao là xác nhận pháp lý/quy hoạch và không truy cập giấy tờ riêng tư của chủ tin.",
                 responseKind="KNOWLEDGE_SOURCE_UNAVAILABLE",response=response,result_properties=result_properties,reference_id=referenced_id)
-        distance_question=bool(re.search(r"(?:bao xa|khoang cach|cach .*truong|gan .*nao)",norm(request.question)))
+        # A POI category asked about one referenced property ("Căn đầu tiên có trường học
+        # không?", "Gần căn đó có siêu thị không?") is a nearby question even without "bao xa".
+        # Answering it with a re-run search cites only RECOMMENDATION evidence, which the public
+        # client rightly blocks for category questions. A priority edit ("ưu tiên gần trường")
+        # stays a search.
+        distance_question=not re.search(r"\buu tien\b",norm(request.question))
         if categories and distance_question and len(properties)==1 and (asked_index is not None or referral):
             property=properties[0]
             source=property.get("source") or {}
@@ -701,7 +841,7 @@ class ChatOrchestrator(AdvisorDiscoveryMixin):
                     answer="Chưa tải được bằng chứng tiện ích của căn này. Hãy mở mục tiện ích trên thẻ và thử lại."
             if "SCHOOL" in categories:
                 answer+=" Nguồn chỉ xác nhận nhóm trường học chung; chưa xác minh trường tiểu học hay cấp học cụ thể."
-            citation=Citation(sourceId="recommendation:"+property["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(property),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=property["title"])
+            citation=Citation(sourceId="recommendation:"+property["id"],url=self.backend.settings.backend_url+"/api/v1/recommendations",version="LIVE",contentHash=digest(property),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="RECOMMENDATION",title=_public_text(property["title"],255))
             citations=[citation]
             if nearby:
                 citations.append(Citation(sourceId="property-nearby:"+source["recordKey"],url=self.backend.settings.backend_url+"/api/v1/properties/"+source["recordKey"]+"/nearby",version=str(nearby.get("fetchedAt") or "LIVE"),contentHash=digest(nearby),scope="INTERNAL_RESEARCH" if research else "PUBLIC",kind="PROPERTY_NEARBY",title="Tiện ích quanh căn nhà"))

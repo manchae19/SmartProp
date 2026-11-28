@@ -2,9 +2,9 @@ import { afterPaint, classNames, inlineStyle } from "../../shared/lib/ui.js";
 import { createStateStore, stateKey } from "../../shared/state/createStateStore.js";
 import React, { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { chatSession } from "./chatRuntime.js";
-import { isNearChatBottom } from "./chatPresentation.js";
+import { isNearChatBottom, chatCriteriaSummary } from "./chatPresentation.js";
 import ChatAnswer from "../../shared/components/ChatAnswer.jsx";
-import ChatSessionPanel from "../../shared/components/ChatSessionPanel.jsx";
+import ChatSessionPanel, { CHAT_STARTER_PROMPTS } from "../../shared/components/ChatSessionPanel.jsx";
 import MobileDrawer from "../../shared/components/layout/MobileDrawer.jsx";
 import AppIcon from "../../shared/components/AppIcon.jsx";
 import "./ChatAdvisorView.css";
@@ -315,18 +315,10 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                     {"Bạn đang tìm một nơi để ở hay muốn khám phá khu vực? Hãy bắt đầu từ ngân sách và nhu cầu của bạn."}
                   </p>
                   <div className="welcome-prompts" data-sp-b5f8ab84="">
-                    <button type="button" disabled={view.locked} onClick={$event => {
-                    view.choose("Tôi có 10 tỷ, gợi ý bất động sản phù hợp.");
-                  }} data-sp-b5f8ab84="">
-                      {"Tìm BĐS theo ngân sách"}
-                      <AppIcon name="arrow" data-sp-b5f8ab84="" />
-                    </button>
-                    <button type="button" disabled={view.locked} onClick={$event => {
-                    view.choose("Ở Hải Châu có những bệnh viện nào?");
-                  }} data-sp-b5f8ab84="">
-                      {"Hỏi tiện ích khu vực"}
-                      <AppIcon name="arrow" data-sp-b5f8ab84="" />
-                    </button>
+                    {CHAT_STARTER_PROMPTS.map(text => <button key={text} type="button" disabled={view.locked} onClick={() => view.choose(text)}>
+                      {text}
+                      <AppIcon name="arrow" />
+                    </button>)}
                   </div>
                   <p className="welcome-note" data-sp-b5f8ab84="">
                     {"Nhập nhu cầu tìm nhà của bạn để bắt đầu."}
@@ -351,9 +343,9 @@ export default React.forwardRef(function ChatAdvisorView(props, ref) {
                         {"S"}
                       </span>
                       <div className="answer-with-actions">
-                        {message.response.evidence?.needs?.summary?.length ? <aside className="chat-needs-summary" aria-label="Tiêu chí đang dùng">
+                        {chatCriteriaSummary(message.response).length ? <aside className="chat-needs-summary" aria-label="Tiêu chí đang dùng">
                             <strong>Tiêu chí đang dùng</strong>
-                            <ul>{message.response.evidence.needs.summary.map((item, index) => <li key={index}>{item}</li>)}</ul>
+                            <ul>{chatCriteriaSummary(message.response).map((item, index) => <li key={index}>{item}</li>)}</ul>
                             <small>Bạn có thể gõ để sửa ngân sách, khu vực hoặc thứ tự ưu tiên.</small>
                           </aside> : null}
                       <ChatAnswer historical={message.historical} result={message.response} messageId={message.id} question={view.questionFor(message.id)} onReading={$event => {

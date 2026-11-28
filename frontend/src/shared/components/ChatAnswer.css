@@ -7,3 +7,5 @@
 .listing-analysis-basis ul {list-style:disc;padding-left:18px;margin:0 0 12px}
 .listing-analysis-basis li {margin:5px 0}
 .listing-analysis-basis p {color:var(--ui-muted,#60758a);margin-top:10px}
+
+.chat-answer.is-land-answer[data-sp-73584f77]{max-width:none;width:100%}.chat-answer.is-land-answer .ai-bubble[data-sp-73584f77]{max-width:none}.chat-answer.is-land-answer .answer-basis,.chat-answer.is-land-answer .fallback-note{display:none}

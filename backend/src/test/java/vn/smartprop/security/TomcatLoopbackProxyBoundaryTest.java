@@ -339,7 +339,12 @@ class TomcatLoopbackProxyBoundaryTest {
             "//api/v1/recommendations/research",
             "/api/v1/recommendations/%2fresearch",
             "/api/v1/properties/../recommendations/research",
-            "/api/v1/properties/%2e%2e/recommendations/research"
+            "/api/v1/properties/%2e%2e/recommendations/research",
+            "/api/land",
+            "/api/land/health",
+            "/api/land/records/DN-QH-0001",
+            "/api/%6cand/records/DN-QH-0001",
+            "/api/land;jsessionid=123/health"
         );
         for (String rawUri : mustBlockUris) {
             assertThat(caddyBlocksUri(rawUri))
@@ -374,10 +379,12 @@ class TomcatLoopbackProxyBoundaryTest {
         if (decodedPath.equals("/api/v1/recommendations/research")
                 || decodedPath.startsWith("/api/v1/recommendations/research/")
                 || decodedPath.equals("/api/v1/amenities/research")
-                || decodedPath.startsWith("/api/v1/amenities/research/")) {
+                || decodedPath.startsWith("/api/v1/amenities/research/")
+                || decodedPath.equals("/api/land")
+                || decodedPath.startsWith("/api/land/")) {
             return true;
         }
-        Pattern loopbackVariant = Pattern.compile("(?i)^/+api/+(?:v1/+)?(?:recommendations/+research|amenities/+research)(?:[;/]|$)");
+        Pattern loopbackVariant = Pattern.compile("(?i)^/+api/+(?:(?:v1/+)?(?:recommendations/+research|amenities/+research)|land)(?:[;/]|$)");
         return loopbackVariant.matcher(decodedPath).find();
     }
 }

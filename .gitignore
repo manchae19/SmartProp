@@ -136,6 +136,11 @@ Thumbs.db
 /ai-services/app/data/*.png
 /tests/
 
+# Executables are never versioned, including inside docs/handoff and docs/legacy.
+# Keep this after the docs negations so none of them overrides it.
+**/*.exe
+autorun.inf
+
 # Paths after the feature-based layout sync
 .vite/
 !/frontend/build/
@@ -149,6 +154,12 @@ ai-services/tests/seed_*.py
 # coordinates came from. No PII, no credentials, no coordinate changes.
 !/docs/SMARTPROP_COORDINATE_PROVENANCE_AUDIT.md
 
+# Hòa Xuân land demo data (large; kept outside Git — rebuild with SMARTPROP_DATA/pipelines/land_demo)
+/SMARTPROP_DATA/raw/land_demo_hoa_xuan/
+/SMARTPROP_DATA/processed/land_demo_hoa_xuan/
+
+# Local process registry, logs and generated cache; never shared via Git.
+/.local-run/
 # News Backend V1: schema, API contract, source rights, ingestion, security,
 # test results and PR #37 integration plan. No secrets, no PII.
 !/docs/SMARTPROP_NEWS_BACKEND_V1_IMPLEMENTATION.md

@@ -27,7 +27,7 @@ export function chatPresentation(packet, {historical = false} = {}) {
   // A clarification is a normal answer, not a model outage: the question itself must be
   // visible, never hidden behind the collapsed raw-answer panel.
   const clarification = data.evidence.responseKind === 'CLARIFICATION_REQUIRED' ? data.answer : null;
-  const cards = data.recommendedProperties.map(p => {
+  const cards = (data.evidence.buyerSearch ? [] : data.recommendedProperties).map(p => {
     const budgetFit = p.scoreBreakdown?.budgetFit;
     const validBudgetFit = budgetFit != null && Number.isFinite(Number(budgetFit)) && Number(budgetFit) >= 0 && Number(budgetFit) <= 100;
     const preferenceReason = p.explanations.find(note => note.includes('Ưu tiên do người dùng'));
@@ -49,12 +49,13 @@ export function chatPresentation(packet, {historical = false} = {}) {
   const areaSources = data.citations.filter(c => ['AREA_AMENITY', 'POI_EVIDENCE'].includes(c.kind));
   let summary;
   if (addressSearch) summary = data.answer;
+  else if (data.evidence.buyerSearch) summary = data.answer;
   else if (clarification) summary = 'Mình cần thêm một chi tiết để trả lời chính xác.';
   else if (count) summary = `Mình tìm thấy ${count} bất động sản công khai phù hợp với nhu cầu đã gửi.` + (count > 3 ? ' Dưới đây là 3 lựa chọn đứng đầu danh sách.' : ' Bạn có thể xem thông tin bên dưới.');
   else if (noMatches) summary = 'Không có tin công khai phù hợp tại ' + (data.evidence.criteria?.district || 'Đà Nẵng') + ' trong ngân sách tối đa ' + compactChatPrice(data.evidence.criteria.budgetVnd).text + '. Bộ lọc khu vực đang được giữ từ hồ sơ hoặc cuộc chat; hệ thống không tự mở rộng.';
   else if (areaSources.length) summary = data.answer;
   else summary = 'Chưa có bằng chứng công khai phù hợp để trả lời. Bạn có thể nêu rõ ngân sách và khu vực muốn tìm.';
-  if (['PLANNING_LOOKUP','COMMUTE_DATA_UNAVAILABLE','FOCUSED_PROPERTY','ADDRESS_NO_RESULTS','OUT_OF_SCOPE','FOCUSED_PROPERTY_EVIDENCE','PROPERTY_UNAVAILABLE','PROPERTY_NEARBY_EVIDENCE','MARKET_PRICE_EVIDENCE','INSUFFICIENT_MARKET_DATA','INSUFFICIENT_TREND_DATA','INSUFFICIENT_MARKET_ANALYSIS_DATA','DATA_SOURCE_ERROR','KNOWLEDGE_SOURCE_UNAVAILABLE','KNOWLEDGE_EVIDENCE','INSUFFICIENT_KNOWLEDGE_EVIDENCE','STALE_KNOWLEDGE_DATA','KNOWLEDGE_SOURCE_CONFLICT'].includes(data.evidence.responseKind)) summary = data.answer;
+  if (['LAND_SEARCH','LAND_RECORD','LAND_COMPARISON','LAND_INFO','LAND_CLARIFICATION','FLOOD_CATALOG','PLANNING_LOOKUP','COMMUTE_DATA_UNAVAILABLE','FOCUSED_PROPERTY','ADDRESS_NO_RESULTS','OUT_OF_SCOPE','FOCUSED_PROPERTY_EVIDENCE','PROPERTY_UNAVAILABLE','PROPERTY_NEARBY_EVIDENCE','MARKET_PRICE_EVIDENCE','INSUFFICIENT_MARKET_DATA','INSUFFICIENT_TREND_DATA','INSUFFICIENT_MARKET_ANALYSIS_DATA','DATA_SOURCE_ERROR','KNOWLEDGE_SOURCE_UNAVAILABLE','KNOWLEDGE_EVIDENCE','INSUFFICIENT_KNOWLEDGE_EVIDENCE','STALE_KNOWLEDGE_DATA','KNOWLEDGE_SOURCE_CONFLICT'].includes(data.evidence.responseKind)) summary = data.answer;
   return {
     summary,
     clarification,
@@ -80,3 +81,22 @@ export function chatPresentation(packet, {historical = false} = {}) {
   };
 }
 export const isNearChatBottom = (element, threshold = 88) => !element || element.scrollHeight - element.clientHeight - element.scrollTop <= threshold;
+
+// Scope summaries to this answer, including saved responses from older runtimes.
+export function chatCriteriaSummary(result) {
+  const evidence=result?.evidence||{},land=evidence.land;
+  if(evidence.buyerSearch)return evidence.buyerSearch.summary||[];
+  if (!land) return evidence.needs?.summary||[];
+  if (land.kind==='FLOOD_CATALOG') return [];
+  const summary=['Hồ sơ đất · Hòa Xuân, Đà Nẵng'];
+  const money=value=>Number(value).toLocaleString('vi-VN')+' đồng';
+  const filters=land.filters||{};
+  if (land.targetPriceVnd!=null) summary.push('Giá mục tiêu: '+money(land.targetPriceVnd));
+  if (filters.minPrice!=null && filters.maxPrice!=null) summary.push('Khoảng giá đang lọc: '+money(filters.minPrice)+' – '+money(filters.maxPrice));
+  else if(filters.maxPrice!=null) summary.push('Giá tối đa: '+money(filters.maxPrice));
+  else if(filters.minPrice!=null) summary.push('Giá tối thiểu: '+money(filters.minPrice));
+  if (land.areaFilters?.minArea!=null) summary.push('Diện tích từ '+land.areaFilters.minArea+' m²');
+  if (land.areaFilters?.maxArea!=null) summary.push('Diện tích đến '+land.areaFilters.maxArea+' m²');
+  if (!Object.keys(filters).length && land.kind==='LAND_RECORD') summary.push('Thông tin của lô đang chọn');
+  return summary;
+}

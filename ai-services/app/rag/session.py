@@ -93,7 +93,7 @@ class SessionStore:
     # -- lifecycle --------------------------------------------------------
     def begin(self, session_id, *, scope):
         """Return (context, session_id, resumed). Unknown/expired ids never error."""
-        if scope not in ("PUBLIC", "INTERNAL_RESEARCH") and not re.fullmatch(r"ACCOUNT:[0-9]{1,19}", scope):
+        if scope not in ("PUBLIC", "PUBLIC_DEMO", "INTERNAL_RESEARCH") and not re.fullmatch(r"ACCOUNT(?:_DEMO)?:[0-9]{1,19}", scope):
             raise ValueError("INVALID_SESSION_SCOPE")
         now = self._clock()
         with self._lock:

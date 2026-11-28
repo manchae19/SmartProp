@@ -70,8 +70,11 @@ public class HybridRecommendationService {
         return recommend(request,true,this.demo);
     }
     private Response recommend(Request request,boolean research,boolean allowDemo) {
+        // ApiException, not ResponseStatusException: the global handler only maps ApiException,
+        // so the old exception surfaced as a generic 500 and hid the missing flag.
         if(!request.amenityPriorities().isEmpty()&&!v11Enabled)
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,"Personalized ranking requires APP_RECOMMENDATION_V11_ENABLED=true and V1.1 services");
+            throw new vn.smartprop.common.ApiException(503,"PERSONALIZED_RANKING_DISABLED",
+                "Xếp hạng theo ưu tiên tiện ích chưa được bật (APP_RECOMMENDATION_V11_ENABLED=true).");
         boolean demoMode=allowDemo||research;
         var raw=new ArrayList<>(repository.find(request,allowDemo));
         if(research)raw.addAll(tinix.find(request));

@@ -2,7 +2,7 @@ import { createStateStore, stateKey } from "../../shared/state/createStateStore.
 import { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { requestNearby } from './nearbyRequest.js';
 import { nearbyPath } from './nearbyExplorer.js';
-import { canAnalyzeDistance } from './coordinateEligibility.js';
+import { canExploreNearby } from './coordinateEligibility.js';
 export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () => true) {
   const [data] = useState(() => createStateStore(null)),
     [busy] = useState(() => createStateStore(false)),
@@ -23,7 +23,7 @@ export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () 
     data.set(null);
     error.set('');
     busy.set(false);
-    const path = enabled() && canAnalyzeDistance(getProperty()) && nearbyPath(getProperty()?.id, getRadius(), getGroups());
+    const path = enabled() && canExploreNearby(getProperty()) && (nearbyPath(getProperty()?.id, getRadius(), getGroups()) + "&allowEstimatedOrigin=true");
     if (!path) return;
     if (Date.now() < retryAt.getSnapshot()) {
       error.set('Vui lòng chờ một lát trước khi thử lại.');

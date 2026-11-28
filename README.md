@@ -1,4 +1,31 @@
-﻿# SmartProp — Cài đặt, build và chạy dự án
+# SmartProp — Cài đặt, build và chạy dự án
+
+## Khởi động local thống nhất
+
+Sau khi đã cài dependency/model và cấu hình `.env` theo các mục bên dưới, chạy từ root repository:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\start-smartprop-local.ps1
+```
+
+- Dùng đường dẫn tương đối theo repository; không dùng launcher trong TEMP.
+- Kiểm tra MySQL/Ollama, sau đó Backend, định giá, RAG và React. Không migrate, seed, reset hoặc import dataset.
+- Tái sử dụng dịch vụ đang khỏe; nếu RAG khác revision source thì báo lỗi, không tự kill dịch vụ lạ.
+- Corpus còn hạn được dùng lại. Thiếu/quá hạn/đổi phiên bản mới lấy snapshot từ API công khai; FAISS chỉ dựng lại khi nội dung/index thay đổi. Không tắt kiểm tra hạn 24 giờ.
+- Cache tổng quan nằm trong `.local-run/cache/land-overviews/`, sống qua lần tắt/mở RAG. Cache hợp lệ theo mã lô + phiên bản dữ liệu + phiên bản mẫu + hash hồ sơ; bản dự phòng chỉ giữ 5 phút. Không chứa token/lịch sử chat, không đưa lên Git.
+- Các dịch vụ quét ảnh/YOLO là dịch vụ phụ: bộ lệnh này không tự bật SQL production hay cài weights của chúng.
+
+```powershell
+# Kiểm tra trạng thái và revision, không khởi động thêm
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\status-smartprop-local.ps1
+# Cập nhật corpus khi cần; thêm -Force để lấy lại snapshot dù còn hạn
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\update-rag-data.ps1
+# Chỉ dừng các tiến trình do launcher ghi nhận; không dừng MySQL/dịch vụ ngoài
+powershell -NoProfile -ExecutionPolicy Bypass -File .\ops\stop-smartprop-local.ps1
+```
+
+Log và sổ tiến trình ở `.local-run/`. Khi báo thiếu dependency/model/data, hoàn tất phần cài đặt lần đầu; Git không cung cấp model, dataset, database hoặc secrets. Dataset hiện chưa được di chuyển/phân loại lại.
+
 
 SmartProp sử dụng **React + Vite**, **Java 21 / Spring Boot**, **MySQL Spatial**, dịch vụ định giá **XGBoost v6** và chatbot **RAG + Ollama/Qwen**.
 
@@ -497,13 +524,16 @@ Không dùng lock wheel Windows cho Linux. Các dependency/model đã được x
 
 ### 12.3. Reverse proxy đầy đủ
 
-**`ops/Caddyfile` hiện chỉ proxy `/api/*` về Backend. Không dùng nguyên mẫu đó để kết luận chat/định giá đã được nối.** Máy chủ cần các tuyến riêng:
+**`ops/Caddyfile` là cấu hình triển khai hiện tại và đã được kiểm chứng bằng Caddy thật.** Nó chặn mọi route nội bộ (`/api/land`, `/api/v1/*/research`) trước upstream, proxy `/api/chat/health` sang RAG `127.0.0.1:8001`, proxy `/api/chat` sang chat relay `127.0.0.1:8082` và `/api/*` sang Backend `127.0.0.1:8080`; mọi header `X-SmartProp-Demo-Key`/`Forwarded` bị bỏ trước khi tới upstream. Dữ liệu đất demo Hòa Xuân **không** đi qua Caddy công khai — chỉ dùng qua Vite dev proxy trên loopback với `SMARTPROP_INTERNAL_DEMO_KEY`/`RAG_DEMO_KEY`.
 
-| Tuyến công khai | Upstream |
+| Tuyến công khai | Upstream / kết quả |
 |---|---|
 | `/api/v1/*` | Backend `127.0.0.1:8080` |
-| `/api/ai/*` | AI `127.0.0.1:8000`, bỏ prefix `/api/ai` |
+| `/api/ai/*` (nếu dùng chung Caddy) | AI `127.0.0.1:8000`, bỏ prefix `/api/ai` |
 | `/api/chat` | Chat relay `127.0.0.1:8082`, chỉ nhận POST theo contract |
+| `/api/chat/health` | RAG `127.0.0.1:8001` |
+| `/api/land`, `/api/land/*` | **403 tại Caddy**, không bao giờ tới upstream |
+| `/api/v1/recommendations/research`, `/api/v1/amenities/research` | **403 tại Caddy** (chỉ loopback) |
 | Các route React còn lại | Static files; fallback `index.html` |
 
 Chạy relay bằng Node trong service riêng, với environment:
@@ -523,10 +553,10 @@ example.com {
     encode zstd gzip
     route {
         @loopbackOnly {
-            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/*
+            path /api/v1/recommendations/research /api/v1/recommendations/research/* /api/v1/amenities/research /api/v1/amenities/research/* /api/land /api/land/*
         }
         @loopbackVariant {
-            path_regexp loopback_norm (?i)^/+api/+(?:v1/+)?(?:recommendations/+research|amenities/+research)(?:[;/]|$)
+            path_regexp loopback_norm (?i)^/+api/+(?:(?:v1/+)?(?:recommendations/+research|amenities/+research)|land)(?:[;/]|$)
         }
         @ambiguousApiPath {
             expression {http.request.uri}.matches("(?i)^/+api(?:/|%2f|%5c|;)[^?]*(?:%2f|%5c|%2e%2e|\\.\\.|;|//)")
@@ -546,9 +576,23 @@ example.com {
             header Cache-Control "no-store"
             respond `{"code":"FORBIDDEN","message":"Đường dẫn API không hợp lệ."}` 403
         }
+        @chatHealth {
+            path /api/chat/health
+            method GET
+        }
+        handle @chatHealth {
+            uri strip_prefix /api
+            reverse_proxy 127.0.0.1:8001 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
+        }
         @chat path /api/chat
         handle @chat {
-            reverse_proxy 127.0.0.1:8082
+            reverse_proxy 127.0.0.1:8082 {
+                header_up -X-SmartProp-Demo-Key
+                header_up -Forwarded
+            }
         }
         handle /api/chat/* {
             respond 404

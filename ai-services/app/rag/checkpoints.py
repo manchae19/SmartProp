@@ -55,10 +55,16 @@ def _unsupported(value):
     raise TypeError("Unsupported checkpoint value")
 
 
-def durable_chat(orchestrator, payload, token, account):
+def durable_chat(orchestrator, payload, token, account, *, allow_demo=False):
     conversation_id = payload.sessionId or secrets.token_hex(16)
     if not re.fullmatch(r"[a-f0-9]{32}", conversation_id):
         raise UpstreamError(404)
+    if allow_demo:
+        # Synthetic demo turns stay in the process-local demo session store. They are never
+        # read from or written to the account checkpoint store, so they cannot appear in the
+        # account history and cannot be resumed by a normal ACCOUNT/PUBLIC request.
+        local = copy(orchestrator)
+        return local.chat(payload, token=token, account=account, allow_demo=True)
     saved = checkpoint_call(orchestrator.backend, "GET", conversation_id+"/checkpoint", token) if payload.sessionId else None
     local = copy(orchestrator)
     local.sessions = CheckpointSessions(conversation_id, saved["checkpoint"] if saved else None)

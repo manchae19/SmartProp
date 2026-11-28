@@ -12,9 +12,12 @@ export default defineConfig(({mode}) => {
   // YOLOv8 object detection runs as its own service so it can be restarted
   // without touching duplicate scanning (18001) or RAG chat (8001).
   const visionTarget=process.env.SMARTPROP_DEV_VISION_TARGET||env.VISION_API_TARGET||'http://127.0.0.1:18002'
+  // Internal loopback mentor demo key (never VITE_*, never exposed to browser bundle).
+  const internalDemoKey=(process.env.SMARTPROP_INTERNAL_DEMO_KEY||process.env.RAG_DEMO_KEY||env.SMARTPROP_INTERNAL_DEMO_KEY||env.RAG_DEMO_KEY||'').trim()
+  const validDemoKey=internalDemoKey.length>=16?internalDemoKey:''
   for(const target of [apiTarget,aiTarget,visionTarget])if(!new RegExp('^http://127[.]0[.]0[.]1:[0-9]{4,5}$').test(target))throw Error('Dev API proxy must target a loopback HTTP port')
   const proxy={
-    '^/api/chat(?:\\?|$)':publicChatProxy(chatTarget),
+    '^/api/chat(?:/health)?(?:\\?|$)':publicChatProxy(chatTarget,{demoKey:validDemoKey}),
     '/api/image-duplicates':{target:chatTarget,changeOrigin:false,proxyTimeout:60000,
       rewrite:value=>value.replace(/^\/api\/image-duplicates(?=\/|$)/,'/image-duplicates')},
     '/api/image-analysis':{target:visionTarget,changeOrigin:false,proxyTimeout:60000,
@@ -29,12 +32,21 @@ export default defineConfig(({mode}) => {
         if(process.env.SMARTPROP_INTERNAL_DEMO_KEY)request.setHeader('X-SmartProp-Demo-Key',process.env.SMARTPROP_INTERNAL_DEMO_KEY)
       })
     }},
+    // Hòa Xuân land demo map/detail routes live on the chat service (loopback mentor demo only).
+    '/api/land':{target:chatTarget,changeOrigin:false,proxyTimeout:30000,
+      rewrite:value=>value.replace(/^\/api\/land(?=\/|$)/,'/land'),
+      configure:proxy=>{
+        proxy.on('proxyReq',request=>{
+          for(const name of ['Cookie','X-SmartProp-Demo-Key','Forwarded','X-Forwarded-For'])request.removeHeader(name)
+          if(validDemoKey)request.setHeader('X-SmartProp-Demo-Key',validDemoKey)
+        })
+      }},
     '/api/ai':{target:aiTarget,changeOrigin:true,rewrite:value=>value.replace(/^\/api\/ai(?=\/|$)/,''),proxyTimeout:15000},
     '/api':{target:apiTarget,changeOrigin:false,proxyTimeout:15000},
   }
   return {
     optimizeDeps:{include:['leaflet']},
-    plugins:[publicChatBoundary(),approvedPublicAssets(),react(),tailwindcss()],
+    plugins:[publicChatBoundary({demoKey:validDemoKey}),approvedPublicAssets(),react(),tailwindcss()],
     server:{host:'127.0.0.1',port:Number(process.env.SMARTPROP_DEV_PORT||5173),strictPort:true,proxy},
     preview:{host:'127.0.0.1',port:4173,strictPort:true,proxy},
   }

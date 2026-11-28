@@ -19,6 +19,8 @@ import PropertyExplorer from "../map/PropertyExplorer.jsx";
 import PrePurchaseChecks from "./PrePurchaseChecks.jsx";
 import CoordinateStatusPanel from "./CoordinateStatusPanel.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
+import { poiLabel, poiSymbol } from "../map/nearbyPlaces.js";
+import { nearbyPoiRows } from "./nearbyPoiRows.js";
 import "./ListingDetailView.css";
 function useListingDetailViewState(inputProps, forwardedRef) {
   const _propsLatest = useRef(inputProps);
@@ -247,6 +249,7 @@ function useListingDetailViewState(inputProps, forwardedRef) {
     isFavorite: isFavorite.getSnapshot(),
     showGallery: showGallery.getSnapshot(),
     currentImageIndex: currentImageIndex.getSnapshot(),
+    pois: nearbyPoiRows(pois.getSnapshot()),
     listing: getListing(),
     listingId: getListingId(),
     images: getImages(),
@@ -635,7 +638,21 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                       {"Khoảng cách đường chim bay"}
                     </span>
                   </div>
-
+                  {view.pois.length ? <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" aria-label="Tiện ích trong bán kính 1 km">
+                      {view.pois.map(poi => <li key={poi.id} className="flex items-center gap-3 p-3 rounded-2xl bg-brand-card border border-brand-line min-w-0">
+                          <span aria-hidden="true" className="w-8 h-8 shrink-0 rounded-xl bg-[var(--ui-soft)] flex items-center justify-center text-sm text-[var(--ui-accent)]">{poiSymbol(poi.category)}</span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-sm font-semibold text-[var(--ui-accent)] truncate" title={poi.name}>{poi.name}</span>
+                            <span className="block text-xs text-brand-muted">{poiLabel(poi.category)}</span>
+                          </span>
+                          <span className="shrink-0 text-xs font-bold text-brand-navy">{poi.distance}</span>
+                        </li>)}
+                    </ul> : <p className="text-sm text-brand-muted">
+                      {view.state.notice === "Chưa tải được tiện ích xung quanh." ? view.state.notice : "Chưa có dữ liệu tiện ích trong bán kính 1 km quanh vị trí tin đăng."}
+                    </p>}
+                  <p className="text-xs text-brand-muted mt-4">
+                    {"Nguồn: © OpenStreetMap contributors qua Geoapify. Khoảng cách tính từ ghim tin đăng, chưa phải quãng đường di chuyển."}
+                  </p>
                 </section>
                 <ImageAnalysisSection propertyId={view.property?.id} />
                 {view.property?.id && view.property.transactionType === "SALE" && view.property.status === "PUBLISHED" ? (

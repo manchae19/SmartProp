@@ -34,6 +34,8 @@ class Settings:
     demo_key: str = field(default="", repr=False)
     checkpoint_key: str = field(default="", repr=False)
     sql_enabled: bool = False
+    # The read-only cross-check targets a configured local staging datasource. The real
+    # database (3306) is refused unless an operator opts in explicitly.
     sql_host: str = "127.0.0.1"
     sql_port: int = 13306
     sql_database: str = ""
@@ -59,6 +61,16 @@ class Settings:
             raise ValueError("Backend tool timeout must be bounded")
         if type(self.ollama_keep_alive_seconds) is not int or not 0 <= self.ollama_keep_alive_seconds <= 300:
             raise ValueError("Ollama retention must be bounded between zero and 300 seconds")
+        if self.sql_host not in ("127.0.0.1", "localhost"):
+            raise ValueError("RAG SQL host must be local")
+        if type(self.sql_port) is not int or not 1 <= self.sql_port <= 65535:
+            raise ValueError("RAG SQL port is invalid")
+        if self.sql_port == 3306 and not self.sql_allow_production:
+            raise ValueError("RAG SQL port 3306 is disabled; use staging 13306 or set RAG_SQL_ALLOW_PRODUCTION=true")
+        if self.sql_database and not self.sql_database.replace("_", "").isalnum():
+            raise ValueError("RAG SQL database name is invalid")
+        if self.sql_enabled and (not self.sql_database or not self.db_user or not self.db_password):
+            raise ValueError("RAG SQL database and credentials are required when SQL is enabled")
 
         if self.sql_host not in ("127.0.0.1", "localhost"):
             raise ValueError("RAG SQL host must be local")

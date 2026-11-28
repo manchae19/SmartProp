@@ -10,6 +10,8 @@ from .intent import buy_to_let, fold, poi_categories, transaction_information
 from .money import mask_recurring_amounts, parse_budget
 from .personalization import area_spec, invalid_area_text
 
+DANANG_DISTRICTS = ("Ngũ Hành Sơn", "Liên Chiểu", "Thanh Khê", "Hải Châu", "Hòa Vang", "Sơn Trà", "Cẩm Lệ")
+
 # Word ordinals only. A bare digit must NEVER be read as an ordinal: "2 tỷ" is a
 # budget, not "căn thứ hai". Numeric ordinals need an explicit property noun prefix,
 # handled by _numeric_ordinal() below.
@@ -102,7 +104,7 @@ def detect_property_type(question):
     # "nha thuoc", "nha hang", "nha khoa", "nha kho" ... are POIs, not residential types.
     value = re.sub(r"(?<!\w)nha\s+(?:thuoc|hang|khoa|kho|nghi|may|tro|xe|hat|sach|bep|go)\b", " ", value)
     mapping = (("can ho", "APARTMENT"), ("chung cu", "APARTMENT"), ("nha pho", "HOUSE"),
-               ("nha rieng", "HOUSE"), ("biet thu", "VILLA"), ("dat nen", "LAND"),
+               ("nha rieng", "HOUSE"), ("biet thu", "VILLA"), ("dat nen", "LAND"), ("dat tho cu", "LAND"),
                ("phong tro", "ROOM"), ("mat bang", "COMMERCIAL"), ("shophouse", "COMMERCIAL"))
     # Generic 'nha' means a home search, not an explicit HOUSE-only restriction.
     hits = [code for term, code in mapping if _has(value, term.strip())]
@@ -169,6 +171,17 @@ def classification(question, context, *, districts=()):
     kind=detect_property_type(question)
     if re.search(r"\b(?:tat ca loai|moi loai|khong gioi han loai)\b",value):kind="ALL"
     purpose=detect_purpose(question)
+    # With an active search, naming another district or a new area bound edits the stored
+    # criteria ("Chuyển sang Hải Châu thì sao?") instead of becoming an unclear turn.
+    # Only an explicit change phrase or a message that is nothing but the new value counts;
+    # an address, a commute destination or a question about a listing that merely names a
+    # district or a size is not a criteria edit.
+    change_phrase=bool(re.search(r"\b(?:chuyen|doi|thay)\s+(?:sang|qua|thanh|bang|ve)\b|\bthi sao\s*[?.!]*\s*$",value))
+    named_district=detect_district(question,DANANG_DISTRICTS)
+    district_only=bool(named_district and re.fullmatch(r"\s*(?:(?:o|tai|khu vuc|quan|huyen)\s+)?"+re.escape(fold(named_district))+r"\s*(?:thoi|nhe|nha|di)?\s*[?.!]*\s*",value))
+    area_only=bool(re.fullmatch(r"[\s\w.,²-]{0,40}",value)) and len(value.split())<=7
+    district_edit=has_history and not reference and named_district is not None and (change_phrase or district_only)
+    area_edit=has_history and not reference and area_spec(question) is not None and (change_phrase or area_only)
     refinement=bool(re.search(r"\b(?:tim ky hon|goi y khac|lua chon khac|mo rong|thu hep|giu ngan sach)\b",value)) or priority_edit
     if has_history and not reference:
         district = detect_district(question, districts)
@@ -190,7 +203,9 @@ def classification(question, context, *, districts=()):
     planning=bool(re.search(r"\b(?:quy hoach|giai toa|giai phong mat bang|lo gioi|thu hoi dat|quy hoach xay dung)\b",value))
     market=bool(re.search(r"\b(?:thi truong|gia chao|gia rao|gia trung binh|mat bang gia|gia ban|gia thue|gia mua|gia nha|gia dat|gia can ho|gia chung cu|trieu/m2|gia moi m2|gia m2)\b",value))
     trend=bool(re.search(r"\b(?:xu huong|bien dong|tang gia|giam gia|tang hay giam|so voi|nam truoc|thang truoc|quy truoc|lich su gia|du bao)\b|(?:20[0-9]{2}|[0-9]+ thang|quy [1-4])",value))
-    market = market or bool(re.search(r"\bgia\b(?!\s+dinh\b)",value) and (trend or re.search(r"\b(?:o|tai|bao nhieu)\b",value)))
+    # "gia đình", "gia tăng"... fold to "gia" but are not a price question.
+    price_value=re.sub(r"\bgia (?:dinh|dung|canh|tang|han|nhap|cong|su|vi)\b"," ",value)
+    market = market or bool(re.search(r"\bgia\b",price_value) and (trend or re.search(r"\b(?:o|tai|bao nhieu)\b",price_value)))
     prior_intent=state.get("turnIntent")
     analysis_terms=bool(re.search(r"\b(?:thinh hanh|ua chuong|duoc quan tam|duoc tim kiem|ban chay|xu huong|nhu cau thi truong|suc hut|phan khuc noi bat)\b",value))
     analysis_subject=bool(re.search(r"\b"+housing+r"\b|\b(?:thi truong|phan khuc|loai hinh)\b",value)) or prior_intent in ("MARKET_PRICE","MARKET_TREND","MARKET_ANALYSIS")
@@ -206,9 +221,9 @@ def classification(question, context, *, districts=()):
     elif not explicit_search and not reference and ((market and not re.search(r"\bla gi\b",value)) or market_followup):intent="MARKET_TREND" if trend else "MARKET_PRICE"
     elif knowledge:intent="KNOWLEDGE"
     elif place_question:intent="AREA_AMENITIES"
-    elif explicit_search or pending_search or refinement:intent="REFINE_SEARCH" if has_history else "SEARCH"
+    elif explicit_search or pending_search or refinement or (has_history and change_phrase and (budget_edit or district_edit or area_edit)):intent="REFINE_SEARCH" if has_history else "SEARCH"
     elif reference or (is_analytic(question) and has_history):intent="PROPERTY_FOLLOWUP"
-    elif budget_edit or kind is not None or purpose is not None:intent="UPDATE_CRITERIA"
+    elif budget_edit or kind is not None or purpose is not None or district_edit or area_edit:intent="UPDATE_CRITERIA"
     else:intent="CLARIFY"
     search_change=intent in ("SEARCH","REFINE_SEARCH")
     return {"categories":categories,"budgetChange":budget_edit and parsed.status=="VALID",

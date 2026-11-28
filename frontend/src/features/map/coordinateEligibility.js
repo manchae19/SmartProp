@@ -17,3 +17,8 @@ export function canAnalyzeDistance(property) {
     && KNOWN_SOURCES.has(coordinate.coordinateSource)
     && KNOWN_ACCURACY.has(coordinate.accuracyLevel);
 }
+
+// Legacy listing pins are reference points, never verified property positions.
+export function canExploreNearby(property) {
+  return canShowReferenceMap(property);
+}

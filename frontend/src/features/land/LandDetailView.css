@@ -1,0 +1,17 @@
+.land-detail{max-width:1440px;margin:auto;padding:24px 20px 56px;color:var(--color-brand-navy);min-width:0}
+.land-crumbs{font-size:.8rem;margin-bottom:18px;color:var(--color-brand-muted)}
+.land-head{display:flex;justify-content:space-between;gap:24px;padding:24px 28px;border:1px solid var(--ui-border);background:var(--ui-surface);border-radius:20px;margin-bottom:14px}
+.land-governance-banner{padding:12px 18px;margin-bottom:20px;border:1px solid #e2b96f;background:#fff9eb;color:#5c3d00;border-radius:14px;font-size:.82rem;line-height:1.6}
+.land-head h1{font-size:clamp(1.4rem,3vw,2rem);font-weight:750;margin:8px 0;overflow-wrap:anywhere}
+.land-head p,.land-kind-label{font-size:.85rem;color:var(--color-brand-muted)}.land-code{font-size:.75rem!important;margin-top:8px}
+.land-head-value{display:flex;flex-direction:column;gap:8px;max-width:360px;align-self:center}.land-head-value strong{font-size:1.5rem;font-weight:750}.land-head-value span{font-size:.8rem;color:var(--color-brand-muted)}
+.land-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}.land-sections{display:grid;gap:14px;min-width:0}
+.land-sections>section,.land-fold{padding:20px 22px;border:1px solid var(--ui-border);border-radius:16px;background:var(--ui-surface)}
+.land-sections h2,.land-aside h2{font-size:1.06rem;font-weight:700;margin:0 0 12px}.land-sections h3{font-size:.87rem;font-weight:650;margin:16px 0 8px}
+.land-overview{background:var(--ui-soft,#edf2f7)!important}.land-overview p{font-size:.9rem;line-height:1.85;margin:0}.land-overview-loading{color:var(--color-brand-muted)}
+.land-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;border-top:1px solid var(--ui-border);padding:10px 0;font-size:.85rem;line-height:1.6}.land-row:first-child{border-top:0}.land-row dt{color:var(--color-brand-muted)}.land-row dd{overflow-wrap:anywhere;margin:0}
+.land-demo-tag{display:inline-block;font-size:.65rem;padding:1px 6px;margin-left:6px;background:#fff3d6;color:#795100;border-radius:5px}
+.land-fold>summary{cursor:pointer;font-weight:650;font-size:.9rem;line-height:1.5}.land-fold[open]>summary{margin-bottom:12px}.land-fold p{font-size:.8rem;line-height:1.8;margin:10px 0}.land-fold a{text-decoration:underline}.land-price-row+.land-price-row{border-top:1px solid var(--ui-border);margin-top:18px}
+.land-aside{position:sticky;top:90px;min-width:0;padding:18px;border:1px solid var(--ui-border);border-radius:18px;background:var(--ui-surface)}.land-aside .land-map{max-width:none}.land-map-caption{font-size:.72rem;color:var(--color-brand-muted);margin-top:10px;line-height:1.6}
+.land-load{min-height:50vh;display:flex;gap:18px;align-items:center;justify-content:center;flex-direction:column}.land-load button{padding:10px;border:1px solid var(--ui-border);border-radius:8px}
+@media(max-width:860px){.land-layout{grid-template-columns:minmax(0,1fr)}.land-aside{position:static}.land-head{padding:18px;flex-direction:column;gap:16px}.land-head-value{align-self:start}.land-row{grid-template-columns:110px minmax(0,1fr);gap:10px}.land-detail{padding:18px 12px}.land-sections>section,.land-fold{padding:16px}.land-map-canvas{max-height:65vh}}
