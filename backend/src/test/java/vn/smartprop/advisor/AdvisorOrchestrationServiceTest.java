@@ -7,23 +7,34 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import vn.smartprop.advisor.AdvisorDtos.AdvisedProperty;
 import vn.smartprop.advisor.AdvisorDtos.AdvisorRequest;
 import vn.smartprop.advisor.AdvisorDtos.AdvisorResponse;
+import vn.smartprop.advisor.AdvisorDtos.ComparableItem;
 import vn.smartprop.advisor.AdvisorDtos.ValuationEvidence;
 import vn.smartprop.common.ApiException;
+import vn.smartprop.common.RequestLimits;
 import vn.smartprop.comparable.ComparableDtos;
 import vn.smartprop.comparable.ComparableEligibilityService;
 import vn.smartprop.comparable.ComparableRankingService;
+import vn.smartprop.modules.auth.AccountAccess;
 import vn.smartprop.modules.recommendation.HybridRecommendationService;
 import vn.smartprop.modules.recommendation.RecommendationDtos;
 import vn.smartprop.modules.recommendation.RecommendationDtos.AreaResult;
@@ -44,7 +55,7 @@ class AdvisorOrchestrationServiceTest {
     }
 
     @Test
-    void flexibleBudgetExpandsCeilingAndAnchorsComparablesToSourcePriceNeverV6() {
+    void flexibleBudgetAndAdvisorComparablePurposesDoNotConsumeV13Prediction() throws Exception {
         AdvisorOrchestrationService orchestrator = newOrchestrator(true);
 
         PropertyResult prop = new PropertyResult(
@@ -81,15 +92,15 @@ class AdvisorOrchestrationServiceTest {
         ));
 
         when(valAdapter.probeSupportedLocations()).thenReturn(Map.of("Nhà ở", Set.of("Hải Châu")));
-        // V6 returns 5.2B — ComparableRankingService MUST still receive 4.4B (source asking price), never 5.2B!
+        // V1.3 predicts 5.2B. Only similar-listing evidence may use the source asking price.
         when(valAdapter.evaluate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(
-            new ValuationEvidence("AVAILABLE", true, null, "v6", "b4b1339d3f35857e",
-                new BigDecimal("5200000000"), new BigDecimal("-15.4"), "V6 basis",
+            new ValuationEvidence("AVAILABLE", true, null, "v1.3", "synthetic-test",
+                new BigDecimal("5200000000"), new BigDecimal("-15.4"), "ASKING_SALE_VND_TOTAL",
                 Map.of("areaSqm", 85.0), List.of(), null, List.of())
         );
 
         ArgumentCaptor<ComparableDtos.Request> compCaptor = ArgumentCaptor.forClass(ComparableDtos.Request.class);
-        when(compService.rank(compCaptor.capture(), eq(false))).thenReturn(new ComparableDtos.Response(
+        when(compService.rank(any(), eq(false))).thenReturn(new ComparableDtos.Response(
             new ComparableDtos.Reference("hc-01", "HOUSE", "Hải Châu", "Hòa Cường Bắc", new BigDecimal("85"), new BigDecimal("4400000000"), null, null),
             2,
             "WARD",
@@ -97,7 +108,7 @@ class AdvisorOrchestrationServiceTest {
                 new ComparableDtos.Candidate(
                     "hc-02", ComparableDtos.SourceKind.SMARTPROP, "SmartProp", "HOUSE", "Hải Châu", "Hòa Cường Bắc",
                     new BigDecimal("82"), new BigDecimal("4350000000"), new BigDecimal("-1.1"), 3, 3, null, null,
-                    0.92, Map.of("location", "Cùng phường/xã"), "PLATFORM_PUBLISHED", "/properties/hc-02", null, null
+                    0.92, Map.of("location", "Cùng phường/xã"), "PLATFORM_PUBLISHED", "/properties/hc-02", null, null, 0.74
                 ),
                 new ComparableDtos.Candidate(
                     "tnx-99", ComparableDtos.SourceKind.TINIX_RESEARCH, "TiniX", "HOUSE", "Hải Châu", "Hòa Cường Bắc",
@@ -110,7 +121,7 @@ class AdvisorOrchestrationServiceTest {
             Map.of("SMARTPROP", 10)
         ));
 
-        AdvisorResponse response = orchestrator.consult(new AdvisorRequest(
+        AdvisorRequest request = new AdvisorRequest(
             new BigDecimal("4000000000"),
             15, // +15% -> 4.6B effective ceiling
             Purpose.LIVING,
@@ -122,7 +133,21 @@ class AdvisorOrchestrationServiceTest {
             true,
             true,
             false
-        ));
+        );
+        ObjectMapper mapper = new ObjectMapper();
+        var mvc = MockMvcBuilders.standaloneSetup(
+            new AdvisorController(orchestrator, mock(AccountAccess.class), mock(RequestLimits.class))
+        ).build();
+        String json = mvc.perform(post("/api/v1/advisor/consult")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(request)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.recommendedProperties[0].comparableEvidence.comparables[0].featureCoverage").value(0.74))
+            .andExpect(jsonPath("$.recommendedProperties[0].comparableEvidence.comparables[0].similarityScore").value(0.92))
+            .andExpect(jsonPath("$.recommendedProperties[0].valuationComparableEvidence.comparables[0].featureCoverage").value(0.74))
+            .andExpect(jsonPath("$.recommendedProperties[0].valuationComparableEvidence.comparables[0].similarityScore").value(0.92))
+            .andReturn().getResponse().getContentAsString();
+        AdvisorResponse response = mapper.readValue(json, AdvisorResponse.class);
 
         // 1. Effective ceiling & ALL normalization
         assertThat(recCaptor.getValue().budgetVnd()).isEqualByComparingTo("4600000000");
@@ -130,9 +155,13 @@ class AdvisorOrchestrationServiceTest {
         assertThat(recCaptor.getValue().propertyType()).isEqualTo(PropertyType.ALL);
 
         // 2. Anti-circularity & SAFE isolation check: rank called with includeResearch=false
-        verify(compService).rank(any(), eq(false));
-        assertThat(compCaptor.getValue().priceVnd()).isEqualByComparingTo("4400000000");
-        assertThat(compCaptor.getValue().propertyId()).isEqualTo("hc-01");
+        verify(compService, times(2)).rank(compCaptor.capture(), eq(false));
+        var requests = compCaptor.getAllValues();
+        assertThat(requests.get(0).purpose()).isEqualTo(ComparableDtos.Purpose.SIMILAR_LISTING);
+        assertThat(requests.get(0).priceVnd()).isEqualByComparingTo("4400000000");
+        assertThat(requests.get(1).purpose()).isEqualTo(ComparableDtos.Purpose.VALUATION_SUPPORT);
+        assertThat(requests.get(1).priceVnd()).isNull();
+        assertThat(requests).allSatisfy(comparableRequest -> assertThat(comparableRequest.propertyId()).isEqualTo("hc-01"));
 
         // 3. Property response flags & URL sanitization
         assertThat(response.recommendedProperties()).hasSize(1);
@@ -149,7 +178,22 @@ class AdvisorOrchestrationServiceTest {
         assertThat(item.comparableEvidence().comparables().get(0).candidateId()).isEqualTo("hc-02");
         assertThat(item.comparableEvidence().comparables().get(0).listingUrl()).isEqualTo("/listing/hc-02");
         assertThat(item.comparableEvidence().warnings()).isEmpty();
+        assertThat(item.valuationComparableEvidence().comparables()).hasSize(1);
+        assertThat(item.valuationEvidence().predictedAskingPriceVnd()).isEqualByComparingTo("5200000000");
         assertThat(response.warnings()).noneMatch(w -> w.contains("TiniX") || w.contains("CC BY-NC") || w.startsWith("RESEARCH_COMPARABLES_LABEL:"));
+    }
+
+    @Test
+    void legacyComparableItemRetainsItsScoreWhenCoverageIsAbsent() throws Exception {
+        ComparableItem legacy = new ComparableItem("legacy", "SMARTPROP", "SmartProp", true, false,
+            "PLATFORM_PUBLISHED", "HOUSE", "Hai Chau", null, null, null, null, null, null, null,
+            0.92, "HEURISTIC_SIMILARITY_UNCALIBRATED", Map.of(), "/listing/legacy", null, null);
+        assertThat(legacy.featureCoverage()).isNull();
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode json = mapper.valueToTree(legacy);
+        json.remove("featureCoverage");
+        assertThat(mapper.treeToValue(json, ComparableItem.class)).isEqualTo(legacy);
+        assertThat(json.get("similarityScore").asDouble()).isEqualTo(0.92);
     }
 
     @Test

@@ -108,6 +108,7 @@ export default function AdvisorResults({ result, selectedPoiId = '', onFocusPoi,
                   <AdvisorEvidencePanel
                     valuation={property.valuationEvidence}
                     comparable={property.comparableEvidence}
+                    valuationComparables={property.valuationComparableEvidence}
                     mode={isResearch ? 'INTERNAL_RESEARCH' : 'SAFE'}
                     allowResearch={isResearch}
                   />

@@ -1,5 +1,6 @@
 import { publicMapPoint, locationLabel } from '../map/locationDisplay.js'
 import { nearbyPlaces, poiHasPoint } from '../map/nearbyPlaces.js'
+import { hasResearchComparableMetadata } from '../property/comparables.js'
 
 const PURPOSES = new Set(['LIVING', 'INVESTMENT', 'RENTAL'])
 const TYPES = new Set(['ALL', 'HOUSE', 'APARTMENT', 'LAND', 'VILLA', 'ROOM', 'COMMERCIAL'])
@@ -173,6 +174,7 @@ export function isResearchComparableItem(item) {
       || item.researchReference === true
       || item.datasetLicense === 'CC BY-NC 4.0'
       || String(item.candidateId ?? '').startsWith('tnx-')
+      || String(item.candidateId ?? '').startsWith('tinix:')
     )
   )
 }
@@ -237,19 +239,19 @@ export function validateAdvisorResponse(data, options = {}) {
     validateLocationIntelligence(prop.locationIntelligence, prop)
 
     // Validate Comparable Evidence
-    if (prop.comparableEvidence) {
-      const comp = prop.comparableEvidence
+    for (const comp of [prop.comparableEvidence, prop.valuationComparableEvidence].filter(Boolean)) {
+      const safeOnly = data.mode === 'SAFE' || comp === prop.valuationComparableEvidence
       if (!Array.isArray(comp.comparables) || comp.comparables.length > 5) {
         throw Error('Bằng chứng bất động sản tương đồng không hợp lệ.')
       }
-      if (data.mode === 'SAFE' && hasResearchLeakText(comp.warnings)) {
+      if (safeOnly && (hasResearchLeakText(comp.warnings) || hasResearchComparableMetadata(comp.cohort))) {
         throw Error('Bằng chứng tương đồng ở chế độ SAFE chứa metadata nghiên cứu không hợp lệ.')
       }
       for (const item of comp.comparables) {
         if (!COMPARABLE_KINDS.has(item.sourceKind)) {
           throw Error('Nguồn bất động sản tương đồng không xác định.')
         }
-        if (data.mode === 'SAFE' && isResearchComparableItem(item)) {
+        if (safeOnly && isResearchComparableItem(item)) {
           throw Error('Chế độ công khai SAFE không được phép chứa bằng chứng tương đồng từ nguồn nghiên cứu TiniX.')
         }
         if (item.sourceKind === 'TINIX_RESEARCH') {

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -194,6 +195,32 @@ class ResearchAccessHttpSecurityTest {
         verify(comparableService, never()).rankResearch(any());
         verify(marketService, never()).analyticsResearch(any(), any(), any(), any(), any());
         verify(advisorService, never()).consult(any());
+    }
+
+    @Test
+    void brokerCanSendExplicitComparablePurposeWithAdditiveFields() throws Exception {
+        when(comparableService.rank(any())).thenReturn(new ComparableDtos.Response(
+            new ComparableDtos.Reference(null, "HOUSE", "Hải Châu", null, new BigDecimal("80"), null, null, null),
+            0, "NONE", List.of(), List.of(), Map.of("SMARTPROP", 0, "EXTERNAL_LISTING", 0)));
+        mvc.perform(post("/api/v1/properties/comparables")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + brokerToken)
+                .contentType(MediaType.APPLICATION_JSON).content("""
+                    {"propertyType":"HOUSE","district":"Hải Châu","areaSqm":80,
+                     "purpose":"BUYER_BUDGET_SEARCH","buyerBudgetVnd":3000000000,
+                     "subjectIdentity":{"externalId":42}}
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Cache-Control", "private, no-store"))
+            .andExpect(jsonPath("$.comparables").isArray())
+            .andExpect(jsonPath("$.reference.propertyType").value("HOUSE"))
+            .andExpect(jsonPath("$.eligibleCountsBySource.TINIX_RESEARCH").doesNotExist());
+        var captured = org.mockito.ArgumentCaptor.forClass(ComparableDtos.Request.class);
+        verify(comparableService).rank(captured.capture());
+        var request = captured.getValue();
+        assertThat(request.purpose()).isEqualTo(ComparableDtos.Purpose.BUYER_BUDGET_SEARCH);
+        assertThat(request.buyerBudgetVnd()).isEqualByComparingTo("3000000000");
+        assertThat(request.subjectIdentity().externalId()).isEqualTo(42L);
+        verify(comparableService, never()).rankResearch(any());
     }
 
     @Test

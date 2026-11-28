@@ -96,11 +96,11 @@ class ComparableRankingLiveIT {
                 assertTrue(candidate.listingUrl() == null, "TiniX rows must never carry a URL");
                 Integer held = jdbc.queryForObject(
                     "SELECT is_protected_holdout FROM tinix_dataset_records WHERE internal_id = :id",
-                    Map.of("id", candidate.candidateId()), Integer.class);
+                    Map.of("id", candidate.candidateId().substring("tinix:".length())), Integer.class);
                 assertEquals(0, held);
                 String tx = jdbc.queryForObject(
                     "SELECT transaction_type FROM tinix_dataset_records WHERE internal_id = :id",
-                    Map.of("id", candidate.candidateId()), String.class);
+                    Map.of("id", candidate.candidateId().substring("tinix:".length())), String.class);
                 assertEquals("SALE", tx);
             }
         }
