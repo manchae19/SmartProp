@@ -1,78 +1,75 @@
-# WP-04 isolated Standard-V23 fixture — provisioning log
+# WP-04 isolated Standard-V23 fixture — provisioning and root cause
 
-Sanitised. No credentials, no protected data. Written after Checkpoint 1 was attempted.
+Sanitised. No credentials, no protected data.
 
-## 1. Instance actually provisioned (verified)
+## 1. Correction to the earlier diagnosis
+
+The previous version of this document blamed **MySQL 8.4** for requiring `CHECK` constraint names to
+be unique per schema, and suggested that MySQL 8.0 would behave differently. **That was wrong.**
+MySQL **8.0.16 and later** have the same rule and the same error (`ER_CHECK_CONSTRAINT_DUP_NAME`,
+3822). V2 declares `ck_user_token_version` **exactly once** (on `users`), and the migrated fixture
+contains exactly one such constraint, owned by `wp04_runtime_v23.users`.
+
+The duplicate-constraint error seen earlier was an **artifact of re-running V2 by hand against a
+schema where an earlier attempt had already added the constraint** — not the original failure.
+
+## 2. Original failure (clean fixture, single run)
 
 | Fact | Value |
 |---|---|
-| Binary | `F:\SmartProp\.scratch\mysql-8.4\mysql-8.4.13-winx64\bin\mysqld.exe` |
-| Version | **8.4.13** |
-| Datadir | `F:\SmartProp\.scratch\wp04-mysql\data` (fresh, `--initialize-insecure`) |
-| Bind | `127.0.0.1` only, `--mysqlx=0` |
-| Port | **3407** (verified free before start) |
-| Server UUID | `165b1d47-eaff-11f1-8898-7085c2fe30d2` |
-| PID (first start / restart) | 20472 / 6084 |
-| Schema | `smartprop_wp04_runtime` (utf8mb4_unicode_ci) |
-| Runtime user | `wp04_rt@127.0.0.1`, grants limited to that schema |
-| Protected ports | 3306/3307/3311/3312 never contacted |
+| Server | MySQL **8.4.13** (portable, `F:\SmartProp\.scratch\mysql-8.4\mysql-8.4.13-winx64`) |
+| Fixture | fresh datadir `wp04-mysql/data-clean`, schema `wp04_runtime_clean` |
+| Server UUID | `0f5afd1e-eb00-11f1-94da-7085c2fe30d2` (PID 35020) |
+| Command | `mvnw -o flyway:migrate -Dflyway.target=23 -Dflyway.locations=filesystem:<repo>/database/migrations,filesystem:<repo>/database/research-migrations/poi` |
+| Result | V1 applied; **V2 failed** at `V2__extend_accounts_and_roles.sql` **line 54** |
+| SQLSTATE | **HY000** |
+| Error code | **1419** |
+| Message | `You do not have the SUPER privilege and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)` |
 
-Commands used (no secrets):
+Line 54 is the `CREATE TRIGGER users_role_insert` compatibility bridge (V2 also creates
+`users_role_update`). MySQL 8.4 enables binary logging by default, and creating a trigger under
+binary logging requires `SUPER` or `log_bin_trust_function_creators=1`.
 
-```
-mysqld --initialize-insecure --datadir=<tmp>/data --basedir=<mysql8.4>
-mysqld --datadir=<tmp>/data --port=3407 --bind-address=127.0.0.1 --mysqlx=0
-mysql -h 127.0.0.1 -P 3407 -u root -e "CREATE DATABASE smartprop_wp04_runtime ..."
-```
+**Conclusion:** the blocker is a **server-configuration** requirement for trigger creation, not a
+migration defect, not a CHECK-name rule, and not a MySQL 8.4-vs-8.0 difference.
 
-First attempt failed at `ERROR 1130 Host '127.0.0.1' is not allowed to connect` because
-`--skip-name-resolve` left only `root@localhost`; restarting without that flag fixed it.
+## 3. Clean fixture that applies the unchanged lineage
 
-## 2. Migration attempt — BLOCKED with an exact cause
+| Fact | Value |
+|---|---|
+| Server | MySQL 8.4.13, datadir `wp04-mysql/data-ok` (fresh `--initialize-insecure`) |
+| Bind | `127.0.0.1`, `--mysqlx=0`, port **3407** (verified free) |
+| Server UUID | `54afb557-eb00-11f1-886b-7085c2fe30d2` (PID 34408) |
+| Server flag | `--log-bin-trust-function-creators=1` (fixture-scoped, not a migration change) |
+| Schema / user | `wp04_runtime_v23` / `wp04_v23@127.0.0.1` (grants limited to that schema) |
+| Migrations | unchanged files under `database/migrations` + `database/research-migrations/poi` |
+| Result | **23/23 applied**, `now at version v23`, exit 0 |
+| `flyway:validate` | **Successfully validated 23 migrations**, exit 0 |
 
-Command (Standard lineage through V23, separately controlled, guard untouched):
+Post-migration verification (read-only):
 
-```
-mvnw -o flyway:migrate   -Dflyway.url=jdbc:mysql://127.0.0.1:3407/smartprop_wp04_runtime?connectionTimeZone=UTC   -Dflyway.user=wp04_rt -Dflyway.password=***   -Dflyway.locations=filesystem:<repo>/database/migrations,filesystem:<repo>/database/research-migrations/poi   -Dflyway.target=23
-```
+- `flyway_schema_history`: **23 rows, 23 success, 0 failed**.
+- **56** tables.
+- Triggers present: `users_role_insert`, `users_role_update`, `session_revoke_update`,
+  `properties_listing_code_insert`, `properties_listing_code_update`.
+- Core tables present: `users`, `auth_sessions`, `roles`, `user_roles`, `properties`,
+  `property_images`.
+- `ck_user_token_version` exists exactly once, on `users` — no duplicate.
 
-Exit code **1**. Flyway history after the attempt:
+No migration file was edited, no Flyway history was fabricated, no guard/lineage validation was
+weakened, and `ddl-auto=create` was never used.
 
-| version | success | description |
-|---|---|---|
-| 1 | 1 | accounts and sessions |
-| 2 | **0** | extend accounts and roles |
+## 4. Fixtures preserved for investigation
 
-Applying `V2__extend_accounts_and_roles.sql` directly reproduces the root cause:
+- `wp04-mysql/data` — first attempt (V1 ok, V2 failed, then a manual V2 replay produced the
+  misleading duplicate error). Read-only.
+- `wp04-mysql/data-clean` — clean reproduction of the original V2 failure (log above). Read-only.
+- `wp04-mysql/data-ok` — the verified V23 fixture used for runtime work.
 
-```
-ERROR 3822 (HY000) at line 5: Duplicate check constraint name 'ck_user_token_version'.
-```
+## 5. What is still open
 
-- V1 succeeded, so connectivity, credentials and locations are correct.
-- MySQL **8.4** requires `CHECK` constraint names to be unique **per schema**; MySQL 8.0 (the
-  lineage the migrations were written for) scoped them per table. V2 therefore cannot apply on the
-  8.4 binary.
-- The migration SQL is immutable for this task and the lineage guard must not be weakened, so this is
-  a hard stop, not a configuration mistake.
-
-## 3. What this blocks
-
-Spring Boot cannot start with `ddl-auto=validate` against an empty schema, so:
-
-- `WP04_ISOLATED_STANDARD_V23_FIXTURE_VERIFIED` — **not satisfied** (instance verified, lineage not).
-- Real posting preview and Advisor runtime gates — **not run**.
-- Three real browser route interactions — **not run**.
-
-## 4. Unblocking options (need a decision, none applied)
-
-1. Provision the same fixture with a **MySQL 8.0.x** binary (the lineage's target version). V2 would
-   then apply and the rest of the chain can be validated unchanged.
-2. Obtain approval to make V2 portable (e.g. schema-unique check names) — a migration change outside
-   this task's scope and explicitly forbidden right now.
-
-## 5. Cleanup
-
-The disposable instance was stopped; the datadir is retained at
-`F:\SmartProp\.scratch\wp04-mysql\data` so the run can be repeated verbatim once a MySQL 8.0
-binary is available. No production or group database was ever contacted.
+Checkpoint 1 requires Hibernate schema validation, which needs Spring Boot started against this
+fixture with `spring.jpa.hibernate.ddl-auto=validate`, runtime Flyway disabled and SQL init disabled
+(the `standard-migrations` profile already enforces all three and, unlike the local/staging profiles,
+does not pin the JDBC URL to a protected instance). Synthetic seeding (BROKER, BUYER, ADMIN, published
+properties) and Checkpoints 2–3 (FastAPI + Spring runtime, three browser surfaces) remain.
