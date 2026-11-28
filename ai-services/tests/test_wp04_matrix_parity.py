@@ -5,6 +5,7 @@ compares it, feature by feature, with the matrix the benchmark builds for the sa
 No production preprocessing is changed; the capture wraps the module-level `transform` used by
 the predictor.
 """
+import importlib.util
 import os
 from pathlib import Path
 
@@ -49,8 +50,29 @@ CASES = {
 }
 
 
+BENCH_PATH = Path(__file__).resolve().parents[2] / "docs" / "ai" / "benchmark" / \
+    "wp04_explainability_benchmark.py"
+
+
+def _bench_module():
+    """The Phase A benchmark itself, so its preparation code is the single source of truth."""
+    if not BENCH_PATH.exists():
+        pytest.skip(f"benchmark not found at {BENCH_PATH}")
+    spec = importlib.util.spec_from_file_location("wp04_bench", BENCH_PATH)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.map_v6_to_v1_3 = map_v6_to_v1_3
+    return module
+
+
 def benchmark_matrix(predictor, payload) -> pd.DataFrame:
-    """Exactly what the Phase A benchmark builds."""
+    """Build the matrix with the benchmark's own prepare_matrix()."""
+    frame, _mapped = _bench_module().prepare_matrix(
+        payload, predictor.schema, map_v6_to_v1_3, real_transform, pd)
+    return frame
+
+
+def _legacy_benchmark_matrix(predictor, payload) -> pd.DataFrame:
     mapped = map_v6_to_v1_3(
         payload, district_vocabulary=predictor.schema.get("vocabularies", {}).get("district"))
     input_row = {
@@ -146,3 +168,44 @@ def test_invalid_numeric_is_rejected_before_the_matrix(predictor, monkeypatch):
                                            "location_feature": "Cẩm Lệ",
                                            "area_sqm": -5})
     assert calls["n"] == 0, "invalid numeric must be rejected before the feature transform"
+
+
+def test_matrix_parity_over_full_synthetic_matrix(predictor):
+    """Every one of the 105 synthetic cases, compared feature by feature."""
+    bench = _bench_module()
+    cases, extras = bench.build_cases(predictor.schema)
+    assert len(cases) == 105, f"expected the 105-case matrix, got {len(cases)}"
+
+    captured = []
+    original = predictor_module.transform
+
+    def capturing(frame, schema):
+        result = original(frame, schema)
+        captured.append(result)
+        return result
+
+    predictor_module.transform = capturing
+    try:
+        for case in cases:
+            predictor.predict_from_v6_payload(case.payload)
+            production = captured[-1]
+            expected = bench.prepare_matrix(
+                case.payload, predictor.schema, map_v6_to_v1_3, real_transform, pd)[0]
+            pd.testing.assert_frame_equal(production, expected, check_dtype=True,
+                                          check_categorical=True, check_exact=True)
+        assert len(captured) == len(cases)
+
+        for extra in extras:
+            if extra.expectation != "SUCCESS":
+                continue
+            try:
+                predictor.predict_from_v6_payload(extra.payload)
+            except Exception:  # noqa: BLE001 - unsupported categorical combinations
+                continue
+            production = captured[-1]
+            expected = bench.prepare_matrix(
+                extra.payload, predictor.schema, map_v6_to_v1_3, real_transform, pd)[0]
+            pd.testing.assert_frame_equal(production, expected, check_dtype=True,
+                                          check_categorical=True, check_exact=True)
+    finally:
+        predictor_module.transform = original

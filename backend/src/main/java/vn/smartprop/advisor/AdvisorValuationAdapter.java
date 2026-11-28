@@ -226,12 +226,13 @@ public class AdvisorValuationAdapter {
             featuresUsed,
             missingFeatures,
             shap,
-            List.copyOf(warnings)
+            List.copyOf(warnings),
+            explanationOf(res)
         );
     }
 
     public static ValuationEvidence skipped(String status, String reason) {
-        return new ValuationEvidence(status, false, reason, null, null, null, null, null, Map.of(), List.of(), null, List.of());
+        return new ValuationEvidence(status, false, reason, null, null, null, null, null, Map.of(), List.of(), null, List.of(), null);
     }
 
     static String mapCategory(PropertyType type) {
@@ -295,6 +296,14 @@ public class AdvisorValuationAdapter {
             }
         }
         return List.copyOf(out);
+    }
+
+    /** WP-04: same rule as the valuation service - absent, null or malformed means null. */
+    private static JsonNode explanationOf(JsonNode body){
+        if(body==null||body.isNull()||body.isMissingNode())return null;
+        JsonNode node=body.get("explanation");
+        if(node==null||node.isNull()||node.isMissingNode()||!node.isObject())return null;
+        return node;
     }
 
     private static ShapSummary parseShap(JsonNode s) {

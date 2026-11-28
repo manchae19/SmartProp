@@ -23,7 +23,10 @@ public class ValuationService {
     public record Options(String modelVersion,String modelRun,List<Category> categories,
         Map<String,String> accessTypes,Map<String,String> houseSubtypes){}
     public record Preview(boolean available,String reason,String modelVersion,String modelRun,String predictedAskingPriceVnd,
-        String currency,String priceBasis,Map<String,Object> featuresUsed,List<String> missingFeatures,List<String> warnings){}
+        String currency,String priceBasis,Map<String,Object> featuresUsed,List<String> missingFeatures,List<String> warnings,
+        // WP-04: FastAPI explanation passed through unchanged, or null. Never
+        // synthesised here; JsonNode keeps nested fields and decimal precision.
+        JsonNode explanation){}
     /**
      * Map a district name from any case/Unicode form to the display label the API uses.
      *
@@ -68,7 +71,7 @@ public class ValuationService {
             Map.of("villa","Biệt thự","house_c4","Nhà phố"));
     }
     public Options options(Long actor){access.publisher(actor);return loadOptions();}
-    private Preview unsupported(String reason){return new Preview(false,reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of());}
+    private Preview unsupported(String reason){return new Preview(false,reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of(),null);}
     public Preview preview(Long actor,ValuationRequest r){
         access.publisher(actor);
         String category=switch(r.propertyType()){case HOUSE,VILLA->"Nhà ở";case LAND->"Đất nền";case APARTMENT->"Căn hộ chung cư";default->null;};
@@ -133,10 +136,22 @@ public class ValuationService {
         if(!band.isBlank())warnings.add("Khoảng giá tham khảo: "+band+".");
         return new Preview(true,null,"v1.3",RUN,price.bigIntegerValue().toString(),"VND",
             "Giá rao ước tính từ dữ liệu tin đăng (mô hình thử nghiệm V1.3).",features,
-            strings(n.path("missing_features")),warnings);
+            strings(n.path("missing_features")),warnings,explanationOf(n));
     }
     private static Preview unavailablePreview(String reason){
-        return new Preview(false,reason==null?"Giá tham khảo chưa sẵn sàng.":reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of());
+        return new Preview(false,reason==null?"Giá tham khảo chưa sẵn sàng.":reason,"v1.3",RUN,null,"VND",null,Map.of(),List.of(),List.of(),null);
+    }
+    /**
+     * WP-04: pass the model explanation through exactly as FastAPI produced it.
+     *
+     * MissingNode, NullNode, a non-object node or an absent field all mean "no explanation"
+     * and become null. Nothing is invented at this layer, and the valuation still succeeds.
+     */
+    static JsonNode explanationOf(JsonNode body){
+        if(body==null||body.isNull()||body.isMissingNode())return null;
+        JsonNode node=body.get("explanation");
+        if(node==null||node.isNull()||node.isMissingNode()||!node.isObject())return null;
+        return node;
     }
     private static List<String> strings(JsonNode n){if(!n.isArray()||n.size()>30)throw ValuationClient.unavailable();List<String> out=new ArrayList<>();for(var v:n){if(!v.isTextual()||v.asText().length()>1000)throw ValuationClient.unavailable();out.add(v.asText());}return out;}
 }

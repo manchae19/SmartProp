@@ -200,6 +200,42 @@ def build_cases(schema: Dict[str, Any]) -> Tuple[List[Case], List[Extra]]:
 
 
 # --------------------------------------------------------------------------- helpers
+RENAME_TO_RAW = {"street_name": "raw_street_name", "project_name": "raw_project_name",
+                 "house_direction": "raw_house_direction",
+                 "balcony_direction": "raw_balcony_direction",
+                 "floor_count": "raw_floor_count", "frontage_width": "raw_frontage_width",
+                 "road_width": "raw_road_width", "bedroom_count": "raw_bedroom_count",
+                 "bathroom_count": "raw_bathroom_count"}
+
+
+def build_input_row(mapped: Dict[str, Any]) -> Dict[str, Any]:
+    """Exactly the row PredictorV1_3.predict() assembles from the canonical record."""
+    return {
+        "area": float(mapped["area"]),
+        "raw_floor_count": mapped.get("floor_count"),
+        "raw_frontage_width": mapped.get("frontage_width"),
+        "raw_road_width": mapped.get("road_width"),
+        "raw_bedroom_count": mapped.get("bedroom_count"),
+        "raw_bathroom_count": mapped.get("bathroom_count"),
+        "normalized_type": mapped["normalized_type"],
+        "district": mapped["district"],
+        "ward": mapped.get("ward"),
+        "raw_street_name": mapped.get("street_name"),
+        "raw_project_name": mapped.get("project_name"),
+        "raw_house_direction": mapped.get("house_direction"),
+        "raw_balcony_direction": mapped.get("balcony_direction"),
+    }
+
+
+def prepare_matrix(payload: Dict[str, Any], schema: Dict[str, Any], map_fn, transform_fn,
+                   pd_module):
+    """Single preparation path shared by the benchmark and the parity test."""
+    mapped = map_fn(payload,
+                    district_vocabulary=schema.get("vocabularies", {}).get("district"))
+    frame = transform_fn(pd_module.DataFrame([build_input_row(mapped)]), schema)
+    return frame, mapped
+
+
 def aggregate_groups(features: Sequence[str], contribs: Sequence[float],
                      groups: Dict[str, str]) -> Tuple[Dict[str, float], List[str]]:
     """Signed aggregation by group. Returns (group_sums, problems)."""
@@ -330,32 +366,9 @@ def run(predictor, cases: List[Case], extras: List[Extra]) -> Dict[str, Any]:
               "bathroom_count": "raw_bathroom_count"}
 
     def frame_for(payload: Dict[str, Any]):
-        """Build the matrix exactly like PredictorV1_3.predict() does.
-
-        Production maps the payload to a canonical record, then assembles an explicit
-        `input_row` from the RECORD (not from the raw payload). The earlier version of this
-        benchmark overwrote `ward` with the raw payload value, which is not what production
-        sees (the adapter strips the "Phường/Xã" prefix and casefolds). That is fixed here and
-        asserted below.
-        """
-        mapped = map_v6_to_v1_3(
-            payload, district_vocabulary=schema.get("vocabularies", {}).get("district"))
-        input_row = {
-            "area": float(mapped["area"]),
-            "raw_floor_count": mapped.get("floor_count"),
-            "raw_frontage_width": mapped.get("frontage_width"),
-            "raw_road_width": mapped.get("road_width"),
-            "raw_bedroom_count": mapped.get("bedroom_count"),
-            "raw_bathroom_count": mapped.get("bathroom_count"),
-            "normalized_type": mapped["normalized_type"],
-            "district": mapped["district"],
-            "ward": mapped.get("ward"),
-            "raw_street_name": mapped.get("street_name"),
-            "raw_project_name": mapped.get("project_name"),
-            "raw_house_direction": mapped.get("house_direction"),
-            "raw_balcony_direction": mapped.get("balcony_direction"),
-        }
-        return transform(pd.DataFrame([input_row]), schema), mapped, input_row
+        """Same preparation as production, shared with the parity test."""
+        frame, mapped = prepare_matrix(payload, schema, map_v6_to_v1_3, transform, pd)
+        return frame, mapped, build_input_row(mapped)
 
     additivity, recon_naive, recon_final, topk_rem, group_rem = [], [], [], [], []
     per_case: List[Dict[str, Any]] = []

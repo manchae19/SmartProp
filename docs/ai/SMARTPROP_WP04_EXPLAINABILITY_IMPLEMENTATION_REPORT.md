@@ -85,3 +85,35 @@ venv of its own — recorded as a deviation from "worktree-local venv".
 - Full FastAPI serial: **1216 passed, 20 skipped, 105 subtests, exit 0**
 - Benchmark `--assertions`: 105 cases, 15 extras, self-tests PASS, digest `9eedb3c7c3668f61`
 - Two JSON runs: identical digest, exit 0
+
+---
+
+## B3 — Spring Boot integration
+
+### Contract
+`ValuationService.Preview` và `AdvisorDtos.ValuationEvidence` mang thêm một component
+`JsonNode explanation` (additive, cuối record). `ValuationClient` vốn đã trả `JsonNode` nên
+không đổi tầng transport.
+
+- `explanationOf(JsonNode body)`: `null` cho absent / NullNode / MissingNode / non-object;
+  object hợp lệ được truyền nguyên. Không tạo attribution ở Java.
+- `ValuationEvidence` có thêm constructor 12-arg tương thích ngược để caller cũ (và test cũ của
+  PR #39/#45) không phải sửa.
+- Legacy `shap_explanation` giữ nguyên (`ShapSummary`), không bị thay thế.
+- Prediction, persistence, authorization không đổi; không migration.
+
+### Verification
+- `ValuationExplanationContractTest` — **8 test**: round-trip giữ nested fields + precision,
+  legacy payload không có `explanation` → JSON `null`, cả 4 status (`AVAILABLE`, `PARTIAL`,
+  `UNAVAILABLE`, `NOT_SUPPORTED`) đi qua nguyên vẹn, malformed (array/string/null/absent) → `null`,
+  không sinh factors giả.
+- `ValuationExplanationRuntimeTest` — **5 test**: HTTP thật trên loopback qua `ValuationClient`
+  thật tới stub peer phục vụ payload cùng shape FastAPI: explanation sống sót qua hop, payload
+  legacy, malformed, peer 503 → lỗi unavailable, route preview.
+- **Phát hiện**: Jackson `JsonNode` giữ số dạng **double** (IEEE-754), không phải BigDecimal tuỳ ý.
+  FastAPI phát `float64` nên round-trip là lossless; test dùng đúng biểu diễn float64
+  (`-0.8049478546599858`). Nếu sau này cần số thập phân tuỳ ý phải bật
+  `USE_BIG_DECIMAL_FOR_FLOATS` — ghi lại làm điều kiện mở rộng.
+- Backend: **271 test, 0 failure** (`mvnw -o test`, BUILD SUCCESS).
+- FastAPI WP04 (contract + HTTP + matrix parity): **51 passed**; benchmark 105 case, digest
+  `9eedb3c7c3668f61` không đổi.
