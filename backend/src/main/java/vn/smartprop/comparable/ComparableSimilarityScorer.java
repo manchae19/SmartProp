@@ -22,23 +22,42 @@ public final class ComparableSimilarityScorer {
     public static final double W_FLOORS = 0.10;
     public static final double W_FRONTAGE = 0.06;
     public static final double W_PRICE = 0.08;
+    private static final double W_ROAD = 0.08;
+    private static final double W_PROJECT = 0.18;
 
     public record Input(
         String district, String ward, String propertyType,
         BigDecimal areaSqm, BigDecimal priceVnd,
-        Integer bedrooms, Integer floors, BigDecimal frontageM
-    ) {}
+        Integer bedrooms, Integer floors, BigDecimal frontageM, BigDecimal roadWidthM, String projectKey
+    ) {
+        public Input(String district, String ward, String propertyType, BigDecimal areaSqm, BigDecimal priceVnd,
+                     Integer bedrooms, Integer floors, BigDecimal frontageM) {
+            this(district, ward, propertyType, areaSqm, priceVnd, bedrooms, floors, frontageM, null, null);
+        }
+    }
 
-    public record Result(double score, Map<String,String> breakdown) {}
+    public record Result(double score, Map<String,String> breakdown, double featureCoverage) {}
 
     public static Result score(Input ref, Input cand) {
+        return score(ref, cand, ComparableDtos.Purpose.SIMILAR_LISTING);
+    }
+
+    public static Result score(Input ref, Input cand, ComparableDtos.Purpose purpose) {
         Map<String,String> parts = new LinkedHashMap<>();
         double total = 0.0, weightUsed = 0.0;
+        boolean land = "LAND".equalsIgnoreCase(ref.propertyType());
+        boolean apartment = "APARTMENT".equalsIgnoreCase(ref.propertyType());
+        boolean usePrice = purpose == ComparableDtos.Purpose.SIMILAR_LISTING && positive(ref.priceVnd());
+        double applicable = W_LOCATION + W_AREA + (land ? 0 : W_BEDROOMS)
+            + (land || apartment ? 0 : W_FLOORS) + (apartment ? W_PROJECT : W_FRONTAGE + W_ROAD)
+            + (usePrice ? W_PRICE : 0);
 
         double loc = locationScore(ref.district(), ref.ward(), cand.district(), cand.ward());
         parts.put("location", fmt(loc) + (eq(ref.ward(), cand.ward()) ? " (cùng phường)"
                 : eq(ref.district(), cand.district()) ? " (cùng quận)" : " (quận lân cận)"));
-        total += loc * W_LOCATION; weightUsed += W_LOCATION;
+        if (ComparableIdentity.text(ref.district()) != null && ComparableIdentity.text(cand.district()) != null) {
+            total += loc * W_LOCATION; weightUsed += W_LOCATION;
+        }
 
         if (ref.areaSqm() != null && cand.areaSqm() != null
                 && ref.areaSqm().signum() > 0 && cand.areaSqm().signum() > 0) {
@@ -47,28 +66,38 @@ public final class ComparableSimilarityScorer {
             total += a * W_AREA; weightUsed += W_AREA;
         }
 
-        if (ref.bedrooms() != null && cand.bedrooms() != null) {
-            double b = 1.0 - Math.min(Math.abs(ref.bedrooms() - cand.bedrooms()) / 3.0, 1.0);
+        if (!land && ref.bedrooms() != null && cand.bedrooms() != null
+                && ref.bedrooms() >= 0 && cand.bedrooms() >= 0) {
+            double b = 1.0 - Math.min(Math.abs((double) ref.bedrooms() - cand.bedrooms()) / 3.0, 1.0);
             parts.put("bedrooms", fmt(b));
             total += b * W_BEDROOMS; weightUsed += W_BEDROOMS;
         }
 
-        if (ref.floors() != null && cand.floors() != null) {
-            double f = 1.0 - Math.min(Math.abs(ref.floors() - cand.floors()) / 4.0, 1.0);
+        if (!land && !apartment && ref.floors() != null && cand.floors() != null
+                && ref.floors() > 0 && cand.floors() > 0) {
+            double f = 1.0 - Math.min(Math.abs((double) ref.floors() - cand.floors()) / 4.0, 1.0);
             parts.put("floors", fmt(f));
             total += f * W_FLOORS; weightUsed += W_FLOORS;
         }
 
-        if (ref.frontageM() != null && cand.frontageM() != null
-                && ref.frontageM().signum() > 0 && cand.frontageM().signum() > 0) {
+        if (!apartment && positive(ref.frontageM()) && positive(cand.frontageM())) {
             double fr = 1.0 - Math.min(
                 Math.abs(ref.frontageM().doubleValue() - cand.frontageM().doubleValue()) / 10.0, 1.0);
             parts.put("frontage", fmt(fr));
             total += fr * W_FRONTAGE; weightUsed += W_FRONTAGE;
         }
 
-        if (ref.priceVnd() != null && cand.priceVnd() != null
-                && ref.priceVnd().signum() > 0 && cand.priceVnd().signum() > 0) {
+        if (!apartment && positive(ref.roadWidthM()) && positive(cand.roadWidthM())) {
+            double r = ratioScore(ref.roadWidthM(), cand.roadWidthM());
+            parts.put("roadWidth", fmt(r));
+            total += r * W_ROAD; weightUsed += W_ROAD;
+        }
+        if (apartment && ComparableIdentity.text(ref.projectKey()) != null && ComparableIdentity.text(cand.projectKey()) != null) {
+            double p = eq(ref.projectKey(), cand.projectKey()) ? 1.0 : 0.0;
+            parts.put("project", fmt(p));
+            total += p * W_PROJECT; weightUsed += W_PROJECT;
+        }
+        if (usePrice && positive(cand.priceVnd())) {
             double p = ratioScore(ref.priceVnd(), cand.priceVnd());
             parts.put("price", fmt(p));
             total += p * W_PRICE; weightUsed += W_PRICE;
@@ -84,7 +113,11 @@ public final class ComparableSimilarityScorer {
         }
 
         double score = weightUsed > 0 ? total / weightUsed : 0.0;
-        return new Result(Math.max(0.0, Math.min(1.0, score)), parts);
+        return new Result(Math.max(0.0, Math.min(1.0, score)), parts, Math.min(1.0, weightUsed / applicable));
+    }
+
+    private static boolean positive(BigDecimal value) {
+        return value != null && value.doubleValue() > 0 && Double.isFinite(value.doubleValue());
     }
 
     /** 1.0 when equal, falling to 0.0 at a 3x ratio; symmetric in both directions. */

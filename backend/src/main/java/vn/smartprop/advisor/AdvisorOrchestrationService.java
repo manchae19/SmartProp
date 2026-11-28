@@ -255,7 +255,7 @@ public class AdvisorOrchestrationService {
                 compEvidence = new ComparableEvidence("SKIPPED_BY_REQUEST", 0, "NONE", List.of(), List.of());
             } else {
                 try {
-                    compEvidence = buildComparableEvidence(prop, criteria.includeResearch());
+                    compEvidence = buildComparableEvidence(prop, criteria.includeResearch(), ComparableDtos.Purpose.SIMILAR_LISTING);
                     if (compEvidence.comparables().stream().anyMatch(ComparableItem::researchReference)) {
                         hasResearchComparable = true;
                     }
@@ -286,6 +286,18 @@ public class AdvisorOrchestrationService {
                     prop.priceVnd(),
                     supportedV6Locations
                 );
+            }
+
+            ComparableEvidence valuationComparables = null;
+            if (criteria.includeComparables() && valEvidence != null && valEvidence.available()) {
+                try {
+                    // Price from the model never enters the comparable request.
+                    valuationComparables = buildComparableEvidence(prop, false, ComparableDtos.Purpose.VALUATION_SUPPORT);
+                } catch (RuntimeException ex) {
+                    comparableDegraded = true;
+                    valuationComparables = new ComparableEvidence("DEGRADED", 0, "NONE", List.of(),
+                        List.of("Chưa tải được dữ liệu đối chiếu định giá."));
+                }
             }
 
             List<String> itemWarnings = new ArrayList<>();
@@ -338,6 +350,7 @@ public class AdvisorOrchestrationService {
                 locationIntel,
                 compEvidence,
                 valEvidence,
+                valuationComparables,
                 List.copyOf(itemWarnings)
             ));
         }
@@ -385,7 +398,8 @@ public class AdvisorOrchestrationService {
         );
     }
 
-    private ComparableEvidence buildComparableEvidence(PropertyResult prop, boolean includeResearchMode) {
+    private ComparableEvidence buildComparableEvidence(PropertyResult prop, boolean includeResearchMode,
+                                                       ComparableDtos.Purpose purpose) {
         String typeName = prop.propertyType() == null ? null : prop.propertyType().name();
         if (!comparableEligibility.supportedType(typeName)) {
             return new ComparableEvidence(
@@ -398,14 +412,15 @@ public class AdvisorOrchestrationService {
                 "SKIPPED_UNSUPPORTED_INPUT", 0, "NONE", List.of(),
                 List.of("Thiếu thông tin quận/huyện để đối chiếu bất động sản tương đồng."));
         }
+        boolean similar = purpose == ComparableDtos.Purpose.SIMILAR_LISTING;
         if (!comparableEligibility.plausibleArea(prop.areaSqm())
-                || !comparableEligibility.plausiblePrice(prop.priceVnd())) {
+                || (similar && !comparableEligibility.plausiblePrice(prop.priceVnd()))) {
             return new ComparableEvidence(
                 "SKIPPED_UNSUPPORTED_INPUT", 0, "NONE", List.of(),
                 List.of("Diện tích hoặc giá rao nằm ngoài khung tham chiếu tương đồng tiêu chuẩn."));
         }
 
-        // Pass propertyId when the recommended listing is a SmartProp platform property so notSelf excludes it.
+        // Compare the recommended listing's asking price, never the valuation evidence.
         String propertyId = "PROPERTY".equals(prop.source().kind()) ? prop.source().recordKey() : null;
         ComparableDtos.Request compReq = new ComparableDtos.Request(
             propertyId,
@@ -413,10 +428,14 @@ public class AdvisorOrchestrationService {
             district,
             cleanFilter(prop.ward()),
             prop.areaSqm(),
-            prop.priceVnd(),
+            similar ? prop.priceVnd() : null,
             null,
             null,
-            COMPARABLES_PER_PROPERTY
+            COMPARABLES_PER_PROPERTY,
+            null,
+            purpose,
+            null,
+            comparableSubject(prop)
         );
 
         boolean allowTinix = includeResearchMode
@@ -431,7 +450,7 @@ public class AdvisorOrchestrationService {
             if (isTinix && !allowTinix) continue;
             boolean isSmartProp = c.sourceKind() == ComparableDtos.SourceKind.SMARTPROP;
             String verification = isSmartProp ? "PLATFORM_PUBLISHED"
-                : (isTinix ? "RESEARCH_REFERENCE_ONLY" : "EXTERNAL_UNVERIFIED");
+                : (isTinix ? "RESEARCH_REFERENCE_ONLY" : "EXTERNAL_VERIFIED");
             String url = sanitizeComparableUrl(c);
             mapped.add(new ComparableItem(
                 c.candidateId(),
@@ -454,7 +473,8 @@ public class AdvisorOrchestrationService {
                 c.scoreBreakdown(),
                 url,
                 c.datasetLicense(),
-                c.attribution()
+                c.attribution(),
+                c.featureCoverage()
             ));
         }
 
@@ -463,7 +483,26 @@ public class AdvisorOrchestrationService {
             .toList();
         String status = mapped.isEmpty() ? "EMPTY_NO_MATCHES" : "AVAILABLE";
         String stage = mapped.isEmpty() ? "NONE" : raw.searchStage();
-        return new ComparableEvidence(status, mapped.size(), stage, List.copyOf(mapped), compWarnings);
+        var cohort = raw.evidence();
+        if (!allowTinix && cohort != null && (mapped.size() != raw.comparables().size()
+                || cohort.caps().containsKey(ComparableDtos.SourceKind.TINIX_RESEARCH)
+                || cohort.provenance().containsKey(ComparableDtos.SourceKind.TINIX_RESEARCH))) {
+            cohort = null;
+        }
+        return new ComparableEvidence(status, mapped.size(), stage, List.copyOf(mapped), compWarnings, cohort);
+    }
+
+    private static ComparableDtos.SubjectIdentity comparableSubject(PropertyResult prop) {
+        var source = prop.source();
+        if ("TINIX_AI".equals(source.kind())) {
+            return new ComparableDtos.SubjectIdentity(null, null, null, source.recordKey(), null);
+        }
+        if (!"EXTERNAL".equals(source.kind())) return null;
+        Long externalId = null;
+        if (prop.id() != null && prop.id().matches("external:[0-9]{1,18}")) {
+            externalId = Long.valueOf(prop.id().substring("external:".length()));
+        }
+        return new ComparableDtos.SubjectIdentity(externalId, null, null, null, source.detailUrl());
     }
 
     private static boolean isPublicLiveCandidate(PropertyResult prop) {

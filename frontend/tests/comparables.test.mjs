@@ -7,14 +7,36 @@ import {
   safeListingLink,
   similarityPercent,
   validateComparableResponse,
+  valuationComparableBody,
 } from '../src/features/property/comparables.js'
 
 test('buildComparableBody accepts a valid district lookup', () => {
   const body = buildComparableBody({ propertyType: 'Nhà ở', district: 'Hải Châu', areaSqm: '80', priceVnd: '5000000000', bedrooms: '3' })
   assert.equal(body.propertyType, 'HOUSE')
+  assert.equal(body.purpose, 'SIMILAR_LISTING')
   assert.equal(body.district, 'Hải Châu')
   assert.equal(body.areaSqm, 80)
   assert.equal(body.limit, 5)
+})
+
+test('standalone and posting valuation adapters never forward target or drafted price', () => {
+  assert.deepEqual(valuationComparableBody({ category: 'Nhà ở', house_subtype: 'villa', location_feature: 'Hải Châu',
+    area_sqm: 90, rooms: 3, priceVnd: 9000000000, predicted_asking_price_vnd: 5000000000 }), {
+    purpose: 'VALUATION_SUPPORT', propertyType: 'VILLA', district: 'Hải Châu', areaSqm: 90, bedrooms: 3, limit: 5,
+  })
+  assert.deepEqual(valuationComparableBody({ propertyType: 'LAND', locationFeature: 'Hải Châu', areaSqm: 80,
+    askingPriceVnd: 4000000000 }), {
+    purpose: 'VALUATION_SUPPORT', propertyType: 'LAND', district: 'Hải Châu', areaSqm: 80, limit: 5,
+  })
+})
+
+test('buyer budget is forwarded as a hard cap and SAFE rejects aggregate research metadata', () => {
+  const body = buildComparableBody({ purpose: 'BUYER_BUDGET_SEARCH', propertyType: 'HOUSE',
+    district: 'Hải Châu', areaSqm: 80, priceVnd: 3000000000 })
+  assert.equal(body.buyerBudgetVnd, 3000000000)
+  assert.equal(Object.hasOwn(body, 'priceVnd'), false)
+  assert.throws(() => validateComparableResponse({ reference: {}, comparables: [],
+    evidence: { provenance: { TINIX_RESEARCH: { uniqueEligible: 2 } } } }, { allowResearch: false }), /nghiên cứu/)
 })
 
 test('buildComparableBody rejects an unsupported district', () => {

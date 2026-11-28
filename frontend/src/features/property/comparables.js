@@ -1,4 +1,4 @@
-// Comparable listings for a valuation: same ward, then district, then neighbours.
+// Similar-listing lookup within the requested ward or district.
 // The backend does the filtering, ranking and eligibility; this module only
 // shapes the request and normalises the response for the card.
 import { api } from '../auth/api.js'
@@ -6,6 +6,7 @@ import { api } from '../auth/api.js'
 const CATEGORY_TYPES = { 'Nhà ở': 'HOUSE', 'Đất nền': 'LAND', 'Căn hộ chung cư': 'APARTMENT' }
 export const COMPARABLE_DISTRICTS = ['Hải Châu', 'Thanh Khê', 'Sơn Trà', 'Ngũ Hành Sơn', 'Cẩm Lệ', 'Liên Chiểu', 'Hòa Vang']
 const DISTRICT_SET = new Set(COMPARABLE_DISTRICTS)
+const PURPOSES = new Set(['SIMILAR_LISTING', 'BUYER_BUDGET_SEARCH', 'VALUATION_SUPPORT'])
 
 const SOURCE_LABELS = {
   SMARTPROP: 'SmartProp',
@@ -28,17 +29,39 @@ export function buildComparableBody(form = {}) {
   if (!DISTRICT_SET.has(district)) throw new Error('Chỉ địa bàn cấp quận/huyện mới có dữ liệu tin tương đồng.')
   const area = Number(form.areaSqm)
   if (!Number.isFinite(area) || area < 5 || area > 50000) throw new Error('Diện tích không hợp lệ để tìm tin tương đồng.')
-  const body = { propertyType: type, district, areaSqm: area }
+  const purpose = form.purpose ?? 'SIMILAR_LISTING'
+  if (!PURPOSES.has(purpose)) throw new Error('Mục đích tìm tin tương đồng không hợp lệ.')
+  const body = { purpose, propertyType: type, district, areaSqm: area }
   const ward = String(form.ward ?? '').trim()
   if (ward) body.ward = ward
   const price = Number(form.priceVnd)
-  if (Number.isFinite(price) && price > 0) body.priceVnd = price
+  if (purpose === 'BUYER_BUDGET_SEARCH') {
+    if (!Number.isFinite(price) || price <= 0) throw new Error('Nhập ngân sách mua lớn hơn 0.')
+    body.buyerBudgetVnd = price
+  } else if (purpose === 'SIMILAR_LISTING' && Number.isFinite(price) && price > 0) body.priceVnd = price
   const bedrooms = Number(form.bedrooms)
   if (Number.isInteger(bedrooms) && bedrooms > 0) body.bedrooms = bedrooms
   const floors = Number(form.floors)
   if (Number.isFinite(floors) && floors > 0) body.floors = floors
   body.limit = 5
   return body
+}
+
+export function valuationComparableBody(input) {
+  if (!input) return null
+  try {
+    return buildComparableBody({
+      purpose: 'VALUATION_SUPPORT',
+      propertyType: input.house_subtype === 'villa' ? 'VILLA' : input.propertyType ?? input.category,
+      district: input.locationFeature ?? input.location_feature,
+      areaSqm: input.areaSqm ?? input.area_sqm,
+      ward: input.ward,
+      bedrooms: input.bedrooms ?? input.rooms,
+      floors: input.floors,
+    })
+  } catch {
+    return null
+  }
 }
 
 /** Links only survive if the server already sanitised them to http(s). */
@@ -71,6 +94,14 @@ export function comparableWarnings(response) {
   return Array.isArray(response?.warnings) ? response.warnings.filter((w) => typeof w === 'string') : []
 }
 
+export function hasResearchComparableMetadata(evidence) {
+  return Boolean(evidence && (
+    Object.hasOwn(evidence.caps ?? {}, 'TINIX_RESEARCH')
+    || Object.hasOwn(evidence.provenance ?? {}, 'TINIX_RESEARCH')
+    || (Array.isArray(evidence.limitations) && evidence.limitations.some(text => /TiniX|CC BY-NC/i.test(text)))
+  ))
+}
+
 export function validateComparableResponse(data, options = {}) {
   if (!data || typeof data !== 'object' || !Array.isArray(data.comparables) || !data.reference) {
     throw new Error('Dữ liệu tin tương đồng không hợp lệ.')
@@ -85,7 +116,7 @@ export function validateComparableResponse(data, options = {}) {
     }
   }
   if (!allowResearch) {
-    if (data.eligibleCountsBySource?.TINIX_RESEARCH != null
+    if (data.eligibleCountsBySource?.TINIX_RESEARCH != null || hasResearchComparableMetadata(data.evidence)
         || (Array.isArray(data.warnings) && data.warnings.some((w) => typeof w === 'string' && (w.includes('TiniX') || w.includes('CC BY-NC'))))) {
       throw new Error('Phản hồi chứa siêu dữ liệu nghiên cứu TiniX không được phép ở chế độ công khai.')
     }
