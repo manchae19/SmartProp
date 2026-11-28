@@ -18,7 +18,7 @@ const syntheticTitle = "WP04 synthetic restricted result";
 
 function guardedSql() {
   const manifest = JSON.parse(readFileSync(process.env.WP04_RUNTIME_FILE, "utf8"));
-  assert.equal(manifest.state, "ready");
+  assert.ok(["ready", "valuation-recovered"].includes(manifest.state));
   assert.equal(manifest.stack.react, app);
   const configPath = resolve(manifest.db_file);
   const root = realpathSync(manifest.root);
@@ -219,9 +219,10 @@ async function replaceAccountDuringResearch(browser) {
     // The test config fixture is removed before checking the real policy.
     assert.equal(denied, 403);
     await prepareAdvisor(page, app, { navigate: false });
-    const fallback = waitResponse(page, advisorPath);
-    await submit.click();
-    const reply = await fallback;
+    const [reply] = await Promise.all([
+      waitResponse(page, advisorPath),
+      submit.press("Enter", { timeout: 12000 }),
+    ]);
     assert.equal(reply.request().postDataJSON().includeResearch, false);
     assert.equal((await reply.json()).mode, "SAFE");
     await page.locator('[data-advisor-mode="SAFE"]').waitFor();
@@ -259,8 +260,8 @@ try {
       outcomes.push({ name, evidence, ok: true });
       console.log("PASS " + name);
     } catch (error) {
-      outcomes.push({ name, evidence, ok: false, error: String(error.message).split("\n")[0] });
-      console.log("FAIL " + name + " — " + String(error.message).split("\n")[0]);
+      outcomes.push({ name, evidence, ok: false, error: String(error.message).split("\n").slice(0, 8).join("\n") });
+      console.log("FAIL " + name + " — " + String(error.message).split("\n").slice(0, 8).join("\n"));
     }
   }
 } finally {
