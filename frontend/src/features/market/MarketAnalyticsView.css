@@ -1,4 +1,4 @@
-.ma-section{background:#f7f5f0;color:#142b4f;padding-block:48px}
+.ma-section{background:#f7f5f0;color:#142b4f;padding-block:48px;min-height:calc(100vh - var(--sp-header-height,72px))}
 .ma-container{width:min(100% - 80px,1280px);margin-inline:auto;min-width:0}
 .ma-eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.2em;color:#8b683a}
 .ma-title{font-size:1.6rem;font-weight:650;margin-top:.4rem}

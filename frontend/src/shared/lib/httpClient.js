@@ -51,7 +51,8 @@ export function createHttpClient({
     body,
     authenticated = true,
     responseType = "json",
-    headers: extra = {}
+    headers: extra = {},
+    signal: externalSignal = null
   } = {}) {
     const headers = {
         Accept: "application/json",
@@ -64,7 +65,12 @@ export function createHttpClient({
     const duration = timeoutForPath(path);
     if (!Number.isFinite(duration) || duration < 1 || duration > 180000) throw Error("Invalid bounded request timeout");
     const controller = new AbortController(),
-      timeout = setTimeout(() => controller.abort(), duration);
+      onExternalAbort = () => controller.abort();
+    if (externalSignal) {
+      if (externalSignal.aborted) controller.abort();
+      else externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+    }
+    const timeout = setTimeout(() => controller.abort(), duration);
     try {
       const response = await fetcher(baseUrl + path, {
         method,
@@ -88,11 +94,18 @@ export function createHttpClient({
       return data;
     } catch (e) {
       if (e.status) throw e;
+      if (externalSignal?.aborted) {
+        throw Object.assign(Error("Yêu cầu đã bị hủy."), {
+          name: "AbortError",
+          code: "REQUEST_ABORTED"
+        });
+      }
       throw Object.assign(Error(e.name === "AbortError" ? "Yêu cầu quá thời gian. Vui lòng thử lại." : "Không thể kết nối máy chủ. Vui lòng kiểm tra kết nối."), {
         code: e.name === "AbortError" ? "REQUEST_TIMEOUT" : "NETWORK_ERROR"
       });
     } finally {
       clearTimeout(timeout);
+      if (externalSignal) externalSignal.removeEventListener("abort", onExternalAbort);
     }
   }
   const csrf = () => send("/auth/csrf", {

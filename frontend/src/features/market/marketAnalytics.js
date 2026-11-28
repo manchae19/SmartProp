@@ -3,11 +3,26 @@
 // validates the contract and formats numbers. No value here is mock data.
 import { api } from '../auth/api.js'
 
-export const ANALYSIS_SOURCES = {
+export const PUBLIC_ANALYSIS_SOURCES = Object.freeze({
+  ALL: 'Tất cả nguồn công khai',
+  SMARTPROP: 'SmartProp (đã duyệt)',
+  EXTERNAL_LISTING: 'Tin ngoài (VALID)',
+})
+
+export const ANALYSIS_SOURCES = Object.freeze({
   ALL: 'Tất cả nguồn',
   SMARTPROP: 'SmartProp (đã duyệt)',
   EXTERNAL_LISTING: 'Tin ngoài (VALID)',
   TINIX_RESEARCH: 'TiniX — nghiên cứu',
+})
+
+export function marketResearchActorKey(snap) {
+  if (!snap || snap.status !== 'AUTHENTICATED' || !snap.token) return ''
+  if (snap.user?.role !== 'ADMIN') return ''
+  if (snap.user?.status && snap.user.status !== 'ACTIVE') return ''
+  const identity = snap.user.id ?? snap.user.userId ?? snap.user.sub ?? snap.user.email ?? snap.token ?? ''
+  const normalized = String(identity).trim()
+  return normalized ? `ADMIN:${normalized}` : ''
 }
 
 export const PROPERTY_TYPES = {
@@ -82,10 +97,28 @@ export function validateMarketAnalytics(data, options = {}) {
   return data
 }
 
-export async function loadMarketAnalytics(filters = {}, client = api) {
-  const wantsResearch = requestsMarketResearch(filters)
+export async function loadMarketAnalytics(filters = {}, client = api, options = {}) {
+  const allowResearch = options.allowResearch !== undefined
+    ? options.allowResearch === true
+    : requestsMarketResearch(filters)
+  const wantsResearch = allowResearch && requestsMarketResearch(filters)
+  if (requestsMarketResearch(filters) && !wantsResearch) {
+    const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ và cấu hình máy chủ được bật.')
+    err.status = 403
+    throw err
+  }
+  if (wantsResearch && typeof options.getSession === 'function') {
+    const snap = options.getSession()
+    if (!marketResearchActorKey(snap)) {
+      const err = new Error('Chế độ dữ liệu nghiên cứu yêu cầu phiên ADMIN hợp lệ.')
+      err.status = 403
+      throw err
+    }
+  }
   const query = buildAnalyticsQuery(filters, { allowResearch: wantsResearch })
-  const data = await client('/properties/market-analytics?' + query, { authenticated: wantsResearch })
+  const requestOptions = { authenticated: wantsResearch }
+  if (options.signal) requestOptions.signal = options.signal
+  const data = await client('/properties/market-analytics?' + query, requestOptions)
   return validateMarketAnalytics(data, { allowResearch: wantsResearch })
 }
 

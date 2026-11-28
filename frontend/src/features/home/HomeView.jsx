@@ -52,7 +52,7 @@ function SectionHeading({
 }
 export default function HomeView() {
   const view = useHomeViewState({}, undefined);
-  const [demo, setDemo] = useState(true);
+  const [demo, setDemo] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const items = view.state.items;
   const selected = items.find(p => p.id === selectedId) || items.find(publicMapPoint);
@@ -61,7 +61,7 @@ export default function HomeView() {
   } : {});
   return <div className="home-light">
     <section id="home" className="light-hero" aria-labelledby="hero-title">
-      <img className="light-banner" src={banner} alt="Minh họa Cầu Rồng Đà Nẵng và pháo hoa" fetchPriority="high" onError={e => {
+      <img className="light-banner" src={banner} alt="Minh họa Cầu Rồng Đà Nẵng và pháo hoa" width="2200" height="1134" decoding="async" fetchPriority="high" onError={e => {
         e.currentTarget.hidden = true;
       }} />
       <div className="light-hero-wash" />
@@ -91,8 +91,8 @@ export default function HomeView() {
     <section id="projects" className="light-section light-container"><SectionHeading eyebrow="DỰ ÁN THÀNH PHỐ" title="Dự án nổi bật tại Đà Nẵng." description="Tìm hiểu không gian sống từ các chủ đầu tư và đơn vị phát triển." to="/projects" link="Xem tất cả dự án ↗" /><ProjectDirectory limit={3} />
       <ResourceState state={view.projects} />{view.projects.items.length > 0 && <div className="light-backend-projects"><h3>Dự án trên SmartProp</h3>{view.projects.items.slice(0, 3).map(project => <SiteLink key={project.id} to={'/projects/' + project.id}><strong>{project.name}</strong><span>{project.developer || ''} ↗</span></SiteLink>)}</div>}
     </section>
-    <section id="lifestyle" className="light-section light-tinted"><div className="light-container"><SectionHeading eyebrow="CHỌN THEO NHU CẦU" title="Một phong cách sống. Nhiều lựa chọn." description="Gợi ý theo tiêu chí tìm kiếm; không cam kết khoảng cách hay lợi nhuận." to="/listings" /><div className="light-lifestyles">{lifestylePresets.map(item => <SiteLink key={item.id} to={listingLink('/listings', item.filters)} title={item.explanation}><div className="lifestyle-image"><img src={'/media/projects/' + item.image + '.jpg'} alt="" loading="lazy" /></div><strong>{item.title}<span className="lifestyle-arrow" aria-hidden="true">↗</span></strong><span>{item.explanation}</span></SiteLink>)}</div></div></section>
-    <section id="market" className="light-section light-container"><SectionHeading eyebrow="GÓC NHÌN TỪ DỮ LIỆU" title="Thị trường. Có cơ sở để hiểu." to="/market" link="Khám phá thị trường ↗" /><MarketSummary district={view.search.filters.district} /><p className="light-market-note">Khu vực gợi ý · Minh họa</p><TopSearchedAreas mode="listings" homeAreaImages /><details className="light-demo" open={demo} onToggle={e => setDemo(e.currentTarget.open)}><summary><span className="market-story-title">Biểu đồ xu hướng thị trường<span className="market-story-meta">Dữ liệu mô phỏng · 3 / 6 / 12 tháng</span></span><span className="market-story-toggle">{demo ? 'Thu gọn' : 'Xem biểu đồ'}<span className="market-story-chevron" aria-hidden="true" /></span></summary><MarketIntelligence /></details></section>
+    <section id="lifestyle" className="light-section light-tinted"><div className="light-container"><SectionHeading eyebrow="CHỌN THEO NHU CẦU" title="Một phong cách sống. Nhiều lựa chọn." description="Gợi ý theo tiêu chí tìm kiếm; không cam kết khoảng cách hay lợi nhuận." to="/listings" /><div className="light-lifestyles">{lifestylePresets.map(item => <SiteLink key={item.id} to={listingLink('/listings', item.filters)} title={item.explanation}><div className="lifestyle-image"><img src={'/media/projects/' + item.image + '.jpg'} alt="" width="640" height="400" decoding="async" loading="lazy" /></div><strong>{item.title}<span className="lifestyle-arrow" aria-hidden="true">↗</span></strong><span>{item.explanation}</span></SiteLink>)}</div></div></section>
+    <section id="market" className="light-section light-container"><SectionHeading eyebrow="GÓC NHÌN TỪ DỮ LIỆU" title="Thị trường. Có cơ sở để hiểu." to="/market" link="Khám phá thị trường ↗" /><MarketSummary district={view.search.filters.district} /><p className="light-market-note">Khám phá 7 quận/huyện · Minh họa biểu trưng trung lập</p><TopSearchedAreas mode="listings" /><details className="light-demo" open={demo} onToggle={e => setDemo(e.currentTarget.open)}><summary><span className="market-story-title">Biểu đồ trình diễn giao diện<span className="market-story-meta">Dữ liệu mô phỏng UI (không phải thống kê thực tế hay AI V1.3)</span></span><span className="market-story-toggle">{demo ? 'Thu gọn' : 'Xem minh họa'}<span className="market-story-chevron" aria-hidden="true" /></span></summary><MarketIntelligence /></details></section>
     <section id="account" className="light-container light-tools"><div><p className="light-eyebrow">ĐI XA HƠN VỚI SMARTPROP</p><h2>Từ khám phá đến quyết định.</h2></div><div className="light-actions"><SiteLink className="light-button secondary" to="/valuation">Ước tính giá trị ↗</SiteLink><SiteLink className="light-button secondary" to="/advisor/chat">Trò chuyện AI ↗</SiteLink><SiteLink className="light-button" to="/account">Tài khoản của bạn ↗</SiteLink></div></section>
   </div>;
 }

@@ -33,7 +33,7 @@ export default React.forwardRef(function AppNavigation(props, ref) {
       }, (_, index) => render(index + 1, index)) : Array.isArray(items) || typeof items === "string" ? Array.from(items).map(render) : Object.entries(items || {}).map(([key, item], index) => render(item, key, index)))(view.items, item => <SiteLink key={item.key} to={item.to} aria-current={view.activeNavigation(item.key, view.route) ? "page" : undefined} className={classNames(["flex min-h-12 items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold", view.activeNavigation(item.key, view.route) ? "bg-brand-raised text-brand-navy" : "text-brand-navy hover:bg-brand-surface"])} onClick={$event => {
         view.navigate(item);
       }}>
-          <AppIcon name={item.key === "home" ? "home" : item.key === "advisor" ? "tools" : item.key} />
+          <AppIcon name={item.key === "home" ? "home" : item.key === "news" ? "newspaper" : item.key === "advisor" ? "tools" : item.key} />
           <span>{(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(item.label)}</span>
           {view.vertical && <span className="drawer-chevron" aria-hidden="true">›</span>}
         </SiteLink>)}

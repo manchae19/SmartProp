@@ -11,7 +11,8 @@ export function newsSourceStatus(source, now = Date.now()) {
 }
 export function hasNewNewsSnapshot(sources, lastUpdatedAt) {
   const baseline = Date.parse(lastUpdatedAt);
-  return Number.isFinite(baseline) && sources.some(source => Date.parse(source.lastSuccessAt) > baseline);
+  const list = Array.isArray(sources) ? sources : Array.isArray(sources?.sources) ? sources.sources : [];
+  return Number.isFinite(baseline) && list.some(source => Date.parse(source?.lastSuccessAt) > baseline);
 }
 export function isNewsSnapshotStale(data, now = Date.now()) {
   const updated = Date.parse(data?.lastUpdatedAt);

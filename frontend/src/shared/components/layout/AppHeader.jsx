@@ -162,6 +162,9 @@ export default React.forwardRef(function AppHeader(props, ref) {
           <SiteLink to="/projects" className={classNames(["rounded-lg px-2.5 py-1.5 text-[13px] xl:text-sm font-semibold transition focus-visible:outline-brand-gold", view.route.path.startsWith("/projects") ? "bg-brand-raised text-brand-navy shadow-sm" : "text-brand-navy hover:bg-brand-surface"])}>
             {"Dự án"}
           </SiteLink>
+          <SiteLink to="/news" className={classNames(["rounded-lg px-2.5 py-1.5 text-[13px] xl:text-sm font-semibold transition focus-visible:outline-brand-gold", view.route.path === "/news" || view.route.path.startsWith("/news/") ? "bg-brand-raised text-brand-navy shadow-sm" : "text-brand-navy hover:bg-brand-surface"])} data-news-header={true}>
+            {"Tin tức"}
+          </SiteLink>
           <SiteLink to={view.listingLink("/map", view.normalizeFilters(view.route.query))} className={classNames(["rounded-lg px-2.5 py-1.5 text-[13px] xl:text-sm font-semibold transition focus-visible:outline-brand-gold", view.route.path === "/map" ? "bg-brand-raised text-brand-navy shadow-sm" : "text-brand-navy hover:bg-brand-surface"])}>
             {"Bản đồ GIS"}
           </SiteLink>

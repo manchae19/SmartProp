@@ -1,7 +1,11 @@
 import fs from 'node:fs';import path from 'node:path';
-// Reviewed public files only. Add a filename here when the team adds a new public asset.
+// Reviewed public files only. Add a filename here only after usage rights,
+// licence obligations, and provenance are verified in writing.
+// NOTE: public/media/areas/*.webp have unverified usage rights (see
+// public/media/areas/ATTRIBUTION.md) and are intentionally excluded from
+// production distribution and UI rendering.
 export const publicFiles=[
- 'background.mp4','favicon.svg','icons.svg','vite.svg',
+ 'background.mp4','favicon.svg','icons.svg',
  "images/home/banner.png",
  "images/news/danang-street.webp",
  "images/news/dragon-bridge.webp",
@@ -16,11 +20,6 @@ export const publicFiles=[
  "images/news/credits.json",
  ...['villa','apartments','legal','planning','infrastructure','market','projects','commercial'].map(topic=>`images/news/editorial-${topic}.webp`),
  "images/news/editorial-provenance.json",
- // District hero images for TopSearchedAreas. Attribution and licence status are
- // recorded in public/media/areas/ATTRIBUTION.md; they are not yet cleared for
- // public redistribution, so keep that file next to them.
- "media/areas/ATTRIBUTION.md",
- ...['son-tra','hai-chau','ngu-hanh-son','lien-chieu','cam-le'].map(area=>`media/areas/${area}.webp`),
  "media/projects/sun-ponte.jpg",
  "media/projects/the-filmore.jpg",
  "media/projects/fpt-plaza-3.jpg",
@@ -29,4 +28,4 @@ export const publicFiles=[
  "media/projects/sun-cosmo.jpg"
 ];
 export function approvedFiles(directory){if(!directory||!fs.existsSync(directory))return [];return publicFiles.filter(name=>{const target=path.join(directory,name);if(!fs.existsSync(target))return false;const stat=fs.lstatSync(target);return stat.isFile()&&!stat.isSymbolicLink()})}
-export function approvedPublicAssets(){let config;return {name:'smartprop-approved-public-assets',config:()=>({build:{copyPublicDir:false}}),configResolved:value=>config=value,configureServer(server){server.middlewares.use((req,res,next)=>{let pathname;try{pathname=decodeURIComponent((req.url||'').split('?')[0])}catch{res.statusCode=400;res.end();return}if(/\.exe(?:$|[\/])/i.test(pathname)){res.statusCode=404;res.end();return}next()})},writeBundle(options){if(!config.publicDir)return;const output=path.resolve(options.dir||path.resolve(config.root,config.build.outDir));if(output===config.root||output===config.publicDir)throw Error('Unsafe public asset output');for(const name of approvedFiles(config.publicDir)){const target=path.join(output,name);if(!target.startsWith(output+path.sep))throw Error('Invalid public asset path');fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(config.publicDir,name),target,fs.constants.COPYFILE_EXCL)}}}}
+export function approvedPublicAssets(){let config;return {name:'smartprop-approved-public-assets',config:()=>({build:{copyPublicDir:false}}),configResolved:value=>config=value,configureServer(server){server.middlewares.use((req,res,next)=>{let pathname;try{pathname=decodeURIComponent((req.url||'').split('?')[0])}catch{res.statusCode=400;res.end();return}if(/\.exe(?:$|[\/])/i.test(pathname)||/^\/media\/areas\//i.test(pathname)){res.statusCode=404;res.end();return}next()})},writeBundle(options){if(!config.publicDir)return;const output=path.resolve(options.dir||path.resolve(config.root,config.build.outDir));if(output===config.root||output===config.publicDir)throw Error('Unsafe public asset output');for(const name of approvedFiles(config.publicDir)){const target=path.join(output,name);if(!target.startsWith(output+path.sep))throw Error('Invalid public asset path');fs.mkdirSync(path.dirname(target),{recursive:true});fs.copyFileSync(path.join(config.publicDir,name),target,fs.constants.COPYFILE_EXCL)}}}}

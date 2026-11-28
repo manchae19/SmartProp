@@ -174,7 +174,7 @@ function useLoginViewState(inputProps, forwardedRef) {
 export default React.forwardRef(function LoginView(props, ref) {
   const view = useLoginViewState(props, ref);
   return <><main data-ui-view="LoginView" {...view.rootAttributes} className={classNames(["min-h-screen relative isolation-auto bg-[var(--ui-soft)] flex items-center justify-center p-4 sm:p-6 lg:p-10 font-sans selection:bg-[var(--ui-soft)] selection:text-brand-navy", view.rootAttributes.className])}>
-      <video ref={view.updateVideoValue} className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-50" src="/background.mp4" loop={true} muted={true} playsInline={true} aria-hidden="true" />
+      <video ref={view.updateVideoValue} className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none opacity-50" src="/background.mp4" preload="metadata" loop={true} muted={true} playsInline={true} aria-hidden="true" />
       <div className="absolute inset-0 bg-gradient-to-tr from-[var(--ui-soft)]/95 via-[var(--ui-soft)]/80 to-[var(--ui-soft)]/95 z-0 pointer-events-none" />
       <div className="relative z-10 w-full max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_480px] gap-8 lg:gap-14 items-center">
         <section className="hidden lg:flex flex-col justify-between min-h-[600px] text-brand-navy py-4 pr-6" aria-label="SmartProp">

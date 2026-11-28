@@ -43,6 +43,9 @@ export default React.forwardRef(function AppFooter(props, ref) {
           <SiteLink to="/projects">
             {"Dự án"}
           </SiteLink>
+          <SiteLink to="/news">
+            {"Tin tức bất động sản"}
+          </SiteLink>
           <SiteLink to={view.listingLink("/map", view.filters)}>
             {"Bản đồ GIS"}
           </SiteLink>
@@ -51,11 +54,8 @@ export default React.forwardRef(function AppFooter(props, ref) {
           <SiteLink to="/market">
             {"Dữ liệu thị trường"}
           </SiteLink>
-          <SiteLink to={{
-            ...view.listingLink("/home", view.filters),
-            hash: "#finance"
-          }}>
-            {"Công cụ tài chính"}
+          <SiteLink to="/valuation">
+            {"Ước tính giá trị (V1.3)"}
           </SiteLink>
           <SiteLink to={view.session.token ? "/account" : "/login"}>
             {(value => value == null ? "" : typeof value === "object" ? JSON.stringify(value) : String(value))(view.session.token ? "Hồ sơ cá nhân" : "Đăng nhập / Tạo tài khoản")}
