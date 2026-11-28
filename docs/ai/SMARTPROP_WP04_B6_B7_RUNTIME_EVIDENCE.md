@@ -217,3 +217,60 @@ this session and are not claimed.
   prediction; explanation failures downgrade to UNAVAILABLE and never alter the price.
 - Known limits: no calibrated confidence, no prediction interval (WP-05), synthetic-fixture runtime
   only. Reviewed commit: `893eeb9` plus the local runtime-fix commit.
+
+---
+
+## Browser runtime session — what actually happened
+
+### Environment reused (verified, owned)
+
+MySQL `data-ok` on 3407 (UUID `54afb557-eb00-11f1-886b-7085c2fe30d2`), FastAPI V1.3 on 8000,
+Spring Boot `standard-migrations` on 8080 (Flyway validate 23, Hibernate validate), Vite on 5180.
+A real BROKER JWT was obtained from `/api/v1/auth/login`.
+
+### Real browser run: NOT COMPLETED
+
+A Playwright runner (`frontend/tests/wp04/browser/runtime-surfaces.mjs`) was written and executed
+against those services with **no response interception**. Result: **2 passed / 13 failed**.
+
+The decisive symptom: after driving the visible form controls and clicking the primary CTAs
+(`Ước tính giá rao` on `/valuation`, `Tìm gợi ý phù hợp` on `/advisor`), **no request to
+`/api/ai/predict` or `/api/v1/advisor/consult` was emitted at all** — so the explanation panel
+never appeared and every dependent assertion timed out. Injecting `localStorage.token/role` did not
+make the app treat the session as authenticated (the shell still offered “Đăng nhập”), and
+`/post/step-4` cannot render a preview without a persisted draft, so the posting workflow is not
+reachable from a cold route.
+
+Conclusion: the three real route workflows are **not** verified. This is a harness/фlow-state gap,
+not evidence that the surfaces are broken — the HTTP level already returns real V1.3 predictions
+with full explanations (preview `5749775772`, Advisor `4767450210`).
+
+### Fresh regression that did run
+
+| Suite | Result |
+|---|---|
+| WP-04 Python (contract + HTTP + matrix) | **51 passed**, exit 0 |
+| Phase A deterministic benchmark | **105 cases, 15 extras, self-tests PASS**, digest `9eedb3c7c3668f61` unchanged |
+| Full frontend recursive `npm test` | **242 passed, 0 failed**, exit 0 |
+| Vite production build | PASS |
+
+### Gate status
+
+Passed with evidence: isolated V23 fixture, Hibernate validation, synthetic seed, effective
+valuation configuration, real FastAPI standalone/preview/Advisor HTTP, exact price consistency,
+prediction invariance, artifact integrity, migrations unchanged, cleanup, docs.
+
+Not passed: `WP04_REAL_THREE_SURFACE_BROWSER_PASS`, `WP04_B5_*_RUNTIME_PASS` (browser level),
+`WP04_RUNTIME_FAILURE_ISOLATION_PASS` through the UI, `WP04_REACTIVE_AUTHORIZATION_PRESERVED`
+(browser-level revocation), `WP04_WP02_REGRESSION_PASS` (12 Chromium groups), full FastAPI serial,
+full RAG, full Spring Boot regression — none were executed in this session.
+
+### WP06 handoff — implemented statuses only
+
+`explanation_v1_3.py` emits **AVAILABLE** and **UNAVAILABLE**. `PARTIAL` and `NOT_SUPPORTED` exist in
+the shared contract and are handled by the frontend, but the current producer never emits them.
+Version `1.0`; method `XGBOOST_NATIVE_TREESHAP`; target `ASKING_PRICE_VND`; output space
+`LOG1P_PRICE_VND`; 22 feature identities; provenance states OBSERVED, DERIVED, DEFAULTED, MISSING,
+MISSING_INVALID, NOT_APPLICABLE, UNKNOWN_CATEGORY, UNVERIFIED; reconstruction tolerance
+`1e-5 * max(1, abs(predicted_margin_log))`. Explanation generation runs inside `PredictorV1_3.predict`
+after the unchanged point prediction; a failure downgrades the explanation and never alters the price.
