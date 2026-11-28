@@ -1,0 +1,211 @@
+{
+  "base": "http://127.0.0.1:5180",
+  "at": "2026-11-28T11:20:03.027Z",
+  "fixtureSource": "tests/wp04/fixtures/explanation-samples.json",
+  "totals": {
+    "total": 33,
+    "passed": 30,
+    "failed": 0,
+    "notRun": 3
+  },
+  "results": [
+    {
+      "name": "advisor mounts the explanation panel",
+      "ok": true,
+      "detail": "1",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor panel status is AVAILABLE",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor waterfall shows the six contributions",
+      "ok": true,
+      "detail": "6",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor renders all 22 provenance rows",
+      "ok": true,
+      "detail": "22",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor shows the calibration bridge",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor renders the cumulative waterfall svg",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor keeps legacy SHAP hidden",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor does not duplicate a legacy SHAP panel",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "both comparable evidence sections render",
+      "ok": true,
+      "detail": "3",
+      "status": "PASS"
+    },
+    {
+      "name": "feature coverage is displayed",
+      "ok": true,
+      "detail": "2",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-available renders without a JS exception",
+      "ok": true,
+      "detail": "0",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-available shows no NaN or Infinity",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy response hides the new panel",
+      "ok": true,
+      "detail": "0",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy response offers the SHAP toggle",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy response has no SHAP panel until opened",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-legacy renders without a JS exception",
+      "ok": true,
+      "detail": "0",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-legacy shows no NaN or Infinity",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "unavailable explanation still renders the panel",
+      "ok": true,
+      "detail": "1",
+      "status": "PASS"
+    },
+    {
+      "name": "unavailable panel reports UNAVAILABLE",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "unavailable panel shows no waterfall",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-unavailable renders without a JS exception",
+      "ok": true,
+      "detail": "0",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-unavailable shows no NaN or Infinity",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed explanation degrades to INVALID",
+      "ok": true,
+      "detail": "1",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed panel reports INVALID",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed panel shows no attribution",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-malformed renders without a JS exception",
+      "ok": true,
+      "detail": "0",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor-malformed shows no NaN or Infinity",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "/valuation app shell renders",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "/advisor app shell renders",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "/post/step-4 app shell renders",
+      "ok": true,
+      "detail": "",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone explanation interaction",
+      "ok": false,
+      "detail": "",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "posting preview interaction",
+      "ok": false,
+      "detail": "",
+      "status": "NOT_RUN"
+    },
+    {
+      "name": "advisor consult interaction",
+      "ok": false,
+      "detail": "",
+      "status": "NOT_RUN"
+    }
+  ]
+}

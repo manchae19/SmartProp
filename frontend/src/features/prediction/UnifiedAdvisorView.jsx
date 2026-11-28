@@ -70,7 +70,7 @@ export default function UnifiedAdvisorView() {
         <h1 id="advisor-title">Tư vấn bất động sản đa bằng chứng</h1>
         <p>
           Kết hợp xếp hạng phù hợp theo nhu cầu &amp; tiện ích khu vực (Hybrid V1.1), bằng chứng bất động sản tương đồng
-          và định giá tham chiếu độc lập XGBoost V6 kèm giải thích TreeSHAP trong một luồng tư vấn thống nhất.
+          và định giá tham chiếu độc lập XGBoost V1.3 kèm giải thích TreeSHAP trong một luồng tư vấn thống nhất.
         </p>
       </div>
 
@@ -204,7 +204,7 @@ export default function UnifiedAdvisorView() {
           <div className="evidence-options">
             <label className="check-pill">
               <input type="checkbox" checked={form.includeValuation} onChange={(e) => controller.patch('includeValuation', e.target.checked)} />
-              <span>Định giá tham chiếu XGBoost V6 &amp; giải thích TreeSHAP</span>
+              <span>Định giá tham chiếu XGBoost V1.3 &amp; giải thích TreeSHAP</span>
             </label>
             <label className="check-pill">
               <input type="checkbox" checked={form.includeComparables} onChange={(e) => controller.patch('includeComparables', e.target.checked)} />
@@ -217,7 +217,7 @@ export default function UnifiedAdvisorView() {
           </datalist>
 
           <div className="form-footer">
-            <p>Điểm phù hợp và định giá V6 là bằng chứng hỗ trợ quyết định độc lập; không thay thế thẩm định pháp lý hoặc khảo sát thực địa.</p>
+            <p>Điểm phù hợp và định giá V1.3 là bằng chứng hỗ trợ quyết định độc lập; không thay thế thẩm định pháp lý hoặc khảo sát thực địa.</p>
             <div className="form-actions">
               <button className="advisor-btn secondary" type="button" onClick={() => controller.reset()}>Đặt lại</button>
               <button className="advisor-btn primary" type="submit" data-advisor-submit>{busy ? 'Đang tổng hợp tư vấn…' : 'Nhận tư vấn AI'}</button>
@@ -241,7 +241,7 @@ export default function UnifiedAdvisorView() {
           <span className="loading-spinner" aria-hidden="true" />
           <div>
             <strong>Đang phân tích nhu cầu &amp; đối chiếu bằng chứng…</strong>
-            <p>Đang xếp hạng khu vực, bất động sản phù hợp, mẫu tương đồng và mô hình định giá V6.</p>
+            <p>Đang xếp hạng khu vực, bất động sản phù hợp, mẫu tương đồng và mô hình định giá V1.3.</p>
           </div>
         </div>
       ) : null}
@@ -266,7 +266,7 @@ export default function UnifiedAdvisorView() {
           <strong>Quy trình tư vấn minh bạch &amp; không tự bịa số liệu</strong>
           <p>
             Nhấn “Nhận tư vấn AI” để xem tối đa 5 khu vực phù hợp nhất và danh sách bất động sản kèm điểm thành phần,
-            tiện ích khu vực, mẫu tương đồng thực tế và mức định giá tham chiếu XGBoost V6 giải thích bằng TreeSHAP.
+            tiện ích khu vực, mẫu tương đồng thực tế và mức định giá tham chiếu XGBoost V1.3 giải thích bằng TreeSHAP.
           </p>
         </div>
       ) : null}
