@@ -6,7 +6,7 @@ Integration branch `integration/pr37-ui-validation` started at `b33e4fc8cc2c4612
 
 1. **Market session scope and opt-in.** Mount and public requests always submit `includeResearch=false` without a bearer token. The active ADMIN session can submit an explicit research request. TiniX source options, capability and research results appear only after an authorized response. A 403 or a response with research disabled clears research and returns to SAFE. A terminal 401 also invalidates the expired session. Token, actor, role and status transitions clear restricted state and abort its request. An obsolete response cannot repopulate it. Restoration requires a new opt-in. Research metadata in a purportedly public payload is rejected. Existing server-side guards remain authoritative.
 2. **Tests in Git and cancellation.** `git check-ignore -v` located the repository rule for the existing Market tests. The two Market tests and the auth/coordinate test were explicitly added alongside the new HTTP client test. External cancellation and timeout have distinct outcomes. Aborted, obsolete and late refreshed responses cannot apply data or expire a replacement session. Shared refresh remains usable by a second caller when the first caller aborts. The existing session store contract still supplies the session snapshot and subscriptions.
-3. **Browser coverage.** The retained Market and News checks and new route cases exercise real React pages with production-mode Vite assets and mocked HTTP. Checks assert specific UI states and positive request counts before checking request attributes. The normal production distribution was then audited separately.
+3. **Browser coverage.** The retained Market and News checks and new route cases exercise real React pages with production-mode Vite assets and mocked HTTP. Checks assert specific UI states and positive request counts before checking request attributes. Opt-in tests wait for the actual HTTP status, since a fast denial can reset the checkbox before the automation reads it. The normal production distribution was audited separately.
 
 ## Tracked tests and entry points
 
@@ -24,6 +24,7 @@ Run the Node commands in `frontend` and Maven in `backend`. Browser setup and th
 | Suite | Command | Passed / failed / skipped | Exit | Log basename |
 | --- | --- | --- | --- | --- |
 | Frontend recursive | `npm.cmd test` | 194 / 0 / 0 | 0 | `pr37-frontend` |
+| Frontend recursive from Git archive | `git archive HEAD frontend`, extract, reuse existing dependencies and run `npm.cmd test` | 194 / 0 / 0 | 0 | `pr37-repro` |
 | Market session | `node --test tests/marketAnalyticsSession.test.mjs` | 15 / 0 / 0 | 0 | `pr37-market-session` |
 | Market data/assets | `node --test tests/marketDataAndAssets.test.mjs` | 5 / 0 / 0 | 0 | `pr37-market-assets` |
 | HTTP client | `node --test tests/httpClientAbortSession.test.mjs` | 17 / 0 / 0 | 0 | `pr37-http-client` |
@@ -78,7 +79,7 @@ News production availability, target Caddy runtime, MySQL live integration, gran
 
 ## Parallel integration
 
-Read-only assessment against the remote heads below. Virtual merges are conflict inventories.
+Read-only assessment against the remote heads below. Path overlaps are scoped to changes since the approved main. Virtual merges also cover conflicts introduced by earlier main history.
 
 | Parallel work | Observed remote SHA | Overlap and preservation |
 | --- | --- | --- |

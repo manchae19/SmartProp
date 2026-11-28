@@ -367,6 +367,18 @@ export function surfaceGroups(base) {
       await safe.waitFor()
       const market = () => requests.filter(r => r.path.endsWith('/market-analytics'))
       const restricted = () => market().filter(r => r.query.get('includeResearch') === 'true')
+      async function submitResearch(status) {
+        // A fast denial can reset the controlled checkbox before Playwright checks it.
+        await Promise.all([
+          page.waitForResponse(response => {
+            const url = new URL(response.url())
+            return url.pathname.endsWith('/market-analytics')
+              && url.searchParams.get('includeResearch') === 'true'
+              && response.status() === status
+          }),
+          toggle.click(),
+        ])
+      }
       assert.equal(market().length, 1)
       for (const role of ['BUYER', 'BROKER', 'ADMIN']) {
         await setSession(page, { role })
@@ -376,15 +388,16 @@ export function surfaceGroups(base) {
         assert.equal(restricted().length, 0)
       }
       config.researchStatus = 403
-      await toggle.check()
+      await submitResearch(403)
       await page.locator('[data-ma-research-error]').waitFor()
       await safe.waitFor()
       assert.equal(await toggle.isChecked(), false)
       assert.equal(restricted().length, 1)
       assert.ok(restricted()[0].authenticated)
       config.researchStatus = 200
-      await toggle.check()
+      await submitResearch(200)
       await research.waitFor()
+      assert.equal(await toggle.isChecked(), true)
       await page.locator('option[value=TINIX_RESEARCH]').waitFor({ state: 'attached' })
       await responsive(page, 'market-analytics', [['heading', title], ['research toggle', toggle], ['statistic', research]])
       for (const next of [
@@ -401,7 +414,7 @@ export function surfaceGroups(base) {
         await closeWelcome(page)
         assert.equal(await toggle.isChecked(), false)
         assert.equal(restricted().length, count)
-        await toggle.check()
+        await submitResearch(200)
         await research.waitFor()
       }
       let release
@@ -436,7 +449,7 @@ export function surfaceGroups(base) {
       await toggle.waitFor()
       assert.equal(await toggle.isChecked(), false)
       config.researchStatus = 401
-      await toggle.check()
+      await submitResearch(401)
       await toggle.waitFor({ state: 'hidden' })
       await safe.waitFor()
       assert.match(page.url(), /\/market-analytics$/)
