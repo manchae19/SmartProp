@@ -17,6 +17,9 @@ function sameActor(previous, next) {
 function identityOf(snapshot) {
   return JSON.stringify([
     snapshot?.status ?? null,
+    // PR48 keeps a session generation on the store; including it makes a same-account new session
+    // a different identity, which is exactly what the shared contract requires.
+    snapshot?.authGeneration ?? null,
     snapshot?.user?.id ?? snapshot?.user?.userId ?? snapshot?.user?.sub ?? snapshot?.user?.email ?? null,
     snapshot?.user?.role ?? null,
     snapshot?.user?.status ?? null,
@@ -65,6 +68,10 @@ export function createHttpClient({
     // drops `currentCredential`, so nothing matches and continuity is broken immediately.
     currentCredential = session.getSnapshot().token || null,
     credentialGen = 0,
+    // Incremented on every credential write this client did not perform. Requests capture it and
+    // reject when it moved, so an external A -> X -> A round-trip cannot restore continuity even
+    // though the final token equals the original one.
+    scopeGen = 0,
     // rotations: monotonic count of verified refreshes (refreshes only - never session creation).
     rotations = 0,
     // identityEpoch: incremented whenever the actor/role/status changes, so a revocation that is
@@ -92,9 +99,11 @@ export function createHttpClient({
         identityEpoch += 1;
       }
       if (!applyingInternalCredential && snapshot.token !== currentCredential) {
-        // Someone else wrote the credential: stop trusting it for continuity.
+        // Someone else wrote the credential: stop trusting it for continuity and mark the whole
+        // scope as discontinuous. A later internal refresh does not undo this.
         currentCredential = null;
         credentialGen += 1;
+        scopeGen += 1;
       }
     });
   }
@@ -213,10 +222,13 @@ export function createHttpClient({
     if (refreshFlight && refreshFlightKey === flightKey) return refreshFlight;
     const current = epoch,
       startedIdentity = identityEpoch,
+      startedScopeGen = scopeGen,
       started = startedSnapshot,
       ensureRefreshScope = () => {
         const latest = session.getSnapshot();
         if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
+        // An external A -> X -> A round-trip leaves the token unchanged but breaks the scope.
+        if (scopeGen !== startedScopeGen) throw sessionChanged();
         if (started.token !== latest.token || !sameActor(started, latest)) throw sessionChanged();
       },
       run = async () => {
@@ -257,6 +269,7 @@ export function createHttpClient({
     const current = epoch;
     const startedIdentity = identityEpoch;
     const startedCredentialGen = credentialGen;
+    const startedScopeGen = scopeGen;
     const authenticated = options.authenticated !== false;
     const redirect = options.redirectOnSessionExpiry !== false;
     /**
@@ -270,6 +283,7 @@ export function createHttpClient({
       const latest = session.getSnapshot();
       if (!authenticated) return;
       if (current !== epoch || identityEpoch !== startedIdentity) throw sessionChanged();
+      if (scopeGen !== startedScopeGen) throw sessionChanged();
       if (!sameActor(snapshot, latest)) throw sessionChanged();
       if (snapshot.token !== latest.token) {
         // Continuity requires (a) a verified refresh happened since this request started and
@@ -337,6 +351,8 @@ export function createHttpClient({
     if (initialization) return initialization;
     if (initialized && !force) return Promise.resolve(session.getSnapshot().status);
     const current = epoch;
+    // Captured before any async work: `started` used to be an undeclared rotate()-local name.
+    const startedSnapshot = session.getSnapshot();
     state("INITIALIZING");
     initialization = (async () => {
       try {
@@ -349,9 +365,12 @@ export function createHttpClient({
             }
           } catch (e) {
             if (!terminal(e) || !refreshEnabled) throw e;
-            await rotate({ allowNewIdentity: started.user === null });
+            // An existing access token means an existing session: the renewal must not adopt a
+            // different account. Without a token this is cookie-based restoration.
+            await rotate({ allowNewIdentity: !startedSnapshot.token });
           }
-        } else if (refreshEnabled) await rotate();else if (current === epoch) state("UNAUTHENTICATED");
+        } else if (refreshEnabled) await rotate({ allowNewIdentity: true });
+        else if (current === epoch) state("UNAUTHENTICATED");
       } catch (e) {
         if (current === epoch) {
           if (terminal(e)) expire(false);else if (e.code !== "SESSION_CHANGED") unavailable(e);
@@ -413,8 +432,22 @@ export function createHttpClient({
       }
     }), current);
   }
+  /** Read-only bounded scope, for the shared-session contract and diagnostics. */
+  function sessionScope() {
+    const snapshot = session.getSnapshot();
+    return {
+      epoch,
+      identityEpoch,
+      credentialGen,
+      scopeGen,
+      authGeneration: snapshot.authGeneration ?? null,
+      token: snapshot.token ?? null,
+      authenticated: Boolean(snapshot.token),
+    };
+  }
   return {
     request,
+    sessionScope,
     login,
     google,
     logout,

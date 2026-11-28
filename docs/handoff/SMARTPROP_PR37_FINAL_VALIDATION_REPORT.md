@@ -257,3 +257,43 @@ request valid with no retained history. A–I unchanged.
 
 g1–g3 remain anonymous market checks; the authenticated research authorization path is covered by
 **g13**, which needs the fixture-only dist from `e2e/pr37-preview.mjs`.
+
+---
+
+## Final closure: initialization recovery, credential ABA, PR48 contract
+
+### A. Undefined variable in `initialize()`
+`await rotate({ allowNewIdentity: started.user === null })` referenced an undeclared `started`
+(a `rotate()`-local name). The snapshot is now captured before any async work and the flag is
+derived from it: an existing access token means an existing session (renewal must not adopt another
+account), while no token means cookie-based restoration.
+
+### B. External credential ABA
+`ensureCurrent` compared token values, so an external A→X→A round-trip left the token equal to the
+original and skipped continuity validation entirely. A separate `scopeGen` now advances on **every**
+credential write the client did not perform, request scopes capture it, `ensureCurrent` rejects when
+it moved, and `rotate()` validates it before CSRF, after CSRF and after the refresh response. A later
+verified refresh therefore cannot re-validate an obsolete scope.
+
+### PR48 shared session contract
+Prepared in `SMARTPROP_PR48_SHARED_SESSION_CONTRACT.md`: one bounded implementation
+(`epoch`/`identityEpoch`/`credentialGen`/`scopeGen`/`currentCredential`), `authGeneration` folded
+into identity so a same-account new session is isolated, JWT `sub/jti/ver` used for UI continuity
+only, and `client.sessionScope()` exposed for alignment. PR48 is **not** merged and its branch was
+not modified.
+
+### Fresh verification (this run, exit codes)
+
+| Suite | Result |
+|---|---|
+| All HTTP client suites (`httpClient*`, `googleLinkSessionContract`) | **52 tests, 52 pass, 0 fail**, exit 0 |
+| Initialization recovery + ABA (`httpClientInitializationAba`) | **10 tests**, all pass |
+| PR48 contract (`googleLinkSessionContract`) | **6 tests**, all pass |
+| Full frontend recursive (`npm test`) | **229 tests, 229 pass, 0 fail**, exit 0 |
+| WP-02 Chromium | **12 groups PASS**, exit 0 |
+| PR #37 `g13_market_authorization` (fixture preview) | **PASS**, exit 0 |
+| Account / login / navigation smoke | PASS, exit 0 |
+| Vite production build | PASS (2.10s) |
+
+Concurrency uses explicit deferred barriers; no test relies on a sleep to prove ordering (the two
+short delays only let a pending promise reach its await point before the barrier is resolved).
