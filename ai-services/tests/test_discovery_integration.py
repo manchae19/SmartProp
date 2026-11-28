@@ -11,7 +11,10 @@ class DiscoveryIntegrationTests(unittest.TestCase):
         self.chat('Ngân sách của tôi là 2 tỷ 600 triệu')
         rows=[candidate(1,2500000000),candidate(2,4000000000)]
         for row in rows:row['address']='300 Dũng Sĩ Thanh Khê, Đà Nẵng'
-        self.backend.search_by_address=lambda address,limit:{'items':rows,'total':2}
+        def search(address, *, criteria):
+            self.assertEqual(Decimal("2600000000"), Decimal(criteria["budgetVnd"]))
+            return {"items": rows, "total": 2, "complete": True}
+        self.backend.search_by_address = search
         r=self.chat('Tìm nhà ở 300 Dũng Sĩ Thanh Khê')
         self.assertEqual(1,len(r.recommendedProperties))
         self.assertEqual(1,len(r.citations))

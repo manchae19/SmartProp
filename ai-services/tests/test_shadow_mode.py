@@ -59,14 +59,30 @@ class TestShadowMode(unittest.TestCase):
         resp = self.client.post("/predict", json=payload)
         self.assertEqual(resp.status_code, 200)
 
-        # Allow worker thread to complete execution
+        # Allow any worker thread to complete execution
         time.sleep(0.1)
 
         stats = self.client.get("/api/internal/v1_3/shadow/stats", headers=AUTH_HEADER).json()
         self.assertTrue(stats["shadow_enabled"])
-        self.assertEqual(stats["total_requests"], 1)
-        self.assertEqual(stats["shadow_runs"], 1)
+        # V1.3 is the only model producing new valuations, so /predict must NOT dispatch the
+        # legacy shadow task: the worker would re-run this same V1.3 predictor and compare it
+        # with its own answer. Even with the manager enabled, one request stays one inference.
+        # total_requests counts shadow DISPATCHES; /predict performs none now.
+        self.assertEqual(stats["total_requests"], 0)
+        self.assertEqual(stats["shadow_runs"], 0)
         self.assertEqual(stats["shadow_errors"], 0)
+
+        # The telemetry machinery itself is still functional when invoked deliberately.
+        manager = app.state.shadow_manager
+        manager.record_shadow_evaluation(
+            predictor_v1_3=app.state.predictor_v1_3,
+            v6_payload=payload,
+            v6_response={"predicted_asking_price_vnd": 6_000_000_000.0},
+            v6_latency_ms=1.0,
+        )
+        time.sleep(0.3)
+        stats = self.client.get("/api/internal/v1_3/shadow/stats", headers=AUTH_HEADER).json()
+        self.assertEqual(stats["shadow_runs"], 1)
         self.assertIn("divergence", stats)
         self.assertIn("latency", stats)
 

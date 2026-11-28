@@ -2,6 +2,7 @@ import { createStateStore, stateKey } from "../../shared/state/createStateStore.
 import { useRef, useState, useSyncExternalStore, useEffect } from "react";
 import { requestNearby } from './nearbyRequest.js';
 import { nearbyPath } from './nearbyExplorer.js';
+import { canAnalyzeDistance } from './coordinateEligibility.js';
 export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () => true) {
   const [data] = useState(() => createStateStore(null)),
     [busy] = useState(() => createStateStore(false)),
@@ -22,7 +23,7 @@ export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () 
     data.set(null);
     error.set('');
     busy.set(false);
-    const path = enabled() && nearbyPath(getProperty()?.id, getRadius(), getGroups());
+    const path = enabled() && canAnalyzeDistance(getProperty()) && nearbyPath(getProperty()?.id, getRadius(), getGroups());
     if (!path) return;
     if (Date.now() < retryAt.getSnapshot()) {
       error.set('Vui lòng chờ một lát trước khi thử lại.');
@@ -49,7 +50,7 @@ export function useNearbyPlaces(getProperty, getRadius, getGroups, enabled = () 
       if (run === _sequenceRef.current) busy.set(false);
     }
   }
-  const _watched = (() => [getProperty()?.id, getProperty()?.latitude, getProperty()?.longitude, getRadius(), [...getGroups()].sort().join(','), enabled()])();
+  const _watched = (() => [getProperty()?.id, getProperty()?.latitude, getProperty()?.longitude, getProperty()?.coordinate?.referenceMapEligible, getProperty()?.coordinate?.distanceAnalysisEligible, getRadius(), [...getGroups()].sort().join(','), enabled()])();
   const _previous = useRef(_watched),
     _initialized = useRef(false);
   useEffect(() => {

@@ -16,6 +16,7 @@ import { chatSession } from "../prediction/chatRuntime.js";
 import { safeListingsReturnTo } from "./listingJourney.js";
 import PropertyExplorer from "../map/PropertyExplorer.jsx";
 import PrePurchaseChecks from "./PrePurchaseChecks.jsx";
+import CoordinateStatusPanel from "./CoordinateStatusPanel.jsx";
 import { locationLabel } from "../map/locationDisplay.js";
 import "./ListingDetailView.css";
 function useListingDetailViewState(inputProps, forwardedRef) {
@@ -578,6 +579,7 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                   <h2 className="font-bold text-sm mb-2">Thông tin cần đối chiếu</h2>
                   <p className="text-sm text-brand-muted">Duyệt hiển thị tin không phải xác nhận pháp lý, thực địa hoặc an toàn giao dịch. Hãy đối chiếu hồ sơ gốc và tình trạng tài sản.</p>
                 </section>
+                <CoordinateStatusPanel coordinate={view.property?.coordinate} />
                 <PrePurchaseChecks property={view.property} />
                 <section className="bg-brand-card rounded-3xl p-6 sm:p-8 border border-brand-line shadow-xs" data-sp-4f294819="">
                   <h2 className="text-base font-bold text-[var(--ui-accent)] mb-4 flex items-center gap-2" data-sp-4f294819="">
@@ -664,7 +666,8 @@ export default React.forwardRef(function ListingDetailView(props, ref) {
                     </button>
                   </div>
                   <div className="relative rounded-2xl overflow-hidden bg-brand-card border border-brand-line" data-sp-4f294819="">
-                    {view.mapUrl(view.property) ? <PropertyExplorer items={[view.property]} selectedId={view.property.id} data-sp-4f294819="" /> : <div className="h-full flex items-center justify-center p-6 text-sm text-brand-muted" data-sp-4f294819="">                         {" Chưa có vị trí bản đồ cho tin đăng này. "}
+                    {view.mapUrl(view.property) ? <PropertyExplorer items={[view.property]} selectedId={view.property.id} data-sp-4f294819="" /> : <div className="h-full flex items-center justify-center p-6 text-sm text-brand-muted" data-sp-4f294819="">
+                        {" Chưa có vị trí bản đồ cho tin đăng này. "}
                       </div>}
                     <div className="absolute bottom-3 left-3 pointer-events-none" data-sp-4f294819="">
                       <div className="bg-[var(--ui-soft)] text-brand-navy font-bold px-3.5 py-1.5 rounded-full text-xs shadow-lg border border-brand-line/20 flex items-center gap-1.5" data-sp-4f294819="">

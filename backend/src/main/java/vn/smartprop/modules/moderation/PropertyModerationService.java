@@ -31,11 +31,11 @@ public class PropertyModerationService {
         service.reserve(p,command.expectedVersion());if(after==Property.Status.PUBLISHED && images.countByPropertyIdAndDeletedAtIsNull(p.id)<1)throw ApiInputs.bad("Tin phải có ảnh trước khi được duyệt");
         p.status=after;if(after==Property.Status.PUBLISHED){p.publishedAt=Instant.now();p.expiresAt=null;p.closedAt=null;}else if(after==Property.Status.PENDING)p.publishedAt=null;
         properties.saveAndFlush(p);events.moderation(actor,p.id,null,null,"PROPERTY_"+command.action().name(),command.reason().strip(),before,after.name(),p.ownerId);
-        return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));
+        return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),service.coordinate(p.id));
     }
     @Transactional(readOnly=true) public PageResponse<PropertyDtos.Managed> queue(Long actor,Property.Status status,int page,int size) {
         access.admin(actor);Specification<Property> filter=(p,q,cb)->cb.and(cb.isNull(p.get("deletedAt")),cb.equal(p.get("status"),status));
         var result=properties.findAll(filter,ApiInputs.newest(page,size));var grouped=service.imageMap(result.getContent());return PageResponse.of(result.map(p->PropertyService.managed(p,grouped.getOrDefault(p.id,List.of()))));
     }
-    @Transactional(readOnly=true) public PropertyDtos.Managed detail(Long actor,String id) {access.admin(actor);Property p=service.existing(id);return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
+    @Transactional(readOnly=true) public PropertyDtos.Managed detail(Long actor,String id) {access.admin(actor);Property p=service.existing(id);return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),service.coordinate(p.id));}
 }

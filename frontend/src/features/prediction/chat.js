@@ -104,6 +104,38 @@ export function citationHref(citation, properties) {
   } catch {/* Reject malformed/unexpected sources instead of rendering a raw href. */}
   return null;
 }
+function validateEmptySearch(data) {
+  const e = data.evidence;
+  const search = e.recommendationSearch;
+  const incomplete = e.clarification === 'ADDRESS_SEARCH_INCOMPLETE';
+  if (!['NO_MATCHES', 'ADDRESS_NO_RESULTS'].includes(e.responseKind) && !incomplete && search === undefined) return;
+
+  const address = search?.sourcePath === '/api/v1/properties';
+  const nearby = e.recommendationMethod === 'NEARBY_DISTANCE';
+  const exact = e.recommendationMethod === 'ADDRESS_FILTER';
+  const criteria = e.criteria;
+  if (!criteria || typeof criteria !== 'object' || Array.isArray(criteria) ||
+      data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY' ||
+      data.recommendedProperties.length || data.citations.length ||
+      !Array.isArray(e.retrievedSourceIds) || e.retrievedSourceIds.length ||
+      e.semanticRetrieval?.indexVersion !== null || !Array.isArray(e.semanticRetrieval.hits) || e.semanticRetrieval.hits.length ||
+      search?.performed !== true || search.resultCount !== 0 ||
+      typeof search.criteriaHash !== 'string' || !/^[a-f0-9]{64}$/.test(search.criteriaHash) || e.generation?.accepted !== false ||
+      e.generation.reason !== (incomplete ? 'NOT_NEEDED_FOR_INCOMPLETE_SEARCH' : 'NOT_NEEDED_FOR_EMPTY_SEARCH')) throw invalid();
+  if (criteria.budgetVnd != null && (!['number', 'string'].includes(typeof criteria.budgetVnd) || decimal(criteria.budgetVnd) <= 0n)) throw invalid();
+
+  if (address) {
+    if ((!nearby && !exact) || !text(e.addressQuery) || e.addressSearchComplete !== !incomplete ||
+        (nearby ? e.nearAddress !== true || e.radiusMeters !== 1000 : e.nearAddress !== undefined || e.radiusMeters !== undefined)) throw invalid();
+    if (incomplete) {
+      if (e.responseKind !== 'CLARIFICATION_REQUIRED') throw invalid();
+    } else if (nearby ? e.responseKind !== 'NO_MATCHES' || e.clarification !== 'ADDRESS_NEARBY_EMPTY'
+                      : !['NO_MATCHES', 'ADDRESS_NO_RESULTS'].includes(e.responseKind) || e.clarification !== 'ADDRESS_NO_MATCH') throw invalid();
+  } else if (search.sourcePath !== '/api/v1/recommendations' || e.responseKind !== 'NO_MATCHES' ||
+             e.recommendationMethod !== 'HEURISTIC_V1_1' || criteria.budgetVnd == null ||
+             e.clarification !== undefined || e.addressQuery !== undefined ||
+             e.addressSearchComplete !== undefined || e.nearAddress !== undefined) throw invalid();
+}
 export function publicChatResponse(data, { historical = false } = {}) {
   if (!data || data.mode !== 'SAFE' || blocked.test(JSON.stringify(data)) || secretKeys.test(JSON.stringify(data)) || !text(data.answer) || data.answer.length > 40000 || !['EVIDENCE_ONLY', 'QWEN_GROUNDED_ANSWER', 'QWEN_GROUNDED_PLAN'].includes(data.generationMode) || !['E5_FAISS', 'TOOL_EVIDENCE_ONLY'].includes(data.retrievalMode) || !Array.isArray(data.recommendedProperties) || data.recommendedProperties.length > 10 || !Array.isArray(data.citations) || data.citations.length > 100 || !strings(data.dataLimitations) || !data.evidence || typeof data.evidence !== 'object') throw invalid();
   const needs = data.evidence.needs;
@@ -157,7 +189,7 @@ export function publicChatResponse(data, { historical = false } = {}) {
     }
   }
   const generation = data.evidence.generation;
-  if (data.evidence.responseKind === 'NO_MATCHES' && (data.generationMode !== 'EVIDENCE_ONLY' || data.retrievalMode !== 'TOOL_EVIDENCE_ONLY' || data.recommendedProperties.length || data.citations.length || !(data.evidence.criteria?.budgetVnd || (['ADDRESS_NO_MATCH','ADDRESS_NEARBY_EMPTY'].includes(data.evidence.clarification) && text(data.evidence.addressQuery))) || data.evidence.recommendationSearch?.performed !== true || data.evidence.recommendationSearch.resultCount !== 0 || data.evidence.recommendationSearch.sourcePath !== '/api/v1/recommendations' || !/^[a-f0-9]{64}$/.test(data.evidence.recommendationSearch.criteriaHash) || generation?.accepted !== false || generation.reason !== 'NOT_NEEDED_FOR_EMPTY_SEARCH')) throw invalid();
+  validateEmptySearch(data);
   if (!data.citations.length && (data.recommendedProperties.length || data.generationMode !== 'EVIDENCE_ONLY')) throw invalid();
   if (data.generationMode === 'QWEN_GROUNDED_ANSWER' && (!generation?.accepted || !(generation.eval_count > 0) || !Array.isArray(generation.sentences) || !generation.sentences.length || generation.sentences.some(s => !text(s.text) || !sourceIds.has(s.sourceId) || !data.answer.includes(s.text)))) throw invalid();
   // Explicit POI category questions may only be answered from POI evidence of that category.

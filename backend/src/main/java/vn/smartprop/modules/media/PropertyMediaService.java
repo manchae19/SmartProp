@@ -19,7 +19,7 @@ public class PropertyMediaService {
     public PropertyMediaService(PropertyService properties,PropertyRepository repository,PropertyImageRepository images,LocalFileStore files,AccountAccess access,CloudinaryImageDelivery cloudinary) {this.properties=properties;this.repository=repository;this.images=images;this.files=files;this.access=access;this.cloudinary=cloudinary;}
     private Property editable(Long actor,String id) {access.publisherForUpdate(actor);Property p=properties.owned(actor,id);if(p.status==Property.Status.HIDDEN)throw ApiInputs.conflict("Tin bị ẩn không thể sửa ảnh");return p;}
     private void draft(Property p) {p.status=Property.Status.DRAFT;p.publishedAt=null;p.expiresAt=null;p.closedAt=null;}
-    private PropertyDtos.Managed result(Property p) {repository.saveAndFlush(p);return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id));}
+    private PropertyDtos.Managed result(Property p) {repository.saveAndFlush(p);return PropertyService.managed(p,images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id),properties.coordinate(p.id));}
     @Transactional public PropertyDtos.Managed upload(Long actor,String propertyId,int version,MultipartFile input) {
         Property p=editable(actor,propertyId);var validated=files.validate(input,false);properties.reserve(p,version);
         var current=images.findByPropertyIdAndDeletedAtIsNullOrderBySortOrderAscIdAsc(p.id);if(current.size()>=30)throw ApiInputs.bad("Tối đa30 ảnh/tin");

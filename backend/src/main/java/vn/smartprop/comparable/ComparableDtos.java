@@ -21,8 +21,23 @@ public final class ComparableDtos {
         BigDecimal priceVnd,
         Integer bedrooms,
         Integer floors,
-        Integer limit
-    ) {}
+        Integer limit,
+        Boolean includeResearch
+    ) {
+        public Request(
+            String propertyId,
+            String propertyType,
+            String district,
+            String ward,
+            BigDecimal areaSqm,
+            BigDecimal priceVnd,
+            Integer bedrooms,
+            Integer floors,
+            Integer limit
+        ) {
+            this(propertyId, propertyType, district, ward, areaSqm, priceVnd, bedrooms, floors, limit, null);
+        }
+    }
 
     public record Reference(
         String propertyId,

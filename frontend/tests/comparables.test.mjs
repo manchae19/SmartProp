@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   buildComparableBody,
   isForbidden,
+  loadComparables,
   safeListingLink,
   similarityPercent,
   validateComparableResponse,
@@ -54,4 +55,29 @@ test('isForbidden treats 401 and 403 as authorisation refusals', () => {
 test('similarityPercent rounds a 0..1 score', () => {
   assert.equal(similarityPercent(0.916), 92)
   assert.equal(similarityPercent(undefined), 0)
+})
+
+test('validateComparableResponse and loadComparables reject TINIX_RESEARCH leaks in public mode', async () => {
+  const tinixPayload = {
+    reference: { priceVnd: 5e9 },
+    comparables: [{ candidateId: 'tnx-1', sourceKind: 'TINIX_RESEARCH' }],
+    eligibleCountsBySource: { SMARTPROP: 2, EXTERNAL_LISTING: 5, TINIX_RESEARCH: 55816 },
+    warnings: ['TiniX — CC BY-NC 4.0'],
+  }
+  assert.throws(() => validateComparableResponse(tinixPayload, { allowResearch: false }), /công khai/)
+  assert.throws(() => validateComparableResponse(
+    { reference: {}, comparables: [], eligibleCountsBySource: { SMARTPROP: 2, TINIX_RESEARCH: 0 } },
+    { allowResearch: false }
+  ), /công khai/)
+
+  await assert.rejects(
+    () => loadComparables({ propertyType: 'HOUSE', district: 'Hải Châu', areaSqm: 80 }, async () => tinixPayload),
+    /công khai/
+  )
+
+  const okResearch = await loadComparables(
+    { propertyType: 'HOUSE', district: 'Hải Châu', areaSqm: 80, includeResearch: true },
+    async () => tinixPayload
+  )
+  assert.equal(okResearch.comparables.length, 1)
 })
