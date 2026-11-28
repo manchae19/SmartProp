@@ -67,8 +67,8 @@ Main `f972d3a3465e5cc0ebe4260ddfbee7a8d32eee42` is an ancestor of WP-02. The ove
 
 | Branch | Compared HEAD | WP-02 path overlap | Virtual merge |
 | --- | --- | --- | --- |
-| `research/wp04-explainable-ai` | `2f3af3f120ce7ecbd070571f0a78b8893b7cc9f4` | None | Clean |
+| `research/wp04-explainable-ai` | `06ab1118b2af867926504c8f0b72cf3bb472e6b4` | `AdvisorDtos.java` | Clean |
 | PR #37 | `151a07b4472ea0fd3134fb50f4f3de757e83d46f` | `ListingDetailView.jsx` | Clean |
 | PR #43 | `f59edf223c98249ee6104c367c34537bd851aea5` | `ListingDetailView.jsx` | Ten content conflicts inherited from the divergent history |
 
-PR #43 conflicts in `ai-services/app/rag/{config,followup,money,orchestrator,personalization,session,tools}.py`, `HybridRecommendationService.java`, `chatPresentation.js` and `ops/Caddyfile`. Preserve main's Phase 0 public SAFE isolation, research authorization and proxy boundaries, PR #45's cancellation and strict-filter behavior, and WP-02's listing lookup scope and separate Advisor comparable outputs. If WP-04 later changes the Advisor surface, preserve its explanation contract alongside both comparable evidence lists.
+PR #43 conflicts in `ai-services/app/rag/{config,followup,money,orchestrator,personalization,session,tools}.py`, `HybridRecommendationService.java`, `chatPresentation.js` and `ops/Caddyfile`. Preserve main's Phase 0 public SAFE isolation, research authorization and proxy boundaries, PR #45's cancellation and strict-filter behavior, and WP-02's listing lookup scope and separate Advisor comparable outputs. The inspected WP-04 virtual merge retains its `ValuationEvidence.explanation` alongside both WP-02 comparable lists and `ComparableItem.featureCoverage`.
